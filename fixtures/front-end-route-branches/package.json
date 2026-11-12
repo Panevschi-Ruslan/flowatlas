@@ -1,0 +1,7 @@
+{
+  "name": "front-end-route-branches",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Workspace root. Declares the three services, and holds no code of its own.",
+  "workspaces": ["wiki", "site", "console"]
+}

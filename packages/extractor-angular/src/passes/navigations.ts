@@ -178,7 +178,7 @@ export const landNavigation = (ctx: AngularExtractContext, landing: NavigationLa
   if ('path' in written && target !== undefined && shown !== undefined) {
     landing.ensure();
     ctx.ensureClassNode(target.declaration);
-    ctx.builder.addEdge({
+    const stored = ctx.builder.addEdge({
       from,
       to: target.id,
       type: landing.type,
@@ -193,6 +193,12 @@ export const landNavigation = (ctx: AngularExtractContext, landing: NavigationLa
         ...(shape?.redirects === true ? { redirects: true } : {}),
       },
     });
+    // One edge per navigating node and screen: a second address to the same screen is kept beside the first (P291).
+    const first = stored.meta?.[NAVIGATES_META];
+    if (typeof first === 'string' && first !== written.path && stored.meta !== undefined) {
+      const also = Array.isArray(stored.meta['alsoNavigates']) ? (stored.meta['alsoNavigates'] as string[]) : [];
+      stored.meta = { ...stored.meta, alsoNavigates: [...new Set([...also, written.path])].sort() };
+    }
     return;
   }
   // A route that answers and shows nothing this reading could read is the route reader's row already.
@@ -217,7 +223,7 @@ export const landNavigation = (ctx: AngularExtractContext, landing: NavigationLa
 };
 
 /** The navigation a call makes on the router, when it makes one. */
-const routerCall = (node: TsNode): { readonly method: string; readonly written: Written } | undefined => {
+export const routerCall = (node: TsNode): { readonly method: string; readonly written: Written } | undefined => {
   if (!Node.isCallExpression(node)) return undefined;
   const callee = node.getExpression();
   if (!Node.isPropertyAccessExpression(callee)) return undefined;
@@ -282,6 +288,6 @@ export const navigationsPass = definePass('navigations', (ctx: AngularExtractCon
 });
 
 /** The node of a function a module declares, which nothing else in this reader names. */
-const ensureFunctionNode = (ctx: AngularExtractContext, id: string, file: string, fn: NamedFunction): void => {
+export const ensureFunctionNode = (ctx: AngularExtractContext, id: string, file: string, fn: NamedFunction): void => {
   ctx.builder.addNode({ id, type: 'function', label: fn.name, repo: ctx.repo, file, line: fn.line });
 };

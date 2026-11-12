@@ -1,0 +1,1596 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T19:08:34.327Z",
+  "services": [
+    {
+      "name": "wiki",
+      "repo": "./wiki",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "console#src/app/admin.guard.ts:AdminGuard",
+      "type": "provider",
+      "label": "AdminGuard",
+      "repo": "console",
+      "file": "src/app/admin.guard.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "console#src/app/admin.guard.ts:AdminGuard.canActivateChild",
+      "type": "method",
+      "label": "AdminGuard.canActivateChild",
+      "repo": "console",
+      "file": "src/app/admin.guard.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "console#src/app/guards.ts:requireSession",
+      "type": "function",
+      "label": "requireSession",
+      "repo": "console",
+      "file": "src/app/guards.ts",
+      "line": 6
+    },
+    {
+      "id": "console#src/app/guards.ts:roleGuard",
+      "type": "function",
+      "label": "roleGuard",
+      "repo": "console",
+      "file": "src/app/guards.ts",
+      "line": 12
+    },
+    {
+      "id": "console#src/app/guards.ts:totalsResolver",
+      "type": "function",
+      "label": "totalsResolver",
+      "repo": "console",
+      "file": "src/app/guards.ts",
+      "line": 15
+    },
+    {
+      "id": "console#src/app/reports.component.ts:ReportsComponent",
+      "type": "ui_component",
+      "label": "ReportsComponent",
+      "repo": "console",
+      "file": "src/app/reports.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-reports"
+      }
+    },
+    {
+      "id": "console#src/app/reports.service.ts:ReportsService",
+      "type": "provider",
+      "label": "ReportsService",
+      "repo": "console",
+      "file": "src/app/reports.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "console#src/app/reports.service.ts:ReportsService.totals",
+      "type": "method",
+      "label": "ReportsService.totals",
+      "repo": "console",
+      "file": "src/app/reports.service.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "console#src/app/routes.ts:canActivate@14",
+      "type": "function",
+      "label": "canActivate@14",
+      "repo": "console",
+      "file": "src/app/routes.ts",
+      "line": 14
+    },
+    {
+      "id": "console#src/app/session.service.ts:SessionService",
+      "type": "provider",
+      "label": "SessionService",
+      "repo": "console",
+      "file": "src/app/session.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "console#src/app/session.service.ts:SessionService.hasRole",
+      "type": "method",
+      "label": "SessionService.hasRole",
+      "repo": "console",
+      "file": "src/app/session.service.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "role",
+              "type": "string"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "console#src/app/session.service.ts:SessionService.isSignedIn",
+      "type": "method",
+      "label": "SessionService.isSignedIn",
+      "repo": "console",
+      "file": "src/app/session.service.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "console#src/app/sign-in.component.ts:SignInComponent",
+      "type": "ui_component",
+      "label": "SignInComponent",
+      "repo": "console",
+      "file": "src/app/sign-in.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-sign-in"
+      }
+    },
+    {
+      "id": "console#src/app/start.component.ts:StartComponent",
+      "type": "ui_component",
+      "label": "StartComponent",
+      "repo": "console",
+      "file": "src/app/start.component.ts",
+      "line": 5,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-start"
+      }
+    },
+    {
+      "id": "console#src/app/start.component.ts:StartComponent.openReports",
+      "type": "method",
+      "label": "StartComponent.openReports",
+      "repo": "console",
+      "file": "src/app/start.component.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "console#src/app/start.component.ts:StartComponent.openWeek",
+      "type": "method",
+      "label": "StartComponent.openWeek",
+      "repo": "console",
+      "file": "src/app/start.component.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "console#src/app/users.component.ts:UsersComponent",
+      "type": "ui_component",
+      "label": "UsersComponent",
+      "repo": "console",
+      "file": "src/app/users.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-users"
+      }
+    },
+    {
+      "id": "repo:console",
+      "type": "repo",
+      "label": "console",
+      "repo": "console",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 7,
+          "templates": 4,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:site",
+      "type": "repo",
+      "label": "site",
+      "repo": "site",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 11,
+          "components": 7,
+          "hooks": 1
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        },
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "repo:wiki",
+      "type": "repo",
+      "label": "wiki",
+      "repo": "wiki",
+      "meta": {
+        "stats": {
+          "files": 18,
+          "filesRead": 18,
+          "filesUnreadable": 0,
+          "functions": 17,
+          "components": 11,
+          "hooks": 2,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "site#src/app/(admin)/admin/page.tsx:AdminPage",
+      "type": "ui_component",
+      "label": "AdminPage",
+      "repo": "site",
+      "file": "src/app/(admin)/admin/page.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/admin"
+      }
+    },
+    {
+      "id": "site#src/app/[locale]/[slug]/page.tsx:ArticlePage",
+      "type": "ui_component",
+      "label": "ArticlePage",
+      "repo": "site",
+      "file": "src/app/[locale]/[slug]/page.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/:param/:param"
+      }
+    },
+    {
+      "id": "site#src/app/[locale]/page.tsx:FrontPage",
+      "type": "ui_component",
+      "label": "FrontPage",
+      "repo": "site",
+      "file": "src/app/[locale]/page.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/:param"
+      }
+    },
+    {
+      "id": "site#src/app/[locale]/posts/page/[pageNumber]/page.tsx:PostsPage",
+      "type": "ui_component",
+      "label": "PostsPage",
+      "repo": "site",
+      "file": "src/app/[locale]/posts/page/[pageNumber]/page.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/:param/posts/page/:param"
+      }
+    },
+    {
+      "id": "site#src/app/[locale]/search/page.tsx:SearchPage",
+      "type": "ui_component",
+      "label": "SearchPage",
+      "repo": "site",
+      "file": "src/app/[locale]/search/page.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/:param/search"
+      }
+    },
+    {
+      "id": "site#src/components/Footer.tsx:Footer",
+      "type": "ui_component",
+      "label": "Footer",
+      "repo": "site",
+      "file": "src/components/Footer.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "site#src/components/Nav.tsx:Nav",
+      "type": "ui_component",
+      "label": "Nav",
+      "repo": "site",
+      "file": "src/components/Nav.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ page }",
+              "type": "{page:number}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "site#src/i18n/routing.ts:useRouter",
+      "type": "function",
+      "label": "useRouter",
+      "repo": "site",
+      "file": "src/i18n/routing.ts",
+      "line": 11,
+      "kind": "hook"
+    },
+    {
+      "id": "ui_action:console#src/app/start.component.ts:7:22",
+      "type": "ui_action",
+      "label": "click=\"openReports()\"",
+      "repo": "console",
+      "file": "src/app/start.component.ts",
+      "line": 7,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "openReports()",
+        "component": "console#src/app/start.component.ts:StartComponent",
+        "template": "src/app/start.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:console#src/app/start.component.ts:7:70",
+      "type": "ui_action",
+      "label": "click=\"openWeek()\"",
+      "repo": "console",
+      "file": "src/app/start.component.ts",
+      "line": 7,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "openWeek()",
+        "component": "console#src/app/start.component.ts:StartComponent",
+        "template": "src/app/start.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:site#src/components/Footer.tsx:11:15",
+      "type": "ui_action",
+      "label": "onClick={() => router.replace('/about-us')}",
+      "repo": "site",
+      "file": "src/components/Footer.tsx",
+      "line": 11,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => router.replace('/about-us')",
+        "component": "site#src/components/Footer.tsx:Footer",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:site#src/components/Nav.tsx:15:15",
+      "type": "ui_action",
+      "label": "onClick={() => router.push(`/posts/page/${page + 1}`)}",
+      "repo": "site",
+      "file": "src/components/Nav.tsx",
+      "line": 15,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => router.push(`/posts/page/${page + 1}`)",
+        "component": "site#src/components/Nav.tsx:Nav",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:wiki#src/components/Header.tsx:15:15",
+      "type": "ui_action",
+      "label": "onClick={() => history.push(settingsPath('webhooks'))}",
+      "repo": "wiki",
+      "file": "src/components/Header.tsx",
+      "line": 15,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => history.push(settingsPath('webhooks'))",
+        "component": "wiki#src/components/Header.tsx:Header",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "wiki#src/components/Header.tsx:Header",
+      "type": "ui_component",
+      "label": "Header",
+      "repo": "wiki",
+      "file": "src/components/Header.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "wiki#src/hooks/useMemoized.ts:useMemoized",
+      "type": "function",
+      "label": "useMemoized",
+      "repo": "wiki",
+      "file": "src/hooks/useMemoized.ts",
+      "line": 4,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "make",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "T"
+        }
+      }
+    },
+    {
+      "id": "wiki#src/hooks/useSettingsEntries.ts:useSettingsEntries",
+      "type": "function",
+      "label": "useSettingsEntries",
+      "repo": "wiki",
+      "file": "src/hooks/useSettingsEntries.ts",
+      "line": 20,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "canManage",
+              "type": "boolean"
+            }
+          ],
+          "returns": "type:wiki#SettingsEntry[]"
+        }
+      }
+    },
+    {
+      "id": "wiki#src/lib/paths.ts:settingsPath",
+      "type": "function",
+      "label": "settingsPath",
+      "repo": "wiki",
+      "file": "src/lib/paths.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "segments",
+              "type": "string[]",
+              "rest": true
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "wiki#src/lib/paths.ts:startPath",
+      "type": "function",
+      "label": "startPath",
+      "repo": "wiki",
+      "file": "src/lib/paths.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "wiki#src/routes/index.tsx:Routes",
+      "type": "ui_component",
+      "label": "Routes",
+      "repo": "wiki",
+      "file": "src/routes/index.tsx",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "wiki#src/routes/settings.tsx:SettingsRoutes",
+      "type": "ui_component",
+      "label": "SettingsRoutes",
+      "repo": "wiki",
+      "file": "src/routes/settings.tsx",
+      "line": 13,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/settings"
+      }
+    },
+    {
+      "id": "wiki#src/screens/SharedPage.tsx:SharedPage",
+      "type": "ui_component",
+      "label": "SharedPage",
+      "repo": "wiki",
+      "file": "src/screens/SharedPage.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "wiki#src/screens/SignIn.tsx:SignIn",
+      "type": "ui_component",
+      "label": "SignIn",
+      "repo": "wiki",
+      "file": "src/screens/SignIn.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "wiki#src/screens/Start.tsx:Start",
+      "type": "ui_component",
+      "label": "Start",
+      "repo": "wiki",
+      "file": "src/screens/Start.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/ /:param /start /start/:param",
+        "routeGuessed": "/ /:param /start /start/:param"
+      }
+    },
+    {
+      "id": "wiki#src/screens/settings/Members.tsx:Members",
+      "type": "ui_component",
+      "label": "Members",
+      "repo": "wiki",
+      "file": "src/screens/settings/Members.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/settings/members"
+      }
+    },
+    {
+      "id": "wiki#src/screens/settings/Profile.tsx:Profile",
+      "type": "ui_component",
+      "label": "Profile",
+      "repo": "wiki",
+      "file": "src/screens/settings/Profile.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/settings"
+      }
+    },
+    {
+      "id": "wiki#src/screens/settings/Shortcuts.tsx:Shortcuts",
+      "type": "ui_component",
+      "label": "Shortcuts",
+      "repo": "wiki",
+      "file": "src/screens/settings/Shortcuts.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/settings/shortcuts"
+      }
+    },
+    {
+      "id": "wiki#src/screens/settings/Tokens.tsx:Tokens",
+      "type": "ui_component",
+      "label": "Tokens",
+      "repo": "wiki",
+      "file": "src/screens/settings/Tokens.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/settings/tokens"
+      }
+    },
+    {
+      "id": "wiki#src/screens/settings/Webhooks.tsx:Webhooks",
+      "type": "ui_component",
+      "label": "Webhooks",
+      "repo": "wiki",
+      "file": "src/screens/settings/Webhooks.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/settings/webhooks"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "console#src/app/admin.guard.ts:AdminGuard",
+      "to": "console#src/app/session.service.ts:SessionService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/admin.guard.ts",
+      "line": 7
+    },
+    {
+      "from": "console#src/app/admin.guard.ts:AdminGuard.canActivateChild",
+      "to": "console#src/app/session.service.ts:SessionService.hasRole",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "boolean",
+      "file": "src/app/admin.guard.ts",
+      "line": 10
+    },
+    {
+      "from": "console#src/app/guards.ts:requireSession",
+      "to": "console#src/app/session.service.ts:SessionService.isSignedIn",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "boolean",
+      "file": "src/app/guards.ts",
+      "line": 8
+    },
+    {
+      "from": "console#src/app/guards.ts:roleGuard",
+      "to": "console#src/app/session.service.ts:SessionService.hasRole",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "boolean",
+      "file": "src/app/guards.ts",
+      "line": 12
+    },
+    {
+      "from": "console#src/app/guards.ts:totalsResolver",
+      "to": "console#src/app/reports.service.ts:ReportsService.totals",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "number",
+      "file": "src/app/guards.ts",
+      "line": 15
+    },
+    {
+      "from": "console#src/app/reports.component.ts:ReportsComponent",
+      "to": "console#src/app/guards.ts:requireSession",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 15,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/reports",
+        "order": 0
+      }
+    },
+    {
+      "from": "console#src/app/reports.component.ts:ReportsComponent",
+      "to": "console#src/app/guards.ts:totalsResolver",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 15,
+      "meta": {
+        "guard": "resolve",
+        "route": "/reports",
+        "order": 1
+      }
+    },
+    {
+      "from": "console#src/app/routes.ts:canActivate@14",
+      "to": "console#src/app/session.service.ts:SessionService.isSignedIn",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "boolean",
+      "file": "src/app/routes.ts",
+      "line": 14
+    },
+    {
+      "from": "console#src/app/sign-in.component.ts:SignInComponent",
+      "to": "console#src/app/routes.ts:canActivate@14",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 14,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/sign-in",
+        "order": 0
+      }
+    },
+    {
+      "from": "console#src/app/start.component.ts:StartComponent.openReports",
+      "to": "console#src/app/reports.component.ts:ReportsComponent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/start.component.ts",
+      "line": 13,
+      "meta": {
+        "navigates": "/reports",
+        "route": "/reports",
+        "page": "src/app/reports.component.ts"
+      }
+    },
+    {
+      "from": "console#src/app/start.component.ts:StartComponent.openWeek",
+      "to": "console#src/app/reports.component.ts:ReportsComponent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/start.component.ts",
+      "line": 17,
+      "meta": {
+        "navigates": "/reports?range=week",
+        "route": "/reports",
+        "page": "src/app/reports.component.ts",
+        "byUrl": true,
+        "alsoNavigates": [
+          "/reports"
+        ]
+      }
+    },
+    {
+      "from": "console#src/app/users.component.ts:UsersComponent",
+      "to": "console#src/app/admin.guard.ts:AdminGuard.canActivateChild",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "boolean",
+      "file": "src/app/routes.ts",
+      "line": 19,
+      "meta": {
+        "guard": "canActivateChild",
+        "route": "/admin/users",
+        "order": 1
+      }
+    },
+    {
+      "from": "console#src/app/users.component.ts:UsersComponent",
+      "to": "console#src/app/guards.ts:requireSession",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 18,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/admin/users",
+        "order": 0
+      }
+    },
+    {
+      "from": "console#src/app/users.component.ts:UsersComponent",
+      "to": "console#src/app/guards.ts:roleGuard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 20,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/admin/users",
+        "order": 2,
+        "factory": true
+      }
+    },
+    {
+      "from": "site#src/app/[locale]/page.tsx:FrontPage",
+      "to": "site#src/components/Footer.tsx:Footer",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/app/[locale]/page.tsx",
+      "line": 9,
+      "meta": {
+        "renders": "Footer"
+      }
+    },
+    {
+      "from": "site#src/app/[locale]/page.tsx:FrontPage",
+      "to": "site#src/components/Nav.tsx:Nav",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{page:number}"
+      ],
+      "returns": "unknown",
+      "file": "src/app/[locale]/page.tsx",
+      "line": 8,
+      "meta": {
+        "renders": "Nav"
+      }
+    },
+    {
+      "from": "site#src/components/Footer.tsx:Footer",
+      "to": "site#src/app/[locale]/[slug]/page.tsx:ArticlePage",
+      "type": "calls",
+      "confidence": "heuristic",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Footer.tsx",
+      "line": 11,
+      "meta": {
+        "navigates": "/about-us",
+        "route": "/:param/:param",
+        "page": "src/app/[locale]/[slug]/page.tsx",
+        "localePrefix": "[locale]",
+        "replace": true
+      }
+    },
+    {
+      "from": "site#src/components/Footer.tsx:Footer",
+      "to": "site#src/app/[locale]/search/page.tsx:SearchPage",
+      "type": "calls",
+      "confidence": "heuristic",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Footer.tsx",
+      "line": 10,
+      "meta": {
+        "navigates": "/search",
+        "route": "/:param/search",
+        "page": "src/app/[locale]/search/page.tsx",
+        "localePrefix": "[locale]",
+        "link": "LocaleLink"
+      }
+    },
+    {
+      "from": "site#src/components/Footer.tsx:Footer",
+      "to": "site#src/i18n/routing.ts:useRouter",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/components/Footer.tsx",
+      "line": 7
+    },
+    {
+      "from": "site#src/components/Nav.tsx:Nav",
+      "to": "site#src/app/(admin)/admin/page.tsx:AdminPage",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Nav.tsx",
+      "line": 14,
+      "meta": {
+        "navigates": "/admin",
+        "route": "/admin",
+        "page": "src/app/(admin)/admin/page.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "site#src/components/Nav.tsx:Nav",
+      "to": "site#src/app/[locale]/[slug]/page.tsx:ArticlePage",
+      "type": "calls",
+      "confidence": "heuristic",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Nav.tsx",
+      "line": 12,
+      "meta": {
+        "navigates": "/about-us",
+        "route": "/:param/:param",
+        "page": "src/app/[locale]/[slug]/page.tsx",
+        "localePrefix": "[locale]",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "site#src/components/Nav.tsx:Nav",
+      "to": "site#src/app/[locale]/page.tsx:FrontPage",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Nav.tsx",
+      "line": 13,
+      "meta": {
+        "navigates": "/fr",
+        "route": "/:param",
+        "page": "src/app/[locale]/page.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "site#src/components/Nav.tsx:Nav",
+      "to": "site#src/app/[locale]/posts/page/[pageNumber]/page.tsx:PostsPage",
+      "type": "calls",
+      "confidence": "heuristic",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Nav.tsx",
+      "line": 15,
+      "meta": {
+        "navigates": "/posts/page/${page + 1}",
+        "route": "/:param/posts/page/:param",
+        "page": "src/app/[locale]/posts/page/[pageNumber]/page.tsx",
+        "localePrefix": "[locale]"
+      }
+    },
+    {
+      "from": "site#src/components/Nav.tsx:Nav",
+      "to": "site#src/app/[locale]/search/page.tsx:SearchPage",
+      "type": "calls",
+      "confidence": "heuristic",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Nav.tsx",
+      "line": 11,
+      "meta": {
+        "navigates": "/search",
+        "route": "/:param/search",
+        "page": "src/app/[locale]/search/page.tsx",
+        "localePrefix": "[locale]",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "ui_action:console#src/app/start.component.ts:7:22",
+      "to": "console#src/app/start.component.ts:StartComponent.openReports",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/start.component.ts",
+      "line": 7
+    },
+    {
+      "from": "ui_action:console#src/app/start.component.ts:7:70",
+      "to": "console#src/app/start.component.ts:StartComponent.openWeek",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/start.component.ts",
+      "line": 7
+    },
+    {
+      "from": "ui_action:site#src/components/Footer.tsx:11:15",
+      "to": "site#src/components/Footer.tsx:Footer",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/components/Footer.tsx",
+      "line": 11
+    },
+    {
+      "from": "ui_action:site#src/components/Nav.tsx:15:15",
+      "to": "site#src/components/Nav.tsx:Nav",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/components/Nav.tsx",
+      "line": 15
+    },
+    {
+      "from": "ui_action:wiki#src/components/Header.tsx:15:15",
+      "to": "wiki#src/components/Header.tsx:Header",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/components/Header.tsx",
+      "line": 15
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "wiki#src/lib/paths.ts:settingsPath",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string[]"
+      ],
+      "returns": "string",
+      "file": "src/components/Header.tsx",
+      "line": 15
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "wiki#src/lib/paths.ts:startPath",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/components/Header.tsx",
+      "line": 10
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "wiki#src/screens/SharedPage.tsx:SharedPage",
+      "type": "calls",
+      "confidence": "heuristic",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Header.tsx",
+      "line": 9,
+      "meta": {
+        "navigates": "/",
+        "route": "/",
+        "page": "src/screens/SharedPage.tsx",
+        "branch": true,
+        "link": "Link"
+      }
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "wiki#src/screens/SignIn.tsx:SignIn",
+      "type": "calls",
+      "confidence": "heuristic",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Header.tsx",
+      "line": 9,
+      "meta": {
+        "navigates": "/",
+        "route": "/",
+        "page": "src/screens/SignIn.tsx",
+        "branch": true,
+        "link": "Link"
+      }
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "wiki#src/screens/Start.tsx:Start",
+      "type": "calls",
+      "confidence": "heuristic",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Header.tsx",
+      "line": 10,
+      "meta": {
+        "navigates": "/start",
+        "route": "/start",
+        "page": "src/screens/Start.tsx",
+        "branch": true,
+        "link": "Link",
+        "alsoNavigates": [
+          "/start/recent"
+        ]
+      }
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "wiki#src/screens/settings/Members.tsx:Members",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Header.tsx",
+      "line": 12,
+      "meta": {
+        "navigates": "/settings/members",
+        "route": "/settings/members",
+        "page": "src/screens/settings/Members.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "wiki#src/screens/settings/Profile.tsx:Profile",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Header.tsx",
+      "line": 13,
+      "meta": {
+        "navigates": "/settings",
+        "route": "/settings",
+        "page": "src/screens/settings/Profile.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "wiki#src/screens/settings/Tokens.tsx:Tokens",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Header.tsx",
+      "line": 14,
+      "meta": {
+        "navigates": "/settings/tokens",
+        "route": "/settings/tokens",
+        "page": "src/screens/settings/Tokens.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "wiki#src/screens/settings/Webhooks.tsx:Webhooks",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Header.tsx",
+      "line": 15,
+      "meta": {
+        "navigates": "/settings/webhooks",
+        "route": "/settings/webhooks",
+        "page": "src/screens/settings/Webhooks.tsx"
+      }
+    },
+    {
+      "from": "wiki#src/hooks/useSettingsEntries.ts:useSettingsEntries",
+      "to": "wiki#src/hooks/useMemoized.ts:useMemoized",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "T",
+      "file": "src/hooks/useSettingsEntries.ts",
+      "line": 21
+    },
+    {
+      "from": "wiki#src/hooks/useSettingsEntries.ts:useSettingsEntries",
+      "to": "wiki#src/lib/paths.ts:settingsPath",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string[]"
+      ],
+      "returns": "string",
+      "file": "src/hooks/useSettingsEntries.ts",
+      "line": 23
+    },
+    {
+      "from": "wiki#src/routes/index.tsx:Routes",
+      "to": "wiki#src/lib/paths.ts:startPath",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/routes/index.tsx",
+      "line": 18
+    },
+    {
+      "from": "wiki#src/routes/settings.tsx:SettingsRoutes",
+      "to": "wiki#src/hooks/useSettingsEntries.ts:useSettingsEntries",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "boolean"
+      ],
+      "returns": "type:wiki#SettingsEntry[]",
+      "file": "src/routes/settings.tsx",
+      "line": 14
+    },
+    {
+      "from": "wiki#src/screens/Start.tsx:Start",
+      "to": "wiki#src/components/Header.tsx:Header",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/screens/Start.tsx",
+      "line": 7,
+      "meta": {
+        "renders": "Header"
+      }
+    }
+  ],
+  "types": {
+    "type:wiki#SettingsEntry": {
+      "name": "SettingsEntry",
+      "kind": "object",
+      "declaredIn": "wiki#src/hooks/useSettingsEntries.ts",
+      "structuralHash": "910b83b1f2b76845",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "component",
+          "type": "unknown",
+          "optional": false
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app/start.component.ts",
+      "line": 10,
+      "reason": "di-type-unresolved",
+      "hint": "Inject a class, or name the provider with @Inject(TOKEN).",
+      "symbol": "StartComponent.constructor[0]",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@angular/router"
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/app/(admin)/admin/page.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/app/[locale]/[slug]/page.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/app/[locale]/page.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/app/[locale]/posts/page/[pageNumber]/page.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/app/[locale]/search/page.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/components/Footer.tsx",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/components/Footer.tsx",
+      "line": 10,
+      "reason": "navigation-locale-prefixed",
+      "level": "info",
+      "sites": 5,
+      "message": "src/components/Footer.tsx navigates to /search, written without the locale the application's middleware puts in front, so it is joined to /:param/search, the page under [locale]",
+      "hint": "Nothing to do: the middleware or the routing configuration that adds the locale is what places the page; the join is heuristic.",
+      "symbol": "Footer navigates to /search",
+      "meta": {
+        "navigates": "/search",
+        "route": "/:param/search",
+        "causes": [
+          {
+            "cause": "navigation-locale-prefixed",
+            "sites": 5,
+            "samples": [
+              {
+                "file": "src/components/Footer.tsx",
+                "line": 10,
+                "symbol": "Footer navigates to /search"
+              },
+              {
+                "file": "src/components/Footer.tsx",
+                "line": 11,
+                "symbol": "Footer navigates to /about-us"
+              },
+              {
+                "file": "src/components/Nav.tsx",
+                "line": 11,
+                "symbol": "Nav navigates to /search"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/components/Nav.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/middleware.ts",
+      "line": 1,
+      "reason": "middleware-matcher-unread",
+      "message": "1 matcher pattern in src/middleware.ts is a regular expression, so which routes it guards was not read.",
+      "hint": "Routes this covers are reported as unguarded. Write the matcher as a path pattern, or name the routes under doctor.publicRoutes.",
+      "symbol": "/((?!api|_next|admin|.*\\..*).*)",
+      "adapter": "nextjs-routes",
+      "service": "site"
+    },
+    {
+      "file": "src/components/Header.tsx",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/hooks/useMemoized.ts",
+      "line": 4,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "wiki"
+    },
+    {
+      "file": "src/hooks/useSettingsEntries.ts",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ComponentType",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "wiki"
+    },
+    {
+      "file": "src/routes/index.tsx",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/routes/settings.tsx",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/screens/SharedPage.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/screens/SignIn.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/screens/Start.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/screens/settings/Members.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/screens/settings/Profile.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/screens/settings/Shortcuts.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/screens/settings/Tokens.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/screens/settings/Webhooks.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    }
+  ]
+}

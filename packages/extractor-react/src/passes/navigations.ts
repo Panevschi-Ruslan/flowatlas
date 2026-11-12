@@ -3,10 +3,11 @@ import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
-import { drawNavigations, type DrawEdge, type NavigatingScript, type Page } from '../sfc/navigation.js';
+import { drawNavigations, navigationConfidence, type DrawEdge, type NavigatingScript, type Page } from '../sfc/navigation.js';
 import { routeNames } from '../sfc/routes.js';
 import { repoFiles } from '../sfc/stores.js';
-import { routePathsOf, routeScreenOf } from './routes.js';
+import { localePrefixOf } from '../util/locale-routing.js';
+import { listedRoutes, routePathsOf, routePlacingOf, routeScreenOf } from './routes.js';
 import { definePass } from './types.js';
 
 /**
@@ -35,7 +36,18 @@ export const navigationsPass = definePass('navigations', (ctx: ReactExtractConte
     const named = [...(names.get(indexed.file) ?? [])];
     const branches = typeof meta?.['routeGuessed'] === 'string' ? new Set(meta['routeGuessed'].split(' ')) : new Set<string>();
     for (const path of route.split(' ')) {
-      pages.push({ file: indexed.file, route: path, fn: indexed, ...(named.length === 1 ? { name: named[0] as string } : {}), ...(branches.has(path) ? { guessed: true as const } : {}) });
+      const placing = routePlacingOf(ctx, indexed.id, path);
+      const locale = localePrefixOf(ctx.repoDir, indexed.file, path);
+      pages.push({
+        file: indexed.file,
+        route: path,
+        fn: indexed,
+        ...(named.length === 1 ? { name: named[0] as string } : {}),
+        ...(branches.has(path) ? { guessed: true as const } : {}),
+        ...(placing.branches.length === 0 ? {} : { branches: placing.branches }),
+        ...(placing.within.length === 0 ? {} : { within: placing.within }),
+        ...(locale === undefined ? {} : { localePrefix: locale }),
+      });
     }
   }
   if (pages.length === 0) return;
@@ -60,7 +72,7 @@ export const navigationsPass = definePass('navigations', (ctx: ReactExtractConte
     ctx.ensureFunctionNode(from.fn);
     ctx.ensureFunctionNode(to.fn);
     // A page reached through a branch nothing written decides is one of two the build may make (P288).
-    ctx.builder.addEdge({ from: from.id, to: to.id, type: 'calls', confidence: meta['branch'] === true ? 'heuristic' : 'static', file, line, meta });
+    ctx.builder.addEdge({ from: from.id, to: to.id, type: 'calls', confidence: navigationConfidence(meta), file, line, meta });
   };
   drawNavigations(ctx, pages, scripts, () => undefined, edge, false, unplacedRoutes(ctx, sources.filter((source) => !embedded.has(source))));
 });
@@ -111,6 +123,12 @@ const unplacedRoutes = (ctx: ReactExtractContext, sources: readonly SourceFile[]
       const path = attribute('path');
       if (path === undefined) return;
       const shown = SCREEN_KEYS.map(attribute).find((each) => each !== undefined);
+      // A route written over a list's items is one per entry, each counted as the route reader reads it (P291).
+      const listed = listedRoutes(path, shown);
+      if (listed !== undefined) {
+        count += listed.unread + listed.routes.filter((each) => !placed(each.path, each.screen)).length;
+        return;
+      }
       if (!placed(path, shown)) count += 1;
     });
   }

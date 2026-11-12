@@ -248,6 +248,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     "A module of the repository writes this call under a condition, and the options the configuration hands the module rule it out, so what it would add is not built and not drawn. Nothing to do; change the option to have it added.",
   'navigation-external': () =>
     "A page, a component or a route middleware navigates to an address with a host, or with `{ external: true }`: it leaves the application, so no page of it is joined. Nothing to do; the row says where the application hands the visitor on.",
+  'navigation-locale-prefixed': () =>
+    "A navigation is written without the locale the application's middleware or routing configuration puts in front of every address, so it is joined to the page under the locale segment (`app/[locale]/...`). The join is heuristic. Nothing to do.",
   'navigation-unresolved': () =>
     "A page, a component or a route middleware navigates - `navigateTo(...)`, `router.push(...)`, `navigate(...)`, `goto(...)`, `redirect(...)`, `router.navigate([...])`, `<NuxtLink to>`, `<Link to>` - to an address no page of the application shows, to one two pages fit as well, or to one written as code, so the page it shows is not joined. Correct the address or the name, add the page, or write the address as a literal (a template of one, or `{ name: '...' }`).",
   'framework-feature-off': () =>

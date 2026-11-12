@@ -13,7 +13,7 @@ import {
   type SourceCounts,
   type Unresolved,
 } from '@flowatlas/core';
-import type { ClassDeclaration } from 'ts-morph';
+import type { ClassDeclaration, Node } from 'ts-morph';
 import type { AngularClassIndex, AngularRole, IndexedClass } from './index-classes.js';
 
 /**
@@ -52,6 +52,19 @@ export interface RouteEntry {
   path: string;
   /** Component the route shows, when it names a class of this repository. */
   component?: ClassDeclaration;
+  /**
+   * What the router runs before it shows the route, in its order (P291): each
+   * `canMatch`, `canActivateChild` and `canActivate` from the outermost route
+   * down, a parent's `canActivateChild` before the route's own guards, then
+   * every `resolve` - each as written in the configuration.
+   */
+  guards?: readonly RouteGuard[];
+}
+
+/** A guard or a resolver a route lists, as written (P291). */
+export interface RouteGuard {
+  readonly kind: 'canMatch' | 'canActivate' | 'canActivateChild' | 'resolve';
+  readonly value: Node;
 }
 
 /**

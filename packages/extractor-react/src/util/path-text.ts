@@ -188,8 +188,8 @@ const spell = (node: TsNode, env: Env, depth: number): SpelledPath[] | undefined
     };
     collect(value);
     const read = pieces.map((piece) => spell(piece, env, depth));
-    // Text joined to values: a sum of values none of which is text is no address.
-    if (read.every((each) => each === undefined)) return undefined;
+    // Text joined to values: a sum of values none of which is text is no address, and a number added to one (`page + 1`) is a sum (P291).
+    if (read.every((each, index) => each === undefined || Node.isNumericLiteral(pieces[index] as TsNode))) return undefined;
     return joined(read.map((each, index) => each ?? [hole(pieces[index] as TsNode)]));
   }
   if (Node.isConditionalExpression(value)) {

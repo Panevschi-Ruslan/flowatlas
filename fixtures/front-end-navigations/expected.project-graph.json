@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T16:14:18.803Z",
+  "builtAt": "2026-11-12T19:08:28.506Z",
   "services": [
     {
       "name": "storefront",
@@ -1411,7 +1411,10 @@
         "navigates": "/stock",
         "route": "/stock",
         "page": "src/views/StockView.vue",
-        "link": "RouterLink"
+        "link": "RouterLink",
+        "alsoNavigates": [
+          "stock"
+        ]
       }
     },
     {
@@ -1846,7 +1849,10 @@
       "meta": {
         "navigates": "/orders${search}",
         "route": "/orders",
-        "page": "src/pages/Orders.tsx"
+        "page": "src/pages/Orders.tsx",
+        "alsoNavigates": [
+          "/orders"
+        ]
       }
     },
     {

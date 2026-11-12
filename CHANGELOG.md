@@ -35,6 +35,24 @@ only one of them moved.
   what stays unread is: a release's or a helmfile's hooks (programs, run and
   not read), a remote sub-helmfile (fetched when helmfile runs), and a chart
   dependency only a chart repository has (no repository is read).
+- **Route tables over a list, pages under a condition, a locale prefix, and
+  an Angular route's guards (P291).** A `<Route path={config.path}
+  component={config.component} />` written over a list's items places one page
+  per entry of the list a hook, a `const` or a function of the repository
+  hands back. Pages each placed under its own side of a condition nothing
+  written decides (`env.X ? <Switch>a</Switch> : <Switch>b</Switch>`) are
+  branches: a navigation to their address lands on each, `heuristic` with
+  `meta.branch`, where it was `ambiguous`. In a Next application whose pages
+  sit under a top `[locale]` segment and which declares a middleware or
+  routing configuration that adds it, an address written without the prefix
+  lands on the page under it, `heuristic` with `meta.localePrefix` and a
+  `navigation-locale-prefixed` note, and next-intl's own `Link`, `useRouter`
+  and `redirect` are navigations. Two navigations from one function to one
+  page keep every address (`meta.alsoNavigates`), the one written outright
+  before a guess. An Angular route's `canMatch`, `canActivate`,
+  `canActivateChild` and `resolve`, its own and its parents', are `calls`
+  edges from its screen (`meta.guard`, `meta.order`), whether or not they
+  navigate, with a functional guard's calls on `inject(Service)`.
 - **gRPC messages as payload types, a package's health and reflection
   services, and what a server and its contract disagree on (P287).** A
   `.proto` file's messages and enums are read (nested ones, `repeated`,

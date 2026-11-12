@@ -68,6 +68,8 @@ const NOTES: readonly string[] = [
   'framework-feature-off',
   // A navigation out of the application, to an address with a host (P265)
   'navigation-external',
+  // A navigation joined to a page under the locale segment a middleware puts in front (P291)
+  'navigation-locale-prefixed',
   // Stand-ins for a package that is not installed (core/stand-ins.ts, P78)
   'package-from-repo',
   'package-version-differs',

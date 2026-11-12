@@ -49,13 +49,45 @@ export interface Page {
   readonly fn: IndexedFunction;
   /** The address was read through a branch nothing written decides (P288). */
   readonly guessed?: true;
+  /** The conditions the route placing it is written under, each `condition:side` (P291). */
+  readonly branches?: readonly string[];
+  /** The segment a middleware puts in front of an address written without it, `[locale]` (P291). */
+  readonly localePrefix?: string;
+  /** The ids of the components whose bodies write a route placing it (P291). */
+  readonly within?: readonly string[];
 }
+
+/** A navigation that lands on a page. */
+type PageLanding = { readonly kind: 'page'; readonly page: Page; readonly by: 'path' | 'name'; readonly written: string; readonly guessed?: true; readonly localePrefix?: string };
 
 /** Where a navigation lands, as the router decides it. */
 type Landing =
-  | { readonly kind: 'page'; readonly page: Page; readonly by: 'path' | 'name'; readonly written: string; readonly guessed?: true }
+  | PageLanding
+  /** Pages at one address, each placed under its own side of a condition nothing written decides (P291). */
+  | { readonly kind: 'branches'; readonly landings: readonly PageLanding[] }
   | { readonly kind: 'external'; readonly written: string }
   | { readonly kind: 'unresolved'; readonly why: 'missing' | 'dynamic' | 'ambiguous'; readonly written: string };
+
+/**
+ * Whether no two of these pages are placed together: for each two, a
+ * condition one is placed under on one side and the other on the other
+ * (`env.X ? <Switch>a</Switch> : <Switch>b</Switch>`), so which one is at the
+ * address is the build's choice, not a clash (P291).
+ */
+const exclusive = (pages: readonly Page[]): boolean =>
+  pages.every((a, index) =>
+    pages.slice(index + 1).every((b) =>
+      (a.branches ?? []).some((mark) => {
+        const at = mark.lastIndexOf(':');
+        const condition = mark.slice(0, at);
+        return (b.branches ?? []).some((other) => other.startsWith(`${condition}:`) && other !== mark);
+      }),
+    ),
+  );
+
+/** How sure a navigation's edge is: a branch nothing decides, or a prefix a middleware adds, is a guess (P288, P291). */
+export const navigationConfidence = (meta: Readonly<Record<string, unknown>>): 'heuristic' | 'static' =>
+  meta['branch'] === true || meta['localePrefix'] !== undefined ? 'heuristic' : 'static';
 
 type DrawEdge = (from: IndexedFunction, to: IndexedFunction, file: string, line: number, meta: Record<string, unknown>) => void;
 
@@ -163,24 +195,67 @@ const byPath = (all: readonly Page[], path: string, from: string): Landing => {
   // A value glued to the end of the last segment (`/login${query}`) is the query, not the page.
   const trimmed = path.replace(/([^/$}])\$\{[^}]*\}$/, '$1');
   const written = segmentsOf(trimmed.replace(/\$\{[^}]*\}/g, '\u0000'));
-  const fits = pages.flatMap((page) => {
+  const fits = pages.flatMap((page): Array<{ page: Page; fit: number; localized?: true }> => {
     const fit = fitOf(written, page.route);
-    return fit === undefined ? [] : [{ page, fit }];
+    if (page.localePrefix === undefined) return fit === undefined ? [] : [{ page, fit }];
+    return localizedFits(page, written, fit);
   });
   const best = Math.max(...fits.map((each) => each.fit));
   let top = fits.filter((each) => each.fit === best);
+  // One page fits both as written and with the locale put in front: as written.
+  top = top.filter((each) => each.localized !== true || !top.some((other) => other.page === each.page && other.localized !== true));
   // One component shown at two addresses that fit as well is still one page.
   if (top.length > 1 && top.every((each) => each.page.fn === top[0]?.page.fn)) top = top.slice(0, 1);
   // A page placed through a branch nothing decides gives way to one placed outright (P288).
   if (top.length > 1 && top.some((each) => each.page.guessed !== true)) top = top.filter((each) => each.page.guessed !== true);
+  // A screen that holds routes of its own (`<Route path="/settings" component={SettingsRoutes} />`) gives way to the page they place there (P291).
+  if (top.length > 1) {
+    const inner = top.filter((each) => !top.some((other) => other.page.within?.includes(each.page.fn.id) === true));
+    if (inner.length > 0) top = inner;
+  }
   if (top.length > 1) {
     const nearest = Math.max(...top.map((each) => sharedDirectories(each.page.file, from)));
     top = top.filter((each) => sharedDirectories(each.page.file, from) === nearest);
   }
   const shown = path.replace(/\u0000/g, '${…}');
+  const landed = (each: { page: Page; localized?: true }, guessed: boolean): PageLanding => ({
+    kind: 'page',
+    page: each.page,
+    by: 'path',
+    written: shown,
+    ...(guessed ? { guessed: true as const } : {}),
+    ...(each.localized === true && each.page.localePrefix !== undefined ? { localePrefix: each.page.localePrefix } : {}),
+  });
   if (top.length === 0) return { kind: 'unresolved', why: 'missing', written: shown };
+  // Pages each placed under its own side of one condition: the build's choices, each a branch (P291).
+  if (top.length > 1 && exclusive(top.map((each) => each.page))) return { kind: 'branches', landings: top.map((each) => landed(each, true)) };
   if (top.length > 1) return { kind: 'unresolved', why: 'ambiguous', written: shown };
-  return { kind: 'page', page: (top[0] as { page: Page }).page, by: 'path', written: shown };
+  return landed(top[0] as { page: Page; localized?: true }, false);
+};
+
+/** A segment that is a locale: `fr`, `pt-BR`, `zh-Hant`. */
+const LOCALE_TAG = /^[a-z]{2}(?:[-_][A-Za-z]{2,4})?$/;
+
+/**
+ * How a page under a locale segment a middleware adds (`app/[locale]/search`)
+ * fits a written address (P291): an address that starts with a value or a
+ * locale is written with the prefix, and fits as written; one that starts
+ * with anything else is written without it, and the middleware puts it in
+ * front - it fits the page's address past the prefix, `localized`. A segment
+ * that may be either (`/fr`) is tried both ways.
+ */
+const localizedFits = (page: Page, written: readonly string[], asWritten: number | undefined): Array<{ page: Page; fit: number; localized?: true }> => {
+  const first = written[0];
+  const prefixed = first !== undefined && first.includes('\u0000');
+  const out: Array<{ page: Page; fit: number; localized?: true }> = [];
+  if (asWritten !== undefined && (prefixed || (first !== undefined && LOCALE_TAG.test(first)))) out.push({ page, fit: asWritten });
+  if (!prefixed) {
+    const rest = page.route.split('/').filter((segment) => segment !== '').slice(1).join('/');
+    const fit = fitOf(written, `/${rest}`);
+    // Below the same fit as written, so a page placed without the prefix answers first.
+    if (fit !== undefined) out.push({ page, fit: fit - 0.25, localized: true });
+  }
+  return out;
 };
 
 /** Each service's application roots: a file's nearest directory holding a manifest, below the repository's. */
@@ -260,8 +335,8 @@ const landingsOf = (pages: readonly Page[], to: TsNode | undefined, options: TsN
  * says nothing of its own (P288).
  */
 const branchLandings = (read: ReadonlyArray<{ readonly landing: Landing; readonly guessed: boolean }>): Landing[] =>
-  read.some((each) => each.landing.kind === 'page')
-    ? read.filter((each) => each.landing.kind === 'page' || !each.guessed).map((each) => each.landing)
+  read.some((each) => each.landing.kind === 'page' || each.landing.kind === 'branches')
+    ? read.filter((each) => each.landing.kind === 'page' || each.landing.kind === 'branches' || !each.guessed).map((each) => each.landing)
     : read.map((each) => each.landing);
 
 /** Where `navigateTo(to, options)` lands, read as written. */
@@ -299,6 +374,35 @@ const importOf = (name: TsNode): { readonly module: string; readonly name: strin
       const imported = declaration.getParent();
       return Node.isImportDeclaration(imported) ? { module: imported.getModuleSpecifierValue(), name: 'default' } : undefined;
     }
+  }
+  return undefined;
+};
+
+/** The modules whose makers hand back a locale router's own navigation: next-intl's `createNavigation(routing)` (P291). */
+const LOCALE_NAVIGATION_MAKERS: ReadonlyMap<string, ReadonlySet<string>> = new Map([
+  ['createNavigation', new Set(['next-intl/navigation'])],
+  ['createSharedPathnamesNavigation', new Set(['next-intl/navigation'])],
+  ['createLocalizedPathnamesNavigation', new Set(['next-intl/navigation'])],
+]);
+
+/**
+ * The name a locale router's navigation hands a name out as, where the name
+ * is one: `export const { Link, redirect, useRouter } = createNavigation(routing)`
+ * in a module of the application, imported where it navigates under any name
+ * (P291). The address is written without the locale, which the helper puts
+ * in front.
+ */
+const localeNavigationName = (name: TsNode): string | undefined => {
+  if (!Node.isIdentifier(name)) return undefined;
+  const symbol = name.getSymbol();
+  for (const declaration of (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []) {
+    if (!Node.isBindingElement(declaration)) continue;
+    const holder = declaration.getParent()?.getParent();
+    const made = holder !== undefined && Node.isVariableDeclaration(holder) ? holder.getInitializer() : undefined;
+    if (made === undefined || !Node.isCallExpression(bare(made))) continue;
+    const found = importOf((bare(made) as CallExpression).getExpression());
+    if (found === undefined || LOCALE_NAVIGATION_MAKERS.get(found.name)?.has(found.module) !== true) continue;
+    return declaration.getPropertyNameNode()?.getText() ?? declaration.getName();
   }
   return undefined;
 };
@@ -363,6 +467,7 @@ const makesRouter = (call: TsNode, nuxt: boolean): boolean => {
   if (!Node.isCallExpression(call)) return false;
   const callee = call.getExpression();
   if (importedFrom(callee, 'useRouter', ROUTER_HOOK_MODULES) || importedFrom(callee, 'useHistory', HISTORY_HOOK_MODULES)) return true;
+  if (localeNavigationName(callee) === 'useRouter') return true;
   if (nuxt && isNuxts(callee, 'useRouter')) return true;
   const found = importOf(callee);
   return found !== undefined && ROUTER_MAKERS.get(found.name)?.has(found.module) === true;
@@ -412,6 +517,8 @@ const navigationOf = (call: CallExpression, nuxt: boolean): CallNavigation | 'ab
       const kit = importOf(callee)?.module === '@sveltejs/kit';
       return { to: kit ? second : first, redirects: true };
     }
+    const localized = localeNavigationName(callee);
+    if (localized === 'redirect' || localized === 'permanentRedirect') return { to: first, redirects: true };
     const held = constValue(callee);
     if (held !== undefined && Node.isCallExpression(held) && importedFrom(held.getExpression(), 'useNavigate', NAVIGATE_HOOK_MODULES)) {
       return { to: first, replace: optionTrue(second, 'replace') };
@@ -435,6 +542,8 @@ const navigationOf = (call: CallExpression, nuxt: boolean): CallNavigation | 'ab
 
 /** The component a JSX element is a link of: the attribute its address is written in, and whether it redirects. */
 const linkOf = (tag: TsNode): { readonly attribute: string; readonly redirects?: true } | undefined => {
+  // A locale router's own `<Link href>` (P291).
+  if (localeNavigationName(tag) === 'Link') return { attribute: 'href' };
   const found = importOf(tag);
   if (found === undefined) return undefined;
   return LINK_COMPONENTS.find((link) => link.modules.has(found.module) && link.names.has(found.name));
@@ -462,7 +571,7 @@ const ownerOf = (ctx: ReactExtractContext, call: TsNode): IndexedFunction | unde
   return undefined;
 };
 
-const navigationRow = (ctx: ReactExtractContext, file: string, line: number, symbol: string, landing: Exclude<Landing, { kind: 'page' }>, unplaced = 0): void => {
+const navigationRow = (ctx: ReactExtractContext, file: string, line: number, symbol: string, landing: Exclude<Landing, { kind: 'page' | 'branches' }>, unplaced = 0): void => {
   if (landing.kind === 'external') {
     ctx.report({
       file,
@@ -541,18 +650,34 @@ export const drawNavigations = (
   /** How many of the application's routes are written in a way not read, so a page may exist that was not placed. */
   unplaced = 0,
 ): void => {
+  // Every navigation from one function to one page, drawn as one edge once all are read (P291).
+  const landed = new Map<string, { from: IndexedFunction; to: IndexedFunction; each: Array<{ file: string; line: number; meta: Record<string, unknown> }> }>();
   const land = (from: IndexedFunction, file: string, line: number, landing: Landing, extra: Record<string, unknown>): void => {
+    if (landing.kind === 'branches') {
+      for (const each of landing.landings) land(from, file, line, each, extra);
+      return;
+    }
     if (landing.kind !== 'page') {
       navigationRow(ctx, file, line, from.name, landing, unplaced);
       return;
     }
-    edge(from, landing.page.fn, file, line, {
-      [NAVIGATES_META]: landing.written,
-      route: landing.page.route,
-      page: landing.page.file,
-      ...(landing.by === 'name' ? { byName: true } : {}),
-      ...(landing.guessed === true ? { branch: true } : {}),
-      ...extra,
+    if (from.id === landing.page.fn.id) return;
+    if (landing.localePrefix !== undefined) localizedRow(ctx, file, line, from.name, landing);
+    const key = `${from.id}\u0000${landing.page.fn.id}`;
+    const pair = landed.get(key) ?? { from, to: landing.page.fn, each: [] };
+    landed.set(key, pair);
+    pair.each.push({
+      file,
+      line,
+      meta: {
+        [NAVIGATES_META]: landing.written,
+        route: landing.page.route,
+        page: landing.page.file,
+        ...(landing.by === 'name' ? { byName: true } : {}),
+        ...(landing.guessed === true ? { branch: true } : {}),
+        ...(landing.localePrefix === undefined ? {} : { localePrefix: landing.localePrefix }),
+        ...extra,
+      },
     });
   };
   const linkTags = nuxt ? LINK_TAGS : VUE_ROUTER_LINK_TAGS;
@@ -645,6 +770,35 @@ export const drawNavigations = (
       if (landing !== undefined) land(component, file, tag.line, landing, { link: tag.name });
     }
   }
+
+  // One edge per function and page (P291): the navigation written outright
+  // where there is one, so a guess elsewhere does not weaken it, and every
+  // other address written to the same page in `meta.alsoNavigates`.
+  for (const { from, to, each } of landed.values()) {
+    const primary = each.find((one) => navigationConfidence(one.meta) === 'static') ?? (each[0] as (typeof each)[number]);
+    const written = primary.meta[NAVIGATES_META];
+    const also = [...new Set(each.map((one) => one.meta[NAVIGATES_META]).filter((other): other is string => typeof other === 'string' && other !== written))].sort();
+    edge(from, to, primary.file, primary.line, { ...primary.meta, ...(also.length === 0 ? {} : { alsoNavigates: also }) });
+  }
+};
+
+/**
+ * The note beside a navigation joined across a locale prefix (P291): the
+ * address is written without the locale, the application's middleware or
+ * routing configuration puts it in front, and the page is the one under the
+ * locale segment.
+ */
+const localizedRow = (ctx: ReactExtractContext, file: string, line: number, symbol: string, landing: PageLanding): void => {
+  ctx.report({
+    file,
+    line,
+    reason: 'navigation-locale-prefixed',
+    level: 'info',
+    symbol: `${symbol} navigates to ${landing.written}`,
+    message: `${file} navigates to ${landing.written}, written without the locale the application's middleware puts in front, so it is joined to ${landing.page.route}, the page under ${landing.localePrefix ?? 'the locale segment'}`,
+    hint: 'Nothing to do: the middleware or the routing configuration that adds the locale is what places the page; the join is heuristic.',
+    meta: { cause: 'navigation-locale-prefixed', navigates: landing.written, route: landing.page.route },
+  });
 };
 
 /** What `:to="..."` names: a quoted address, a template of one, `{ name: '...' }`, or code. */

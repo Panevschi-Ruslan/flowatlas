@@ -7,7 +7,7 @@ import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { svelteMarkupTags, vueTemplateTags, type MarkupTag } from './events.js';
-import { drawNavigations, nuxtPages } from './navigation.js';
+import { drawNavigations, navigationConfidence, nuxtPages } from './navigation.js';
 import { asyncComponentFile, installedPlugins, librarySettingsOf, libraryOf, type InstalledPlugins } from './registrations.js';
 
 /**
@@ -245,7 +245,7 @@ export const drawChildren = (
     ctx.ensureFunctionNode(from.fn);
     ctx.ensureFunctionNode(to.fn);
     // A page reached through a branch nothing written decides is one of two the build may make (P288).
-    ctx.builder.addEdge({ from: from.id, to: to.id, type: 'calls', confidence: meta['branch'] === true ? 'heuristic' : 'static', file, line, meta });
+    ctx.builder.addEdge({ from: from.id, to: to.id, type: 'calls', confidence: navigationConfidence(meta), file, line, meta });
   };
 
   for (const { component, made, script } of components) {

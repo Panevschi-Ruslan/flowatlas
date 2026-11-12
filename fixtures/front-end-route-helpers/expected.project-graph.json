@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T16:14:20.827Z",
+  "builtAt": "2026-11-12T19:08:40.528Z",
   "services": [
     {
       "name": "desk",
@@ -969,6 +969,19 @@
       }
     },
     {
+      "from": "console#src/app/queue.component.ts:QueueComponent",
+      "to": "console#src/app/auth.guard.ts:authGuard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 11,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/queue",
+        "order": 0
+      }
+    },
+    {
       "from": "desk#src/routes/index.tsx:Routes",
       "to": "desk#src/lib/paths.ts:adminPath",
       "type": "calls",
@@ -1130,7 +1143,10 @@
         "navigates": "/",
         "route": "/",
         "page": "src/screens/Home.tsx",
-        "branch": true
+        "branch": true,
+        "alsoNavigates": [
+          "/home"
+        ]
       }
     },
     {
@@ -1210,7 +1226,10 @@
         "navigates": "/",
         "route": "/",
         "page": "apps/store/src/app/(app)/[slug]/page.tsx",
-        "link": "Link"
+        "link": "Link",
+        "alsoNavigates": [
+          "/search"
+        ]
       }
     },
     {

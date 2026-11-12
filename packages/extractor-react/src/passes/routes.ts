@@ -5,6 +5,7 @@ import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { componentIn } from '../util/component.js';
+import { listedKey, listEntries } from '../util/list-entries.js';
 import { beforeQuery, holdsHole, spelledPaths } from '../util/path-text.js';
 import { definePass } from './types.js';
 
@@ -73,6 +74,96 @@ const withOptionals = (path: string): string[] => {
 export const routeScreenOf = (ctx: ReactExtractContext, value: TsNode | undefined): IndexedFunction | undefined =>
   value === undefined ? undefined : componentIn(ctx, value);
 
+/** One route a list's entry writes: its path and its screen, as the entry writes them. */
+export interface ListedRoute {
+  readonly path: TsNode | undefined;
+  readonly screen: TsNode | undefined;
+}
+
+/**
+ * The routes a `<Route>` written over a list's items stands for (P291):
+ * `configs.map((config) => <Route path={config.path} component={config.component} />)`
+ * is one route per entry of the list, its path and its screen the entry's
+ * values under the keys the element reads; a screen the element writes
+ * outright is every entry's. Nothing where the path is not read off a list's
+ * item; `unread` counts the items not written as an object in place.
+ */
+export const listedRoutes = (pathValue: TsNode | undefined, screenValue: TsNode | undefined): { readonly routes: readonly ListedRoute[]; readonly unread: number } | undefined => {
+  if (pathValue === undefined) return undefined;
+  const listed = listedKey(pathValue);
+  if (listed === undefined) return undefined;
+  const read = listEntries(listed.list);
+  if (read === undefined) return { routes: [], unread: 1 };
+  const screenKey = screenValue === undefined ? undefined : screenKeyOf(screenValue, listed.parameter);
+  const routes = read.entries.map((entry) => ({
+    path: valueOf(entry, listed.key),
+    screen: screenKey === undefined ? screenValue : screenKey === null ? undefined : valueOf(entry, screenKey),
+  }));
+  return { routes, unread: read.unread };
+};
+
+/** The key of a list's item a screen is read from, `null` for another list's item, `undefined` for a screen written outright. */
+const screenKeyOf = (screen: TsNode, parameter: TsNode): string | null | undefined => {
+  const inner = Node.isJsxExpression(screen) ? screen.getExpression() : screen;
+  if (inner === undefined) return undefined;
+  // `element={<config.Screen />}`: the tag is the item's member.
+  const tag = Node.isJsxSelfClosingElement(inner) ? inner.getTagNameNode() : Node.isJsxElement(inner) ? inner.getOpeningElement().getTagNameNode() : inner;
+  const listed = listedKey(tag);
+  if (listed !== undefined) return listed.parameter === parameter ? listed.key : null;
+  return undefined;
+};
+
+/**
+ * The branches a route element is written under: for each condition
+ * (`cond ? <Switch>a</Switch> : <Switch>b</Switch>`) around it, the condition
+ * and the side, so two pages at one address that only one side each places
+ * are told apart as the build's two choices (P291).
+ */
+const branchesOf = (ctx: ReactExtractContext, node: TsNode): string[] => {
+  const marks: string[] = [];
+  for (let child: TsNode = node, at = node.getParent(); at !== undefined && !Node.isSourceFile(at); child = at, at = at.getParent()) {
+    if (!Node.isConditionalExpression(at) || child === at.getCondition()) continue;
+    marks.push(`${ctx.fileOf(at)}:${at.getStart()}:${child === at.getWhenTrue() ? 'then' : 'else'}`);
+  }
+  return marks;
+};
+
+/** Where a route is written: the conditions around it, and the component whose body writes it. */
+interface Placing {
+  readonly branches: readonly string[];
+  readonly within?: string;
+}
+
+/** The component of this reading whose body a route element is written in, the nearest first. */
+const writtenWithin = (ctx: ReactExtractContext, node: TsNode): string | undefined => {
+  for (let at = node.getParent(); at !== undefined && !Node.isSourceFile(at); at = at.getParent()) {
+    if (Node.isFunctionLikeDeclaration(at) || Node.isVariableDeclaration(at)) {
+      const indexed = ctx.functions.get(at as never);
+      if (indexed !== undefined && indexed.role === 'component') return indexed.id;
+    }
+  }
+  return undefined;
+};
+
+const placingOf = (ctx: ReactExtractContext, node: TsNode, within = writtenWithin(ctx, node)): Placing => ({
+  branches: branchesOf(ctx, node),
+  ...(within === undefined ? {} : { within }),
+});
+
+/** How each page's addresses were placed, by the function's id and the address (P291). */
+const ROUTE_PLACINGS = new WeakMap<object, Map<string, Map<string, { branches: readonly string[]; within: Set<string> }>>>();
+
+/**
+ * How a page was placed at an address (P291): the conditions it was placed
+ * under, as `branchesOf` writes them, none where it was placed outright once;
+ * and the components whose bodies write a route placing it, so a page placed
+ * by routes nested in another page's component is told apart from that one.
+ */
+export const routePlacingOf = (ctx: ReactExtractContext, id: string, path: string): { readonly branches: readonly string[]; readonly within: readonly string[] } => {
+  const found = ROUTE_PLACINGS.get(ctx.builder)?.get(id)?.get(path);
+  return { branches: found?.branches ?? [], within: [...(found?.within ?? [])].sort() };
+};
+
 /**
  * The address a page of Next's older router is shown at, or nothing: only a
  * file under the application's own `pages/` (or `src/pages/`), not under
@@ -115,7 +206,9 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
   const routed = new Map<string, Set<string>>();
 
   const guessed = new Map<string, Set<string>>();
-  const claim = (indexed: IndexedFunction | undefined, path: string, placed = false, branch = false): void => {
+  const placings = new Map<string, Map<string, { branches: readonly string[]; within: Set<string> }>>();
+  ROUTE_PLACINGS.set(ctx.builder, placings);
+  const claim = (indexed: IndexedFunction | undefined, path: string, placed = false, branch = false, placing: Placing = { branches: [] }): void => {
     // A file a router places is a screen whatever it returns: a page that only redirects is still the page at that address (P276).
     if (indexed === undefined || (indexed.role !== 'component' && !placed)) return;
     const paths = routed.get(indexed.id);
@@ -124,9 +217,15 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
     if (paths === undefined) routed.set(indexed.id, new Set([path]));
     else paths.add(path);
     if (branch) guessed.set(indexed.id, new Set([...(guessed.get(indexed.id) ?? []), path]));
+    // Placed at an address outright once, a page is there whichever way a condition goes.
+    const byPath = placings.get(indexed.id) ?? new Map<string, { branches: readonly string[]; within: Set<string> }>();
+    placings.set(indexed.id, byPath);
+    const before = byPath.get(path);
+    const within = new Set([...(before?.within ?? []), ...(placing.within === undefined ? [] : [placing.within])]);
+    byPath.set(path, { branches: before === undefined ? placing.branches : before.branches.filter((mark) => placing.branches.includes(mark)), within });
   };
-  const claimAll = (indexed: IndexedFunction | undefined, paths: ReturnType<typeof routePathsOf>): void => {
-    for (const each of paths ?? []) claim(indexed, each.path, false, each.guessed === true);
+  const claimAll = (indexed: IndexedFunction | undefined, paths: ReturnType<typeof routePathsOf>, placing?: Placing): void => {
+    for (const each of paths ?? []) claim(indexed, each.path, false, each.guessed === true, placing);
   };
 
   for (const sourceFile of ctx.project.getSourceFiles()) {
@@ -138,7 +237,7 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
       if (Node.isObjectLiteralExpression(node)) {
         const paths = routePathsOf(valueOf(node, 'path'));
         if (paths === undefined) return;
-        claimAll(routeScreenOf(ctx, valueOf(node, 'element') ?? valueOf(node, 'Component')), paths);
+        claimAll(routeScreenOf(ctx, valueOf(node, 'element') ?? valueOf(node, 'Component')), paths, placingOf(ctx, node));
         return;
       }
       // The element form: `<Route path="/orders" element={<Orders />} />`.
@@ -150,9 +249,18 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
       if (attributes === undefined) return;
       const tag = Node.isJsxSelfClosingElement(node) ? node.getTagNameNode() : (node as never as { getTagNameNode(): TsNode }).getTagNameNode();
       if (tag.getText() !== 'Route') return;
-      const paths = routePathsOf(attributeOf(attributes, ['path']));
+      const pathValue = attributeOf(attributes, ['path']);
+      const screenValue = attributeOf(attributes, ['element', 'Component', 'component']);
+      const placing = placingOf(ctx, node);
+      // A route written over a list's items: one route per entry (P291).
+      const listed = listedRoutes(pathValue, screenValue);
+      if (listed !== undefined) {
+        for (const route of listed.routes) claimAll(routeScreenOf(ctx, route.screen), routePathsOf(route.path), placing);
+        return;
+      }
+      const paths = routePathsOf(pathValue);
       if (paths === undefined) return;
-      claimAll(routeScreenOf(ctx, attributeOf(attributes, ['element', 'Component', 'component'])), paths);
+      claimAll(routeScreenOf(ctx, screenValue), paths, placing);
     });
   }
 

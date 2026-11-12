@@ -720,6 +720,36 @@ navigates, or hands back `router.createUrlTree([...])` or
 carries `meta.redirects: true`, as does the same in a class's method
 (`fixtures/front-end-route-helpers`).
 
+Routes and navigations P288 left open are read too (P291). A route table
+written over a list's items (`configs.map((config) => <Route
+path={config.path} component={config.component} />)`, the list a hook, a
+`const` or a function of the repository hands back, through `filter`,
+`useMemo(() => [...])` and what is `push`ed or `splice`d onto it) places one
+page per entry; an entry written as code counts toward `unplaced`. Pages
+placed at one address each under its own side of a condition nothing written
+decides (`env.X ? <Switch>a</Switch> : <Switch>b</Switch>`) are the build's
+two choices, not a clash: a navigation to the address lands on each, its
+edges `heuristic` with `meta.branch: true`, where it was an `ambiguous` row.
+In a Next application whose pages sit under one dynamic segment at the top
+(`app/[locale]/search`) and which declares a middleware that puts it in front
+(next-intl's, or one of its own that reads the segment and rewrites or
+redirects), a rewrite in its configuration naming it, or a package that routes
+by locale, an address written without the prefix (`/search`) lands on the page
+under it: a `heuristic` edge with `meta.localePrefix` and a
+`navigation-locale-prefixed` note (info); an address that starts with a value
+or a locale (`/fr`) fits as written. The `Link`, `useRouter` and `redirect`
+next-intl's `createNavigation(routing)` hands out in a module of the
+application are navigations wherever they are imported, under any name. Two navigations from one function to one
+page stay one edge, the one written outright before a guess, every other
+address in `meta.alsoNavigates`. An Angular route's guards and resolvers are
+drawn in front of its screen: each `canMatch`, a parent's `canActivateChild`,
+`canActivate` (its own and the routes' it is nested in) and `resolve` is a
+`calls` edge from the screen with `meta.guard` and `meta.order` - a guard
+class's method of that name, a functional guard's function, a factory's call
+(`meta.factory`), a guard written in place a function node named by its kind
+and line - and a functional guard's calls on `inject(Service)` are its edges
+on (`fixtures/front-end-route-branches`).
+
 A factory that does more than hand back its object of functions keeps its own
 body as a scope, and a call written in one of the object's members is now held
 by the member alone, not by both (P288).

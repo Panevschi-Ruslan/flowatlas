@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T16:14:20.827Z",
+  "builtAt": "2026-11-12T19:08:40.528Z",
   "configHash": "bc7eb680f0b5",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1025,
+      "durationMs": 3135,
       "packages": {
         "name": "front-end-route-helpers-catalog",
         "runtime": [
@@ -29,10 +29,10 @@
       "type": "angular",
       "extractor": "@flowatlas/extractor-angular",
       "nodes": 9,
-      "edges": 4,
+      "edges": 5,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 990,
+      "durationMs": 3055,
       "packages": {
         "name": "front-end-route-helpers-console",
         "runtime": [
@@ -53,7 +53,7 @@
       "edges": 16,
       "types": 0,
       "unresolved": 8,
-      "durationMs": 1031,
+      "durationMs": 3141,
       "packages": {
         "name": "front-end-route-helpers-desk",
         "runtime": [
@@ -75,7 +75,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 990,
+      "durationMs": 3054,
       "packages": {
         "name": "front-end-route-helpers-panel",
         "runtime": [
@@ -94,7 +94,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 991,
+      "durationMs": 3057,
       "packages": {
         "name": "front-end-route-helpers-sites",
         "runtime": [
@@ -113,7 +113,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1007,
+      "durationMs": 3127,
       "packages": {
         "name": "front-end-route-helpers-stand",
         "runtime": [],
@@ -171,7 +171,7 @@
   ],
   "totals": {
     "nodes": 52,
-    "edges": 34,
+    "edges": 35,
     "types": 0,
     "missed": 18,
     "sites": 19,
