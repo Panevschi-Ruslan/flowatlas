@@ -13,6 +13,7 @@ import { settingsAfter, whereFound, type BaseUrlAnswer, type FoundValue } from '
 import { localGraphqlEndpoint, sendsOperation, undecidedFinding, unservedFinding } from './graphql-value.js';
 import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
 import { defaultPortOf, forwardedAgain, proxyChainFinding, PROXY_HOPS, type Forward } from './proxy-forward.js';
+import { servesRequest, withGlobalPrefix, type ServesRequest } from './request-served.js';
 import { apiServedAt, servedAmbiguousFinding, servedAtFinding } from './served-at-link.js';
 
 /** A reason, a sentence and what to do about it — everything but where it happened. */
@@ -76,9 +77,10 @@ export interface RouteIndex {
    * The one configured service a host is reached at, and whether the
    * configuration says so or only the services' own setting files do: the
    * lookup a browser request's host is asked of (P239), asked of a request
-   * between services too (P244).
+   * between services too (P244). A port only a framework's assumed default
+   * answers places a request only where that service serves it (P300).
    */
-  serviceAtHost?(host: string, defaultPort?: number): PortAnswer | undefined;
+  serviceAtHost?(host: string, defaultPort?: number, serves?: ServesRequest): PortAnswer | undefined;
   /** How a service's server forwards a path to another server, where its proxy does (P257). */
   forwardOf?(service: string, path: string): Forward | undefined;
   /** How a cluster's way in forwards a request to a public host, where one does (P260). */
@@ -487,14 +489,6 @@ const chooseAmong = (routes: readonly GraphNode[], candidates: readonly string[]
     name,
   );
 
-/** A caller may leave out a prefix the service adds to all of its routes. */
-const withGlobalPrefix = (path: string, routes: readonly GraphNode[]): string | undefined => {
-  const prefix = routes
-    .map((route) => route.meta?.['globalPrefix'])
-    .find((value) => typeof value === 'string');
-  return typeof prefix === 'string' ? `/${prefix}/${path}`.replace(/\/+/g, '/') : undefined;
-};
-
 /**
  * Decides where one outgoing request goes.
  *
@@ -655,6 +649,10 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
       })
       .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 
+  /** Whether a service serves this request at one of the paths, for a port only a framework assumes (P300). */
+  const servesAt = (paths: readonly string[]): ServesRequest | undefined =>
+    verbRead ? servesRequest((service) => index.routesOf(service), { method, paths, operation: sendsOperation(call), call }) : undefined;
+
   const single = index.markerOf(call.id);
   const markers = index.markersOf?.(call.id) ?? (single === undefined ? [] : [single]);
   const reached: Array<{ entry: GraphNode; runnersUp: readonly string[]; mountAssumed?: readonly string[]; guessed?: true }> = [];
@@ -720,7 +718,7 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
    * party where no service is reached there.
    */
   const throughProxy = (service: string, forward: Forward, passed: readonly string[] = [service]): Resolution => {
-    const found = index.serviceAtHost?.(forward.host, forward.defaultPort);
+    const found = index.serviceAtHost?.(forward.host, forward.defaultPort, servesAt([forward.path]));
     if (found === undefined) return { outcome: { kind: 'external', host: forward.host, proxied: { service, forward } }, notes };
     if (found.kind === 'shared') return { outcome: { kind: 'portShared', port: found.port, said: found.said, services: found.services }, notes };
     if (found.kind === 'closed') return { outcome: { kind: 'portClosed', host: found.host, closed: found.closed }, notes };
@@ -785,7 +783,7 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
       if (own.outcome.kind === 'noRoute' && forward !== undefined) return throughProxy(call.repo, forward);
       return own;
     }
-    const at = typeof host === 'string' ? index.serviceAtHost?.(host, defaultPortOf(call.meta?.['url'])) : undefined;
+    const at = typeof host === 'string' ? index.serviceAtHost?.(host, defaultPortOf(call.meta?.['url']), servesAt(typeof path === 'string' ? [path] : [])) : undefined;
     if (at?.kind === 'shared') return { outcome: { kind: 'portShared', port: at.port, said: at.said, services: at.services }, notes };
     // A port the network does not reach the service at: it will not connect (P257).
     if (at?.kind === 'closed') return { outcome: { kind: 'portClosed', host: at.host, closed: at.closed }, notes };

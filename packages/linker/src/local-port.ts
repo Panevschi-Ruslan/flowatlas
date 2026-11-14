@@ -14,6 +14,7 @@ import { GRAPHQL_META } from '@flowatlas/graphql';
 import { servicesAt, type HostIndex } from './base-url-value.js';
 import type { Finding } from './http-link.js';
 import { cmp } from './order.js';
+import type { ServesRequest } from './request-served.js';
 
 /**
  * Which service an address on this machine is, by the port it names (P250).
@@ -380,8 +381,15 @@ export interface PortIndex {
 /**
  * The service an address on this machine reaches, by its port, or nothing
  * where it names no port on this machine or nothing listens there.
+ *
+ * A port only a framework's assumed default answers - every service heard at
+ * it listening there by default, and no file or configuration placing one -
+ * is no evidence which service a request means (P300): it places the request
+ * only where that service serves it (`serves`), and nothing where it does
+ * not, or where nothing says what the request asks. The request is then
+ * joined as it would be with nobody heard at the port.
  */
-export const atLocalPort = (address: string, index: PortIndex): PortAnswer | undefined => {
+export const atLocalPort = (address: string, index: PortIndex, serves?: ServesRequest): PortAnswer | undefined => {
   const port = localPortOf(address);
   if (port === undefined) return undefined;
   const configured = servicesAt(address, index.configured);
@@ -395,7 +403,9 @@ export const atLocalPort = (address: string, index: PortIndex): PortAnswer | und
   // only defaults left together are two services' at once.
   const heard = index.listening.get(port) ?? [];
   const firm = heard.some((each) => each.default !== true) || fromFiles.length > 0;
-  const listening = firm ? heard.filter((each) => each.default !== true || fromFiles.includes(each.service)) : heard;
+  const listening = firm
+    ? heard.filter((each) => each.default !== true || fromFiles.includes(each.service))
+    : heard.filter((each) => serves?.(each.service) === true);
   const services = [...new Set([...fromFiles, ...listening.map((each) => each.service)])].sort(cmp);
   if (services.length === 0) return undefined;
   if (services.length === 1) {

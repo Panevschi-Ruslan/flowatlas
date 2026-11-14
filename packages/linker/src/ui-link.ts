@@ -5,6 +5,7 @@ import { MARKER_FINDINGS, pathOfValue, unreadRouteFinding, type Finding } from '
 import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
 import { defaultPortOf, forwardedAgain, proxiedOutFinding, proxyChainFinding, PROXY_HOPS, type Forward } from './proxy-forward.js';
 import { cmp } from './order.js';
+import { servesRequest, type ServesRequest } from './request-served.js';
 import { apiServedAt, servedAmbiguousFinding, type ServedApi } from './served-at-link.js';
 import {
   behindUnread,
@@ -41,9 +42,10 @@ export interface UiIndex {
   /**
    * The one configured service a host is reached at, and whether the
    * configuration says so (its name, an alias, `services[].hosts`) or only the
-   * services' own setting files do (P239).
+   * services' own setting files do (P239). A port only a framework's assumed
+   * default answers places a request only where that service serves it (P300).
    */
-  serviceAtHost?(host: string, defaultPort?: number): PortAnswer | undefined;
+  serviceAtHost?(host: string, defaultPort?: number, serves?: ServesRequest): PortAnswer | undefined;
   /** How a service's server forwards a path to another server, where its proxy does (P257). */
   forwardOf?(service: string, path: string): Forward | undefined;
   /** How a cluster's way in forwards a request to a public host, where one does (P260). */
@@ -270,6 +272,10 @@ interface Ask {
   index: UiIndex;
 }
 
+/** Whether a service serves the request at a path, for a port only a framework assumes (P300). */
+const servesAsked = (ask: Ask, path: string): ServesRequest =>
+  servesRequest((service) => ask.index.routesOf(service), { method: ask.method, paths: [path], operation: sendsOperation(ask.call), call: ask.call });
+
 /**
  * The service an annotation names, `@flowatlas-calls catalog GET /items`, by
  * its name or an alias (P127).
@@ -369,7 +375,7 @@ const byHost = (ask: Ask): UiOutcome | undefined => {
   // service behind it, whoever else the host names (P260).
   const way = index.ingressOf?.(host, ask.path);
   if (way !== undefined) return forwarded(ask, host, way);
-  const found = index.serviceAtHost?.(host, defaultPortOf(call.meta?.['url']));
+  const found = index.serviceAtHost?.(host, defaultPortOf(call.meta?.['url']), servesAsked(ask, ask.path));
   if (found === undefined) return undefined;
   // Two services listen on the port this machine's address names (P250): no
   // way below may pick one of them by its route.
@@ -418,7 +424,7 @@ const byServedAt = (ask: Ask): UiOutcome | undefined => {
  * party, said as one.
  */
 const forwarded = (ask: Ask, service: string, forward: Forward, passed: readonly string[] = [service]): UiOutcome => {
-  const found = ask.index.serviceAtHost?.(forward.host, forward.defaultPort);
+  const found = ask.index.serviceAtHost?.(forward.host, forward.defaultPort, servesAsked(ask, forward.path));
   if (found === undefined) return { kind: 'proxiedOut', service, forward };
   if (found.kind === 'shared') return { kind: 'portShared', port: found.port, said: found.said, services: found.services };
   if (found.kind === 'closed') return { kind: 'portClosed', host: found.host, closed: found.closed };

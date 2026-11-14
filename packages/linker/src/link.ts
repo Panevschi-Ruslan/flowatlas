@@ -35,6 +35,8 @@ import {
   type RouteIndex,
 } from './http-link.js';
 import { servedAtFinding } from './served-at-link.js';
+import { pathsUnder, servesRequest } from './request-served.js';
+import { sendsOperation } from './graphql-value.js';
 import { joinDeployments } from './deployment-link.js';
 import { joinImports } from './import-link.js';
 import { keepWhereDeclared } from './declared-link.js';
@@ -667,7 +669,9 @@ const subgraphServiceOf = (
   if (route.baseUrlEnv === undefined) {
     // A port on this machine is the service whose server listens on it (P245),
     // by the one lookup every request to this machine is asked of (P250).
-    const local = route.url === undefined ? undefined : atLocalPort(route.url, hosts);
+    // A port only a framework assumes places it where that service serves the operation at the path (P300).
+    const serves = servesRequest((service) => index.routesOf(service), { method: 'POST', paths: route.path === undefined ? [] : [route.path], operation: true });
+    const local = route.url === undefined ? undefined : atLocalPort(route.url, hosts, serves);
     if (local?.kind === 'service') return { service: local.service, confidence: local.sure ? 'static' : 'heuristic' };
     if (local?.kind === 'shared') return { why: portSharedFinding(local.port, local.said).message };
     const at = route.url === undefined ? undefined : servicesAt(route.url, hosts.all);
@@ -742,9 +746,9 @@ const hostLookup = (hosts: PortIndex): NonNullable<UiIndex['serviceAtHost']> => 
     const listening = inNetworkAt(host, service, hosts, defaultPort);
     return { kind: 'service', service, sure, ...(listening === undefined ? {} : { listening }) };
   };
-  return (host, defaultPort) => {
+  return (host, defaultPort, serves) => {
     const address = `http:${'/'.repeat(2)}${host}`;
-    const local = atLocalPort(address, hosts);
+    const local = atLocalPort(address, hosts, serves);
     if (local !== undefined) return local;
     const named = one(servicesAt(address, hosts.configured));
     if (named !== undefined) return placed(named, true, host, defaultPort);
@@ -778,14 +782,22 @@ const baseUrlLookup = (
   config: FlowatlasConfig,
   settings: Readonly<Record<string, RepoSettings>>,
   ports: PortIndex,
+  routesOf: (service: string) => readonly GraphNode[] | undefined,
 ): RouteIndex['baseUrlOf'] => {
   if (config.settingFiles.read === false) return undefined;
   const hosts = hostIndexOf(config, settings);
   // The services at an address's port on this machine, the ports their code
   // listens on among them (P292); a front end's dev server forwards what it
-  // does not serve, so it places nothing here (P254).
-  const atPort = (address: string): readonly string[] | undefined => {
-    const found = atLocalPort(address, ports);
+  // does not serve, so it places nothing here (P254). A port only a
+  // framework assumes places the request where that service serves it at the
+  // value's path or its own (P300).
+  const atPortFor = (call: GraphNode) => (address: string): readonly string[] | undefined => {
+    const stated = call.meta?.['method'];
+    const serves =
+      stated === null
+        ? undefined
+        : servesRequest(routesOf, { method: typeof stated === 'string' ? stated : 'GET', paths: pathsUnder(address, call.meta?.['path']), operation: sendsOperation(call), call });
+    const found = atLocalPort(address, ports, serves);
     if (found?.kind === 'shared') return found.services;
     return found?.kind === 'service' && found.listening?.devServer !== true ? [found.service] : undefined;
   };
@@ -805,7 +817,7 @@ const baseUrlLookup = (
       runners: runnersOf.get(call.id) ?? [],
       ...(own === undefined ? {} : { settings: own }),
       hosts,
-      atPort,
+      atPort: atPortFor(call),
       services: names,
     });
   };
@@ -980,7 +992,7 @@ export const linkGraphs = (
   // One lookup for both halves of a call: a browser's request is placed by its
   // setting's values and, where they settle nothing, its name, as one between
   // services is (P292).
-  const valuedBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, hosts);
+  const valuedBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, hosts, (service) => routesByService.get(service));
   const index: RouteIndex = {
     ...buildRouteIndex(nodes, edges.values(), config, routesByService, servicesByEnv),
     functionUrlsOf: (callId) => urls.get(callId) ?? [],
