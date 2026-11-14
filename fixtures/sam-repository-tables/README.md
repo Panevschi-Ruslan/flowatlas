@@ -19,3 +19,7 @@ rather than at the base class's one `send`, where the table is a field nothing
 there names. Before P289 the field was read where it is written, the three
 writes were no producer (a table write is one only where its table is read),
 and every stream carried a `stream-no-writer` note.
+
+Since P299 the data reader's `db-layer-unread` rows on `Repository` and
+`Store` ("nothing was read through it") are withdrawn: the writes above are
+read through both.

@@ -15,7 +15,7 @@ import { classMembersOf } from '../di/class-members.js';
 import { functionOf, methodNamedOn } from '../di/member-call.js';
 import { evaluateExpression } from '../static-value.js';
 import { registryOf } from '../stated-origin.js';
-import { returnedExpression } from '../trace.js';
+import { callSitesOf, returnedExpression } from '../trace.js';
 
 /**
  * Where a library writes the name of the thing a call is addressed to.
@@ -1193,6 +1193,8 @@ const writtenProperty = (record: ObjectLiteralExpression, key: string, bound: Bi
       // building it answers - holds the key or does not, and one that does
       // not leaves it to what is written before it (P286).
       const spread = depth > MOST_NESTED ? undefined : followValue(property.getExpression(), bound, depth + 1);
+      // A parameter no caller hands the key in leaves it to what is written before it (P299).
+      if (spread !== undefined && spread.choices === undefined && spreadParameterSilent(spread, key, depth)) continue;
       if (spread === undefined || spread.choices !== undefined || !Node.isObjectLiteralExpression(spread.value)) {
         return stopped(property.getExpression());
       }
@@ -1401,9 +1403,152 @@ const stepInto = (expression: TsNode, step: string, bound: Bindings): LocatedSlo
     if (elements.length <= Number(step) || element === undefined || elements.some((each) => Node.isSpreadElement(each))) return halt();
     return [carrying({ expression: element, reached: true }, followed.bound)];
   }
+  // `Object.assign({ TableName: table, ... }, extra)`: the record it answers (P299).
+  const sources = step === EVERY_KEY || step === EVERY_ELEMENT || isIndex(step) ? undefined : assignedSources(value);
+  if (sources !== undefined) {
+    return [assignedProperty(sources, step, followed.bound, 0)];
+  }
   if (!Node.isObjectLiteralExpression(value)) return halt();
   if (step === EVERY_KEY) return value.getProperties().map((property) => carrying(writtenKey(property), followed.bound));
   return [writtenProperty(value, step, followed.bound)];
+};
+
+/** A record spread in that is a parameter no caller hands the key in (P299). */
+const spreadParameterSilent = (spread: Followed, key: string, depth: number): boolean => {
+  const declaration = declarationNamed(peeled(spread.value));
+  return (
+    declaration !== undefined &&
+    Node.isParameterDeclaration(declaration) &&
+    !spread.bound.has(declaration) &&
+    !callersMayWrite(declaration, key, depth + 1)
+  );
+};
+
+/**
+ * The records `Object.assign(target, ...sources)` copies, the target first:
+ * the record it answers holds each key of the last of them that writes it.
+ */
+const assignedSources = (value: TsNode): TsNode[] | undefined => {
+  if (!Node.isCallExpression(value)) return undefined;
+  if (peeled(value.getExpression()).getText().replace(/\s+/g, '') !== 'Object.assign') return undefined;
+  const handed = value.getArguments();
+  return handed.length === 0 ? undefined : handed;
+};
+
+/** Whether a value is written as nothing: `undefined`, `null`, or `void` of anything. */
+const isNothing = (node: TsNode): boolean =>
+  node.getKind() === SyntaxKind.NullKeyword ||
+  node.getKind() === SyntaxKind.UndefinedKeyword ||
+  Node.isVoidExpression(node) ||
+  (Node.isIdentifier(node) && node.getText() === 'undefined');
+
+/** The function callers call, for a parameter of it: a method, a named function, or the `const` holding an arrow. */
+const callableOf = (parameter: ParameterDeclaration): Parameters<typeof callSitesOf>[0] | undefined => {
+  const owner = parameter.getParent();
+  if (Node.isMethodDeclaration(owner)) return owner;
+  if (Node.isFunctionDeclaration(owner)) return owner.getName() === undefined ? undefined : owner;
+  if (!Node.isArrowFunction(owner) && !Node.isFunctionExpression(owner)) return undefined;
+  const holder = owner.getParent();
+  if (Node.isPropertyDeclaration(holder)) return holder;
+  return Node.isVariableDeclaration(holder) && isConstDeclaration(holder) ? holder : undefined;
+};
+
+/** What each parameter met was found to write of a key, worked out once per parameter and key. */
+const CALLERS_WRITE = new WeakMap<ParameterDeclaration, Map<string, boolean>>();
+
+/**
+ * Whether any caller may hand a parameter a record writing a key (P299).
+ *
+ * `Object.assign({ TableName: table }, extra)` keeps the literal's table
+ * unless `extra` writes one, and `extra` is what each caller hands: a caller
+ * handing nothing, `undefined`, or a record written out without the key
+ * leaves it as it was. Any other value - a record not written out, a key
+ * computed, a function nothing names the callers of - may write it, and so
+ * may a function no call names at all, which is read where it is.
+ */
+const callersMayWrite = (parameter: ParameterDeclaration, key: string, depth: number): boolean => {
+  const known = CALLERS_WRITE.get(parameter)?.get(key);
+  if (known !== undefined) return known;
+  const answer = ((): boolean => {
+    if (parameter.getDotDotDotToken() !== undefined) return true;
+    const callable = callableOf(parameter);
+    const owner = parameter.getParent();
+    if (callable === undefined || !Node.isParametered(owner)) return true;
+    const index = owner.getParameters().indexOf(parameter);
+    const sites = callSitesOf(callable);
+    if (sites.length === 0) return true;
+    return sites.some((site) => {
+      const handed = site.getArguments();
+      if (handed.slice(0, index + 1).some((each) => Node.isSpreadElement(each))) return true;
+      const argument = handed[index];
+      if (argument === undefined) {
+        const initial = parameter.getInitializer();
+        return initial === undefined ? false : sourceMayWrite(initial, key, NO_BINDINGS, depth + 1);
+      }
+      return sourceMayWrite(argument, key, NO_BINDINGS, depth + 1);
+    });
+  })();
+  const keys = CALLERS_WRITE.get(parameter) ?? new Map<string, boolean>();
+  keys.set(key, answer);
+  CALLERS_WRITE.set(parameter, keys);
+  return answer;
+};
+
+/** Whether a value handed as a source of a record may write a key: anything not known to leave it as it was. */
+const sourceMayWrite = (source: TsNode, key: string, bound: Bindings, depth: number): boolean => {
+  if (depth > MOST_NESTED) return true;
+  const followed = followValue(source, bound, depth + 1);
+  if (followed.choices !== undefined) return followed.choices.some((choice) => sourceMayWrite(choice.value, key, choice.bound, depth + 1));
+  const value = peeled(followed.value);
+  if (isNothing(value)) return false;
+  if (Node.isObjectLiteralExpression(value)) return writtenProperty(value, key, followed.bound, depth + 1) !== undefined;
+  const nested = assignedSources(value);
+  if (nested !== undefined) return nested.some((each) => Node.isSpreadElement(each) || sourceMayWrite(each, key, followed.bound, depth + 1));
+  const declaration = declarationNamed(value);
+  if (declaration !== undefined && Node.isParameterDeclaration(declaration) && !followed.bound.has(declaration)) {
+    return callersMayWrite(declaration, key, depth + 1);
+  }
+  return true;
+};
+
+/**
+ * What the record `Object.assign` answers holds under one key (P299): the
+ * last source that writes it, each read as a spread is read. A source that
+ * is a parameter no caller hands the key in leaves it to the sources before
+ * it; one a caller may write it in stops the walk there, at the parameter,
+ * which a reader of each caller reads again with it bound.
+ */
+const assignedProperty = (sources: readonly TsNode[], key: string, bound: Bindings, depth: number): LocatedSlot => {
+  for (let index = sources.length - 1; index >= 0; index -= 1) {
+    const source = sources[index];
+    if (source === undefined) continue;
+    if (Node.isSpreadElement(source) || depth > MOST_NESTED) return stopped(source);
+    const followed = followValue(source, bound, depth + 1);
+    if (followed.choices !== undefined) {
+      if (followed.choices.some((choice) => sourceMayWrite(choice.value, key, choice.bound, depth + 1))) return stopped(source);
+      continue;
+    }
+    const value = peeled(followed.value);
+    if (isNothing(value)) continue;
+    if (Node.isObjectLiteralExpression(value)) {
+      const inner = writtenProperty(value, key, followed.bound, depth + 1);
+      if (inner === undefined) continue;
+      return inner;
+    }
+    const nested = assignedSources(value);
+    if (nested !== undefined) {
+      const inner = assignedProperty(nested, key, followed.bound, depth + 1);
+      if (inner === undefined) continue;
+      return inner;
+    }
+    const declaration = declarationNamed(value);
+    if (declaration !== undefined && Node.isParameterDeclaration(declaration) && !followed.bound.has(declaration)) {
+      if (!callersMayWrite(declaration, key, depth + 1)) continue;
+      return { expression: source, reached: false, selector: declaration };
+    }
+    return stopped(source);
+  }
+  return undefined;
 };
 
 /**

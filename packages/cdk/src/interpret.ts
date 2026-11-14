@@ -16,6 +16,8 @@ import {
   FunctionValue,
   NodeHandle,
   ObjectValue,
+  PRINCIPAL_ATTRIBUTES,
+  principalHolders,
   Scope,
   textOf,
   toJson,
@@ -549,9 +551,9 @@ export class Interpreter {
       if (receiver.key === 'aws-iam.Grant' && GRANT_TO_PRINCIPAL.has(name) && args[0] instanceof ObjectValue) {
         const options = args[0];
         const grantee = options.get('grantee');
-        const holder = grantee instanceof Construct ? grantee : grantee instanceof Attribute && (grantee.name === 'role' || grantee.name === 'grantPrincipal') ? grantee.construct : undefined;
         const statement = new Built('aws-iam.PolicyStatement', [new ObjectValue([['actions', options.get('actions')], ['resources', options.get('resourceArns')]])], site);
-        holder?.add('addToRolePolicy', [statement], site, frame.conditional);
+        // A `CompositePrincipal` is granted on each of its members (P299).
+        for (const holder of principalHolders(grantee)) holder.add('addToRolePolicy', [statement], site, frame.conditional);
       }
       return staticCall(receiver.member(name), args, site);
     }
@@ -573,6 +575,17 @@ export class Interpreter {
       const made = constructMethod(receiver, name, args, site, frame);
       if (made instanceof Construct && !this.constructs.includes(made)) this.constructs.push(made);
       return made;
+    }
+    // What is added to a construct's role through it, `fn.role?.addManagedPolicy(...)`, is kept on the construct as `role.<method>` (P299).
+    if (receiver instanceof Attribute && PRINCIPAL_ATTRIBUTES.has(receiver.name) && ROLE_METHODS.has(name)) {
+      receiver.construct.add(`role.${name}`, args, site, frame.conditional);
+      return undefined;
+    }
+    // A `CompositePrincipal` keeps the members added to it after it is built (P299).
+    if (receiver instanceof Built && receiver.what === 'aws-iam.CompositePrincipal' && name === 'addPrincipals') {
+      const added = receiver.state.get('principals');
+      receiver.state.set('principals', [...(Array.isArray(added) ? added : []), ...args]);
+      return receiver;
     }
     if (receiver instanceof Built) return isChainable(receiver) ? chainMethod(receiver, name, args, site) : new Unread(`${name} of ${receiver.what} is not read`, 'not-read');
     if (receiver instanceof FunctionValue && (name === 'call' || name === 'apply')) return this.callFunction(receiver, name === 'call' ? args.slice(1) : [], frame.self, frame, node);
@@ -758,6 +771,9 @@ export class Interpreter {
     this.#fields(cls, self, frame);
   }
 }
+
+/** The methods of a role, or any principal, that add to what it is allowed (P299). */
+const ROLE_METHODS = new Set(['addToPolicy', 'addToPrincipalPolicy', 'addManagedPolicy', 'attachInlinePolicy']);
 
 /** The calls of `Grant` that add a statement to a grantee's role (P289). */
 const GRANT_TO_PRINCIPAL = new Set(['addToPrincipal', 'addToPrincipalOrResource', 'addToPrincipalAndResource']);

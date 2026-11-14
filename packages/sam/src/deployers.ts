@@ -30,7 +30,9 @@ export type { DeployedValue } from '@flowatlas/serverless';
  *   written; a command launches the stacks it names and every stack they
  *   depend on (`dependencies`, and the stacks a `!stack_output` reads), as
  *   sceptre does; `!ssm` is a parameter of the account, said by its name
- *   (P289).
+ *   (P289). A command written beside another sceptre project that runs
+ *   `sceptre --dir <this project>` launches this one's stacks as one written
+ *   here would; a stack's `hooks` are commands sceptre runs, a row (P299).
  * - **rain**: `rain deploy <template> [<stack>] --params K=V,K2=V2 --config
  *   <file>` written in a script, a recipe, a shell script or a pipeline (see
  *   `commands.ts`) beside the template or above it; the stack is named after
@@ -72,6 +74,8 @@ export interface Deployer {
   readonly varFiles?: readonly string[];
   /** Every file read to know it, repo-relative, for the build cache. */
   readonly read: readonly string[];
+  /** The events a sceptre stack runs hooks on (P299), `before_create` and kin: commands run around the launch, not read. */
+  readonly hooks?: readonly string[];
 }
 
 const textAt = (repoDir: string, file: string): string | undefined => {
@@ -561,9 +565,51 @@ interface SceptreRun {
   readonly mergeVars: boolean;
 }
 
-/** Every sceptre command written around a project that launches its stacks. */
+/**
+ * The other sceptre projects beside a project (P299): every directory holding
+ * both a `config/` and a `templates/` that is a child of the project's
+ * directory's parent or of any directory above it.
+ */
+const projectsBeside = (repoDir: string, root: string): string[] => {
+  const found: string[] = [];
+  for (let at = root; at !== '.' && at !== ''; ) {
+    at = posix.dirname(at);
+    let entries;
+    try {
+      entries = readdirSync(join(repoDir, at), { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries.sort((a, b) => (a.name < b.name ? -1 : 1))) {
+      if (!entry.isDirectory() || entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+      const dir = at === '.' ? entry.name : `${at}/${entry.name}`;
+      if (dir !== root && !found.includes(dir) && isDirectory(join(repoDir, dir, 'config')) && isDirectory(join(repoDir, dir, 'templates'))) found.push(dir);
+    }
+  }
+  return found;
+};
+
+/**
+ * Every command that may launch a project's stacks: the ones written around
+ * it, and the ones written around another sceptre project beside it (P299) -
+ * a recipe there that runs `sceptre --dir ../<project> launch ...` launches
+ * this project's stacks, and what they depend on, as one written here would.
+ */
+const commandsLaunching = (repoDir: string, root: string): Command[] => {
+  const seen = new Set<string>();
+  return [root, ...projectsBeside(repoDir, root)]
+    .flatMap((dir) => commandsAround(repoDir, dir))
+    .filter((command) => {
+      const key = `${command.file}:${command.line}:${command.words.join(' ')}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+};
+
+/** Every sceptre command written around a project, or around another beside it, that launches its stacks. */
 const sceptreRuns = (repoDir: string, root: string): SceptreRun[] =>
-  commandsAround(repoDir, root).flatMap((command): SceptreRun[] => {
+  commandsLaunching(repoDir, root).flatMap((command): SceptreRun[] => {
     const at = command.words.findIndex((word) => /(?:^|\/)sceptre$/.test(word));
     if (at < 0) return [];
     const varFiles: string[] = [];
@@ -742,6 +788,9 @@ const sceptreDeployers = (repoDir: string, template: string, vars: readonly stri
       const stackName = stackNameOf(stack);
       const region = plainOf(stack.own.value['region']) ?? plainOf(stack.settings['region']);
       const run = launch.command === undefined ? '' : ` (${launch.command.label}, ${launch.command.file})`;
+      // A group's hooks are the stack's where it writes none of its own, as sceptre inherits them.
+      const hooksWritten = stack.own.value['hooks'] ?? stack.settings['hooks'];
+      const hooks = isMapping(hooksWritten) ? Object.entries(hooksWritten).filter(([, each]) => (Array.isArray(each) ? each.length > 0 : each !== null && each !== undefined)).map(([event]) => event) : [];
       found.push({
         tool: 'sceptre',
         file,
@@ -755,6 +804,7 @@ const sceptreDeployers = (repoDir: string, template: string, vars: readonly stri
         files: [],
         varFiles: launch.varFiles,
         read: [...new Set([...stack.read, ...launch.varFiles, ...namedFiles, ...resolving.read, ...(launch.command === undefined ? [] : [launch.command.file])])],
+        ...(hooks.length === 0 ? {} : { hooks }),
       });
     }
   }

@@ -272,3 +272,68 @@ describe('the rest of what Jinja templates commonly write, and sceptre dependenc
     expect(deployment.rows.find((row) => row.reason === 'function-name-unread')?.message).toContain('the SSM parameter /shop/prefix');
   });
 });
+
+describe('namespaces, select and groupby, late names, loop.changed and recursive loops, and sceptre commands beside a project and hooks (P299)', () => {
+  const render = (text: string, roots: Record<string, unknown> = {}) => renderJinja(text, lookupIn(roots));
+  const queues = { var: { queues: [{ name: 'jobs', tier: 'b', dlq: true }, { name: 'audit', tier: 'a', dlq: false }, { name: 'mail', tier: 'b' }] } };
+
+  it('keeps what a loop sets on a namespace past the loop, each way its own', () => {
+    expect(render("{% set ns = namespace(found=false, count=0) %}{% for q in var.queues %}{% if q.dlq %}{% set ns.found = true %}{% set ns.count = ns.count + 1 %}{% endif %}{% endfor %}{{ ns.found }} {{ ns.count }}", { var: { queues: [{ dlq: true }, { dlq: false }] } }).text).toBe('True 1');
+    const ways = render("{% set ns = namespace(x='a') %}{% if var.flag %}{% set ns.x = 'b' %}{% endif %}{{ ns.x }}").ways;
+    expect([...ways].sort()).toEqual(['a', 'b']);
+    // Only a namespace takes an attribute: anything else is not run, its statements kept.
+    expect([...render('{% set d = {} %}{% set d.x = 1 %}{{ d }}').unrendered.values()]).toContain('{% set d.x = 1 %}');
+  });
+
+  it('selects and rejects by a test, of the items or of an attribute of each', () => {
+    expect(render("{{ var.queues | selectattr('dlq') | map(attribute='name') | join(',') }} {{ var.queues | rejectattr('dlq') | map(attribute='name') | join(',') }} {{ var.queues | selectattr('tier', 'equalto', 'b') | map(attribute='name') | join(',') }}", queues).text).toBe('jobs audit,mail jobs,mail');
+    expect(render("{{ [1, 2, 3, 4] | select('odd') | join }} {{ [1, 2, 3, 4] | reject('divisibleby', 2) | list | length }} {{ ['a', '', 'b'] | select | join }} {{ [1, 5, 9] | select('>', 3) | join('-') }} {{ var.queues | selectattr('dlq', 'defined') | list | length }}", queues).text).toBe('13 2 ab 5-9 2');
+    expect(render("{% if 6 is divisibleby 3 and 'x' is in ['x'] and 4 is even and none is sameas none %}yes{% endif %}").text).toBe('yes');
+  });
+
+  it('groups by an attribute, sorted, each group read by place or by name', () => {
+    expect(render("{% for tier, items in var.queues | groupby('tier') %}{{ tier }}:{{ items | map(attribute='name') | join('+') }} {% endfor %}", queues).text).toBe('a:audit b:jobs+mail ');
+    expect(render("{% for g in var.queues | groupby(attribute='tier') %}{{ g.grouper }}={{ g.list | length }};{% endfor %}", queues).text).toBe('a=1;b=2;');
+  });
+
+  it('lets a macro read a name its file binds after it, as it is when the macro is called', () => {
+    expect(render("{% macro url(path) %}{{ base }}.{{ path }}{% endmacro %}{% set base = 'api' %}{{ url('orders') }}").text).toBe('api.orders');
+    // A name bound again after the macro is read as it is at the call; a loop's own name is not the macro's.
+    expect(render("{% set base = 'a' %}{% macro m() %}{{ base }}{{ q | default('-') }}{% endmacro %}{% set base = 'b' %}{% for q in [1] %}{{ m() }}{% endfor %}").text).toBe('b-');
+    const files: Record<string, string> = { 'macros.j2': "{% macro url(path) %}{{ base }}.{{ path }}{% endmacro %}{% set base = 'api' %}" };
+    const rendering = renderJinja("{% import 'macros.j2' as m %}{{ m.url('orders') }}", lookupIn({}), 0, { load: (name) => (files[name] === undefined ? undefined : { text: files[name] as string, file: name }) });
+    expect(rendering.text).toBe('api.orders');
+  });
+
+  it('says whether what loop.changed is handed changed since the last item, and keeps the items a loop filters', () => {
+    const roots = { var: { queues: [{ name: 'jobs', tier: 'b' }, { name: 'audit', tier: 'b' }, { name: 'mail', tier: 'a' }, { name: 'push', tier: 'c' }] } };
+    expect(render("{% for q in var.queues if q.name != 'mail' %}{% if loop.changed(q.tier) %}[{{ q.tier }}]{% endif %}{{ q.name }}{{ loop.length }} {% endfor %}", roots).text).toBe('[b]jobs3 audit3 [c]push3 ');
+  });
+
+  it('runs a recursive loop at each depth', () => {
+    const tree = { var: { tree: [{ name: 'shop', children: [{ name: 'orders', children: [{ name: 'lines', children: [] }] }, { name: 'stock', children: [] }] }] } };
+    expect(render('{% for node in var.tree recursive %}{{ node.name }}@{{ loop.depth }}{% if node.children %}({{ loop(node.children) }}){% endif %} {% endfor %}', tree).text).toBe('shop@1(orders@2(lines@3 ) stock@2 ) ');
+  });
+
+  it('launches the stacks a command written beside another project launches, and what they depend on', () => {
+    const queue = "template_path: stack.yaml\nparameters:\n  Prefix: '{{ var.prefix }}'\n  Stage: prod\n";
+    const files = {
+      'infra/shop/templates/stack.yaml': TEMPLATE,
+      'infra/shop/config/config.yaml': 'project_code: shop\nregion: eu-west-1\n',
+      'infra/shop/config/prod/queue.yaml': queue,
+      'infra/shop/config/prod/app.yaml': 'template_path: other.yaml\ndependencies:\n  - prod/queue.yaml\n',
+      'infra/network/templates/vpc.yaml': "AWSTemplateFormatVersion: '2010-09-09'\nResources: {}\n",
+      'infra/network/config/config.yaml': 'project_code: net\n',
+      'infra/network/Makefile': 'deploy:\n\tsceptre --dir ../shop --var prefix=shop launch -y prod/app.yaml\n',
+    };
+    expect(names(read(files))).toEqual(['shop-prod-fn']);
+  });
+
+  it('says a stack runs hooks, which are run and not read', () => {
+    const deployment = read(sceptre({ 'prod/stack.yaml': 'template_path: stack.yaml\nparameters:\n  Prefix: shop\n  Stage: prod\nhooks:\n  before_create:\n    - !cmd ./seed.sh\n  after_create: []\n' }));
+    expect(names(deployment)).toEqual(['shop-prod-fn']);
+    const row = deployment.rows.find((each) => each.reason === 'deployment-unread');
+    expect(row?.message).toContain('runs hooks on before_create');
+    expect(row?.message).not.toContain('after_create');
+  });
+});

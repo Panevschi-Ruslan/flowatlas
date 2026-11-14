@@ -230,6 +230,35 @@ const partsOf = (source: string): Part[] => {
 /** A part rendered over a root and read, its lines mapped to the file's; or why it is not. */
 type ReadPart = { readonly kind: 'read'; readonly document: PositionedDocument; readonly lineOf: (line: number) => number } | { readonly kind: 'unread'; readonly why: string };
 
+/**
+ * The line (from 1) of the first action of a helmfile's own text that reads
+ * `.Release` outside a quoted or raw string (P299). helmfile renders its
+ * state before any release, with no `.Release` in what it renders over, so
+ * such a part is refused; written inside a raw string, {{`{{ .Release.Name }}`}},
+ * it is text the first pass leaves for the release.
+ */
+const releaseUnescaped = (text: string): number | undefined => {
+  let index = text.indexOf('{{');
+  while (index !== -1) {
+    let at = index + 2;
+    let bare = '';
+    while (at < text.length && !text.startsWith('}}', at)) {
+      const char = text[at] as string;
+      if (char === '`' || char === '"') {
+        const close = char === '`' ? text.indexOf('`', at + 1) : (/(?<!\\)"/.exec(text.slice(at + 1))?.index ?? -1) + at + 1;
+        at = close <= at ? text.length : close + 1;
+        bare += ' ';
+        continue;
+      }
+      bare += char;
+      at += 1;
+    }
+    if (/(?:^|[\s($|])\.Release\b|\$\.Release\b/.test(bare)) return text.slice(0, index).split('\n').length;
+    index = text.indexOf('{{', at + 2);
+  }
+  return undefined;
+};
+
 const readPart = (part: Part, root: Record<string, unknown>): ReadPart => {
   const parsed = (text: string): PositionedDocument | undefined => {
     try {
@@ -241,6 +270,13 @@ const readPart = (part: Part, root: Record<string, unknown>): ReadPart => {
   if (!part.text.includes('{{')) {
     const document = parsed(part.text);
     return document === undefined ? { kind: 'unread', why: 'it is not YAML' } : { kind: 'read', document, lineOf: (line) => line + part.first };
+  }
+  const release = releaseUnescaped(part.text);
+  if (release !== undefined) {
+    return {
+      kind: 'unread',
+      why: `line ${release + part.first} writes .Release in an action of the helmfile itself, which helmfile renders before any release is read and refuses; a release template's field is written escaped, {{\`{{ .Release.Name }}\`}}`,
+    };
   }
   const rendered = renderingsOver(part.text, root);
   if (rendered.kind === 'unread') return { kind: 'unread', why: rendered.why };
@@ -385,13 +421,56 @@ interface Pending {
   readonly need: string;
 }
 
+/** A release of the state, in one environment, the helmfile declaring it, and whether the reading of that helmfile keeps it (P299). */
+interface Entry {
+  readonly environment: string;
+  readonly release: Declared;
+  /** The helmfile it is declared in (its own file, or the helmfile layering the base it is written in). */
+  readonly helmfile: string;
+  /** Whether its helmfile's reading keeps it: by name, by a selector, or with nothing selecting. */
+  readonly chosen: boolean;
+}
+
+/** What a release kept installs (P299): the chart install, and the rows its install says, both only where it is kept. */
+interface Candidate {
+  readonly release: Declared;
+  readonly environment: string;
+  readonly install?: ChartInstall;
+  readonly rows: readonly ManifestRow[];
+}
+
 /** What one helmfile and its sub-helmfiles install, with every release they declare and the needs their own helmfile does not answer. */
 interface State {
-  readonly installs: ChartInstall[];
+  readonly candidates: Candidate[];
   readonly rows: ManifestRow[];
-  readonly declared: Array<{ readonly environment: string; readonly release: Declared }>;
+  readonly declared: Entry[];
   readonly pending: Pending[];
 }
+
+/**
+ * The releases of a whole state a command keeps (P299): each its own
+ * helmfile's reading keeps, and with `--include-needs` what they need -
+ * a release of their own helmfile first, else of any helmfile of the state,
+ * as a need is answered (P295) - and with `--include-transitive-needs` what
+ * that needs in turn.
+ */
+const keptOf = (declared: readonly Entry[], needs: HelmfileReading['needs']): Set<Declared> => {
+  const kept = new Set(declared.filter((each) => each.chosen).map((each) => each.release));
+  if (needs === undefined || needs === 'none') return kept;
+  const queue = declared.filter((each) => each.chosen);
+  while (queue.length > 0) {
+    const each = queue.shift() as Entry;
+    const others = declared.filter((other) => other.environment === each.environment && other.release !== each.release);
+    for (const need of each.release.needs) {
+      const found = needed(need, others.filter((other) => other.helmfile === each.helmfile).map((other) => other.release)) ?? needed(need, others.map((other) => other.release));
+      if (found === undefined || kept.has(found)) continue;
+      kept.add(found);
+      const entry = others.find((other) => other.release === found);
+      if (needs === 'transitive' && entry !== undefined) queue.push(entry);
+    }
+  }
+  return kept;
+};
 
 /**
  * Every chart install a helmfile writes, one per release per environment,
@@ -399,14 +478,25 @@ interface State {
  * bases it layers (P273), and each release's `needs` is kept as the releases
  * installed before it: a command keeping releases by name with
  * `--include-needs` keeps what they need too (`--include-transitive-needs`,
- * what that needs in turn). A need is a release of the whole state, the
- * helmfile's and its sub-helmfiles' (P295), and a need no release of it is,
- * is the finding `release-need-undefined`, as helmfile refuses to apply it.
+ * what that needs in turn), across the sub-helmfiles of the state (P299). A
+ * need is a release of the whole state, the helmfile's and its
+ * sub-helmfiles' (P295), and a need no release of it is, is the finding
+ * `release-need-undefined`, as helmfile refuses to apply it.
  */
 export const readHelmfile = (path: string, label: (path: string) => string, reading: HelmfileReading = {}): { installs: ChartInstall[]; rows: ManifestRow[] } => {
   const state = readState(path, label, reading, []);
-  const installs = [...state.installs];
+  const kept = keptOf(state.declared, reading.needs);
+  const chosen = state.candidates.filter((each) => kept.has(each.release));
+  const installs = chosen.flatMap((each) => (each.install === undefined ? [] : [each.install]));
   const rows = [...state.rows];
+  for (const each of chosen) {
+    // A row of a release is about the kept releases needing it too, whose services wait on what it installs.
+    const needers = state.declared.filter((other) => other.environment === each.environment && kept.has(other.release) && other.release !== each.release && other.release.needs.some((need) => needed(need, [each.release]) !== undefined)).map((other) => other.release.name);
+    for (const row of each.rows) {
+      if (rows.some((seen) => seen.file === row.file && seen.line === row.line && seen.message === row.message)) continue;
+      rows.push(needers.length === 0 ? row : { ...row, about: [...new Set([...row.about, ...needers])] });
+    }
+  }
   for (const { environment, release, need } of state.pending) {
     const found = needed(need, state.declared.filter((each) => each.environment === environment && each.release !== release).map((each) => each.release));
     if (found !== undefined) {
@@ -430,6 +520,36 @@ export const readHelmfile = (path: string, label: (path: string) => string, read
   return { installs, rows };
 };
 
+/**
+ * Why a release's chart is not read (P299): a chart of a repository the
+ * helmfile declares (`bitnami/redis`) or of a registry (`oci://`), which
+ * helmfile fetches when it runs and nothing fetches here, or a path of the
+ * project's that holds no chart.
+ */
+const chartUnread = (chart: string, release: Declared, repositories: ReadonlyMap<string, string>, folder: boolean): ManifestRow => {
+  const { name, file, line } = release;
+  const local = /^(?:\.{1,2}[\\/]|[\\/]|~)/.test(chart);
+  const repository = chart.includes('/') && !local && !chart.includes('://') ? chart.slice(0, chart.indexOf('/')) : undefined;
+  const from = chart.includes('://')
+    ? `the registry or address ${chart}`
+    : repository === undefined
+      ? undefined
+      : repositories.has(repository)
+        ? `the chart repository ${repository}${repositories.get(repository) === '' ? '' : ` (${repositories.get(repository)})`}`
+        : `the chart repository ${repository}, which no part of the helmfile declares`;
+  const why = from === undefined || folder
+    ? `its chart ${chart} is ${folder ? 'a folder of the project holding no Chart.yaml' : 'not in the project'}`
+    : `its chart ${chart} comes from ${from}, fetched when helmfile runs; no chart repository is read here, so its templates are not rendered`;
+  return {
+    reason: 'manifest-unread',
+    file,
+    line,
+    message: `The release ${name} (${file}:${line}) is not rendered: ${why}`,
+    hint: 'Keep the chart in the project (helm pull --untar into a folder the release names as its chart), or annotate the request with the service it reaches (/** @flowatlas-calls <service> METHOD /path */).',
+    about: [name],
+  };
+};
+
 const readState = (
   path: string,
   label: (path: string) => string,
@@ -439,11 +559,11 @@ const readState = (
 ): State => {
   const declaredReleases: State['declared'] = [];
   const pending: Pending[] = [];
-  if (readText(path) === undefined) return { installs: [], rows: [], declared: declaredReleases, pending };
+  if (readText(path) === undefined) return { candidates: [], rows: [], declared: declaredReleases, pending };
   const dir = dirname(path);
   const declared = declaredEnvironments(path, dir, label);
   const environments = reading.environments ?? (declared.length === 0 ? ['default'] : declared);
-  const installs: ChartInstall[] = [];
+  const candidates: Candidate[] = [];
   const rows: ManifestRow[] = [];
   const unreadRow = (file: string, line: number, why: string, about: readonly string[]): void => {
     if (rows.some((seen) => seen.file === file && seen.line === line && seen.message.endsWith(why))) return;
@@ -480,6 +600,8 @@ const readState = (
     const templates = new Map<string, Record<string, unknown>>();
     let common: Record<string, string> = {};
     const subs: Array<{ entry: unknown; file: string; line: number; values: Record<string, unknown> }> = [];
+    // The chart repositories its parts declare (P299): a release's chart written `<repository>/<chart>` is one of theirs.
+    const repositories = new Map<string, string>();
     layersOf(
       path,
       dir,
@@ -498,6 +620,9 @@ const readState = (
         if (own !== undefined) stated();
         if (isRecord(value['templates'])) for (const [name, template] of Object.entries(value['templates'])) if (isRecord(template)) templates.set(name, template);
         if (isRecord(value['commonLabels'])) common = { ...common, ...textsOf(value['commonLabels']) };
+        for (const repository of (Array.isArray(value['repositories']) ? value['repositories'] : []).filter(isRecord)) {
+          if (typeof repository['name'] === 'string') repositories.set(repository['name'], typeof repository['url'] === 'string' ? repository['url'] : '');
+        }
         hooksRow(file, lineOf(document.at(['hooks'])?.line ?? 1), value['hooks'], file, []);
         (Array.isArray(value['helmfiles']) ? value['helmfiles'] : []).forEach((entry, index) => {
           subs.push({ entry, file, line: lineOf(document.at(['helmfiles', index])?.line ?? 1), values });
@@ -521,27 +646,15 @@ const readState = (
       },
       (file, line, why) => unreadRow(file, line, why, []),
     );
-    // A need no release of the helmfile is, is asked of the whole state once it is read (P295).
-    for (const each of releases) {
-      declaredReleases.push({ environment, release: each });
-      for (const need of each.needs) if (needed(need, releases) === undefined) pending.push({ environment, release: each, need });
-    }
-    // The releases a command keeps - by name, or by the labels its selectors ask (P289) - and with --include-needs what they need.
+    // The releases a command keeps - by name, or by the labels its selectors ask (P289); what they need is kept across the whole state (P299).
     const selectors = reading.selectors ?? [];
     const named = new Set(reading.releases ?? []);
     const selecting = selectors.length > 0 || named.size > 0;
-    const kept = new Set(selecting ? releases.filter((each) => named.has(each.name) || selectors.some((selector) => selectorMatches(selector, each.labels))).map((each) => each.name) : []);
-    if (kept.size > 0 && reading.needs !== undefined && reading.needs !== 'none') {
-      const queue = releases.filter((each) => kept.has(each.name));
-      while (queue.length > 0) {
-        const each = queue.shift() as Declared;
-        for (const need of each.needs) {
-          const found = needed(need, releases);
-          if (found === undefined || kept.has(found.name)) continue;
-          kept.add(found.name);
-          if (reading.needs === 'transitive') queue.push(found);
-        }
-      }
+    const chosen = (each: Declared): boolean => !selecting || named.has(each.name) || selectors.some((selector) => selectorMatches(selector, each.labels));
+    // A need no release of the helmfile is, is asked of the whole state once it is read (P295).
+    for (const each of releases) {
+      declaredReleases.push({ environment, release: each, helmfile: path, chosen: chosen(each) });
+      for (const need of each.needs) if (needed(need, releases) === undefined) pending.push({ environment, release: each, need });
     }
     // Sub-helmfiles first, as helmfile applies them (P289): each its own state, in this environment.
     for (const sub of subs) {
@@ -587,7 +700,7 @@ const readState = (
           { environments: [environment], stateValues: given, ...chosen, ...(reading.needs === undefined ? {} : { needs: reading.needs }), ...(reading.explicitSelectors === undefined ? {} : { explicitSelectors: reading.explicitSelectors }) },
           [...within, path],
         );
-        for (const install of read.installs) installs.push(install);
+        candidates.push(...read.candidates);
         for (const row of read.rows) if (!rows.some((seen) => seen.file === row.file && seen.line === row.line && seen.message === row.message)) rows.push(row);
         declaredReleases.push(...read.declared);
         pending.push(...read.pending);
@@ -597,11 +710,17 @@ const readState = (
       const { release, name, namespace, file, line } = each;
       const chart = typeof release['chart'] === 'string' ? release['chart'] : undefined;
       if (chart === undefined) continue;
-      if (selecting && !kept.has(name)) continue;
       if (release['installed'] === false || (typeof release['condition'] === 'string' && conditionFalse(each.values, release['condition']))) continue;
       const chartDir = pathFrom(dir, chart);
-      // A chart of a repository (`bitnami/redis`) is no directory of the project's.
-      if (!existsSync(join(chartDir, 'Chart.yaml'))) continue;
+      // A chart of a repository (`bitnami/redis`) or a registry is no directory of the project's, and is said (P299).
+      if (!existsSync(join(chartDir, 'Chart.yaml'))) {
+        candidates.push({ release: each, environment, rows: [chartUnread(chart, each, repositories, existsSync(chartDir))] });
+        continue;
+      }
+      const own: ManifestRow[] = [];
+      const ownRow = (why: string): void => {
+        own.push({ reason: 'manifest-unread', file, line, message: `${file} is not read from line ${line}: ${why}`, hint: 'Write what the helmfile says as literals, or give the value it reads in the environment\'s values.', about: [name] });
+      };
       const releaseRoot = { Environment: { Name: environment, Values: each.values, KubeContext: UNKNOWN_VALUE }, Values: each.values, StateValues: each.values, Namespace: UNKNOWN_VALUE, Release: { Name: name, Namespace: namespace ?? UNKNOWN_VALUE, Labels: each.labels } };
       const given = (Array.isArray(release['values']) ? release['values'] : []).flatMap((written): Array<string | Record<string, unknown>> => {
         if (isRecord(written)) return [written];
@@ -609,7 +728,7 @@ const readState = (
         const at = pathFrom(dir, written);
         if (!at.endsWith('.gotmpl')) return existsSync(at) ? [at] : [];
         const rendered = valuesFile(at, releaseRoot);
-        if (rendered === undefined) unreadRow(file, line, `${basename(at)} does not render with what the environment gives`, [name]);
+        if (rendered === undefined) ownRow(`${basename(at)} does not render with what the environment gives`);
         return rendered === undefined ? [] : [rendered];
       });
       const sets = (Array.isArray(release['set']) ? release['set'] : []).flatMap((set) => {
@@ -621,18 +740,23 @@ const readState = (
         const found = needed(need, releases);
         return found === undefined ? [] : [found.name];
       });
-      installs.push({
-        chart: chartDir,
-        release: name,
-        ...(namespace === undefined ? {} : { namespace }),
-        values: given,
-        sets,
-        file,
-        line,
+      candidates.push({
+        release: each,
         environment,
-        ...(needs.length === 0 ? {} : { needs }),
+        rows: own,
+        install: {
+          chart: chartDir,
+          release: name,
+          ...(namespace === undefined ? {} : { namespace }),
+          values: given,
+          sets,
+          file,
+          line,
+          environment,
+          ...(needs.length === 0 ? {} : { needs }),
+        },
       });
     }
   }
-  return { installs, rows, declared: declaredReleases, pending };
+  return { candidates, rows, declared: declaredReleases, pending };
 };

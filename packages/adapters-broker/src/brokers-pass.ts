@@ -305,6 +305,23 @@ export const extractBrokers = (ctx: PassContext): void => {
   /** Method and channel pairs the code itself already states. */
   const alreadyStatic = new Set<string>();
 
+  /**
+   * The classes of this repository a publish or a write was read through
+   * (P299): the class the broker's call is written in and each class it
+   * extends, by file and name. A data layer the data reader found nothing
+   * read through - a repository whose store is a broker's, a table written
+   * through a client of the SDK - was read here, and its row goes.
+   */
+  const readThrough = new Set<string>();
+  const noteReadThrough = (call: CallExpression): void => {
+    let current: ClassDeclaration | undefined = call.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+    for (let depth = 0; current !== undefined && depth < 8; depth += 1) {
+      const name = current.getName();
+      if (name !== undefined) readThrough.add(`${ctx.fileOf(current)}#${name}`);
+      current = current.getBaseClass();
+    }
+  };
+
   const channelNodeOf = (name: string, spec: BrokerSpec, file: string, line: number): GraphNode => {
     const id = makeChannelId(name);
     const existing = ctx.builder.getNode(id);
@@ -757,6 +774,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     // earns a node: `ensure` is deferred precisely so that the thousands of
     // functions in a repository that publish nothing stay out of the graph.
     (caller?.holder ?? holder).ensure();
+    noteReadThrough(call);
     ctx.builder.addNode({
       id: producerId,
       type: 'producer',
@@ -1640,6 +1658,13 @@ export const extractBrokers = (ctx: PassContext): void => {
   readConstructions();
 
   withdrawDescribedCalls(ctx.builder, described);
+
+  // A data layer something was read through here is not unread (P299).
+  if (readThrough.size > 0) {
+    ctx.builder.withdrawUnresolved(
+      (row) => row.reason === 'db-layer-unread' && row.symbol !== undefined && readThrough.has(`${row.file}#${row.symbol}`),
+    );
+  }
 
   readBrokerMarkers(ctx, specs[0] ?? brokerAdapters[0], alreadyStatic);
 };

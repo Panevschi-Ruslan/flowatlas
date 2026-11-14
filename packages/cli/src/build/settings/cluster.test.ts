@@ -432,7 +432,8 @@ describe('every way a cluster is installed (P263)', () => {
     // With nothing choosing, the two environments disagree, and the chart's own values are read.
     const unchosen = readProjectSettings({ services: [{ name: 'orders', dir: join(dir, 'orders') }], rootDir: dir });
     expect(unchosen['orders']?.routes?.map((each) => each.ports.map((port) => `${port.port}:${port.target}`).join(','))).toEqual(['80:3000']);
-    expect(unchosen['orders']?.rows?.map((row) => `${row.reason} ${row.file}`)).toEqual(['manifest-overlay-unchosen charts/orders/Chart.yaml']);
+    // The release of a chart repository is said (P299).
+    expect(unchosen['orders']?.rows?.map((row) => `${row.reason} ${row.file}`)).toEqual(['manifest-overlay-unchosen charts/orders/Chart.yaml', 'manifest-unread helmfile.yaml']);
     expect(unchosen['orders']?.rows?.[0]?.message).toContain('helmfile.yaml:10 (environment production)');
   });
 
@@ -1181,5 +1182,155 @@ describe('kustomize transformer and generator configurations, helmfile selectors
     expect(read.rows?.map((row) => `${row.file}:${row.line} ${row.message}`)).toEqual([
       'charts/shop/Chart.yaml:10 charts/shop/Chart.yaml depends on the chart queue 2.0.0 from https://charts.example.test, which nothing has fetched into the project (charts/ holds no queue); no chart repository is read, so its templates are not rendered',
     ]);
+  });
+});
+
+describe('helmfile needs across sub-helmfiles and charts of a repository, kustomize value-add, prefix and suffix transformers, transformer kustomizations and default name references (P299)', () => {
+  const label = (dir: string) => (path: string): string => relative(join(dir, 'deploy'), path).split(sep).join(posix.sep);
+  const chart = (name: string): Record<string, string> => ({
+    [`deploy/charts/${name}/Chart.yaml`]: `apiVersion: v2\nname: ${name}\nversion: 0.1.0\n`,
+    [`deploy/charts/${name}/templates/service.yaml`]: SERVICE(name, 80, 3000),
+  });
+
+  it('keeps a need another sub-helmfile answers with --include-needs, and what that needs with --include-transitive-needs', () => {
+    const dir = project({
+      ...chart('orders'),
+      'deploy/helmfile.yaml': lines('helmfiles:', '  - apps/data.yaml', '  - apps/orders.yaml'),
+      'deploy/apps/data.yaml': lines('releases:', '  - name: db', '    chart: ../charts/orders', '    needs: [config]', '  - name: config', '    chart: ../charts/orders', '  - name: cache', '    chart: ../charts/orders'),
+      'deploy/apps/orders.yaml': lines('releases:', '  - name: orders', '    chart: ../charts/orders', '    labels: { tier: api }', '    needs: [db]', '  - name: admin', '    chart: ../charts/orders'),
+    });
+    const kept = (needs: 'none' | 'direct' | 'transitive'): string[] => readHelmfile(join(dir, 'deploy/helmfile.yaml'), label(dir), { selectors: ['tier=api'], needs }).installs.map((each) => each.release as string);
+    expect(kept('none')).toEqual(['orders']);
+    expect(kept('direct')).toEqual(['db', 'orders']);
+    expect(kept('transitive')).toEqual(['db', 'config', 'orders']);
+  });
+
+  it('says a release whose chart a chart repository or a registry holds, and one a selector leaves out is not said', () => {
+    const dir = project({
+      ...chart('orders'),
+      'deploy/helmfile.yaml': lines(
+        'repositories:',
+        '  - name: charts-example',
+        '    url: https://charts.example.test',
+        'releases:',
+        '  - name: orders',
+        '    chart: ./charts/orders',
+        '  - name: queue',
+        '    chart: charts-example/queue',
+        '  - name: cache',
+        '    chart: oci://registry.example.test/charts/cache',
+        '  - name: search',
+        '    chart: mirror/search',
+        '  - name: metrics',
+        '    chart: ./charts/metrics',
+        '  - name: admin',
+        '    chart: charts-example/admin',
+        '    installed: false',
+      ),
+    });
+    const read = readHelmfile(join(dir, 'deploy/helmfile.yaml'), label(dir));
+    expect(read.installs.map((each) => each.release)).toEqual(['orders']);
+    expect(read.rows.map((row) => `${row.file}:${row.line} ${row.message}`)).toEqual([
+      'helmfile.yaml:7 The release queue (helmfile.yaml:7) is not rendered: its chart charts-example/queue comes from the chart repository charts-example (https://charts.example.test), fetched when helmfile runs; no chart repository is read here, so its templates are not rendered',
+      'helmfile.yaml:9 The release cache (helmfile.yaml:9) is not rendered: its chart oci://registry.example.test/charts/cache comes from the registry or address oci://registry.example.test/charts/cache, fetched when helmfile runs; no chart repository is read here, so its templates are not rendered',
+      'helmfile.yaml:11 The release search (helmfile.yaml:11) is not rendered: its chart mirror/search comes from the chart repository mirror, which no part of the helmfile declares, fetched when helmfile runs; no chart repository is read here, so its templates are not rendered',
+      'helmfile.yaml:13 The release metrics (helmfile.yaml:13) is not rendered: its chart ./charts/metrics is not in the project',
+    ]);
+    expect(readHelmfile(join(dir, 'deploy/helmfile.yaml'), label(dir), { releases: ['orders'] }).rows).toEqual([]);
+  });
+
+  it('says a release field written as a template of the release in a part helmfile renders first, where no release is', () => {
+    const dir = project({
+      ...chart('orders'),
+      'deploy/helmfile.yaml.gotmpl': lines('environments:', '  default: {}', '---', 'releases:', '  - name: orders', '    chart: ./charts/orders', '    values:', '      - values/{{ .Release.Name }}.yaml'),
+      'deploy/values/orders.yaml': 'port: 80\n',
+    });
+    const read = readHelmfile(join(dir, 'deploy/helmfile.yaml.gotmpl'), label(dir));
+    expect(read.installs.map((each) => `${each.release} ${JSON.stringify(each.values)}`)).toEqual([]);
+    expect(read.rows.map((row) => `${row.file}:${row.line} ${row.message}`)).toEqual([
+      "helmfile.yaml.gotmpl:4 helmfile.yaml.gotmpl is not read from line 4: line 8 writes .Release in an action of the helmfile itself, which helmfile renders before any release is read and refuses; a release template's field is written escaped, {{`{{ .Release.Name }}`}}",
+    ]);
+    // Escaped, the first pass leaves it as text for the release, which renders it.
+    writeFileSync(join(dir, 'deploy/helmfile.yaml.gotmpl'), lines('releases:', '  - name: orders', '    chart: ./charts/orders', '    values:', '      - values/{{`{{ .Release.Name }}`}}.yaml', '      - note: {{ "the .Release of a string" | quote }}'));
+    const escaped = readHelmfile(join(dir, 'deploy/helmfile.yaml.gotmpl'), label(dir));
+    expect(escaped.rows).toEqual([]);
+    expect(escaped.installs.map((each) => each.values.length)).toEqual([2]);
+  });
+});
+
+describe('kustomize value-add, prefix and suffix transformers, transformer kustomizations, default name references and selectors (P299)', () => {
+  it('adds a value at the fields a ValueAddTransformer targets, prefixes and suffixes by the split transformers, and generates a service account', () => {
+    const dir = project({
+      'shop/k8s/kustomization.yaml': lines(
+        'resources:',
+        '  - orders.yaml',
+        'generators:',
+        '  - generators/account.yaml',
+        'transformers:',
+        '  - transformers/value-add.yaml',
+        '  - transformers/prefix.yaml',
+        '  - transformers/suffix.yaml',
+      ),
+      'shop/k8s/orders.yaml': [
+        DEPLOYMENT('orders', 3000, ['          env:', '            - name: BASE_PATH', '              value: /api/orders']),
+        lines('apiVersion: v1', 'kind: Service', 'metadata:', '  name: orders', '  labels:', '    tier: api', 'spec:', '  ports:', '    - port: 80', '      targetPort: 3000'),
+      ].join('\n---\n'),
+      'shop/k8s/generators/account.yaml': lines(
+        'apiVersion: builtin',
+        'kind: IAMPolicyGenerator',
+        'metadata:',
+        '  name: account',
+        'cloud: gke',
+        'kubernetesService:',
+        '  namespace: shop',
+        '  name: orders-runner',
+        'serviceAccount:',
+        '  name: orders',
+        '  projectId: shop-project',
+      ),
+      'shop/k8s/transformers/value-add.yaml': lines(
+        'apiVersion: builtin',
+        'kind: ValueAddTransformer',
+        'metadata:',
+        '  name: value-add',
+        'value: v2',
+        'targets:',
+        '  - selector:',
+        '      kind: Deployment',
+        '    fieldPath: spec/template/spec/containers/env/value',
+        '    filePathPosition: 2',
+        '  - selector:',
+        '      labelSelector: tier=api',
+        '  - fieldPath: metadata/annotations/team',
+      ),
+      'shop/k8s/transformers/prefix.yaml': lines('apiVersion: builtin', 'kind: PrefixTransformer', 'metadata:', '  name: prefix', 'prefix: shop-'),
+      'shop/k8s/transformers/suffix.yaml': lines('apiVersion: builtin', 'kind: SuffixTransformer', 'metadata:', '  name: suffix', 'suffix: -live', 'fieldSpecs:', '  - kind: Service', '    path: metadata/name'),
+    });
+    const read = readManifestsUnder(join(dir, 'shop'));
+    // The value-add puts v2 in as the path's second segment; the label selector names the service, given v2 as its namespace (the default field).
+    expect(read.workloads.map((each) => `${each.namespace ?? '-'}/${each.name} ${each.containers.map((container) => container.environment.map((env) => `${env.name}=${env.raw}`).join(',')).join(';')}`)).toEqual(['-/shop-orders BASE_PATH=/api/v2/orders']);
+    expect(read.services.map((each) => `${each.namespace}/${each.name}`)).toEqual(['v2/shop-orders-live']);
+    expect(read.rows ?? []).toEqual([]);
+  });
+
+  it("builds a transformer kustomization's own fields over its configurations, and renames what names a resource by kustomize's default references", () => {
+    const dir = project({
+      'shop/k8s/kustomization.yaml': lines('resources:', '  - orders.yaml', 'namePrefix: shop-', 'transformers:', '  - transformers'),
+      'shop/k8s/orders.yaml': [
+        DEPLOYMENT('orders', 3000, ['          envFrom:', '            - configMapRef:', '                name: orders-settings']),
+        lines('apiVersion: v1', 'kind: ConfigMap', 'metadata:', '  name: orders-settings', 'data:', '  PORT: "3000"'),
+        lines('apiVersion: v1', 'kind: Service', 'metadata:', '  name: orders', 'spec:', '  ports:', '    - port: 80', '      targetPort: 3000'),
+        lines('apiVersion: apps/v1', 'kind: StatefulSet', 'metadata:', '  name: ledger', 'spec:', '  serviceName: orders', '  template:', '    spec:', '      serviceAccountName: runner', '      containers:', '        - name: ledger', '          image: ledger'),
+        lines('apiVersion: v1', 'kind: ServiceAccount', 'metadata:', '  name: runner'),
+        lines('apiVersion: rbac.authorization.k8s.io/v1', 'kind: RoleBinding', 'metadata:', '  name: runner', 'roleRef:', '  kind: ClusterRole', '  name: runner', 'subjects:', '  - kind: ServiceAccount', '    name: runner', '  - kind: User', '    name: runner'),
+      ].join('\n---\n'),
+      'shop/k8s/transformers/kustomization.yaml': lines('resources:', '  - labels.yaml', 'patches:', '  - target:', '      kind: LabelTransformer', '    patch: |-', '      - op: replace', '        path: /labels/tier', '        value: web'),
+      'shop/k8s/transformers/labels.yaml': lines('apiVersion: builtin', 'kind: LabelTransformer', 'metadata:', '  name: labels', 'labels:', '  tier: api', 'fieldSpecs:', '  - path: metadata/labels', '    create: true', '  - kind: Service', '    path: spec/selector', '    create: true'),
+    });
+    const read = readManifestsUnder(join(dir, 'shop'));
+    // The transformer kustomization's patch turns tier into web before the label transformer runs.
+    expect(read.services.map((each) => `${each.name} ${JSON.stringify(each.selector)}`)).toEqual(['shop-orders {"tier":"web"}']);
+    expect(read.workloads.map((each) => `${each.name} ${each.containers.map((container) => container.environment.map((env) => `${env.name}=${env.raw}`).join(',')).join(';')}`)).toEqual(['shop-orders PORT=3000', 'shop-ledger ']);
+    expect(read.rows ?? []).toEqual([]);
   });
 });

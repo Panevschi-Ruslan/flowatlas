@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-12T18:57:15.550Z",
+  "builtAt": "2026-11-14T17:39:01.029Z",
   "services": [
     {
       "name": "shop",
@@ -935,32 +935,12 @@
   "unresolved": [
     {
       "file": "src/repository.ts",
-      "line": 6,
-      "reason": "db-layer-unread",
-      "message": "Repository reads as a data layer, and nothing was read through it.",
-      "hint": "Add \"Repository\" to adapters.db.localBaseClasses in flowatlas.config.json, so calls through it are recorded as data access.",
-      "symbol": "Repository",
-      "adapter": "local-base",
-      "service": "shop"
-    },
-    {
-      "file": "src/repository.ts",
       "line": 9,
       "reason": "type-generic-uninstantiated",
       "level": "info",
       "sites": 2,
       "hint": "The type argument is not known here, so the reference names the parameter.",
       "symbol": "T",
-      "service": "shop"
-    },
-    {
-      "file": "src/repository.ts",
-      "line": 15,
-      "reason": "db-layer-unread",
-      "message": "Store reads as a data layer, and nothing was read through it.",
-      "hint": "Add \"Store\" to adapters.db.localBaseClasses in flowatlas.config.json, so calls through it are recorded as data access.",
-      "symbol": "Store",
-      "adapter": "local-base",
       "service": "shop"
     },
     {

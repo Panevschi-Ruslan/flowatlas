@@ -283,3 +283,39 @@ describe('completing an address from the repository’s own files', () => {
     expect(alone.edges.filter((each) => each.type === 'emits')).toEqual([]);
   });
 });
+
+/**
+ * Code no function is seen running, where every function of its deployment
+ * is deployed with one value of what it reads (P299).
+ */
+describe('completing an address no function is seen running (P299)', () => {
+  const unreached = (functions: GraphNode[]) => {
+    const nodes = new Map([...functions, producer].map((node) => [node.id, structuredClone(node)]));
+    const edges = new Map<string, GraphEdge>();
+    const rows: Unresolved[] = [{ service: 'returns', file: 'src/lib/queue.ts', line: 9, reason: 'channel-from-environment', meta: { variable: 'RETURNS_QUEUE_URL' } }];
+    const found = completeFromEnvironment(nodes, edges, rows);
+    return { rows, found, emits: [...edges.values()].filter((each) => each.type === 'emits') };
+  };
+  const value: EnvironmentValue = { written: 'aws_sqs_queue.returns.url', value: 'library-returns', kind: 'queue' };
+
+  it('completes it from the value every function is deployed with, as a guess', () => {
+    const { rows, found, emits } = unreached([fn('record', { RETURNS_QUEUE_URL: value }), fn('notify', { RETURNS_QUEUE_URL: value })]);
+    expect(found).toEqual([]);
+    expect(rows).toEqual([]);
+    expect(emits).toMatchObject([
+      { to: 'channel:sqs/library-returns', confidence: 'heuristic', meta: { variables: ['RETURNS_QUEUE_URL'], functions: [], everyFunction: true } },
+    ]);
+  });
+
+  it('leaves it where one function is deployed without it or with another value', () => {
+    const other: EnvironmentValue = { written: 'aws_sqs_queue.other.url', value: 'library-other', kind: 'queue' };
+    for (const functions of [
+      [fn('record', { RETURNS_QUEUE_URL: value }), fn('notify', {})],
+      [fn('record', { RETURNS_QUEUE_URL: value }), fn('notify', { RETURNS_QUEUE_URL: other })],
+    ]) {
+      const { rows, emits } = unreached(functions);
+      expect(rows.map((row) => row.reason)).toEqual(['channel-from-environment']);
+      expect(emits).toEqual([]);
+    }
+  });
+});

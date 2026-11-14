@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>264 fixtures</span>
-    <span>682 snapshot files</span>
+    <span>265 fixtures</span>
+    <span>685 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -1665,7 +1665,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Everything else <span class="count" data-total="73">73</span></h2>
+    <h2>Everything else <span class="count" data-total="74">74</span></h2>
     <ul>
       <li class="fixture" data-search="bot-registry everything else a bot whose buttons are functions in a table it keeps itself, and whose commands are registered inside module-level functions.">
         <div class="head">
@@ -1737,6 +1737,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">4 services</span>
         </div>
         <p>The deployment templating P263 left out, read as the tools that install the manifests read it (P273): a helmfile kept in a folder that a pipeline names with <code>-f</code>, layered over two <code>bases</code>, whose release <code>needs</code> another; a command that keeps one release by name and the releases it needs (<code>--include-needs</code>); and a kustomization whose deprecated <code>vars</code> give the pod its port and the way in its host.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="cluster-templating-needs everything else the deployment templating p295 left open, read as the tools that install the manifests read it (p299): a kustomization whose transformers come from a folder that is itself a kustomization, built before they run (its patch changes the prefix its `prefixtransformer` writes), one of them a `valueaddtransformer` writing the port the pod listens on; and a helmfile run with a selector and `--include-needs`, whose kept release needs a release of another sub-helmfile and a chart repository's chart.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/cluster-templating-needs">cluster-templating-needs</a>
+          <span class="kind">4 services</span>
+        </div>
+        <p>The deployment templating P295 left open, read as the tools that install the manifests read it (P299): a kustomization whose transformers come from a folder that is itself a kustomization, built before they run (its patch changes the prefix its <code>PrefixTransformer</code> writes), one of them a <code>ValueAddTransformer</code> writing the port the pod listens on; and a helmfile run with a selector and <code>--include-needs</code>, whose kept release needs a release of another sub-helmfile and a chart repository's chart.</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="cluster-transformer-joins everything else the deployment templating p289 left open, read as the tools that install the manifests read it (p295): a kustomization whose name, labels and port come from the transformer and generator files it lists rather than from its own fields; a helmfile whose release needs a release another of its sub-helmfiles declares; and a chart whose port comes up through `import-values` from a dependency of its dependency.">

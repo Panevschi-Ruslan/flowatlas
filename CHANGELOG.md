@@ -8,6 +8,36 @@ only one of them moved.
 
 ### Added
 
+- **The rest of the deployment templating and grants P289 and P295 left open
+  (P299).** A command keeping releases with a selector and `--include-needs`
+  keeps what they need from any sub-helmfile of the state (transitively with
+  `--include-transitive-needs`). A kept release whose chart a chart
+  repository or a registry holds (`<repository>/<chart>`, `oci://`), or whose
+  chart path holds no chart, is a `manifest-unread` row saying so, about the
+  releases needing it too; `.Release` in an action of a helmfile's own text is
+  a row saying helmfile refuses it unescaped. kustomize's
+  `ValueAddTransformer` (`fieldPath`, `filePathPosition`, `targetFilePath`),
+  `PrefixTransformer`, `SuffixTransformer` and `IAMPolicyGenerator` are read;
+  a folder under `transformers:` or `generators:` is built as a kustomization,
+  its own patches, prefixes and labels over its configurations; kustomize's
+  default name references (config maps, secrets, services, service accounts,
+  claims, roles, autoscaler targets) are renamed with what they name, a
+  reference that writes its `kind` naming only that kind; and a selector
+  reads `namespace`, `labelSelector` and `annotationSelector`. sceptre's Jinja
+  runs `namespace()` and `{% set ns.x %}`, the tests (`is`, `select`,
+  `reject`, `selectattr`, `rejectattr`), `groupby`, a macro reading a name its
+  file binds after it, `loop.changed`, `for ... if` and recursive loops; a
+  command beside another sceptre project launching this one is read, and a
+  stack's hooks are a row. An AWS write through a repository is read where
+  `Object.assign` puts a parameter after the literal that no caller hands the
+  key, where the v2 client is a field the constructor assigns with `aws-sdk`
+  not installed, and where the table is a static field set from the
+  environment; the data reader's `db-layer-unread` row is withdrawn for a
+  class a producer was read through; and a producer whose variable every
+  function of its service is given the same value is joined (heuristic). A
+  CDK role's managed policies (AWS ones by their access, a policy the app
+  writes by its statements, one looked up named), a user's groups and a
+  `CompositePrincipal`'s members carry their grants.
 - **Kustomize transformer and generator files, labels, and what P289 left of
   helmfile and charts (P295).** A kustomization's `transformers:` and
   `generators:` are read from the files (or the folder, or the inline text)

@@ -1,0 +1,23 @@
+repositories:
+  - name: charts-example
+    url: https://charts.example.test
+
+releases:
+  - name: stock
+    namespace: shop
+    chart: ../charts/stock
+    labels:
+      tier: data
+    values:
+      - service:
+          port: 8443
+  - name: cache
+    namespace: shop
+    chart: charts-example/cache
+    labels:
+      tier: data
+  - name: reports
+    namespace: shop
+    chart: charts-example/reports
+    labels:
+      tier: data

@@ -343,3 +343,59 @@ queue.publish([...others, { type: 'b' }]);`);
     ]);
   });
 });
+
+/**
+ * The record `Object.assign` answers, and a record a parameter spreads in
+ * (P299): each key the last source that writes it, a parameter writing a
+ * key only where a caller hands it one.
+ */
+describe('a record put together from others (P299)', () => {
+  const TABLE: NameLocator = { kind: 'argument-path', index: 0, path: ['TableName'] };
+  const puts = (file: SourceFile): CallExpression[] =>
+    file.getDescendantsOfKind(SyntaxKind.CallExpression).filter((call) => call.getExpression().getText().endsWith('.putItem'));
+
+  it('reads a key of the literal where no caller hands the parameter after it the key', () => {
+    const file = parse(`class Store {
+  save(table: string, item: object, extra?: object) {
+    const params = Object.assign({ TableName: table, Item: item }, extra);
+    return this.client.putItem(params);
+  }
+}
+class Log extends Store {
+  append(item: object) { return super.save('log', item, { ConditionExpression: 'attribute_not_exists(id)' }); }
+  other(item: object) { return super.save('log', item); }
+  third(item: object) { return super.save('log', item, undefined); }
+}`);
+    expect(slots(callTo(file, 'putItem'), TABLE)).toEqual(['table']);
+  });
+
+  it('stops at the parameter where a caller hands it the key, or a value not written out, or nothing calls it', () => {
+    const file = parse(`declare const options: object;
+function save(table: string, extra?: object) {
+  return client.putItem(Object.assign({ TableName: table }, extra));
+}
+save('a', { TableName: 'b' });
+function put(table: string, extra?: object) {
+  return client.putItem(Object.assign({ TableName: table }, extra));
+}
+put('a', options);
+function uncalled(table: string, extra?: object) {
+  return client.putItem(Object.assign({ TableName: table }, extra));
+}`);
+    expect(puts(file).map((call) => slots(call, TABLE))).toEqual([['stopped at extra'], ['stopped at extra'], ['stopped at extra']]);
+  });
+
+  it('reads a key the last source writes, a source of nothing nothing', () => {
+    const file = parse(`client.putItem(Object.assign({}, { TableName: 'first' }, null, { TableName: 'last' }, { Item: {} }));`);
+    expect(slots(callTo(file, 'putItem'), TABLE)).toEqual(["'last'"]);
+  });
+
+  it('reads past a parameter spread in that no caller hands the key', () => {
+    const file = parse(`function save(table: string, extra: object = {}) {
+  return client.putItem({ TableName: table, ...extra });
+}
+save('a', { ReturnValues: 'NONE' });
+save('b');`);
+    expect(slots(callTo(file, 'putItem'), TABLE)).toEqual(['table']);
+  });
+});

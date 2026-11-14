@@ -1,0 +1,9 @@
+apiVersion: builtin
+kind: ValueAddTransformer
+metadata:
+  name: port
+value: "4100"
+targets:
+  - selector:
+      kind: Deployment
+    fieldPath: spec/template/spec/containers/env/value

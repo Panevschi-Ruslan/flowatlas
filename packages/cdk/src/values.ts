@@ -304,3 +304,23 @@ export const whyNotText = (value: Value, what: string): string => {
   if (value instanceof Construct || value instanceof Attribute) return `${what} is a value known only once deployed`;
   return `${what} is not text`;
 };
+
+/** The attributes of a construct that stand for the principal it acts as: `fn.role`, `fn.grantPrincipal` (P299). */
+export const PRINCIPAL_ATTRIBUTES: ReadonlySet<string> = new Set(['role', 'grantPrincipal']);
+
+/**
+ * The constructs a grantee stands for (P299): a construct, a construct's role
+ * or principal, and each member of a `CompositePrincipal`, with those added to
+ * it by `addPrincipals`.
+ */
+export const principalHolders = (grantee: Value, seen = new Set<Value>()): Construct[] => {
+  if (seen.has(grantee)) return [];
+  seen.add(grantee);
+  if (grantee instanceof Construct) return [grantee];
+  if (grantee instanceof Attribute && PRINCIPAL_ATTRIBUTES.has(grantee.name)) return [grantee.construct];
+  if (grantee instanceof Built && grantee.what === 'aws-iam.CompositePrincipal') {
+    const added = grantee.state.get('principals');
+    return [...grantee.args, ...(Array.isArray(added) ? added : [])].flatMap((member) => principalHolders(member, seen));
+  }
+  return [];
+};

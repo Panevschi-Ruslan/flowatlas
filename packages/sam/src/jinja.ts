@@ -122,7 +122,36 @@ class Unknown {
   constructor(readonly written: string) {}
 }
 
-type JinjaValue = string | number | boolean | null | readonly JinjaValue[] | { readonly [key: string]: JinjaValue } | Undefined | Unknown | Pairs | Macro | Builtin;
+type JinjaValue = string | number | boolean | null | readonly JinjaValue[] | { readonly [key: string]: JinjaValue } | Undefined | Unknown | Pairs | Macro | Builtin | Namespace;
+
+/**
+ * What `namespace(...)` makes (P299): a record whose attributes `{% set ns.x =
+ * ... %}` changes, the change seen past the loop or block it is made in, as
+ * Jinja keeps it. What it is made with is its own; what is set since is kept
+ * on the way, under {@link NAMESPACE} and its number, so each way a condition
+ * goes keeps what it set.
+ */
+class Namespace {
+  constructor(
+    readonly id: number,
+    readonly initial: Readonly<Record<string, JinjaValue>>,
+  ) {}
+}
+
+/** The name a namespace's attributes set since it was made are kept under on a way, its number after it (P299). */
+const NAMESPACE = '__jinja_namespace_';
+
+/** How many namespaces have been made, each numbered apart. */
+let namespaces = 0;
+
+/** The pairs `groupby` gives (P299): each a list of its grouper and its items, read by place and as `.grouper` and `.list`. */
+const GROUPS = new WeakSet<object>();
+
+/** The names a rendering inside a loop, a block or a file it names hands back: the outer ones, with every namespace's attributes as they now are (P299). */
+const handedBack = (inner: ReadonlyMap<string, JinjaValue>, outer: ReadonlyMap<string, JinjaValue>): ReadonlyMap<string, JinjaValue> => {
+  const changed = [...inner].filter(([name, value]) => name.startsWith(NAMESPACE) && outer.get(name) !== value);
+  return changed.length === 0 ? outer : new Map([...outer, ...changed]);
+};
 
 /** A function Jinja gives a template (P289): `loop.cycle`, `range`, `dict`, a method of a text, a list or a mapping; called with what it is handed. */
 class Builtin {
@@ -149,12 +178,17 @@ interface Parameter {
  * imported without the current names.
  */
 class Macro {
+  /** The names its file binds once rendered to the end, for a macro imported from it (P299): what it reads of them at call time. */
+  late: ReadonlyMap<string, JinjaValue> | undefined;
+
   constructor(
     readonly name: string,
     readonly parameters: readonly Parameter[],
     readonly body: readonly Node[],
     readonly closure: ReadonlyMap<string, JinjaValue>,
     readonly lookup: Lookup,
+    /** The rendering of the file it is defined in (P299): called from there, it reads that file's names as they are at the call. */
+    readonly home: object = {},
   ) {}
 }
 
@@ -221,7 +255,7 @@ type Expression =
   | { readonly kind: 'dict'; readonly entries: readonly (readonly [Expression, Expression])[] }
   | { readonly kind: 'unary'; readonly operator: 'not' | '-'; readonly of: Expression }
   | { readonly kind: 'binary'; readonly operator: string; readonly left: Expression; readonly right: Expression }
-  | { readonly kind: 'test'; readonly of: Expression; readonly name: string; readonly negated: boolean }
+  | { readonly kind: 'test'; readonly of: Expression; readonly name: string; readonly negated: boolean; readonly args: readonly Expression[] }
   | { readonly kind: 'conditional'; readonly test: Expression; readonly then: Expression; readonly otherwise: Expression | undefined };
 
 const TOKEN = /\s*(?:('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")|(\d+(?:\.\d+)?)|([A-Za-z_]\w*)|(==|!=|<=|>=|\/\/|\*\*|[-+*/%~<>()[\]{}.,:|=]))/y;
@@ -314,7 +348,10 @@ class ExpressionParser {
       } else if (token === 'is') {
         this.next();
         const negated = this.take('not');
-        left = { kind: 'test', of: left, name: this.next(), negated };
+        const name = this.next();
+        // A test's argument (P299): in parentheses, `divisibleby(3)`, or one value after it, `equalto 3`.
+        const args = this.take('(') ? this.arguments().map((each) => each.value) : startsArgument(this.peek()) ? [this.postfix()] : [];
+        left = { kind: 'test', of: left, name, negated, args };
       } else return left;
     }
   }
@@ -454,6 +491,16 @@ class ExpressionParser {
   }
 }
 
+/** Words that end a test rather than hand it a value. */
+const NOT_AN_ARGUMENT = new Set(['and', 'or', 'if', 'else', 'not', 'in', 'is', 'recursive']);
+
+/** Whether a token starts the one value a test is handed without parentheses (P299). */
+function startsArgument(token: string | undefined): boolean {
+  if (token === undefined) return false;
+  if (/^['"\d]/.test(token) || token === '[' || token === '{') return true;
+  return /^[A-Za-z_]\w*$/.test(token) && !NOT_AN_ARGUMENT.has(token);
+}
+
 /** An expression, or several written with commas between them as a tuple without its parentheses (P289). */
 const parseTuple = (text: string): Expression => {
   const parser = new ExpressionParser(tokensOf(text));
@@ -491,8 +538,11 @@ type NodeOf =
   | { readonly kind: 'text'; readonly text: string }
   | { readonly kind: 'output'; readonly expression: Expression; readonly written: string }
   | { readonly kind: 'if'; readonly branches: readonly { readonly test: Expression; readonly written: string; readonly body: readonly Node[] }[]; readonly otherwise: readonly Node[] }
-  | { readonly kind: 'for'; readonly names: readonly string[]; readonly over: Expression; readonly written: string; readonly body: readonly Node[]; readonly otherwise: readonly Node[] }
+  // P299: `if` filters the items before they are counted; `recursive` lets the body call `loop(...)`.
+  | { readonly kind: 'for'; readonly names: readonly string[]; readonly over: Expression; readonly filter?: Expression; readonly recursive: boolean; readonly written: string; readonly body: readonly Node[]; readonly otherwise: readonly Node[] }
   | { readonly kind: 'set'; readonly name: string; readonly value: Expression }
+  // P299: an attribute of a namespace set, `{% set ns.found = true %}`.
+  | { readonly kind: 'set-attribute'; readonly name: string; readonly attribute: string; readonly value: Expression; readonly written: string }
   // P289: several names set at once, unpacking what the value holds.
   | { readonly kind: 'set-many'; readonly names: readonly string[]; readonly value: Expression; readonly written: string }
   // P273: a set block, its text through the filters written (\`HELD\` the text).
@@ -611,6 +661,12 @@ const parseTemplate = (text: string, own = true): Node[] => {
       if (word === 'for') {
         const match = /^([A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*)\s+in\s+([\s\S]+)$/.exec(rest);
         if (match === null) throw new NotRead('a for this does not read');
+        // What it loops over, then the filter of its items and `recursive` (P299), as Jinja reads a loop's head.
+        const head = new ExpressionParser(tokensOf(match[2] as string));
+        const over = head.or();
+        const filter = head.take('if') ? head.or() : undefined;
+        const recursive = head.take('recursive');
+        if (!head.done) throw new NotRead('a for this does not read');
         const inner = block(['else', 'endfor']);
         if (inner.end === undefined) throw new NotRead('a for never ends');
         let otherwise: readonly Node[] = [];
@@ -619,7 +675,7 @@ const parseTemplate = (text: string, own = true): Node[] => {
           if (last.end === undefined) throw new NotRead('a for never ends');
           otherwise = last.body;
         }
-        body.push(place({ kind: 'for', names: (match[1] as string).split(',').map((name) => name.trim()), over: parseExpression(match[2] as string), written: piece.written, body: inner.body, otherwise }));
+        body.push(place({ kind: 'for', names: (match[1] as string).split(',').map((name) => name.trim()), over, ...(filter === undefined ? {} : { filter }), recursive, written: piece.written, body: inner.body, otherwise }));
         continue;
       }
       if (word === 'set') {
@@ -627,6 +683,11 @@ const parseTemplate = (text: string, own = true): Node[] => {
         const many = /^([A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)+)\s*,?\s*=\s*([\s\S]+)$/.exec(rest);
         if (many !== null) {
           body.push(place({ kind: 'set-many', names: (many[1] as string).split(',').map((name) => name.trim()), value: parseTuple(many[2] as string), written: piece.written }));
+          continue;
+        }
+        const attribute = /^([A-Za-z_]\w*)\.([A-Za-z_]\w*)\s*=\s*([\s\S]+)$/.exec(rest);
+        if (attribute !== null) {
+          body.push(place({ kind: 'set-attribute', name: attribute[1] as string, attribute: attribute[2] as string, value: parseExpression(attribute[3] as string), written: piece.written }));
           continue;
         }
         const match = /^([A-Za-z_]\w*)\s*=\s*([\s\S]+)$/.exec(rest);
@@ -805,7 +866,158 @@ const FILTERS: ReadonlyMap<string, Filter> = new Map<string, Filter>([
     const pad = Math.max(0, width - text.length);
     return ' '.repeat(Math.floor(pad / 2)) + text + ' '.repeat(pad - Math.floor(pad / 2));
   }) : new Unknown('center'))],
+  // P299: the items a test keeps or drops, of themselves or of an attribute of each, and items grouped by an attribute.
+  ['select', selected(true, false)],
+  ['reject', selected(false, false)],
+  ['selectattr', selected(true, true)],
+  ['rejectattr', selected(false, true)],
+  ['groupby', (value, [attribute, fallback], named) => {
+    const items = listOf(value);
+    const by = named.get('attribute') ?? attribute;
+    if (items === undefined || (typeof by !== 'string' && typeof by !== 'number')) return new Unknown('groupby');
+    const otherwise = named.get('default') ?? fallback;
+    const sensitive = truth(named.get('case_sensitive') ?? false) === true;
+    const groups = new Map<string | number | boolean | null, { grouper: JinjaValue; list: JinjaValue[] }>();
+    for (const item of items) {
+      const grouper = attributeOf(item, String(by), otherwise);
+      if (!(typeof grouper === 'string' || typeof grouper === 'number' || typeof grouper === 'boolean' || grouper === null)) return new Unknown('groupby');
+      // Grouped and sorted without case by default, the grouper written as the group's first item writes it.
+      const key = typeof grouper === 'string' && !sensitive ? grouper.toLowerCase() : grouper;
+      const group = groups.get(key) ?? { grouper, list: [] };
+      group.list.push(item);
+      groups.set(key, group);
+    }
+    const keys = [...groups.keys()];
+    if (!(keys.every((key) => typeof key === 'string') || keys.every((key) => typeof key === 'number' || typeof key === 'boolean'))) return new Unknown('groupby');
+    const order = (key: string | number | boolean | null): string | number => (typeof key === 'string' ? key : Number(key));
+    keys.sort((a, b) => (order(a) < order(b) ? -1 : order(a) > order(b) ? 1 : 0));
+    return keys.map((key) => {
+      const { grouper, list } = groups.get(key) as { grouper: JinjaValue; list: JinjaValue[] };
+      const pair: JinjaValue[] = [grouper, list];
+      GROUPS.add(pair);
+      return pair;
+    });
+  }],
 ]);
+
+/**
+ * `select` and `reject`, `selectattr` and `rejectattr` (P299): the items -
+ * or each item's attribute - the test named passes, or fails; with no test
+ * named, the ones that are true. A test not settled for any item leaves the
+ * list not known; an attribute an item the files give does not have is
+ * undefined, as Jinja reads it.
+ */
+function selected(keep: boolean, byAttribute: boolean): Filter {
+  return (value, args) => {
+    const items = listOf(value);
+    const [attribute, ...afterAttribute] = args;
+    if (items === undefined || (byAttribute && typeof attribute !== 'string')) return new Unknown(keep ? 'select' : 'reject');
+    const [test, ...handed] = byAttribute ? afterAttribute : args;
+    if (test !== undefined && typeof test !== 'string') return new Unknown(keep ? 'select' : 'reject');
+    const out: JinjaValue[] = [];
+    for (const item of items) {
+      const subject = byAttribute ? attributeOf(item, attribute as string, undefined) : item;
+      const missing = subject instanceof Undefined && !isUnsettled(item);
+      const answer = test === undefined ? (missing ? false : truth(subject)) : testOf(test, subject, handed);
+      if (answer === undefined) return new Unknown(keep ? 'select' : 'reject');
+      if (answer === keep) out.push(item);
+    }
+    return out;
+  };
+}
+
+/** Two values compared as Jinja's operators and tests compare them; `undefined` where they are not compared. */
+function compared(operator: string, left: JinjaValue, right: JinjaValue): boolean | undefined {
+  if (isUnsettled(left) || isUnsettled(right)) return undefined;
+  switch (operator) {
+    case '==':
+      return same(left, right);
+    case '!=':
+      return !same(left, right);
+    case '<':
+    case '>':
+    case '<=':
+    case '>=': {
+      if (!((typeof left === 'number' && typeof right === 'number') || (typeof left === 'string' && typeof right === 'string'))) return undefined;
+      const a = left as number | string;
+      const b = right as number | string;
+      return operator === '<' ? a < b : operator === '>' ? a > b : operator === '<=' ? a <= b : a >= b;
+    }
+    case 'in':
+      if (typeof right === 'string' && typeof left === 'string') return right.includes(left);
+      if (Array.isArray(right)) return (right as JinjaValue[]).some((item) => same(item, left));
+      if (isRecord(right) && typeof left === 'string') return left in right;
+      return undefined;
+    default:
+      return undefined;
+  }
+}
+
+/** The tests that compare a value with the one they are handed, by every name Jinja gives them. */
+const COMPARING = new Map([
+  ['==', '=='], ['eq', '=='], ['equalto', '=='],
+  ['!=', '!='], ['ne', '!='],
+  ['<', '<'], ['lt', '<'], ['lessthan', '<'],
+  ['<=', '<='], ['le', '<='],
+  ['>', '>'], ['gt', '>'], ['greaterthan', '>'],
+  ['>=', '>='], ['ge', '>='],
+  ['in', 'in'],
+]);
+
+/**
+ * A Jinja test of a value (P299, the first five P273): its answer, `undefined`
+ * where the files do not settle it. A test this does not know is not read.
+ */
+function testOf(name: string, value: JinjaValue, args: readonly JinjaValue[]): boolean | undefined {
+  if (name === 'defined') return value instanceof Unknown ? undefined : !(value instanceof Undefined);
+  if (name === 'undefined') return value instanceof Unknown ? undefined : value instanceof Undefined;
+  if (isUnsettled(value) || args.some(isUnsettled)) return undefined;
+  const comparing = COMPARING.get(name);
+  if (comparing !== undefined) return args.length === 0 ? undefined : compared(comparing, value, args[0] as JinjaValue);
+  switch (name) {
+    case 'none':
+      return value === null;
+    case 'string':
+      return typeof value === 'string';
+    case 'number':
+      return typeof value === 'number';
+    case 'integer':
+      return typeof value === 'number' && Number.isInteger(value);
+    case 'float':
+      return typeof value === 'number' && !Number.isInteger(value);
+    case 'boolean':
+      return typeof value === 'boolean';
+    case 'true':
+      return value === true;
+    case 'false':
+      return value === false;
+    case 'mapping':
+      return isRecord(value) || value instanceof Namespace;
+    case 'sequence':
+    case 'iterable':
+      return Array.isArray(value) || typeof value === 'string' || isRecord(value) || value instanceof Pairs;
+    case 'callable':
+      return value instanceof Macro || value instanceof Builtin;
+    case 'lower':
+      return typeof value === 'string' ? value === value.toLowerCase() : undefined;
+    case 'upper':
+      return typeof value === 'string' ? value === value.toUpperCase() : undefined;
+    case 'odd':
+    case 'even':
+      return typeof value === 'number' && Number.isInteger(value) ? (Math.abs(value) % 2 === 1) === (name === 'odd') : undefined;
+    case 'divisibleby': {
+      const [by] = args;
+      return typeof value === 'number' && typeof by === 'number' && by !== 0 ? value % by === 0 : undefined;
+    }
+    case 'sameas': {
+      const [other] = args;
+      // Python's `is`: the same value, for the values written plainly.
+      return other === undefined ? undefined : value === other || (value === null && other === null);
+    }
+    default:
+      throw new NotRead(`the test ${name} is not run here`);
+  }
+}
 
 /** The items of a list, a text's characters or a mapping's keys, as Jinja iterates them; `undefined` where it is none of these. */
 function listOf(value: JinjaValue): JinjaValue[] | undefined {
@@ -849,6 +1061,8 @@ const GLOBALS: ReadonlyMap<string, Builtin> = new Map([
     }),
   ],
   ['dict', new Builtin('dict', (args, named) => (args.length === 0 ? Object.fromEntries(named) : isRecord(args[0]) ? { ...(args[0] as Record<string, JinjaValue>), ...Object.fromEntries(named) } : new Unknown('dict')))],
+  // P299: a record whose attributes a loop can set and the text after it read.
+  ['namespace', new Builtin('namespace', (args, named) => (args.length === 0 || isRecord(args[0]) ? new Namespace((namespaces += 1), { ...((args[0] ?? {}) as Record<string, JinjaValue>), ...Object.fromEntries(named) }) : new Unknown('namespace')))],
 ]);
 
 /** A method of a text, a list or a mapping (P289), as Python gives a template one; `undefined` where it is not one read here. */
@@ -942,6 +1156,8 @@ interface MacroCall {
   readonly macro: Macro;
   readonly positional: readonly JinjaValue[];
   readonly named: ReadonlyMap<string, JinjaValue>;
+  /** The names bound where it is called (P299). */
+  readonly from: ReadonlyMap<string, JinjaValue>;
 }
 
 /** The macro a call expression calls and what it hands it; `undefined` where it calls no macro. */
@@ -956,7 +1172,7 @@ const macroCalled = (expression: Expression, scope: Scope): MacroCall | undefine
     if (arg.name === undefined) positional.push(value);
     else named.set(arg.name, value);
   }
-  return { macro: callee, positional, named };
+  return { macro: callee, positional, named, from: scope.names };
 };
 
 /**
@@ -988,10 +1204,15 @@ const renderMacro = (call: MacroCall, run: Run, caller?: Macro): string[] => {
   if (extra.length > 0 && !takes.has('varargs')) throw new NotRead(`${macro.name} is handed more than it takes`);
   for (const [name] of extraNamed) if (!takes.has('kwargs')) throw new NotRead(`${macro.name} takes no ${name}`);
   const names = new Map(macro.closure);
+  // A name its file binds after it, or binds anew, is read as it is when the macro is called (P299), as Jinja looks
+  // a macro's free names up then: the end of the file imported, or the names where it is called in its own file -
+  // but not what a loop, a with or a macro around the call binds.
+  for (const [name, value] of macro.late ?? []) names.set(name, value);
+  if (macro.home === run.home) for (const [name, value] of call.from) if (!run.locals.has(name)) names.set(name, value);
   names.set('varargs', extra);
   names.set('kwargs', Object.fromEntries(extraNamed));
   names.set(macro.name, macro);
-  const inner: Run = { ...run, lookup: macro.lookup };
+  const inner: Run = { ...run, lookup: macro.lookup, home: macro.home, locals: new Set([...macro.parameters.map((each) => each.name), 'varargs', 'kwargs', 'caller']) };
   macro.parameters.forEach((parameter, index) => {
     const value = index < positional.length ? (positional[index] as JinjaValue) : named.has(parameter.name) ? (named.get(parameter.name) as JinjaValue) : parameter.fallback === undefined ? new Undefined(parameter.name) : evaluate(parameter.fallback, { names, lookup: macro.lookup, run: inner });
     names.set(parameter.name, value);
@@ -1021,6 +1242,13 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
       const key = evaluate(expression.key, scope);
       if (of instanceof Unknown || isUnsettled(key)) return new Unknown('a member');
       if (of instanceof Undefined) return new Undefined(of.written);
+      // A namespace's attribute: what was set on this way since it was made, else what it was made with (P299).
+      if (of instanceof Namespace && typeof key === 'string') {
+        const since = scope.names.get(NAMESPACE + of.id) as Readonly<Record<string, JinjaValue>> | undefined;
+        return since?.[key] ?? of.initial[key] ?? new Undefined(key);
+      }
+      // A group `groupby` gives, by its names (P299).
+      if (Array.isArray(of) && GROUPS.has(of) && (key === 'grouper' || key === 'list')) return (of as JinjaValue[])[key === 'grouper' ? 0 : 1] as JinjaValue;
       // A method of a text or a mapping, where the mapping holds nothing by its name (P289).
       if (expression.key.kind === 'literal' && typeof key === 'string' && !(isRecord(of) && key in of)) {
         const method = methodOf(of, key);
@@ -1047,7 +1275,9 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
       }
       // A function Jinja gives, or a method of a value (P289).
       if (expression.of.kind === 'name' || expression.of.kind === 'member') {
-        const callee = evaluate(expression.of, scope);
+        const written = evaluate(expression.of, scope);
+        // A recursive loop's record is called to loop again (P299).
+        const callee = isRecord(written) && written['__call__'] instanceof Builtin ? written['__call__'] : written;
         if (callee instanceof Builtin) {
           const positional: JinjaValue[] = [];
           const named = new Map<string, JinjaValue>();
@@ -1094,13 +1324,7 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
     }
     case 'test': {
       const of = evaluate(expression.of, scope);
-      let answer: boolean | undefined;
-      if (expression.name === 'defined') answer = of instanceof Unknown ? undefined : !(of instanceof Undefined);
-      else if (expression.name === 'undefined') answer = of instanceof Unknown ? undefined : of instanceof Undefined;
-      else if (expression.name === 'none') answer = isUnsettled(of) ? undefined : of === null;
-      else if (expression.name === 'string') answer = isUnsettled(of) ? undefined : typeof of === 'string';
-      else if (expression.name === 'number') answer = isUnsettled(of) ? undefined : typeof of === 'number';
-      else throw new NotRead(`the test ${expression.name} is not run here`);
+      const answer = testOf(expression.name, of, expression.args.map((arg) => evaluate(arg, scope)));
       return answer === undefined ? new Unknown('a test') : answer !== expression.negated;
     }
     case 'conditional': {
@@ -1132,23 +1356,13 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
         case '-':
           return typeof left === 'number' && typeof right === 'number' ? left - right : new Unknown('-');
         case '==':
-          return same(left, right);
         case '!=':
-          return !same(left, right);
         case '<':
         case '>':
         case '<=':
-        case '>=': {
-          if (!((typeof left === 'number' && typeof right === 'number') || (typeof left === 'string' && typeof right === 'string'))) return new Unknown(expression.operator);
-          const a = left as number | string;
-          const b = right as number | string;
-          return expression.operator === '<' ? a < b : expression.operator === '>' ? a > b : expression.operator === '<=' ? a <= b : a >= b;
-        }
+        case '>=':
         case 'in':
-          if (typeof right === 'string' && typeof left === 'string') return right.includes(left);
-          if (Array.isArray(right)) return (right as JinjaValue[]).some((item) => same(item, left));
-          if (isRecord(right) && typeof left === 'string') return left in right;
-          return new Unknown('in');
+          return compared(expression.operator, left, right) ?? new Unknown(expression.operator);
         default:
           throw new NotRead(`the operator ${expression.operator} is not run here`);
       }
@@ -1216,6 +1430,9 @@ interface Run {
   readonly depth: { value: number };
   /** The line of the file rendered whose statement is being rendered, for text a node of another file writes (P273). */
   readonly anchor?: number;
+  /** The rendering of the file whose nodes are rendered, and the names a loop, a with or a macro around them binds (P299). */
+  readonly home: object;
+  readonly locals: ReadonlySet<string>;
 }
 
 /** The file a statement names, parsed; `undefined` where the repository has no such file. */
@@ -1294,7 +1511,7 @@ const renderTemplate = (nodes: readonly Node[], ways: readonly Way[], run: Run):
 const renderBlock = (chain: readonly (readonly Node[])[], way: Way, run: Run): Way[] => {
   const [first = [], ...rest] = chain;
   const names = rest.length === 0 ? way.names : new Map([...way.names, ['super', new Macro('super', [], [{ kind: 'super', chain: rest }], way.names, run.lookup)]]);
-  return renderNodes(first, [{ ...way, names }], run).map((done) => ({ ...done, names: way.names }));
+  return renderNodes(first, [{ ...way, names }], run).map((done) => ({ ...done, names: handedBack(done.names, way.names) }));
 };
 
 /** A file another names, rendered with the names bound and the lookup, or none of them (P273). */
@@ -1302,7 +1519,7 @@ const renderLoaded = (loaded: Loaded, start: Way, withContext: boolean, run: Run
   if (run.depth.value >= MOST_DEPTH) throw new NotRead('files include each other deeper than is followed');
   run.depth.value += 1;
   try {
-    return renderTemplate(loaded.nodes, [withContext ? start : { ...start, names: new Map() }], withContext ? run : { ...run, lookup: NOTHING, blocks: new Map() });
+    return renderTemplate(loaded.nodes, [withContext ? start : { ...start, names: new Map() }], withContext ? { ...run, home: loaded, locals: new Set() } : { ...run, lookup: NOTHING, blocks: new Map(), home: loaded, locals: new Set() });
   } finally {
     run.depth.value -= 1;
   }
@@ -1327,6 +1544,14 @@ const moduleOf = (node: Extract<Node, { kind: 'import' | 'from' }>, way: Way, ru
     const agreed = values.every((value) => value === first || (value instanceof Macro && first instanceof Macro ? value.body === first.body : value !== undefined && first !== undefined && same(value, first)));
     out[name] = first !== undefined && agreed ? first : new Unknown(name);
   }
+  // A macro of the file reads its names as the file ends them (P299): where every way ends a name alike.
+  const late = new Map<string, JinjaValue>();
+  for (const name of new Set(ways.flatMap((each) => [...each.names.keys()]))) {
+    const values = ways.map((each) => each.names.get(name));
+    const [first] = values;
+    if (first !== undefined && values.every((value) => value === first || (value !== undefined && !(value instanceof Macro) && same(value, first)))) late.set(name, first);
+  }
+  for (const value of Object.values(out)) if (value instanceof Macro && value.home === loaded) value.late = late;
   return out;
 };
 
@@ -1358,6 +1583,14 @@ const renderNode = (node: Node, way: Way, outer: Run): Way[] => {
     }
     case 'set':
       return [{ ...way, names: new Map([...way.names, [node.name, evaluate(node.value, scope)]]) }];
+    case 'set-attribute': {
+      // Only a namespace's attributes are set, as Jinja allows (P299); kept on the way, and handed back past loops and blocks.
+      const target = evaluate({ kind: 'name', name: node.name }, scope);
+      if (!(target instanceof Namespace)) throw new NotRead(`${node.written} sets an attribute of what is not a namespace`);
+      const key = NAMESPACE + target.id;
+      const since = (way.names.get(key) ?? {}) as Readonly<Record<string, JinjaValue>>;
+      return [{ ...way, names: new Map([...way.names, [key, { ...since, [node.attribute]: evaluate(node.value, scope) }]]) }];
+    }
     case 'set-many': {
       const value = evaluate(node.value, scope);
       const items = Array.isArray(value) ? (value as JinjaValue[]) : undefined;
@@ -1375,10 +1608,10 @@ const renderNode = (node: Node, way: Way, outer: Run): Way[] => {
     case 'with': {
       const bound = new Map(way.names);
       for (const [name, value] of node.assignments) bound.set(name, evaluate(value, scope));
-      return renderNodes(node.body, [{ ...way, names: bound }], run).map((done) => ({ ...done, names: way.names }));
+      return renderNodes(node.body, [{ ...way, names: bound }], { ...run, locals: new Set([...run.locals, ...node.assignments.map(([name]) => name)]) }).map((done) => ({ ...done, names: handedBack(done.names, way.names) }));
     }
     case 'macro':
-      return [{ ...way, names: new Map([...way.names, [node.name, new Macro(node.name, node.parameters, node.body, way.names, run.lookup)]]) }];
+      return [{ ...way, names: new Map([...way.names, [node.name, new Macro(node.name, node.parameters, node.body, way.names, run.lookup, run.home)]]) }];
     case 'call-block': {
       const called = macroCalled(node.call, scope);
       if (called === undefined) throw new NotRead(`${node.written} calls no macro the files define`);
@@ -1392,7 +1625,7 @@ const renderNode = (node: Node, way: Way, outer: Run): Way[] => {
         throw new NotRead(`${node.written} names a file that is not in the repository`);
       }
       // What the included file binds stays in it.
-      return renderLoaded(loaded, way, node.withContext, run).map((done) => ({ ...done, names: way.names }));
+      return renderLoaded(loaded, way, node.withContext, run).map((done) => ({ ...done, names: handedBack(done.names, way.names) }));
     }
     case 'import':
       return [{ ...way, names: new Map([...way.names, [node.as, moduleOf(node, way, run)]]) }];
@@ -1419,39 +1652,87 @@ const renderNode = (node: Node, way: Way, outer: Run): Way[] => {
       }
       return renderNodes(node.otherwise, [way], run);
     }
-    case 'for': {
-      const over = evaluate(node.over, scope);
-      if (!(over instanceof Pairs) && !Array.isArray(over) && !isRecord(over) && typeof over !== 'string') throw new NotRead(`${node.written} loops over what the files do not give`);
-      const items: JinjaValue[] = over instanceof Pairs ? over.pairs.map(([key, value]) => [key, value]) : Array.isArray(over) ? [...(over as JinjaValue[])] : isRecord(over) ? Object.keys(over) : [...over];
-      if (items.length === 0) return renderNodes(node.otherwise, [way], run);
-      let ways: Way[] = [way];
-      items.forEach((item, index) => {
-        const bound = new Map<string, JinjaValue>();
-        const [only] = node.names;
-        if (node.names.length === 1 && only !== undefined) bound.set(only, item);
-        else if (Array.isArray(item) && item.length === node.names.length) node.names.forEach((name, at) => bound.set(name, (item as JinjaValue[])[at] as JinjaValue));
-        else throw new NotRead(`${node.written} unpacks what it does not hold`);
-        // The loop's own record (P289): where it is, what is beside it, and `cycle` through the values it is handed.
-        bound.set('loop', {
-          index: index + 1,
-          index0: index,
-          revindex: items.length - index,
-          revindex0: items.length - index - 1,
-          first: index === 0,
-          last: index === items.length - 1,
-          length: items.length,
-          depth: 1,
-          depth0: 0,
-          ...(index > 0 ? { previtem: items[index - 1] as JinjaValue } : {}),
-          ...(index < items.length - 1 ? { nextitem: items[index + 1] as JinjaValue } : {}),
-          cycle: new Builtin('cycle', (args) => (args.length === 0 ? new Unknown('cycle') : (args[index % args.length] as JinjaValue))),
-        });
-        // What the body binds stays in the body, as Jinja scopes a loop.
-        ways = ways.flatMap((at) => renderNodes(node.body, [{ ...at, names: new Map([...at.names, ...bound]) }], run).map((done) => ({ ...done, names: at.names })));
-      });
-      return ways;
-    }
+    case 'for':
+      return loopOver(node, evaluate(node.over, scope), way, run, 0);
   }
+};
+
+/**
+ * A loop over what it is handed, at a depth (P273, P289, P299): each item the
+ * loop's `if` keeps bound to its names, with the loop's record - where it is,
+ * what is beside it, `cycle`, `changed`, and for a recursive loop `loop(...)`,
+ * the same loop over what it is handed one deeper, its text written there.
+ * What the body binds stays in the body, as Jinja scopes a loop, save what it
+ * sets on a namespace.
+ */
+const loopOver = (node: Extract<Node, { kind: 'for' }>, over: JinjaValue, way: Way, outer: Run, depth: number): Way[] => {
+  if (!(over instanceof Pairs) && !Array.isArray(over) && !isRecord(over) && typeof over !== 'string') throw new NotRead(`${node.written} loops over what the files do not give`);
+  const all: JinjaValue[] = over instanceof Pairs ? over.pairs.map(([key, value]) => [key, value]) : Array.isArray(over) ? [...(over as JinjaValue[])] : isRecord(over) ? Object.keys(over) : [...over];
+  const bind = (item: JinjaValue): Map<string, JinjaValue> => {
+    const bound = new Map<string, JinjaValue>();
+    const [only] = node.names;
+    if (node.names.length === 1 && only !== undefined) bound.set(only, item);
+    else if (Array.isArray(item) && item.length === node.names.length) node.names.forEach((name, at) => bound.set(name, (item as JinjaValue[])[at] as JinjaValue));
+    else throw new NotRead(`${node.written} unpacks what it does not hold`);
+    return bound;
+  };
+  // The items the loop's `if` keeps, before they are counted (P299).
+  const filter = node.filter;
+  const items =
+    filter === undefined
+      ? all
+      : all.filter((item) => {
+          const kept = truth(evaluate(filter, { names: new Map([...way.names, ...bind(item)]), lookup: outer.lookup, run: outer }));
+          if (kept === undefined) throw new NotRead(`${node.written} keeps items by what the files do not decide`);
+          return kept;
+        });
+  if (items.length === 0) return renderNodes(node.otherwise, [way], outer);
+  const run: Run = { ...outer, locals: new Set([...outer.locals, ...node.names, 'loop']) };
+  // What `loop.changed(...)` was last handed, by the place it was handed at; `null` where the ways disagree (P299).
+  const handed = new Map<number, string | null>();
+  let ways: Way[] = [way];
+  items.forEach((item, index) => {
+    const bound = bind(item);
+    const changed = new Builtin('changed', (args) => {
+      const now = args.some(holdsUnsettled) ? null : json(args);
+      const before = handed.has(index) ? handed.get(index) : undefined;
+      handed.set(index, before !== undefined && before !== now ? null : now);
+      const last = [...handed.keys()].filter((at) => at < index).sort((a, b) => b - a)[0];
+      if (now === null || (last !== undefined && handed.get(last) === null)) return new Unknown('loop.changed');
+      return last === undefined || handed.get(last) !== now;
+    });
+    const again = new Builtin('loop', ([inner]) => {
+      if (inner instanceof Undefined) return '';
+      if (inner === undefined || isUnsettled(inner)) return new Unknown('loop()');
+      if (run.depth.value >= MOST_DEPTH) throw new NotRead(`${node.written} recurses deeper than is followed`);
+      run.depth.value += 1;
+      try {
+        const texts = [...new Set(loopOver(node, inner, { text: '', names: way.names, lines: [] }, outer, depth + 1).map((done) => done.text))];
+        return texts.length === 1 ? (texts[0] as string) : new Unknown('loop()');
+      } finally {
+        run.depth.value -= 1;
+      }
+    });
+    // The loop's own record (P289).
+    bound.set('loop', {
+      index: index + 1,
+      index0: index,
+      revindex: items.length - index,
+      revindex0: items.length - index - 1,
+      first: index === 0,
+      last: index === items.length - 1,
+      length: items.length,
+      depth: depth + 1,
+      depth0: depth,
+      ...(index > 0 ? { previtem: items[index - 1] as JinjaValue } : {}),
+      ...(index < items.length - 1 ? { nextitem: items[index + 1] as JinjaValue } : {}),
+      cycle: new Builtin('cycle', (args) => (args.length === 0 ? new Unknown('cycle') : (args[index % args.length] as JinjaValue))),
+      changed,
+      ...(node.recursive ? { __call__: again } : {}),
+    });
+    ways = ways.flatMap((at) => renderNodes(node.body, [{ ...at, names: new Map([...at.names, ...bound]) }], run).map((done) => ({ ...done, names: handedBack(done.names, at.names) })));
+  });
+  return ways;
 };
 
 /** The text as P261 read it: every expression it settles rendered, every statement kept by a stand-in. */
@@ -1488,7 +1769,7 @@ const keptStatements = (text: string, lookup: Lookup, file: number): Rendering =
 export const renderJinja = (text: string, lookup: Lookup, file = 0, options: JinjaOptions = {}): Rendering => {
   try {
     const nodes = parseTemplate(text);
-    const run: Run = { lookup, file, kept: new Map(), unrendered: new Map(), undecided: [], load: options.load, templates: new Map(), loaded: new Set(), blocks: new Map(), depth: { value: 0 } };
+    const run: Run = { lookup, file, kept: new Map(), unrendered: new Map(), undecided: [], load: options.load, templates: new Map(), loaded: new Set(), blocks: new Map(), depth: { value: 0 }, home: nodes, locals: new Set() };
     const all = renderTemplate(nodes, [{ text: '', names: new Map(), lines: [] }], run);
     const ways = [...new Set(all.map((way) => way.text))];
     return { text: ways[0] ?? '', unrendered: run.unrendered, ways, undecided: run.undecided, loaded: [...run.loaded].sort(), lines: settledLines(all[0]?.lines ?? []) };

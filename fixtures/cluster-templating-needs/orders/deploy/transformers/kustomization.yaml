@@ -1,0 +1,11 @@
+resources:
+  - prefix.yaml
+  - labels.yaml
+  - port.yaml
+patches:
+  - target:
+      kind: PrefixTransformer
+    patch: |-
+      - op: replace
+        path: /prefix
+        value: shop-

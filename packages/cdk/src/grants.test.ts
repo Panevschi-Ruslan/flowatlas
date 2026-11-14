@@ -79,3 +79,92 @@ describe('what a CDK function is granted through its role and Grant.addToPrincip
     ]);
   });
 });
+
+describe('what a CDK function is granted through managed policies, groups and composite principals (P299)', () => {
+  const grantsOf = (deployment: Deployment): string[] =>
+    (deployment.functions[0]?.grants ?? []).map(({ kind, name, any, unread, by }) => `${kind} ${name ?? any ?? `open: ${unread ?? '?'}`} ${by}`);
+
+  it("reads a role's managed policies: one AWS keeps by its name or ARN, one the app creates by its statements, one of the account left open", () => {
+    const deployment = stack(`
+    const notices = new sns.Topic(this, 'Notices', { topicName: 'stock-notices' });
+    const restock = new sqs.Queue(this, 'Restock', { queueName: 'stock-restock' });
+    const own = new iam.ManagedPolicy(this, 'Own', { statements: [new iam.PolicyStatement({ actions: ['sns:Publish'], resources: [notices.topicArn] })] });
+    own.addStatements(new iam.PolicyStatement({ actions: ['sqs:SendMessage'], resources: [restock.queueArn] }));
+    const role = new iam.Role(this, 'MoveRole', {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'), own],
+    });
+    role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSQSFullAccess'));
+    role.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'Tables', 'arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess'));
+    role.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyName(this, 'Shared', 'stock-shared-policy'));
+    const move = new lambda.Function(this, 'Move', { functionName: 'stock-move', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset(path.join(__dirname, '..', 'src')), handler: 'move.handler', role });`);
+    const open = 'open: the managed policy stock-shared-policy is kept in the account, and its statements are not in the app stock-shared-policy';
+    expect(grantsOf(deployment)).toEqual([
+      'queue AmazonSQSFullAccess AmazonSQSFullAccess',
+      'table AmazonDynamoDBFullAccess AmazonDynamoDBFullAccess',
+      ...['queue', 'topic', 'bus', 'stream', 'table', 'bucket', 'function', 'workflow'].map((kind) => `${kind} ${open}`),
+      'topic stock-notices PolicyStatement',
+      'queue stock-restock PolicyStatement',
+    ]);
+  });
+
+  it("reads what is added through a function's own role and a managed policy attached to it", () => {
+    const deployment = stack(`${FN}
+    const restock = new sqs.Queue(this, 'Restock', { queueName: 'stock-restock' });
+    const audit = new sqs.Queue(this, 'Audit', { queueName: 'stock-audit' });
+    move.role?.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSNSFullAccess'));
+    move.role!.addToPrincipalPolicy(new iam.PolicyStatement({ actions: ['sqs:SendMessage'], resources: [restock.queueArn] }));
+    new iam.ManagedPolicy(this, 'AuditPolicy', { roles: [move.role!], statements: [new iam.PolicyStatement({ actions: ['sqs:SendMessage'], resources: [audit.queueArn] })] });`);
+    expect(grantsOf(deployment)).toEqual(['topic AmazonSNSFullAccess AmazonSNSFullAccess', 'queue stock-restock PolicyStatement', 'queue stock-audit PolicyStatement']);
+  });
+
+  it('reads the grants of a user whose access key the function is deployed with, and of the groups that user is in', () => {
+    const deployment = stack(`
+    const restock = new sqs.Queue(this, 'Restock', { queueName: 'stock-restock' });
+    const notices = new sns.Topic(this, 'Notices', { topicName: 'stock-notices' });
+    const audit = new sqs.Queue(this, 'Audit', { queueName: 'stock-audit' });
+    const unrelated = new sqs.Queue(this, 'Unrelated', { queueName: 'stock-unrelated' });
+    const operators = new iam.Group(this, 'Operators');
+    const others = new iam.Group(this, 'Others');
+    const user = new iam.User(this, 'Mover');
+    operators.addUser(user);
+    const key = new iam.AccessKey(this, 'MoverKey', { user });
+    restock.grantSendMessages(user);
+    notices.grantPublish(operators);
+    operators.addToPolicy(new iam.PolicyStatement({ actions: ['sqs:SendMessage'], resources: [audit.queueArn] }));
+    operators.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonS3FullAccess'));
+    unrelated.grantSendMessages(others);
+    const move = new lambda.Function(this, 'Move', { functionName: 'stock-move', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset(path.join(__dirname, '..', 'src')), handler: 'move.handler', environment: { KEY_ID: key.accessKeyId } });`);
+    expect(grantsOf(deployment)).toEqual([
+      'queue stock-restock grantSendMessages',
+      'topic stock-notices grantPublish',
+      'bucket AmazonS3FullAccess AmazonS3FullAccess',
+      'queue stock-audit PolicyStatement',
+    ]);
+  });
+
+  it("reads a user whose access key is kept in a secret the function's environment names", () => {
+    const deployment = stack(`
+    const restock = new sqs.Queue(this, 'Restock', { queueName: 'stock-restock' });
+    const user = new iam.User(this, 'Mover');
+    const key = new iam.AccessKey(this, 'MoverKey', { user });
+    const secret = new cdk.aws_secretsmanager.Secret(this, 'MoverSecret', { secretObjectValue: { secret: key.secretAccessKey } });
+    restock.grantSendMessages(user);
+    const move = new lambda.Function(this, 'Move', { functionName: 'stock-move', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset(path.join(__dirname, '..', 'src')), handler: 'move.handler', environment: { KEY_SECRET: secret.secretArn } });`);
+    expect(grantsOf(deployment)).toEqual(['queue stock-restock grantSendMessages']);
+  });
+
+  it('reads a role assumed by a composite principal, and a grant to a composite principal on each member', () => {
+    const deployment = stack(`
+    const role = new iam.Role(this, 'MoveRole', { assumedBy: new iam.CompositePrincipal(new iam.ServicePrincipal('lambda.amazonaws.com'), new iam.ServicePrincipal('states.amazonaws.com')) });
+    const move = new lambda.Function(this, 'Move', { functionName: 'stock-move', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset(path.join(__dirname, '..', 'src')), handler: 'move.handler', role });
+    const other = new iam.Role(this, 'OtherRole', { assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com') });
+    const restock = new sqs.Queue(this, 'Restock', { queueName: 'stock-restock' });
+    const later = new sqs.Queue(this, 'Later', { queueName: 'stock-later' });
+    const both = new iam.CompositePrincipal(other);
+    both.addPrincipals(role);
+    restock.grantSendMessages(both);
+    iam.Grant.addToPrincipal({ grantee: new iam.CompositePrincipal(other, move), actions: ['sqs:SendMessage'], resourceArns: [later.queueArn] });`);
+    expect(grantsOf(deployment)).toEqual(['queue stock-restock grantSendMessages', 'queue stock-later PolicyStatement']);
+  });
+});

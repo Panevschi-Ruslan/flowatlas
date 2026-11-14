@@ -695,17 +695,58 @@ const jsonPatch = (target: Located, operation: Record<string, unknown>): string 
 interface Target {
   readonly kind?: string;
   readonly name?: string;
+  /** What else a kustomize selector names (P299): a namespace, and labels and annotations by a selector's terms. */
+  readonly namespace?: string;
+  readonly labelSelector?: string;
+  readonly annotationSelector?: string;
 }
 
 const targetOf = (value: unknown): Target | undefined => {
   if (!isRecord(value)) return undefined;
-  const kind = text(value['kind']);
-  const name = text(value['name']);
-  return { ...(kind === undefined ? {} : { kind }), ...(name === undefined ? {} : { name }) };
+  const out: Record<string, string> = {};
+  for (const key of ['kind', 'name', 'namespace', 'labelSelector', 'annotationSelector'] as const) {
+    const written = text(value[key]);
+    if (written !== undefined) out[key] = written;
+  }
+  return out as Target;
+};
+
+/**
+ * Whether a mapping of labels passes a label selector as Kubernetes reads one
+ * (P299): each term, `k=v`, `k==v`, `k!=v`, `k`, `!k`, `k in (a,b)` and
+ * `k notin (a,b)`.
+ */
+const labelSelected = (selector: string, labels: Readonly<Record<string, string>>): boolean => {
+  const terms = selector.match(/[^,(]+(?:\([^)]*\))?/g) ?? [];
+  return terms.every((written) => {
+    const term = written.trim();
+    if (term === '') return true;
+    const set = /^([^\s!=]+)\s+(in|notin)\s*\(([^)]*)\)$/.exec(term);
+    if (set !== null) {
+      const values = (set[3] as string).split(',').map((each) => each.trim());
+      const has = labels[set[1] as string] !== undefined && values.includes(labels[set[1] as string] as string);
+      return set[2] === 'in' ? has : !has;
+    }
+    const not = /^([^!=\s]+)\s*!=\s*(.*)$/.exec(term);
+    if (not !== null) return labels[not[1] as string] !== (not[2] as string).trim();
+    const is = /^([^!=\s]+)\s*==?\s*(.*)$/.exec(term);
+    if (is !== null) return labels[is[1] as string] === (is[2] as string).trim();
+    if (term.startsWith('!')) return labels[term.slice(1).trim()] === undefined;
+    return labels[term] !== undefined;
+  });
 };
 
 const targets = (resources: readonly Resource[], target: Target): Resource[] =>
-  resources.filter((each) => (target.kind === undefined || text(each.value['kind']) === target.kind) && (target.name === undefined || each.names.has(target.name)));
+  resources.filter((each) => {
+    const metadata = isRecord(each.value['metadata']) ? each.value['metadata'] : {};
+    return (
+      (target.kind === undefined || text(each.value['kind']) === target.kind) &&
+      (target.name === undefined || each.names.has(target.name)) &&
+      (target.namespace === undefined || text(metadata['namespace']) === target.namespace) &&
+      (target.labelSelector === undefined || labelSelected(target.labelSelector, labelsOf(metadata['labels']))) &&
+      (target.annotationSelector === undefined || labelSelected(target.annotationSelector, labelsOf(metadata['annotations'])))
+    );
+  });
 
 // ---------------------------------------------------------------- replacements
 
@@ -774,16 +815,8 @@ const setFieldAt = (value: unknown, steps: readonly Step[], written: unknown, cr
   return any;
 };
 
-/** The resources a replacement's `source`, `select` or `reject` names by kind, name and namespace. */
-const selectedBy = (resources: readonly Resource[], selector: Record<string, unknown>): Resource[] => {
-  const kind = text(selector['kind']);
-  const name = text(selector['name']);
-  const namespace = text(selector['namespace']);
-  return resources.filter((each) => {
-    const metadata = isRecord(each.value['metadata']) ? each.value['metadata'] : {};
-    return (kind === undefined || text(each.value['kind']) === kind) && (name === undefined || each.names.has(name)) && (namespace === undefined || text(metadata['namespace']) === namespace);
-  });
-};
+/** The resources a replacement's `source`, `select` or `reject` names by kind, name and namespace, and labels and annotations by selector (P299). */
+const selectedBy = (resources: readonly Resource[], selector: Record<string, unknown>): Resource[] => targets(resources, targetOf(selector) ?? {});
 
 /** The folder a kustomization keeps an inflated chart in: `<home>/<name>`, or `<home>/<name>-<version>/<name>` as newer kustomize pulls it. */
 const chartHomeOf = (home: string, name: string, version: string | undefined): string | undefined =>
@@ -965,11 +998,62 @@ const IMAGE_FIELDS: readonly FieldSpec[] = specs(false, [undefined], 'spec/conta
 /** A resource's name, which a name prefix and suffix write by default. */
 const NAME_FIELD: readonly FieldSpec[] = specs(false, [undefined], 'metadata/name');
 
-/** The fields kustomize renames with the service object they name by default: an `Ingress`'s backends. */
-const SERVICE_REFERENCES: NameReference = {
-  kind: 'Service',
-  fields: specs(false, ['Ingress'], 'spec/defaultBackend/service/name', 'spec/rules/http/paths/backend/service/name', 'spec/backend/serviceName', 'spec/rules/http/paths/backend/serviceName'),
-};
+/** A pod spec's fields, at each place a kind holds one: a pod's own, a workload's template, a cron job's job template. */
+const podSpecFields = (...paths: string[]): FieldSpec[] => [
+  ...specs(false, ['Pod'], ...paths.map((path) => `spec/${path}`)),
+  ...specs(false, [...POD_OWNERS, 'Job', 'ReplicationController'], ...paths.map((path) => `spec/template/spec/${path}`)),
+  ...specs(false, ['CronJob'], ...paths.map((path) => `spec/jobTemplate/spec/template/spec/${path}`)),
+];
+
+/** The containers of a pod spec, init and ephemeral ones included. */
+const CONTAINER_LISTS = ['containers', 'initContainers', 'ephemeralContainers'];
+
+/**
+ * The fields kustomize renames with the resource they name by default (its
+ * built-in `nameReference` configuration; P299 past an `Ingress`'s backends):
+ * the config maps and secrets a pod's volumes, environment and pull secrets
+ * name, an `Ingress`'s TLS secret; the service an `Ingress`, a stateful set,
+ * an API service or a webhook names; the service account a pod runs as and a
+ * binding's subjects; the claim a volume names; a role a binding names; and
+ * the workload an autoscaler or a disruption budget's target names.
+ */
+const DEFAULT_NAME_REFERENCES: readonly NameReference[] = [
+  {
+    kind: 'Service',
+    fields: [
+      ...specs(false, ['Ingress'], 'spec/defaultBackend/service/name', 'spec/rules/http/paths/backend/service/name', 'spec/backend/serviceName', 'spec/rules/http/paths/backend/serviceName'),
+      ...specs(false, ['StatefulSet'], 'spec/serviceName'),
+      ...specs(false, ['APIService'], 'spec/service/name'),
+      ...specs(false, ['ValidatingWebhookConfiguration', 'MutatingWebhookConfiguration'], 'webhooks/clientConfig/service/name'),
+    ],
+  },
+  {
+    kind: 'ConfigMap',
+    fields: podSpecFields(
+      'volumes/configMap/name',
+      'volumes/projected/sources/configMap/name',
+      ...CONTAINER_LISTS.flatMap((list) => [`${list}/env/valueFrom/configMapKeyRef/name`, `${list}/envFrom/configMapRef/name`]),
+    ),
+  },
+  {
+    kind: 'Secret',
+    fields: [
+      ...podSpecFields(
+        'volumes/secret/secretName',
+        'volumes/projected/sources/secret/name',
+        'imagePullSecrets/name',
+        ...CONTAINER_LISTS.flatMap((list) => [`${list}/env/valueFrom/secretKeyRef/name`, `${list}/envFrom/secretRef/name`]),
+      ),
+      ...specs(false, ['Ingress'], 'spec/tls/secretName'),
+      ...specs(false, ['ServiceAccount'], 'imagePullSecrets/name', 'secrets/name'),
+    ],
+  },
+  { kind: 'ServiceAccount', fields: [...podSpecFields('serviceAccountName', 'serviceAccount'), ...specs(false, ['RoleBinding', 'ClusterRoleBinding'], 'subjects/name')] },
+  { kind: 'PersistentVolumeClaim', fields: podSpecFields('volumes/persistentVolumeClaim/claimName') },
+  { kind: 'Role', fields: specs(false, ['RoleBinding'], 'roleRef/name') },
+  { kind: 'ClusterRole', fields: specs(false, ['RoleBinding', 'ClusterRoleBinding'], 'roleRef/name') },
+  ...[...POD_OWNERS, 'ReplicationController'].map((kind): NameReference => ({ kind, fields: specs(false, ['HorizontalPodAutoscaler', 'VerticalPodAutoscaler'], 'spec/scaleTargetRef/name', 'spec/targetRef/name') })),
+];
 
 /** Every text at a kustomize field path (P289), each as its holder and key: a list on the way is every item of it, as kustomize walks one. */
 const stringsAtPath = (value: unknown, path: readonly string[]): Array<{ holder: Record<string | number, unknown>; key: string | number }> => {
@@ -1062,6 +1146,8 @@ class Builder {
     private readonly read: (path: string) => Resource[],
     /** A chart rendered with one reading, its dependencies with it (P263). */
     private readonly inflate: (dir: string, reading: ChartReading, rows: ManifestRow[]) => Resource[] = () => [],
+    /** The kustomizations whose transformers or generators this one builds the configurations of (P299). */
+    private readonly within: ReadonlySet<string> = new Set(),
   ) {}
 
   /** The documents of a patch file, lists of operations included. */
@@ -1180,7 +1266,7 @@ class Builder {
    * resource of the kind has now is left as it is.
    */
   private renameReferences(resources: readonly Resource[]): void {
-    for (const reference of [SERVICE_REFERENCES, ...this.#nameReferences]) {
+    for (const reference of [...DEFAULT_NAME_REFERENCES, ...this.#nameReferences]) {
       const referred = resources.filter((resource) => text(resource.value['kind']) === reference.kind);
       const nameOf = (resource: Resource): string | undefined => text(isRecord(resource.value['metadata']) ? resource.value['metadata']['name'] : undefined);
       const current = new Set(referred.flatMap((resource) => nameOf(resource) ?? []));
@@ -1195,6 +1281,8 @@ class Builder {
         for (const spec of reference.fields) {
           if (!specApplies(spec, resource.value)) continue;
           for (const { holder, key } of stringsAtPath(resource.value, spec.path)) {
+            // A reference that says the kind it names (a binding's roleRef and subjects, an autoscaler's target) names only that kind (P299).
+            if (typeof key === 'string' && typeof holder['kind'] === 'string' && holder['kind'] !== reference.kind) continue;
             const now = renamed.get(holder[key] as string);
             if (now !== undefined) holder[key] = now;
           }
@@ -1488,16 +1576,21 @@ class Builder {
         documents(path);
         continue;
       }
-      // A folder is a kustomization whose resources are the configurations.
-      const inner = kustomizationAt(path);
-      if (inner === undefined) {
+      // A folder is a kustomization built as kustomize builds it (P299), its own patches, prefixes, labels and
+      // generators over the configurations it lists; what it builds is the configurations.
+      if (kustomizationAt(path) === undefined) {
         said(`lists the folder ${written} under ${key}, which holds no kustomization`);
         continue;
       }
-      for (const listed of Array.isArray(inner.value['resources']) ? inner.value['resources'] : []) {
-        const file = text(listed) === undefined ? undefined : resolve(path, text(listed) as string);
-        if (file !== undefined && existsSync(file) && !statSync(file).isDirectory()) documents(file);
+      if (this.within.has(path) || path === kustomization.dir || this.within.size >= 8) {
+        said(`lists the folder ${written} under ${key}, which is ${this.within.size >= 8 ? 'nested deeper than is followed' : 'one of the kustomizations it configures'}`);
+        continue;
       }
+      const inner = new Builder(this.root, this.read, this.inflate, new Set([...this.within, kustomization.dir]));
+      const built = inner.build(path);
+      this.rows.push(...inner.rows);
+      if (built.length === 0) said(`lists the folder ${written} under ${key}, whose kustomization builds no configuration`);
+      for (const resource of built) out.push({ config: resource.value, at: whereOf(resource.value) ?? { file: resource.file, line: 1 } });
     }
     return out;
   }
@@ -1541,7 +1634,59 @@ class Builder {
       resources.push(...this.inflateOne(kustomization.dir, config, resolve(kustomization.dir, text(config['chartHome']) ?? 'charts'), at));
       return;
     }
+    if (kind === 'IAMPolicyGenerator') {
+      // The service account it writes (P299): the Kubernetes one named, bound to the cloud account by its annotation.
+      const service = isRecord(config['kubernetesService']) ? config['kubernetesService'] : {};
+      const account = isRecord(config['serviceAccount']) ? config['serviceAccount'] : {};
+      const name = text(service['name']);
+      if (name === undefined) return;
+      const namespace = text(service['namespace']);
+      const cloudName = text(account['name']);
+      const project = text(account['projectId']);
+      const annotations = cloudName === undefined || project === undefined ? {} : { 'iam.gke.io/gcp-service-account': `${cloudName}@${project}.iam.gserviceaccount.com` };
+      const metadata = located({ name, ...(namespace === undefined ? {} : { namespace }), annotations: located(annotations, at) }, at);
+      resources.push({ value: located({ apiVersion: 'v1', kind: 'ServiceAccount', metadata }, at), file: at.file, names: new Set([name]) });
+      return;
+    }
     this.rows.push(row('manifest-unread', at, `${at.file} configures the built-in generator ${kind ?? '?'}, which is not read`, UNREAD_HINT, []));
+  }
+
+  /**
+   * A `ValueAddTransformer` (P299), as kustomize runs one: its `value` (by
+   * default the name of the kustomization's folder) written at each target's
+   * `fieldPath` (by default `metadata/namespace`, a `\/` a slash inside a key)
+   * of the resources its selector chooses (every one where it writes none),
+   * the field made where it is not there; with `filePathPosition`, put in as
+   * that segment of the path written there instead. Targets in the file
+   * `targetFilePath` names are read after its own.
+   */
+  private valueAdded(kustomization: Kustomization, config: Record<string, unknown>, resources: readonly Resource[], at: Where): void {
+    const value = text(config['value']) ?? basename(kustomization.dir);
+    const fromFile = text(config['targetFilePath']);
+    const written = [
+      ...(Array.isArray(config['targets']) ? config['targets'] : []),
+      ...(fromFile === undefined ? [] : this.readPatch(resolve(kustomization.dir, fromFile)).flatMap((document) => (Array.isArray(document) ? document : [document]))),
+    ];
+    if (fromFile !== undefined && !existsSync(resolve(kustomization.dir, fromFile))) {
+      this.rows.push(row('manifest-unread', at, `${at.file} names the targets file ${fromFile}, which is not in the project`, UNREAD_HINT, []));
+    }
+    for (const target of written.filter(isRecord)) {
+      const selector = isRecord(target['selector']) ? targetOf(target['selector']) : undefined;
+      const path = (text(target['fieldPath']) ?? 'metadata/namespace').split(/(?<!\\)\//).map((step) => step.replace(/\\\//g, '/')).filter((step) => step !== '');
+      const last = path[path.length - 1];
+      if (last === undefined) continue;
+      const position = Number(text(target['filePathPosition']) ?? 0);
+      for (const resource of selector === undefined ? resources : targets(resources, selector)) {
+        for (const holder of mapsAtPath(resource.value, path.slice(0, -1), true)) {
+          const before = holder[last];
+          if (before !== undefined && before !== null && typeof before !== 'string' && typeof before !== 'number') continue;
+          holder[last] = position > 0 ? pathSegmentAdded(before === undefined || before === null ? '' : String(before), value, position) : value;
+        }
+        // A name written is one the resource is known by.
+        const name = text(isRecord(resource.value['metadata']) ? resource.value['metadata']['name'] : undefined);
+        if (name !== undefined) resource.names.add(name);
+      }
+    }
   }
 
   /**
@@ -1559,6 +1704,16 @@ class Builder {
     switch (kind) {
       case 'PrefixSuffixTransformer':
         for (const resource of resources) affixed(resource, fields, text(config['prefix']) ?? '', fields, text(config['suffix']) ?? '');
+        return;
+      // The two halves newer kustomize splits it into (P299), each by default over a resource's name.
+      case 'PrefixTransformer':
+        for (const resource of resources) affixed(resource, fields.length === 0 ? NAME_FIELD : fields, text(config['prefix']) ?? '', [], '');
+        return;
+      case 'SuffixTransformer':
+        for (const resource of resources) affixed(resource, [], '', fields.length === 0 ? NAME_FIELD : fields, text(config['suffix']) ?? '');
+        return;
+      case 'ValueAddTransformer':
+        this.valueAdded(kustomization, config, resources, at);
         return;
       case 'LabelTransformer':
         for (const resource of resources) pairsWritten(resource.value, labelsOf(config['labels']), fields);
@@ -1613,6 +1768,19 @@ const affixed = (resource: Resource, before: readonly FieldSpec[], prefix: strin
   }
   const name = text(isRecord(resource.value['metadata']) ? resource.value['metadata']['name'] : undefined);
   if (name !== undefined) resource.names.add(name);
+};
+
+/**
+ * A value put into a path as its segment at a position counted from 1
+ * (P299), as kustomize's value-add filter does: an empty path is the value,
+ * a position past the last segment appends it, a leading slash is kept.
+ */
+const pathSegmentAdded = (path: string, value: string, position: number): string => {
+  if (path === '') return value;
+  const rooted = path.startsWith('/');
+  const segments = (rooted ? path.slice(1) : path).split('/').filter((segment) => segment !== '');
+  segments.splice(Math.min(position - 1, segments.length), 0, value);
+  return `${rooted ? '/' : ''}${segments.join('/')}`;
 };
 
 /** A namespace written at the fields its specs name (P295), made where they say; only where none is written, with `unsetOnly`. */

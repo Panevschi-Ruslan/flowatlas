@@ -11,6 +11,8 @@ import {
   eventPatternOf,
   S3_DETAIL_TYPES,
   grantedIn,
+  MANAGED_WRITE_POLICIES,
+  managedPolicyName,
   kindsGranted,
   S3_EVENT_SOURCE,
 } from '@flowatlas/aws';
@@ -46,7 +48,7 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import { definitionOf } from './state-machine.js';
-import { Attribute, Built, CdkRef, Construct, Embedded, EXPORT_VALUE, HOLE, Imported, ObjectValue, textOf, Unread, type Added, type Site, type Value } from './values.js';
+import { Attribute, Built, CdkRef, Construct, Embedded, EXPORT_VALUE, HOLE, Imported, ObjectValue, principalHolders, textOf, Unread, type Added, type Site, type Value } from './values.js';
 
 /**
  * The constructs an app made, written out as P21's `Deployment` (P57, D1).
@@ -133,6 +135,49 @@ const documentStatements = (document: Value): Value[] => {
   if (!(document instanceof Built) || builtBy(document) !== 'PolicyDocument') return [];
   const props = document.args[0];
   return props instanceof ObjectValue ? listOf(props.get('statements')) : [];
+};
+
+/** The methods that add a statement to a principal: a function's role, a role, a user, a group (P289, P299). */
+const PRINCIPAL_STATEMENTS = ['addToRolePolicy', 'addToPolicy', 'addToPrincipalPolicy'];
+
+/** The statements of a `Policy` or a `ManagedPolicy` the app creates: written, added by `addStatements`, or in its document (P289, P299). */
+const policyStatements = (policy: Construct): Value[] => [
+  ...listOf(prop(policy, 'statements')),
+  ...policy.addedBy('addStatements').flatMap(({ args }) => args),
+  ...documentStatements(prop(policy, 'document')),
+];
+
+/** Every kind a policy whose statements are not read may grant. */
+const EVERY_KIND: readonly DeployedKind[] = ['queue', 'topic', 'bus', 'stream', 'table', 'bucket', 'function', 'workflow'];
+
+/** An ARN of a managed policy AWS keeps: `arn:aws:iam::aws:policy/...`. */
+const AWS_POLICY_ARN = /^arn:[^:]+:iam::aws:policy\//;
+
+/**
+ * What a managed policy the app does not create grants (P299). One AWS keeps
+ * (`ManagedPolicy.fromAwsManagedPolicyName`, or an ARN under `aws:policy/`)
+ * grants every one of a kind where it is a full-access policy, and no send
+ * otherwise, as a template's managed policy is read. One of the account
+ * (`fromManagedPolicyName`, `fromManagedPolicyArn`) keeps its statements
+ * outside the app, so it may grant anything: a grant of every kind left open,
+ * naming the policy, which bounds nothing.
+ */
+const managedPolicyGrants = (policy: Value, at: Site): DeployedGrant[] => {
+  const aws = (name: string, site: Site): DeployedGrant[] => (MANAGED_WRITE_POLICIES[name] ?? []).map((kind) => ({ kind, any: name, by: name, ...site }));
+  const open = (unread: string, by: string, site: Site): DeployedGrant[] => EVERY_KIND.map((kind) => ({ kind, unread, by, ...site }));
+  if (policy instanceof Built && policy.what === 'aws-iam.ManagedPolicy.fromAwsManagedPolicyName') {
+    const name = textOf(policy.args[0]);
+    return name === undefined ? open('the name of the AWS managed policy is not read', 'ManagedPolicy', policy.site) : aws(managedPolicyName(name), policy.site);
+  }
+  if (policy instanceof Construct && policy.imported !== undefined) {
+    const { arn, name, unread } = policy.imported;
+    if (arn !== undefined && AWS_POLICY_ARN.test(arn)) return aws(managedPolicyName(arn), policy.site);
+    const named = arn ?? name;
+    if (named !== undefined) return open(`the managed policy ${managedPolicyName(named)} is kept in the account, and its statements are not in the app`, managedPolicyName(named), policy.site);
+    return open(`the managed policy looked up is not read: ${unread?.text ?? 'its name is not text'}`, policy.id, policy.site);
+  }
+  if (policy instanceof Unread) return open(`a managed policy is not read: ${policy.text}`, 'ManagedPolicy', at);
+  return [];
 };
 
 /** An event pattern of the CDK, as the JSON the template holds: `detailType` is `detail-type`, a `Match` is a content filter. */
@@ -610,15 +655,17 @@ export class AppDeployment {
    * it names. A role it is handed (`role: orderRole`) carries its grants to
    * it (P289): what is granted to the role, the statements added to it
    * (`addToPolicy`, `addToPrincipalPolicy`, `Grant.addToPrincipal`), its
-   * `inlinePolicies`, and every `Policy` attached to it.
+   * `inlinePolicies`, and every `Policy` attached to it. Each principal it
+   * acts as (P299, `#principalsOf`) is read the same way, with its managed
+   * policies (`managedPolicies`, `addManagedPolicy`, a `ManagedPolicy`
+   * attached to it): one the app creates by its statements, one it looks up
+   * as `managedPolicyGrants` says; a grant to a `CompositePrincipal` reaches
+   * each of its members.
    */
   #grants(fn: Construct): DeployedGrant[] {
     const out: DeployedGrant[] = [];
-    const written = prop(fn, 'role');
-    const role = written instanceof Construct ? written : undefined;
-    const holders = role === undefined ? [fn] : [fn, role];
-    const isFn = (grantee: Value): boolean =>
-      holders.some((holder) => grantee === holder || (grantee instanceof Attribute && grantee.construct === holder && (grantee.name === 'role' || grantee.name === 'grantPrincipal')));
+    const holders = this.#principalsOf(fn);
+    const isFn = (grantee: Value): boolean => principalHolders(grantee).some((holder) => holders.includes(holder));
     for (const construct of this.constructs) {
       for (const [method, calls] of construct.added) {
         if (!WRITE_GRANTS.has(method)) continue;
@@ -632,16 +679,19 @@ export class AppDeployment {
         }
       }
     }
-    const statements = [...fn.addedBy('addToRolePolicy').map(({ args }) => args[0]), ...listOf(prop(fn, 'initialPolicy'))];
-    if (role !== undefined) {
-      for (const method of ['addToPolicy', 'addToPrincipalPolicy', 'addToRolePolicy']) statements.push(...role.addedBy(method).map(({ args }) => args[0]));
-      const inline = prop(role, 'inlinePolicies');
+    const statements: Value[] = [];
+    const managed = new Set<Value>();
+    for (const holder of holders) {
+      for (const method of PRINCIPAL_STATEMENTS) statements.push(...this.#addedToPrincipal(holder, method).map(({ args }) => args[0]));
+      if (holder === fn) statements.push(...listOf(prop(fn, 'initialPolicy')));
+      const inline = prop(holder, 'inlinePolicies');
       for (const document of inline instanceof ObjectValue ? inline.entries.values() : []) statements.push(...documentStatements(document));
-      for (const policy of this.constructs.filter((construct) => construct.type === 'aws-iam.Policy')) {
-        const attached = listOf(prop(policy, 'roles')).includes(role) || policy.addedBy('attachToRole').some(({ args }) => args[0] === role) || role.addedBy('attachInlinePolicy').some(({ args }) => args[0] === policy);
-        if (!attached) continue;
-        statements.push(...listOf(prop(policy, 'statements')), ...policy.addedBy('addStatements').flatMap(({ args }) => args), ...documentStatements(prop(policy, 'document')));
-      }
+      for (const policy of this.#attached(holder, 'aws-iam.Policy', 'attachInlinePolicy')) statements.push(...policyStatements(policy));
+      for (const policy of [...listOf(prop(holder, 'managedPolicies')), ...this.#addedToPrincipal(holder, 'addManagedPolicy').map(({ args }) => args[0]), ...this.#attached(holder, 'aws-iam.ManagedPolicy')]) managed.add(policy);
+    }
+    for (const policy of managed) {
+      if (policy instanceof Construct && policy.imported === undefined) statements.push(...policyStatements(policy));
+      else out.push(...managedPolicyGrants(policy, fn.site));
     }
     for (const statement of statements) {
       if (!(statement instanceof Built) || builtBy(statement) !== 'PolicyStatement') continue;
@@ -667,6 +717,65 @@ export class AppDeployment {
       }
     }
     return out;
+  }
+
+  /**
+   * The principals a function acts as (P299): itself (its own role), the role
+   * it is handed - a role, or another construct's role it shares - and an IAM
+   * user whose access key it is deployed with (in its environment, or in a
+   * secret its environment names) with every group that user is in. A role is
+   * never in a group, as IAM has it, so a group reaches a function only
+   * through such a user.
+   */
+  #principalsOf(fn: Construct): Construct[] {
+    const out: Construct[] = [fn];
+    const keep = (holder: Construct): void => {
+      if (!out.includes(holder)) out.push(holder);
+    };
+    for (const holder of principalHolders(prop(fn, 'role'))) keep(holder);
+    const written = prop(fn, 'environment');
+    const values: Value[] = [...(written instanceof ObjectValue ? written.entries.values() : []), ...fn.addedBy('addEnvironment').map(({ args }) => args[1])];
+    const keyOf = (value: Value): Construct | undefined => (value instanceof Attribute && value.construct.type === 'aws-iam.AccessKey' ? value.construct : undefined);
+    const keys: Construct[] = [];
+    for (const value of values) {
+      const key = keyOf(value);
+      if (key !== undefined) keys.push(key);
+      if (!(value instanceof Attribute) || value.construct.type !== 'aws-secretsmanager.Secret') continue;
+      const object = prop(value.construct, 'secretObjectValue');
+      for (const held of [prop(value.construct, 'secretStringValue'), ...(object instanceof ObjectValue ? object.entries.values() : [])]) {
+        const inSecret = keyOf(held);
+        if (inSecret !== undefined) keys.push(inSecret);
+      }
+    }
+    for (const key of keys) {
+      const user = prop(key, 'user');
+      if (!(user instanceof Construct)) continue;
+      keep(user);
+      for (const group of [...listOf(prop(user, 'groups')), ...user.addedBy('addToGroup').map(({ args }) => args[0])]) if (group instanceof Construct) keep(group);
+      for (const group of this.#ofType('aws-iam.Group')) if (group.addedBy('addUser').some(({ args }) => args[0] === user)) keep(group);
+    }
+    return out;
+  }
+
+  /** What a method added to a principal, called on it or through its role (`fn.role?.addToPrincipalPolicy(...)`) (P299). */
+  #addedToPrincipal(holder: Construct, method: string): Added[] {
+    return [...holder.addedBy(method), ...holder.addedBy(`role.${method}`)];
+  }
+
+  /**
+   * The policies of a type attached to a principal (P299): those naming it
+   * among their `roles`, `users` or `groups`, those attached to it
+   * (`attachToRole`, `attachToUser`, `attachToGroup`), and those it attaches
+   * itself by `inline` (`attachInlinePolicy`).
+   */
+  #attached(holder: Construct, type: string, inline?: string): Construct[] {
+    const names = (value: Value): boolean => principalHolders(value).includes(holder);
+    return this.#ofType(type).filter(
+      (policy) =>
+        ['roles', 'users', 'groups'].some((key) => listOf(prop(policy, key)).some(names)) ||
+        ['attachToRole', 'attachToUser', 'attachToGroup'].some((method) => policy.addedBy(method).some(({ args }) => args[0] !== undefined && names(args[0]))) ||
+        (inline !== undefined && this.#addedToPrincipal(holder, inline).some(({ args }) => args[0] === policy)),
+    );
   }
 
   /** The handler: a `NodejsFunction`'s entry and export, or a `Function`'s handler string and asset. */

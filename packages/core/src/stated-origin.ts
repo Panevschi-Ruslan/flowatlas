@@ -1,5 +1,5 @@
 import { packageOfSpecifier } from './adapters/manifest.js';
-import { Node, SyntaxKind, type Node as TsNode } from 'ts-morph';
+import { Node, SyntaxKind, type Node as TsNode, type PropertyDeclaration } from 'ts-morph';
 
 /**
  * Which package and which class the source says a receiver is, when the checker
@@ -48,11 +48,36 @@ const constructedBy = (initializer: TsNode | undefined): TsNode | undefined => {
 };
 
 /**
+ * What a field declared with neither a type nor a value is given in its
+ * class's constructor, where the constructor gives it one value and nothing
+ * else in the class gives it another (P299): `private client;` beside
+ * `this.client = new AWS.DynamoDB()`.
+ */
+const constructorAssignment = (declaration: PropertyDeclaration): TsNode | undefined => {
+  const owner = declaration.getParent();
+  if (declaration.isStatic() || (!Node.isClassDeclaration(owner) && !Node.isClassExpression(owner))) return undefined;
+  const name = declaration.getName();
+  const values: TsNode[] = [];
+  let elsewhere = false;
+  owner.forEachDescendant((node) => {
+    if (!Node.isBinaryExpression(node) || node.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) return;
+    const left = node.getLeft();
+    if (!Node.isPropertyAccessExpression(left) || !Node.isThisExpression(left.getExpression()) || left.getName() !== name) return;
+    if (node.getFirstAncestorByKind(SyntaxKind.Constructor)?.getParent() === owner) values.push(node.getRight());
+    else elsewhere = true;
+  });
+  return values.length === 1 && !elsewhere ? values[0] : undefined;
+};
+
+/**
  * Where a declaration states the class of what it holds: its annotation, or the
  * construction it was initialised with.
  */
 const statedBy = (declaration: TsNode): TsNode | undefined => {
-  if (Node.isVariableDeclaration(declaration) || Node.isPropertyDeclaration(declaration)) {
+  if (Node.isPropertyDeclaration(declaration)) {
+    return declaration.getTypeNode() ?? constructedBy(declaration.getInitializer() ?? constructorAssignment(declaration));
+  }
+  if (Node.isVariableDeclaration(declaration)) {
     return declaration.getTypeNode() ?? constructedBy(declaration.getInitializer());
   }
   if (Node.isParameterDeclaration(declaration) || Node.isPropertySignature(declaration)) {

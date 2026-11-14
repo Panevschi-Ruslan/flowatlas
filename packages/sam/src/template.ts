@@ -200,6 +200,17 @@ const deployValues = (parts: DeploymentParts, options: TemplateReadOptions, conf
   if (deployer !== undefined) {
     const { one } = deployer;
     for (const path of one.read) options.loaded.add(join(repoDir, path));
+    if (one.hooks !== undefined) {
+      // A hook is a program sceptre runs around the launch (P299): run, not read, by design.
+      parts.rows.push({
+        file: one.file,
+        line: one.line,
+        symbol: `${file}#Hooks`,
+        reason: 'deployment-unread',
+        message: `the ${one.tool} stack ${one.label} runs hooks on ${one.hooks.join(', ')}, commands sceptre runs around the launch; a hook is a program that is run, not read, so whatever it creates or changes is not drawn`,
+        hint: 'Write what the hook makes as a resource of the template or a stack of the project, or annotate the code that reaches it (/** @flowatlas-calls <service> METHOD /path */).',
+      });
+    }
     const fromFiles = one.files.map((path) => read(path, true)).filter((values): values is Record<string, string> => values !== undefined);
     return {
       named: [...fromFiles, { ...one.values }],
