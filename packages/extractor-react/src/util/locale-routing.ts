@@ -160,10 +160,12 @@ export const declaredLocalesOf = (project: Project, repoDir: string, file: strin
 };
 
 const readLocales = (project: Project, repoDir: string, segment: TopSegment): readonly string[] | undefined => {
-  const base = join(repoDir, segment.root);
+  // A source file's path is written with forward slashes on every system, so
+  // the directories it is compared with are too (Windows joins with `\`).
+  const base = join(repoDir, segment.root).replace(/\\/g, '/');
   const inside = (path: string): boolean => path.startsWith(`${base}/`) && !path.includes('/node_modules/');
   // The segment's own layout or page: what it hands to the router is the set of values it is built for.
-  const directory = join(repoDir, segment.directory);
+  const directory = join(repoDir, segment.directory).replace(/\\/g, '/');
   for (const source of project.getSourceFiles()) {
     const path = source.getFilePath();
     if (!path.startsWith(`${directory}/`) || path.slice(directory.length + 1).includes('/') || !/^(?:layout|page)\.[jt]sx?$/.test(path.slice(directory.length + 1))) continue;
