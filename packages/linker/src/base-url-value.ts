@@ -161,6 +161,16 @@ export interface BaseUrlInput {
   readonly services: readonly string[];
 }
 
+/**
+ * The settings a chain of `||` reads after the one a request is rooted at,
+ * in order (P296): `process.env.A || process.env.B || 'x'` goes to `B` where
+ * `A` is not set.
+ */
+export const settingsAfter = (call: GraphNode): readonly string[] => {
+  const also = call.meta?.['baseUrlAlso'];
+  return Array.isArray(also) ? also.filter((each): each is string => typeof each === 'string') : [];
+};
+
 /** Every value the setting is found with, strongest first: the deployment's alone, where it says. */
 export const valuesOf = (input: BaseUrlInput): FoundValue[] => {
   const deployed = input.variables.flatMap((variable) => deployedValues(variable, input.runners));

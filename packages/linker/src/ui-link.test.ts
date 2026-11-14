@@ -394,7 +394,11 @@ describe('an operation sent to a setting no value of which names a service', () 
     // Where no value is for this machine, the public host's path is asked of the endpoints under the same rule (P292).
     expect(resolveUiCall(operation('signIn'), indexWith([value('https://demo.example.com/store-api', 'wrangler.toml')]))).toMatchObject({ kind: 'linked', via: 'graphql-path' });
     expect(resolveUiCall(operation('payByCard'), indexWith([value('https://demo.example.com/store-api', 'wrangler.toml')]))).toMatchObject({ kind: 'noRoute', unserved: ['Mutation.payByCard'] });
-    expect(resolveUiCall(operation('signIn'), indexWith([value('https://demo.example.com/graphql', 'wrangler.toml')])).kind).toBe('noRoute');
+    // A path no endpoint serves (a gateway rewriting it): the one endpoint serving the operation, and here two do (P296).
+    expect(resolveUiCall(operation('signIn'), indexWith([value('https://demo.example.com/graphql', 'wrangler.toml')]))).toMatchObject({
+      kind: 'ambiguous',
+      candidates: ['api (POST /store-api)', 'api (POST /office-api)'],
+    });
     const disagreeing = [value('http://localhost:3000/store-api', '.env'), value('http://localhost:3000/office-api', '.env.example')];
     // Values for this machine that disagree settle nothing: no value is the one the request goes under.
     const split: UiIndex = { ...indexWith(disagreeing), baseUrlOf: () => ({ kind: 'unsettled', values: disagreeing, services: [], namedOnly: [] }) };

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-12T19:17:19.031Z",
+  "builtAt": "2026-11-14T17:54:45.019Z",
   "configHash": "4a9eaa283634",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 869,
+      "durationMs": 874,
       "packages": {
         "name": "inventory",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 839,
+      "durationMs": 837,
       "packages": {
         "name": "ledger",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 20,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 912,
+      "durationMs": 927,
       "packages": {
         "name": "market",
         "runtime": [
@@ -69,7 +69,7 @@
       "edges": 2,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 1070,
+      "durationMs": 1056,
       "packages": {
         "name": "reviews",
         "runtime": [
@@ -126,13 +126,13 @@
       "line": 6,
       "reason": "base-url-from-files",
       "level": "info",
-      "message": "PUBLIC_APP_URL is http://localhost:4300 in app/lib/catalog.ts (the code’s own fallback), which is taken as inventory",
+      "message": "PUBLIC_APP_URL is http://localhost:4300 in app/lib/urls.ts (the code’s own fallback), which is taken as inventory",
       "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add PUBLIC_APP_URL to services[].baseUrlEnv of inventory to say so outright.",
       "symbol": "http_out:market#app/lib/catalog.ts:6:21",
       "meta": {
         "variable": "PUBLIC_APP_URL",
         "value": "http://localhost:4300",
-        "from": "app/lib/catalog.ts (the code’s own fallback)"
+        "from": "app/lib/urls.ts (the code’s own fallback)"
       },
       "sites": 2
     },

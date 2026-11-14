@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T17:07:37.202Z",
+  "builtAt": "2026-11-14T17:53:46.805Z",
   "services": [
     {
       "name": "api",
@@ -943,6 +943,15 @@
             "orpc-procedures"
           ]
         },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 1,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
         "ownOrigin": true
       }
     },

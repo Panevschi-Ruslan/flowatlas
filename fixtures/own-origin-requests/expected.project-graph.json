@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:13:34.697Z",
+  "builtAt": "2026-11-14T17:53:48.543Z",
   "services": [
     {
       "name": "site",
@@ -322,6 +322,15 @@
             "nitro-routes"
           ]
         },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 1,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
         "proxy": [
           {
             "path": "/catalog",

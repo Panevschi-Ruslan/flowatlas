@@ -38,6 +38,29 @@ only one of them moved.
   CDK role's managed policies (AWS ones by their access, a policy the app
   writes by its statements, one looked up named), a user's groups and a
   `CompositePrincipal`'s members carry their grants.
+- **Ports, settings and requests left open (P296).** A full-stack
+  framework's own server - Next, Nuxt and Nitro, Remix's `remix-serve` and
+  React Router's `react-router-serve` - listens on its documented 3000, as
+  `PORT`'s fallback, where no configuration, script or workspace target says
+  (`default: true`), and on the port a script's own environment gives it
+  (`PORT=3020 next start`, `-p ${PORT:-3020}`); a script handing the port in
+  unread (`-p $PORT`) assumes nothing. A default is the weakest word for a
+  port: it yields to any service the code or the files place there, and two
+  defaults on one port are no answer. A chain of `||` or `??` is read as one
+  step however long it is; the settings it reads after the first
+  (`baseUrlAlso`) are where it goes next, their values and claimants its own,
+  and its fallback is said in the module it is written in
+  (`baseUrlDefaultFrom`). A helper is read per branch its arguments settle
+  (`!x` included), a function an object holds as a plain one, and a request
+  between services keeps the path a constant writes after its setting. A
+  server's request under a public host with no path joins the one service
+  serving its path as a guess (`externalValuePath`), as a browser's does,
+  several an `ambiguous-route-target` row; a GraphQL operation under public
+  hosts none of whose paths an endpoint serves joins the one endpoint serving
+  it (`graphql-path`), several a row. An `XMLHttpRequest` opened in one
+  function is sent where its receiver goes: another method sending the field,
+  a field it is kept in, the function it is handed to, the caller it is
+  returned to, the module holding it.
 - **Kustomize transformer and generator files, labels, and what P289 left of
   helmfile and charts (P295).** A kustomization's `transformers:` and
   `generators:` are read from the files (or the folder, or the inline text)

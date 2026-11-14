@@ -48,7 +48,7 @@ describe('following a value back to a settings key', () => {
       export const other = () => renamed;
     `);
     expect(rootConfigKey(address(file))).toBe('SHIPPING_URL');
-    expect(rootConfigAddress(address(file))).toEqual({ key: 'SHIPPING_URL', prefix: '/quote', otherwise: 'http://shipping:8080' });
+    expect(rootConfigAddress(address(file))).toEqual({ key: 'SHIPPING_URL', prefix: '/quote', otherwise: 'http://shipping:8080', otherwiseFile: '/a.ts' });
     const renamed = file.getDescendantsOfKind(SyntaxKind.Identifier).at(-1)!;
     expect(rootConfigKey(renamed)).toBe('OTHER');
     // Taken out of anything else, it is no setting.

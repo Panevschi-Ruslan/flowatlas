@@ -133,6 +133,10 @@ export interface ApiUrl {
   baseUrlEnv: string | null;
   /** What the code falls back to where that key is not set, when it writes one (P292). */
   baseUrlDefault?: string;
+  /** The module that fallback is written in, as the compiler names it (P296). */
+  baseUrlDefaultFile?: string;
+  /** The settings a chain of `||` reads after that key, in order (P296). */
+  baseUrlAlso?: readonly string[];
   /** Host, when the address names one outright. */
   host: string | null;
   /** How the address was arrived at, for the reader of the node. */
@@ -140,6 +144,20 @@ export interface ApiUrl {
   /** Whether part of the path came from a branch nobody settled. */
   guessed: boolean;
 }
+
+/** What a setting found behind an address says beyond its key, as an address carries it (P292, P296). */
+const fallbackOf = (behind: { readonly otherwise?: string | undefined; readonly otherwiseFile?: string | undefined; readonly also?: readonly string[] | undefined }): Pick<ApiUrl, 'baseUrlDefault' | 'baseUrlDefaultFile' | 'baseUrlAlso'> => ({
+  ...(behind.otherwise === undefined ? {} : { baseUrlDefault: behind.otherwise }),
+  ...(behind.otherwise === undefined || behind.otherwiseFile === undefined ? {} : { baseUrlDefaultFile: behind.otherwiseFile }),
+  ...(behind.also === undefined || behind.also.length === 0 ? {} : { baseUrlAlso: behind.also }),
+});
+
+/** The same carried back to a setting behind a hole, from an address read further in. */
+const behindOf = (address: { readonly baseUrlDefault?: string | undefined; readonly baseUrlDefaultFile?: string | undefined; readonly baseUrlAlso?: readonly string[] | undefined }): Pick<SettingBehind, 'otherwise' | 'otherwiseFile' | 'also'> => ({
+  ...(address.baseUrlDefault === undefined ? {} : { otherwise: address.baseUrlDefault }),
+  ...(address.baseUrlDefault === undefined || address.baseUrlDefaultFile === undefined ? {} : { otherwiseFile: address.baseUrlDefaultFile }),
+  ...(address.baseUrlAlso === undefined || address.baseUrlAlso.length === 0 ? {} : { also: address.baseUrlAlso }),
+});
 
 const EMPTY: ApiUrl = {
   url: null,
@@ -232,7 +250,7 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
             key: inner.baseUrlEnv,
             prefix: routePathOf(inner.path ?? ''),
             ...(inner.guessed ? { guessed: true } : {}),
-            ...(inner.baseUrlDefault === undefined ? {} : { otherwise: inner.baseUrlDefault }),
+            ...behindOf(inner),
           };
     }
     // A helper that assembles the address answers with both halves: the
@@ -250,7 +268,7 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
           key,
           prefix: inner?.value ?? '',
           ...(inner?.guessed === true ? { guessed: true } : {}),
-          ...(inner?.fallback === undefined ? {} : { otherwise: inner.fallback }),
+          ...(inner === null ? {} : behindOf({ baseUrlDefault: inner.fallback, baseUrlDefaultFile: inner.fallbackFile, baseUrlAlso: inner.also })),
         };
       }
     }
@@ -277,7 +295,7 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
       url: `\${${behind.key}}${prefix}`,
       path: routePathOf(prefix),
       baseUrlEnv: behind.key,
-      ...(behind.otherwise === undefined ? {} : { baseUrlDefault: behind.otherwise }),
+      ...fallbackOf(behind),
       host: null,
       via: 'template-env',
       guessed: behind.guessed === true,
@@ -311,7 +329,7 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
     url: baseUrlEnv === undefined ? resolved.value : `\${${baseUrlEnv}}${resolved.value}`,
     path: routePathOf(resolved.value),
     baseUrlEnv: baseUrlEnv ?? null,
-    ...(baseUrlEnv === undefined || resolved.fallback === undefined ? {} : { baseUrlDefault: resolved.fallback }),
+    ...(baseUrlEnv === undefined ? {} : fallbackOf({ otherwise: resolved.fallback, otherwiseFile: resolved.fallbackFile, also: resolved.also })),
     host: null,
     via,
     guessed,
@@ -362,7 +380,7 @@ export const analyzeClientBase = (node: TsNode, options: ReadAddressOptions = {}
       url: `\${${behind.key}}${prefix}`,
       path: routePathOf(prefix),
       baseUrlEnv: behind.key,
-      ...(behind.otherwise === undefined ? {} : { baseUrlDefault: behind.otherwise }),
+      ...fallbackOf(behind),
       host: null,
       via: 'template-env',
       guessed: behind.guessed === true,

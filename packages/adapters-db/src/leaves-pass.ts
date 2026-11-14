@@ -2037,10 +2037,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     const fallback = info.baseUrlDefault ?? loaded?.otherwise;
     const baseUrlDefault = fallback === undefined ? undefined : addressOnly(fallback);
     // Where the fallback is written, when it is not where the request is.
-    const defaultFrom =
-      baseUrlDefault === undefined || info.baseUrlDefault !== undefined || loaded?.file === undefined
-        ? undefined
-        : relative(ctx.repoDir, loaded.file).split(sep).join('/');
+    // A chain of `||` written in a constants module is that module's (P296).
+    const writtenIn = info.baseUrlDefault !== undefined ? info.baseUrlDefaultFile : loaded?.file;
+    const writtenAt = baseUrlDefault === undefined || writtenIn === undefined ? undefined : relative(ctx.repoDir, writtenIn).split(sep).join('/');
+    const defaultFrom = writtenAt === owner.file ? undefined : writtenAt;
     // Which application this request is written in, asked of the file through
     // the one function every browser reader asks too, so the two halves' readings
     // of one call cannot disagree about it (R136). A map keyed by declaration
@@ -2061,6 +2061,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         ...(loaded?.variable === undefined || loaded.variable === info.baseUrlEnv ? {} : { baseUrlVariable: loaded.variable }),
         ...(baseUrlDefault === undefined ? {} : { baseUrlDefault }),
         ...(defaultFrom === undefined ? {} : { baseUrlDefaultFrom: defaultFrom }),
+        ...(info.baseUrlEnv === null || info.baseUrlAlso === undefined ? {} : { baseUrlAlso: info.baseUrlAlso }),
         responseType,
         bodyType,
         ...(bodyType === null ? {} : { bodyFrom }),

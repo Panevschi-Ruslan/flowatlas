@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:06:11.763Z",
+  "builtAt": "2026-11-14T17:48:17.524Z",
   "services": [
     {
       "name": "orders",
@@ -662,6 +662,15 @@
             "nitro-routes"
           ]
         },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 6,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
         "proxy": [
           {
             "path": "/orders-api",

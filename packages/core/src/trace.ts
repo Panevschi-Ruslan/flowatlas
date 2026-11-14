@@ -1,9 +1,11 @@
 import type {
   ArrowFunction,
+  BinaryExpression,
   BindingElement,
   CallExpression,
   FunctionDeclaration,
   FunctionExpression,
+  MethodDeclaration,
   Identifier,
   ObjectLiteralExpression,
   ParameterDeclaration,
@@ -247,6 +249,17 @@ export interface SettingAddress {
    * rooted at.
    */
   otherwise?: string;
+  /**
+   * The module `otherwise` is written in, as the compiler names it: a chain
+   * of `||` in a constants module is that module's, not the request's (P296).
+   */
+  otherwiseFile?: string;
+  /**
+   * The settings a chain of `||` or `??` reads after the one the address is
+   * rooted at, in order (P296): `process.env.A || process.env.B || 'x'` is
+   * rooted at `A`, and `B` is where it goes where `A` is not set.
+   */
+  also?: readonly string[];
 }
 
 /**
@@ -679,6 +692,12 @@ const truthOf = (condition: TsNode, scope: Scope, budget: number): Truth => {
   const read = readString(condition, scope, budget);
   if (read !== null) return read !== '';
 
+  // `!url`: the other way round, where it is settled at all (P296).
+  if (Node.isPrefixUnaryExpression(node) && node.getOperatorToken() === SyntaxKind.ExclamationToken) {
+    const inner = truthOf(node.getOperand(), scope, budget - 1);
+    return typeof inner === 'boolean' ? !inner : inner;
+  }
+
   if (Node.isTemplateExpression(node)) {
     const literals = [
       node.getHead().getLiteralText(),
@@ -861,7 +880,7 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
   const direct = scope.readSetting(node);
   if (direct !== null) {
     const otherwise = scope.settingDefault?.(node);
-    return { key: direct, prefix: '', ...(otherwise === undefined ? {} : { otherwise }) };
+    return { key: direct, prefix: '', ...(otherwise === undefined ? {} : { otherwise, otherwiseFile: node.getSourceFile().getFilePath() }) };
   }
 
   if (Node.isTemplateExpression(node)) {
@@ -881,27 +900,25 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
       // `this.crate.exportUrl(id)` — a helper on another object of this
       // repository assembles the address, and its own class answers `this`.
       const declared = callee.getExpression().getType().getSymbol()?.getDeclarations()[0];
-      if (declared === undefined || !Node.isClassDeclaration(declared)) return null;
+      // A function an object of the repository holds, `urls.withScheme(x)` (P296).
+      if (declared === undefined || !Node.isClassDeclaration(declared)) return throughMember(node, callee, scope, budget);
       if (declared.getSourceFile().isInNodeModules() || declared.getSourceFile().isDeclarationFile()) {
         return null;
       }
       for (const owner of classChain(declared)) {
         const method = methodNamedOn(owner, callee.getName());
-        if (method === undefined) continue;
-        // Every return of the method's own, and they have to agree: a helper
-        // on another object that answers differently per branch is a hole,
-        // not whichever branch happens to read first.
+        const fn = method === undefined ? undefined : functionOf(method);
+        if (method === undefined || fn === undefined) continue;
+        // Every return of the method's own that the call reaches, and they
+        // have to agree: a helper on another object that answers differently
+        // per branch nobody settles is a hole, not whichever branch happens to
+        // read first. A branch the arguments settle is the one taken (P296).
         const inside: Scope = { ...scope, self: declared, bound: bindings(method, node, scope) };
-        const answers = answersOf(method).map((returned) => addressOf(returned, inside, budget - 1));
-        const [first] = answers;
+        const answer = helperAddress(fn, inside, budget);
         // Nothing to read here is not an answer: a base class further along the
         // chain may declare the method this one only names.
-        if (first === undefined) continue;
-        if (first === null) return null;
-        const same = answers.every(
-          (answer) => answer !== null && answer.key === first.key && answer.prefix === first.prefix,
-        );
-        return same ? first : null;
+        if (answer === undefined) continue;
+        return answer;
       }
       return null;
     }
@@ -943,17 +960,7 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
 
   if (Node.isBinaryExpression(node)) {
     const operator = node.getOperatorToken().getKind();
-    if (operator === SyntaxKind.QuestionQuestionToken || operator === SyntaxKind.BarBarToken) {
-      const left = addressOf(node.getLeft(), scope, budget - 1);
-      if (left === null) return addressOf(node.getRight(), scope, budget - 1);
-      // `process.env.X ?? 'http://orders:3000'`: what the code falls back to
-      // for the whole value is worth keeping beside the setting (P77).
-      if (left.prefix !== '' || left.otherwise !== undefined) return left;
-      const fallback = evaluateExpression(node.getRight());
-      return fallback.resolved && typeof fallback.value === 'string' && fallback.value !== ''
-        ? { ...left, otherwise: fallback.value }
-        : left;
-    }
+    if (operator === SyntaxKind.QuestionQuestionToken || operator === SyntaxKind.BarBarToken) return chainAddress(node, scope, budget);
     if (operator === SyntaxKind.PlusToken) {
       const left = addressOf(node.getLeft(), scope, budget - 1);
       if (left === null) return null;
@@ -1041,54 +1048,252 @@ const plainFunctionOf = (call: CallExpression): FunctionDeclaration | ArrowFunct
   return initializer !== undefined && (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) ? initializer : undefined;
 };
 
+/** A function a helper is written as, whichever way. */
+type HelperFunction = FunctionDeclaration | ArrowFunction | FunctionExpression | MethodDeclaration;
+
+/** Whether a statement always leaves the function it is in: a return or a throw, or a block ending in one. */
+const alwaysLeaves = (statement: TsNode | undefined): boolean => {
+  if (statement === undefined) return false;
+  if (Node.isReturnStatement(statement) || Node.isThrowStatement(statement)) return true;
+  if (!Node.isBlock(statement)) return false;
+  const statements = statement.getStatements();
+  return alwaysLeaves(statements[statements.length - 1]);
+};
+
 /**
- * `withScheme(process.env.APP_URL)`: a function of the repository
- * handed a value, read with its parameters bound to what the call hands it
- * (P292). Every return must say the same: the setting a parameter holds,
- * with what the function writes after it (`${url}/api`), or reshaped
- * (`url.trim()`, a scheme put in front where the value lacks one,
- * `https://${url}`). A return of the empty text, `null` or `undefined` is no
- * value, which a `||` after the call falls through; another text written out
- * is what the function falls back to. Anything else is no address.
+ * Whether a statement of a helper is reached, as far as its arguments settle
+ * it (P296): one inside a branch the arguments rule out is not, nor one after
+ * a branch they take that always returns. A condition nobody settles rules
+ * nothing out.
  */
-const throughFunction = (call: CallExpression, scope: Scope, budget: number): SettingAddress | null => {
-  const fn = plainFunctionOf(call);
-  if (fn === undefined) return null;
+const reachedUnder = (statement: TsNode, fn: TsNode, scope: Scope, budget: number): boolean => {
+  let child: TsNode = statement;
+  let parent = statement.getParent();
+  while (parent !== undefined && child !== fn) {
+    if (Node.isIfStatement(parent)) {
+      const inThen = parent.getThenStatement() === child;
+      const inElse = parent.getElseStatement() === child;
+      if (inThen || inElse) {
+        const truth = truthOf(parent.getExpression(), scope, budget - 1);
+        if ((inThen && truth === false) || (inElse && truth === true)) return false;
+      }
+    }
+    if (Node.isBlock(parent)) {
+      for (const earlier of parent.getStatements()) {
+        if (earlier === child) break;
+        if (!Node.isIfStatement(earlier)) continue;
+        const truth = truthOf(earlier.getExpression(), scope, budget - 1);
+        if (truth === true && alwaysLeaves(earlier.getThenStatement())) return false;
+        if (truth === false && alwaysLeaves(earlier.getElseStatement())) return false;
+      }
+    }
+    if (parent === fn) break;
+    child = parent;
+    parent = parent.getParent();
+  }
+  return true;
+};
+
+/** What one value a helper answers with, or one operand of a chain of `||`, says of an address. */
+type Answered =
+  | { readonly kind: 'none' }
+  | { readonly kind: 'text'; readonly value: string; readonly file: string }
+  | { readonly kind: 'address'; readonly address: SettingAddress };
+
+/** `https://${url}`: the value with a scheme put in front of it and nothing after, or nothing. */
+const schemedValue = (value: TsNode): TsNode | undefined => {
+  if (!Node.isTemplateExpression(value)) return undefined;
+  const [span, ...more] = value.getTemplateSpans();
+  return span !== undefined && more.length === 0 && SCHEME_ONLY.test(value.getHead().getLiteralText()) && span.getLiteral().getLiteralText() === ''
+    ? span.getExpression()
+    : undefined;
+};
+
+/**
+ * One value read as an address or its absence (P292, P296): the empty text,
+ * `null` and `undefined` are no value; other text written out is a fallback;
+ * a value with a scheme put in front of it is the value; a condition the
+ * arguments settle is the branch taken, and one nobody settles is both
+ * branches, which must agree. Anything else is the address it is rooted at,
+ * or nothing that can be read (`null`).
+ */
+const answeredBy = (value: TsNode, scope: Scope, budget: number): Answered | null => {
+  if (budget <= 0) return null;
+  const node = unwrap(value);
+  if (Node.isNullLiteral(node) || (Node.isIdentifier(node) && node.getText() === 'undefined')) return { kind: 'none' };
+  // A settings read is the setting, whatever value a build's file gives it.
+  if (scope.readSetting(node) !== null) {
+    const address = addressOf(node, scope, budget);
+    return address === null ? null : { kind: 'address', address };
+  }
+  const written = evaluateExpression(node);
+  if (written.resolved && typeof written.value === 'string') {
+    return written.value === '' ? { kind: 'none' } : { kind: 'text', value: written.value, file: node.getSourceFile().getFilePath() };
+  }
+  if (Node.isConditionalExpression(node)) {
+    const settled = truthOf(node.getCondition(), scope, budget);
+    if (settled === true) return answeredBy(node.getWhenTrue(), scope, budget - 1);
+    if (settled === false) return answeredBy(node.getWhenFalse(), scope, budget - 1);
+    return agreeing([answeredBy(node.getWhenTrue(), scope, budget - 1), answeredBy(node.getWhenFalse(), scope, budget - 1)]);
+  }
+  // A constant holding such a condition: `const PREVIEW = process.env.HOST ? `https://${…}` : ''`.
+  if (Node.isIdentifier(node)) {
+    const declaration = node.getSymbol()?.getDeclarations()[0];
+    if (declaration !== undefined && Node.isVariableDeclaration(declaration)) {
+      const initializer = declaration.getInitializer();
+      if (initializer !== undefined && Node.isConditionalExpression(unwrap(initializer))) return answeredBy(initializer, scope, budget - 1);
+    }
+  }
+  const address = addressOf(schemedValue(node) ?? node, scope, budget);
+  return address === null ? null : { kind: 'address', address };
+};
+
+/**
+ * What several answers say together: the address every one that has a value
+ * is rooted at, with the first text one writes out as its fallback; nothing
+ * where one cannot be read or two disagree; the text alone, or no value,
+ * where none is rooted at a setting.
+ */
+const agreeing = (answers: readonly (Answered | null)[]): Answered | null => {
+  let found: SettingAddress | undefined;
+  let text: { readonly value: string; readonly file: string } | undefined;
+  for (const answer of answers) {
+    if (answer === null) return null;
+    if (answer.kind === 'none') continue;
+    if (answer.kind === 'text') {
+      text ??= answer;
+      continue;
+    }
+    if (found !== undefined && (found.key !== answer.address.key || found.prefix !== answer.address.prefix)) return null;
+    found ??= answer.address;
+  }
+  if (found === undefined) return text === undefined ? { kind: 'none' } : { kind: 'text', value: text.value, file: text.file };
+  const address = found.otherwise === undefined && text !== undefined ? { ...found, otherwise: text.value, otherwiseFile: text.file } : found;
+  return { kind: 'address', address };
+};
+
+/**
+ * What a helper answers with, read with its parameters bound to what the call
+ * hands it (P292): every return the call reaches (P296) must say the same.
+ * `undefined` where it has nothing to read at all.
+ */
+const helperAddress = (fn: HelperFunction, inside: Scope, budget: number): SettingAddress | null | undefined => {
+  const body = fn.getBody();
+  if (body === undefined) return undefined;
+  const returns = !Node.isBlock(body)
+    ? [body]
+    : ownReturns(fn).flatMap((statement) => {
+        const returned = statement.asKind(SyntaxKind.ReturnStatement)?.getExpression();
+        return returned === undefined || !reachedUnder(statement, fn, inside, budget) ? [] : [returned];
+      });
+  if (returns.length === 0) return undefined;
+  const agreed = agreeing(returns.map((returned) => answeredBy(returned, inside, budget - 1)));
+  return agreed?.kind === 'address' ? agreed.address : null;
+};
+
+/** What a call hands a function's parameters, by parameter. */
+const boundArguments = (fn: HelperFunction, call: CallExpression, scope: Scope): Map<ParameterDeclaration, Bound> => {
   const bound = new Map<ParameterDeclaration, Bound>();
   const args = call.getArguments();
   fn.getParameters().forEach((parameter, index) => {
     const argument = args[index];
     if (argument !== undefined) bound.set(parameter, { node: argument, scope });
   });
+  return bound;
+};
+
+/**
+ * `withScheme(process.env.APP_URL)`: a function of the repository
+ * handed a value, read with its parameters bound to what the call hands it
+ * (P292). Every return the call reaches must say the same: the setting a
+ * parameter holds, with what the function writes after it (`${url}/api`), or
+ * reshaped (`url.trim()`, a scheme put in front where the value lacks one,
+ * `https://${url}`). A return of the empty text, `null` or `undefined` is no
+ * value, which a `||` after the call falls through; another text written out
+ * is what the function falls back to. A branch the arguments settle is the
+ * one taken (P296). Anything else is no address.
+ */
+const throughFunction = (call: CallExpression, scope: Scope, budget: number): SettingAddress | null => {
+  const fn = plainFunctionOf(call);
+  if (fn === undefined) return null;
+  const bound = boundArguments(fn, call, scope);
   if (bound.size === 0) return null;
-  const inside: Scope = { ...scope, self: enclosingClass(fn), bound };
-  const body = fn.getBody();
-  const returns = body !== undefined && !Node.isBlock(body) ? [body] : ownReturns(fn).flatMap((statement) => {
-    const returned = statement.asKind(SyntaxKind.ReturnStatement)?.getExpression();
-    return returned === undefined ? [] : [returned];
-  });
-  let found: SettingAddress | undefined;
-  let otherwise: string | undefined;
-  for (const returned of returns) {
-    const value = unwrap(returned);
-    if (Node.isNullLiteral(value) || (Node.isIdentifier(value) && value.getText() === 'undefined')) continue;
-    const written = evaluateExpression(value);
-    if (written.resolved && typeof written.value === 'string') {
-      if (written.value !== '' && otherwise === undefined) otherwise = written.value;
+  return helperAddress(fn, { ...scope, self: enclosingClass(fn), bound }, budget) ?? null;
+};
+
+/**
+ * `urls.withScheme(process.env.APP_URL)`: a function an object of the
+ * repository holds - a method of an object literal, or a property holding an
+ * arrow or a function - read as a plain function is (P296).
+ */
+const throughMember = (call: CallExpression, callee: PropertyAccessExpression, scope: Scope, budget: number): SettingAddress | null => {
+  const declaration = callee.getNameNode().getSymbol()?.getDeclarations()[0];
+  if (declaration === undefined) return null;
+  const file = declaration.getSourceFile();
+  if (file.isInNodeModules() || file.isDeclarationFile()) return null;
+  const initializer = Node.isPropertyAssignment(declaration) ? declaration.getInitializer() : undefined;
+  const fn: HelperFunction | undefined = Node.isMethodDeclaration(declaration)
+    ? declaration
+    : initializer !== undefined && (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer))
+      ? initializer
+      : undefined;
+  if (fn === undefined) return null;
+  const bound = boundArguments(fn, call, scope);
+  if (bound.size === 0) return null;
+  return helperAddress(fn, { ...scope, self: enclosingClass(fn), bound }, budget) ?? null;
+};
+
+/** The operands of a chain of one operator, `a || b || c`, left to right. */
+const chainOperands = (node: TsNode, operator: SyntaxKind): TsNode[] => {
+  const inner = unwrap(node);
+  return Node.isBinaryExpression(inner) && inner.getOperatorToken().getKind() === operator
+    ? [...chainOperands(inner.getLeft(), operator), inner.getRight()]
+    : [node];
+};
+
+/**
+ * `ensure(process.env.A) || PREVIEW_URL || process.env.B || 'http://localhost:3000'`
+ * (P292, P296): rooted at the first operand that roots at a setting, the
+ * chain read as one step however long it is. Each later operand rooted at
+ * another setting is where the value goes where the ones before it are not
+ * set (`also`), and the first text written out after the setting is what the
+ * chain falls back to, with the module it is written in. An operand nothing
+ * here can read is passed over, as the value passes over an empty one.
+ */
+const chainAddress = (node: BinaryExpression, scope: Scope, budget: number): SettingAddress | null => {
+  let first: SettingAddress | undefined;
+  const also: string[] = [];
+  let otherwise: { readonly value: string; readonly file: string } | undefined;
+  for (const operand of chainOperands(node, node.getOperatorToken().getKind())) {
+    const answer = answeredBy(operand, scope, budget - 1);
+    if (answer === null || answer.kind === 'none') continue;
+    if (answer.kind === 'text') {
+      // Text before any setting is the value whatever follows it; text after
+      // one ends the chain, since nothing after a value is ever read.
+      if (first === undefined) return null;
+      otherwise ??= answer;
+      break;
+    }
+    if (first === undefined) {
+      first = answer.address;
+      // A setting with a path written after it is not one a fallback stands in for.
+      if (first.prefix !== '') return first;
       continue;
     }
-    const [span, ...more] = Node.isTemplateExpression(value) ? value.getTemplateSpans() : [];
-    const schemed =
-      span !== undefined && more.length === 0 && SCHEME_ONLY.test((value as TemplateExpression).getHead().getLiteralText()) && span.getLiteral().getLiteralText() === ''
-        ? span.getExpression()
-        : undefined;
-    const answer = addressOf(schemed ?? value, inside, budget - 1);
-    if (answer === null) return null;
-    if (found !== undefined && (found.key !== answer.key || found.prefix !== answer.prefix)) return null;
-    found ??= answer;
+    if (answer.address.prefix !== '') continue;
+    for (const key of [answer.address.key, ...(answer.address.also ?? [])]) {
+      if (key !== first.key && !also.includes(key)) also.push(key);
+    }
+    if (answer.address.otherwise !== undefined) {
+      otherwise ??= { value: answer.address.otherwise, file: answer.address.otherwiseFile ?? operand.getSourceFile().getFilePath() };
+      break;
+    }
   }
-  if (found === undefined) return null;
-  return found.otherwise === undefined && otherwise !== undefined ? { ...found, otherwise } : found;
+  if (first === undefined) return null;
+  const root = first;
+  const allAlso = [...new Set([...(root.also ?? []), ...also])].filter((key) => key !== root.key);
+  const fallback = root.otherwise === undefined && otherwise !== undefined ? { otherwise: otherwise.value, otherwiseFile: otherwise.file } : {};
+  return { ...root, ...(allAlso.length === 0 ? {} : { also: allAlso }), ...fallback };
 };
 
 /**
@@ -1877,6 +2082,10 @@ export interface SplitAddress {
   baseUrlEnv: string | null;
   /** What the code falls back to where that setting is not set, when it writes one (P77). */
   otherwise?: string;
+  /** The module that fallback is written in (P296). */
+  otherwiseFile?: string;
+  /** The settings a chain of `||` reads after that key, in order (P296). */
+  also?: readonly string[];
   /** Literal text before and after the part the caller supplies. */
   before: string;
   after: string;
@@ -1905,6 +2114,7 @@ export const splitAtParameter = (
   const spans = node.getTemplateSpans();
   let baseUrlEnv: string | null = null;
   let otherwise: string | undefined;
+  let rootedAt: SettingAddress | null = null;
   let text = node.getHead().getLiteralText();
   let start = 0;
 
@@ -1922,6 +2132,7 @@ export const splitAtParameter = (
       const rooted = rootSettingAddress(first.getExpression(), options);
       baseUrlEnv = rooted?.key ?? null;
       otherwise = rooted?.otherwise;
+      rootedAt = rooted;
       text = first.getLiteral().getLiteralText();
       start = 1;
     }
@@ -1936,7 +2147,15 @@ export const splitAtParameter = (
 
     if (handed !== undefined) {
       if (split !== undefined) return undefined;
-      split = { ...handed, baseUrlEnv, ...(otherwise === undefined ? {} : { otherwise }), before: text, after: literal };
+      split = {
+        ...handed,
+        baseUrlEnv,
+        ...(otherwise === undefined ? {} : { otherwise }),
+        ...(otherwise === undefined || rootedAt?.otherwiseFile === undefined ? {} : { otherwiseFile: rootedAt.otherwiseFile }),
+        ...(rootedAt?.also === undefined ? {} : { also: rootedAt.also }),
+        before: text,
+        after: literal,
+      };
       text = '';
       continue;
     }

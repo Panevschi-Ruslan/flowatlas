@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-12T19:08:28.506Z",
+  "builtAt": "2026-11-14T17:48:36.058Z",
   "services": [
     {
       "name": "storefront",
@@ -583,6 +583,15 @@
             "nextjs-routes"
           ]
         },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 1,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
         "ownOrigin": true
       }
     },

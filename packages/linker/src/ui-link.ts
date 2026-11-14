@@ -1,5 +1,5 @@
 import { normalizePath, wasRead, type Confidence, type GraphNode } from '@flowatlas/core';
-import type { BaseUrlAnswer, FoundValue } from './base-url-value.js';
+import { settingsAfter, type BaseUrlAnswer, type FoundValue } from './base-url-value.js';
 import { localGraphqlEndpoint, sendsOperation, unservedFinding } from './graphql-value.js';
 import { MARKER_FINDINGS, pathOfValue, unreadRouteFinding, type Finding } from './http-link.js';
 import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
@@ -299,10 +299,16 @@ const byApiTarget = (ask: Ask): UiOutcome | undefined => {
 };
 
 /** Exactly one service declaring the same settings key as its own base. */
+/** Who claims the key, or else the first setting a chain of `||` reads after it that somebody claims (P296). */
+const claimingOf = (ask: Ask, env: string): readonly string[] => {
+  const own = ask.index.claimantsOf(env);
+  return own.length > 0 ? own : (settingsAfter(ask.call).map((each) => ask.index.claimantsOf(each)).find((each) => each.length > 0) ?? own);
+};
+
 const byBaseUrlEnv = (ask: Ask): UiOutcome | undefined => {
-  const { env, index } = ask;
+  const { env } = ask;
   if (env === undefined) return undefined;
-  const claiming = index.claimantsOf(env);
+  const claiming = claimingOf(ask, env);
   return claiming.length === 1 ? within(ask, claiming[0] as string, 'base-url-env') : undefined;
 };
 
@@ -316,6 +322,8 @@ const byLocalGraphqlValue = (ask: Ask, answer: BaseUrlAnswer | undefined): UiOut
   const found = localGraphqlEndpoint(ask.call, ask.path, answer, ask.index.services(), (service) => ask.index.routesOf(service));
   if (found === undefined) return undefined;
   if (found.kind === 'unserved') return { kind: 'noRoute', targetService: found.service, method: 'POST', path: found.path, verbs: [], unread: [], unserved: found.fields };
+  // A public host several endpoints serve the operation under (P296): the services that answer, and no join.
+  if (found.kind === 'undecided') return { kind: 'ambiguous', method: 'POST', path: ask.path, candidates: found.endpoints.map((each) => `${each.service} (POST ${each.path})`) };
   return { kind: 'linked', via: 'graphql-path', entry: found.entry, targetService: found.service, runnersUp: [], baseUrl: found.found };
 };
 
@@ -326,7 +334,7 @@ const byLocalGraphqlValue = (ask: Ask, answer: BaseUrlAnswer | undefined): UiOut
  */
 const byBaseUrlValue = (ask: Ask): UiOutcome | undefined => {
   const { env, index } = ask;
-  if (env === undefined || index.claimantsOf(env).length > 0) return undefined;
+  if (env === undefined || claimingOf(ask, env).length > 0) return undefined;
   const answer = index.baseUrlOf?.(ask.call);
   // An operation is asked of the endpoints at the value's path first, a
   // service's included (P281, P292).

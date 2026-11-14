@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "next-nested-apps",
-  "generatedAt": "2026-11-10T15:12:48.219Z",
+  "generatedAt": "2026-11-14T17:52:47.346Z",
   "nodes": [
     {
       "id": "entry:next-nested-apps@.:http:GET:/api/orders",
@@ -203,6 +203,15 @@
             "nextjs-routes"
           ]
         },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 1,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
         "ownOrigin": true
       }
     },

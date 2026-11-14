@@ -122,11 +122,19 @@ describe("a server's request rooted at a setting whose value is a host no servic
     expect(baseUrl?.value).toBe('https://api.example.test/api');
   });
 
-  it('stays a third party where two services serve it, where only the bare path is served, or where the value has no path', () => {
+  it('stays a third party where two services serve it, or where only the bare path is served under a value with a path', () => {
     const two = { catalog: [route('catalog', 'GET', '/api/products')], search: [route('search', 'GET', '/api/products')] };
     expect(resolveCall(serverRequest('GET', '/products'), index(external('https://api.example.test/api'), two)).outcome).toMatchObject({ kind: 'external' });
     const bare = { catalog: [route('catalog', 'GET', '/products')] };
     expect(resolveCall(serverRequest('GET', '/products'), index(external('https://api.example.test/api'), bare)).outcome).toMatchObject({ kind: 'external' });
-    expect(resolveCall(serverRequest('GET', '/products'), index(external('https://api.example.test'), bare)).outcome).toMatchObject({ kind: 'external' });
+  });
+
+  it('joins the one service serving its own path under a value with no path, as a browser request is, and says so where two do (P296)', () => {
+    const bare = { catalog: [route('catalog', 'GET', '/products')] };
+    expect(resolveCall(serverRequest('GET', '/products'), index(external('https://api.example.test'), bare)).outcome).toMatchObject({ kind: 'linked', via: 'externalValuePath' });
+    const two = { catalog: [route('catalog', 'GET', '/products')], search: [route('search', 'GET', '/products')] };
+    const shared = resolveCall(serverRequest('GET', '/products'), index(external('https://api.example.test'), two));
+    expect(shared.outcome).toMatchObject({ kind: 'external' });
+    expect(shared.notes.map((note) => note.reason)).toEqual(['ambiguous-route-target']);
   });
 });

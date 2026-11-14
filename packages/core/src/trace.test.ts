@@ -167,11 +167,51 @@ describe('a settings value kept in a static property', () => {
       http.get(\`\${APP_URL}/api/me\`);
     `);
     const opening = address(file).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
-    expect(rootSettingAddress(opening, { readSetting })).toEqual({ key: 'apiUrl', prefix: '', otherwise: 'http://localhost:3000' });
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({ key: 'apiUrl', prefix: '', otherwise: 'http://localhost:3000', otherwiseFile: '/a.ts' });
   });
 
-  it('reads no setting through a function whose returns say different things', () => {
+  // P296: a chain read as one step however long, later settings as further
+  // fallbacks, and the fallback said where it is written.
+  it('reads a long chain of || as one step, the settings after the first as where it goes next', () => {
     const file = parse(`
+      function withScheme(url: string | undefined): string {
+        if (!url) return '';
+        if (url.startsWith('http')) return url;
+        return \`https://\${url}\`;
+      }
+      declare const other: { a: string; b: string; c: string };
+      const A = other.a ? \`https://\${other.a}\` : '';
+      const B = other.b ? \`https://\${other.b}.example.test\` : '';
+      const C = other.c ? \`https://\${other.c}\` : '';
+      const APP_URL = withScheme(environment.apiUrl) || A || B || C || environment.secondUrl || environment.thirdUrl || 'http://localhost:3000';
+      http.get(\`\${APP_URL}/api/me\`);
+    `);
+    const opening = address(file).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({
+      key: 'apiUrl',
+      prefix: '',
+      also: ['secondUrl', 'thirdUrl'],
+      otherwise: 'http://localhost:3000',
+      otherwiseFile: '/a.ts',
+    });
+  });
+
+  it('says a chain written in another module falls back in that module', () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    project.createSourceFile('constants.ts', `${HEADER}export const APP_URL = environment.apiUrl ?? environment.secondUrl ?? 'http://localhost:3000';`);
+    const file = project.createSourceFile('a.ts', `${HEADER}import { APP_URL } from './constants';\nhttp.get(\`\${APP_URL}/api/me\`);`);
+    const opening = address(file).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({
+      key: 'apiUrl',
+      prefix: '',
+      also: ['secondUrl'],
+      otherwise: 'http://localhost:3000',
+      otherwiseFile: '/constants.ts',
+    });
+  });
+
+  it('reads a function per branch where its arguments settle the branch, and none where nothing does', () => {
+    const settled = parse(`
       function pick(url: string, flag: boolean): string {
         if (flag) return \`\${url}/admin\`;
         return url;
@@ -179,8 +219,40 @@ describe('a settings value kept in a static property', () => {
       const BASE = pick(environment.apiUrl, true);
       http.get(\`\${BASE}/orders\`);
     `);
+    const opening = address(settled).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({ key: 'apiUrl', prefix: '/admin' });
+    const other = parse(`
+      function pick(url: string, flag: boolean): string {
+        if (!flag) { return url; }
+        return \`\${url}/admin\`;
+      }
+      const BASE = pick(environment.apiUrl, false);
+      http.get(\`\${BASE}/orders\`);
+    `);
+    expect(rootSettingAddress(address(other).getDescendantsOfKind(SyntaxKind.Identifier)[0]!, { readSetting })).toEqual({ key: 'apiUrl', prefix: '' });
+    const open = parse(`
+      declare const flag: boolean;
+      function pick(url: string, admin: boolean): string {
+        if (admin) return \`\${url}/admin\`;
+        return url;
+      }
+      const BASE = pick(environment.apiUrl, flag);
+      http.get(\`\${BASE}/orders\`);
+    `);
+    expect(rootSettingAddress(address(open).getDescendantsOfKind(SyntaxKind.Identifier)[0]!, { readSetting })).toBeNull();
+  });
+
+  it('reads a function an object holds as a plain one', () => {
+    const file = parse(`
+      const urls = {
+        withScheme(url: string): string { return url.startsWith('http') ? url : \`https://\${url}\`; },
+        under: (url: string) => \`\${url}/api\`,
+      };
+      const BASE = urls.under(urls.withScheme(environment.apiUrl));
+      http.get(\`\${BASE}/orders\`);
+    `);
     const opening = address(file).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
-    expect(rootSettingAddress(opening, { readSetting })).toBeNull();
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({ key: 'apiUrl', prefix: '/api' });
   });
 
   it('reads the path a function writes after the setting it is handed', () => {

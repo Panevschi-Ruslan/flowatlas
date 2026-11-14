@@ -11,7 +11,56 @@ export const sendsOperation = (call: GraphNode): boolean => call.meta?.['graphql
 /** What the values of a request's setting say of the GraphQL endpoint it reaches (P281). */
 export type LocalGraphqlAnswer =
   | { readonly kind: 'linked'; readonly service: string; readonly entry: GraphNode; readonly found: FoundValue }
-  | { readonly kind: 'unserved'; readonly service: string; readonly path: string; readonly fields: readonly string[] };
+  | { readonly kind: 'unserved'; readonly service: string; readonly path: string; readonly fields: readonly string[] }
+  /**
+   * A public host whose path no endpoint serves, or that has none (P296),
+   * where several of the project's endpoints serve the operation.
+   */
+  | { readonly kind: 'undecided'; readonly endpoints: readonly { readonly service: string; readonly path: string }[]; readonly fields: readonly string[]; readonly found: FoundValue };
+
+/** Every GraphQL endpoint of the services, with the service serving it. */
+const endpointsOf = (services: readonly string[], routesOf: (service: string) => readonly GraphNode[] | undefined, at?: string): { service: string; entry: GraphNode }[] =>
+  services.flatMap((service) =>
+    (routesOf(service) ?? [])
+      .filter((route) => (route.meta?.['graphql'] as { endpoint?: boolean } | undefined)?.endpoint === true && route.meta?.['method'] === 'POST' && (at === undefined || route.meta?.['path'] === at))
+      .map((entry) => ({ service, entry })),
+  );
+
+/**
+ * A GraphQL operation whose only values are public hosts none of whose paths
+ * an endpoint serves - a gateway in front rewriting it, or a host with no
+ * path (P296): the host is a deployment of the project's one endpoint that
+ * serves the operation, where exactly one qualifies - the only endpoint, or
+ * the only one declaring a root field the operation asks for - joined as a
+ * guess, as a browser's request under such a host is by its route alone
+ * (P280). Several are a row saying so; none serving the operation leaves the
+ * host a third party's.
+ */
+const publicHostEndpoint = (
+  call: GraphNode,
+  found: FoundValue,
+  services: readonly string[],
+  routesOf: (service: string) => readonly GraphNode[] | undefined,
+): LocalGraphqlAnswer | undefined => {
+  const endpoints = endpointsOf(services, routesOf);
+  if (endpoints.length === 0) return undefined;
+  const asked = rootFieldsAsked(call);
+  const serving = asked.length === 0 ? endpoints : endpoints.filter((each) => asked.some((field) => servesRootField(each.entry, field, routesOf(each.service) ?? [])));
+  const [only] = serving;
+  if (serving.length === 1 && only !== undefined) return { kind: 'linked', service: only.service, entry: only.entry, found };
+  // None serving it: the host is a third party's, whose operation nothing here declares.
+  if (serving.length === 0) return undefined;
+  return { kind: 'undecided', endpoints: serving.map((each) => ({ service: each.service, path: String(each.entry.meta?.['path']) })), fields: asked, found };
+};
+
+/** The row a public host several endpoints qualify for is (P296). */
+export const undecidedFinding = (answer: Extract<LocalGraphqlAnswer, { kind: 'undecided' }>): { reason: string; message: string; hint: string } => ({
+  reason: 'ambiguous-route-target',
+  message: `${answer.found.variable} is ${answer.found.value}, a public host no endpoint's path matches, and the GraphQL endpoints ${answer.endpoints
+    .map((each) => `${each.service} (POST ${each.path})`)
+    .join(' and ')} each serve the operation, so it is joined to neither`,
+  hint: `Add ${answer.found.variable} to services[].baseUrlEnv of the service whose deployment the host is.`,
+});
 
 /**
  * A GraphQL operation sent to a setting whose values name no configured
@@ -62,15 +111,17 @@ export const localGraphqlEndpoint = (
   // hosts' (P292): a project whose only value is its deployment's demo host.
   const local = pathsOf(true);
   // A service's public address is its deployment's, which its own join reads.
-  const paths = local.size > 0 || answer.kind === 'service' ? local : pathsOf(false);
-  if (paths.size !== 1) return undefined;
+  const publicOnly = local.size === 0 && answer.kind !== 'service';
+  const paths = publicOnly ? pathsOf(false) : local;
+  // The public hosts, where nothing for this machine says (P296): the first, for the row and the join.
+  const publicValue = publicOnly ? values.find((found) => { const host = hostOf(found.value); return host !== undefined && !isInnerHost(host.hostname); }) : undefined;
+  const byHost = (): LocalGraphqlAnswer | undefined =>
+    publicValue === undefined || paths.size > 1 ? undefined : publicHostEndpoint(call, publicValue, services, routesOf);
+  if (paths.size !== 1) return byHost();
   const [[at, found]] = [...paths] as [[string, FoundValue]];
-  const endpoints = among.flatMap((service) =>
-    (routesOf(service) ?? [])
-      .filter((route) => (route.meta?.['graphql'] as { endpoint?: boolean } | undefined)?.endpoint === true && route.meta?.['method'] === 'POST' && route.meta?.['path'] === at)
-      .map((entry) => ({ service, entry })),
-  );
+  const endpoints = endpointsOf(among, routesOf, at);
   const [only] = endpoints;
+  if (endpoints.length === 0) return byHost();
   if (endpoints.length !== 1 || only === undefined) return undefined;
   const asked = rootFieldsAsked(call);
   if (asked.length > 0 && !asked.some((field) => servesRootField(only.entry, field, routesOf(only.service) ?? []))) {

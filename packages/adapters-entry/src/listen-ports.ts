@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   configValueAt,
@@ -28,8 +28,11 @@ import { repoSources } from './shared.js';
  * own spelling, kept here beside the adapters that answer for it: Hono's
  * `serve({ fetch, port })` and the runtimes' `Bun.serve` / `Deno.serve`, a
  * module answering `export default { port, fetch }`, Nuxt's `devServer.port`,
- * and the `--port` a `package.json` script starts Next or Nuxt with. No
- * framework's own default dev port is assumed: 3000 is everybody's.
+ * and the `--port` a `package.json` script starts Next or Nuxt with. Where
+ * nothing says, a full-stack framework's own default (Next's and Nuxt's 3000)
+ * is where it listens (P296), as the weakest word for a port: 3000 is
+ * everybody's, so a default yields to any service the code or the files place
+ * there, and two defaults on one port are no answer.
  */
 
 /**
@@ -128,6 +131,13 @@ export interface ScriptCommand {
   readonly port?: number;
   /** Whether the command says the server must not move to another port where its own is taken: `--strictPort`. */
   readonly strict: boolean;
+  /**
+   * The port the command's own environment gives a server that reads `PORT`
+   * (P296): `PORT=3020 next start`, or the fallback of `-p ${PORT:-3020}`.
+   */
+  readonly environmentPort?: number;
+  /** Whether the command hands the port in from somewhere nothing here reads: `-p $PORT` (P296). */
+  readonly portUnread?: true;
 }
 
 /**
@@ -157,12 +167,18 @@ export const scriptCommands = (repoDir: string, commands: RegExp): ScriptCommand
       if (!commands.test(part)) continue;
       const written = /(?:^|\s)(?:-p|--port)(?:\s+|=)(\d{2,5})\b/.exec(part)?.[1];
       const port = written === undefined || Number(written) >= 65536 ? undefined : Number(written);
+      // `PORT=3020 next start`, `-p ${PORT:-3020}`: where a server reading PORT listens (P296).
+      const given = /(?:^|\s)PORT=(\d{2,5})(?=\s)/.exec(part)?.[1] ?? /\$\{PORT:?-(\d{2,5})\}/.exec(part)?.[1];
+      const environmentPort = given === undefined || Number(given) >= 65536 ? undefined : Number(given);
+      const handed = port === undefined && environmentPort === undefined && /(?:^|\s)(?:-p|--port)(?:\s+|=)\S/.test(part);
       const at = text.indexOf(JSON.stringify(name));
       found.push({
         command: part.trim(),
         line: at < 0 ? 1 : lineAt(text, at),
         ...(port === undefined ? {} : { port }),
         strict: /(?:^|\s)--strict-?port\b/i.test(part),
+        ...(environmentPort === undefined ? {} : { environmentPort }),
+        ...(handed ? { portUnread: true as const } : {}),
       });
     }
   }
@@ -177,11 +193,30 @@ export const scriptCommands = (repoDir: string, commands: RegExp): ScriptCommand
 export const scriptPorts = (repoDir: string, commands: RegExp): ListenPort[] =>
   scriptCommands(repoDir, commands).flatMap((each) => (each.port === undefined ? [] : [{ port: each.port, file: 'package.json', line: each.line }]));
 
-/** Next's own server, started by a script or by a workspace tool's target (P257). */
-export const nextListens = (ctx: ExtractContext): ListenPort[] => [
-  ...scriptPorts(ctx.repoDir, /\bnext\s+(dev|start)\b/),
-  ...targetPorts(ctx.repoDir, NEXT_SERVER_EXECUTORS, false),
-];
+/**
+ * Where a full-stack framework's own server listens (P296): the port its
+ * configuration writes (`written`), each script's `-p`, and the port a
+ * script's own environment gives a server reading `PORT`; and, where none of
+ * them says and no script hands the port in from somewhere unread, the
+ * framework's documented default, as the setting `PORT` falls back to it
+ * (`default: true`). Such a server serves the application's own API routes,
+ * so it is no dev server forwarding what it does not serve; a default is the
+ * weakest word for a port, and yields to any other (`atLocalPort`).
+ */
+export const frameworkListens = (repoDir: string, commands: RegExp, otherwise: number, written: readonly ListenPort[] = []): ListenPort[] => {
+  const scripts = scriptCommands(repoDir, commands);
+  const found: ListenPort[] = [...written];
+  for (const each of scripts) {
+    if (each.port !== undefined) found.push({ port: each.port, file: 'package.json', line: each.line });
+    else if (each.environmentPort !== undefined) found.push({ port: each.environmentPort, file: 'package.json', line: each.line });
+  }
+  if (found.length > 0 || scripts.some((each) => each.portUnread === true) || !existsSync(join(repoDir, 'package.json'))) return found;
+  return [{ port: otherwise, file: 'package.json', line: scripts[0]?.line ?? 1, setting: 'PORT', default: true }];
+};
+
+/** Next's own server, started by a script or by a workspace tool's target (P257), on 3000 where nothing says (P296). */
+export const nextListens = (ctx: ExtractContext): ListenPort[] =>
+  frameworkListens(ctx.repoDir, /\bnext\s+(dev|start)\b/, 3000, targetPorts(ctx.repoDir, NEXT_SERVER_EXECUTORS, false));
 
 const NUXT_CONFIGS = ['nuxt.config.ts', 'nuxt.config.js', 'nuxt.config.mjs', 'nuxt.config.mts', 'nuxt.config.cjs'];
 
@@ -199,5 +234,6 @@ export const nitroListens = (ctx: ExtractContext): ListenPort[] => {
     const at = /devServer\s*:\s*\{[^}]*?\bport\s*:/.exec(text);
     found.push({ port, file: normalizeFilePath(config.file, ctx.repoDir), line: at === null ? 1 : lineAt(text, at.index + at[0].length) });
   }
-  return [...found, ...scriptPorts(ctx.repoDir, /\b(nuxi|nuxt|nitro|nitropack)\s+(dev|preview|start)\b/)];
+  // Nuxt's and Nitro's servers listen on 3000 where nothing says (P296).
+  return frameworkListens(ctx.repoDir, /\b(nuxi|nuxt|nitro|nitropack)\s+(dev|preview|start)\b/, 3000, found);
 };

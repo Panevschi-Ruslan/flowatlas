@@ -23,7 +23,7 @@ import {
   type TypeEntry,
   type Unresolved,
 } from '@flowatlas/core';
-import { baseUrlOf, hostIndexOf, servicesAt, takenMeta, whereFound, type FoundValue, type HostIndex } from './base-url-value.js';
+import { baseUrlOf, settingsAfter, hostIndexOf, servicesAt, takenMeta, whereFound, type FoundValue, type HostIndex } from './base-url-value.js';
 import {
   baseUrlTakenFinding,
   findingFor,
@@ -799,7 +799,9 @@ const baseUrlLookup = (
     const own = settings[call.repo];
     return baseUrlOf({
       call,
-      variables: typeof variable === 'string' && variable !== env ? [env, variable] : [env],
+      // The settings a chain of `||` reads after it are where the value goes
+      // where it is not set, so their values are its values too (P296).
+      variables: [...new Set([env, ...(typeof variable === 'string' ? [variable] : []), ...settingsAfter(call)])],
       runners: runnersOf.get(call.id) ?? [],
       ...(own === undefined ? {} : { settings: own }),
       hosts,

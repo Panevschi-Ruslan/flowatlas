@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-14T17:56:33.100Z",
+  "configHash": "54382dd0cbd9",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 895,
+      "packages": {
+        "name": "catalog",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 892,
+      "packages": {
+        "name": "orders",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "reviews",
+      "repo": "./reviews",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 2,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 1116,
+      "packages": {
+        "name": "reviews",
+        "runtime": [
+          "@graphql-yoga/nestjs",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/graphql",
+          "graphql"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "status",
+      "repo": "./status",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 888,
+      "packages": {
+        "name": "status",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 30,
+      "edges": 20,
+      "types": 0,
+      "unresolved": 9,
+      "durationMs": 971,
+      "packages": {
+        "name": "framework-ports-chains-web",
+        "runtime": [
+          "graphql-request",
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 6,
+    "linked": 5,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 1,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 6,
+    "resolved": 5,
+    "unresolved": 1,
+    "byReason": {
+      "ambiguous-route-target": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 8,
+    "called": 6,
+    "uncalled": [
+      "entry:catalog:http:GET:/health",
+      "entry:orders:http:GET:/health"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "server/shop.ts",
+      "line": 5,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "SHOP_HOST is https://shop.example.test in .env.example, which is taken as catalog",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add SHOP_HOST to services[].baseUrlEnv of catalog to say so outright.",
+      "symbol": "http_out:web#server/shop.ts:5:21",
+      "meta": {
+        "variable": "SHOP_HOST",
+        "value": "https://shop.example.test",
+        "from": ".env.example"
+      }
+    },
+    {
+      "service": "web",
+      "file": "server/shop.ts",
+      "line": 11,
+      "reason": "ambiguous-route-target",
+      "message": "SHOP_HOST is https://shop.example.test (.env.example), a host no service is reached at, and GET /health is served by catalog and orders, so the request is taken as a third party's",
+      "hint": "Add SHOP_HOST to services[].baseUrlEnv of the service whose deployment https://shop.example.test is, or the host to its services[].hosts.",
+      "symbol": "http_out:web#server/shop.ts:11:21"
+    },
+    {
+      "service": "web",
+      "file": "server/shop.ts",
+      "line": 11,
+      "reason": "ambiguous-route-target",
+      "message": "catalog and orders both answer GET /health",
+      "hint": "Set services[].apiTarget on the frontend to say which service its settings key names.",
+      "symbol": "ui_api_call:web#server/shop.ts:11:21"
+    },
+    {
+      "service": "web",
+      "file": "server/shop.ts",
+      "line": 11,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "SHOP_HOST is https://shop.example.test in .env.example, which is taken as shop.example.test",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add SHOP_HOST to services[].baseUrlEnv of shop.example.test to say so outright.",
+      "symbol": "http_out:web#server/shop.ts:11:21",
+      "meta": {
+        "variable": "SHOP_HOST",
+        "value": "https://shop.example.test",
+        "from": ".env.example"
+      }
+    },
+    {
+      "service": "web",
+      "file": "server/shop.ts",
+      "line": 26,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "GATEWAY_URL is https://gateway.example.test/v1 in .env.example, which is taken as reviews",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add GATEWAY_URL to services[].baseUrlEnv of reviews to say so outright.",
+      "symbol": "http_out:web#server/shop.ts:26:10",
+      "meta": {
+        "variable": "GATEWAY_URL",
+        "value": "https://gateway.example.test/v1",
+        "from": ".env.example"
+      },
+      "sites": 2
+    },
+    {
+      "service": "web",
+      "file": "server/verify.ts",
+      "line": 6,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "PUBLIC_APP_URL is http://localhost:3000 in lib/constants.ts (the code’s own fallback), which is taken as web",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add PUBLIC_APP_URL to services[].baseUrlEnv of web to say so outright.",
+      "symbol": "http_out:web#server/verify.ts:6:26",
+      "meta": {
+        "variable": "PUBLIC_APP_URL",
+        "value": "http://localhost:3000",
+        "from": "lib/constants.ts (the code’s own fallback)"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 51,
+    "edges": 40,
+    "types": 1,
+    "missed": 15,
+    "sites": 22,
+    "notes": 4,
+    "findings": 0,
+    "unresolved": 15
+  }
+}

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "trpc-router",
-  "generatedAt": "2026-11-09T16:50:42.530Z",
+  "generatedAt": "2026-11-14T17:55:27.437Z",
   "nodes": [
     {
       "id": "entry:trpc-router:http:ALL:/api/trpc/:param",
@@ -193,6 +193,15 @@
             "trpc-procedures"
           ]
         },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 1,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
         "ownOrigin": true
       }
     },

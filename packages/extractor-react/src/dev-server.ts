@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
-import { scriptCommands, targetPorts, VITE_CONFIGS, VITE_SERVER_EXECUTORS, WEBPACK_SERVER_EXECUTORS, type ScriptCommand } from '@flowatlas/adapters-entry';
+import { frameworkListens, scriptCommands, targetPorts, VITE_CONFIGS, VITE_SERVER_EXECUTORS, WEBPACK_SERVER_EXECUTORS, type ScriptCommand } from '@flowatlas/adapters-entry';
 import { NotLiteral, configValueAt, isEnvironmentName, readConfigLiteral, toPosixPath, type ExtractContext, type ListenPort } from '@flowatlas/core';
 
 /**
@@ -123,6 +123,18 @@ export const astroListens = (repoDir: string): ListenPort[] => {
   return [...ports.values(), ...scripts.map((each) => ({ port: each.port as number, file: 'package.json', line: each.line, devServer: true as const }))];
 };
 
+/** The scripts that start a Remix or React Router application's own server, not a bundler's dev server. */
+const APP_SERVES = /\b(?:remix-serve|react-router-serve)\b|\bremix\s+dev\b/;
+
+/**
+ * Remix's and React Router's own servers (`remix-serve`, `react-router-serve`,
+ * the classic `remix dev`), where a script starts one (P296): they serve the
+ * application's resource routes, so they are no dev server, and listen on
+ * `PORT`, 3000 where nothing says.
+ */
+export const appServerListens = (repoDir: string): ListenPort[] =>
+  scriptCommands(repoDir, APP_SERVES).length === 0 ? [] : frameworkListens(repoDir, APP_SERVES, 3000);
+
 /**
  * Where a React, Vue or Svelte front end's own servers listen: its bundler's
  * configuration and scripts, and the dev server targets a workspace tool's
@@ -131,6 +143,7 @@ export const astroListens = (repoDir: string): ListenPort[] => {
 export const frontEndListens = (ctx: ExtractContext): ListenPort[] => [
   ...viteListens(ctx.repoDir),
   ...astroListens(ctx.repoDir),
+  ...appServerListens(ctx.repoDir),
   ...targetPorts(ctx.repoDir, VITE_SERVER_EXECUTORS, true),
   ...targetPorts(ctx.repoDir, WEBPACK_SERVER_EXECUTORS, true),
 ];

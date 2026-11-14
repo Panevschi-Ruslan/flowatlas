@@ -390,7 +390,12 @@ export const atLocalPort = (address: string, index: PortIndex): PortAnswer | und
   const local = `http:${'/'.repeat(2)}localhost:${port}`;
   const filed = servicesAt(local, index.all);
   const fromFiles = Array.isArray(filed) ? filed : [];
-  const listening = index.listening.get(port) ?? [];
+  // A framework's or a library's own default is the weakest word for a port
+  // (P296): it yields to a service the code or the files place there, and
+  // only defaults left together are two services' at once.
+  const heard = index.listening.get(port) ?? [];
+  const firm = heard.some((each) => each.default !== true) || fromFiles.length > 0;
+  const listening = firm ? heard.filter((each) => each.default !== true || fromFiles.includes(each.service)) : heard;
   const services = [...new Set([...fromFiles, ...listening.map((each) => each.service)])].sort(cmp);
   if (services.length === 0) return undefined;
   if (services.length === 1) {

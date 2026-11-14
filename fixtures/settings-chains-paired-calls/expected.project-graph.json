@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-12T19:17:19.031Z",
+  "builtAt": "2026-11-14T17:54:45.019Z",
   "services": [
     {
       "name": "market",
@@ -286,11 +286,15 @@
         "path": "/api/listings",
         "baseUrlEnv": "PUBLIC_APP_URL",
         "baseUrlDefault": "http://localhost:4300",
+        "baseUrlDefaultFrom": "app/lib/urls.ts",
+        "baseUrlAlso": [
+          "PREVIEW_HOST"
+        ],
         "responseType": null,
         "bodyType": null,
         "sameCall": "ui_api_call:market#app/lib/catalog.ts:6:21",
         "baseUrl": "http://localhost:4300",
-        "baseUrlFrom": "app/lib/catalog.ts (the code’s own fallback)",
+        "baseUrlFrom": "app/lib/urls.ts (the code’s own fallback)",
         "targetService": "inventory"
       }
     },
@@ -736,6 +740,10 @@
         "path": "/api/listings",
         "baseUrlEnv": "PUBLIC_APP_URL",
         "baseUrlDefault": "http://localhost:4300",
+        "baseUrlDefaultFrom": "app/lib/urls.ts",
+        "baseUrlAlso": [
+          "PREVIEW_HOST"
+        ],
         "responseType": null,
         "bodyType": null,
         "package": null,
@@ -743,7 +751,7 @@
         "via": "template-env",
         "sameCall": "http_out:market#app/lib/catalog.ts:6:21",
         "baseUrl": "http://localhost:4300",
-        "baseUrlFrom": "app/lib/catalog.ts (the code’s own fallback)",
+        "baseUrlFrom": "app/lib/urls.ts (the code’s own fallback)",
         "targetService": "inventory"
       }
     }
@@ -869,7 +877,7 @@
         "via": "baseUrlValue",
         "targetService": "inventory",
         "baseUrl": "http://localhost:4300",
-        "baseUrlFrom": "app/lib/catalog.ts (the code’s own fallback)"
+        "baseUrlFrom": "app/lib/urls.ts (the code’s own fallback)"
       }
     },
     {
@@ -1083,7 +1091,7 @@
         "via": "base-url-value",
         "targetService": "inventory",
         "baseUrl": "http://localhost:4300",
-        "baseUrlFrom": "app/lib/catalog.ts (the code’s own fallback)"
+        "baseUrlFrom": "app/lib/urls.ts (the code’s own fallback)"
       }
     }
   ],
@@ -1142,13 +1150,13 @@
       "line": 6,
       "reason": "base-url-from-files",
       "level": "info",
-      "message": "PUBLIC_APP_URL is http://localhost:4300 in app/lib/catalog.ts (the code’s own fallback), which is taken as inventory",
+      "message": "PUBLIC_APP_URL is http://localhost:4300 in app/lib/urls.ts (the code’s own fallback), which is taken as inventory",
       "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add PUBLIC_APP_URL to services[].baseUrlEnv of inventory to say so outright.",
       "symbol": "http_out:market#app/lib/catalog.ts:6:21",
       "meta": {
         "variable": "PUBLIC_APP_URL",
         "value": "http://localhost:4300",
-        "from": "app/lib/catalog.ts (the code’s own fallback)"
+        "from": "app/lib/urls.ts (the code’s own fallback)"
       },
       "sites": 2
     },

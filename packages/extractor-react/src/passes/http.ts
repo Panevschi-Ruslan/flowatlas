@@ -52,6 +52,7 @@ import { clientInstances, type ClientInstance } from '../util/client-instance.js
 import { enclosingIndexed, requestsOf, type ReadRequest, type RequestSite } from '../util/forward.js';
 import { localClientOf, type LocalClientReading } from '../util/local-client.js';
 import { basedBy, rewriteFor, unreadOpening } from '../util/request-rewrite.js';
+import { sentThrough } from '../util/sent-later.js';
 import { analyzeApiUrl, analyzeClientBase, isSomewhere, underBase, type ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
 
@@ -176,26 +177,28 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
   /**
    * The body a request's receiver is handed after the call that opens it
    * (P294): the first argument of the first `<receiver>.<method>(...)` written
-   * after it in the function that opens it, looked through its serialisation
-   * as `fetch`'s is. `undefined` where it is sent with none, or not sent there.
+   * after it in the function that opens it, or where the receiver is followed
+   * to - another method sending the field it is kept in, the function it is
+   * handed to, the caller it is returned to (P296) - looked through its
+   * serialisation as `fetch`'s is. `undefined` where it is sent with none, or
+   * not sent anywhere read.
    */
   const sentBodyOf = (call: CallExpression, method: string): TsNode | undefined => {
-    const callee = call.getExpression();
-    if (!Node.isPropertyAccessExpression(callee)) return undefined;
-    const receiver = callee.getExpression().getText();
-    const scope = call.getFirstAncestor((node) => Node.isFunctionLikeDeclaration(node) || Node.isArrowFunction(node) || Node.isFunctionExpression(node)) ?? call.getSourceFile();
-    let sent: CallExpression | undefined;
-    scope.forEachDescendant((node, traversal) => {
-      if (sent !== undefined) return traversal.stop();
-      if (!Node.isCallExpression(node) || node.getStart() < call.getEnd()) return undefined;
-      const each = node.getExpression();
-      if (Node.isPropertyAccessExpression(each) && each.getName() === method && each.getExpression().getText() === receiver) sent = node;
-      return undefined;
-    });
-    const written = sent?.getArguments()[0];
+    const written = sentThrough(call, method)?.getArguments()[0];
     if (written === undefined || !Node.isCallExpression(written)) return written;
     const serialiser = written.getExpression();
     return Node.isPropertyAccessExpression(serialiser) && PLATFORM_FETCH.serialisers.includes(serialiser.getName()) ? (written.getArguments()[0] ?? written) : written;
+  };
+
+  /**
+   * Where the fallback of the setting an address is rooted at is written,
+   * where that is another module than the request's (P296): a chain of `||`
+   * in a constants module is that module's.
+   */
+  const defaultFromOf = (address: ApiUrl, file: string): { baseUrlDefaultFrom?: string } => {
+    if (address.baseUrlEnv === null || address.baseUrlDefault === undefined || address.baseUrlDefaultFile === undefined) return {};
+    const from = normalizeFilePath(address.baseUrlDefaultFile, ctx.repoDir);
+    return from === file ? {} : { baseUrlDefaultFrom: from };
   };
 
   /**
@@ -516,6 +519,8 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         path: address.path,
         baseUrlEnv: address.baseUrlEnv,
         ...(address.baseUrlEnv === null || address.baseUrlDefault === undefined ? {} : { baseUrlDefault: address.baseUrlDefault }),
+        ...defaultFromOf(address, site.file),
+        ...(address.baseUrlEnv === null || address.baseUrlAlso === undefined ? {} : { baseUrlAlso: address.baseUrlAlso }),
         responseType: typeOfResponse(network),
         bodyType: body.type,
         ...(body.type === null ? {} : { bodyFrom: 'literal' }),

@@ -81,6 +81,39 @@ describe('plain browser code (P284)', () => {
     ]);
   });
 
+  it('follows the receiver to where a request opened in one function is sent in another (P296)', () => {
+    const graph = read({
+      '/js/later.js': [
+        'function opened() {',
+        '  const request = new XMLHttpRequest();',
+        "  request.open('POST', 'https://api.example.test/orders');",
+        '  return request;',
+        '}',
+        'function place(order) {',
+        '  const sent = opened();',
+        '  sent.send(JSON.stringify({ item: order.item }));',
+        '}',
+        'function deliver(request, note) {',
+        '  request.send(JSON.stringify({ text: note }));',
+        '}',
+        'function write(note) {',
+        '  const request = new XMLHttpRequest();',
+        "  request.open('POST', 'https://api.example.test/notes');",
+        '  deliver(request, note);',
+        '}',
+        'const shared = new XMLHttpRequest();',
+        "function begin() { shared.open('POST', 'https://api.example.test/pings'); }",
+        "function end() { shared.send(JSON.stringify({ at: 1 })); }",
+      ].join('\n'),
+    });
+    const found = requests(graph).map((node) => [node.meta?.['path'], node.meta?.['bodyKeys']]);
+    expect(found.sort((a, b) => String(a[0]).localeCompare(String(b[0])))).toEqual([
+      ['/notes', ['text']],
+      ['/orders', ['item']],
+      ['/pings', ['at']],
+    ]);
+  });
+
   it('leaves a verb it cannot read as unread', () => {
     const graph = read({ '/js/any.js': "function send(verb) {\n  const request = new XMLHttpRequest();\n  request.open(verb, 'https://api.example.test/orders');\n}\n" });
     expect(requests(graph).map((node) => node.meta?.['method'])).toEqual([null]);

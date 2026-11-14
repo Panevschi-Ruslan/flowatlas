@@ -1,0 +1,1858 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-14T17:56:33.100Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "status",
+      "repo": "./status",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "reviews",
+      "repo": "./reviews",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/index.ts:GET /health@9",
+      "type": "function",
+      "label": "GET /health@9",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /items@5",
+      "type": "function",
+      "label": "GET /items@5",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "config_key:web#GATEWAY_URL",
+      "type": "config_key",
+      "label": "GATEWAY_URL",
+      "repo": "web",
+      "file": "server/shop.ts",
+      "line": 26,
+      "meta": {
+        "key": "GATEWAY_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:web#SHOP_HOST",
+      "type": "config_key",
+      "label": "SHOP_HOST",
+      "repo": "web",
+      "file": "server/shop.ts",
+      "line": 5,
+      "meta": {
+        "key": "SHOP_HOST",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:reviews:graphql:Query.reviews",
+      "type": "entry",
+      "label": "Query.reviews",
+      "repo": "reviews",
+      "file": "src/reviews.resolver.ts",
+      "line": 14,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "reviews",
+        "returns": "[Review!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:reviews:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "reviews",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Review": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "stars": {
+                    "type": "Int!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "reviews": {
+                    "type": "[Review!]!"
+                  }
+                }
+              }
+            }
+          },
+          "listen": [
+            {
+              "port": 4500,
+              "file": "src/main.ts",
+              "line": 7
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:status:http:GET:/admin/checks",
+      "type": "entry",
+      "label": "GET /admin/checks",
+      "repo": "status",
+      "file": "src/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/admin/checks",
+        "rawPath": "/admin/checks",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:status:http:GET:/checks",
+      "type": "entry",
+      "label": "GET /checks",
+      "repo": "status",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/checks",
+        "rawPath": "/checks",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:web:http:POST:/api/auth/verify-email",
+      "type": "entry",
+      "label": "POST /api/auth/verify-email",
+      "repo": "web",
+      "file": "pages/api/auth/verify-email.ts",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/auth/verify-email",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:web:http:POST:/api/uploads",
+      "type": "entry",
+      "label": "POST /api/uploads",
+      "repo": "web",
+      "file": "pages/api/uploads.ts",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/uploads",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "external_api:shop.example.test",
+      "type": "external_api",
+      "label": "shop.example.test",
+      "repo": "web",
+      "meta": {
+        "host": "shop.example.test"
+      }
+    },
+    {
+      "id": "http_out:web#server/shop.ts:11:21",
+      "type": "http_out",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "server/shop.ts",
+      "line": 11,
+      "meta": {
+        "method": "GET",
+        "url": "${SHOP_HOST}/health",
+        "path": "/health",
+        "baseUrlEnv": "SHOP_HOST",
+        "responseType": null,
+        "bodyType": null,
+        "sameCall": "ui_api_call:web#server/shop.ts:11:21",
+        "baseUrl": "https://shop.example.test",
+        "baseUrlFrom": ".env.example",
+        "host": "shop.example.test"
+      }
+    },
+    {
+      "id": "http_out:web#server/shop.ts:26:10",
+      "type": "http_out",
+      "label": "query LatestReviews /",
+      "repo": "web",
+      "file": "server/shop.ts",
+      "line": 26,
+      "meta": {
+        "method": "POST",
+        "url": "${GATEWAY_URL}",
+        "path": "/",
+        "baseUrlEnv": "GATEWAY_URL",
+        "responseType": null,
+        "bodyType": null,
+        "client": "graphql-request",
+        "graphql": {
+          "operation": "query",
+          "name": "LatestReviews",
+          "fields": [
+            {
+              "field": "reviews",
+              "line": 17,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 18
+                },
+                {
+                  "field": "stars",
+                  "line": 19
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "server/shop.ts",
+            "line": 16
+          },
+          "library": "graphql-request"
+        },
+        "sameCall": "ui_api_call:web#server/shop.ts:26:10",
+        "baseUrl": "https://gateway.example.test/v1",
+        "baseUrlFrom": ".env.example",
+        "targetService": "reviews"
+      }
+    },
+    {
+      "id": "http_out:web#server/shop.ts:5:21",
+      "type": "http_out",
+      "label": "GET /items",
+      "repo": "web",
+      "file": "server/shop.ts",
+      "line": 5,
+      "meta": {
+        "method": "GET",
+        "url": "${SHOP_HOST}/items",
+        "path": "/items",
+        "baseUrlEnv": "SHOP_HOST",
+        "responseType": null,
+        "bodyType": null,
+        "sameCall": "ui_api_call:web#server/shop.ts:5:21",
+        "baseUrl": "https://shop.example.test",
+        "baseUrlFrom": ".env.example",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "http_out:web#server/status.ts:12:21",
+      "type": "http_out",
+      "label": "GET /admin/checks",
+      "repo": "web",
+      "file": "server/status.ts",
+      "line": 12,
+      "meta": {
+        "method": "GET",
+        "url": "${STATUS_API_URL}/admin/checks",
+        "path": "/admin/checks",
+        "baseUrlEnv": "STATUS_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "sameCall": "ui_api_call:web#server/status.ts:12:21",
+        "targetService": "status"
+      }
+    },
+    {
+      "id": "http_out:web#server/status.ts:6:21",
+      "type": "http_out",
+      "label": "GET /checks",
+      "repo": "web",
+      "file": "server/status.ts",
+      "line": 6,
+      "meta": {
+        "method": "GET",
+        "url": "${PUBLIC_STATUS_URL}/checks",
+        "path": "/checks",
+        "baseUrlEnv": "PUBLIC_STATUS_URL",
+        "baseUrlDefault": "http://localhost:4400",
+        "baseUrlDefaultFrom": "lib/constants.ts",
+        "baseUrlAlso": [
+          "STATUS_API_URL"
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "sameCall": "ui_api_call:web#server/status.ts:6:21",
+        "targetService": "status"
+      }
+    },
+    {
+      "id": "http_out:web#server/verify.ts:6:26",
+      "type": "http_out",
+      "label": "POST /api/auth/verify-email",
+      "repo": "web",
+      "file": "server/verify.ts",
+      "line": 6,
+      "meta": {
+        "method": "POST",
+        "url": "${PUBLIC_APP_URL}/api/auth/verify-email?${…}",
+        "path": "/api/auth/verify-email",
+        "baseUrlEnv": "PUBLIC_APP_URL",
+        "baseUrlDefault": "http://localhost:3000",
+        "baseUrlDefaultFrom": "lib/constants.ts",
+        "baseUrlAlso": [
+          "PREVIEW_HOST",
+          "STAGING_HOST",
+          "EDGE_HOST"
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "baseUrl": "http://localhost:3000",
+        "baseUrlFrom": "lib/constants.ts (the code’s own fallback)",
+        "targetService": "web"
+      }
+    },
+    {
+      "id": "orders#src/index.ts:GET /health@5",
+      "type": "function",
+      "label": "GET /health@5",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4600,
+            "file": "src/index.ts",
+            "line": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4700,
+            "file": "src/index.ts",
+            "line": 9
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:reviews",
+      "type": "repo",
+      "label": "reviews",
+      "repo": "reviews",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "graphql-resolvers"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4500,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:status",
+      "type": "repo",
+      "label": "status",
+      "repo": "status",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4400,
+            "file": "src/index.ts",
+            "line": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 13,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 6,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "reviews#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "module",
+      "label": "GraphQLModule",
+      "repo": "reviews",
+      "file": "node_modules/@nestjs/graphql",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "external": true
+      }
+    },
+    {
+      "id": "reviews#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "reviews",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "ReviewsResolver"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "reviews#src/reviews.resolver.ts:ReviewsResolver",
+      "type": "provider",
+      "label": "ReviewsResolver",
+      "repo": "reviews",
+      "file": "src/reviews.resolver.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "reviews#src/reviews.resolver.ts:ReviewsResolver.reviews",
+      "type": "method",
+      "label": "ReviewsResolver.reviews",
+      "repo": "reviews",
+      "file": "src/reviews.resolver.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:reviews#Review[]"
+        }
+      }
+    },
+    {
+      "id": "status#src/index.ts:GET /admin/checks@9",
+      "type": "function",
+      "label": "GET /admin/checks@9",
+      "repo": "status",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "status#src/index.ts:GET /checks@5",
+      "type": "function",
+      "label": "GET /checks@5",
+      "repo": "status",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_action:web#components/Upload.tsx:14:18",
+      "type": "ui_action",
+      "label": "onClick={start}",
+      "repo": "web",
+      "file": "components/Upload.tsx",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "start",
+        "component": "web#components/Upload.tsx:Upload",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:web#components/Upload.tsx:4:3",
+      "type": "ui_api_call",
+      "label": "POST /api/uploads",
+      "repo": "web",
+      "file": "components/Upload.tsx",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/uploads",
+        "path": "/api/uploads",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{name:string;size:number}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name",
+          "size"
+        ],
+        "package": null,
+        "client": "xhr",
+        "via": "literal",
+        "targetService": "web"
+      }
+    },
+    {
+      "id": "ui_api_call:web#server/shop.ts:11:21",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "server/shop.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${SHOP_HOST}/health",
+        "path": "/health",
+        "baseUrlEnv": "SHOP_HOST",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "sameCall": "http_out:web#server/shop.ts:11:21"
+      }
+    },
+    {
+      "id": "ui_api_call:web#server/shop.ts:26:10",
+      "type": "ui_api_call",
+      "label": "query LatestReviews /",
+      "repo": "web",
+      "file": "server/shop.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${GATEWAY_URL}",
+        "path": "/",
+        "baseUrlEnv": "GATEWAY_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "graphql-request",
+        "client": "graphql-request",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "LatestReviews",
+          "fields": [
+            {
+              "field": "reviews",
+              "line": 17,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 18
+                },
+                {
+                  "field": "stars",
+                  "line": 19
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "server/shop.ts",
+            "line": 16
+          },
+          "library": "graphql-request"
+        },
+        "sameCall": "http_out:web#server/shop.ts:26:10",
+        "baseUrl": "https://gateway.example.test/v1",
+        "baseUrlFrom": ".env.example",
+        "targetService": "reviews"
+      }
+    },
+    {
+      "id": "ui_api_call:web#server/shop.ts:5:21",
+      "type": "ui_api_call",
+      "label": "GET /items",
+      "repo": "web",
+      "file": "server/shop.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${SHOP_HOST}/items",
+        "path": "/items",
+        "baseUrlEnv": "SHOP_HOST",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "sameCall": "http_out:web#server/shop.ts:5:21",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#server/status.ts:12:21",
+      "type": "ui_api_call",
+      "label": "GET /admin/checks",
+      "repo": "web",
+      "file": "server/status.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${STATUS_API_URL}/admin/checks",
+        "path": "/admin/checks",
+        "baseUrlEnv": "STATUS_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "sameCall": "http_out:web#server/status.ts:12:21",
+        "targetService": "status"
+      }
+    },
+    {
+      "id": "ui_api_call:web#server/status.ts:6:21",
+      "type": "ui_api_call",
+      "label": "GET /checks",
+      "repo": "web",
+      "file": "server/status.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${PUBLIC_STATUS_URL}/checks",
+        "path": "/checks",
+        "baseUrlEnv": "PUBLIC_STATUS_URL",
+        "baseUrlDefault": "http://localhost:4400",
+        "baseUrlDefaultFrom": "lib/constants.ts",
+        "baseUrlAlso": [
+          "STATUS_API_URL"
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "sameCall": "http_out:web#server/status.ts:6:21",
+        "targetService": "status"
+      }
+    },
+    {
+      "id": "web#components/Upload.tsx:Upload",
+      "type": "ui_component",
+      "label": "Upload",
+      "repo": "web",
+      "file": "components/Upload.tsx",
+      "line": 9,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ name }",
+              "type": "{name:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#components/Upload.tsx:openUpload",
+      "type": "function",
+      "label": "openUpload",
+      "repo": "web",
+      "file": "components/Upload.tsx",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "XMLHttpRequest"
+        }
+      }
+    },
+    {
+      "id": "web#lib/urls.ts:ADMIN_STATUS_URL",
+      "type": "function",
+      "label": "ADMIN_STATUS_URL",
+      "repo": "web",
+      "file": "lib/urls.ts",
+      "line": 8
+    },
+    {
+      "id": "web#lib/urls.ts:under",
+      "type": "function",
+      "label": "under",
+      "repo": "web",
+      "file": "lib/urls.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "base",
+              "type": "string"
+            },
+            {
+              "name": "admin",
+              "type": "boolean"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "web#pages/api/auth/verify-email.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "web",
+      "file": "pages/api/auth/verify-email.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "unknown"
+            },
+            {
+              "name": "res",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#pages/api/uploads.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "web",
+      "file": "pages/api/uploads.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "unknown"
+            },
+            {
+              "name": "res",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#server/shop.ts:readHealth",
+      "type": "function",
+      "label": "readHealth",
+      "repo": "web",
+      "file": "server/shop.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#server/shop.ts:readItems",
+      "type": "function",
+      "label": "readItems",
+      "repo": "web",
+      "file": "server/shop.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#server/shop.ts:readReviews",
+      "type": "function",
+      "label": "readReviews",
+      "repo": "web",
+      "file": "server/shop.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#server/status.ts:readAdminChecks",
+      "type": "function",
+      "label": "readAdminChecks",
+      "repo": "web",
+      "file": "server/status.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#server/status.ts:readChecks",
+      "type": "function",
+      "label": "readChecks",
+      "repo": "web",
+      "file": "server/status.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#server/verify.ts:getServerSideProps",
+      "type": "function",
+      "label": "getServerSideProps",
+      "repo": "web",
+      "file": "server/verify.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "context",
+              "type": "{query:{token?:string}}"
+            }
+          ],
+          "returns": "{props:{verified:boolean}}"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:http:GET:/health",
+      "to": "catalog#src/index.ts:GET /health@9",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/items",
+      "to": "catalog#src/index.ts:GET /items@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/health",
+      "to": "orders#src/index.ts:GET /health@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:reviews:graphql:Query.reviews",
+      "to": "reviews#src/reviews.resolver.ts:ReviewsResolver.reviews",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:reviews#Review[]",
+      "file": "src/reviews.resolver.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:status:http:GET:/admin/checks",
+      "to": "status#src/index.ts:GET /admin/checks@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:status:http:GET:/checks",
+      "to": "status#src/index.ts:GET /checks@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:web:http:POST:/api/auth/verify-email",
+      "to": "web#pages/api/auth/verify-email.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{verified:boolean}",
+      "file": "pages/api/auth/verify-email.ts",
+      "line": 3,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:web:http:POST:/api/uploads",
+      "to": "web#pages/api/uploads.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{stored:boolean}",
+      "file": "pages/api/uploads.ts",
+      "line": 3,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:web#server/shop.ts:11:21",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "server/shop.ts",
+      "line": 11,
+      "meta": {
+        "baseUrl": "https://shop.example.test",
+        "baseUrlFrom": ".env.example"
+      }
+    },
+    {
+      "from": "http_out:web#server/shop.ts:26:10",
+      "to": "entry:reviews:graphql:Query.reviews",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "server/shop.ts",
+      "line": 17,
+      "meta": {
+        "graphql": {
+          "operation": "LatestReviews",
+          "field": "Query.reviews"
+        }
+      }
+    },
+    {
+      "from": "http_out:web#server/shop.ts:26:10",
+      "to": "entry:reviews:http:POST:/graphql",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "server/shop.ts",
+      "line": 26,
+      "meta": {
+        "via": "graphqlPath",
+        "targetService": "reviews",
+        "baseUrl": "https://gateway.example.test/v1",
+        "baseUrlFrom": ".env.example"
+      }
+    },
+    {
+      "from": "http_out:web#server/shop.ts:5:21",
+      "to": "entry:catalog:http:GET:/items",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "server/shop.ts",
+      "line": 5,
+      "meta": {
+        "via": "externalValuePath",
+        "targetService": "catalog",
+        "baseUrl": "https://shop.example.test",
+        "baseUrlFrom": ".env.example"
+      }
+    },
+    {
+      "from": "http_out:web#server/status.ts:12:21",
+      "to": "entry:status:http:GET:/admin/checks",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "server/status.ts",
+      "line": 12,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "status"
+      }
+    },
+    {
+      "from": "http_out:web#server/status.ts:6:21",
+      "to": "entry:status:http:GET:/checks",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "server/status.ts",
+      "line": 6,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "status"
+      }
+    },
+    {
+      "from": "http_out:web#server/verify.ts:6:26",
+      "to": "entry:web:http:POST:/api/auth/verify-email",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "server/verify.ts",
+      "line": 6,
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "web",
+        "baseUrl": "http://localhost:3000",
+        "baseUrlFrom": "lib/constants.ts (the code’s own fallback)"
+      }
+    },
+    {
+      "from": "reviews#src/app.module.ts:AppModule",
+      "to": "reviews#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "imports",
+      "confidence": "heuristic",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "ui_action:web#components/Upload.tsx:14:18",
+      "to": "web#components/Upload.tsx:Upload",
+      "type": "handles",
+      "confidence": "static",
+      "file": "components/Upload.tsx",
+      "line": 14
+    },
+    {
+      "from": "ui_api_call:web#components/Upload.tsx:4:3",
+      "to": "entry:web:http:POST:/api/uploads",
+      "type": "hits",
+      "confidence": "static",
+      "file": "components/Upload.tsx",
+      "line": 4,
+      "params": [
+        "{name:string;size:number}"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "web"
+      }
+    },
+    {
+      "from": "ui_api_call:web#server/shop.ts:26:10",
+      "to": "entry:reviews:graphql:Query.reviews",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "server/shop.ts",
+      "line": 17,
+      "meta": {
+        "graphql": {
+          "operation": "LatestReviews",
+          "field": "Query.reviews"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#server/shop.ts:26:10",
+      "to": "entry:reviews:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "server/shop.ts",
+      "line": 26,
+      "meta": {
+        "via": "graphql-path",
+        "targetService": "reviews",
+        "baseUrl": "https://gateway.example.test/v1",
+        "baseUrlFrom": ".env.example"
+      }
+    },
+    {
+      "from": "ui_api_call:web#server/shop.ts:5:21",
+      "to": "entry:catalog:http:GET:/items",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "server/shop.ts",
+      "line": 5,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#server/status.ts:12:21",
+      "to": "entry:status:http:GET:/admin/checks",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "server/status.ts",
+      "line": 12,
+      "meta": {
+        "via": "base-url-env",
+        "targetService": "status"
+      }
+    },
+    {
+      "from": "ui_api_call:web#server/status.ts:6:21",
+      "to": "entry:status:http:GET:/checks",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "server/status.ts",
+      "line": 6,
+      "meta": {
+        "via": "base-url-env",
+        "targetService": "status"
+      }
+    },
+    {
+      "from": "web#components/Upload.tsx:Upload",
+      "to": "web#components/Upload.tsx:openUpload",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "XMLHttpRequest",
+      "file": "components/Upload.tsx",
+      "line": 11
+    },
+    {
+      "from": "web#components/Upload.tsx:openUpload",
+      "to": "ui_api_call:web#components/Upload.tsx:4:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "components/Upload.tsx",
+      "line": 4
+    },
+    {
+      "from": "web#lib/urls.ts:ADMIN_STATUS_URL",
+      "to": "web#lib/urls.ts:under",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "boolean"
+      ],
+      "returns": "string",
+      "file": "lib/urls.ts",
+      "line": 8
+    },
+    {
+      "from": "web#server/shop.ts:readHealth",
+      "to": "config_key:web#SHOP_HOST",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "server/shop.ts",
+      "line": 11
+    },
+    {
+      "from": "web#server/shop.ts:readHealth",
+      "to": "http_out:web#server/shop.ts:11:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/shop.ts",
+      "line": 11
+    },
+    {
+      "from": "web#server/shop.ts:readHealth",
+      "to": "ui_api_call:web#server/shop.ts:11:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/shop.ts",
+      "line": 11
+    },
+    {
+      "from": "web#server/shop.ts:readItems",
+      "to": "config_key:web#SHOP_HOST",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "server/shop.ts",
+      "line": 5
+    },
+    {
+      "from": "web#server/shop.ts:readItems",
+      "to": "http_out:web#server/shop.ts:5:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/shop.ts",
+      "line": 5
+    },
+    {
+      "from": "web#server/shop.ts:readItems",
+      "to": "ui_api_call:web#server/shop.ts:5:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/shop.ts",
+      "line": 5
+    },
+    {
+      "from": "web#server/shop.ts:readReviews",
+      "to": "config_key:web#GATEWAY_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "server/shop.ts",
+      "line": 26
+    },
+    {
+      "from": "web#server/shop.ts:readReviews",
+      "to": "http_out:web#server/shop.ts:26:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/shop.ts",
+      "line": 26
+    },
+    {
+      "from": "web#server/shop.ts:readReviews",
+      "to": "ui_api_call:web#server/shop.ts:26:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/shop.ts",
+      "line": 26
+    },
+    {
+      "from": "web#server/status.ts:readAdminChecks",
+      "to": "http_out:web#server/status.ts:12:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/status.ts",
+      "line": 12
+    },
+    {
+      "from": "web#server/status.ts:readAdminChecks",
+      "to": "ui_api_call:web#server/status.ts:12:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/status.ts",
+      "line": 12
+    },
+    {
+      "from": "web#server/status.ts:readChecks",
+      "to": "http_out:web#server/status.ts:6:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/status.ts",
+      "line": 6
+    },
+    {
+      "from": "web#server/status.ts:readChecks",
+      "to": "ui_api_call:web#server/status.ts:6:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/status.ts",
+      "line": 6
+    },
+    {
+      "from": "web#server/verify.ts:getServerSideProps",
+      "to": "http_out:web#server/verify.ts:6:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/verify.ts",
+      "line": 6
+    }
+  ],
+  "types": {
+    "type:reviews#Review": {
+      "name": "Review",
+      "kind": "object",
+      "declaredIn": "reviews#src/reviews.resolver.ts",
+      "structuralHash": "bc066008af1b9100",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "stars",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /items@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 6,
+                "symbol": "GET /items@5 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 10,
+                "symbol": "GET /health@9 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /health@5 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "orders"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 9,
+      "reason": "module-import-not-installed",
+      "hint": "GraphQLModule is a module of @nestjs/graphql, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
+      "symbol": "AppModule imports GraphQLModule",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "module": "GraphQLModule"
+      },
+      "service": "reviews"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /checks@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 6,
+                "symbol": "GET /checks@5 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 10,
+                "symbol": "GET /admin/checks@9 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "status"
+    },
+    {
+      "file": "components/Upload.tsx",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "pages/api/auth/verify-email.ts",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "NextApiRequest",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "next"
+      },
+      "service": "web"
+    },
+    {
+      "file": "pages/api/auth/verify-email.ts",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "NextApiResponse",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "next"
+      },
+      "service": "web"
+    },
+    {
+      "file": "pages/api/auth/verify-email.ts",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "pages/api/auth/verify-email.ts",
+      "line": 4,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 6,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "handler -> res.status(405).end",
+      "meta": {
+        "causes": [
+          {
+            "cause": "module-not-installed",
+            "package": "next",
+            "sites": 6,
+            "samples": [
+              {
+                "file": "pages/api/auth/verify-email.ts",
+                "line": 4,
+                "symbol": "handler -> res.status(405).end"
+              },
+              {
+                "file": "pages/api/auth/verify-email.ts",
+                "line": 4,
+                "symbol": "handler -> res.status"
+              },
+              {
+                "file": "pages/api/auth/verify-email.ts",
+                "line": 5,
+                "symbol": "handler -> res.json"
+              }
+            ],
+            "files": [
+              "pages/api/uploads.ts"
+            ]
+          }
+        ]
+      },
+      "service": "web"
+    },
+    {
+      "file": "pages/api/uploads.ts",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "NextApiRequest",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "next"
+      },
+      "service": "web"
+    },
+    {
+      "file": "pages/api/uploads.ts",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "NextApiResponse",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "next"
+      },
+      "service": "web"
+    },
+    {
+      "file": "pages/api/uploads.ts",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "server/shop.ts",
+      "line": 5,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "SHOP_HOST is https://shop.example.test in .env.example, which is taken as catalog",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add SHOP_HOST to services[].baseUrlEnv of catalog to say so outright.",
+      "symbol": "http_out:web#server/shop.ts:5:21",
+      "meta": {
+        "variable": "SHOP_HOST",
+        "value": "https://shop.example.test",
+        "from": ".env.example"
+      }
+    },
+    {
+      "service": "web",
+      "file": "server/shop.ts",
+      "line": 11,
+      "reason": "ambiguous-route-target",
+      "message": "SHOP_HOST is https://shop.example.test (.env.example), a host no service is reached at, and GET /health is served by catalog and orders, so the request is taken as a third party's",
+      "hint": "Add SHOP_HOST to services[].baseUrlEnv of the service whose deployment https://shop.example.test is, or the host to its services[].hosts.",
+      "symbol": "http_out:web#server/shop.ts:11:21"
+    },
+    {
+      "service": "web",
+      "file": "server/shop.ts",
+      "line": 11,
+      "reason": "ambiguous-route-target",
+      "message": "catalog and orders both answer GET /health",
+      "hint": "Set services[].apiTarget on the frontend to say which service its settings key names.",
+      "symbol": "ui_api_call:web#server/shop.ts:11:21"
+    },
+    {
+      "service": "web",
+      "file": "server/shop.ts",
+      "line": 11,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "SHOP_HOST is https://shop.example.test in .env.example, which is taken as shop.example.test",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add SHOP_HOST to services[].baseUrlEnv of shop.example.test to say so outright.",
+      "symbol": "http_out:web#server/shop.ts:11:21",
+      "meta": {
+        "variable": "SHOP_HOST",
+        "value": "https://shop.example.test",
+        "from": ".env.example"
+      }
+    },
+    {
+      "file": "server/shop.ts",
+      "line": 25,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "server/shop.ts",
+      "line": 26,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "GATEWAY_URL is https://gateway.example.test/v1 in .env.example, which is taken as reviews",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add GATEWAY_URL to services[].baseUrlEnv of reviews to say so outright.",
+      "symbol": "http_out:web#server/shop.ts:26:10",
+      "meta": {
+        "variable": "GATEWAY_URL",
+        "value": "https://gateway.example.test/v1",
+        "from": ".env.example"
+      },
+      "sites": 2
+    },
+    {
+      "service": "web",
+      "file": "server/verify.ts",
+      "line": 6,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "PUBLIC_APP_URL is http://localhost:3000 in lib/constants.ts (the code’s own fallback), which is taken as web",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add PUBLIC_APP_URL to services[].baseUrlEnv of web to say so outright.",
+      "symbol": "http_out:web#server/verify.ts:6:26",
+      "meta": {
+        "variable": "PUBLIC_APP_URL",
+        "value": "http://localhost:3000",
+        "from": "lib/constants.ts (the code’s own fallback)"
+      }
+    }
+  ]
+}

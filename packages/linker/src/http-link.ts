@@ -9,8 +9,8 @@ import {
   type RouteResult,
 } from './route-match.js';
 import { chooseByApiName } from './api-choice.js';
-import { whereFound, type BaseUrlAnswer, type FoundValue } from './base-url-value.js';
-import { localGraphqlEndpoint, unservedFinding } from './graphql-value.js';
+import { settingsAfter, whereFound, type BaseUrlAnswer, type FoundValue } from './base-url-value.js';
+import { localGraphqlEndpoint, sendsOperation, undecidedFinding, unservedFinding } from './graphql-value.js';
 import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
 import { defaultPortOf, forwardedAgain, proxyChainFinding, PROXY_HOPS, type Forward } from './proxy-forward.js';
 import { apiServedAt, servedAmbiguousFinding, servedAtFinding } from './served-at-link.js';
@@ -620,21 +620,40 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     // (P281): two paths in front are two answers (P292).
     if (new Set(values.map((value) => pathOfValue(value) ?? '')).size > 1) return undefined;
     const start = pathOfValue(found);
-    if (start === undefined || typeof path !== 'string' || !wasRead(path) || !verbRead || index.services === undefined) return undefined;
+    if (typeof path !== 'string' || !wasRead(path) || !verbRead || index.services === undefined) return undefined;
+    // A host with no path after it (P296): the request's own path alone, as
+    // a browser's request under it is asked (P280), where every value agrees
+    // there is none; one service answering it is the guess, several a row.
+    if (start === undefined) {
+      // An operation is asked of the endpoints, not of a route its path matches (P281).
+      if (values.some((value) => pathOfValue(value) !== undefined) || found.byName === true || sendsOperation(call)) return undefined;
+      const answering = answeringServices(path);
+      const [only] = answering;
+      if (answering.length > 1) notes.push(externalPathSharedFinding(found, method, path, answering));
+      if (only === undefined || answering.length > 1) return undefined;
+      const reached = within(only, 'externalValuePath', { baseUrl: found });
+      return reached.outcome.kind === 'linked' ? reached : undefined;
+    }
     const whole = normalizePath(`${start}/${path}`);
-    const answering = index.services().filter((service) => {
-      const routes = index.routesOf(service) ?? [];
-      const from = callerApplicationIn(service);
-      const answers = (result: RouteResult): boolean => isMatch(result) || result.reason === 'ambiguous';
-      if (answers(matchRoute(method, whole, routes, from))) return true;
-      const prefixed = withGlobalPrefix(whole, routes);
-      return prefixed !== undefined && answers(matchRoute(method, prefixed, routes, from));
-    });
+    const answering = answeringServices(whole);
     const [only] = answering;
     if (only === undefined || answering.length > 1) return undefined;
     const reached = within(only, 'externalValuePath', { baseUrl: found }, whole);
     return reached.outcome.kind === 'linked' ? reached : undefined;
   };
+
+  /** Every service that serves an address, a global prefix taken into account. */
+  const answeringServices = (address: string): string[] =>
+    (index.services?.() ?? [])
+      .filter((service) => {
+        const routes = index.routesOf(service) ?? [];
+        const from = callerApplicationIn(service);
+        const answers = (result: RouteResult): boolean => isMatch(result) || result.reason === 'ambiguous';
+        if (answers(matchRoute(method, address, routes, from))) return true;
+        const prefixed = withGlobalPrefix(address, routes);
+        return prefixed !== undefined && answers(matchRoute(method, prefixed, routes, from));
+      })
+      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 
   const single = index.markerOf(call.id);
   const markers = index.markersOf?.(call.id) ?? (single === undefined ? [] : [single]);
@@ -814,7 +833,9 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
   // claimed by whoever claims the variable (P77).
   const variable = call.meta?.['baseUrlVariable'];
   const own = index.claimantsOf(env);
-  const claiming = own.length === 0 && typeof variable === 'string' ? index.claimantsOf(variable) : own;
+  const claimed = own.length === 0 && typeof variable === 'string' ? index.claimantsOf(variable) : own;
+  // A setting a chain of `||` reads after it, where nobody claims the ones before (P296).
+  const claiming = claimed.length > 0 ? claimed : (settingsAfter(call).map((each) => index.claimantsOf(each)).find((each) => each.length > 0) ?? claimed);
   // A setting no service claims may hold a function's own URL, which answers
   // every verb and path: the request reaches the function whatever it asks.
   const [url, ...urls] = claiming.length === 0 ? (index.functionUrlsOf?.(call.id) ?? []) : [];
@@ -831,6 +852,8 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
   const local = typeof path === 'string' && wasRead(path) && index.services !== undefined ? localGraphqlEndpoint(call, path, valued, index.services(), (service) => index.routesOf(service)) : undefined;
   if (local?.kind === 'linked') return { outcome: { kind: 'linked', via: 'graphqlPath', entry: local.entry, runnersUp: [] }, notes, baseUrl: local.found };
   if (local?.kind === 'unserved') return { outcome: { kind: 'noRoute', targetService: local.service, method: 'POST', path: local.path, verbs: [], unread: [], unserved: local.fields }, notes };
+  // A public host several endpoints serve the operation under: a row, and the request where it was (P296).
+  if (local?.kind === 'undecided') notes.push(undecidedFinding(local));
   if (valued?.kind === 'external') {
     // A host no service is reached at, with a path after it
     // (`https://api.example.test/api`): the one service serving the address
@@ -866,6 +889,17 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
   }
   return within(targetService, via, taken);
 };
+
+/**
+ * Why a request under a host no service is reached at, with no path after
+ * it, is not joined by its own path (P296): several services serve that
+ * path, so the host is taken as no one's.
+ */
+export const externalPathSharedFinding = (found: FoundValue, method: string, path: string, services: readonly string[]): Finding => ({
+  reason: 'ambiguous-route-target',
+  message: `${found.variable} is ${found.value} (${whereFound(found)}), a host no service is reached at, and ${method} ${path} is served by ${services.join(' and ')}, so the request is taken as a third party's`,
+  hint: `Add ${found.variable} to services[].baseUrlEnv of the service whose deployment ${found.value} is, or the host to its services[].hosts.`,
+});
 
 /** The path a value found for a setting carries beyond its host, when it carries one (P91). */
 export const pathOfValue = (found: FoundValue): string | undefined => {

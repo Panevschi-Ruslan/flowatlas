@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T12:55:21.950Z",
+  "builtAt": "2026-11-14T17:53:15.857Z",
   "services": [
     {
       "name": "shop",
@@ -194,6 +194,15 @@
             "nitro-routes"
           ]
         },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 1,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
         "ownOrigin": true
       }
     },

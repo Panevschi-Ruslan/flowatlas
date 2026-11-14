@@ -21,6 +21,10 @@ export interface ReadAddress {
    * `process.env.API_URL || 'http://localhost:3000'` (P77, P292).
    */
   baseUrlDefault?: string;
+  /** The module that fallback is written in, as the compiler names it, when it is not the request's (P296). */
+  baseUrlDefaultFile?: string;
+  /** The settings a chain of `||` reads after that key, in order (P296). */
+  baseUrlAlso?: readonly string[];
   /** Host, when the address names one outright. */
   host: string | null;
   /** How the address was arrived at, for the reader of the node. */
@@ -82,13 +86,15 @@ export const underBase = <Address extends ReadAddress>(base: ReadAddress | undef
   const written = address.url ?? address.path;
   const joint = written.startsWith('/') ? written : `/${written}`;
   // The fallback is the setting's, so it is the base's where the base names the setting.
-  const { baseUrlDefault: _own, ...rest } = address;
+  const { baseUrlDefault: _own, baseUrlDefaultFile: _ownFile, baseUrlAlso: _ownAlso, ...rest } = address;
   return {
     ...(rest as Address),
     url: `${(base.url ?? '').replace(/\/+$/, '')}${joint}`,
     path: routePathOf(`${opening}${address.path}`),
     baseUrlEnv: base.baseUrlEnv,
     ...(base.baseUrlEnv === null || base.baseUrlDefault === undefined ? {} : { baseUrlDefault: base.baseUrlDefault }),
+    ...(base.baseUrlEnv === null || base.baseUrlDefault === undefined || base.baseUrlDefaultFile === undefined ? {} : { baseUrlDefaultFile: base.baseUrlDefaultFile }),
+    ...(base.baseUrlEnv === null || base.baseUrlAlso === undefined ? {} : { baseUrlAlso: base.baseUrlAlso }),
     host: base.host,
     // How the *address* was arrived at, and an address rooted at a settings key
     // is that whichever end of it the key came from.

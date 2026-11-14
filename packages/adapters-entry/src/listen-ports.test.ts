@@ -75,7 +75,7 @@ describe('where each framework server listens (P250)', () => {
     ).toEqual(['src/a.ts:2 3003', 'src/b.ts:2 3000 default', 'src/c.ts:1 3006', 'src/d.ts:1 8000 default', 'src/e.ts:1 3007']);
   });
 
-  it("reads Nuxt's `devServer.port` and a script's `--port`, and assumes no default", () => {
+  it("reads Nuxt's `devServer.port` and a script's `--port`, with no default beside them", () => {
     expect(
       listening([nitroRoutesAdapter], {}, {
         'nuxt.config.ts': "export default defineNuxtConfig({\n  ssr: true,\n  devServer: {\n    host: '0.0.0.0',\n    port: 3010,\n  },\n});\n",
@@ -91,6 +91,23 @@ describe('where each framework server listens (P250)', () => {
         'package.json': JSON.stringify({ scripts: { dev: 'next dev -p 3020', start: 'next build && next start --port=3021', env: 'next dev -p $PORT', lint: 'eslint -p 3999' } }, null, 2),
       }),
     ).toEqual(['package.json:3 3020', 'package.json:4 3021']);
+  });
+
+  // P296: a full-stack framework's own default where nothing says, and the
+  // port a script's own environment gives.
+  it("takes Next's and Nuxt's 3000 where nothing writes a port, as PORT's fallback", () => {
+    expect(listening([nextjsRoutesAdapter], {}, { 'package.json': JSON.stringify({ scripts: { dev: 'next dev --turbopack', start: 'next start' } }, null, 2) })).toEqual([
+      'package.json:3 3000[PORT] default',
+    ]);
+    expect(listening([nitroRoutesAdapter], {}, { 'package.json': JSON.stringify({ scripts: { dev: 'nuxi dev' } }, null, 2) })).toEqual(['package.json:3 3000[PORT] default']);
+    expect(listening([nextjsRoutesAdapter], {}, { 'package.json': JSON.stringify({ dependencies: { next: '15.0.0' } }, null, 2) })).toEqual(['package.json:1 3000[PORT] default']);
+  });
+
+  it('reads the port a script gives PORT, and assumes no default where a script hands the port in unread', () => {
+    expect(
+      listening([nextjsRoutesAdapter], {}, { 'package.json': JSON.stringify({ scripts: { start: 'PORT=3030 next start', dev: 'next dev -p ${PORT:-3031}' } }, null, 2) }),
+    ).toEqual(['package.json:3 3030', 'package.json:4 3031']);
+    expect(listening([nextjsRoutesAdapter], {}, { 'package.json': JSON.stringify({ scripts: { dev: 'next dev -p $PORT' } }, null, 2) })).toEqual([]);
   });
 });
 
