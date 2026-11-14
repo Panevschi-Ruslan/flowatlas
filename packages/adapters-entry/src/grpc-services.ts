@@ -12,6 +12,7 @@ import {
   namedFunction,
   packageOfSpecifier,
   parseProto,
+  protoJsonName,
   protoTypes,
   startLineOf,
 } from '@flowatlas/core';
@@ -392,6 +393,138 @@ const unimplemented = (ctx: ExtractContext, site: TsNode, fullName: string, meth
   }
 };
 
+/** The function a handler is written as: in place, a method, or a function of the repository it names. */
+const handlerFunctionOf = (node: TsNode, depth = 0): TsNode | undefined => {
+  if (depth > 4) return undefined;
+  if (Node.isMethodDeclaration(node) || Node.isFunctionDeclaration(node) || Node.isArrowFunction(node) || Node.isFunctionExpression(node)) return node;
+  if (Node.isPropertyAssignment(node)) {
+    const value = node.getInitializer();
+    return value === undefined ? undefined : handlerFunctionOf(unwrapWork(value).work, depth + 1);
+  }
+  if (Node.isShorthandPropertyAssignment(node)) return handlerFunctionOf(node.getNameNode(), depth + 1);
+  if (!Node.isIdentifier(node) && !Node.isPropertyAccessExpression(node)) return undefined;
+  const symbol = (Node.isPropertyAccessExpression(node) ? node.getNameNode() : node).getSymbol();
+  const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
+  if (declaration === undefined || declaration.getSourceFile().isInNodeModules() || declaration.getSourceFile().isDeclarationFile()) return undefined;
+  if (Node.isVariableDeclaration(declaration)) {
+    const value = declaration.getInitializer();
+    return value === undefined ? undefined : handlerFunctionOf(unwrapWork(value).work, depth + 1);
+  }
+  return handlerFunctionOf(declaration, depth + 1);
+};
+
+/** The names a value's members are read under where it is held: `x.name`, `const { name } = x`, a name holding it read on. */
+const membersRead = (holder: TsNode, within: TsNode, out: Array<{ name: string; node: TsNode }>, depth = 0): void => {
+  if (depth > 3) return;
+  const nameNode = Node.isParameterDeclaration(holder) || Node.isVariableDeclaration(holder) || Node.isBindingElement(holder) ? holder.getNameNode() : undefined;
+  if (nameNode === undefined) return;
+  if (Node.isObjectBindingPattern(nameNode)) {
+    for (const element of nameNode.getElements()) {
+      if (element.getDotDotDotToken() !== undefined) continue;
+      out.push({ name: element.getPropertyNameNode()?.getText() ?? element.getName(), node: element });
+    }
+    return;
+  }
+  if (!Node.isIdentifier(nameNode)) return;
+  for (const reference of within.getDescendantsOfKind(SyntaxKind.Identifier)) {
+    if (reference === nameNode || reference.getText() !== nameNode.getText() || !(reference.getSymbol()?.getDeclarations() ?? []).includes(holder as never)) continue;
+    readOff(reference, within, out, depth);
+  }
+};
+
+/** What is read off a value where it is written: `value.name`, or the value held by a name or taken apart. */
+const readOff = (value: TsNode, within: TsNode, out: Array<{ name: string; node: TsNode }>, depth: number): void => {
+  const parent = value.getParent();
+  if (parent === undefined) return;
+  if (Node.isPropertyAccessExpression(parent) && parent.getExpression() === value) {
+    // A method of the message (`request.getProductId()`) is no field.
+    const call = parent.getParent();
+    if (call !== undefined && Node.isCallExpression(call) && call.getExpression() === parent) return;
+    out.push({ name: parent.getName(), node: parent.getNameNode() });
+    return;
+  }
+  if (Node.isVariableDeclaration(parent) && parent.getInitializer() === value) membersRead(parent, within, out, depth + 1);
+};
+
+/**
+ * The fields a handler reads off the request it is handed (P297): a
+ * `@grpc/grpc-js` handler's `call.request.product_id`, `const { qty } =
+ * call.request`, or a name holding it read on; a NestJS method's first
+ * parameter, `data.productId` or taken apart where it is declared. A call of a
+ * method on the request is no field read.
+ */
+const requestReadsOf = (node: TsNode, nest: boolean): Array<{ name: string; node: TsNode }> => {
+  const fn = handlerFunctionOf(node);
+  if (fn === undefined || !(Node.isMethodDeclaration(fn) || Node.isFunctionDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn))) return [];
+  const [first] = fn.getParameters();
+  const out: Array<{ name: string; node: TsNode }> = [];
+  if (first === undefined) return out;
+  if (nest) {
+    membersRead(first, fn, out);
+    return out;
+  }
+  const name = first.getNameNode();
+  if (Node.isObjectBindingPattern(name)) {
+    const request = name.getElements().find((element) => (element.getPropertyNameNode()?.getText() ?? element.getName()) === 'request');
+    if (request !== undefined) membersRead(request, fn, out);
+    return out;
+  }
+  if (!Node.isIdentifier(name)) return out;
+  for (const reference of fn.getDescendantsOfKind(SyntaxKind.Identifier)) {
+    if (reference === name || reference.getText() !== name.getText() || !(reference.getSymbol()?.getDeclarations() ?? []).includes(first as never)) continue;
+    const parent = reference.getParent();
+    if (parent !== undefined && Node.isPropertyAccessExpression(parent) && parent.getExpression() === reference && parent.getName() === 'request') readOff(parent, fn, out, 0);
+  }
+  return out;
+};
+
+/**
+ * A row for each field a handler reads off its request that the method's
+ * message does not declare under the names the service's loader hands them
+ * (P297): `call.request.product_ids` where the contract declares
+ * `product_id`, or `call.request.product_id` where the loader names it
+ * `productId`. The handler reads nothing there.
+ */
+const undeclaredReads = (ctx: ExtractContext, declaration: Declaration | undefined, method: ProtoMethod | undefined, fullName: string, handler: TsNode, nest: boolean): void => {
+  if (declaration === undefined || method === undefined || declaration.fieldNames === 'unread') return;
+  const reads = requestReadsOf(handler, nest);
+  if (reads.length === 0) return;
+  const names = declaration.fieldNames === 'proto' ? 'proto' : 'json';
+  const ref = declaration.types.refOf(method.request, declaration.pkg, names);
+  const registry = declaration.types.registry();
+  const entry = registry[ref];
+  if (entry === undefined) return;
+  const shapes = entry.kind === 'union' ? (entry.members ?? []).flatMap((member) => registry[member] ?? []) : [entry];
+  const fields = shapes.flatMap((shape) => shape.fields ?? []);
+  const declared = new Set(fields.map((field) => field.name));
+  const reported = new Set<string>();
+  for (const read of reads) {
+    if (declared.has(read.name) || reported.has(read.name)) continue;
+    reported.add(read.name);
+    // The same field under the other naming: `product_id` where the loader hands `productId`, or the other way round.
+    const other = fields.find((field) => field.meta?.['protoName'] === read.name || protoJsonName(field.name) === read.name);
+    ctx.builder.addUnresolved({
+      file: fileOfNode(read.node, ctx),
+      line: startLineOf(read.node),
+      reason: 'grpc-field-undeclared',
+      level: 'info',
+      // One row per field read, each its own place.
+      sites: 1,
+      message:
+        other === undefined
+          ? `The handler of ${fullName}/${method.name} reads ${read.name} off its request, and ${method.request} in ${declaration.path} declares no such field, so it reads nothing there.`
+          : `The handler of ${fullName}/${method.name} reads ${read.name} off its request, and the loader hands that field of ${method.request} as ${other.name}, so it reads nothing there.`,
+      hint:
+        other === undefined
+          ? 'Read a field the message declares, or declare the field in the contract.'
+          : `Read ${other.name}, or load the contract with keepCase ${names === 'proto' ? 'false' : 'true'} so the fields keep the names it writes.`,
+      symbol: `${fullName}/${method.name} ${read.name}`,
+      adapter: ADAPTER,
+      meta: { service: fullName, method: method.name, field: read.name, message: method.request, contract: declaration.path, ...(other === undefined ? {} : { named: other.name }) },
+    });
+  }
+};
+
 /** The row for a member of an implementation, or a decorated method, that is no method of the contract. */
 const undeclared = (ctx: ExtractContext, site: TsNode, fullName: string, name: string, path: string, drawn: boolean): void => {
   ctx.builder.addUnresolved({
@@ -470,6 +603,8 @@ const registeredOf = (call: CallExpression, ctx: ExtractContext, contracts: Cont
     const label = `grpc ${reading.fullName}/${method.name}`;
     const kind = method.declared === undefined ? 'unary' : grpcCallKind(method.declared);
     entries.push(entryOf(ctx, declaration, call, reading.fullName, method.name, kind, method.declared, handlerOfMember(member, label, ctx), callee.getName()));
+    // What the handler reads off its request, against the message (P297).
+    if (kind === 'unary' || kind === 'server-stream') undeclaredReads(ctx, declaration, method.declared, reading.fullName, member.node, false);
   }
   if (reading.declared !== undefined && declaration !== undefined && implemented.complete) {
     unimplemented(ctx, call, reading.fullName, reading.declared.service.methods.filter((method) => !served.has(method.name)), declaration.path, `the implementation registered at this call`);
@@ -686,6 +821,8 @@ const decoratedOf = (
         entries.push(
           entryOf(ctx, contract, method, named.fullName, methodName, call, declaredMethod, { handler: handlerOf(method, ctx), via: 'method' }, decorator.getName()),
         );
+        // What the controller reads off the message it is handed (P297); a stream's is an observable, not the message.
+        if (call === 'unary' || call === 'server-stream') undeclaredReads(ctx, contract, declaredMethod, named.fullName, method, true);
       }
     }
   }

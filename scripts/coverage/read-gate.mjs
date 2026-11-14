@@ -137,6 +137,7 @@ const GATED = {
       'grpc-package-service',
       'grpc-method-unimplemented',
       'grpc-method-undeclared',
+      'grpc-field-undeclared',
       'route-file-not-served',
       'route-module-not-found',
       'route-claimed-twice',

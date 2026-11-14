@@ -1,5 +1,7 @@
-import type { Node as TsNode, ObjectLiteralExpression, ParameterDeclaration } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { evaluateExpression } from '@flowatlas/core';
+import type { ClassDeclaration, MethodDeclaration, Node as TsNode, ObjectLiteralExpression, ParameterDeclaration } from 'ts-morph';
+import { Node, SyntaxKind } from 'ts-morph';
+import { memberOf, reads, type Bindings } from './bound-entries.js';
 
 /**
  * The entries of a list a route table is built from (P291): `configs.map(
@@ -8,11 +10,239 @@ import { Node } from 'ts-morph';
  * back, each entry an object written in place.
  */
 export interface ListEntries {
-  /** The objects written as the list's items. */
-  readonly entries: readonly ObjectLiteralExpression[];
+  /** The objects written as the list's items, each with the elements it is written over bound (P297). */
+  readonly entries: readonly ListEntry[];
   /** Items written as something other than an object in place, or added from code that is not read. */
   readonly unread: number;
 }
+
+/** One entry of a list: the object written for it, and the elements of other lists it is written over (P297). */
+export interface ListEntry {
+  readonly object: ObjectLiteralExpression;
+  readonly bound?: Bindings;
+}
+
+const sameBindings = (a: Bindings | undefined, b: Bindings | undefined): boolean => {
+  if (a === undefined || b === undefined) return a === b;
+  return a.size === b.size && [...a].every(([key, value]) => b.get(key) === value);
+};
+
+/** The methods of a list that run a function on each of its elements, the element handed first. */
+const ELEMENT_METHODS: ReadonlySet<string> = new Set(['forEach', 'map', 'flatMap']);
+
+/**
+ * The list an object is written over, where it is written inside a function
+ * handed to a list's `forEach` / `map` / `flatMap`, or inside a `for...of`,
+ * and reads the element: the list, and the name the element is bound to.
+ */
+const iteratedOver = (object: ObjectLiteralExpression): { readonly list: TsNode; readonly parameter: TsNode } | undefined => {
+  for (let at: TsNode | undefined = object.getParent(); at !== undefined && !Node.isSourceFile(at); at = at.getParent()) {
+    if (Node.isArrowFunction(at) || Node.isFunctionExpression(at)) {
+      const [parameter] = at.getParameters();
+      const call = at.getParent();
+      if (parameter === undefined || !Node.isIdentifier(parameter.getNameNode()) || call === undefined || !Node.isCallExpression(call) || !call.getArguments().includes(at as never)) continue;
+      const callee = call.getExpression();
+      if (!Node.isPropertyAccessExpression(callee) || !ELEMENT_METHODS.has(callee.getName())) continue;
+      if (reads(object, parameter, parameter.getName())) return { list: callee.getExpression(), parameter };
+      continue;
+    }
+    if (Node.isForOfStatement(at)) {
+      const initializer = at.getInitializer();
+      const [declaration] = Node.isVariableDeclarationList(initializer) ? initializer.getDeclarations() : [];
+      if (declaration === undefined || !Node.isIdentifier(declaration.getNameNode())) continue;
+      if (reads(object, declaration, declaration.getName())) return { list: at.getExpression(), parameter: declaration };
+    }
+    if (Node.isFunctionDeclaration(at) || Node.isMethodDeclaration(at) || Node.isClassDeclaration(at)) return undefined;
+  }
+  return undefined;
+};
+
+/** The methods of a store that add to it. */
+const STORING_METHODS: ReadonlySet<string> = new Set(['push', 'unshift', 'splice', 'set', 'add']);
+
+/** A class of the repository a receiver names, and the `const` holding an instance of it where it names one. */
+const registryClassOf = (receiver: TsNode): { readonly cls: ClassDeclaration; readonly instance?: TsNode } | undefined => {
+  if (!Node.isIdentifier(receiver)) return undefined;
+  const symbol = receiver.getSymbol();
+  const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
+  if (declaration === undefined || declaration.getSourceFile().isDeclarationFile() || declaration.getSourceFile().getFilePath().includes('/node_modules/')) return undefined;
+  if (Node.isClassDeclaration(declaration)) return { cls: declaration };
+  if (!Node.isVariableDeclaration(declaration)) return undefined;
+  const made = declaration.getInitializer();
+  const created = made === undefined ? undefined : bare(made);
+  if (created === undefined || !Node.isNewExpression(created)) return undefined;
+  const found = registryClassOf(created.getExpression());
+  return found === undefined || found.instance !== undefined ? undefined : { cls: found.cls, instance: declaration };
+};
+
+/** The fields of a class a method reads: `this.plugins`, `Registry.plugins`. */
+const fieldsReadBy = (cls: ClassDeclaration, method: MethodDeclaration): Set<string> => {
+  const fields = new Set<string>();
+  method.forEachDescendant((node) => {
+    if (!Node.isPropertyAccessExpression(node)) return;
+    const owner = node.getExpression();
+    if (!Node.isThisExpression(owner) && !(Node.isIdentifier(owner) && owner.getText() === cls.getName())) return;
+    if (cls.getProperty(node.getName()) !== undefined || cls.getStaticProperty(node.getName()) !== undefined) fields.add(node.getName());
+  });
+  return fields;
+};
+
+/** Whether an expression reads one of these fields of the class. */
+const readsField = (node: TsNode, cls: ClassDeclaration, fields: ReadonlySet<string>): boolean =>
+  [node, ...node.getDescendants()].some((each) => {
+    if (!Node.isPropertyAccessExpression(each) || !fields.has(each.getName())) return false;
+    const owner = each.getExpression();
+    return Node.isThisExpression(owner) || (Node.isIdentifier(owner) && owner.getText() === cls.getName());
+  });
+
+/** The methods of the class a method calls on itself: `this.register(...)`. */
+const ownCalls = (cls: ClassDeclaration, method: MethodDeclaration): MethodDeclaration[] =>
+  method.getDescendantsOfKind(SyntaxKind.CallExpression).flatMap((call) => {
+    const callee = call.getExpression();
+    if (!Node.isPropertyAccessExpression(callee)) return [];
+    const owner = callee.getExpression();
+    if (!Node.isThisExpression(owner) && !(Node.isIdentifier(owner) && owner.getText() === cls.getName())) return [];
+    const called = cls.getMethods().find((each) => each.getName() === callee.getName() && each.getBody() !== undefined);
+    return called === undefined ? [] : [called];
+  });
+
+/** Whether a method adds to one of these fields, itself or through a method of the class it calls; the key it files an entry under (`plugin.type`) where it reads one. */
+const storing = (cls: ClassDeclaration, method: MethodDeclaration, fields: ReadonlySet<string>, depth = 0): { readonly key?: string } | undefined => {
+  if (depth > 3) return undefined;
+  let stores = false;
+  let key: string | undefined;
+  method.forEachDescendant((node) => {
+    if (Node.isCallExpression(node)) {
+      const callee = node.getExpression();
+      if (Node.isPropertyAccessExpression(callee) && STORING_METHODS.has(callee.getName()) && readsField(callee.getExpression(), cls, fields)) stores = true;
+      // `this.plugins.get(plugin.type)`: the entry's key.
+      if (Node.isPropertyAccessExpression(callee) && callee.getName() === 'get' && readsField(callee.getExpression(), cls, fields)) {
+        const [first] = node.getArguments();
+        if (first !== undefined && Node.isPropertyAccessExpression(first) && Node.isIdentifier(first.getExpression())) key ??= first.getName();
+      }
+    }
+    const left = Node.isBinaryExpression(node) && node.getOperatorToken().getText() === '=' ? node.getLeft() : undefined;
+    if (left !== undefined && Node.isElementAccessExpression(left) && readsField(left, cls, fields)) {
+      stores = true;
+      const index = left.getArgumentExpression();
+      if (index !== undefined && Node.isPropertyAccessExpression(index) && Node.isIdentifier(index.getExpression())) key ??= index.getName();
+    }
+  });
+  for (const called of ownCalls(cls, method)) {
+    const inner = called === method ? undefined : storing(cls, called, fields, depth + 1);
+    if (inner === undefined) continue;
+    stores = true;
+    key ??= inner.key;
+  }
+  return stores ? (key === undefined ? {} : { key }) : undefined;
+};
+
+/** The parameter of a method its store is read by: `this.plugins.get(type)` is the first. */
+const readKeyIndex = (cls: ClassDeclaration, method: MethodDeclaration, fields: ReadonlySet<string>): number | undefined => {
+  const parameters = method.getParameters();
+  let found: number | undefined;
+  method.forEachDescendant((node, traversal) => {
+    let index: TsNode | undefined;
+    const callee = Node.isCallExpression(node) ? node.getExpression() : undefined;
+    if (Node.isCallExpression(node) && callee !== undefined && Node.isPropertyAccessExpression(callee)) {
+      if (callee.getName() === 'get' && readsField(callee.getExpression(), cls, fields)) index = node.getArguments()[0];
+    } else if (Node.isElementAccessExpression(node) && readsField(node.getExpression(), cls, fields)) index = node.getArgumentExpression();
+    if (index === undefined || !Node.isIdentifier(index)) return;
+    const at = parameters.findIndex((parameter) => (index.getSymbol()?.getDeclarations() ?? []).includes(parameter as never));
+    if (at === -1) return;
+    found = at;
+    traversal.stop();
+  });
+  return found;
+};
+
+const REGISTRIES = new WeakMap<TsNode, { readonly items: readonly TsNode[]; readonly unread: number } | null>();
+
+/**
+ * The entries a registry of the repository's own holds, where a list is read
+ * off it (P297): `PluginManager.getHooks(Hook.Settings)` - a method of a
+ * class of the repository reading a field of it (`this.plugins.get(type)`) -
+ * is every entry handed, anywhere in the repository, to a method of the same
+ * class that adds to that field (`PluginManager.add([{ type: Hook.Settings,
+ * value }])`, itself or through `this.register(plugin)`); where the reading
+ * method looks the store up by a parameter and the adding one files an entry
+ * by one of its keys (`this.plugins.get(plugin.type)`), only the entries
+ * whose key is written as the call's argument is. A class held in a `const`
+ * as an instance (`const registry = new Registry()`) is read the same way,
+ * its adding calls on that `const`.
+ */
+const registryEntries = (call: TsNode): { readonly items: readonly TsNode[]; readonly unread: number } | undefined => {
+  if (!Node.isCallExpression(call)) return undefined;
+  const known = REGISTRIES.get(call);
+  if (known !== undefined) return known ?? undefined;
+  REGISTRIES.set(call, null);
+  const callee = call.getExpression();
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const owner = registryClassOf(bare(callee.getExpression()));
+  if (owner === undefined) return undefined;
+  const { cls, instance } = owner;
+  const reader = (instance === undefined ? cls.getStaticMethod(callee.getName()) : cls.getInstanceMethod(callee.getName())) as MethodDeclaration | undefined;
+  if (reader === undefined || reader.getBody() === undefined) return undefined;
+  const fields = fieldsReadBy(cls, reader);
+  if (fields.size === 0) return undefined;
+  const adders = new Map<string, { readonly key?: string }>();
+  for (const method of cls.getMethods()) {
+    if (method === reader || method.isStatic() !== (instance === undefined) || method.getBody() === undefined) continue;
+    const stores = storing(cls, method, fields);
+    if (stores !== undefined) adders.set(method.getName(), stores);
+  }
+  if (adders.size === 0) return undefined;
+  const keyIndex = readKeyIndex(cls, reader, fields);
+  const keyArgument = keyIndex === undefined ? undefined : call.getArguments()[keyIndex];
+  const items: TsNode[] = [];
+  let unread = 0;
+  const matches = (item: TsNode, key: string | undefined): boolean => {
+    if (key === undefined || keyArgument === undefined) return true;
+    const object = bare(item);
+    if (!Node.isObjectLiteralExpression(object)) return true;
+    const written = memberOf(object, key);
+    if (written === undefined) return false;
+    if ('value' in written) {
+      const argument = evaluateExpression(keyArgument);
+      return argument.resolved && written.value === argument.value;
+    }
+    const text = (node: TsNode): string => bare(node).getText().replace(/\s+/g, '');
+    if (text(written.node) === text(keyArgument)) return true;
+    const left = evaluateExpression(written.node);
+    const right = evaluateExpression(keyArgument);
+    return left.resolved && right.resolved && left.value === right.value;
+  };
+  for (const source of call.getSourceFile().getProject().getSourceFiles()) {
+    if (source.isDeclarationFile() || source.getFilePath().includes('/node_modules/')) continue;
+    const text = source.getFullText();
+    if (![...adders.keys()].some((name) => text.includes(`.${name}(`))) continue;
+    for (const adding of source.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+      const target = adding.getExpression();
+      if (!Node.isPropertyAccessExpression(target)) continue;
+      const adder = adders.get(target.getName());
+      if (adder === undefined) continue;
+      const receiver = bare(target.getExpression());
+      if (Node.isThisExpression(receiver)) continue;
+      const added = registryClassOf(receiver);
+      if (added === undefined || added.cls !== cls || added.instance !== instance) continue;
+      for (const argument of adding.getArguments().slice(0, 1)) {
+        const value = bare(argument);
+        const handed = Node.isArrayLiteralExpression(value) ? value.getElements() : [value];
+        for (const each of handed) {
+          if (items.length >= MOST) break;
+          if (!Node.isObjectLiteralExpression(bare(each)) && !Node.isSpreadElement(each)) {
+            unread += 1;
+            continue;
+          }
+          if (matches(each, adder.key)) items.push(each);
+        }
+      }
+    }
+  }
+  const read = { items, unread };
+  REGISTRIES.set(call, read);
+  return read;
+};
 
 /** How many steps a list is followed through names, calls and the functions that hand it back. */
 const DEPTH = 6;
@@ -104,15 +334,33 @@ const addedTo = (declaration: TsNode): TsNode[] => {
  * one back (`useMemo(() => [...])`, a computed value). An item written as
  * anything else is counted as not read.
  */
-export const listEntries = (expression: TsNode): ListEntries | undefined => {
-  const entries: ObjectLiteralExpression[] = [];
+export const listEntries = (expression: TsNode, outerDepth = 0): ListEntries | undefined => {
+  const entries: ListEntry[] = [];
   let unread = 0;
   const seen = new Set<TsNode>();
+
+  const push = (entry: ListEntry): void => {
+    if (entries.length >= MOST || entries.some((each) => each.object === entry.object && sameBindings(each.bound, entry.bound))) return;
+    entries.push(entry);
+  };
 
   const item = (node: TsNode, depth: number): void => {
     const value = bare(node);
     if (Node.isObjectLiteralExpression(value)) {
-      if (entries.length < MOST && !entries.includes(value)) entries.push(value);
+      // An object written over the elements of another list is one entry per element (P297).
+      const over = iteratedOver(value);
+      if (over === undefined || outerDepth >= 2) {
+        push({ object: value });
+        return;
+      }
+      const outer = listEntries(over.list, outerDepth + 1);
+      // A list no element of which is written (one filled when the application runs): the entry is not read.
+      if (outer === undefined || outer.entries.length === 0) {
+        unread += Math.max(1, outer?.unread ?? 0);
+        return;
+      }
+      unread += outer.unread;
+      for (const element of outer.entries) push({ object: value, bound: new Map([...(element.bound ?? []), [over.parameter, element.object]]) });
       return;
     }
     if (Node.isSpreadElement(value)) {
@@ -155,6 +403,13 @@ export const listEntries = (expression: TsNode): ListEntries | undefined => {
     }
     if (!Node.isCallExpression(value)) return false;
     const callee = value.getExpression();
+    // A registry of the repository's own read by a method: the entries handed to its adding methods (P297).
+    const registered = registryEntries(value);
+    if (registered !== undefined) {
+      for (const each of registered.items) item(each, depth + 1);
+      unread += registered.unread;
+      return true;
+    }
     if (Node.isPropertyAccessExpression(callee) && SUBSET_METHODS.has(callee.getName())) {
       const read = list(callee.getExpression(), depth + 1);
       if (callee.getName() === 'concat') for (const argument of value.getArguments()) if (!list(argument, depth + 1)) item(argument, depth + 1);

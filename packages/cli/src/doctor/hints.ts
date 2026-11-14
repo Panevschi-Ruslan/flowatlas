@@ -426,6 +426,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'A .proto contract declares a method of a service, and the server that registers the service implements no member for it: a client calling it is answered UNIMPLEMENTED. Informational where the method is not meant to be called yet. Implement it where the service is registered, or take it out of the contract.',
   'grpc-method-undeclared': () =>
     'A server implements a member for a gRPC service that the service\'s .proto contract does not declare, so no client of the contract can call it: usually a method renamed on one side only. Declare it in the contract, or correct its name.',
+  'grpc-field-undeclared': () =>
+    'A gRPC handler reads a field off the request it is handed that the method\'s message does not declare under the names the service\'s loader hands them, so it reads nothing there: a field renamed on one side, or read in the contract\'s case where the loader hands camelCase, or the other way round. Read the field the message declares, or load the contract with keepCase as the handler expects.',
   'grpc-package-service': () =>
     'A gRPC server registers a service a package implements, and the package\'s contract is not one this knows (health checking and reflection are known and drawn), so its methods are not drawn. Load its .proto file from the repository and register the service by name to have them drawn.',
   'grpc-method-unserved': () =>
@@ -917,6 +919,7 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'graphql-field-resolved-twice': ['GraphQL field resolved twice', 'GraphQL fields resolved twice'],
   'grpc-method-unimplemented': ['gRPC method its server does not implement', 'gRPC methods their servers do not implement'],
   'grpc-method-undeclared': ['gRPC member its contract does not declare', 'gRPC members their contracts do not declare'],
+  'grpc-field-undeclared': ['gRPC request field its message does not declare', 'gRPC request fields their messages do not declare'],
   'graphql-composition-conflict': ['federated field composition refuses', 'federated fields composition refuses'],
   'graphql-supergraph-drift': ['supergraph field out of date', 'supergraph fields out of date'],
   'graphql-auth-not-checked': ['gateway that checks no authorization directive', 'gateways that check no authorization directive'],

@@ -795,6 +795,28 @@ describe('a function a library composes into another (P285)', () => {
     ]);
   });
 
+  it("is called through Remeda's data-last pipe, and through a composition a module exports as its default (P297)", () => {
+    const sites = sitesOfRun({
+      'run.ts': `export const run = (args: { query: string }) => args.query;`,
+      'remeda.ts': [
+        `import { pipe, piped } from 'remeda';`,
+        `import * as R from 'remeda';`,
+        `import { run } from './run';`,
+        `export const quiet = piped(run, String);`,
+        `export const older = R.createPipe(run, String);`,
+        // Remeda's own pipe hands a value first: no composition.
+        `export const applied = pipe(run, (fn) => fn);`,
+      ].join('\n'),
+      'default.ts': [`import flow from 'lodash/flow';`, `import { run } from './run';`, `export default flow(run, String);`].join('\n'),
+      'use.ts': [
+        `import { applied, older, quiet } from './remeda';`,
+        `import loadQuiet from './default';`,
+        `quiet({ query: 'a' }); older({ query: 'b' }); applied({ query: 'c' }); loadQuiet({ query: 'd' });`,
+      ].join('\n'),
+    });
+    expect(sites).toEqual([`loadQuiet({ query: 'd' })`, `older({ query: 'b' })`, `quiet({ query: 'a' })`]);
+  });
+
   it('is not called through a value-first pipe, a function handed later, or a composer of no library', () => {
     const sites = sitesOfRun({
       'run.ts': `export const run = (args: { query: string }) => args.query;`,

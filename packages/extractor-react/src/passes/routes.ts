@@ -5,6 +5,7 @@ import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { componentIn } from '../util/component.js';
+import { boundRead, type Bindings } from '../util/bound-entries.js';
 import { listedKey, listEntries } from '../util/list-entries.js';
 import { beforeQuery, holdsHole, spelledPaths } from '../util/path-text.js';
 import { definePass } from './types.js';
@@ -39,11 +40,11 @@ const attributeOf = (
  * (`path={startPath()}`, `` `${findPath()}/:query?` ``); one arrived at
  * through a branch nothing decides is `guessed`.
  */
-export const routePathsOf = (value: TsNode | undefined): Array<{ readonly path: string; readonly guessed?: true }> | undefined => {
+export const routePathsOf = (value: TsNode | undefined, bound?: Bindings): Array<{ readonly path: string; readonly guessed?: true }> | undefined => {
   if (value === undefined) return undefined;
   const inner = Node.isJsxExpression(value) ? value.getExpression() : value;
   if (inner === undefined) return undefined;
-  const spelled = spelledPaths(inner);
+  const spelled = spelledPaths(inner, bound);
   // A value in the query is no part of the route; one in the path leaves it unread.
   const paths = spelled?.map((each) => ({ ...each, text: beforeQuery(each.text) }));
   if (paths === undefined || paths.some((each) => holdsHole(each.text))) return undefined;
@@ -71,13 +72,25 @@ const withOptionals = (path: string): string[] => {
 };
 
 /** The component a route's screen names, written as a name, an element, a lazily loaded module or a member of one. */
-export const routeScreenOf = (ctx: ReactExtractContext, value: TsNode | undefined): IndexedFunction | undefined =>
-  value === undefined ? undefined : componentIn(ctx, value);
+export const routeScreenOf = (ctx: ReactExtractContext, value: TsNode | undefined, bound?: Bindings): IndexedFunction | undefined => {
+  if (value === undefined) return undefined;
+  // A member of an element the entry is written over (`plugin.value.component.Component`): the element's own value (P297).
+  const inner = Node.isJsxExpression(value) ? (value.getExpression() ?? value) : value;
+  const read = boundRead(inner, bound);
+  if (read === 'absent') return undefined;
+  if (read !== undefined) {
+    if (!('node' in read.found) || read.rest.length > 1 || (read.rest.length === 1 && !/^[A-Z]/.test(read.rest[0] as string))) return undefined;
+    return componentIn(ctx, read.found.node);
+  }
+  return componentIn(ctx, value);
+};
 
 /** One route a list's entry writes: its path and its screen, as the entry writes them. */
 export interface ListedRoute {
   readonly path: TsNode | undefined;
   readonly screen: TsNode | undefined;
+  /** The elements of other lists the entry is written over (P297). */
+  readonly bound?: Bindings;
 }
 
 /**
@@ -96,8 +109,9 @@ export const listedRoutes = (pathValue: TsNode | undefined, screenValue: TsNode 
   if (read === undefined) return { routes: [], unread: 1 };
   const screenKey = screenValue === undefined ? undefined : screenKeyOf(screenValue, listed.parameter);
   const routes = read.entries.map((entry) => ({
-    path: valueOf(entry, listed.key),
-    screen: screenKey === undefined ? screenValue : screenKey === null ? undefined : valueOf(entry, screenKey),
+    path: valueOf(entry.object, listed.key),
+    screen: screenKey === undefined ? screenValue : screenKey === null ? undefined : valueOf(entry.object, screenKey),
+    ...(entry.bound === undefined ? {} : { bound: entry.bound }),
   }));
   return { routes, unread: read.unread };
 };
@@ -255,7 +269,7 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
       // A route written over a list's items: one route per entry (P291).
       const listed = listedRoutes(pathValue, screenValue);
       if (listed !== undefined) {
-        for (const route of listed.routes) claimAll(routeScreenOf(ctx, route.screen), routePathsOf(route.path), placing);
+        for (const route of listed.routes) claimAll(routeScreenOf(ctx, route.screen, route.bound), routePathsOf(route.path, route.bound), placing);
         return;
       }
       const paths = routePathsOf(pathValue);

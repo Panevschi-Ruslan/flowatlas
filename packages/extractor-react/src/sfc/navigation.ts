@@ -55,10 +55,38 @@ export interface Page {
   readonly localePrefix?: string;
   /** The ids of the components whose bodies write a route placing it (P291). */
   readonly within?: readonly string[];
+  /** The dynamic segment at the top of its address, whatever declares it, `[locale]` (P297). */
+  readonly localeSegment?: string;
+  /** The locales the application declares for that segment (P297). */
+  readonly locales?: readonly string[];
 }
 
 /** A navigation that lands on a page. */
-type PageLanding = { readonly kind: 'page'; readonly page: Page; readonly by: 'path' | 'name'; readonly written: string; readonly guessed?: true; readonly localePrefix?: string };
+type PageLanding = {
+  readonly kind: 'page';
+  readonly page: Page;
+  readonly by: 'path' | 'name';
+  readonly written: string;
+  readonly guessed?: true;
+  readonly localePrefix?: string;
+  /** The link of the application's own that puts the locale in front (P297). */
+  readonly localizedBy?: string;
+};
+
+/**
+ * What a link of the application's own does to the address it is handed
+ * (P297): `<LangLink href="/pricing">` renders Next's `<Link
+ * href={withLang(locale, href)}>`, so the address is written without the
+ * locale the wrapper puts in front (`localized`); `<AppLink to="/orders">`
+ * rendering `<Link to={`/app${to}`}>` puts text around it.
+ */
+interface Via {
+  /** The wrapper, as its component is named. */
+  readonly name: string;
+  readonly before: string;
+  readonly after: string;
+  readonly localized: boolean;
+}
 
 /** Where a navigation lands, as the router decides it. */
 type Landing =
@@ -188,16 +216,20 @@ const sharedDirectories = (a: string, b: string): number => {
  * file: the page nearest it, by the directories they share, is its own
  * application's (P276).
  */
-const byPath = (all: readonly Page[], path: string, from: string): Landing => {
+const byPath = (all: readonly Page[], handed: string, from: string, via?: Via): Landing => {
+  // What a link of the application's own puts around the address it is handed (P297).
+  const path = via === undefined || EXTERNAL.test(handed) ? handed : `${via.before}${handed}${via.after}`;
   // An address that starts with a value read at run time may start with a host: which application it is in is not read.
   if (path.startsWith('${')) return { kind: 'unresolved', why: 'dynamic', written: path };
   const pages = ownPages(all, from);
   // A value glued to the end of the last segment (`/login${query}`) is the query, not the page.
   const trimmed = path.replace(/([^/$}])\$\{[^}]*\}$/, '$1');
   const written = segmentsOf(trimmed.replace(/\$\{[^}]*\}/g, '\u0000'));
+  // The segment the locale goes in: one a middleware fills, or, through a link that puts the locale in front itself, the page's top segment (P297).
+  const prefixOf = (page: Page): string | undefined => page.localePrefix ?? (via?.localized === true ? page.localeSegment : undefined);
   const fits = pages.flatMap((page): Array<{ page: Page; fit: number; localized?: true }> => {
     const fit = fitOf(written, page.route);
-    if (page.localePrefix === undefined) return fit === undefined ? [] : [{ page, fit }];
+    if (prefixOf(page) === undefined) return fit === undefined ? [] : [{ page, fit }];
     return localizedFits(page, written, fit);
   });
   const best = Math.max(...fits.map((each) => each.fit));
@@ -224,7 +256,8 @@ const byPath = (all: readonly Page[], path: string, from: string): Landing => {
     by: 'path',
     written: shown,
     ...(guessed ? { guessed: true as const } : {}),
-    ...(each.localized === true && each.page.localePrefix !== undefined ? { localePrefix: each.page.localePrefix } : {}),
+    ...(each.localized === true && prefixOf(each.page) !== undefined ? { localePrefix: prefixOf(each.page) as string } : {}),
+    ...(each.localized === true && via?.localized === true ? { localizedBy: via.name } : {}),
   });
   if (top.length === 0) return { kind: 'unresolved', why: 'missing', written: shown };
   // Pages each placed under its own side of one condition: the build's choices, each a branch (P291).
@@ -233,8 +266,11 @@ const byPath = (all: readonly Page[], path: string, from: string): Landing => {
   return landed(top[0] as { page: Page; localized?: true }, false);
 };
 
-/** A segment that is a locale: `fr`, `pt-BR`, `zh-Hant`. */
+/** A segment shaped as a locale: `fr`, `pt-BR`, `zh-Hant`; what a locale is where the application declares none (P291). */
 const LOCALE_TAG = /^[a-z]{2}(?:[-_][A-Za-z]{2,4})?$/;
+
+/** Whether a first segment is a locale of the page's segment: one the application declares, or, where it declares none, one shaped as a locale (P297). */
+const isLocale = (page: Page, segment: string): boolean => (page.locales === undefined ? LOCALE_TAG.test(segment) : page.locales.includes(segment));
 
 /**
  * How a page under a locale segment a middleware adds (`app/[locale]/search`)
@@ -242,13 +278,15 @@ const LOCALE_TAG = /^[a-z]{2}(?:[-_][A-Za-z]{2,4})?$/;
  * locale is written with the prefix, and fits as written; one that starts
  * with anything else is written without it, and the middleware puts it in
  * front - it fits the page's address past the prefix, `localized`. A segment
- * that may be either (`/fr`) is tried both ways.
+ * that may be either (`/fr`) is tried both ways. A locale is one the
+ * application declares where it declares any (P297): `/go` is no locale of
+ * an application built for `en` and `fr`.
  */
 const localizedFits = (page: Page, written: readonly string[], asWritten: number | undefined): Array<{ page: Page; fit: number; localized?: true }> => {
   const first = written[0];
   const prefixed = first !== undefined && first.includes('\u0000');
   const out: Array<{ page: Page; fit: number; localized?: true }> = [];
-  if (asWritten !== undefined && (prefixed || (first !== undefined && LOCALE_TAG.test(first)))) out.push({ page, fit: asWritten });
+  if (asWritten !== undefined && (prefixed || (first !== undefined && isLocale(page, first)))) out.push({ page, fit: asWritten });
   if (!prefixed) {
     const rest = page.route.split('/').filter((segment) => segment !== '').slice(1).join('/');
     const fit = fitOf(written, `/${rest}`);
@@ -302,9 +340,9 @@ const propertyValue = (object: TsNode, key: string): TsNode | undefined => {
 };
 
 /** Where an address read as text lands, from a branch nothing decides where it was read through one. */
-const pathLanding = (pages: readonly Page[], text: string, from: string, external: boolean, guessed: boolean): Landing => {
+const pathLanding = (pages: readonly Page[], text: string, from: string, external: boolean, guessed: boolean, via?: Via): Landing => {
   if (EXTERNAL.test(text) || (external && !text.startsWith('/'))) return { kind: 'external', written: text };
-  const landing = byPath(pages, text, from);
+  const landing = byPath(pages, text, from, via);
   return landing.kind === 'page' && (guessed || landing.page.guessed === true) ? { ...landing, guessed: true } : landing;
 };
 
@@ -313,20 +351,20 @@ const pathLanding = (pages: readonly Page[], text: string, from: string, externa
  * spells, a path a function of the repository hands back read through it
  * (`push(adminPath('teams'))`), one per branch nothing decides (P288).
  */
-const landingsOf = (pages: readonly Page[], to: TsNode | undefined, options: TsNode | undefined, from: string): Landing[] => {
+const landingsOf = (pages: readonly Page[], to: TsNode | undefined, options: TsNode | undefined, from: string, via?: Via): Landing[] => {
   const external = options !== undefined && propertyValue(options, 'external')?.getText() === 'true';
   if (to === undefined) return [{ kind: 'unresolved', why: 'dynamic', written: '' }];
   const text = addressText(to);
-  if (text !== undefined && !Node.isTemplateExpression(to)) return [pathLanding(pages, text, from, external, false)];
+  if (text !== undefined && !Node.isTemplateExpression(to)) return [pathLanding(pages, text, from, external, false, via)];
   const spelled = Node.isObjectLiteralExpression(to) ? undefined : spelledPaths(to);
-  if (spelled !== undefined) return branchLandings(spelled.map((each) => ({ landing: pathLanding(pages, each.text, from, external, each.guessed === true), guessed: each.guessed === true })));
+  if (spelled !== undefined) return branchLandings(spelled.map((each) => ({ landing: pathLanding(pages, each.text, from, external, each.guessed === true, via), guessed: each.guessed === true })));
   if (Node.isObjectLiteralExpression(to)) {
     const name = propertyValue(to, 'name');
     const pathname = propertyValue(to, 'path') ?? propertyValue(to, 'pathname');
     const read = name === undefined && pathname !== undefined && addressText(pathname) === undefined ? spelledPaths(pathname) : undefined;
-    if (read !== undefined) return branchLandings(read.map((each) => ({ landing: pathLanding(pages, each.text, from, false, each.guessed === true), guessed: each.guessed === true })));
+    if (read !== undefined) return branchLandings(read.map((each) => ({ landing: pathLanding(pages, each.text, from, false, each.guessed === true, via), guessed: each.guessed === true })));
   }
-  return [landingOf(pages, to, options, from)];
+  return [landingOf(pages, to, options, from, via)];
 };
 
 /**
@@ -340,11 +378,11 @@ const branchLandings = (read: ReadonlyArray<{ readonly landing: Landing; readonl
     : read.map((each) => each.landing);
 
 /** Where `navigateTo(to, options)` lands, read as written. */
-const landingOf = (pages: readonly Page[], to: TsNode | undefined, options: TsNode | undefined, from: string): Landing => {
+const landingOf = (pages: readonly Page[], to: TsNode | undefined, options: TsNode | undefined, from: string, via?: Via): Landing => {
   const external = options !== undefined && propertyValue(options, 'external')?.getText() === 'true';
   if (to === undefined) return { kind: 'unresolved', why: 'dynamic', written: '' };
   const text = addressText(to);
-  if (text !== undefined) return EXTERNAL.test(text) || (external && !text.startsWith('/')) ? { kind: 'external', written: text } : byPath(pages, text, from);
+  if (text !== undefined) return EXTERNAL.test(text) || (external && !text.startsWith('/')) ? { kind: 'external', written: text } : byPath(pages, text, from, via);
   if (Node.isObjectLiteralExpression(to)) {
     const name = propertyValue(to, 'name');
     const path = propertyValue(to, 'path');
@@ -356,7 +394,7 @@ const landingOf = (pages: readonly Page[], to: TsNode | undefined, options: TsNo
     // `{ path }` for Vue Router, `{ pathname, query }` for Next's router and link (P276).
     const pathname = path ?? propertyValue(to, 'pathname');
     const pathText = pathname === undefined ? undefined : addressText(pathname);
-    if (name === undefined && pathText !== undefined) return EXTERNAL.test(pathText) ? { kind: 'external', written: pathText } : byPath(pages, pathText, from);
+    if (name === undefined && pathText !== undefined) return EXTERNAL.test(pathText) ? { kind: 'external', written: pathText } : byPath(pages, pathText, from, via);
   }
   return { kind: 'unresolved', why: 'dynamic', written: to.getText().replace(/\s+/g, ' ').slice(0, 60) };
 };
@@ -549,6 +587,176 @@ const linkOf = (tag: TsNode): { readonly attribute: string; readonly redirects?:
   return LINK_COMPONENTS.find((link) => link.modules.has(found.module) && link.names.has(found.name));
 };
 
+/** A link of the application's own: the prop its address is handed in, and what it does to it (P297). */
+interface Wrapper {
+  readonly attribute: string;
+  readonly via: Via;
+}
+
+/** The functions that hand a component on, a wrapper's component read through them. */
+const COMPONENT_WRAPPERS: ReadonlySet<string> = new Set(['memo', 'forwardRef', 'observer']);
+
+/**
+ * The function a JSX tag names, where it is a component of the repository:
+ * a function, a `const` holding an arrow, one handed through `memo` /
+ * `forwardRef` / `observer`, or a styled component made from another
+ * (`styled(LangLink)`...``, `styled(X).attrs(...)`...``), read through
+ * to the component it styles.
+ */
+const componentFunctionOf = (tag: TsNode, depth = 0): TsNode | undefined => {
+  if (depth > 6 || !Node.isIdentifier(tag)) return undefined;
+  const symbol = tag.getSymbol();
+  const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
+  if (declaration === undefined || declaration.getSourceFile().isDeclarationFile() || declaration.getSourceFile().getFilePath().includes('/node_modules/')) return undefined;
+  if (Node.isFunctionDeclaration(declaration)) return declaration;
+  const value = Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : Node.isExportAssignment(declaration) ? declaration.getExpression() : undefined;
+  return value === undefined ? undefined : componentFunctionIn(value, depth + 1);
+};
+
+const componentFunctionIn = (expression: TsNode, depth: number): TsNode | undefined => {
+  const value = bare(expression);
+  if (Node.isArrowFunction(value) || Node.isFunctionExpression(value)) return value;
+  if (Node.isIdentifier(value)) return componentFunctionOf(value, depth + 1);
+  // `styled(Base)`...``, `styled(Base).attrs({...})`...``, `styled(Base)({...})`: the component styled.
+  let made: TsNode | undefined = Node.isTaggedTemplateExpression(value) ? value.getTag() : value;
+  while (made !== undefined && (Node.isCallExpression(made) || Node.isPropertyAccessExpression(made))) {
+    if (Node.isPropertyAccessExpression(made)) {
+      made = made.getExpression();
+      continue;
+    }
+    const callee = made.getExpression();
+    const [first] = made.getArguments();
+    const name = Node.isIdentifier(callee) ? callee.getText() : undefined;
+    if (first !== undefined && name !== undefined && (COMPONENT_WRAPPERS.has(name) || name === 'styled')) return componentFunctionIn(first, depth + 1);
+    made = callee;
+  }
+  return undefined;
+};
+
+/** The names a component's props are read under: `{ href, ...rest }` taken apart, or `props` and `props.href`. */
+const propReadOf = (fn: TsNode, value: TsNode): string | undefined => {
+  if (!Node.isArrowFunction(fn) && !Node.isFunctionExpression(fn) && !Node.isFunctionDeclaration(fn)) return undefined;
+  const [parameter] = fn.getParameters();
+  if (parameter === undefined) return undefined;
+  const read = bare(value);
+  if (Node.isIdentifier(read)) {
+    const declaration = read.getSymbol()?.getDeclarations()[0];
+    if (declaration === undefined || !Node.isBindingElement(declaration) || declaration.getDotDotDotToken() !== undefined) return undefined;
+    return declaration.getFirstAncestor((node) => node === parameter) === undefined ? undefined : (declaration.getPropertyNameNode()?.getText() ?? declaration.getName());
+  }
+  if (Node.isPropertyAccessExpression(read) && Node.isIdentifier(read.getExpression()) && Node.isIdentifier(parameter.getNameNode())) {
+    return (read.getExpression().getSymbol()?.getDeclarations() ?? []).includes(parameter as never) ? read.getName() : undefined;
+  }
+  return undefined;
+};
+
+/** What a wrapper's inner link is handed: a prop as it is, put inside a template, or handed to a call among other values. */
+const wrappedOf = (fn: TsNode, value: TsNode, attribute: string): { readonly prop: string; readonly before: string; readonly after: string; readonly localized: boolean } | undefined => {
+  const read = bare(Node.isJsxExpression(value) ? (value.getExpression() ?? value) : value);
+  const direct = propReadOf(fn, read);
+  if (direct !== undefined) return { prop: direct, before: '', after: '', localized: false };
+  // `` `/app${to}` ``, `'/app' + to`: the text around the prop.
+  const pieces: TsNode[] = [];
+  if (Node.isTemplateExpression(read)) {
+    pieces.push(read.getHead());
+    for (const span of read.getTemplateSpans()) pieces.push(span.getExpression(), span.getLiteral());
+  } else if (Node.isBinaryExpression(read) && read.getOperatorToken().getText() === '+') {
+    const collect = (piece: TsNode): void => {
+      const inner = bare(piece);
+      if (Node.isBinaryExpression(inner) && inner.getOperatorToken().getText() === '+') {
+        collect(inner.getLeft());
+        collect(inner.getRight());
+      } else pieces.push(inner);
+    };
+    collect(read);
+  }
+  if (pieces.length > 0) {
+    const at = pieces.findIndex((piece) => propReadOf(fn, piece) !== undefined);
+    if (at !== -1 && pieces.filter((piece) => propReadOf(fn, piece) !== undefined).length === 1) {
+      const text = (piece: TsNode): string =>
+        Node.isStringLiteral(piece) || Node.isNoSubstitutionTemplateLiteral(piece)
+          ? piece.getLiteralValue()
+          : Node.isTemplateHead(piece) || Node.isTemplateMiddle(piece) || Node.isTemplateTail(piece)
+            ? piece.getLiteralText()
+            : `\${${piece.getText().replace(/[{}\s]/g, '')}}`;
+      const prop = propReadOf(fn, pieces[at] as TsNode) as string;
+      // Text put around a prop of the link's own name is a wrapper's; around any other (`/orders/${id}`) it is the component's own navigation.
+      if (prop !== attribute) return undefined;
+      return { prop, before: pieces.slice(0, at).map(text).join(''), after: pieces.slice(at + 1).map(text).join(''), localized: false };
+    }
+  }
+  // `withLang(locale, href)`: the prop handed to a function with the locale; the function puts it in front.
+  if (Node.isCallExpression(read)) {
+    const args = read.getArguments();
+    const prop = args.map((arg) => propReadOf(fn, arg)).find((each) => each !== undefined);
+    if (prop !== undefined && args.length > 1) return { prop, before: '', after: '', localized: true };
+  }
+  return undefined;
+};
+
+const WRAPPERS = new WeakMap<TsNode, Wrapper | null>();
+
+/**
+ * A link of the application's own a JSX tag names (P297): a component of
+ * the repository whose body renders a framework's link - or another such
+ * wrapper - with its address read from one of its own props, as it is
+ * (`<Link {...props} href={href} />`), inside text (`` to={`/app${to}`} ``),
+ * or handed to a function with the locale (`href={withLang(locale,
+ * href)}`). `<Button href="/partners">` rendering `<LangLink
+ * href={href}>` is one too. The prop is where a use writes the address.
+ */
+const linkWrapperOf = (tag: TsNode, depth = 0): Wrapper | undefined => {
+  if (depth > 4) return undefined;
+  const fn = componentFunctionOf(tag);
+  if (fn === undefined) return undefined;
+  const known = WRAPPERS.get(fn);
+  if (known !== undefined) return known ?? undefined;
+  WRAPPERS.set(fn, null);
+  let found: Wrapper | undefined;
+  fn.forEachDescendant((node, traversal) => {
+    if (!Node.isJsxSelfClosingElement(node) && !Node.isJsxOpeningElement(node)) return;
+    const inner = node.getTagNameNode();
+    const link = linkOf(inner);
+    const nested = link === undefined ? linkWrapperOf(inner, depth + 1) : undefined;
+    const attribute = link?.attribute ?? nested?.attribute;
+    if (attribute === undefined) return;
+    const written = node.getAttributes().find((each) => Node.isJsxAttribute(each) && each.getNameNode().getText() === attribute);
+    const initializer = written !== undefined && Node.isJsxAttribute(written) ? written.getInitializer() : undefined;
+    const wrapped = initializer === undefined ? undefined : wrappedOf(fn, initializer, attribute);
+    if (wrapped === undefined) return;
+    const outer = nested?.via;
+    found = {
+      attribute: wrapped.prop,
+      via: {
+        name: Node.isFunctionDeclaration(fn) ? (fn.getName() ?? tag.getText()) : tag.getText(),
+        before: `${outer?.before ?? ''}${wrapped.before}`,
+        after: `${wrapped.after}${outer?.after ?? ''}`,
+        localized: wrapped.localized || outer?.localized === true,
+      },
+    };
+    traversal.stop();
+  });
+  WRAPPERS.set(fn, found ?? null);
+  return found;
+};
+
+/** Whether a link's address is a prop of the component it is written in, which hands it on: the uses of that component are the navigations (P297). */
+const forwardsProp = (node: TsNode, value: TsNode | undefined, attribute: string): boolean => {
+  if (value === undefined) return false;
+  for (let at = node.getParent(); at !== undefined && !Node.isSourceFile(at); at = at.getParent()) {
+    if (Node.isArrowFunction(at) || Node.isFunctionExpression(at) || Node.isFunctionDeclaration(at)) return isComponentFunction(at) && wrappedOf(at, value, attribute) !== undefined;
+  }
+  return false;
+};
+
+/** Whether a function is written as a component: named with a capital, itself or the `const` holding it, through `memo` / `forwardRef` / `observer`. */
+const isComponentFunction = (fn: TsNode): boolean => {
+  if (Node.isFunctionDeclaration(fn)) return /^[A-Z]/.test(fn.getName() ?? '') || fn.isDefaultExport();
+  let holder = fn.getParent();
+  while (holder !== undefined && Node.isCallExpression(holder) && COMPONENT_WRAPPERS.has(holder.getExpression().getText())) holder = holder.getParent();
+  return holder !== undefined && ((Node.isVariableDeclaration(holder) && /^[A-Z]/.test(holder.getName())) || Node.isExportAssignment(holder));
+};
+
 /** Whether a callee is Nuxt's own function of that name: auto-imported, or imported from Nuxt. */
 const isNuxts = (callee: TsNode, name: string): boolean => {
   if (!Node.isIdentifier(callee) || callee.getText() !== name) return false;
@@ -636,7 +844,7 @@ export const nuxtPages = (
   });
 
 /** Words a file must hold for any of its calls or elements to be a navigation, so most files are passed over unread. */
-const MAY_NAVIGATE = /navigateTo|abortNavigation|\$router|useRouter|useNavigate|useHistory|\bNavigate\b|\bRedirect\b|\bgoto\b|\bredirect\b|createRouter|create(?:Browser|Hash|Memory)Router|next\/link|next\/router|\bLink\b|\.(?:push|replace|navigate)\(/;
+const MAY_NAVIGATE = /navigateTo|abortNavigation|\$router|useRouter|useNavigate|useHistory|\bNavigate\b|\bRedirect\b|\bgoto\b|\bredirect\b|createRouter|create(?:Browser|Hash|Memory)Router|next\/link|next\/router|\bLink\b|\.(?:push|replace|navigate)\(|\s(?:href|to)=/;
 
 export const drawNavigations = (
   ctx: ReactExtractContext,
@@ -716,7 +924,8 @@ export const drawNavigations = (
         // `<Link to="/orders">`, `<NavLink to>`, Next's `<Link href>` (P276).
         if (!Node.isJsxSelfClosingElement(node) && !Node.isJsxOpeningElement(node)) return;
         const tag = node.getTagNameNode();
-        const link = linkOf(tag);
+        // A framework's link, or a link of the application's own read through to the one it renders (P297).
+        const link: { readonly attribute: string; readonly redirects?: true; readonly via?: Via } | undefined = linkOf(tag) ?? (/^[A-Z]/.test(tag.getText()) ? linkWrapperOf(tag) : undefined);
         if (link === undefined) return;
         const { attribute } = link;
         const written = node.getAttributes().find((each) => Node.isJsxAttribute(each) && each.getNameNode().getText() === attribute);
@@ -725,9 +934,16 @@ export const drawNavigations = (
         if (owner === undefined) return;
         const initializer = written.getInitializer();
         const value = initializer !== undefined && Node.isJsxExpression(initializer) ? initializer.getExpression() : initializer;
+        // The link inside a wrapper, handed the wrapper's own prop: its uses navigate, each read where it is written (P297).
+        if (forwardsProp(node, value, attribute)) return;
         const replace = node.getAttributes().some((each) => Node.isJsxAttribute(each) && each.getNameNode().getText() === 'replace' && (each.getInitializer() === undefined || each.getInitializer()?.getText() === '{true}'));
-        for (const landing of landingsOf(pages, value, undefined, file)) {
-          land(owner, file, startLineOf(node), landing, { link: tag.getText(), ...(replace ? { replace: true } : {}), ...(link.redirects === true ? { redirects: true } : {}) });
+        for (const landing of landingsOf(pages, value, undefined, file, link.via)) {
+          land(owner, file, startLineOf(node), landing, {
+            link: tag.getText(),
+            ...(link.via === undefined ? {} : { wrapper: link.via.name }),
+            ...(replace ? { replace: true } : {}),
+            ...(link.redirects === true ? { redirects: true } : {}),
+          });
         }
       });
     }
@@ -795,9 +1011,15 @@ const localizedRow = (ctx: ReactExtractContext, file: string, line: number, symb
     reason: 'navigation-locale-prefixed',
     level: 'info',
     symbol: `${symbol} navigates to ${landing.written}`,
-    message: `${file} navigates to ${landing.written}, written without the locale the application's middleware puts in front, so it is joined to ${landing.page.route}, the page under ${landing.localePrefix ?? 'the locale segment'}`,
-    hint: 'Nothing to do: the middleware or the routing configuration that adds the locale is what places the page; the join is heuristic.',
-    meta: { cause: 'navigation-locale-prefixed', navigates: landing.written, route: landing.page.route },
+    message:
+      landing.localizedBy === undefined
+        ? `${file} navigates to ${landing.written}, written without the locale the application's middleware puts in front, so it is joined to ${landing.page.route}, the page under ${landing.localePrefix ?? 'the locale segment'}`
+        : `${file} navigates to ${landing.written} through ${landing.localizedBy}, which puts the locale in front, so it is joined to ${landing.page.route}, the page under ${landing.localePrefix ?? 'the locale segment'}`,
+    hint:
+      landing.localizedBy === undefined
+        ? 'Nothing to do: the middleware or the routing configuration that adds the locale is what places the page; the join is heuristic.'
+        : 'Nothing to do: the link of the application\'s own that adds the locale is what places the page; the join is heuristic.',
+    meta: { cause: 'navigation-locale-prefixed', navigates: landing.written, route: landing.page.route, ...(landing.localizedBy === undefined ? {} : { localizedBy: landing.localizedBy }) },
   });
 };
 

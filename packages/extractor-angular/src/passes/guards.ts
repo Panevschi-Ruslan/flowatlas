@@ -140,7 +140,10 @@ const drawFunctionBody = (ctx: AngularExtractContext, target: Extract<GuardTarge
  * navigation lands on the screen, so a flow from it goes through what the
  * router runs first, whether the guard navigates or not. A guard written in
  * place is a function node of its own, named by its kind and line; one a
- * package exports is the package's; one written as code is a row.
+ * package exports is the package's; one written as code is a row. What the
+ * router runs as the screen is left - each `canDeactivate`, the route's own
+ * first, then the routes it is nested in - is drawn the same way with
+ * `meta.leaving` and an order of its own (P297).
  */
 export const guardsPass = definePass('guards', (ctx: AngularExtractContext) => {
   const drawnBodies = new Set<string>();
@@ -149,6 +152,8 @@ export const guardsPass = definePass('guards', (ctx: AngularExtractContext) => {
     const screen = ctx.classes.get(route.component);
     if (screen === undefined) continue;
     let order = 0;
+    // What runs as the screen is left is counted on its own, in the order the router runs it (P297).
+    let leaving = 0;
     for (const guard of route.guards) {
       const target = guardTarget(ctx, guard);
       if (target.kind === 'package') continue;
@@ -175,7 +180,12 @@ export const guardsPass = definePass('guards', (ctx: AngularExtractContext) => {
         confidence: 'static',
         file: ctx.fileOf(guard.value),
         line: lineOf(guard.value),
-        meta: { guard: guard.kind, route: route.path, order: order++, ...(target.kind === 'function' && target.made === true ? { factory: true } : {}) },
+        meta: {
+          guard: guard.kind,
+          route: route.path,
+          ...(guard.kind === 'canDeactivate' ? { leaving: true, order: leaving++ } : { order: order++ }),
+          ...(target.kind === 'function' && target.made === true ? { factory: true } : {}),
+        },
       });
       if (target.kind !== 'function' || drawnBodies.has(target.id)) continue;
       drawnBodies.add(target.id);

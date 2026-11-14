@@ -1,6 +1,6 @@
 import { Project, SyntaxKind, type CallExpression } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
-import { graphqlCallOf, type GraphqlCall } from './calls.js';
+import { generatedServiceCallOf, graphqlCallOf, serviceDocumentOf, type GraphqlCall } from './calls.js';
 import { callAddressOf } from './clients.js';
 import { documentOf, type DocumentReading } from './documents.js';
 import { operationsOf } from './operations.js';
@@ -270,5 +270,65 @@ describe('an SDK factory known by what its module exports (P285)', () => {
       '/shop/src/page.ts': "import { store } from './store';\nexport const a = () => store.cart();",
     });
     expect(graphqlCallOf(callOf(made, '/shop/src/page.ts', 'cart'))).toBeUndefined();
+  });
+});
+
+describe('the services typescript-apollo-angular writes into a module nobody committed (P297)', () => {
+  const files = (config: string): Record<string, string> => ({
+    '/app/package.json': '{}',
+    '/app/codegen.yml': `documents: 'src/**/*.graphql'\ngenerates:\n  src/generated/graphql.ts:\n    plugins:\n      - typescript-operations\n      - typescript-apollo-angular\n${config}`,
+    '/app/src/orders.graphql': 'query Orders { orders { id } }\nmutation PlaceOrder($id: ID!) { placeOrder(id: $id) { id } }',
+    '/app/src/orders.component.ts': `
+      import { inject } from '@angular/core';
+      import { OrdersGQL, OrdersSdk, ApolloAngularSDK } from './generated/graphql';
+      export class OrdersComponent {
+        private readonly ordersGql = inject(OrdersGQL);
+        constructor(private readonly sdk: OrdersSdk, private readonly plain: ApolloAngularSDK) {}
+        load() { return this.sdk.orders(); }
+        watch() { return this.sdk.ordersWatch(); }
+        place() { return this.sdk.placeOrder({ id: '1' }); }
+        fetch() { return this.ordersGql.fetch(); }
+        other() { return this.plain.orders(); }
+      }
+    `,
+  });
+  const method = (made: Project, name: string): CallExpression => {
+    const found = made
+      .getSourceFileOrThrow('/app/src/orders.component.ts')
+      .getDescendantsOfKind(SyntaxKind.MethodDeclaration)
+      .find((each) => each.getName() === name)
+      ?.getFirstDescendantByKind(SyntaxKind.CallExpression);
+    if (found === undefined) throw new Error(`no method ${name}`);
+    return found;
+  };
+
+  it("reads the class sdkClass writes under the name serviceName gives it, a query's Watch method included, and an operation's own service", () => {
+    const made = project(files('    config:\n      sdkClass: true\n      serviceName: OrdersSdk\n'));
+    expect(operationOf(generatedServiceCallOf(method(made, 'load')))).toBe('query orders');
+    expect(operationOf(generatedServiceCallOf(method(made, 'watch')))).toBe('query orders');
+    expect(operationOf(generatedServiceCallOf(method(made, 'place')))).toBe('mutation placeOrder');
+    expect(operationOf(generatedServiceCallOf(method(made, 'fetch')))).toBe('query orders');
+    // The plugin's default name is not this configuration's class.
+    expect(generatedServiceCallOf(method(made, 'other'))).toBeUndefined();
+  });
+
+  it('reads the document of a committed service the plugin writes over the namespace, `extends Apollo.Query`', () => {
+    const made = project({
+      '/app/src/generated/graphql.ts': [
+        `import * as Apollo from 'apollo-angular';`,
+        `export const OrdersDocument = Apollo.gql\`query Orders { orders { id } }\`;`,
+        `export class OrdersGQL extends Apollo.Query<unknown, unknown> { document = OrdersDocument; }`,
+      ].join('\n'),
+    });
+    const service = made.getSourceFileOrThrow('/app/src/generated/graphql.ts').getClassOrThrow('OrdersGQL');
+    expect(serviceDocumentOf(service)?.getText()).toBe('OrdersDocument');
+  });
+
+  it('reads no SDK class where the configuration asks for none, and names it ApolloAngularSDK where it does not rename it', () => {
+    const none = project(files(''));
+    expect(generatedServiceCallOf(method(none, 'load'))).toBeUndefined();
+    expect(operationOf(generatedServiceCallOf(method(none, 'fetch')))).toBe('query orders');
+    const plain = project(files('    config:\n      sdkClass: true\n'));
+    expect(operationOf(generatedServiceCallOf(method(plain, 'other')))).toBe('query orders');
   });
 });

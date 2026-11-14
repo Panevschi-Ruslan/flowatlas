@@ -50,7 +50,7 @@ export { fragmentsOf, operationsOf, reachedFields } from './operations.js';
 export type { Operation, Reached, SelectedField } from './operations.js';
 export { documentOf, lineInFile } from './documents.js';
 export type { DocumentReading } from './documents.js';
-export { clientEndpointIn, fetchedDocument, fetchedQuery, graphqlCallOf, handedThrough, SERVICE_SENDS, serviceDocumentOf } from './calls.js';
+export { clientEndpointIn, fetchedDocument, fetchedQuery, generatedServiceCallOf, graphqlCallOf, handedThrough, SERVICE_SENDS, serviceDocumentOf } from './calls.js';
 export { callAddressOf, clientAddressOf, pageClientIn } from './clients.js';
 export type { ClientAddress } from './clients.js';
 export type { GraphqlCall, GraphqlLibrary } from './calls.js';

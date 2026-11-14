@@ -1060,6 +1060,45 @@ describe('the keys a gRPC call writes, under the names each loader gives the fie
     expect(requestFindings(keyed(SNAKE, '{user_id:string;quantity:number}', false, false))).toEqual([['extra_field', 'user_id']]);
     expect(requestFindings(keyed(CAMEL, '{userId:string;quantity:number}', true, true))).toEqual([['extra_field', 'userId']]);
   });
+
+  /** A call reading the answer as `read`, its loader keeping the case or not, from a server whose loader does or does not (P297). */
+  const answered = (read: string, callerKeeps: boolean, serverKeeps: boolean): ContractReport => {
+    const types = protoTypes([{ path: 'shop.proto', file: parseProto(`syntax = "proto3"; package shop; message Q { string id = 1; } message Stock { int32 units_left = 1; }`) }], 'orders');
+    const names = serverKeeps ? 'proto' : 'json';
+    const signature = { params: [{ name: 'request', type: types.refOf('Q', 'shop', names) }], returns: types.refOf('Stock', 'shop', names) };
+    return checkContracts(
+      graphOf({
+        nodes: [
+          node('worker#Fulfil', 'method', 'worker'),
+          node('http_out:worker#src/orders.ts:4:5', 'http_out', 'worker', {
+            kind: 'rpc',
+            meta: { procedure: 'grpc:shop.Orders/Stock', call: 'unary', client: 'grpc', inputKeys: ['id'], outputType: read, ...(callerKeeps ? { protoFieldNames: 'proto' } : {}) },
+          }),
+          node('entry:orders:rpc:grpc:shop.Orders/Stock', 'entry', 'orders', {
+            kind: 'rpc',
+            meta: { key: 'grpc:shop.Orders/Stock', call: 'unary', signature, ...(serverKeeps ? { protoFieldNames: 'proto' } : {}) },
+          }),
+        ],
+        edges: [
+          edge('worker#Fulfil', 'calls', 'http_out:worker#src/orders.ts:4:5'),
+          edge('http_out:worker#src/orders.ts:4:5', 'hits', 'entry:orders:rpc:grpc:shop.Orders/Stock', { params: ['{id:string}'], returns: read }),
+        ],
+        types: types.registry(),
+      }),
+      { generatedAt: FIXED },
+    );
+  };
+  const responseFindings = (report: ContractReport) => report.findings.filter((finding) => finding.direction === 'response').map((finding) => [finding.kind, finding.field]);
+
+  it("reads the answer's fields under the names the caller's loader gives them, said by the server's (P297)", () => {
+    for (const serverKeeps of [false, true]) {
+      expect(responseFindings(answered('{units_left:number}', true, serverKeeps))).toEqual([]);
+      expect(responseFindings(answered('{unitsLeft:number}', false, serverKeeps))).toEqual([]);
+    }
+    expect(responseFindings(answered('{units_left:string}', true, false))).toEqual([['type_mismatch', 'unitsLeft']]);
+    // A name the caller's loader does not give the field is still read from nothing.
+    expect(responseFindings(answered('{unitsLeft:number}', true, true)).map(([kind]) => kind)).not.toEqual([]);
+  });
 });
 
 describe("a plain request to a procedure's REST route (P256)", () => {

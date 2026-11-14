@@ -4,7 +4,7 @@ import type { Node as TsNode, SourceFile } from 'ts-morph';
 import type { CallExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
-import { handedOutward, isHandedParameter } from '../util/forward.js';
+import { classMethods, handedOutward, isHandedParameter } from '../util/forward.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { analyzeApiUrl, analyzeClientBase, type ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
@@ -225,7 +225,7 @@ export const graphqlPass = definePass('graphql', (ctx: ReactExtractContext) => {
     return true;
   };
 
-  for (const indexed of ctx.functions.all()) {
+  for (const indexed of [...ctx.functions.all(), ...classMethods(ctx)]) {
     if (indexed.file.startsWith('../')) continue;
     forEachCall(indexed.fn.body, (node) => {
       if (!Node.isCallExpression(node)) return;

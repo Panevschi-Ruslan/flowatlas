@@ -61,6 +61,32 @@ only one of them moved.
   function is sent where its receiver goes: another method sending the field,
   a field it is kept in, the function it is handed to, the caller it is
   returned to, the module holding it.
+- **Front-end, SDK and gRPC items P291 and P293 left open (P297).** A link
+  component of the application's own is read through to the link it renders:
+  its address prop handed on as it is, inside text (`` to={`/help${to}`} ``),
+  or to a function with the locale (`href={withLang(locale, href)}`, which
+  lands under the top `[locale]` segment even where no middleware declares
+  it), a component rendering such a link (`<Button href>`) or styled from one
+  (`styled(LangLink)`) included; the link inside it says nothing of its
+  own. A route table's list follows a registry of the repository's own (a
+  class whose method reads a field its other methods add to, the entries
+  handed to those methods anywhere in the repository, filtered by the key the
+  store is looked up by), and an entry written over another list's elements
+  is one per element, read off it through spreads and a JSON module. A first
+  segment is a locale only if the application declares it (its Next `i18n`,
+  next-intl's `defineRouting`, the `[locale]` segment's
+  `generateStaticParams`), by its shape only where none is declared. An
+  Angular route's `canDeactivate`, its own then its parents', is drawn from
+  its screen with `meta.leaving` and an order of its own. A request written in
+  a method of a class that is not a client of the repository's own is drawn
+  from `Class.method`. typescript-apollo-angular's `sdkClass` (named by
+  `serviceName`) and per-operation services are read from a module nobody
+  committed, and a committed service extending `Apollo.Query` is read. Remeda
+  composes (`piped`, `createPipe`), and `export default flow(...)` is called
+  where it is imported. A gRPC handler's reads of `call.request` (or a NestJS
+  method's message) that its message does not declare under the loader's
+  names are `grpc-field-undeclared` findings (info), and an answer read under
+  a loader keeping the case is compared under the server's names.
 - **Kustomize transformer and generator files, labels, and what P289 left of
   helmfile and charts (P295).** A kustomization's `transformers:` and
   `generators:` are read from the files (or the folder, or the inline text)

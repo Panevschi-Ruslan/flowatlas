@@ -1,6 +1,6 @@
 import { callSitesOf as callSitesOfFunction, evaluateExpression, startLineOf, wasRead, type NamedFunction } from '@flowatlas/core';
 import type { CallExpression, ClassDeclaration, Node as TsNode, ObjectLiteralExpression, ParameterDeclaration } from 'ts-morph';
-import { Node, VariableDeclarationKind } from 'ts-morph';
+import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { analyzeApiUrl, type ApiUrl, type Bindings } from './url.js';
@@ -175,7 +175,7 @@ const callSitesOf = (fn: NamedFunction): CallExpression[] => {
  * `load = () => …`. Named `Class.method`, as every reader names a method; no
  * function of a class nobody names, nor of a package.
  */
-const methodIndexed = (ctx: ReactExtractContext, member: TsNode): IndexedFunction | undefined => {
+export const methodIndexed = (ctx: ReactExtractContext, member: TsNode): IndexedFunction | undefined => {
   if (!Node.isMethodDeclaration(member) && !Node.isPropertyDeclaration(member)) return undefined;
   const owner = member.getParent();
   const className = Node.isClassDeclaration(owner) ? owner.getName() : undefined;
@@ -479,4 +479,29 @@ export const handedOutward = (
 export const isHandedParameter = (ctx: ReactExtractContext, value: TsNode): boolean => {
   const read = parameterRead(value);
   return read !== undefined && functionOfParameter(ctx, read.parameter) !== undefined;
+};
+
+/**
+ * The methods of the repository's classes whose bodies are read for requests
+ * of their own (P297): `class OrdersStore { load() { return fetch('/api/orders') } }`
+ * makes its request from `OrdersStore.load`, as a function of the module
+ * would. Not a class the request pass reads as a client of the repository's
+ * own, whose methods are read at their callers; not a class written inside a
+ * function this reading indexes, whose body is read with that function's.
+ */
+export const classMethods = (ctx: ReactExtractContext, isClientClass: ClientClass = () => false): IndexedFunction[] => {
+  const out: IndexedFunction[] = [];
+  for (const source of ctx.project.getSourceFiles()) {
+    if (source.isDeclarationFile() || source.isInNodeModules()) continue;
+    for (const cls of source.getDescendantsOfKind(SyntaxKind.ClassDeclaration)) {
+      if (cls.getName() === undefined || ctx.functions.get(cls) !== undefined) continue;
+      if (cls.getAncestors().some((at) => ctx.functions.get(at as never) !== undefined)) continue;
+      if (isClientClass(cls)) continue;
+      for (const member of cls.getMembers()) {
+        const indexed = methodIndexed(ctx, member);
+        if (indexed !== undefined) out.push(indexed);
+      }
+    }
+  }
+  return out;
 };

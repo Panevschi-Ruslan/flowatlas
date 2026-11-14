@@ -2,6 +2,7 @@ import { forEachCall, makeLeafId, methodBodies, normalizeFilePath, siteOf } from
 import {
   clientEndpointIn,
   documentOf,
+  generatedServiceCallOf,
   GRAPHQL_META,
   graphqlCallOf,
   operationMeta,
@@ -21,7 +22,10 @@ import { definePass } from './types.js';
  * (P232): `this.apollo.query({ query })`, `watchQuery`, `mutate`, and a
  * `Query` service's `fetch()` or `watch()`, whose document is the service's
  * own. Each is a request to the endpoint its client is made with, carrying
- * the operation under `meta.graphql`, as the other front end's are.
+ * the operation under `meta.graphql`, as the other front end's are. A service
+ * typescript-apollo-angular writes into a module nobody committed - an
+ * operation's `<Operation>GQL`, or the class `sdkClass` writes - sends the
+ * operation the configuration's documents name (P297).
  */
 
 /** The document a call on a `Query` service sends: `this.ordersGQL.watch()`. */
@@ -48,7 +52,7 @@ export const graphqlPass = definePass('graphql', (ctx: AngularExtractContext) =>
   const record = (call: CallExpression, found: GraphqlCall, methodId: string, file: string): void => {
     const at = siteOf(call);
     const id = makeLeafId('ui_api_call', ctx.repo, file, at.line, at.column);
-    const reading = documentOf(found.document);
+    const reading = found.reading ?? documentOf(found.document);
     const operation = reading.kind === 'read' ? operationsOf(reading.document, reading.fragments)[0] : undefined;
     const graphql = reading.kind === 'read' && operation !== undefined ? operationMeta(operation, reading, (path) => normalizeFilePath(path, ctx.repoDir), found.library, found.transport) : undefined;
     if (reading.kind !== 'read') {
@@ -101,7 +105,7 @@ export const graphqlPass = definePass('graphql', (ctx: AngularExtractContext) =>
       if (methodId === undefined) continue;
       forEachCall(body, (site: TsNode) => {
         if (!Node.isCallExpression(site)) return;
-        const found = graphqlCallOf(site) ?? serviceCallOf(site);
+        const found = graphqlCallOf(site) ?? serviceCallOf(site) ?? generatedServiceCallOf(site);
         if (found === undefined) return;
         ctx.ensureMethodNode(method);
         record(site, found, methodId, indexed.file);

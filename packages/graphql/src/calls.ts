@@ -1,5 +1,6 @@
 import type { CallExpression, ClassDeclaration, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
+import { apolloAngularOutputOf, codegenDocument } from './codegen.js';
 import { documentOf, type DocumentReading } from './documents.js';
 import { sdkCallOf, writtenInSdk } from './sdk.js';
 
@@ -267,13 +268,64 @@ export const handedThrough = (value: TsNode, calls: readonly CallExpression[]): 
  * screens call as `this.ordersGQL.fetch()` or `.watch()`.
  */
 export const serviceDocumentOf = (declaration: ClassDeclaration): TsNode | undefined => {
-  const base = declaration.getExtends()?.getExpression().getText();
+  // `extends Query<...>`, or `extends Apollo.Query<...>` as the generated services write it (P297).
+  const base = declaration.getExtends()?.getExpression().getText().replace(/^.*\./, '');
   if (base === undefined || !['Query', 'Mutation', 'Subscription'].includes(base)) return undefined;
   return declaration.getProperty('document')?.getInitializer();
 };
 
 /** The calls of a service class that send its document: `fetch`, `watch`, `mutate`, `subscribe`. */
 export const SERVICE_SENDS = new Set(['fetch', 'watch', 'mutate', 'subscribe']);
+
+/** The type a receiver is declared with, by the name it is imported under: `private sdk: ApolloAngularSDK`, `sdk = inject(ApolloAngularSDK)`. */
+const declaredTypeOf = (receiver: TsNode): { readonly name: string; readonly specifier: string; readonly file: string } | undefined => {
+  const named = Node.isPropertyAccessExpression(receiver) && Node.isThisExpression(receiver.getExpression()) ? receiver.getNameNode() : Node.isIdentifier(receiver) ? receiver : undefined;
+  for (const declaration of named?.getSymbol()?.getDeclarations() ?? []) {
+    let type: TsNode | undefined;
+    if (Node.isPropertyDeclaration(declaration) || Node.isParameterDeclaration(declaration) || Node.isVariableDeclaration(declaration)) {
+      const written = declaration.getTypeNode();
+      type = written !== undefined && Node.isTypeReference(written) ? written.getTypeName() : undefined;
+      const value = type === undefined ? declaration.getInitializer() : undefined;
+      if (value !== undefined && Node.isCallExpression(value) && value.getExpression().getText() === 'inject') type = value.getArguments()[0];
+    }
+    if (type === undefined || !Node.isIdentifier(type)) continue;
+    const found = importOf(type);
+    if (found !== undefined) return { name: found.exported, specifier: found.module, file: type.getSourceFile().getFilePath() };
+  }
+  return undefined;
+};
+
+/**
+ * What a call on an apollo-angular service sends, where the service is
+ * written by typescript-apollo-angular into a module nobody committed
+ * (P297): `this.ordersGQL.fetch()` on `OrdersGQL` sends `OrdersDocument`; a
+ * method of the class `sdkClass` writes (`ApolloAngularSDK`, or as
+ * `serviceName` names it) sends the operation it is named after,
+ * `this.sdk.orders()` and `this.sdk.ordersWatch()` the `Orders` query. The
+ * operation is read from the documents the configuration lists.
+ */
+export const generatedServiceCallOf = (call: CallExpression): GraphqlCall | undefined => {
+  const callee = call.getExpression();
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const type = declaredTypeOf(callee.getExpression());
+  if (type === undefined) return undefined;
+  const project = call.getProject();
+  const output = apolloAngularOutputOf(project, type.file, type.specifier);
+  if (output === undefined) return undefined;
+  const method = callee.getName();
+  const read = (operation: string, transport?: 'ws'): GraphqlCall | undefined => {
+    const reading = codegenDocument(project, type.file, type.specifier, `${operation.charAt(0).toUpperCase()}${operation.slice(1)}Document`);
+    return reading === undefined ? undefined : { library: 'apollo-angular', document: undefined, reading, ...(transport === undefined ? {} : { transport }) };
+  };
+  if (output.sdkClass === type.name) {
+    const exact = read(method);
+    if (exact?.reading?.kind === 'read' || !method.endsWith('Watch')) return exact;
+    return read(method.slice(0, -'Watch'.length)) ?? exact;
+  }
+  if (!SERVICE_SENDS.has(method)) return undefined;
+  const suffix = output.suffixes.find((each) => type.name.endsWith(each) && type.name.length > each.length);
+  return suffix === undefined ? undefined : read(type.name.slice(0, -suffix.length), method === 'subscribe' ? 'ws' : undefined);
+};
 
 /**
  * The address the application's GraphQL client is made with, where it is

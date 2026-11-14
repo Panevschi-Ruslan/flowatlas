@@ -404,6 +404,41 @@ export const configuresSdk = (project: Project): boolean => {
   return found;
 };
 
+/** The plugin that writes apollo-angular's services, by the name a configuration lists it under. */
+const APOLLO_ANGULAR_PLUGIN = /\btypescript-apollo-angular\b/;
+
+/**
+ * What typescript-apollo-angular writes into a module nobody committed, as
+ * the configuration that generates it says (P297): a service per operation,
+ * `<Operation>GQL` (its `querySuffix` / `mutationSuffix` /
+ * `subscriptionSuffix` in place of `GQL` where the configuration writes one),
+ * and, under `sdkClass: true`, one class whose methods send each operation -
+ * `ApolloAngularSDK`, or the name `serviceName` gives it.
+ */
+export interface ApolloAngularOutput {
+  /** The class `sdkClass` writes, where the configuration asks for one. */
+  readonly sdkClass?: string;
+  /** The suffixes the operation services are named with. */
+  readonly suffixes: readonly string[];
+}
+
+/** The value a configuration writes for an option, in the output's entry first, then anywhere in it. */
+const optionIn = (block: string, text: string, option: string): string | undefined => {
+  const pattern = new RegExp(`\\b${option}["']?\\s*:\\s*["']?([A-Za-z_$][\\w$]*)`);
+  return pattern.exec(block)?.[1] ?? pattern.exec(text)?.[1];
+};
+
+export const apolloAngularOutputOf = (project: Project, importingFile: string, specifier: string): ApolloAngularOutput | undefined => {
+  const importingDir = posix.dirname(importingFile);
+  const config = configNear(project.getFileSystem(), importingDir);
+  if (config === undefined) return undefined;
+  const block = outputBlock(config, candidatesOf(project, importingDir, specifier));
+  if (block === undefined || !APOLLO_ANGULAR_PLUGIN.test(block)) return undefined;
+  const sdk = optionIn(block, config.text, 'sdkClass') === 'true';
+  const suffixes = [...new Set(['querySuffix', 'mutationSuffix', 'subscriptionSuffix'].map((option) => optionIn(block, config.text, option) ?? 'GQL'))];
+  return { ...(sdk ? { sdkClass: optionIn(block, config.text, 'serviceName') ?? 'ApolloAngularSDK' } : {}), suffixes };
+};
+
 export const generatedSdkOf = (project: Project, importingFile: string, specifier: string): GeneratedSdk | undefined => {
   const importingDir = posix.dirname(importingFile);
   const config = configNear(project.getFileSystem(), importingDir);

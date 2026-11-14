@@ -406,6 +406,7 @@ interface LevelGuards {
   readonly canMatch: readonly TsNode[];
   readonly canActivate: readonly TsNode[];
   readonly canActivateChild: readonly TsNode[];
+  readonly canDeactivate: readonly TsNode[];
   readonly resolve: readonly TsNode[];
 }
 
@@ -424,6 +425,7 @@ const levelGuards = (element: ObjectLiteralExpression): LevelGuards => {
     canMatch: listed(routeProperty(element, 'canMatch')),
     canActivate: listed(routeProperty(element, 'canActivate')),
     canActivateChild: listed(routeProperty(element, 'canActivateChild')),
+    canDeactivate: listed(routeProperty(element, 'canDeactivate')),
     resolve:
       resolve === undefined
         ? []
@@ -441,7 +443,9 @@ const levelGuards = (element: ObjectLiteralExpression): LevelGuards => {
  * What the router runs before it shows a route, from the routes it is nested
  * in (P291): every `canMatch` as it matches, outermost first; then, level by
  * level, the parent's `canActivateChild` and the level's own `canActivate`;
- * then every resolver, outermost first.
+ * then every resolver, outermost first. And what it runs as the route is
+ * left (P297): every `canDeactivate`, the route's own first, then each level
+ * it is nested in, innermost out.
  */
 const chainOf = (levels: readonly LevelGuards[]): RouteGuard[] => [
   ...levels.flatMap((level) => level.canMatch.map((value) => ({ kind: 'canMatch' as const, value }))),
@@ -450,6 +454,7 @@ const chainOf = (levels: readonly LevelGuards[]): RouteGuard[] => [
     ...level.canActivate.map((value) => ({ kind: 'canActivate' as const, value })),
   ]),
   ...levels.flatMap((level) => level.resolve.map((value) => ({ kind: 'resolve' as const, value }))),
+  ...[...levels].reverse().flatMap((level) => level.canDeactivate.map((value) => ({ kind: 'canDeactivate' as const, value }))),
 ];
 
 /**

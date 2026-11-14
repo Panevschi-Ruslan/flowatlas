@@ -1,0 +1,20 @@
+query Documents {
+  documents {
+    id
+    title
+  }
+}
+
+query Document($id: ID!) {
+  document(id: $id) {
+    id
+    title
+    body
+  }
+}
+
+mutation SaveDocument($id: ID!, $body: String!) {
+  saveDocument(id: $id, body: $body) {
+    id
+  }
+}

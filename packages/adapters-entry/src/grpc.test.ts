@@ -366,6 +366,49 @@ describe('gRPC servers and their contracts (P287)', () => {
     });
   });
 
+  it("says each field a handler reads off its request that the message does not declare under the loader's names (P297)", () => {
+    const fields = (rows: Unresolved[]): Array<[string, unknown, unknown]> =>
+      rows.filter((row) => row.reason === 'grpc-field-undeclared').map((row) => [String(row.meta?.['field']), row.meta?.['named'], row.level]);
+    // camelCase: `userId` and `item` are the message's; `user_id` is named `userId`; `cart` is none of it.
+    const served = read({
+      '/svc/index.js': `
+        const grpc = require('@grpc/grpc-js');
+        const loader = require('@grpc/proto-loader');
+        const pkg = grpc.loadPackageDefinition(loader.loadSync('shop.proto'));
+        function addItem(call, callback) {
+          const { userId, cart } = call.request;
+          const request = call.request;
+          callback(null, { ok: request.item !== undefined && request.user_id !== userId && cart && call.request.serialize() });
+        }
+        new grpc.Server().addService(pkg.shop.CartService.service, { getCart: ({ request }, cb) => cb(null, request.userId), addItem });
+      `,
+    });
+    expect(fields(served.rows)).toEqual([
+      ['cart', undefined, 'info'],
+      ['user_id', 'userId', 'info'],
+    ]);
+    // A NestJS controller's message, under a loader keeping the case.
+    const { rows } = read(
+      {
+        '/svc/src/main.ts': `
+          import { Transport } from '@nestjs/microservices';
+          export const options = { transport: Transport.GRPC, options: { package: 'shop', protoPath: 'shop.proto', loader: { keepCase: true } } };
+        `,
+        '/svc/src/cart.controller.ts': `
+          import { Controller } from '@nestjs/common';
+          import { GrpcMethod } from '@nestjs/microservices';
+          @Controller()
+          export class CartController {
+            @GrpcMethod('CartService', 'AddItem') addItem(data: { user_id: string }) { return { ok: data.user_id !== '' && data.userId }; }
+            @GrpcMethod('CartService', 'GetCart') getCart({ user_id }: { user_id: string }) { return { user_id }; }
+          }
+        `,
+      },
+      { '@grpc/grpc-js': '^1.0.0', '@nestjs/microservices': '^10.0.0' },
+    );
+    expect(fields(rows)).toEqual([['userId', 'user_id', 'info']]);
+  });
+
   it('draws the health and reflection services a package hands the server, and says one it does not know', () => {
     const { entries, rows } = read({
       '/svc/src/server.ts': `

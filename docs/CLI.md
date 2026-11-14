@@ -750,6 +750,32 @@ class's method of that name, a functional guard's function, a factory's call
 and line - and a functional guard's calls on `inject(Service)` are its edges
 on (`fixtures/front-end-route-branches`).
 
+What P291 left open is read too (P297). A link component of the
+application's own is read through to the link it renders: `<HelpLink
+to="/billing">` rendering `` <Link to={`/help${to}`}> `` lands on
+`/help/billing`, and `<LangLink href="/pricing">` rendering `<Link
+href={withLang(locale, href)}>` - the prop handed to a function with the
+locale - lands on the page under the top `[locale]` segment, `heuristic`, with
+a `navigation-locale-prefixed` note naming the link, whether or not a
+middleware declares the prefix. A component rendering such a link with its
+own prop (`<Button href>`) or styled from one (`styled(LangLink)`) is one
+too; the edge carries `meta.wrapper`, and the link inside the wrapper says
+nothing of its own. A route table's list may be a registry of the
+repository's own: `PluginManager.getHooks(Hook.Settings)`, a method reading a
+field of its class that other methods add to, is every entry handed to those
+methods anywhere in the repository (`PluginManager.add([{ type:
+Hook.Settings, ... }])`), only those filed under the key the call names. An
+entry written inside a `forEach` / `map` over another list is one entry per
+element, a member read off the element (`plugin.id`, `plugin.value.component`)
+taken from it, through spreads and a JSON module it spreads. A first segment
+is a locale only where the application declares it - the Next configuration's
+`i18n.locales`, next-intl's `defineRouting({ locales })`, the values the
+segment's `generateStaticParams` builds - and by its shape only where it
+declares none. An Angular route's `canDeactivate`, the route's own first, then
+each route it is nested in, is a `calls` edge from its screen with
+`meta.leaving: true` and an order of its own
+(`fixtures/locale-links-registries-sdk-grpc`).
+
 A factory that does more than hand back its object of functions keeps its own
 body as a scope, and a call written in one of the object's members is now held
 by the member alone, not by both (P288).
@@ -878,6 +904,14 @@ contract declares that the server registering the service does not implement
 a NestJS decorator names that the contract does not declare a
 `grpc-method-undeclared` finding, both informational
 (`fixtures/grpc-contract-messages`).
+
+A field a handler reads off its request - `call.request.zone`, `const {
+productId } = call.request`, a NestJS method's `data.productId` - that the
+method's message does not declare under the names the service's loader hands
+is a `grpc-field-undeclared` finding (info), naming the field's other spelling
+where it is the loader's case that differs. An answer a caller whose loader
+keeps the case reads (`{ units_left }`) is compared with the server's message
+under the server's names (P297, `fixtures/locale-links-registries-sdk-grpc`).
 
 **Several GraphQL endpoints, and the client each operation is sent with
 (P266).** A NestJS server that imports `GraphQLModule.forRoot*` more than once
@@ -3709,7 +3743,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread`, `mcp-name-dynamic` (P270) |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch`, `procedure-link-dynamic`, `procedure-link-socket` (info), `procedure-link-unserved`, `procedure-prefix-unread`, `procedure-contract-unread`, `procedure-unmounted` (info, P270) |
-| gRPC services and calls (P274) | `grpc-service-unread` (a service registered, or a client made, that cannot be named), `grpc-contract-unread` (info: a service no `.proto` file of the repository declares, its methods named as written), `grpc-method-unserved` (a method a contract declares that nothing configured implements), `grpc-package-service` (info: a service a package implements whose contract is not known, its methods not drawn), `grpc-method-unimplemented` (info finding: a method the contract declares that the server registering the service does not implement), `grpc-method-undeclared` (info finding: a member a server implements for a service that its contract does not declare) |
+| gRPC services and calls (P274) | `grpc-service-unread` (a service registered, or a client made, that cannot be named), `grpc-contract-unread` (info: a service no `.proto` file of the repository declares, its methods named as written), `grpc-method-unserved` (a method a contract declares that nothing configured implements), `grpc-package-service` (info: a service a package implements whose contract is not known, its methods not drawn), `grpc-method-unimplemented` (info finding: a method the contract declares that the server registering the service does not implement), `grpc-method-undeclared` (info finding: a member a server implements for a service that its contract does not declare), `grpc-field-undeclared` (info finding: a field a handler reads off its request that the message does not declare under the loader's names, P297) |
 | Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `service-binding-unknown`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread`, `api-client-base-unread` |
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-public-declared` (info), `marker-reason-missing` (info), `route-shadowed` |
 | What a framework's build would have written (P240) | `aliases-from-convention` (info), `aliases-from-config` (info), `implicit-imports-from-convention` (info), `implicit-import-ambiguous`, `framework-layer-unread`, `framework-setting-dynamic` |

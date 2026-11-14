@@ -1,6 +1,7 @@
 import { evaluateExpression } from '@flowatlas/core';
-import type { Node as TsNode } from 'ts-morph';
+import type { ObjectLiteralExpression, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
+import { boundRead, type Bindings } from './bound-entries.js';
 
 /**
  * The addresses a front end's path expression spells (P288), read the way a
@@ -27,10 +28,37 @@ const MOST = 8;
 const DEPTH = 4;
 
 /** What a parameter holds in one call: its values, the values of a rest parameter, or nothing passed. */
-type Bound = { readonly values: readonly SpelledPath[] } | { readonly rest: ReadonlyArray<readonly SpelledPath[]> } | { readonly absent: true };
+type Bound =
+  | { readonly values: readonly SpelledPath[] }
+  | { readonly rest: ReadonlyArray<readonly SpelledPath[]> }
+  | { readonly absent: true }
+  /** An element of a list an entry is written over, the object it is (P297). */
+  | { readonly object: ObjectLiteralExpression };
 type Env = ReadonlyMap<TsNode, Bound>;
 
 const NO_ENV: Env = new Map();
+
+/** The elements bound in an environment, kept where a `const` or a default is read without the call's parameters (P297). */
+const objectsOf = (env: Env): Env => {
+  if (env.size === 0) return NO_ENV;
+  const kept = new Map<TsNode, Bound>();
+  for (const [declaration, bound] of env) if ('object' in bound) kept.set(declaration, bound);
+  return kept.size === 0 ? NO_ENV : kept;
+};
+
+const bindingsOf = (env: Env): Bindings | undefined => {
+  if (env.size === 0) return undefined;
+  const bindings = new Map<TsNode, ObjectLiteralExpression>();
+  for (const [declaration, bound] of env) if ('object' in bound) bindings.set(declaration, bound.object);
+  return bindings.size === 0 ? undefined : bindings;
+};
+
+/** The one address an expression spells for certain: no hole, no guess. */
+const certainText = (node: TsNode, env: Env): string | undefined => {
+  const read = spell(node, env, 0);
+  const [only] = read ?? [];
+  return read?.length === 1 && only !== undefined && only.guessed !== true && !only.text.includes('${') ? only.text : undefined;
+};
 
 const bare = (node: TsNode): TsNode => {
   let value = node;
@@ -86,11 +114,17 @@ const decided = (condition: TsNode, env: Env): boolean | undefined => {
   const length = restLength(value, env);
   if (length !== undefined) return length > 0;
   const bound = parameterOf(value, env);
-  if (bound !== undefined) {
+  if (bound !== undefined && !('object' in bound)) {
     if ('absent' in bound) return false;
     if ('rest' in bound) return true;
     // A text written in place is there; one read at run time may be empty.
     return bound.values.every((path) => !path.text.includes('${') && path.text !== '') ? true : undefined;
+  }
+  // Two values an entry writes, compared (`group === 'Integrations'` where the element writes its group, P297).
+  if (Node.isBinaryExpression(value) && bindingsOf(env) !== undefined && ['===', '==', '!==', '!='].includes(value.getOperatorToken().getText())) {
+    const left = certainText(value.getLeft(), env);
+    const right = left === undefined ? undefined : certainText(value.getRight(), env);
+    if (left !== undefined && right !== undefined) return value.getOperatorToken().getText().startsWith('=') ? left === right : left !== right;
   }
   if (Node.isBinaryExpression(value)) {
     const left = restLength(value.getLeft(), env);
@@ -210,6 +244,20 @@ const spell = (node: TsNode, env: Env, depth: number): SpelledPath[] | undefined
     }
     return distinct.length === 1 ? distinct : guessedAll(distinct);
   }
+  // A member of an element an entry is written over: the element's own value under that key (P297).
+  const member = boundRead(value, bindingsOf(env));
+  if (member !== undefined) {
+    if (member === 'absent' || member.rest.length > 0) return undefined;
+    const found = member.found;
+    if ('value' in found) return typeof found.value === 'string' || typeof found.value === 'number' ? [{ text: String(found.value) }] : undefined;
+    return depth < DEPTH ? spell(found.node, objectsOf(env), depth + 1) : undefined;
+  }
+  // `a ?? b` over an element: the first where the element writes it, the second where it does not (P297).
+  if (Node.isBinaryExpression(value) && ['??', '||'].includes(value.getOperatorToken().getText())) {
+    const left = boundRead(value.getLeft(), bindingsOf(env));
+    if (left === 'absent') return spell(value.getRight(), env, depth);
+    if (left !== undefined) return spell(value.getLeft(), env, depth);
+  }
   const bound = parameterOf(value, env);
   if (bound !== undefined) return 'values' in bound ? [...bound.values] : undefined;
   if (Node.isCallExpression(value)) return spellCall(value, env, depth);
@@ -218,7 +266,7 @@ const spell = (node: TsNode, env: Env, depth: number): SpelledPath[] | undefined
     const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
     if (declaration !== undefined && Node.isVariableDeclaration(declaration) && declaration.getVariableStatement()?.getDeclarationKind() === 'const') {
       const initializer = declaration.getInitializer();
-      if (initializer !== undefined && depth < DEPTH) return spell(initializer, NO_ENV, depth + 1);
+      if (initializer !== undefined && depth < DEPTH) return spell(initializer, objectsOf(env), depth + 1);
     }
   }
   if (Node.isIdentifier(value) || Node.isPropertyAccessExpression(value) || Node.isElementAccessExpression(value)) {
@@ -244,7 +292,7 @@ const spellCall = (call: TsNode, env: Env, depth: number): SpelledPath[] | undef
   if (depth >= DEPTH) return undefined;
   const fn = calledFunction(callee);
   if (fn === undefined || !Node.isFunctionLikeDeclaration(fn)) return undefined;
-  const scope = new Map<TsNode, Bound>();
+  const scope = new Map<TsNode, Bound>(objectsOf(env));
   fn.getParameters().forEach((parameter, index) => {
     if (parameter.isRestParameter()) {
       scope.set(parameter, { rest: args.slice(index).map((arg) => spell(arg, env, depth) ?? [hole(arg)]) });
@@ -271,8 +319,9 @@ const spellCall = (call: TsNode, env: Env, depth: number): SpelledPath[] | undef
  * The addresses an expression spells, or nothing where it is not text (a
  * value read at run time on its own, an object, a call of a package).
  */
-export const spelledPaths = (node: TsNode): SpelledPath[] | undefined => {
-  const read = spell(node, NO_ENV, 0);
+export const spelledPaths = (node: TsNode, bindings?: Bindings): SpelledPath[] | undefined => {
+  const env: Env = bindings === undefined || bindings.size === 0 ? NO_ENV : new Map([...bindings].map(([declaration, object]) => [declaration, { object }] as const));
+  const read = spell(node, env, 0);
   // A hole and nothing else is a value read at run time, not an address.
   if (read === undefined || read.every((path) => /^\$\{[^}]*\}$/.test(path.text))) return undefined;
   return read;

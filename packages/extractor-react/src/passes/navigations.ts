@@ -6,7 +6,8 @@ import type { IndexedFunction } from '../index-functions.js';
 import { drawNavigations, navigationConfidence, type DrawEdge, type NavigatingScript, type Page } from '../sfc/navigation.js';
 import { routeNames } from '../sfc/routes.js';
 import { repoFiles } from '../sfc/stores.js';
-import { localePrefixOf } from '../util/locale-routing.js';
+import type { Bindings } from '../util/bound-entries.js';
+import { declaredLocalesOf, localePrefixOf, localeSegmentOf } from '../util/locale-routing.js';
 import { listedRoutes, routePathsOf, routePlacingOf, routeScreenOf } from './routes.js';
 import { definePass } from './types.js';
 
@@ -38,7 +39,11 @@ export const navigationsPass = definePass('navigations', (ctx: ReactExtractConte
     for (const path of route.split(' ')) {
       const placing = routePlacingOf(ctx, indexed.id, path);
       const locale = localePrefixOf(ctx.repoDir, indexed.file, path);
+      const segment = localeSegmentOf(indexed.file, path);
+      const locales = segment === undefined ? undefined : declaredLocalesOf(ctx.project, ctx.repoDir, indexed.file, path);
       pages.push({
+        ...(segment === undefined ? {} : { localeSegment: segment }),
+        ...(locales === undefined ? {} : { locales }),
         file: indexed.file,
         route: path,
         fn: indexed,
@@ -89,8 +94,10 @@ const SCREEN_KEYS = ['element', 'Component', 'component'];
  */
 const unplacedRoutes = (ctx: ReactExtractContext, sources: readonly SourceFile[]): number => {
   let count = 0;
-  const placed = (path: TsNode | undefined, screen: TsNode | undefined): boolean => {
-    if (routePathsOf(path) === undefined) return false;
+  const placed = (path: TsNode | undefined, screen: TsNode | undefined, bound?: Bindings): boolean => {
+    if (routePathsOf(path, bound) === undefined) return false;
+    // An entry written over a registry's elements: its screen is read off the element (P297).
+    if (bound !== undefined) return routeScreenOf(ctx, screen, bound) !== undefined;
     const inner = screen !== undefined && Node.isJsxExpression(screen) ? screen.getExpression() : screen;
     // No screen named: a layout or a redirect, which shows nothing a navigation lands on.
     if (inner === undefined) return true;
@@ -126,7 +133,7 @@ const unplacedRoutes = (ctx: ReactExtractContext, sources: readonly SourceFile[]
       // A route written over a list's items is one per entry, each counted as the route reader reads it (P291).
       const listed = listedRoutes(path, shown);
       if (listed !== undefined) {
-        count += listed.unread + listed.routes.filter((each) => !placed(each.path, each.screen)).length;
+        count += listed.unread + listed.routes.filter((each) => !placed(each.path, each.screen, each.bound)).length;
         return;
       }
       if (!placed(path, shown)) count += 1;

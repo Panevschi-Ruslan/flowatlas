@@ -18,6 +18,7 @@ export interface Route {
   canActivate?: unknown[];
   canActivateChild?: unknown[];
   canMatch?: unknown[];
+  canDeactivate?: unknown[];
   resolve?: Record<string, unknown>;
 }
 export type Routes = Route[];
@@ -171,5 +172,52 @@ describe("a route's guards and resolvers in front of its screen, and one edge pe
     const edge = graph.edges.find((each) => each.meta?.['navigates'] !== undefined && each.to.endsWith('ReportsComponent'));
     expect(edge?.meta?.['navigates']).toBe('/reports?range=week');
     expect(edge?.meta?.['alsoNavigates']).toEqual(['/reports']);
+  });
+});
+
+describe('what the router runs as a screen is left (P297)', () => {
+  const left = extract({
+    'app.routes.ts': `import { provideRouter } from '@angular/router';
+import { EditorComponent } from './editor.component';
+import { confirmLeave, signedIn, UnsavedGuard } from './guards';
+export const config = provideRouter([
+  {
+    path: 'admin',
+    canDeactivate: [confirmLeave],
+    children: [{ path: 'editor', component: EditorComponent, canActivate: [signedIn], canDeactivate: [UnsavedGuard, () => true] }],
+  },
+]);
+`,
+    'guards.ts': `import { Injectable } from '@angular/core';
+export const signedIn = () => true;
+export const confirmLeave = () => true;
+@Injectable({ providedIn: 'root' })
+export class UnsavedGuard {
+  canDeactivate(editor: { saved: boolean }): boolean { return editor.saved; }
+}
+`,
+    'editor.component.ts': `import { Component } from '@angular/core';
+@Component({ selector: 'app-editor', template: '<textarea></textarea>' })
+export class EditorComponent { saved = true; }
+`,
+  });
+  const byId = new Map(left.nodes.map((node) => [node.id, node]));
+  const label = (id: string): string => {
+    const node = byId.get(id);
+    return node?.type === 'method' ? String(node.id.split(':').at(-1)) : String(node?.label);
+  };
+
+  it("draws each canDeactivate on the way out, the route's own first, in an order of its own", () => {
+    const guards = left.edges
+      .filter((edge) => edge.meta?.['guard'] !== undefined)
+      .map((edge) => `${label(edge.from)} ${edge.meta?.['leaving'] === true ? 'out' : 'in'} ${String(edge.meta?.['order'])} ${String(edge.meta?.['guard'])} ${label(edge.to)}`)
+      .sort();
+    expect(guards).toEqual([
+      'EditorComponent in 0 canActivate signedIn',
+      // The route's own, as written, then the route it is nested in.
+      'EditorComponent out 0 canDeactivate UnsavedGuard.canDeactivate',
+      'EditorComponent out 1 canDeactivate canDeactivate@8',
+      'EditorComponent out 2 canDeactivate confirmLeave',
+    ]);
   });
 });

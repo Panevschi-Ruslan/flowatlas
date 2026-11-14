@@ -1,0 +1,2206 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-14T18:03:47.251Z",
+  "services": [
+    {
+      "name": "wiki",
+      "repo": "./wiki",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "portal",
+      "repo": "./portal",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "grpc",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "checkout",
+      "repo": "./checkout",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "checkout#src/app.ts:GET /level/:id@20",
+      "type": "function",
+      "label": "GET /level/:id@20",
+      "repo": "checkout",
+      "file": "src/app.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "console#src/app/editor.component.ts:EditorComponent",
+      "type": "ui_component",
+      "label": "EditorComponent",
+      "repo": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-editor"
+      }
+    },
+    {
+      "id": "console#src/app/editor.component.ts:EditorComponent.list",
+      "type": "method",
+      "label": "EditorComponent.list",
+      "repo": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/app/editor.component.ts:EditorComponent.open",
+      "type": "method",
+      "label": "EditorComponent.open",
+      "repo": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/app/editor.component.ts:EditorComponent.save",
+      "type": "method",
+      "label": "EditorComponent.save",
+      "repo": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/app/editor.component.ts:EditorComponent.watchList",
+      "type": "method",
+      "label": "EditorComponent.watchList",
+      "repo": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/app/guards.ts:UnsavedChangesGuard",
+      "type": "provider",
+      "label": "UnsavedChangesGuard",
+      "repo": "console",
+      "file": "src/app/guards.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "console#src/app/guards.ts:UnsavedChangesGuard.canDeactivate",
+      "type": "method",
+      "label": "UnsavedChangesGuard.canDeactivate",
+      "repo": "console",
+      "file": "src/app/guards.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "editor",
+              "type": "type:console#EditorComponent"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "console#src/app/guards.ts:leaveAdmin",
+      "type": "function",
+      "label": "leaveAdmin",
+      "repo": "console",
+      "file": "src/app/guards.ts",
+      "line": 8
+    },
+    {
+      "id": "console#src/app/guards.ts:signedIn",
+      "type": "function",
+      "label": "signedIn",
+      "repo": "console",
+      "file": "src/app/guards.ts",
+      "line": 5
+    },
+    {
+      "id": "entry:checkout:http:GET:/level/:param",
+      "type": "entry",
+      "label": "GET /level/:param",
+      "repo": "checkout",
+      "file": "src/app.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/level/:param",
+        "rawPath": "/level/:id",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:rpc:grpc:stock.StockService/GetLevel",
+      "type": "entry",
+      "label": "grpc stock.StockService/GetLevel",
+      "repo": "stock",
+      "file": "index.js",
+      "line": 18,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:stock.StockService/GetLevel",
+        "call": "unary",
+        "service": "stock.StockService",
+        "method": "GetLevel",
+        "request": "LevelRequest",
+        "response": "Level",
+        "contract": "../proto/stock.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:stock#.stock.LevelRequest"
+            }
+          ],
+          "returns": "type:stock#.stock.Level"
+        },
+        "adapter": "grpc-server",
+        "registration": "addService",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "http_out:checkout#src/app.ts:21:3",
+      "type": "http_out",
+      "label": "grpc stock.StockService/GetLevel",
+      "repo": "checkout",
+      "file": "src/app.ts",
+      "line": 21,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "grpc:stock.StockService/GetLevel",
+        "call": "unary",
+        "operation": "getLevel",
+        "client": "grpc",
+        "service": "stock.StockService",
+        "method": "GetLevel",
+        "contract": "../proto/stock.proto",
+        "link": {
+          "protocol": "grpc",
+          "baseUrlEnv": "STOCK_ADDR"
+        },
+        "protoFieldNames": "proto",
+        "inputKeys": [
+          "product_id",
+          "warehouse_id"
+        ],
+        "inputType": "{product_id:any;warehouse_id:1}",
+        "outputType": "type:checkout#Level",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "portal#src/app/[locale]/go/[plan]/page.tsx:PlanPage",
+      "type": "ui_component",
+      "label": "PlanPage",
+      "repo": "portal",
+      "file": "src/app/[locale]/go/[plan]/page.tsx",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/:param/go/:param"
+      }
+    },
+    {
+      "id": "portal#src/app/[locale]/pricing/page.tsx:PricingPage",
+      "type": "ui_component",
+      "label": "PricingPage",
+      "repo": "portal",
+      "file": "src/app/[locale]/pricing/page.tsx",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/:param/pricing"
+      }
+    },
+    {
+      "id": "portal#src/components/Nav.tsx:Nav",
+      "type": "ui_component",
+      "label": "Nav",
+      "repo": "portal",
+      "file": "src/components/Nav.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "repo:checkout",
+      "type": "repo",
+      "label": "checkout",
+      "repo": "checkout",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes",
+            "grpc-server"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/app.ts",
+            "line": 24
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:console",
+      "type": "repo",
+      "label": "console",
+      "repo": "console",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "templates": 1,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:portal",
+      "type": "repo",
+      "label": "portal",
+      "repo": "portal",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 4,
+          "components": 3,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        },
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "repo:site",
+      "type": "repo",
+      "label": "site",
+      "repo": "site",
+      "meta": {
+        "stats": {
+          "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 10,
+          "components": 7,
+          "hooks": 1
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        },
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "grpc-server"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:wiki",
+      "type": "repo",
+      "label": "wiki",
+      "repo": "wiki",
+      "meta": {
+        "stats": {
+          "files": 21,
+          "filesRead": 21,
+          "filesUnreadable": 0,
+          "functions": 16,
+          "components": 10,
+          "hooks": 1,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "site#src/app/[locale]/layout.tsx:LocaleLayout",
+      "type": "ui_component",
+      "label": "LocaleLayout",
+      "repo": "site",
+      "file": "src/app/[locale]/layout.tsx",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ children }",
+              "type": "{children:unknown}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "site#src/app/[locale]/page.tsx:HomePage",
+      "type": "ui_component",
+      "label": "HomePage",
+      "repo": "site",
+      "file": "src/app/[locale]/page.tsx",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/:param"
+      }
+    },
+    {
+      "id": "site#src/app/[locale]/partners/page.tsx:PartnersPage",
+      "type": "ui_component",
+      "label": "PartnersPage",
+      "repo": "site",
+      "file": "src/app/[locale]/partners/page.tsx",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/:param/partners"
+      }
+    },
+    {
+      "id": "site#src/app/[locale]/pricing/page.tsx:PricingPage",
+      "type": "ui_component",
+      "label": "PricingPage",
+      "repo": "site",
+      "file": "src/app/[locale]/pricing/page.tsx",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/:param/pricing"
+      }
+    },
+    {
+      "id": "site#src/components/Button.tsx:Button",
+      "type": "ui_component",
+      "label": "Button",
+      "repo": "site",
+      "file": "src/components/Button.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ href, children }",
+              "type": "{href?:string;children:unknown}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "site#src/components/Footer.tsx:Footer",
+      "type": "ui_component",
+      "label": "Footer",
+      "repo": "site",
+      "file": "src/components/Footer.tsx",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "site#src/i18n/LangLink.tsx:LangLink",
+      "type": "ui_component",
+      "label": "LangLink",
+      "repo": "site",
+      "file": "src/i18n/LangLink.tsx",
+      "line": 9,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ href, ...props }",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "site#src/i18n/use-locale.ts:useLocale",
+      "type": "function",
+      "label": "useLocale",
+      "repo": "site",
+      "file": "src/i18n/use-locale.ts",
+      "line": 7,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "'en'|'fr'"
+        }
+      }
+    },
+    {
+      "id": "site#src/i18n/with-lang.ts:withLang",
+      "type": "function",
+      "label": "withLang",
+      "repo": "site",
+      "file": "src/i18n/with-lang.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "locale",
+              "type": "'en'|'fr'"
+            },
+            {
+              "name": "href",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "stock#index.js:getLevel",
+      "type": "function",
+      "label": "getLevel",
+      "repo": "stock",
+      "file": "index.js",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "call",
+              "type": "any"
+            },
+            {
+              "name": "callback",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:console#src/app/editor.component.ts:14:12",
+      "type": "ui_api_call",
+      "label": "query Documents /graphql",
+      "repo": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo-angular",
+        "client": "apollo-angular",
+        "via": "literal",
+        "graphql": {
+          "operation": "query",
+          "name": "Documents",
+          "fields": [
+            {
+              "field": "documents",
+              "line": 2,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 3
+                },
+                {
+                  "field": "title",
+                  "line": 4
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/graphql/documents.graphql",
+            "line": 1
+          },
+          "library": "apollo-angular"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:console#src/app/editor.component.ts:18:12",
+      "type": "ui_api_call",
+      "label": "query Documents /graphql",
+      "repo": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo-angular",
+        "client": "apollo-angular",
+        "via": "literal",
+        "graphql": {
+          "operation": "query",
+          "name": "Documents",
+          "fields": [
+            {
+              "field": "documents",
+              "line": 2,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 3
+                },
+                {
+                  "field": "title",
+                  "line": 4
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/graphql/documents.graphql",
+            "line": 1
+          },
+          "library": "apollo-angular"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:console#src/app/editor.component.ts:22:12",
+      "type": "ui_api_call",
+      "label": "query Document /graphql",
+      "repo": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo-angular",
+        "client": "apollo-angular",
+        "via": "literal",
+        "graphql": {
+          "operation": "query",
+          "name": "Document",
+          "fields": [
+            {
+              "field": "document",
+              "arguments": [
+                "id"
+              ],
+              "line": 9,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 10
+                },
+                {
+                  "field": "title",
+                  "line": 11
+                },
+                {
+                  "field": "body",
+                  "line": 12
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "id",
+              "type": "ID!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/graphql/documents.graphql",
+            "line": 8
+          },
+          "library": "apollo-angular"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:console#src/app/editor.component.ts:27:12",
+      "type": "ui_api_call",
+      "label": "mutation SaveDocument /graphql",
+      "repo": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo-angular",
+        "client": "apollo-angular",
+        "via": "literal",
+        "graphql": {
+          "operation": "mutation",
+          "name": "SaveDocument",
+          "fields": [
+            {
+              "field": "saveDocument",
+              "arguments": [
+                "id",
+                "body"
+              ],
+              "line": 17,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 18
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "id",
+              "type": "ID!",
+              "required": true
+            },
+            {
+              "name": "body",
+              "type": "String!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/graphql/documents.graphql",
+            "line": 16
+          },
+          "library": "apollo-angular"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:wiki#src/components/Header.tsx:11:10@2:41",
+      "type": "ui_api_call",
+      "label": "GET /api/teams",
+      "repo": "wiki",
+      "file": "src/components/Header.tsx",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/teams",
+        "path": "/api/teams",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "through": "getJson"
+      }
+    },
+    {
+      "id": "ui_api_call:wiki#src/components/Header.tsx:12:10@2:41",
+      "type": "ui_api_call",
+      "label": "GET /api/members",
+      "repo": "wiki",
+      "file": "src/components/Header.tsx",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/members",
+        "path": "/api/members",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "through": "getJson"
+      }
+    },
+    {
+      "id": "ui_api_call:wiki#src/stores/ActivityStore.ts:13:23",
+      "type": "ui_api_call",
+      "label": "GET /api/activity",
+      "repo": "wiki",
+      "file": "src/stores/ActivityStore.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/activity",
+        "path": "/api/activity",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "ui_api_call:wiki#src/stores/ActivityStore.ts:19:11",
+      "type": "ui_api_call",
+      "label": "DELETE /api/activity/:param",
+      "repo": "wiki",
+      "file": "src/stores/ActivityStore.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "url": "/api/activity/:param",
+        "path": "/api/activity/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "wiki#src/components/Header.tsx:Header",
+      "type": "ui_component",
+      "label": "Header",
+      "repo": "wiki",
+      "file": "src/components/Header.tsx",
+      "line": 9,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "wiki#src/components/HelpLink.tsx:HelpLink",
+      "type": "ui_component",
+      "label": "HelpLink",
+      "repo": "wiki",
+      "file": "src/components/HelpLink.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ to, children }",
+              "type": "{to:string;children:unknown}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "wiki#src/hooks/useSettingsEntries.ts:useSettingsEntries",
+      "type": "function",
+      "label": "useSettingsEntries",
+      "repo": "wiki",
+      "file": "src/hooks/useSettingsEntries.ts",
+      "line": 16,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:wiki#SettingsEntry[]"
+        }
+      }
+    },
+    {
+      "id": "wiki#src/lib/http.ts:getJson",
+      "type": "function",
+      "label": "getJson",
+      "repo": "wiki",
+      "file": "src/lib/http.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "url",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "wiki#src/lib/paths.ts:integrationPath",
+      "type": "function",
+      "label": "integrationPath",
+      "repo": "wiki",
+      "file": "src/lib/paths.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "wiki#src/lib/paths.ts:settingsPath",
+      "type": "function",
+      "label": "settingsPath",
+      "repo": "wiki",
+      "file": "src/lib/paths.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "segments",
+              "type": "string[]",
+              "rest": true
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "wiki#src/lib/quiet.ts:loadQuietly",
+      "type": "function",
+      "label": "loadQuietly",
+      "repo": "wiki",
+      "file": "src/lib/quiet.ts",
+      "line": 5
+    },
+    {
+      "id": "wiki#src/plugins/audit/client/Settings.tsx:AuditSettings",
+      "type": "ui_component",
+      "label": "AuditSettings",
+      "repo": "wiki",
+      "file": "src/plugins/audit/client/Settings.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/settings/audit"
+      }
+    },
+    {
+      "id": "wiki#src/plugins/calendar/client/Settings.tsx:CalendarSettings",
+      "type": "ui_component",
+      "label": "CalendarSettings",
+      "repo": "wiki",
+      "file": "src/plugins/calendar/client/Settings.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/settings/integrations/calendar"
+      }
+    },
+    {
+      "id": "wiki#src/plugins/emoji/client/Settings.tsx:EmojiSettings",
+      "type": "ui_component",
+      "label": "EmojiSettings",
+      "repo": "wiki",
+      "file": "src/plugins/emoji/client/Settings.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "wiki#src/routes/index.tsx:Routes",
+      "type": "ui_component",
+      "label": "Routes",
+      "repo": "wiki",
+      "file": "src/routes/index.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "wiki#src/routes/settings.tsx:SettingsRoutes",
+      "type": "ui_component",
+      "label": "SettingsRoutes",
+      "repo": "wiki",
+      "file": "src/routes/settings.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/settings"
+      }
+    },
+    {
+      "id": "wiki#src/screens/HelpBilling.tsx:HelpBilling",
+      "type": "ui_component",
+      "label": "HelpBilling",
+      "repo": "wiki",
+      "file": "src/screens/HelpBilling.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/help/billing"
+      }
+    },
+    {
+      "id": "wiki#src/screens/Home.tsx:Home",
+      "type": "ui_component",
+      "label": "Home",
+      "repo": "wiki",
+      "file": "src/screens/Home.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "wiki#src/screens/settings/Profile.tsx:Profile",
+      "type": "ui_component",
+      "label": "Profile",
+      "repo": "wiki",
+      "file": "src/screens/settings/Profile.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/settings"
+      }
+    },
+    {
+      "id": "wiki#src/stores/ActivityStore.ts:ActivityStore.load",
+      "type": "function",
+      "label": "ActivityStore.load",
+      "repo": "wiki",
+      "file": "src/stores/ActivityStore.ts",
+      "line": 12
+    },
+    {
+      "id": "wiki#src/stores/ActivityStore.ts:ActivityStore.remove",
+      "type": "function",
+      "label": "ActivityStore.remove",
+      "repo": "wiki",
+      "file": "src/stores/ActivityStore.ts",
+      "line": 18
+    }
+  ],
+  "edges": [
+    {
+      "from": "checkout#src/app.ts:GET /level/:id@20",
+      "to": "http_out:checkout#src/app.ts:21:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 21
+    },
+    {
+      "from": "console#src/app/editor.component.ts:EditorComponent",
+      "to": "console#src/app/guards.ts:UnsavedChangesGuard.canDeactivate",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:console#EditorComponent"
+      ],
+      "returns": "boolean",
+      "file": "src/app/routes.ts",
+      "line": 10,
+      "meta": {
+        "guard": "canDeactivate",
+        "route": "/admin/editor",
+        "leaving": true,
+        "order": 0
+      }
+    },
+    {
+      "from": "console#src/app/editor.component.ts:EditorComponent",
+      "to": "console#src/app/guards.ts:leaveAdmin",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 9,
+      "meta": {
+        "guard": "canDeactivate",
+        "route": "/admin/editor",
+        "leaving": true,
+        "order": 1
+      }
+    },
+    {
+      "from": "console#src/app/editor.component.ts:EditorComponent",
+      "to": "console#src/app/guards.ts:signedIn",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 10,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/admin/editor",
+        "order": 0
+      }
+    },
+    {
+      "from": "console#src/app/editor.component.ts:EditorComponent.list",
+      "to": "ui_api_call:console#src/app/editor.component.ts:14:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/editor.component.ts",
+      "line": 14
+    },
+    {
+      "from": "console#src/app/editor.component.ts:EditorComponent.open",
+      "to": "ui_api_call:console#src/app/editor.component.ts:22:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/editor.component.ts",
+      "line": 22
+    },
+    {
+      "from": "console#src/app/editor.component.ts:EditorComponent.save",
+      "to": "ui_api_call:console#src/app/editor.component.ts:27:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/editor.component.ts",
+      "line": 27
+    },
+    {
+      "from": "console#src/app/editor.component.ts:EditorComponent.watchList",
+      "to": "ui_api_call:console#src/app/editor.component.ts:18:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/editor.component.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:checkout:http:GET:/level/:param",
+      "to": "checkout#src/app.ts:GET /level/:id@20",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{left:number}",
+      "file": "src/app.ts",
+      "line": 20,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:stock:rpc:grpc:stock.StockService/GetLevel",
+      "to": "stock#index.js:getLevel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "index.js",
+      "line": 8
+    },
+    {
+      "from": "http_out:checkout#src/app.ts:21:3",
+      "to": "entry:stock:rpc:grpc:stock.StockService/GetLevel",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 21,
+      "params": [
+        "{product_id:any;warehouse_id:1}"
+      ],
+      "returns": "type:checkout#Level",
+      "meta": {
+        "via": "link-url",
+        "targetService": "stock"
+      }
+    },
+    {
+      "from": "portal#src/components/Nav.tsx:Nav",
+      "to": "portal#src/app/[locale]/go/[plan]/page.tsx:PlanPage",
+      "type": "calls",
+      "confidence": "heuristic",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Nav.tsx",
+      "line": 8,
+      "meta": {
+        "navigates": "/go/pricing",
+        "route": "/:param/go/:param",
+        "page": "src/app/[locale]/go/[plan]/page.tsx",
+        "localePrefix": "[locale]",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "portal#src/components/Nav.tsx:Nav",
+      "to": "portal#src/app/[locale]/pricing/page.tsx:PricingPage",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Nav.tsx",
+      "line": 9,
+      "meta": {
+        "navigates": "/de/pricing",
+        "route": "/:param/pricing",
+        "page": "src/app/[locale]/pricing/page.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "site#src/app/[locale]/layout.tsx:LocaleLayout",
+      "to": "site#src/components/Footer.tsx:Footer",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/app/[locale]/layout.tsx",
+      "line": 15,
+      "meta": {
+        "renders": "Footer"
+      }
+    },
+    {
+      "from": "site#src/components/Button.tsx:Button",
+      "to": "site#src/i18n/LangLink.tsx:LangLink",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "unknown",
+      "file": "src/components/Button.tsx",
+      "line": 8,
+      "meta": {
+        "renders": "LangLink"
+      }
+    },
+    {
+      "from": "site#src/components/Footer.tsx:Footer",
+      "to": "site#src/app/[locale]/page.tsx:HomePage",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Footer.tsx",
+      "line": 14,
+      "meta": {
+        "navigates": "/fr",
+        "route": "/:param",
+        "page": "src/app/[locale]/page.tsx",
+        "link": "LangLink",
+        "wrapper": "LangLink"
+      }
+    },
+    {
+      "from": "site#src/components/Footer.tsx:Footer",
+      "to": "site#src/app/[locale]/partners/page.tsx:PartnersPage",
+      "type": "calls",
+      "confidence": "heuristic",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Footer.tsx",
+      "line": 15,
+      "meta": {
+        "navigates": "/partners",
+        "route": "/:param/partners",
+        "page": "src/app/[locale]/partners/page.tsx",
+        "localePrefix": "[locale]",
+        "link": "Button",
+        "wrapper": "Button"
+      }
+    },
+    {
+      "from": "site#src/components/Footer.tsx:Footer",
+      "to": "site#src/app/[locale]/pricing/page.tsx:PricingPage",
+      "type": "calls",
+      "confidence": "heuristic",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Footer.tsx",
+      "line": 13,
+      "meta": {
+        "navigates": "/pricing",
+        "route": "/:param/pricing",
+        "page": "src/app/[locale]/pricing/page.tsx",
+        "localePrefix": "[locale]",
+        "link": "FooterLink",
+        "wrapper": "LangLink"
+      }
+    },
+    {
+      "from": "site#src/components/Footer.tsx:Footer",
+      "to": "site#src/components/Button.tsx:Button",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{href?:string;children:unknown}"
+      ],
+      "returns": "unknown",
+      "file": "src/components/Footer.tsx",
+      "line": 15,
+      "meta": {
+        "renders": "Button"
+      }
+    },
+    {
+      "from": "site#src/components/Footer.tsx:Footer",
+      "to": "site#src/i18n/LangLink.tsx:LangLink",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "unknown",
+      "file": "src/components/Footer.tsx",
+      "line": 14,
+      "meta": {
+        "renders": "LangLink"
+      }
+    },
+    {
+      "from": "site#src/i18n/LangLink.tsx:LangLink",
+      "to": "site#src/i18n/use-locale.ts:useLocale",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "'en'|'fr'",
+      "file": "src/i18n/LangLink.tsx",
+      "line": 10
+    },
+    {
+      "from": "site#src/i18n/LangLink.tsx:LangLink",
+      "to": "site#src/i18n/with-lang.ts:withLang",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "'en'|'fr'",
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/i18n/LangLink.tsx",
+      "line": 11
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "ui_api_call:wiki#src/components/Header.tsx:11:10@2:41",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/components/Header.tsx",
+      "line": 11
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "ui_api_call:wiki#src/components/Header.tsx:12:10@2:41",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/components/Header.tsx",
+      "line": 12
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "wiki#src/components/HelpLink.tsx:HelpLink",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{to:string;children:unknown}"
+      ],
+      "returns": "unknown",
+      "file": "src/components/Header.tsx",
+      "line": 19,
+      "meta": {
+        "renders": "HelpLink"
+      }
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "wiki#src/lib/quiet.ts:loadQuietly",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/components/Header.tsx",
+      "line": 12
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "wiki#src/plugins/audit/client/Settings.tsx:AuditSettings",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Header.tsx",
+      "line": 18,
+      "meta": {
+        "navigates": "/settings/audit",
+        "route": "/settings/audit",
+        "page": "src/plugins/audit/client/Settings.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "wiki#src/plugins/calendar/client/Settings.tsx:CalendarSettings",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Header.tsx",
+      "line": 17,
+      "meta": {
+        "navigates": "/settings/integrations/calendar",
+        "route": "/settings/integrations/calendar",
+        "page": "src/plugins/calendar/client/Settings.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "wiki#src/components/Header.tsx:Header",
+      "to": "wiki#src/screens/HelpBilling.tsx:HelpBilling",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Header.tsx",
+      "line": 19,
+      "meta": {
+        "navigates": "/help/billing",
+        "route": "/help/billing",
+        "page": "src/screens/HelpBilling.tsx",
+        "link": "HelpLink",
+        "wrapper": "HelpLink"
+      }
+    },
+    {
+      "from": "wiki#src/hooks/useSettingsEntries.ts:useSettingsEntries",
+      "to": "wiki#src/lib/paths.ts:integrationPath",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/hooks/useSettingsEntries.ts",
+      "line": 22
+    },
+    {
+      "from": "wiki#src/hooks/useSettingsEntries.ts:useSettingsEntries",
+      "to": "wiki#src/lib/paths.ts:settingsPath",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string[]"
+      ],
+      "returns": "string",
+      "file": "src/hooks/useSettingsEntries.ts",
+      "line": 18
+    },
+    {
+      "from": "wiki#src/routes/settings.tsx:SettingsRoutes",
+      "to": "wiki#src/hooks/useSettingsEntries.ts:useSettingsEntries",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:wiki#SettingsEntry[]",
+      "file": "src/routes/settings.tsx",
+      "line": 6
+    },
+    {
+      "from": "wiki#src/stores/ActivityStore.ts:ActivityStore.load",
+      "to": "ui_api_call:wiki#src/stores/ActivityStore.ts:13:23",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/stores/ActivityStore.ts",
+      "line": 13
+    },
+    {
+      "from": "wiki#src/stores/ActivityStore.ts:ActivityStore.remove",
+      "to": "ui_api_call:wiki#src/stores/ActivityStore.ts:19:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/stores/ActivityStore.ts",
+      "line": 19
+    }
+  ],
+  "types": {
+    "type:checkout#Level": {
+      "name": "Level",
+      "kind": "object",
+      "declaredIn": "checkout#src/app.ts",
+      "structuralHash": "7e3fc455d55be22d",
+      "fields": [
+        {
+          "name": "units_left",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "back_order",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:console#EditorComponent": {
+      "name": "EditorComponent",
+      "kind": "object",
+      "declaredIn": "console#src/app/editor.component.ts",
+      "structuralHash": "2845348dbb017818",
+      "fields": [
+        {
+          "name": "saved",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "documentGql",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:express#Request<any,any,any>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:stock#.stock.Level": {
+      "name": "stock.Level",
+      "kind": "object",
+      "declaredIn": "stock#../proto/stock.proto",
+      "structuralHash": "9f6dafb43c5505bd",
+      "fields": [
+        {
+          "name": "unitsLeft",
+          "type": "number",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "units_left"
+          }
+        },
+        {
+          "name": "backOrder",
+          "type": "boolean",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "back_order"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "stock.Level"
+      }
+    },
+    "type:stock#.stock.LevelRequest": {
+      "name": "stock.LevelRequest",
+      "kind": "object",
+      "declaredIn": "stock#../proto/stock.proto",
+      "structuralHash": "c14fbfb30d1c7821",
+      "fields": [
+        {
+          "name": "productId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "product_id"
+          }
+        },
+        {
+          "name": "warehouseId",
+          "type": "number",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "warehouse_id"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "stock.LevelRequest"
+      }
+    },
+    "type:wiki#SettingsEntry": {
+      "name": "SettingsEntry",
+      "kind": "object",
+      "declaredIn": "wiki#src/hooks/useSettingsEntries.ts",
+      "structuralHash": "f92ddfed72efa6a8",
+      "fields": [
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "component",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app/editor.component.ts",
+      "line": 9,
+      "reason": "inject-token-unresolved",
+      "level": "info",
+      "hint": "The token is not a class, so there is nothing to point an edge at. Expected for an InjectionToken.",
+      "symbol": "EditorComponent.documentGql",
+      "service": "console"
+    },
+    {
+      "file": "src/app/editor.component.ts",
+      "line": 11,
+      "reason": "di-type-unresolved",
+      "hint": "Inject a class, or name the provider with @Inject(TOKEN).",
+      "symbol": "EditorComponent.constructor[0]",
+      "meta": {
+        "cause": "import-unresolved",
+        "package": "../generated/graphql.js"
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/app/editor.component.ts",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "service": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 14,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /graphql",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /graphql */.",
+      "symbol": "ui_api_call:console#src/app/editor.component.ts:14:12"
+    },
+    {
+      "file": "src/app/editor.component.ts",
+      "line": 17,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "service": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 18,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /graphql",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /graphql */.",
+      "symbol": "ui_api_call:console#src/app/editor.component.ts:18:12"
+    },
+    {
+      "file": "src/app/editor.component.ts",
+      "line": 21,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "service": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 22,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /graphql",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /graphql */.",
+      "symbol": "ui_api_call:console#src/app/editor.component.ts:22:12"
+    },
+    {
+      "file": "src/app/editor.component.ts",
+      "line": 25,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "service": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 27,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /graphql",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /graphql */.",
+      "symbol": "ui_api_call:console#src/app/editor.component.ts:27:12"
+    },
+    {
+      "file": "src/app/[locale]/go/[plan]/page.tsx",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "portal"
+    },
+    {
+      "file": "src/app/[locale]/pricing/page.tsx",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "portal"
+    },
+    {
+      "file": "src/components/Nav.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "portal"
+    },
+    {
+      "file": "src/components/Nav.tsx",
+      "line": 8,
+      "reason": "navigation-locale-prefixed",
+      "level": "info",
+      "message": "src/components/Nav.tsx navigates to /go/pricing, written without the locale the application's middleware puts in front, so it is joined to /:param/go/:param, the page under [locale]",
+      "hint": "Nothing to do: the middleware or the routing configuration that adds the locale is what places the page; the join is heuristic.",
+      "symbol": "Nav navigates to /go/pricing",
+      "meta": {
+        "cause": "navigation-locale-prefixed",
+        "navigates": "/go/pricing",
+        "route": "/:param/go/:param"
+      },
+      "service": "portal"
+    },
+    {
+      "file": "src/app/[locale]/layout.tsx",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ReactNode",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/app/[locale]/layout.tsx",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/app/[locale]/page.tsx",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/app/[locale]/partners/page.tsx",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/app/[locale]/pricing/page.tsx",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/components/Button.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ReactNode",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/components/Button.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/components/Footer.tsx",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/components/Footer.tsx",
+      "line": 13,
+      "reason": "navigation-locale-prefixed",
+      "level": "info",
+      "sites": 2,
+      "message": "src/components/Footer.tsx navigates to /pricing through LangLink, which puts the locale in front, so it is joined to /:param/pricing, the page under [locale]",
+      "hint": "Nothing to do: the link of the application's own that adds the locale is what places the page; the join is heuristic.",
+      "symbol": "Footer navigates to /pricing",
+      "meta": {
+        "navigates": "/pricing",
+        "route": "/:param/pricing",
+        "localizedBy": "LangLink",
+        "causes": [
+          {
+            "cause": "navigation-locale-prefixed",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/components/Footer.tsx",
+                "line": 13,
+                "symbol": "Footer navigates to /pricing"
+              },
+              {
+                "file": "src/components/Footer.tsx",
+                "line": 15,
+                "symbol": "Footer navigates to /partners"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/i18n/LangLink.tsx",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "index.js",
+      "line": 11,
+      "reason": "grpc-field-undeclared",
+      "level": "info",
+      "sites": 1,
+      "message": "The handler of stock.StockService/GetLevel reads product_id off its request, and the loader hands that field of LevelRequest as productId, so it reads nothing there.",
+      "hint": "Read productId, or load the contract with keepCase true so the fields keep the names it writes.",
+      "symbol": "stock.StockService/GetLevel product_id",
+      "adapter": "grpc-server",
+      "meta": {
+        "service": "stock.StockService",
+        "method": "GetLevel",
+        "field": "product_id",
+        "message": "LevelRequest",
+        "contract": "../proto/stock.proto",
+        "named": "productId"
+      },
+      "service": "stock"
+    },
+    {
+      "file": "index.js",
+      "line": 13,
+      "reason": "grpc-field-undeclared",
+      "level": "info",
+      "sites": 1,
+      "message": "The handler of stock.StockService/GetLevel reads zone off its request, and LevelRequest in ../proto/stock.proto declares no such field, so it reads nothing there.",
+      "hint": "Read a field the message declares, or declare the field in the contract.",
+      "symbol": "stock.StockService/GetLevel zone",
+      "adapter": "grpc-server",
+      "meta": {
+        "service": "stock.StockService",
+        "method": "GetLevel",
+        "field": "zone",
+        "message": "LevelRequest",
+        "contract": "../proto/stock.proto"
+      },
+      "service": "stock"
+    },
+    {
+      "file": "src/components/Header.tsx",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "service": "wiki",
+      "file": "src/components/Header.tsx",
+      "line": 11,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/teams",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/teams */.",
+      "symbol": "ui_api_call:wiki#src/components/Header.tsx:11:10@2:41"
+    },
+    {
+      "service": "wiki",
+      "file": "src/components/Header.tsx",
+      "line": 12,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/members",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/members */.",
+      "symbol": "ui_api_call:wiki#src/components/Header.tsx:12:10@2:41"
+    },
+    {
+      "file": "src/components/HelpLink.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ReactNode",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "wiki"
+    },
+    {
+      "file": "src/components/HelpLink.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/hooks/useSettingsEntries.ts",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ComponentType",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "wiki"
+    },
+    {
+      "file": "src/plugins/audit/client/Settings.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/plugins/calendar/client/Settings.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/plugins/emoji/client/Settings.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/routes/index.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/routes/settings.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/screens/HelpBilling.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/screens/Home.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/screens/settings/Profile.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "service": "wiki",
+      "file": "src/stores/ActivityStore.ts",
+      "line": 13,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/activity",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/activity */.",
+      "symbol": "ui_api_call:wiki#src/stores/ActivityStore.ts:13:23"
+    },
+    {
+      "service": "wiki",
+      "file": "src/stores/ActivityStore.ts",
+      "line": 19,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves DELETE /api/activity/:param",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls DELETE /api/activity/:param */.",
+      "symbol": "ui_api_call:wiki#src/stores/ActivityStore.ts:19:11"
+    }
+  ]
+}

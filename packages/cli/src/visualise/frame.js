@@ -500,6 +500,7 @@ export const PAGE_WORDS = Object.freeze({
     'grpc-method-unserved': 'gRPC method nothing configured serves',
     'grpc-method-unimplemented': 'gRPC method not implemented',
     'grpc-method-undeclared': 'gRPC member the contract does not declare',
+    'grpc-field-undeclared': 'gRPC request field the message does not declare',
     'grpc-package-service': 'gRPC service of a package not drawn',
     'route-root-ambiguous': 'API root placed twice',
     'route-root-not-found': 'API root not found',

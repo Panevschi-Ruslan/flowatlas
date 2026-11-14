@@ -249,7 +249,9 @@ const procedureExchanges = (
   };
 
   const answering = party(lookup, handler.service, declared.returns, handler.symbol);
-  const reading = party(lookup, caller.service, edge.returns, caller.symbol);
+  // The answer's type as the caller reads it, its top-level fields under the names the server's message gives them (P297).
+  const answerNames = messageNames(lookup, declared.returns, asked['protoFieldNames'] === 'proto' ? 'proto' : 'json');
+  const reading = party(lookup, caller.service, renamedShape(lookup, edge.returns, answerNames), caller.symbol);
   // No answer type on the request: the call hands the answer to a hook or a
   // query's options, typed there by the binding's inference (P58), or a gRPC
   // call to a callback whose answer is not typed (P287).

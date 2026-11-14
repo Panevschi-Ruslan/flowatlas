@@ -158,6 +158,8 @@ const FINDINGS: readonly string[] = [
   // A gRPC contract's method a server does not implement, and a member it implements the contract does not declare (P287)
   'grpc-method-unimplemented',
   'grpc-method-undeclared',
+  // A field a gRPC handler reads off its request that the method's message does not declare (P297)
+  'grpc-field-undeclared',
   // A federated graph its composition refuses, or a supergraph its subgraphs moved past (P241)
   'graphql-composition-conflict',
   'graphql-supergraph-drift',
@@ -540,6 +542,7 @@ const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
       'graphql-field-resolved-twice',
       'grpc-method-unimplemented',
       'grpc-method-undeclared',
+      'grpc-field-undeclared',
       'graphql-composition-conflict',
       'graphql-supergraph-drift',
       'graphql-entity-type-unsaid',

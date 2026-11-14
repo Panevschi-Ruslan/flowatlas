@@ -56,14 +56,15 @@ export interface RouteEntry {
    * What the router runs before it shows the route, in its order (P291): each
    * `canMatch`, `canActivateChild` and `canActivate` from the outermost route
    * down, a parent's `canActivateChild` before the route's own guards, then
-   * every `resolve` - each as written in the configuration.
+   * every `resolve` - each as written in the configuration; then what it
+   * runs as the route is left, each `canDeactivate` from the route out (P297).
    */
   guards?: readonly RouteGuard[];
 }
 
 /** A guard or a resolver a route lists, as written (P291). */
 export interface RouteGuard {
-  readonly kind: 'canMatch' | 'canActivate' | 'canActivateChild' | 'resolve';
+  readonly kind: 'canMatch' | 'canActivate' | 'canActivateChild' | 'resolve' | 'canDeactivate';
   readonly value: Node;
 }
 

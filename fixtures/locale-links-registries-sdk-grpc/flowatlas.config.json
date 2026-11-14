@@ -1,0 +1,11 @@
+{
+  "services": [
+    { "name": "wiki", "repo": "./wiki", "type": "react" },
+    { "name": "site", "repo": "./site", "type": "nextjs" },
+    { "name": "portal", "repo": "./portal", "type": "nextjs" },
+    { "name": "console", "repo": "./console", "type": "angular" },
+    { "name": "stock", "repo": "./stock", "type": "grpc", "baseUrlEnv": ["STOCK_ADDR"] },
+    { "name": "checkout", "repo": "./checkout", "type": "express" }
+  ],
+  "output": ".flowatlas"
+}

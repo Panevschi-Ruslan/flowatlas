@@ -11,6 +11,7 @@ import type {
   ParameterDeclaration,
   PropertyAccessExpression,
   PropertyAssignment,
+  SourceFile,
   Symbol as TsSymbol,
   TemplateExpression,
   Node as TsNode,
@@ -1687,15 +1688,16 @@ export const callSitesOf = (holder: Forwarder): CallExpression[] => callSitesThr
  * The functions of a library that compose functions into one, by which of
  * the functions handed in is the one called with what the composition is
  * called with (P285): `flow(f, g)` and Ramda's `pipe(f, g)` call `f` first,
- * `compose(g, f)` and `flowRight(g, f)` call it last.
+ * `compose(g, f)` and `flowRight(g, f)` call it last; Remeda's `piped(f, g)`
+ * (`createPipe` before it) calls `f` first (P297).
  */
-const COMPOSERS: Readonly<Record<string, 'first' | 'last'>> = { flow: 'first', pipe: 'first', compose: 'last', flowRight: 'last' };
+const COMPOSERS: Readonly<Record<string, 'first' | 'last'>> = { flow: 'first', pipe: 'first', piped: 'first', createPipe: 'first', compose: 'last', flowRight: 'last' };
 
 /** The libraries those functions are taken from. */
-const COMPOSING_MODULES = /^(fp-ts|effect|lodash|lodash-es|lodash\.flow|lodash\.flowright|ramda|rambda)(\/|$)/;
+const COMPOSING_MODULES = /^(fp-ts|effect|lodash|lodash-es|lodash\.flow|lodash\.flowright|ramda|rambda|remeda)(\/|$)/;
 
 /** Libraries whose `pipe` hands a value first, not a function: `pipe(x, f)` is `f(x)`, no composition. */
-const VALUE_FIRST_PIPE = /^(fp-ts|effect)(\/|$)/;
+const VALUE_FIRST_PIPE = /^(fp-ts|effect|remeda)(\/|$)/;
 
 /** The module an imported name, or a namespace it is a member of, is taken from, and the name it has there. */
 const importedFrom = (callee: TsNode): { module: string; name: string } | undefined => {
@@ -1732,8 +1734,30 @@ const compositionHanded = (value: TsNode): CallExpression | undefined => {
   return (order === 'first' ? handed[0] : handed[handed.length - 1]) === value ? composition : undefined;
 };
 
-/** What a composition is held by, or called by in place: what its callers name. */
-type Composed = { readonly holder: Forwarder | PropertyAssignment } | { readonly call: CallExpression };
+/** What a composition is held by, called by in place, or exported as the default of a module: what its callers name. */
+type Composed = { readonly holder: Forwarder | PropertyAssignment } | { readonly call: CallExpression } | { readonly defaultOf: SourceFile };
+
+/**
+ * The calls of what a module exports as its default (P297): each module
+ * that imports it (`import runQuiet from './run-quiet'`) calls it by the name
+ * it imports it under.
+ */
+const defaultCallSites = (module: SourceFile): CallExpression[] => {
+  const sites: CallExpression[] = [];
+  for (const source of module.getProject().getSourceFiles()) {
+    if (source.isDeclarationFile() || source.isInNodeModules()) continue;
+    for (const imported of source.getImportDeclarations()) {
+      const named = imported.getDefaultImport();
+      if (named === undefined || imported.getModuleSpecifierSourceFile() !== module) continue;
+      for (const reference of named.findReferencesAsNodes()) {
+        if (reference.getSourceFile() !== source) continue;
+        const call = callOf(reference);
+        if (call !== undefined) sites.push(call);
+      }
+    }
+  }
+  return sites;
+};
 
 /** How many compositions, each handed to the next, are followed out. */
 const COMPOSED_DEPTH = 4;
@@ -1745,8 +1769,9 @@ const COMPOSED_DEPTH = 4;
  * composition may be held by a `let` as by a `const`, by a field of a class
  * (`run = flow(...)`, or `this.run = flow(...)` where the class declares
  * it), or by a member of an object (`{ run: flow(...) }`); called where it is
- * made, `flow(runQuery, silence)(variables)`; or handed on, first again, to
- * another composition.
+ * made, `flow(runQuery, silence)(variables)`; handed on, first again, to
+ * another composition; or exported as a module's default, called by each
+ * module importing it (P297).
  */
 const composedInto = (reference: TsNode): Composed | undefined => {
   const parent = reference.getParent();
@@ -1764,6 +1789,8 @@ const composedInto = (reference: TsNode): Composed | undefined => {
     if (Node.isCallExpression(holder) && holder.getExpression() === outer) return { call: holder };
     if (Node.isVariableDeclaration(holder) && Node.isIdentifier(holder.getNameNode())) return { holder };
     if (Node.isPropertyDeclaration(holder) || Node.isPropertyAssignment(holder)) return { holder };
+    // `export default flow(runQuery, silence)`: called by every module importing it (P297).
+    if (Node.isExportAssignment(holder) && !holder.isExportEquals()) return { defaultOf: holder.getSourceFile() };
     if (Node.isBinaryExpression(holder) && holder.getOperatorToken().getKind() === SyntaxKind.EqualsToken && holder.getRight() === outer) {
       // `this.run = flow(...)`, in a class that declares the field.
       const left = holder.getLeft();
@@ -1792,7 +1819,12 @@ const callSitesThrough = (holder: Forwarder | PropertyAssignment, composed: Set<
       // A function handed to a library's composition is called by each call of what it makes (P285).
       const made = (!Node.isPropertyAssignment(holder) && isClassMethod(holder)) || composed.size > 4 ? undefined : composedInto(reference);
       if (made !== undefined && 'call' in made) add(made.call);
-      else if (made !== undefined && !composed.has(made.holder)) {
+      else if (made !== undefined && 'defaultOf' in made) {
+        if (!composed.has(made.defaultOf)) {
+          composed.add(made.defaultOf);
+          for (const each of defaultCallSites(made.defaultOf)) add(each);
+        }
+      } else if (made !== undefined && !composed.has(made.holder)) {
         composed.add(made.holder);
         for (const each of callSitesThrough(made.holder, composed)) add(each);
       }
