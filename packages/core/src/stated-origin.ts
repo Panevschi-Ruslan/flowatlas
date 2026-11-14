@@ -51,7 +51,7 @@ const constructedBy = (initializer: TsNode | undefined): TsNode | undefined => {
  * What a field declared with neither a type nor a value is given in its
  * class's constructor, where the constructor gives it one value and nothing
  * else in the class gives it another (P299): `private client;` beside
- * `this.client = new AWS.DynamoDB()`.
+ * `this.client = new Sdk.Store()`.
  */
 const constructorAssignment = (declaration: PropertyDeclaration): TsNode | undefined => {
   const owner = declaration.getParent();

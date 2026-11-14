@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T18:03:47.251Z",
+  "builtAt": "2026-11-14T18:14:16.993Z",
   "services": [
     {
       "name": "wiki",
@@ -397,6 +397,15 @@
             "nextjs-routes"
           ]
         },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 1,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
         "ownOrigin": true
       }
     },
@@ -424,6 +433,15 @@
             "nextjs-routes"
           ]
         },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 1,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
         "ownOrigin": true
       }
     },
