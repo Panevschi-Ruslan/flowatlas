@@ -51,7 +51,7 @@ const chosenParameter = (reading: TemplateReading, name: string): boolean => {
 };
 
 /** Whether a value as written reads such a parameter: by `Ref`, or as `${Name}` in an `Fn::Sub` (P294). */
-const readsChosenParameter = (reading: TemplateReading, value: unknown, depth = 0): boolean => {
+export const readsChosenParameter = (reading: TemplateReading, value: unknown, depth = 0): boolean => {
   if (depth > 16 || value === null || typeof value !== 'object') return false;
   const intrinsic = intrinsicOf(value);
   if (intrinsic?.[0] === 'Ref') return typeof intrinsic[1] === 'string' && chosenParameter(reading, intrinsic[1]);

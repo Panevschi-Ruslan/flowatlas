@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:12:35.396Z",
+  "builtAt": "2026-11-14T18:01:40.211Z",
   "services": [
     {
       "name": "bookshop",
@@ -380,12 +380,13 @@
         "declaredAs": "functions.catalog.events[0]",
         "servedAt": [
           {
-            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "host": "*.execute-api.*.amazonaws.com",
             "base": [
               "*"
             ],
             "api": "dev-bookshop",
-            "chosenDefault": "dev"
+            "chosenDefault": "dev",
+            "chosenHost": "*.execute-api.eu-west-1.amazonaws.com"
           }
         ],
         "adapter": "aws-lambda"

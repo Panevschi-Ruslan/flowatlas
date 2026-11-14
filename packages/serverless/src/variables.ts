@@ -240,6 +240,11 @@ export class Variables {
     this.#context = context;
   }
 
+  /** An option the deployment is run with, where the configuration gives it. */
+  option(name: string): string | undefined {
+    return this.#context.options[name];
+  }
+
   /** The stage the service is deployed to, and where that was found. */
   get stage(): { value: string | Unread; from: StageFrom } {
     if (this.#stage !== undefined) return this.#stage;

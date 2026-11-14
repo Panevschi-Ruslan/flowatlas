@@ -315,6 +315,7 @@ const nameLocatorSchema = z.discriminatedUnion('kind', [
     kind: z.literal('argument-property'),
     index: z.number().int().min(0),
     key: z.string().min(1),
+    otherwise: z.number().int().min(0).optional(),
   }),
   z.strictObject({
     kind: z.literal('chain-call'),

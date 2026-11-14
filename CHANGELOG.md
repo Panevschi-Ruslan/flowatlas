@@ -87,6 +87,32 @@ only one of them moved.
   method's message) that its message does not declare under the loader's
   names are `grpc-field-undeclared` findings (info), and an answer read under
   a loader keeping the case is compared under the server's names.
+- **Queue and AWS items P286, P290 and P294 left open (P298).** A job record a
+  queue layer plans, splits and hands back is read along that way: a name a
+  `const` destructures out of what a function answers is that key of each
+  record it may answer, a field of an instance written out is what its
+  constructor keeps, `map.get(key)` of a `Map` a `const` holds each value it
+  is given, an element at a place a spread or a `push` may move one of the
+  list's elements, a value that is one of several - some waiting on a caller -
+  each followed out on its own, and what a `catch` is handed each value its
+  try block throws in the repository's own functions; two of a layer's calls
+  drawn at one caller are one producer naming every job either names. A
+  scheduler's template with no `name` names its job by the scheduler's id
+  (the `argument-property` locator's new `otherwise`). A worker's processor a
+  caller writes in place that does more than hand the job on is a handler of
+  its own, with the calls its body makes. An API Terraform maps onto a custom
+  domain records `servedAt` at the domain and at its own address with the
+  base path it does not write (`under`); a stage reached through a `local` or
+  a child module's input is open where a root variable or the workspace
+  decides it; a module's provider is the one its call's `providers` map
+  hands it. A Serverless region from the file is the default of any region
+  `--region` names (`chosenHost`), as a CDK stage or region from
+  `tryGetContext` is of any `-c` names, and a SAM parameter a parent template
+  hands down from its own parameter is open; the served-at join asks the API
+  deployed to by default at the host a request writes before the rest
+  (`fixtures/job-batches-planned-by-a-layer`,
+  `fixtures/gateway-served-at-deploy-choices`).
+
 - **Kustomize transformer and generator files, labels, and what P289 left of
   helmfile and charts (P295).** A kustomization's `transformers:` and
   `generators:` are read from the files (or the folder, or the inline text)

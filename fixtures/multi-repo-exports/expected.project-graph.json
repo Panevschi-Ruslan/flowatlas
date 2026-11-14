@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-12T18:51:11.220Z",
+  "builtAt": "2026-11-14T18:03:40.987Z",
   "services": [
     {
       "name": "gateway",
@@ -416,12 +416,13 @@
         "declaredAs": "functions.health.events[0]",
         "servedAt": [
           {
-            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "host": "*.execute-api.*.amazonaws.com",
             "base": [
               "*"
             ],
             "api": "shop",
-            "chosenDefault": "prod"
+            "chosenDefault": "prod",
+            "chosenHost": "*.execute-api.eu-west-1.amazonaws.com"
           }
         ],
         "adapter": "aws-lambda"
@@ -445,9 +446,10 @@
         "declaredAs": "functions.status.events[0]",
         "servedAt": [
           {
-            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "host": "*.execute-api.*.amazonaws.com",
             "base": [],
-            "api": "shop-http"
+            "api": "shop-http",
+            "chosenHost": "*.execute-api.eu-west-1.amazonaws.com"
           }
         ],
         "adapter": "aws-lambda"

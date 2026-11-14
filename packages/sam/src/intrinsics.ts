@@ -21,7 +21,12 @@ const NO_VALUE = Symbol('no value');
 export type Decided = boolean | Unread;
 
 /** Where a parameter's value came from, for a person. */
-export type ParameterFrom = 'option' | 'file' | 'parent' | 'default';
+/**
+ * `parent-open` is a value a parent template hands down from one its own
+ * deployment chooses - its own parameter, overridden when it is deployed
+ * (P298).
+ */
+export type ParameterFrom = 'option' | 'file' | 'parent' | 'parent-open' | 'default';
 
 export interface Parameter {
   readonly value: string | readonly string[] | Unread;

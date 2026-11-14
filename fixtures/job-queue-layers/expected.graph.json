@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "job-queue-layers",
-  "generatedAt": "2026-11-12T19:10:39.645Z",
+  "generatedAt": "2026-11-14T18:09:30.173Z",
   "nodes": [
     {
       "id": "channel:archive-order",
@@ -219,9 +219,28 @@
       }
     },
     {
-      "id": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers@src/queues/bull.service.ts:21",
+      "id": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers.start@77@src/queues/bull.service.ts:21",
       "type": "consumer",
-      "label": "startWorkers",
+      "label": "startWorkers.start@77",
+      "repo": "job-queue-layers",
+      "file": "src/queues/bull.service.ts",
+      "line": 21,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:job-queue-layers:event:mail",
+        "through": [
+          "BullService.openWorker",
+          "MailWorker"
+        ]
+      }
+    },
+    {
+      "id": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers.start@80@src/queues/bull.service.ts:21",
+      "type": "consumer",
+      "label": "startWorkers.start@80",
       "repo": "job-queue-layers",
       "file": "src/queues/bull.service.ts",
       "line": 21,
@@ -233,7 +252,6 @@
         "entryId": "entry:job-queue-layers:event:invoices",
         "through": [
           "BullService.openWorker",
-          "MailWorker",
           "InvoiceWorker"
         ]
       }
@@ -1019,15 +1037,20 @@
       }
     },
     {
-      "id": "job-queue-layers#src/queues/queue-base.ts:startWorkers",
+      "id": "job-queue-layers#src/queues/queue-base.ts:startWorkers.start@77",
       "type": "function",
-      "label": "startWorkers",
+      "label": "startWorkers.start@77",
       "repo": "job-queue-layers",
       "file": "src/queues/queue-base.ts",
-      "line": 76,
+      "line": 77,
       "meta": {
         "signature": {
-          "params": [],
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
           "returns": "void"
         },
         "logs": [
@@ -1035,7 +1058,28 @@
             "level": "log",
             "text": "mail to",
             "at": 78
-          },
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-queue-layers#src/queues/queue-base.ts:startWorkers.start@80",
+      "type": "function",
+      "label": "startWorkers.start@80",
+      "repo": "job-queue-layers",
+      "file": "src/queues/queue-base.ts",
+      "line": 80,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
           {
             "level": "log",
             "text": "invoice for",
@@ -1264,7 +1308,7 @@
         "adapter": "bullmq",
         "channelVia": "literal",
         "method": "upsertJobScheduler",
-        "jobName": null
+        "jobName": "nightly-report"
       }
     },
     {
@@ -1490,7 +1534,7 @@
     },
     {
       "from": "channel:invoices",
-      "to": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers@src/queues/bull.service.ts:21",
+      "to": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers.start@80@src/queues/bull.service.ts:21",
       "type": "consumes",
       "confidence": "static",
       "file": "src/queues/bull.service.ts",
@@ -1498,7 +1542,7 @@
     },
     {
       "from": "channel:mail",
-      "to": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers@src/queues/bull.service.ts:21",
+      "to": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers.start@77@src/queues/bull.service.ts:21",
       "type": "consumes",
       "confidence": "static",
       "file": "src/queues/bull.service.ts",
@@ -1593,8 +1637,16 @@
       "line": 54
     },
     {
-      "from": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers@src/queues/bull.service.ts:21",
-      "to": "job-queue-layers#src/queues/queue-base.ts:startWorkers",
+      "from": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers.start@77@src/queues/bull.service.ts:21",
+      "to": "job-queue-layers#src/queues/queue-base.ts:startWorkers.start@77",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/queues/bull.service.ts",
+      "line": 21
+    },
+    {
+      "from": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers.start@80@src/queues/bull.service.ts:21",
+      "to": "job-queue-layers#src/queues/queue-base.ts:startWorkers.start@80",
       "type": "handles",
       "confidence": "static",
       "file": "src/queues/bull.service.ts",
@@ -1644,29 +1696,43 @@
     },
     {
       "from": "entry:job-queue-layers:event:invoices",
-      "to": "job-queue-layers#src/queues/queue-base.ts:startWorkers",
+      "to": "job-queue-layers#src/queues/queue-base.ts:startWorkers.start@80",
       "type": "handles",
       "confidence": "static",
       "file": "src/queues/bull.service.ts",
       "line": 21,
-      "params": [],
+      "params": [
+        "unknown"
+      ],
       "returns": "void",
       "signature": {
-        "params": [],
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
         "returns": "void"
       }
     },
     {
       "from": "entry:job-queue-layers:event:mail",
-      "to": "job-queue-layers#src/queues/queue-base.ts:startWorkers",
+      "to": "job-queue-layers#src/queues/queue-base.ts:startWorkers.start@77",
       "type": "handles",
       "confidence": "static",
       "file": "src/queues/bull.service.ts",
       "line": 21,
-      "params": [],
+      "params": [
+        "unknown"
+      ],
       "returns": "void",
       "signature": {
-        "params": [],
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
         "returns": "void"
       }
     },
@@ -2550,18 +2616,33 @@
       }
     },
     {
-      "file": "src/queues/bull.service.ts",
-      "line": 21,
-      "reason": "consumer-handler-unresolved",
-      "hint": "The processor a caller hands in does more than delegate, so the chain stops at the body that caller writes it in.",
-      "symbol": "BullService.openWorker -> new Worker"
-    },
-    {
       "file": "src/queues/queue-base.ts",
       "line": 59,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "Processor",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/queues/queue-base.ts",
+      "line": 77,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<{ email: string; }>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/queues/queue-base.ts",
+      "line": 80,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<{ orderId: string; }>",
       "meta": {
         "cause": "module-not-installed",
         "package": "bullmq"

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:10:09.026Z",
+  "builtAt": "2026-11-14T18:08:26.905Z",
   "services": [
     {
       "name": "bookings",
@@ -86,9 +86,10 @@
         "declaredAs": "functions.cancelBooking.events[0]",
         "servedAt": [
           {
-            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "host": "*.execute-api.*.amazonaws.com",
             "base": [],
-            "api": "prod-bookings"
+            "api": "prod-bookings",
+            "chosenHost": "*.execute-api.eu-west-1.amazonaws.com"
           }
         ],
         "adapter": "aws-lambda"
@@ -112,12 +113,13 @@
         "declaredAs": "functions.listSlots.events[0]",
         "servedAt": [
           {
-            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "host": "*.execute-api.*.amazonaws.com",
             "base": [
               "*"
             ],
             "api": "prod-bookings",
-            "chosenDefault": "prod"
+            "chosenDefault": "prod",
+            "chosenHost": "*.execute-api.eu-west-1.amazonaws.com"
           }
         ],
         "adapter": "aws-lambda"
@@ -141,12 +143,13 @@
         "declaredAs": "functions.bookSlot.events[0]",
         "servedAt": [
           {
-            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "host": "*.execute-api.*.amazonaws.com",
             "base": [
               "*"
             ],
             "api": "prod-bookings",
-            "chosenDefault": "prod"
+            "chosenDefault": "prod",
+            "chosenHost": "*.execute-api.eu-west-1.amazonaws.com"
           }
         ],
         "adapter": "aws-lambda"
@@ -643,7 +646,7 @@
       "line": 2,
       "reason": "base-url-from-files",
       "level": "info",
-      "message": "https://k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com/dev/bookings names its API by an id no file holds; it is taken as prod-bookings of bookings, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (prod where none is given), so the stage dev is taken as one of its, and the request as one for /bookings on it",
+      "message": "https://k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com/dev/bookings names its API by an id no file holds; it is taken as prod-bookings of bookings, the API of the project served at *.execute-api.*.amazonaws.com/* with a route for it, at whatever stage it is run with (prod where none is given), so the stage dev is taken as one of its, in whatever region it is deployed to (*.execute-api.eu-west-1.amazonaws.com where none is given), and the request as one for /bookings on it",
       "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
       "symbol": "ui_api_call:web#js/book.js:2:10"
     },
@@ -653,7 +656,7 @@
       "line": 3,
       "reason": "base-url-from-files",
       "level": "info",
-      "message": "https://k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com/bookings/:param names its API by an id no file holds; it is taken as prod-bookings of bookings, the API of the project served at *.execute-api.eu-west-1.amazonaws.com with a route for it, and the request as one for /bookings/:param on it",
+      "message": "https://k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com/bookings/:param names its API by an id no file holds; it is taken as prod-bookings of bookings, the API of the project served at *.execute-api.*.amazonaws.com with a route for it, in whatever region it is deployed to (*.execute-api.eu-west-1.amazonaws.com where none is given), and the request as one for /bookings/:param on it",
       "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
       "symbol": "ui_api_call:web#js/cancel.js:3:3"
     },
@@ -663,7 +666,7 @@
       "line": 2,
       "reason": "base-url-from-files",
       "level": "info",
-      "message": "https://k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com/dev/slots names its API by an id no file holds; it is taken as prod-bookings of bookings, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (prod where none is given), so the stage dev is taken as one of its, and the request as one for /slots on it",
+      "message": "https://k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com/dev/slots names its API by an id no file holds; it is taken as prod-bookings of bookings, the API of the project served at *.execute-api.*.amazonaws.com/* with a route for it, at whatever stage it is run with (prod where none is given), so the stage dev is taken as one of its, in whatever region it is deployed to (*.execute-api.eu-west-1.amazonaws.com where none is given), and the request as one for /slots on it",
       "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
       "symbol": "ui_api_call:web#js/slots.js:2:24"
     },

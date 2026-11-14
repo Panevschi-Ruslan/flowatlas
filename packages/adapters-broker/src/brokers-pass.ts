@@ -6,6 +6,12 @@ import {
   RECORDED_META,
   WHERE_DECLARED_META,
   declaredParameterType,
+  findMethod,
+  inlineFunction,
+  namedFunction,
+  originOfValue,
+  placeOf,
+  resolveReceiver,
   decoratorArgs,
   definePass,
   evaluateExpression,
@@ -47,7 +53,7 @@ import {
 // of any extractor, so it names none, and the Angular reader that borrows its
 // name resolution no longer inherits the Nest one through it.
 import { repoSourceFiles, scopesOf, type Holder, type PassContext, type Scope } from '@flowatlas/extract-scopes';
-import type { CallExpression, ClassDeclaration, MethodDeclaration, NewExpression, Node as TsNode, ParameterDeclaration } from 'ts-morph';
+import type { ArrowFunction, CallExpression, ClassDeclaration, FunctionExpression, MethodDeclaration, NewExpression, Node as TsNode, ParameterDeclaration } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { brokerAdapters, createCustomBrokerAdapter, type BrokerSpec, type ConsumerPattern, type SubscriberPattern } from './adapters/index.js';
 import { createStarterAdapter } from './adapters/starters.js';
@@ -177,9 +183,30 @@ const jobsNamed = (expressions: readonly TsNode[]): { jobName: string | null; jo
   return { jobName: null };
 };
 
+/**
+ * Folds the jobs a second reading of one publish names into the first's
+ * (P298): every name either reads, `jobName` the one where there is one.
+ */
+const mergeJobs = (meta: Record<string, unknown>, jobName: string | null, jobNames: readonly string[] | undefined): void => {
+  const named = (name: unknown, names: unknown): string[] => [
+    ...(typeof name === 'string' ? [name] : []),
+    ...(Array.isArray(names) ? names.filter((each): each is string => typeof each === 'string') : []),
+  ];
+  const before = named(meta['jobName'], meta['jobNames']);
+  const all = [...new Set([...before, ...named(jobName, jobNames)])].sort();
+  if (all.length === before.length) return;
+  if (all.length === 1) {
+    meta['jobName'] = all[0];
+    return;
+  }
+  meta['jobName'] = null;
+  meta['jobNames'] = all;
+};
+
 /** Whether a value followed out is several values, not one written with several branches (P286). */
 const severalOf = (held: Held): boolean =>
-  held.kind === 'written' && (held.choices?.length ?? 0) > 1 && !Node.isConditionalExpression(held.expression);
+  held.kind === 'several' ||
+  (held.kind === 'written' && (held.choices?.length ?? 0) > 1 && !Node.isConditionalExpression(held.expression));
 
 /** The job a value followed out names, or each it may name (P286). */
 const jobsHeld = (held: Held | undefined): { jobName: string | null; jobNames?: string[] } =>
@@ -775,6 +802,11 @@ export const extractBrokers = (ctx: PassContext): void => {
     // functions in a repository that publish nothing stay out of the graph.
     (caller?.holder ?? holder).ensure();
     noteReadThrough(call);
+    // Two of a layer's calls drawn at one caller - its `add` and its
+    // `addBulk`, each reached on its own way out - are one publish there,
+    // naming every job either names (P298).
+    const prior = ctx.builder.getNode(producerId);
+    if (prior?.type === 'producer' && prior.meta !== undefined && jobName !== undefined) mergeJobs(prior.meta, jobName, jobs.jobNames);
     ctx.builder.addNode({
       id: producerId,
       type: 'producer',
@@ -1450,6 +1482,54 @@ export const extractBrokers = (ctx: PassContext): void => {
   };
 
   /**
+   * A processor written in place at a caller, as a function of its own
+   * (P298): named for the member it is written in and the call it is handed
+   * to - `MailWorker.constructor.init@21` - and given the calls its body makes
+   * to the repository's own functions and methods, which no other walk gives
+   * it. One function per arrow, however many workers run it.
+   */
+  const inlineProcessors = new Map<TsNode, NamedFunction>();
+  const inlineProcessor = (written: ArrowFunction | FunctionExpression): NamedFunction => {
+    const known = inlineProcessors.get(written);
+    if (known !== undefined) return known;
+    const owner = written.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+    const member = written.getFirstAncestor(
+      (node) => Node.isConstructorDeclaration(node) || Node.isMethodDeclaration(node) || Node.isPropertyDeclaration(node) || Node.isGetAccessorDeclaration(node) || Node.isSetAccessorDeclaration(node),
+    );
+    const memberName = member === undefined ? undefined : Node.isConstructorDeclaration(member) ? 'constructor' : (member as MethodDeclaration).getName();
+    // Outside a class, where it is written is the name it is kept under, which `placeOf` says.
+    const where = owner !== undefined && memberName !== undefined ? `${ctx.classes.get(owner)?.name ?? owner.getName() ?? '?'}.${memberName}` : undefined;
+    const fn = inlineFunction(written, where === undefined ? placeOf(written) : `${where}.${placeOf(written)}`);
+    inlineProcessors.set(written, fn);
+    const from = ctx.functionIdOf(fn);
+    const file = ctx.fileOf(written);
+    forEachCall(fn.body, (call) => {
+      const callee = call.getExpression();
+      let to: string | undefined;
+      if (Node.isIdentifier(callee)) {
+        const origin = originOfValue(callee);
+        const named = origin.kind === 'local' ? namedFunction(origin.declaration) : undefined;
+        if (named !== undefined) {
+          ctx.ensureFunctionNode(named);
+          to = ctx.functionIdOf(named);
+        }
+      } else if (Node.isPropertyAccessExpression(callee)) {
+        const receiver = resolveReceiver(callee.getExpression(), owner, ctx.di);
+        const found = receiver.kind === 'builtin' || receiver.classDecl === undefined ? undefined : findMethod(receiver.classDecl, callee.getName()).method;
+        const id = found === undefined ? undefined : ctx.methodIdOf(found);
+        if (found !== undefined && id !== undefined) {
+          ctx.ensureMethodNode(found);
+          to = id;
+        }
+      }
+      if (to === undefined) return;
+      ctx.ensureFunctionNode(fn);
+      ctx.builder.addEdge({ from, to, type: 'calls', confidence: 'static', file, line: lineColOf(call).line });
+    });
+    return fn;
+  };
+
+  /**
    * A worker started by a construction (P271): `new Worker(name, processor)`,
    * read once per queue its name stands for - each element of a loop it is
    * made in, each caller of the function it is made in - with the handler
@@ -1487,6 +1567,9 @@ export const extractBrokers = (ctx: PassContext): void => {
         if (placed?.fn !== undefined) return { kind: 'function', fn: placed.fn };
         const delegated = writtenIn === undefined ? undefined : targetOfHandler(written, writtenIn);
         if (delegated !== undefined) return { kind: 'method', method: delegated };
+        // A processor a caller writes in place that does more than hand the
+        // job on is a handler of its own, as a route written in place is (P298).
+        if (written !== processor) return { kind: 'function', fn: inlineProcessor(written) };
       }
       // The body the worker is made in, as the subscriptions do, or the one
       // a caller writes the processor in.

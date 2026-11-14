@@ -78,17 +78,24 @@ export const DEFAULT_STAGE = '$default';
  * none (P294).
  */
 export const executeApiServedAt = (
-  region: string | undefined,
+  region: string | { readonly name?: string; readonly chosen?: boolean } | undefined,
   api: string,
   stage: { readonly name?: string; readonly chosen?: boolean },
 ): ServedAt => {
   const chosen = stage.chosen === true;
   const name = stage.name === DEFAULT_STAGE ? undefined : stage.name;
+  // A region chosen when the deployment is run (`--region`) is any region,
+  // the one it deploys to where nothing chooses kept beside it (P298).
+  const regionOf = typeof region === 'object' ? region : { name: region };
+  const named = regionOf.name !== undefined && /^[a-z0-9-]+$/.test(regionOf.name) ? regionOf.name : undefined;
+  const regionChosen = regionOf.chosen === true;
+  const gateway = (at: string): string => `*.execute-api.${at}.amazonaws.com`;
   return {
-    host: `*.execute-api.${region !== undefined && /^[a-z0-9-]+$/.test(region) ? region : '*'}.amazonaws.com`,
+    host: gateway(named === undefined || regionChosen ? '*' : named),
     base: chosen ? ['*'] : name === undefined ? [] : [name],
     api,
     ...(chosen && name !== undefined ? { chosenDefault: name } : {}),
+    ...(regionChosen && named !== undefined ? { chosenHost: gateway(named) } : {}),
   };
 };
 

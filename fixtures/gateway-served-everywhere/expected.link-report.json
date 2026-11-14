@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-12T18:46:14.484Z",
+  "builtAt": "2026-11-14T18:09:27.740Z",
   "configHash": "50c8c911f4ee",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 4,
       "types": 1,
       "unresolved": 4,
-      "durationMs": 1348,
+      "durationMs": 819,
       "packages": {
         "name": "library-catalog",
         "runtime": [],
@@ -30,7 +30,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 1398,
+      "durationMs": 805,
       "packages": {
         "name": "library-loans",
         "runtime": [],
@@ -48,7 +48,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1301,
+      "durationMs": 805,
       "packages": {
         "name": "library-reviews",
         "runtime": [],
@@ -66,7 +66,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 1482,
+      "durationMs": 889,
       "packages": {
         "name": "library-stock",
         "runtime": [],
@@ -84,7 +84,7 @@
       "edges": 10,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1307
+      "durationMs": 803
     }
   ],
   "httpOut": {
@@ -166,7 +166,7 @@
       "line": 2,
       "reason": "base-url-from-files",
       "level": "info",
-      "message": "https://s1d4f7g0hj.execute-api.eu-west-1.amazonaws.com/dev/reviews names its API by an id no file holds; it is taken as prod-reviews of reviews, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (prod where none is given), so the stage dev is taken as one of its, and the request as one for /reviews on it",
+      "message": "https://s1d4f7g0hj.execute-api.eu-west-1.amazonaws.com/dev/reviews names its API by an id no file holds; it is taken as prod-reviews of reviews, the API of the project served at *.execute-api.*.amazonaws.com/* with a route for it, at whatever stage it is run with (prod where none is given), so the stage dev is taken as one of its, in whatever region it is deployed to (*.execute-api.eu-west-1.amazonaws.com where none is given), and the request as one for /reviews on it",
       "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
       "symbol": "ui_api_call:web#js/reviews.js:2:24"
     }

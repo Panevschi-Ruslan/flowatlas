@@ -3,8 +3,11 @@ import {
   dispatchOf,
   EVERY_ELEMENT,
   evaluateExpression,
+  functionOf,
   importOf,
   listOfElement,
+  mapValuesOf,
+  methodNamedOn,
   parameterBehind,
   walkPath,
   type DiMap,
@@ -83,6 +86,12 @@ export type Held =
       readonly path: readonly string[];
       readonly expression: TsNode;
     }
+  /**
+   * One of several values some of which wait on a caller further out (P298):
+   * the branches of a condition, the lists a batch was split into. The walk
+   * follows each on its own. Never nested.
+   */
+  | { readonly kind: 'several'; readonly expression: TsNode; readonly options: readonly Held[] }
   /** Followed as far as it goes, and no further: `why` says where it stopped. */
   | { readonly kind: 'unread'; readonly expression: TsNode; readonly why: string };
 
@@ -228,7 +237,8 @@ export const heldAt = (expression: TsNode): Held => {
 };
 
 /** Whether a value still waits on somebody further out. */
-export const waits = (held: Held): boolean => held.kind === 'parameter' || held.kind === 'field' || held.kind === 'set';
+export const waits = (held: Held): boolean =>
+  held.kind === 'parameter' || held.kind === 'field' || held.kind === 'set' || (held.kind === 'several' && held.options.some(waits));
 
 /** Whether a class is the other or extends it, however far up. */
 const derivesFrom = (cls: ClassDeclaration, owner: ClassDeclaration): boolean => {
@@ -282,7 +292,11 @@ export const heldValues = (start: TsNode, path: readonly string[], site: TsNode,
   if (depth > MOST_FOLLOWED) return { kind: 'unread', expression: start, why: `${start.getText().slice(0, 60)} is made of more values than are followed.` };
   const found: Held[] = [];
   const reached: TsNode[] = [];
-  for (const slot of walkPath(start, path, bound)) {
+  const slots = walkPath(start, path, bound);
+  // A list with nothing in it, at every place or at the one asked for: no
+  // value at all, which is written as surely as one is (P298).
+  if (slots.length === 0) return { kind: 'written', expression: start, choices: [] };
+  for (const slot of slots) {
     if (slot === undefined) {
       return { kind: 'unread', expression: start, why: `${start.getText().slice(0, 60)} writes no ${path.join('.')}.` };
     }
@@ -297,6 +311,27 @@ export const heldValues = (start: TsNode, path: readonly string[], site: TsNode,
   return combined(found, start, path.includes(EVERY_ELEMENT), reached.length === 1 && one !== undefined ? one : undefined);
 };
 
+/** What a value waits on, as text: two ways to the same parameter and path are one value. */
+const waitingKey = (held: Held): string | undefined => {
+  const at = (node: TsNode): string => `${node.getSourceFile().getFilePath()}:${node.getStart()}`;
+  if (held.kind === 'parameter') return `p:${at(held.parameter)}:${held.path.join('.')}`;
+  if (held.kind === 'field') return `f:${at(held.owner)}:${held.index}:${held.name ?? ''}:${at(held.expression)}`;
+  if (held.kind === 'set') return `s:${at(held.method)}:${held.index}:${held.path.join('.')}:${at(held.expression)}`;
+  return undefined;
+};
+
+/** The values found, each value that waits on a caller kept once (P298). */
+const distinctWaiting = (found: readonly Held[]): Held[] => {
+  const seen = new Set<string>();
+  return found.filter((each) => {
+    const key = waitingKey(each);
+    if (key === undefined) return true;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 /**
  * Several values read as one (P286): each written value a choice of one
  * written value; otherwise the first that could not be read, or a value
@@ -304,7 +339,9 @@ export const heldValues = (start: TsNode, path: readonly string[], site: TsNode,
  * a list are each read on their own (P290): those written are read, and why
  * the others are not is kept beside them.
  */
-const combined = (found: readonly Held[], start: TsNode, elements: boolean, expression?: TsNode): Held => {
+const combined = (given: readonly Held[], start: TsNode, elements: boolean, expression?: TsNode): Held => {
+  // A value that is one of several is each of them, read on its own.
+  const found = distinctWaiting(given.flatMap((each) => (each.kind === 'several' ? each.options : [each])));
   const [first, ...more] = found;
   if (first === undefined) return { kind: 'unread', expression: start, why: `${start.getText().slice(0, 60)} holds nothing written out.` };
   if (more.length === 0) return first;
@@ -314,6 +351,23 @@ const combined = (found: readonly Held[], start: TsNode, elements: boolean, expr
   if (written.length === found.length) {
     const partial = written.find((each) => each.partial !== undefined)?.partial;
     return { kind: 'written', expression: expression ?? first.expression, choices, ...(partial === undefined ? {} : { partial }) };
+  }
+  // Values some of which wait on a caller further out, and none of which is
+  // unread where it matters: each is followed on its own (P298) - the
+  // branches of `error instanceof PartialSendError ? error.unsentJobs : jobs`,
+  // the lists a batch is split into and spread back together.
+  const unread = found.filter((each) => each.kind === 'unread');
+  const waiting = found.filter((each) => waits(each));
+  if (waiting.length > 0 && (unread.length === 0 || elements)) {
+    const why = unread[0]?.kind === 'unread' ? unread[0].why : undefined;
+    // Written values that are no value at all - a list with nothing in it -
+    // are nowhere to draw a publish.
+    const kept: Held[] =
+      choices.length > 0 || why !== undefined
+        ? [{ kind: 'written', expression: expression ?? (written[0] ?? first).expression, choices, ...(why === undefined ? {} : { partial: why }) }]
+        : [];
+    const options = [...kept, ...waiting];
+    return options.length === 1 ? (options[0] as Held) : { kind: 'several', expression: expression ?? start, options };
   }
   if (elements && written.length > 0) {
     const other = found.find((each) => each.kind !== 'written');
@@ -334,11 +388,101 @@ const isNothing = (expression: TsNode): boolean => {
   return node.getKind() === SyntaxKind.NullKeyword || (Node.isIdentifier(node) && node.getText() === 'undefined');
 };
 
+/** Whether an expression is a list, as its type says. */
+const isList = (expression: TsNode): boolean => {
+  const type = expression.getType();
+  return type.isArray() || type.isTuple() || (type.isUnion() && type.getUnionTypes().every((each) => each.isArray() || each.isTuple()));
+};
+
+/** The function a node is written in: what `return` and `throw` leave. */
+const functionAround = (node: TsNode): TsNode | undefined =>
+  node.getFirstAncestor(
+    (each) =>
+      Node.isFunctionDeclaration(each) ||
+      Node.isMethodDeclaration(each) ||
+      Node.isArrowFunction(each) ||
+      Node.isFunctionExpression(each) ||
+      Node.isConstructorDeclaration(each) ||
+      Node.isGetAccessorDeclaration(each) ||
+      Node.isSetAccessorDeclaration(each),
+  );
+
+/** Whether a node sits in a try block inside `block` whose own `catch` takes what it throws. */
+const caughtWithin = (node: TsNode, block: TsNode): boolean => {
+  for (let at = node.getParent(); at !== undefined && at !== block; at = at.getParent()) {
+    const attempt = at.getParent();
+    if (Node.isBlock(at) && attempt !== undefined && Node.isTryStatement(attempt) && attempt.getTryBlock() === at && attempt.getCatchClause() !== undefined) return true;
+  }
+  return false;
+};
+
+/** The function of the repository a call runs, where it names one: `this.method(...)`, a function by its name. */
+const calledBody = (call: CallExpression): TsNode | undefined => {
+  const callee = unwrapped(call.getExpression());
+  if (Node.isPropertyAccessExpression(callee)) {
+    const target = unwrapped(callee.getExpression());
+    if (!Node.isThisExpression(target) && target.getKind() !== SyntaxKind.SuperKeyword) return undefined;
+    let cls = call.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+    for (let depth = 0; cls !== undefined && depth < 8; depth += 1) {
+      const method = methodNamedOn(cls, callee.getName());
+      const fn = method === undefined ? undefined : functionOf(method);
+      if (fn !== undefined) return fn;
+      cls = cls.getBaseClass();
+    }
+    return undefined;
+  }
+  return Node.isIdentifier(callee) ? functionNamed(callee) : undefined;
+};
+
+/** How many functions deep, and how many values, the throws of a try block are read (P298). */
+const MOST_THROWN_DEPTH = 4;
+const MOST_THROWN = 32;
+
+/**
+ * Every value a block throws out of itself, as written in this repository
+ * (P298): each `throw` of its own, and each of a function of the repository
+ * it calls - `this.sendElsewhere(...)` - with that function's parameters
+ * bound to what the call hands them. A throw a `try` inside the block
+ * catches is not thrown out of it; an error a package throws is not one
+ * this reads.
+ */
+const thrownBy = (block: TsNode, bound: Bindings, depth: number, seen: Set<TsNode>): { value: TsNode; bound: Bindings }[] => {
+  const own = functionAround(block);
+  const out: { value: TsNode; bound: Bindings }[] = [];
+  for (const statement of block.getDescendantsOfKind(SyntaxKind.ThrowStatement)) {
+    if (functionAround(statement) !== own || caughtWithin(statement, block)) continue;
+    out.push({ value: statement.getExpression(), bound });
+  }
+  if (depth >= MOST_THROWN_DEPTH) return out.slice(0, MOST_THROWN);
+  for (const call of block.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+    if (functionAround(call) !== own || caughtWithin(call, block)) continue;
+    const fn = calledBody(call);
+    if (fn === undefined || seen.has(fn) || fn.getSourceFile().isDeclarationFile()) continue;
+    if (!Node.isMethodDeclaration(fn) && !Node.isFunctionDeclaration(fn) && !Node.isArrowFunction(fn) && !Node.isFunctionExpression(fn)) continue;
+    const body = fn.getBody();
+    if (body === undefined) continue;
+    seen.add(fn);
+    const handed = new Map(bound);
+    fn.getParameters().forEach((parameter, index) => {
+      const argument = call.getArguments()[index];
+      if (argument !== undefined && !Node.isSpreadElement(argument)) handed.set(parameter, argument);
+    });
+    out.push(...thrownBy(body, handed, depth + 1, seen));
+    if (out.length >= MOST_THROWN) break;
+  }
+  return out.slice(0, MOST_THROWN);
+};
+
 /** One value the walk reached, read past the bindings and destructurings it names (P286). */
 const heldIn = (expression: TsNode, bound: Bindings, site: TsNode, depth: number, rest: readonly string[]): Held => {
   let node = unwrapped(expression);
   if (Node.isAwaitExpression(node)) node = unwrapped(node.getExpression());
-  // A `const` bound to a condition is the condition (P290).
+  // A list spread into the list a path steps through, at every place or at
+  // one: its own elements, each read on along the rest of the path (P298).
+  if (Node.isSpreadElement(node) && (rest[0] === EVERY_ELEMENT || /^\d+$/.test(rest[0] ?? ''))) {
+    return heldValues(node.getExpression(), [EVERY_ELEMENT, ...rest.slice(1)], site, bound, depth + 1);
+  }
+  // A const bound to a condition is the condition (P290).
   const constant = Node.isIdentifier(node) && rest.length > 0 ? declarationOf(node) : undefined;
   const initial =
     constant !== undefined && Node.isVariableDeclaration(constant) && constant.getVariableStatement()?.getDeclarationKind() === VariableDeclarationKind.Const
@@ -354,6 +498,9 @@ const heldIn = (expression: TsNode, bound: Bindings, site: TsNode, depth: number
       false,
     );
   }
+  // `byId.get(id)` of a `Map` a `const` holds: each value it is given (P298).
+  const stored = Node.isCallExpression(node) ? mapValuesOf(node, bound) : undefined;
+  if (stored !== undefined) return combined(stored.map((value) => heldValues(value, rest, site, bound, depth + 1)), node, rest.includes(EVERY_ELEMENT));
   // `jobs[0]`: the element at that place of what the list is (P290).
   if (Node.isElementAccessExpression(node)) {
     const index = node.getArgumentExpression();
@@ -361,11 +508,28 @@ const heldIn = (expression: TsNode, bound: Bindings, site: TsNode, depth: number
     if (key?.resolved === true && (typeof key.value === 'number' || typeof key.value === 'string')) {
       return heldValues(node.getExpression(), [String(key.value), ...rest], site, bound, depth + 1);
     }
+    // `jobs[index]` at a place not read: one of the list's elements, each read (P298).
+    if (isList(node.getExpression())) return heldValues(node.getExpression(), [EVERY_ELEMENT, ...rest], site, bound, depth + 1);
   }
   if (Node.isIdentifier(node)) {
     const declaration = declarationOf(node);
     const handed = declaration === undefined ? undefined : bound.get(declaration);
     if (handed !== undefined) return heldValues(handed, rest, site, bound, depth + 1);
+    // What a `catch` is handed: each value the block it guards throws, read
+    // on along the rest of the path (P298).
+    const clause = declaration?.getParent();
+    if (rest.length > 0 && clause !== undefined && Node.isCatchClause(clause)) {
+      const guarded = clause.getParentIfKind(SyntaxKind.TryStatement)?.getTryBlock();
+      const thrown = guarded === undefined ? [] : thrownBy(guarded, bound, 0, new Set());
+      if (thrown.length === 0) {
+        return { kind: 'unread', expression: node, why: `${node.getText()} is what its try block throws, and nothing it throws is written in this repository.` };
+      }
+      return combined(
+        thrown.map((each) => heldValues(each.value, rest, site, each.bound, depth + 1)),
+        node,
+        rest.includes(EVERY_ELEMENT),
+      );
+    }
     // An element of a list not written where it is named: each element of
     // that list, which whoever hands the list in writes (P290).
     const list = listOfElement(node);
@@ -762,6 +926,7 @@ const instanceValue = (receiver: TsNode, owner: ClassDeclaration, index: number,
  */
 const stepped = (value: Held, call: CallExpression, holder: Forwarder, di: DiMap): Held => {
   if (value.kind === 'written' || value.kind === 'unread') return value;
+  if (value.kind === 'several') return combined(value.options.map((option) => stepped(option, call, holder, di)), call, false, value.expression);
   if (holderAt(value, value.expression) !== holder) {
     return { kind: 'unread', expression: value.expression, why: `${value.expression.getText().slice(0, 60)} is decided by a caller of another function.` };
   }
@@ -829,6 +994,16 @@ export interface ForwardedSite {
   readonly stopped?: 'unheld' | 'budget';
 }
 
+/** A value as text, for telling two places a walk reached apart. */
+const valueKey = (held: Held | undefined): string => {
+  if (held === undefined) return '-';
+  const at = (node: TsNode): string => `${node.getStart()}`;
+  if (held.kind === 'written') return `w:${(held.choices ?? [held.expression]).map(at).join(',')}:${held.partial ?? ''}`;
+  if (held.kind === 'several') return `v:${held.options.map(valueKey).join(',')}`;
+  if (held.kind === 'unread') return `u:${held.why}`;
+  return waitingKey(held) ?? held.kind;
+};
+
 /** A function and the value a walk waits on its callers for: met twice on one way out, a recursion. */
 const waitingOn = (holder: Forwarder, value: Held): string => {
   const at = `${holder.getSourceFile().getFilePath()}:${holder.getStart()}`;
@@ -875,9 +1050,22 @@ export const forwardedPublish = (values: readonly (Held | undefined)[], di: DiMa
       short = true;
       return;
     }
+    // A value that is one of several, some waiting further out: each way is
+    // walked on its own, the written ones decided where they are (P298).
+    const split = current.slice(0, deciding).findIndex((value) => value?.kind === 'several');
+    const several = split < 0 ? undefined : current[split];
+    if (several?.kind === 'several') {
+      for (const option of several.options) walk(current.map((value, index) => (index === split ? option : value)), hops, through, undecided, met);
+      return;
+    }
     const address = decider(current);
-    const holder = address === undefined ? undefined : holderAt(address, address.expression);
-    if (address === undefined || holder === undefined) {
+    if (address === undefined) {
+      if (hops.length === 0) short = true;
+      else sites.push({ site: hops.at(-1) as CallExpression, values: current, hops, through, undecided });
+      return;
+    }
+    const holder = holderAt(address, address.expression);
+    if (holder === undefined) {
       if (hops.length === 0) short = true;
       else sites.push({ site: hops.at(-1) as CallExpression, values: current, hops, through, undecided, stopped: 'unheld' });
       return;
@@ -914,5 +1102,13 @@ export const forwardedPublish = (values: readonly (Held | undefined)[], di: DiMa
     }
   };
   walk(values, [], [], false, []);
-  return { sites, here: short || sites.length === 0 };
+  // Two ways out that meet at one call with the same values are one place (P298).
+  const seen = new Set<string>();
+  const distinct = sites.filter((site) => {
+    const key = `${site.site.getSourceFile().getFilePath()}:${site.site.getStart()}|${site.values.map(valueKey).join('|')}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return { sites: distinct, here: short || distinct.length === 0 };
 };

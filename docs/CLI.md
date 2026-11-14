@@ -5993,7 +5993,7 @@ readable name wins. `channel` replaces `channelArg` where both are given.
 | Locator | Reads |
 |---|---|
 | `{ "kind": "argument", "index": 0 }` | argument 0, which is what `channelArg: 0` means |
-| `{ "kind": "argument-property", "index": 0, "key": "name" }` | the `name` property of argument 0, written out or as a shorthand |
+| `{ "kind": "argument-property", "index": 0, "key": "name" }` | the `name` property of argument 0, written out or as a shorthand; with `"otherwise": 1`, argument 1 where argument 0 is not handed or is an object written out with no `name` and no spread (P298) |
 | `{ "kind": "base-constructor-argument", "index": 0 }` | argument 0 of the `super(...)` in the class the receiver was declared as |
 | `{ "kind": "receiver" }` | the expression the call was made on |
 | `{ "kind": "receiver-type" }` | the declaration of the receiver's declared type |
@@ -6045,7 +6045,34 @@ step reads the elements a list is written with and those `push` and
 `unshift` add to the `const` holding it, a list spread in, each branch of a
 condition, and what a `map` callback answers; and a step written as a number
 is the element at that place of a list written out (P290,
-`fixtures/job-flows-from-callers`).
+`fixtures/job-flows-from-callers`), or one of its elements where a spread or a
+`push` may move it, none past the end of a list written whole. A name taken
+out of a record by a `const` destructuring is that key of each record what it
+is taken out of may be - `const { later } = this.plan(jobs)` each `later` the
+method answers; a field of an instance written out (`new Refused(jobs).unsent`)
+is what its constructor keeps there, none for a class with no such field; and
+`map.get(key)` of a `Map` a `const` holds is each value it is given (P298).
+
+**A job record a queue layer plans, splits and hands back** (P298). The walk
+out from a publish follows a value that is one of several - the branches of
+`error instanceof PartialSendError ? error.unsentJobs : jobs`, the lists a
+batch was split into spread back together - each on its own, the ones written
+where they are drawn there and the ones a caller decides at each caller, two
+ways reaching one call drawn once. What a `catch` is handed is each value its
+try block throws: a `throw` of its own or of a function of the repository it
+calls, with that function's parameters bound to what the call hands them, a
+throw an inner `try` catches excepted; an error a package throws is not read.
+An element at a place not read (`jobs[index]`) is each element of the list.
+Two calls of the layer drawn at one caller - its `add` and its `addBulk` - are
+one producer naming every job either names
+(`fixtures/job-batches-planned-by-a-layer`). A scheduler's
+`upsertJobScheduler(id, repeat, template)` names its job by the template's
+`name`, or by `id` where the template has none or there is no template, as
+BullMQ does. A worker's processor a caller writes in place that does more than
+hand the job on is a handler of its own, named for the member it is written in
+and the call it is handed to (`MailWorker.constructor.init@21`), with the calls
+its body makes to the repository's functions and methods; one written where the
+worker is made still stands for the body it is made in.
 
 **Where a send goes that does not say: what its function is granted** (P272).
 A send whose address is not read - a queue's URL looked up in a cache the code
@@ -7051,14 +7078,26 @@ that API are at an address nothing joins to (`fixtures/lambda-terraform-base-pat
 **Where an API nothing maps is served** (P294): each of its routes also records
 `meta.servedAt`, as the Serverless reader does - the gateway host of the region
 of the `aws` provider the API is created with (`provider = aws.<alias>` names
-an aliased one; a region no file sets is any region), the id left open, once per
-stage: `$default` at the root, any other stage under its name, a stage named by
-a root module's `var.<name>` or `terraform.workspace` open with the value it has
+an aliased one; a module uses its own provider block, else the one its call's
+`providers = { aws = aws.west }` hands it, else the caller's, P298; a region no
+file sets is any region), the id left open, once per stage: `$default` at the
+root, any other stage under its name, a stage named by a root module's
+`var.<name>` or `terraform.workspace` - directly, or through a `local` or a
+child module's input written over either (P298) - open with the value it has
 where nothing sets it, and a stage chosen elsewhere where none is read. A
 quick-create HTTP API (`target`) is served at its `$default` stage, and an API
 whose `disable_execute_api_endpoint` is `true` is served at none. A request
 written out with the id is joined to it as a Serverless API's is
 (`fixtures/gateway-served-everywhere`).
+
+**Where a mapped API is served** (P298): the routes of an API mapped onto a
+custom domain record `servedAt` at each domain (`host` the domain name, no
+base, since the base path is already in front of every route) and at the API's
+own address as above, unless it is turned off, with `under` naming the base
+path that address does not write, so `https://<id>.execute-api.<region>.amazonaws.com/<stage>/submit`
+asks the route drawn at `/orders/submit`. Of an API mapped at several base
+paths, the routes of the first carry its own address
+(`fixtures/gateway-served-at-deploy-choices`).
 
 **A shared API is joined across repositories.** A route that hangs from a
 point of an API another repository owns — looked up through a parameter
@@ -7358,8 +7397,12 @@ no stage. The stage the file gives - written out (`stage: prod`), left to the
 command line (`${opt:stage, 'prod'}`), or none written - is the one deployed
 to where nothing chooses (`chosenDefault`), and any stage the service may be
 run with, since `--stage` overrides it; only the configuration's
-`infra.options` settles it (P294). A region the files do not settle is any
-region. SAM and CloudFormation templates, CDK apps and Terraform record the
+`infra.options` settles it (P294). The region likewise (P298): the one the
+file gives - written out, `${opt:region, 'eu-central-1'}`, or the framework's
+`us-east-1` - is deployed to where nothing chooses (`chosenHost`, the gateway
+host of that region beside a `host` of any region), and any region the service
+may be run with, since `--region` overrides it; `infra.options.region` settles
+it. A region the files do not settle is any region. SAM and CloudFormation templates, CDK apps and Terraform record the
 same for the APIs they create (P294): see each reader. A request written
 anywhere in the project - a browser's or another service's - to an address
 with an id no file holds is joined to the one API served at its host and
@@ -7368,8 +7411,10 @@ stage, asking for the path after the stage, `heuristic` (`meta.via:
 `base-url-from-files` note; of several, an API with a route for the request is
 asked before one without, a stage the deployment fixes before one it leaves
 open, and of those one deployed to by default at the stage the address writes
-before the rest; several still left are an `ambiguous-route-target` row naming
-them. A host the configuration places (`services[].hosts`) is the
+before the rest - and of regions left open, one deployed to by default at the
+host the address writes, an API reached at another region taken only where it
+has a route for the request (P298); several still left are an
+`ambiguous-route-target` row naming them. A host the configuration places (`services[].hosts`) is the
 configuration's answer first.
 
 The `serverless-step-functions` plugin's `stepFunctions.stateMachines` are
@@ -7424,7 +7469,11 @@ none is written, the id left open - once per stage: a REST API's
 false`) and every `apigateway.Stage` of its deployments; an HTTP API's default
 stage at the root (unless `createDefaultStage: false`) and every stage
 `addStage` or `new HttpStage` gives it; a stage the app does not settle, or none
-at all, is any stage.
+at all, is any stage. A stage or a region the app takes from its context
+(`this.node.tryGetContext('stage') ?? 'beta'`, in a name, a prop handed to a
+stack, or the record written) is any one `cdk deploy -c` names, the one it
+reads where nothing does kept as its default (`chosenDefault`, `chosenHost`);
+a key `services[].infra.options` sets is that one (P298).
 
 **A construct with no name of its own** - a queue with no `queueName`, a
 function with no `functionName` - is named by its path,
@@ -7541,7 +7590,9 @@ for the REST API it makes, the root of `$default` for its HTTP API, unless
 quick-create API, and a stage chosen elsewhere where none is read. A stage
 named by a parameter (`!Ref Stage`, `${Stage}` in a `!Sub`) is open, with the
 value the files give it where nothing overrides it, since `sam deploy
---parameter-overrides` may; a parameter `services[].infra.options` sets is that
+--parameter-overrides` may - a nested template's parameter too where its parent
+hands it down from a parameter of its own the parent's deployment may override
+(`Parameters: { Stage: !Ref Stage }`, P298); a parameter `services[].infra.options` sets is that
 stage.
 
 **State machines** (`AWS::Serverless::StateMachine`) are workflows: a

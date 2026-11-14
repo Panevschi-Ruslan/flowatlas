@@ -1,6 +1,6 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { parseConfig, type DeliveryTarget, type Deployment } from '@flowatlas/core';
 import { terraformReader } from '../index.js';
@@ -19,7 +19,10 @@ afterAll(() => {
 const readFiles = (files: Record<string, string>): Deployment => {
   const dir = mkdtempSync(join(tmpdir(), 'flowatlas-shapes-'));
   scratch.push(dir);
-  for (const [name, content] of Object.entries(files)) writeFileSync(join(dir, name), content);
+  for (const [name, content] of Object.entries(files)) {
+    mkdirSync(dirname(join(dir, name)), { recursive: true });
+    writeFileSync(join(dir, name), content);
+  }
   return terraformReader.read({ repoDir: dir, config: parseConfig({}) });
 };
 
@@ -182,5 +185,53 @@ describe('where an API is served by its own address (P294)', () => {
       ['y', [{ host: '*.execute-api.*.amazonaws.com', base: ['*'], api: 'y' }]],
       ['z', undefined],
     ]);
+  });
+
+  it('opens a stage a local or a module input reads a root variable or the workspace through, and takes the provider a module call hands its module (P298)', () => {
+    const deployment = readFiles({
+      'main.tf': [
+        'provider "aws" {\n  region = "us-east-1"\n}',
+        'provider "aws" {\n  alias = "west"\n  region = "eu-west-2"\n}',
+        'variable "stage" {\n  default = "staging"\n}',
+        'locals {\n  stage = var.stage\n}',
+        http('x'),
+        route('x'),
+        stage('x', 'chosen', 'local.stage'),
+        'module "handed" {\n  source = "./api"\n  stage = var.stage\n  providers = {\n    aws = aws.west\n  }\n}',
+        'module "fixed" {\n  source = "./api"\n  stage = "live"\n}',
+      ].join('\n'),
+      'api/main.tf': ['variable "stage" {}', http('y'), route('y'), stage('y', 's', 'var.stage')].join('\n'),
+    });
+    expect(servedOf(deployment)).toEqual([
+      ['x', [{ host: '*.execute-api.us-east-1.amazonaws.com', base: ['*'], api: 'x', chosenDefault: 'staging' }]],
+      ['y', [{ host: '*.execute-api.eu-west-2.amazonaws.com', base: ['*'], api: 'y', chosenDefault: 'staging' }]],
+      ['y', [{ host: '*.execute-api.us-east-1.amazonaws.com', base: ['live'], api: 'y' }]],
+    ]);
+  });
+
+  it('is served at each custom domain an API is mapped onto, its base path in front of the routes, and at its own address without it (P298)', () => {
+    const rest = (more = ''): string =>
+      [
+        `resource "aws_api_gateway_rest_api" "shop" {\n  name = "shop"\n${more}}`,
+        'resource "aws_api_gateway_resource" "items" {\n  rest_api_id = aws_api_gateway_rest_api.shop.id\n  parent_id = aws_api_gateway_rest_api.shop.root_resource_id\n  path_part = "items"\n}',
+        'resource "aws_api_gateway_method" "list" {\n  rest_api_id = aws_api_gateway_rest_api.shop.id\n  resource_id = aws_api_gateway_resource.items.id\n  http_method = "GET"\n  authorization = "NONE"\n}',
+        'resource "aws_api_gateway_stage" "live" {\n  rest_api_id = aws_api_gateway_rest_api.shop.id\n  stage_name = "live"\n}',
+        'resource "aws_api_gateway_domain_name" "shop" {\n  domain_name = "api.shop.example"\n}',
+        'resource "aws_api_gateway_base_path_mapping" "shop" {\n  api_id = aws_api_gateway_rest_api.shop.id\n  stage_name = aws_api_gateway_stage.live.stage_name\n  domain_name = aws_api_gateway_domain_name.shop.domain_name\n  base_path = "v1"\n}',
+      ].join('\n');
+    const mapped = readFiles({ 'main.tf': ['provider "aws" {\n  region = "eu-west-1"\n}', rest()].join('\n') });
+    expect(routes(mapped)).toEqual(['GET /v1/items']);
+    expect(servedOf(mapped)).toEqual([
+      [
+        'shop',
+        [
+          { host: 'api.shop.example', base: [], api: 'shop' },
+          { host: '*.execute-api.eu-west-1.amazonaws.com', base: ['live'], api: 'shop', under: '/v1' },
+        ],
+      ],
+    ]);
+    // An API whose own address is turned off is served at its domain alone.
+    const domainOnly = readFiles({ 'main.tf': rest('  disable_execute_api_endpoint = true\n') });
+    expect(servedOf(domainOnly)).toEqual([['shop', [{ host: 'api.shop.example', base: [], api: 'shop' }]]]);
   });
 });

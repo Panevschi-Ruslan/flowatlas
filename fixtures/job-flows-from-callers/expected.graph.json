@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "job-flows-from-callers",
-  "generatedAt": "2026-11-12T19:10:38.625Z",
+  "generatedAt": "2026-11-14T18:09:30.968Z",
   "nodes": [
     {
       "id": "channel:archive-order",
@@ -2156,9 +2156,9 @@
       "file": "src/server.ts",
       "line": 36,
       "reason": "channel-dynamic",
-      "hint": "req.body.followUp, an element of jobs, is decided further out than the elements written beside it, and is not followed there. Annotate POST /items/:itemId/publish@31 with the channel it uses.",
+      "hint": "The queue is req.body.followUp, handed in by nothing a call names: a function no call names by itself, such as a callback, or an instance this cannot follow to where it is made. Annotate POST /items/:itemId/publish@31 with the channel it uses.",
       "symbol": "producer:job-flows-from-callers#src/server.ts:36:9",
-      "message": "POST /items/:itemId/publish@31 -> 'archive-order'"
+      "message": "POST /items/:itemId/publish@31 -> req.body.followUp"
     },
     {
       "file": "src/server.ts",

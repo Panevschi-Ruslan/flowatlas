@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { matchServedAt, servedAtOf, type ServedAt } from './served-at.js';
+import { atChosenHost, matchServedAt, servedAtOf, type ServedAt } from './served-at.js';
 
 const OPEN: ServedAt = { host: '*.gateway.region-1.example.test', base: ['*'], api: 'shop', chosenDefault: 'prod' };
 const FIXED: ServedAt = { host: '*.gateway.region-1.example.test', base: ['prod'], api: 'shop' };
@@ -26,6 +26,16 @@ describe('where an API is served (P284)', () => {
     const plain: ServedAt = { host: 'api.example.test', base: ['v1'], api: 'shop' };
     expect(matchServedAt('api.example.test', '/v1/orders', plain)?.path).toBe('/orders');
     expect(matchServedAt('x.api.example.test', '/v1/orders', plain)).toBeUndefined();
+  });
+
+  it('puts back the part of the routes a place does not write, and tells the host deployed to where nothing chooses (P298)', () => {
+    const under: ServedAt = { host: '*.gateway.region-1.example.test', base: ['prod'], api: 'shop', under: '/v1' };
+    expect(matchServedAt('a1.gateway.region-1.example.test', '/prod/orders', under)?.path).toBe('/v1/orders');
+    expect(matchServedAt('a1.gateway.region-1.example.test', '/prod', under)?.path).toBe('/v1');
+    const anywhere: ServedAt = { host: '*.gateway.*.example.test', base: [], api: 'shop', chosenHost: '*.gateway.region-1.example.test' };
+    expect(atChosenHost('a1.gateway.region-1.example.test', anywhere)).toBe(true);
+    expect(atChosenHost('a1.gateway.region-2.example.test', anywhere)).toBe(false);
+    expect(atChosenHost('a1.gateway.region-1.example.test', under)).toBe(false);
   });
 
   it('reads only well-formed entries out of a meta value', () => {

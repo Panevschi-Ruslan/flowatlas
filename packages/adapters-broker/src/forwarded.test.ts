@@ -376,3 +376,81 @@ six({ type: 'deep' }, true);
     ).toEqual(["'deep'"]);
   });
 });
+
+describe('a batch a layer plans, splits and hands back from an error (P298)', () => {
+  const file = (source: string): SourceFile => new Project({ useInMemoryFileSystem: true }).createSourceFile('a.ts', source);
+  const queues = (source: string): string[] => {
+    const read = file(source);
+    const call = read.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'send') as CallExpression;
+    const out = forwardedPublish([heldValues(call.getArguments()[0] as never, ['type'], call)], new DiMap());
+    return out.sites.map((site) => {
+      const [value] = site.values;
+      const at = site.site.getExpression().getText();
+      if (value?.kind !== 'written') return `${at}: ${value?.kind}`;
+      return `${at}: ${(value.choices ?? [value.expression]).map((each) => each.getText()).join(' ')}`;
+    });
+  };
+  const LAYER = `
+declare function send(job: unknown): void;
+declare function relay(jobs: { type: string; delay?: number }[]): Promise<void>;
+type Job = { type: string; delay?: number };
+class Refused extends Error {
+  constructor(public readonly unsent: Job[], reason: string) { super(reason); }
+}
+class Layer {
+  async addBulk(jobs: Job[]) { await this.dispatch(jobs); }
+  private async dispatch(jobs: Job[]) {
+    const { now, later } = this.plan(jobs);
+    if (now.length > 0) this.toQueue(now);
+    try {
+      await this.forward(later);
+    } catch (error) {
+      this.fallBack(error, [...later]);
+    }
+  }
+  private plan(jobs: Job[]): { now: Job[]; later: Job[] } {
+    const { slow, fast } = this.split(jobs);
+    if (slow.length === 0) return { now: [], later: fast };
+    return { now: slow, later: fast };
+  }
+  private split(jobs: Job[]) {
+    const slow: Job[] = [];
+    const fast: Job[] = [];
+    for (const job of jobs) {
+      if ((job.delay ?? 0) > 900) slow.push(job);
+      else fast.push(job);
+    }
+    return { slow, fast };
+  }
+  private async forward(jobs: Job[]) {
+    try {
+      await relay(jobs);
+    } catch (error) {
+      throw new Refused(jobs, String(error));
+    }
+  }
+  private fallBack(error: unknown, jobs: Job[]) {
+    const unsent = error instanceof Refused ? error.unsent : jobs;
+    this.toQueue(unsent);
+  }
+  private toQueue(jobs: Job[]) { send(jobs[0]); }
+}
+`;
+
+  it('reads a job through the record a planning method answers, destructured, and through the list an error carries back', () => {
+    expect(queues(`${LAYER}\nnew Layer().addBulk([{ type: 'issue' }, { type: 'remind', delay: 3600 }]);`)).toEqual([
+      "new Layer().addBulk: 'issue' 'remind'",
+    ]);
+  });
+
+  it('reads a value that is one of a parameter and what a caught error was thrown with, each on its own', () => {
+    const read = file(`${LAYER}\nnew Layer().addBulk([{ type: 'issue' }]);`);
+    const call = read.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getText() === 'this.toQueue(unsent)') as CallExpression;
+    const held = heldValues(call.getArguments()[0] as never, ['0', 'type'], call);
+    expect(held.kind).toBe('several');
+    expect(held.kind === 'several' ? held.options.map((option) => (option.kind === 'parameter' ? `${option.parameter.getName()}.${option.path.join('.')}` : option.kind)) : []).toEqual([
+      'error.unsent.0.type',
+      'jobs.0.type',
+    ]);
+  });
+});

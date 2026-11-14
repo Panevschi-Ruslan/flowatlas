@@ -335,12 +335,55 @@ queue.send(jobs);`);
   });
 
   it('reads an element by its place, where nothing spread in before it moves it', () => {
-    const file = parse(`queue.send([{ type: 'a' }, { type: 'b' }]);
-queue.publish([...others, { type: 'b' }]);`);
+    const file = parse(`queue.send([{ type: 'a' }, { type: 'b' }]);`);
     expect(slots(callTo(file, 'send'), { kind: 'argument-path', index: 0, path: ['1', 'type'] })).toEqual(["'b'"]);
-    expect(slots(callTo(file, 'publish'), { kind: 'argument-path', index: 0, path: ['1', 'type'] })).toEqual([
-      "stopped at [...others, { type: 'b' }]",
-    ]);
+  });
+
+  it('reads one of the elements at a place a spread or a push may move, and none past the end of a list written whole (P298)', () => {
+    const file = parse(`queue.publish([...others, { type: 'b' }]);
+const later = [];
+later.push({ type: 'c' });
+queue.send(later);
+queue.emit([{ type: 'a' }]);`);
+    expect(slots(callTo(file, 'publish'), { kind: 'argument-path', index: 0, path: ['1', 'type'] })).toEqual(['stopped at ...others', "'b'"]);
+    expect(slots(callTo(file, 'send'), { kind: 'argument-path', index: 0, path: ['0', 'type'] })).toEqual(["'c'"]);
+    expect(slots(callTo(file, 'emit'), { kind: 'argument-path', index: 0, path: ['1', 'type'] })).toEqual([]);
+  });
+
+  it('reads a key of a record a function answers through a const destructuring, each answer on its own (P298)', () => {
+    const file = parse(`function plan(jobs) {
+  if (jobs.length === 0) return { now: [], later: [] };
+  return { now: jobs, later: [{ type: 'held' }] };
+}
+const { later } = plan([{ type: 'a' }]);
+queue.send(later);`);
+    expect(slots(callTo(file, 'send'), { kind: 'argument-path', index: 0, path: ['0', 'type'] })).toEqual(["'held'"]);
+  });
+
+  it('reads the argument a property falls back to where the object written out has no such key, or none is handed (P298)', () => {
+    const file = parse(`queue.send('nightly', { every: 1 }, { data: {} });
+queue.emit('hourly', { every: 1 });
+queue.publish('weekly', { every: 1 }, { name: 'digest' });
+queue.write('monthly', { every: 1 }, template);
+queue.store('yearly', { every: 1 }, { ...template });`);
+    const NAME = { kind: 'argument-property', index: 2, key: 'name', otherwise: 0 } as const;
+    expect(slots(callTo(file, 'send'), NAME)).toEqual(["'nightly'"]);
+    expect(slots(callTo(file, 'emit'), NAME)).toEqual(["'hourly'"]);
+    expect(slots(callTo(file, 'publish'), NAME)).toEqual(["'digest'"]);
+    expect(slots(callTo(file, 'write'), NAME)).toEqual([]);
+    expect(slots(callTo(file, 'store'), NAME)).toEqual([]);
+  });
+
+  it('reads a field an instance written out keeps from its constructor, and a value a Map is given (P298)', () => {
+    const file = parse(`class Refused extends Error {
+  constructor(public readonly jobs: { type: string }[], reason: string) { super(reason); }
+}
+const byId = new Map();
+byId.set('a', { type: 'mapped' });
+queue.send(new Refused([{ type: 'kept' }], 'no'));
+queue.emit(byId.get(key));`);
+    expect(slots(callTo(file, 'send'), { kind: 'argument-path', index: 0, path: ['jobs', '0', 'type'] })).toEqual(["'kept'"]);
+    expect(slots(callTo(file, 'emit'), { kind: 'argument-path', index: 0, path: ['type'] })).toEqual(["'mapped'"]);
   });
 });
 

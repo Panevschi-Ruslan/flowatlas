@@ -47,7 +47,19 @@ export type NameLocator =
    * near miss but a different answer: the record stringifies into a name nothing
    * at the other end of the wire could ever write (R83).
    */
-  | { kind: 'argument-property'; index: number; key: string }
+  | {
+      kind: 'argument-property';
+      index: number;
+      key: string;
+      /**
+       * The argument that names the value where the call hands no object at
+       * `index`, or one written out without `key` and with nothing spread into
+       * it: `upsertJobScheduler(id, repeat, { data })` names its job by the
+       * scheduler's id (P298). An object the call holds in a name, or one with
+       * a spread, may carry the key, and is read as it always was.
+       */
+      otherwise?: number;
+    }
   /** An argument of the call named `method`, anywhere in this chain. */
   | { kind: 'chain-call'; method: string; index: number }
   /** An argument of the call this chain started from. */
@@ -498,6 +510,17 @@ const propertyOf = (node: TsNode | undefined, key: string): TsNode | undefined =
   if (Node.isPropertyAssignment(property)) return property.getInitializer();
   if (Node.isShorthandPropertyAssignment(property)) return property.getNameNode();
   return undefined;
+};
+
+/** Whether an object written out holds no `key`, and nothing spread in that might. */
+const lacksKey = (node: TsNode, key: string): boolean => {
+  const value = peeled(node);
+  if (!Node.isObjectLiteralExpression(value)) return false;
+  return value.getProperties().every((property) => {
+    if (Node.isSpreadAssignment(property)) return false;
+    const name = property.getNameNode();
+    return !Node.isComputedPropertyName(name) && keyOf(name.getText()) !== key;
+  });
 };
 
 /**
@@ -1086,6 +1109,49 @@ const elementsNamed = (node: TsNode, bound: Bindings, depth: number): Followed[]
 };
 
 /**
+ * What `map.get(key)` answers, where the map is a `Map` bound once to a
+ * `const`, reached past the parameters the walk bound (P298): each value it
+ * is made with or `set` to. `undefined` for any other call.
+ */
+const storedValues = (node: TsNode, bound: Bindings): Followed[] | undefined => {
+  if (!Node.isCallExpression(node) || node.getArguments().length !== 1) return undefined;
+  const callee = peeled(node.getExpression());
+  if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'get') return undefined;
+  const map = peeled(settled(callee.getExpression(), bound));
+  const declaration = declarationNamed(map);
+  const made = declaration !== undefined && Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : undefined;
+  if (made === undefined || !Node.isNewExpression(made) || constructedName(made) !== 'Map') return undefined;
+  const values = heldIn(map);
+  return values === undefined || values.length === 0 || values.length > MOST_ELEMENTS ? undefined : values.map((value) => ({ value, bound }));
+};
+
+/** What `map.get(key)` answers, as the values written for a reader that walks them itself (P298). */
+export const mapValuesOf = (node: TsNode, bound: Bindings = NO_BINDINGS): TsNode[] | undefined => storedValues(node, bound)?.map((each) => each.value);
+
+/**
+ * What a name taken out of a record by a `const` destructuring holds (P298):
+ * `const { later, soon } = this.separate(jobs)` makes `later` the `later` of
+ * each record the call may answer, with the function's parameters bound to
+ * what the call hands them. One value per place reached; `undefined` where the
+ * name is no such binding, or the key was not reached.
+ */
+const destructuredValues = (node: TsNode, bound: Bindings, depth: number): Followed[] | undefined => {
+  if (depth > MOST_NESTED || !Node.isIdentifier(node)) return undefined;
+  const declaration = declarationNamed(node);
+  if (declaration === undefined || !Node.isBindingElement(declaration) || declaration.getDotDotDotToken() !== undefined) return undefined;
+  const pattern = declaration.getParent();
+  const variable = pattern?.getParent();
+  if (!Node.isObjectBindingPattern(pattern) || variable === undefined || !Node.isVariableDeclaration(variable) || !isConstDeclaration(variable)) return undefined;
+  const source = variable.getInitializer();
+  if (source === undefined) return undefined;
+  const key = keyOf(declaration.getPropertyNameNode()?.getText() ?? declaration.getName());
+  const slots = stepInto(source, key, bound);
+  const reached = slots.filter((slot): slot is NonNullable<LocatedSlot> => slot !== undefined && slot.reached);
+  if (reached.length === 0 || reached.length !== slots.length) return undefined;
+  return reached.map((slot) => ({ value: slot.expression, bound: slot.bound ?? bound }));
+};
+
+/**
  * What a value is written as, past what does not change it.
  *
  * Parentheses and the assertions TypeScript lets a value carry say nothing about
@@ -1120,6 +1186,28 @@ const followValue = (node: TsNode, bound: Bindings = NO_BINDINGS, depth = 0): Fo
     if (constant !== undefined) {
       current = constant;
       continue;
+    }
+    // `const { toQueue } = this.plan(jobs)`: the key of what it was taken out
+    // of, each record a function may answer read on its own (P298).
+    const taken = destructuredValues(current, held, depth);
+    if (taken !== undefined) {
+      const [only, ...more] = taken;
+      if (only !== undefined && more.length === 0) {
+        current = only.value;
+        held = only.bound;
+        continue;
+      }
+      return { value: current, bound: held, choices: taken };
+    }
+    // `byId.get(id)` of a `Map` a `const` holds: each value it is given (P298).
+    const stored = storedValues(current, held);
+    if (stored !== undefined) {
+      const [only, ...more] = stored;
+      if (only !== undefined && more.length === 0) {
+        current = only.value;
+        continue;
+      }
+      return { value: current, bound: held, choices: stored };
     }
     // A `let` is each value it is given (P290).
     const assigned = assignedValues(current);
@@ -1376,14 +1464,55 @@ const listedElements = (expression: TsNode, value: TsNode, bound: Bindings, dept
 /** A step that names an element of a list by its place: `jobs[0]`. */
 const isIndex = (step: string): boolean => /^\d+$/.test(step);
 
+/**
+ * What an instance written out holds in a field, where its class says
+ * (P298): the argument a constructor keeps in it - a parameter property, or
+ * `this.key = parameter` - or the value the class gives it. An instance whose
+ * type has no such field holds nothing there, which is none. `undefined`
+ * where the field is set some other way.
+ */
+const constructedField = (made: NewExpression, key: string, bound: Bindings): LocatedSlot[] | undefined => {
+  const callee = peeled(made.getExpression());
+  const declaration = Node.isIdentifier(callee) ? declarationNamed(callee) : undefined;
+  const cls = declaration !== undefined && Node.isClassDeclaration(declaration) && !declaration.getSourceFile().isDeclarationFile() ? declaration : undefined;
+  const absent = (): boolean => made.getType().getProperty(key) === undefined && !made.getType().isAny();
+  if (cls === undefined) return absent() ? [] : undefined;
+  const constructor = cls.getConstructors()[0];
+  const parameters = constructor?.getParameters() ?? [];
+  const handed = (parameter: TsNode): LocatedSlot[] | undefined => {
+    const index = parameters.findIndex((each) => each === parameter);
+    const argument = index < 0 ? undefined : made.getArguments()[index];
+    return argument === undefined || Node.isSpreadElement(argument) ? undefined : [carrying({ expression: argument, reached: true }, bound)];
+  };
+  const kept = parameters.find((parameter) => parameter.isParameterProperty() && parameter.getName() === key);
+  if (kept !== undefined) return handed(kept);
+  const assigned: TsNode[] = [];
+  constructor?.forEachDescendant((node) => {
+    if (!Node.isBinaryExpression(node) || node.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) return;
+    const left = peeled(node.getLeft());
+    if (Node.isPropertyAccessExpression(left) && Node.isThisExpression(peeled(left.getExpression())) && left.getName() === key) assigned.push(node.getRight());
+  });
+  const [only, ...more] = assigned;
+  if (only !== undefined) {
+    const parameter = more.length === 0 ? declarationNamed(peeled(only)) : undefined;
+    return parameter !== undefined && Node.isParameterDeclaration(parameter) ? handed(parameter) : undefined;
+  }
+  const initial = cls.getProperty(key)?.getInitializer();
+  if (initial !== undefined) return [{ expression: initial, reached: true }];
+  return cls.getProperty(key) === undefined && cls.getBaseClass() === undefined && absent() ? [] : undefined;
+};
+
 /** One step into what a slot holds. */
 const stepInto = (expression: TsNode, step: string, bound: Bindings): LocatedSlot[] => {
   const followed = followValue(expression, bound);
   // An element of a list of several: one step into each (P272).
   if (followed.choices !== undefined) return followed.choices.flatMap((choice) => stepInto(choice.value, step, choice.bound));
   const { value } = followed;
+  // Where it stopped, with what the walk bound on the way there (P298): a
+  // name a function the walk stepped into destructures is read on with its
+  // parameters still bound.
   const halt = (): LocatedSlot[] => [
-    { expression, reached: false, ...(followed.selector === undefined ? {} : { selector: followed.selector }) },
+    carrying({ expression, reached: false, ...(followed.selector === undefined ? {} : { selector: followed.selector }) }, bound),
   ];
   if (step === EVERY_ELEMENT) {
     // A list made by mapping another, `jobs.map(({ data }) => ({ name, data }))`:
@@ -1398,10 +1527,40 @@ const stepInto = (expression: TsNode, step: string, bound: Bindings): LocatedSlo
   }
   // `jobs[0]` of a list written out, where nothing spread in before it moves it (P290).
   if (isIndex(step) && Node.isArrayLiteralExpression(value)) {
-    const elements = value.getElements().slice(0, Number(step) + 1);
+    const written = value.getElements();
+    const elements = written.slice(0, Number(step) + 1);
     const element = elements.at(-1);
-    if (elements.length <= Number(step) || element === undefined || elements.some((each) => Node.isSpreadElement(each))) return halt();
-    return [carrying({ expression: element, reached: true }, followed.bound)];
+    const declaration = listDeclaration(expression, followed.bound) ?? constHolding(value);
+    const added = declaration === undefined ? [] : pushedInto(declaration, followed.bound, 0);
+    if (added.length === 0 && !written.some((each) => Node.isSpreadElement(each))) {
+      // A list written out whole with no element there holds nothing there.
+      return element === undefined || elements.length <= Number(step) ? [] : [carrying({ expression: element, reached: true }, followed.bound)];
+    }
+    if (element !== undefined && elements.length > Number(step) && !elements.some((each) => Node.isSpreadElement(each))) {
+      return [carrying({ expression: element, reached: true }, followed.bound)];
+    }
+    // A list some of whose elements are spread in or added later holds at
+    // that place one of its elements, which are each read (P298).
+    const listed = listedElements(expression, value, followed.bound, 0);
+    if (listed === undefined) return halt();
+    return listed.map((each) =>
+      'stopped' in each ? carrying(stopped(each.stopped), followed.bound) : carrying({ expression: each.value, reached: true }, each.bound),
+    );
+  }
+  // A place in a list some call makes - `jobs.filter(...)`, what a `map`
+  // answers - holds one of its elements, each read (P298).
+  if (isIndex(step) && Node.isCallExpression(value)) {
+    const listed = listedElements(expression, value, followed.bound, 0);
+    if (listed !== undefined) {
+      return listed.map((each) =>
+        'stopped' in each ? carrying(stopped(each.stopped), followed.bound) : carrying({ expression: each.value, reached: true }, each.bound),
+      );
+    }
+  }
+  // A field of an instance written out: `new PartialSendError(jobs, cause).unsentJobs` (P298).
+  if (Node.isNewExpression(value) && step !== EVERY_KEY) {
+    const field = constructedField(value, step, followed.bound);
+    if (field !== undefined) return field;
   }
   // `Object.assign({ TableName: table, ... }, extra)`: the record it answers (P299).
   const sources = step === EVERY_KEY || step === EVERY_ELEMENT || isIndex(step) ? undefined : assignedSources(value);
@@ -2016,8 +2175,12 @@ const resolvers: LocatorResolvers = {
     const argument = argumentsOf(site)[locator.index];
     return argument === undefined ? [] : walkPath(argument, []);
   },
-  'argument-property': (site, locator) =>
-    one(propertyOf(argumentsOf(site)[locator.index], locator.key)),
+  'argument-property': (site, locator) => {
+    const argument = argumentsOf(site)[locator.index];
+    const fallback = locator.otherwise === undefined ? undefined : argumentsOf(site)[locator.otherwise];
+    if (fallback !== undefined && (argument === undefined || lacksKey(argument, locator.key))) return walkPath(fallback, []);
+    return one(propertyOf(argument, locator.key));
+  },
   'chain-call': (site, locator) =>
     one(Node.isCallExpression(site) ? chainArgument(site, locator.method, locator.index) : undefined),
   'chain-root-argument': (site, locator, context) =>

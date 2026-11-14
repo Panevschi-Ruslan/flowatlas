@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:32:05.429Z",
+  "builtAt": "2026-11-14T18:06:26.896Z",
   "services": [
     {
       "name": "shop",
@@ -180,12 +180,13 @@
         "declaredAs": "functions.ledger.events[0]",
         "servedAt": [
           {
-            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "host": "*.execute-api.*.amazonaws.com",
             "base": [
               "*"
             ],
             "api": "dev-shop",
-            "chosenDefault": "dev"
+            "chosenDefault": "dev",
+            "chosenHost": "*.execute-api.eu-west-1.amazonaws.com"
           }
         ],
         "adapter": "aws-lambda"
@@ -209,12 +210,13 @@
         "declaredAs": "functions.placeOrder.events[0]",
         "servedAt": [
           {
-            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "host": "*.execute-api.*.amazonaws.com",
             "base": [
               "*"
             ],
             "api": "dev-shop",
-            "chosenDefault": "dev"
+            "chosenDefault": "dev",
+            "chosenHost": "*.execute-api.eu-west-1.amazonaws.com"
           }
         ],
         "adapter": "aws-lambda"
@@ -238,12 +240,13 @@
         "declaredAs": "functions.shipOrder.events[0]",
         "servedAt": [
           {
-            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "host": "*.execute-api.*.amazonaws.com",
             "base": [
               "*"
             ],
             "api": "dev-shop",
-            "chosenDefault": "dev"
+            "chosenDefault": "dev",
+            "chosenHost": "*.execute-api.eu-west-1.amazonaws.com"
           }
         ],
         "adapter": "aws-lambda"
@@ -267,12 +270,13 @@
         "declaredAs": "functions.refund.events[0]",
         "servedAt": [
           {
-            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "host": "*.execute-api.*.amazonaws.com",
             "base": [
               "*"
             ],
             "api": "dev-shop",
-            "chosenDefault": "dev"
+            "chosenDefault": "dev",
+            "chosenHost": "*.execute-api.eu-west-1.amazonaws.com"
           }
         ],
         "adapter": "aws-lambda"

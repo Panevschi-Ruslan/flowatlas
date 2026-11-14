@@ -42,7 +42,8 @@ const stateMachineLogicalId = (key: string, machine: Record<string, unknown>): s
 /**
  * The API of this service an address written out is one of, and the path it
  * asks for there (P268): `https://<id>.execute-api.<region>.amazonaws.com/<stage>/<path>`
- * in the service's region, at the stage it is deployed to, is its REST API
+ * in the service's region where the options fix it and in any other where
+ * they do not (P298), at the stage it is deployed to, is its REST API
  * where its functions declare `http` events, and one with no stage its HTTP
  * API's default stage where they declare `httpApi`. The id is a value the
  * platform assigns once the API is created and is not read: an address of
@@ -202,7 +203,12 @@ export const readService = (parts: DeploymentParts, options: ServiceOptions): vo
   // out, `${opt:stage, ...}`, or none - is the one deployed to where nothing
   // chooses, and `--stage` chooses any (P294); only the configuration's
   // options settle it.
-  const region = textOf(provider['region']) ?? (provider['region'] === undefined ? DEFAULT_REGION : undefined);
+  // The region likewise (P298): the file's - written out, `${opt:region, ...}`,
+  // or the framework's own - is the one deployed to where nothing chooses,
+  // and `--region` chooses any; only the configuration's options settle it.
+  const regionOption = variables.option('region');
+  const regionText = regionOption ?? textOf(provider['region']) ?? (provider['region'] === undefined ? DEFAULT_REGION : undefined);
+  const region = { ...(regionText === undefined ? {} : { name: regionText }), ...(regionOption === undefined ? { chosen: true } : {}) };
   const chosen = stage.from !== 'option';
   const served =
     stageText === undefined
@@ -212,7 +218,7 @@ export const readService = (parts: DeploymentParts, options: ServiceOptions): vo
           ...(apis.http === undefined ? {} : { http: executeApiServedAt(region, apis.http, {}) }),
         };
   const events: EventReading = { file: reading, apis: served === undefined ? apis : { ...apis, served } };
-  reading.ownApi = ownApiOf(functions, apis, stageText, textOf(provider['region']));
+  reading.ownApi = ownApiOf(functions, apis, stageText, regionOption);
 
   const providerEnvironment = isRecord(provider['environment']) ? provider['environment'] : {};
   const packaged = isRecord(resolved['package']) ? resolved['package'] : {};

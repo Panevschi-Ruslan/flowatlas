@@ -94,3 +94,26 @@ describe('where a SAM or CloudFormation API is served (P294)', () => {
     ]);
   });
 });
+
+describe('a parameter a parent template hands down (P298)', () => {
+  const nested = (handed: string): Record<string, string> => ({
+    ...SAMCONFIG,
+    'template.yaml': template(
+      ['Orders:', '  Type: AWS::Serverless::Application', '  Properties:', '    Location: api/template.yaml', `    Parameters: { Stage: ${handed} }`].join('\n'),
+      'Parameters:\n  Stage: { Type: String, Default: qa }\n',
+    ),
+    'api/template.yaml': template(
+      ['Api: { Type: AWS::Serverless::Api, Properties: { Name: shop-orders, StageName: !Ref Stage } }', fn('{ Rest: { Type: Api, Properties: { RestApiId: !Ref Api, Path: /orders, Method: post } } }')].join('\n'),
+      'Parameters:\n  Stage: { Type: String }\n',
+    ),
+  });
+
+  it("is any stage the parent's deployment is handed where the parent hands down its own parameter, its default where none is", () => {
+    expect(servedOf(read(nested('!Ref Stage')))).toEqual([['POST', '/orders', [{ host: HOST, base: ['*'], api: 'shop-orders', chosenDefault: 'qa' }]]]);
+  });
+
+  it('is the stage the parent writes out, or the one the options fix for the parent', () => {
+    expect(servedOf(read(nested('live')))).toEqual([['POST', '/orders', [{ host: HOST, base: ['live'], api: 'shop-orders' }]]]);
+    expect(servedOf(read(nested('!Ref Stage'), { Stage: 'prod' }))[0]).toEqual(['POST', '/orders', [{ host: HOST, base: ['prod'], api: 'shop-orders' }]]);
+  });
+});

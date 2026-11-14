@@ -179,12 +179,13 @@ const bullmq: BrokerSpec = {
     },
     // A job repeated on a schedule is a job of the queue too: the scheduler is
     // handed a template, `{ name, data, opts }`, that it adds on every tick
-    // (P267).
+    // (P267). A template with no name, or none at all, names the job by the
+    // scheduler's id, as the library does (P298).
     {
       method: 'upsertJobScheduler',
       channelArg: -1,
       channel: QUEUE_OF_RECEIVER,
-      name: [{ kind: 'argument-property', index: 2, key: 'name' }],
+      name: [{ kind: 'argument-property', index: 2, key: 'name', otherwise: 0 }],
       payload: [{ kind: 'argument-property', index: 2, key: 'data' }],
       kind: 'job',
       receiverPackages: ['bullmq'],

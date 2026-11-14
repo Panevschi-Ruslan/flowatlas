@@ -30,7 +30,26 @@ export type Value =
   | FunctionValue
   | ClassValue
   | NodeHandle
+  | Chosen
   | Unread;
+
+/**
+ * A value of the app's context that `cdk deploy -c <key>=...` may set (P298):
+ * `cdk.json`'s, or the fallback the app writes beside it, where the
+ * deployment's configured options do not fix it. It lives only while it is
+ * held - in a name, a parameter, a function's answer, or a record (which keeps
+ * the plain value and remembers the key, `ObjectValue.chosen`) - and is the
+ * plain value wherever it is used.
+ */
+export class Chosen {
+  constructor(
+    readonly key: string,
+    readonly value: string | number | undefined,
+  ) {}
+}
+
+/** A value as it is used: a context value its plain value. */
+export const settle = (value: Value): Value => (value instanceof Chosen ? value.value : value);
 
 /** A value the files do not settle, and why, in one sentence. */
 export class Unread {
@@ -118,9 +137,18 @@ export const EXPORT_VALUE = 'core.ExportValue';
 /** An object literal, its members in the order written. */
 export class ObjectValue {
   readonly entries: Map<string, Value>;
+  /** The entries a context value the deployment may set gave, by the context key (P298). */
+  readonly chosen = new Map<string, string>();
 
   constructor(entries: Iterable<readonly [string, Value]> = []) {
     this.entries = new Map(entries);
+  }
+
+  /** Sets an entry, remembering where a context value gave it (P298). */
+  put(name: string, value: Value): void {
+    if (value instanceof Chosen) this.chosen.set(name, value.key);
+    else this.chosen.delete(name);
+    this.entries.set(name, settle(value));
   }
 
   get(name: string): Value {
@@ -291,8 +319,10 @@ export const toJson = (value: Value): unknown => {
 };
 
 /** The text a value is, when it is text or a number. */
-export const textOf = (value: Value): string | undefined =>
-  typeof value === 'string' ? value : typeof value === 'number' ? String(value) : undefined;
+export const textOf = (value: Value): string | undefined => {
+  const plain = settle(value);
+  return typeof plain === 'string' ? plain : typeof plain === 'number' ? String(plain) : undefined;
+};
 
 /** A member of an object value, or `undefined`. */
 export const memberOf = (value: Value, name: string): Value => (value instanceof ObjectValue ? value.get(name) : undefined);

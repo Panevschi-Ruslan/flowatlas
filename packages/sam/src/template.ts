@@ -22,7 +22,7 @@ import {
   type Exported,
   type ResourceReader,
 } from '@flowatlas/serverless';
-import { apiLookup, apiReference, apiValueOf, readApis } from './apis.js';
+import { apiLookup, apiReference, apiValueOf, readApis, readsChosenParameter } from './apis.js';
 import { deployConfigOf, TEMPLATE_FILES, type DeployConfig } from './config.js';
 import { deployerOf, JINJA_TEMPLATE, jinjaLoaderBeside, renderedTemplate, type JinjaRendered } from './deployers.js';
 
@@ -119,6 +119,8 @@ export interface TemplateReadOptions {
   readonly parent?: {
     readonly scope: string;
     readonly parameters: Readonly<Record<string, string | Unread>>;
+    /** The parameters it hands down from a value its own deployment chooses (P298). */
+    readonly open?: readonly string[];
     readonly region?: string;
     readonly chain: readonly string[];
     readonly dialect: Dialect;
@@ -311,7 +313,8 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
   }
 
   const given: Record<string, { value: string | Unread; from: ParameterFrom }> = {};
-  for (const [name, value] of Object.entries(options.parent?.parameters ?? {})) given[name] = { value, from: 'parent' };
+  // What the parent hands down is fixed, unless the parent hands down a value its own deployment chooses (P298).
+  for (const [name, value] of Object.entries(options.parent?.parameters ?? {})) given[name] = { value, from: options.parent?.open?.includes(name) === true ? 'parent-open' : 'parent' };
   // A parameter file, under the samconfig's overrides, the configuration's files and the options (P253).
   const files = options.parent === undefined ? deployValues(parts, options, config) : { named: [], vars: [] };
   for (const values of files.named) for (const [name, value] of Object.entries(values)) given[name] = { value, from: 'file' };
@@ -606,9 +609,18 @@ const readNested = (parts: DeploymentParts, reading: TemplateReading, resource: 
   if (chain.includes(file) || chain.length > MOST_NESTED) return unread(`at ${file}, which ${chain.includes(file) ? 'nests itself' : 'is nested too deeply to follow'}`);
   const parameters: Record<string, string | Unread> = {};
   const handed = isRecord(resource.properties['Parameters']) ? resource.properties['Parameters'] : {};
+  // `Stage: !Ref Stage` hands down the parent's own parameter, which its
+  // deployment may override (P298): read in the template as written, before
+  // its parameters are put in.
+  const resources = reading.resolver.context.document['Resources'];
+  const declared = isRecord(resources) ? resources[resource.logicalId] : undefined;
+  const properties = isRecord(declared) ? declared['Properties'] : undefined;
+  const written = isRecord(properties) && isRecord(properties['Parameters']) ? properties['Parameters'] : {};
+  const open: string[] = [];
   for (const [name, value] of Object.entries(handed)) {
     const textValue = reading.template.text(value);
     parameters[name] = textValue;
+    if (readsChosenParameter(reading, written[name])) open.push(name);
   }
   options.loaded.add(join(options.repoDir, file));
   return readTemplate(parts, {
@@ -621,6 +633,7 @@ const readNested = (parts: DeploymentParts, reading: TemplateReading, resource: 
     parent: {
       scope: `${reading.scope}${resource.logicalId}.`,
       parameters,
+      ...(open.length === 0 ? {} : { open }),
       ...(reading.template.pseudo.region === undefined ? {} : { region: reading.template.pseudo.region }),
       chain: [...chain, file],
       dialect,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:31:59.893Z",
+  "builtAt": "2026-11-14T18:06:25.277Z",
   "services": [
     {
       "name": "jobs",
@@ -99,12 +99,13 @@
         "declaredAs": "functions.health.events[0]",
         "servedAt": [
           {
-            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "host": "*.execute-api.*.amazonaws.com",
             "base": [
               "*"
             ],
             "api": "dev-jobs-shared",
-            "chosenDefault": "dev"
+            "chosenDefault": "dev",
+            "chosenHost": "*.execute-api.eu-west-1.amazonaws.com"
           }
         ],
         "adapter": "aws-lambda"

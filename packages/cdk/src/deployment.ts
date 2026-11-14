@@ -888,21 +888,29 @@ export class AppDeployment {
    * nearest stack or stage it is made in, where the app writes one the files
    * settle; the platform's otherwise.
    */
-  #regionOf(construct: Construct): string | undefined {
+  #regionOf(construct: Construct): { name?: string; chosen?: boolean } | undefined {
     const segments = construct.path.split('/');
     for (let depth = segments.length - 1; depth > 0; depth -= 1) {
       const path = segments.slice(0, depth).join('/');
       const scope = this.constructs.find((each) => each.path === path);
       const env = scope === undefined ? undefined : prop(scope, 'env');
-      if (env instanceof ObjectValue && env.get('region') !== undefined) return textOf(env.get('region'));
+      if (env instanceof ObjectValue && env.get('region') !== undefined) {
+        const name = textOf(env.get('region'));
+        // A region taken from the app's context is the one `-c` sets (P298).
+        return { ...(name === undefined ? {} : { name }), ...(env.chosen.has('region') ? { chosen: true } : {}) };
+      }
     }
     return undefined;
   }
 
   /** A stage name as written: that stage, the construct's own where none is written, or any where the app does not settle it (P294). */
-  #stageAt(value: Value, fallback: string): { name?: string; chosen?: boolean } {
+  #stageAt(record: Value, key: string, fallback: string): { name?: string; chosen?: boolean } {
+    const value = record instanceof ObjectValue ? record.get(key) : undefined;
     const name = value === undefined ? fallback : textOf(value);
-    return name === undefined ? { chosen: true } : { name };
+    // A stage the app takes from its context is the one `-c` sets, the one
+    // it reads where nothing sets it kept as its default (P298).
+    const chosen = record instanceof ObjectValue && record.chosen.has(key);
+    return name === undefined ? { chosen: true } : { name, ...(chosen ? { chosen } : {}) };
   }
 
   /**
@@ -916,18 +924,16 @@ export class AppDeployment {
   #servedAt(api: Construct, name: string): ServedAt[] {
     const stages: { name?: string; chosen?: boolean }[] = [];
     if (REST_APIS.has(api.type)) {
-      const options = prop(api, 'deployOptions');
-      const written = options instanceof ObjectValue ? options.get('stageName') : undefined;
-      if (prop(api, 'deploy') !== false) stages.push(this.#stageAt(written, 'prod'));
+      if (prop(api, 'deploy') !== false) stages.push(this.#stageAt(prop(api, 'deployOptions'), 'stageName', 'prod'));
       for (const stage of this.#ofType('aws-apigateway.Stage')) {
         const deployment = prop(stage, 'deployment');
-        if (deployment instanceof Construct && prop(deployment, 'api') === api) stages.push(this.#stageAt(prop(stage, 'stageName'), 'prod'));
+        if (deployment instanceof Construct && prop(deployment, 'api') === api) stages.push(this.#stageAt(stage.props, 'stageName', 'prod'));
       }
       if (stages.length === 0) stages.push({ chosen: true });
     } else {
       if (prop(api, 'createDefaultStage') !== false) stages.push({});
-      for (const { args } of api.addedBy('addStage')) stages.push(this.#stageAt(args[1] instanceof ObjectValue ? args[1].get('stageName') : undefined, DEFAULT_STAGE));
-      for (const stage of this.#ofType('aws-apigatewayv2.HttpStage')) if (prop(stage, 'httpApi') === api) stages.push(this.#stageAt(prop(stage, 'stageName'), DEFAULT_STAGE));
+      for (const { args } of api.addedBy('addStage')) stages.push(this.#stageAt(args[1], 'stageName', DEFAULT_STAGE));
+      for (const stage of this.#ofType('aws-apigatewayv2.HttpStage')) if (prop(stage, 'httpApi') === api) stages.push(this.#stageAt(stage.props, 'stageName', DEFAULT_STAGE));
       if (stages.length === 0) stages.push({ chosen: true });
     }
     const region = this.#regionOf(api);

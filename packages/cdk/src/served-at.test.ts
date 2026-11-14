@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { cdkReader } from './index.js';
 
 /** Where the APIs a CDK app creates are served (P294). */
-const stack = (body: string, props = ''): Deployment => {
+const stack = (body: string, props = '', options?: Record<string, string>): Deployment => {
   const repoDir = mkdtempSync(join(tmpdir(), 'flowatlas-cdk-served-'));
   const files: Record<string, string> = {
     'cdk.json': JSON.stringify({ app: 'npx ts-node bin/app.ts' }),
@@ -31,7 +31,7 @@ const stack = (body: string, props = ''): Deployment => {
     mkdirSync(dirname(join(repoDir, path)), { recursive: true });
     writeFileSync(join(repoDir, path), text);
   }
-  return cdkReader.read({ repoDir, config: parseConfig({}), service: { name: 'app', repo: repoDir, type: 'lambda' } });
+  return cdkReader.read({ repoDir, config: parseConfig({}), service: { name: 'app', repo: repoDir, type: 'lambda', ...(options === undefined ? {} : { infra: { vars: [], options } }) } });
 };
 
 const servedOf = (deployment: Deployment): unknown[] => deployment.routes.map((route) => [route.method, route.path, route.meta?.['servedAt']]);
@@ -67,6 +67,25 @@ describe('where a CDK API is served (P294)', () => {
         ],
       ],
       ['GET', '/stock', [{ host: '*.execute-api.*.amazonaws.com', base: ['*'], api: 'shop-bare' }]],
+    ]);
+  });
+});
+
+describe('a stage and a region the app takes from its context (P298)', () => {
+  const body = `const stage = this.node.tryGetContext('stage') ?? 'beta';
+    const api = new apigw.RestApi(this, 'Api', { restApiName: 'shop-api', deployOptions: { stageName: stage } });
+    api.root.addResource('orders').addMethod('POST', new apigw.LambdaIntegration(place));`;
+  const props = ", { env: { region: app.node.tryGetContext('region') ?? 'eu-west-1' } }";
+
+  it('is any stage and any region `-c` names, the ones the app falls back to where none is given', () => {
+    expect(servedOf(stack(body, props))).toEqual([
+      ['POST', '/orders', [{ host: '*.execute-api.*.amazonaws.com', base: ['*'], api: 'shop-api', chosenDefault: 'beta', chosenHost: '*.execute-api.eu-west-1.amazonaws.com' }]],
+    ]);
+  });
+
+  it('is the stage and the region the configured options fix', () => {
+    expect(servedOf(stack(body, props, { stage: 'qa', region: 'us-east-2' }))).toEqual([
+      ['POST', '/orders', [{ host: '*.execute-api.us-east-2.amazonaws.com', base: ['qa'], api: 'shop-api' }]],
     ]);
   });
 });

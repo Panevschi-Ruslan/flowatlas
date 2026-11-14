@@ -112,7 +112,7 @@ export const readApp = (parts: DeploymentParts, options: AppOptions): string[] =
   const project = new Project({ compilerOptions: { allowJs: false, noEmit: true, skipLibCheck: true, strict: false }, skipAddingFilesFromTsConfig: true });
   const sources = sourcesOf(appDir);
   for (const source of sources) project.addSourceFileAtPath(source);
-  const interpreter = new Interpreter({ repoDir, context: { ...app.context, ...options.options } });
+  const interpreter = new Interpreter({ repoDir, context: { ...app.context, ...options.options }, fixed: new Set(Object.keys(options.options ?? {})) });
   const entry = app.entry === undefined ? undefined : project.getSourceFile(join(appDir, app.entry));
   const classes = project
     .getSourceFiles()

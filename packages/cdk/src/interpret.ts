@@ -9,6 +9,7 @@ import {
   Attribute,
   Built,
   CdkRef,
+  Chosen,
   ClassValue,
   embedding,
   Construct,
@@ -19,6 +20,7 @@ import {
   PRINCIPAL_ATTRIBUTES,
   principalHolders,
   Scope,
+  settle,
   textOf,
   toJson,
   Unread,
@@ -97,7 +99,43 @@ export interface AppReading {
   readonly repoDir: string;
   /** The context the app reads with `tryGetContext`: `cdk.json`'s, under the configured options. */
   readonly context: Readonly<Record<string, unknown>>;
+  /** The context keys the configured options fix; any other the deployment may set (P298). */
+  readonly fixed?: ReadonlySet<string>;
 }
+
+/** An entry of a record, as a context value where one gave it (P298). */
+const chosenEntry = (record: ObjectValue, name: string, value: Value): Value => {
+  const key = record.chosen.get(name);
+  return key !== undefined && (typeof value === 'string' || typeof value === 'number' || value === undefined) ? new Chosen(key, value) : value;
+};
+
+/**
+ * Whether the value an expression is evaluated to is held rather than used
+ * (P298): kept in a name, a record or a function's answer, or the operand of
+ * a fallback - where a context value the deployment may set stays one.
+ */
+const holdsValue = (node: TsNode): boolean => {
+  let at = node;
+  for (let depth = 0; depth < 8; depth += 1) {
+    const parent = at.getParent();
+    if (parent === undefined) return false;
+    if (Node.isParenthesizedExpression(parent) || Node.isAsExpression(parent) || Node.isNonNullExpression(parent) || Node.isSatisfiesExpression(parent) || Node.isAwaitExpression(parent)) {
+      at = parent;
+      continue;
+    }
+    if (Node.isVariableDeclaration(parent)) return parent.getInitializer() === at;
+    if (Node.isPropertyAssignment(parent)) return parent.getInitializer() === at;
+    if (Node.isShorthandPropertyAssignment(parent) || Node.isReturnStatement(parent)) return true;
+    if (Node.isArrowFunction(parent)) return parent.getBody() === at;
+    if (Node.isBinaryExpression(parent)) {
+      const operator = parent.getOperatorToken().getKind();
+      if (operator === SyntaxKind.EqualsToken) return parent.getRight() === at;
+      return operator === SyntaxKind.QuestionQuestionToken || operator === SyntaxKind.BarBarToken;
+    }
+    return false;
+  }
+  return false;
+};
 
 export class Interpreter {
   readonly constructs: Construct[] = [];
@@ -260,6 +298,12 @@ export class Interpreter {
   // ---------------------------------------------------------- expressions
 
   value(node: TsNode, scope: Scope, frame: Frame): Value {
+    const value = this.#evaluate(node, scope, frame);
+    // A context value the deployment may set stays one only where it is held (P298).
+    return value instanceof Chosen && !holdsValue(node) ? value.value : value;
+  }
+
+  #evaluate(node: TsNode, scope: Scope, frame: Frame): Value {
     if (this.#stopped) return new Unread('the app was not read this far', 'bound');
     this.#steps += 1;
     if (this.#steps > MOST_STEPS) {
@@ -350,12 +394,12 @@ export class Interpreter {
         const nameNode = property.getNameNode();
         const name = Node.isComputedPropertyName(nameNode) ? textOf(this.value(nameNode.getExpression(), scope, frame)) : nameNode.getText().replace(/^['"`]|['"`]$/g, '');
         const initializer = property.getInitializer();
-        if (name !== undefined && initializer !== undefined) out.entries.set(name, this.value(initializer, scope, frame));
+        if (name !== undefined && initializer !== undefined) out.put(name, this.value(initializer, scope, frame));
       } else if (Node.isShorthandPropertyAssignment(property)) {
-        out.entries.set(property.getName(), this.value(property.getNameNode(), scope, frame));
+        out.put(property.getName(), this.value(property.getNameNode(), scope, frame));
       } else if (Node.isSpreadAssignment(property)) {
         const spread = this.value(property.getExpression(), scope, frame);
-        if (spread instanceof ObjectValue) for (const [key, item] of spread.entries) out.entries.set(key, item);
+        if (spread instanceof ObjectValue) for (const [key, item] of spread.entries) out.put(key, chosenEntry(spread, key, item));
       } else if (Node.isMethodDeclaration(property)) {
         out.entries.set(property.getName(), new FunctionValue(property, scope));
       }
@@ -371,8 +415,8 @@ export class Interpreter {
       if (Node.isIdentifier(left)) scope.assign(left.getText(), value);
       else if (Node.isPropertyAccessExpression(left)) {
         const owner = this.value(left.getExpression(), scope, frame);
-        if (owner instanceof Construct) owner.fields.set(left.getName(), value);
-        else if (owner instanceof ObjectValue) owner.entries.set(left.getName(), value);
+        if (owner instanceof Construct) owner.fields.set(left.getName(), settle(value));
+        else if (owner instanceof ObjectValue) owner.put(left.getName(), value);
       }
       return value;
     }
@@ -381,9 +425,18 @@ export class Interpreter {
       // An environment variable nothing in the files sets falls back: the
       // fallback is what the files say, as an option with a default is.
       if (left instanceof Unread && left.environment !== undefined) return this.value(node.getRight(), scope, frame);
-      const settled = operator === SyntaxKind.QuestionQuestionToken ? (left instanceof Unread ? undefined : left !== undefined && left !== null) : truthy(left);
+      const plain = settle(left);
+      const settled = operator === SyntaxKind.QuestionQuestionToken ? (plain instanceof Unread ? undefined : plain !== undefined && plain !== null) : truthy(plain);
       if (settled === undefined) return left;
-      return settled ? left : this.value(node.getRight(), scope, frame);
+      if (settled) return left;
+      const right = this.value(node.getRight(), scope, frame);
+      // A context value nothing gives falls back to what the app writes,
+      // which `-c` may still set (P298).
+      if (left instanceof Chosen) {
+        const fallback = settle(right);
+        return typeof fallback === 'string' || typeof fallback === 'number' || fallback === undefined ? new Chosen(left.key, fallback) : right;
+      }
+      return right;
     }
     if (operator === SyntaxKind.AmpersandAmpersandToken) {
       const settled = truthy(left);
@@ -473,7 +526,7 @@ export class Interpreter {
 
   member(owner: Value, name: string, at: TsNode): Value {
     if (owner instanceof CdkRef) return staticValue(owner.member(name));
-    if (owner instanceof ObjectValue) return owner.get(name);
+    if (owner instanceof ObjectValue) return chosenEntry(owner, name, owner.get(name));
     if (Array.isArray(owner)) return name === 'length' ? owner.length : new Unread(`${name} of a list is not read`, 'not-read');
     if (typeof owner === 'string') return name === 'length' ? owner.length : new Unread(`${name} of text is not read`, 'not-read');
     if (owner instanceof Construct) {
@@ -558,7 +611,12 @@ export class Interpreter {
       return staticCall(receiver.member(name), args, site);
     }
     if (receiver instanceof NodeHandle) {
-      if (name === 'tryGetContext' && typeof args[0] === 'string') return (this.app.context[args[0]] as Value) ?? undefined;
+      if (name === 'tryGetContext' && typeof args[0] === 'string') {
+        const given = (this.app.context[args[0]] as Value) ?? undefined;
+        // A key the configured options do not fix is the deployment's to set (P298).
+        const fixed = this.app.fixed?.has(args[0]) === true;
+        return !fixed && (typeof given === 'string' || typeof given === 'number' || given === undefined) ? new Chosen(args[0], given) : given;
+      }
       return undefined;
     }
     if (receiver instanceof Construct) {

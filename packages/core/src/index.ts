@@ -430,6 +430,7 @@ export {
   locatedSlots,
   locatorApplies,
   locatorIsCondition,
+  mapValuesOf,
   originsOf,
   walkPath,
 } from './adapters/locator.js';
@@ -1153,4 +1154,4 @@ export { builtQueryInAddress, builtQueryOf, PLATFORM_HEADERS, PLATFORM_QUERY, wr
 export { defaultHeadersWritten, headersAHookAdds, joinHookHeaders, NO_HOOK_HEADERS, type HookHanded, type HookHeaders } from './hook-headers.js';
 export { responseHeadersRead, type AnswerHanded, type ResponseHeadersRead } from './response-headers.js';
 export type { ConfigLiteral, ExportedNames } from './config-literal.js';
-export { matchServedAt, SERVED_AT_META, servedAtOf, type ServedAt, type ServedMatch } from './served-at.js';
+export { atChosenHost, matchServedAt, SERVED_AT_META, servedAtOf, type ServedAt, type ServedMatch } from './served-at.js';

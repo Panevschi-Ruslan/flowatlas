@@ -10,8 +10,9 @@ with an id no file of the project holds (P294):
 - `loans`, Terraform: an HTTP API at its `$default` stage, which puts no stage
   in the address, with a provider that names no region;
 - `stock`, a CDK app: a REST API deployed to `live`, its stack in `eu-west-1`;
-- `reviews`, the Serverless Framework with `stage: prod` written out, which
-  `--stage` still overrides;
+- `reviews`, the Serverless Framework with `stage: prod` and
+  `region: eu-west-1` written out, which `--stage` and `--region` still
+  override (P298);
 - `web`, plain HTML and the classic scripts it loads (`browser`).
 
 | Call | Read as |

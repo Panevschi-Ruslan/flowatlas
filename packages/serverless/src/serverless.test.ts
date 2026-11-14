@@ -309,8 +309,13 @@ describe('what P246 added to the CloudFormation a service file holds', () => {
       ].join('\n');
     const rest = read({ 'serverless.yml': service('{ http: { path: ledger, method: POST } }') }).functions[1]?.environment ?? {};
     expect(rest['OWN']).toMatchObject({ names: { kind: 'api', name: 'dev-shop' }, path: '/ledger' });
-    expect(rest['ELSEWHERE']).toEqual({ written: expect.any(String), text: 'https://a1b2c3d4e5.execute-api.us-east-1.amazonaws.com/dev/ledger' });
+    // The region the file gives is only the default: `--region` deploys anywhere (P298).
+    expect(rest['ELSEWHERE']).toMatchObject({ names: { kind: 'api', name: 'dev-shop' }, path: '/ledger' });
     expect(rest['OTHER_STAGE']?.names).toBeUndefined();
+    // A region the configuration's options fix is the only one.
+    const fixed = read({ 'serverless.yml': service('{ http: { path: ledger, method: POST } }') }, { region: 'eu-west-1' }).functions[1]?.environment ?? {};
+    expect(fixed['OWN']).toMatchObject({ names: { kind: 'api', name: 'dev-shop' } });
+    expect(fixed['ELSEWHERE']).toEqual({ written: expect.any(String), text: 'https://a1b2c3d4e5.execute-api.us-east-1.amazonaws.com/dev/ledger' });
     // An HTTP API's default stage writes none: the stage is part of the path.
     const http = read({ 'serverless.yml': service('{ httpApi: { path: /dev/ledger, method: POST } }') }).functions[1]?.environment ?? {};
     expect(http['OTHER_STAGE']).toMatchObject({ names: { kind: 'api', name: 'dev-shop' }, path: '/prod/ledger' });
@@ -330,23 +335,29 @@ describe('what P246 added to the CloudFormation a service file holds', () => {
       read({ 'serverless.yml': yaml }, options).routes.map((route) => [route.method, route.meta?.['servedAt']]);
     // `${opt:stage, 'prod'}`: whatever stage it is run with, prod where none is given.
     expect(servedOf(service("stage: \"${opt:stage, 'prod'}\", "))).toEqual([
-      ['POST', [{ host: '*.execute-api.eu-west-1.amazonaws.com', base: ['*'], api: 'prod-shop', chosenDefault: 'prod' }]],
-      ['GET', [{ host: '*.execute-api.eu-west-1.amazonaws.com', base: [], api: 'prod-shop' }]],
+      ['POST', [{ host: '*.execute-api.*.amazonaws.com', base: ['*'], api: 'prod-shop', chosenDefault: 'prod', chosenHost: '*.execute-api.eu-west-1.amazonaws.com' }]],
+      ['GET', [{ host: '*.execute-api.*.amazonaws.com', base: [], api: 'prod-shop', chosenHost: '*.execute-api.eu-west-1.amazonaws.com' }]],
     ]);
     // None written: the framework's default, chosen the same way.
-    expect(servedOf(service(''))[0]?.[1]).toEqual([{ host: '*.execute-api.eu-west-1.amazonaws.com', base: ['*'], api: 'dev-shop', chosenDefault: 'dev' }]);
+    expect(servedOf(service(''))[0]?.[1]).toEqual([{ host: '*.execute-api.*.amazonaws.com', base: ['*'], api: 'dev-shop', chosenDefault: 'dev', chosenHost: '*.execute-api.eu-west-1.amazonaws.com' }]);
     // Written as text: the default, which `--stage` still overrides (P294).
-    expect(servedOf(service('stage: prod, '))[0]?.[1]).toEqual([{ host: '*.execute-api.eu-west-1.amazonaws.com', base: ['*'], api: 'prod-shop', chosenDefault: 'prod' }]);
+    expect(servedOf(service('stage: prod, '))[0]?.[1]).toEqual([{ host: '*.execute-api.*.amazonaws.com', base: ['*'], api: 'prod-shop', chosenDefault: 'prod', chosenHost: '*.execute-api.eu-west-1.amazonaws.com' }]);
     // Named by the configuration's options: that stage.
     expect(servedOf(service("stage: \"${opt:stage, 'prod'}\", "), { stage: 'qa' })[0]?.[1]).toEqual([
-      { host: '*.execute-api.eu-west-1.amazonaws.com', base: ['qa'], api: 'qa-shop' },
+      { host: '*.execute-api.*.amazonaws.com', base: ['qa'], api: 'qa-shop', chosenHost: '*.execute-api.eu-west-1.amazonaws.com' },
     ]);
     // An API another deployment creates is served where that deployment says, which is not read here.
     const shared = servedOf(service('stage: prod, ', ', apiGateway: { restApiId: abc123, restApiRootResourceId: def456 }'));
     expect(shared.filter(([method]) => method === 'POST').map(([, served]) => served)).toEqual(shared.some(([method]) => method === 'POST') ? [undefined] : []);
-    expect(shared.find(([method]) => method === 'GET')?.[1]).toEqual([{ host: '*.execute-api.eu-west-1.amazonaws.com', base: [], api: 'prod-shop' }]);
+    expect(shared.find(([method]) => method === 'GET')?.[1]).toEqual([{ host: '*.execute-api.*.amazonaws.com', base: [], api: 'prod-shop', chosenHost: '*.execute-api.eu-west-1.amazonaws.com' }]);
     // A region the files do not settle: any region (P294).
     const unread = service('stage: prod, ').replace('region: eu-west-1', 'region: "${env:FLOWATLAS_TEST_UNSET_REGION}"');
     expect(servedOf(unread)[0]?.[1]).toEqual([{ host: '*.execute-api.*.amazonaws.com', base: ['*'], api: 'prod-shop', chosenDefault: 'prod' }]);
+    // `${opt:region, 'eu-central-1'}`: any region, that one where none is given; a region the options name fixes it (P298).
+    const optional = service('stage: prod, ').replace('region: eu-west-1', "region: \"${opt:region, 'eu-central-1'}\"");
+    expect(servedOf(optional)[0]?.[1]).toEqual([
+      { host: '*.execute-api.*.amazonaws.com', base: ['*'], api: 'prod-shop', chosenDefault: 'prod', chosenHost: '*.execute-api.eu-central-1.amazonaws.com' },
+    ]);
+    expect(servedOf(optional, { region: 'ap-south-1' })[0]?.[1]).toEqual([{ host: '*.execute-api.ap-south-1.amazonaws.com', base: ['*'], api: 'prod-shop', chosenDefault: 'prod' }]);
   });
 });

@@ -29,6 +29,18 @@ export interface ServedAt {
   readonly api: string;
   /** For a base chosen when the deployment is run: what it is where nothing chooses. */
   readonly chosenDefault?: string;
+  /**
+   * For a host part chosen when the deployment is run - a region the host
+   * names, `*` in `host`: the host where nothing chooses (P298).
+   */
+  readonly chosenHost?: string;
+  /**
+   * What the path every route of the API is drawn at starts with that this
+   * place does not write (P298): `/v1` for the routes of an API mapped onto a
+   * custom domain at the base path `v1`, read at the API's own address, which
+   * serves them without it.
+   */
+  readonly under?: string;
 }
 
 /** A request's address matched against one place an API is served. */
@@ -70,5 +82,11 @@ export const matchServedAt = (host: string, path: string, served: ServedAt): Ser
   if (segments.length < served.base.length) return undefined;
   const written = segments.slice(0, served.base.length);
   if (!served.base.every((segment, at) => segment === '*' || segment === written[at])) return undefined;
-  return { served, path: `/${segments.slice(served.base.length).join('/')}`, written };
+  const after = segments.slice(served.base.length).join('/');
+  const under = (served.under ?? '').replace(/\/+$/, '');
+  return { served, path: under === '' ? `/${after}` : `${under}${after === '' ? '' : `/${after}`}`, written };
 };
+
+/** Whether a request at `host` names the host an API is served at where nothing chooses its region (P298). */
+export const atChosenHost = (host: string, served: ServedAt): boolean =>
+  served.chosenHost !== undefined && (served.chosenHost.includes('*') ? hostPattern(served.chosenHost).test(host) : served.chosenHost.toLowerCase() === host.toLowerCase());

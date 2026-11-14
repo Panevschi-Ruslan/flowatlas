@@ -1,7 +1,7 @@
 import { executeApiServedAt } from '@flowatlas/aws';
 import { SERVED_AT_META, type ServedAt } from '@flowatlas/core';
-import type { Instance, Value } from '../eval/values.js';
-import { attributeOf } from '../hcl/ast.js';
+import type { Instance, ModuleInstance, Value } from '../eval/values.js';
+import { attributeOf, type Expression } from '../hcl/ast.js';
 import { referencesIn } from '../hcl/walk.js';
 import { argument, textOf, unreadRow, whyNot } from './arguments.js';
 import type { ResourceReader, ResourceReading } from './reading.js';
@@ -102,12 +102,32 @@ const stagesOf = (api: Instance, reading: ResourceReading): string[] =>
  */
 const chosenOnApply = (instance: Instance, name: string): boolean => {
   const written = attributeOf(instance.block.body, name);
-  if (written === undefined || instance.module.root !== undefined) return false;
-  return [...referencesIn(written.expression)].some(
-    (reference) =>
-      reference.source.type === 'variable' &&
-      (reference.source.name === 'var' || (reference.source.name === 'terraform' && reference.steps[0]?.kind === 'attr' && reference.steps[0].name === 'workspace')),
-  );
+  return written !== undefined && chosenIn(written.expression, instance.module, 0);
+};
+
+/** How many locals and module inputs a value is followed through to the root. */
+const MOST_HOPS = 16;
+
+/**
+ * Whether an expression of a module reads a value whoever applies the
+ * configuration sets (P294, P298): `terraform.workspace`, a root module's
+ * `var.<name>`, or a local or a child module's input written over either -
+ * `local.stage = terraform.workspace`, `stage = var.stage` in the call of
+ * the module the stage is created in.
+ */
+const chosenIn = (expression: Expression, module: ModuleInstance, depth: number): boolean => {
+  if (depth > MOST_HOPS) return false;
+  for (const reference of referencesIn(expression)) {
+    if (reference.source.type !== 'variable') continue;
+    const [step] = reference.steps;
+    const named = step?.kind === 'attr' ? step.name : undefined;
+    if (reference.source.name === 'terraform' && named === 'workspace') return true;
+    if (named === undefined || (reference.source.name !== 'var' && reference.source.name !== 'local')) continue;
+    if (reference.source.name === 'var' && module.root === undefined) return true;
+    const written = module.written(reference.source.name, named);
+    if (written !== undefined && chosenIn(written.expression, written.scope.module, depth + 1)) return true;
+  }
+  return false;
 };
 
 /** The region the AWS provider a block is created with is configured for, where the files settle it (P294). */
@@ -171,14 +191,29 @@ export const addressesOf = (api: Instance, reading: ResourceReading): ApiAddress
     const served = servedOf(api, reading);
     return [{ prefix: '', meta: { ...(stages.length === 0 ? {} : { stages }), ...(served.length === 0 ? {} : { [SERVED_AT_META]: served }) } }];
   }
-  return [...byPrefix.values()].map(({ prefix, domains, stages }) => ({
-    prefix,
-    meta: {
-      basePath: prefix ?? null,
-      ...(domains.length === 0 ? {} : { domains: sorted(domains) }),
-      ...(stages.length === 0 ? {} : { stages: sorted(stages) }),
-    },
-  }));
+  // Where a mapped API is served (P298): at each domain it is mapped onto, the
+  // base path already in front of its routes; and at the API's own address,
+  // which still answers unless it is turned off, without the base path -
+  // recorded on the routes of one base path only, the routes of the others
+  // being the same API's.
+  const label = textOf(argument(api, 'name')) ?? api.address;
+  const own = servedOf(api, reading);
+  const addresses = [...byPrefix.values()].sort((a, b) => (a.prefix ?? '￿').localeCompare(b.prefix ?? '￿'));
+  return addresses.map(({ prefix, domains, stages }, index) => {
+    const served: ServedAt[] = [
+      ...sorted(domains).map((domain): ServedAt => ({ host: domain, base: [], api: label })),
+      ...(index === 0 && prefix !== undefined ? own.map((each): ServedAt => (prefix === '' ? each : { ...each, under: prefix })) : []),
+    ];
+    return {
+      prefix,
+      meta: {
+        basePath: prefix ?? null,
+        ...(domains.length === 0 ? {} : { domains: sorted(domains) }),
+        ...(stages.length === 0 ? {} : { stages: sorted(stages) }),
+        ...(served.length === 0 || prefix === undefined ? {} : { [SERVED_AT_META]: served }),
+      },
+    };
+  });
 };
 
 /**

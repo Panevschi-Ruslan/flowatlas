@@ -105,4 +105,15 @@ describe('an address API Gateway serves (P268)', () => {
     expect(executeApiServedAt('<region>', 'shop', { chosen: true })).toEqual({ host: '*.execute-api.*.amazonaws.com', base: ['*'], api: 'shop' });
     expect(executeApiServedAt('eu-west-1', 'shop', { name: '$default' })).toEqual({ host: '*.execute-api.eu-west-1.amazonaws.com', base: [], api: 'shop' });
   });
+
+  it('serves in any region a region chosen when the deployment is run, keeping the one deployed to where nothing chooses (P298)', () => {
+    expect(executeApiServedAt({ name: 'eu-central-1', chosen: true }, 'shop', { name: 'live' })).toEqual({
+      host: '*.execute-api.*.amazonaws.com',
+      base: ['live'],
+      api: 'shop',
+      chosenHost: '*.execute-api.eu-central-1.amazonaws.com',
+    });
+    expect(executeApiServedAt({ chosen: true }, 'shop', { name: 'live' })).toEqual({ host: '*.execute-api.*.amazonaws.com', base: ['live'], api: 'shop' });
+    expect(executeApiServedAt({ name: 'eu-central-1' }, 'shop', {})).toEqual({ host: '*.execute-api.eu-central-1.amazonaws.com', base: [], api: 'shop' });
+  });
 });

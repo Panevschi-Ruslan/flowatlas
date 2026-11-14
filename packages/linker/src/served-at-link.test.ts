@@ -88,6 +88,30 @@ describe('a browser request to an address where one API of the project is served
     expect(resolveUiCall(uiCall('POST', '/prod/orders'), uiIndex({ shop, billing: other }))).toMatchObject({ kind: 'linked', targetService: 'shop' });
   });
 
+  it('is, of regions left open, the one deployed to where nothing chooses at the host the address writes, said in the note (P298)', () => {
+    const anywhere = (api: string, region: string): ServedAt => ({
+      host: '*.gateway.*.example.test',
+      base: ['*'],
+      api,
+      chosenDefault: 'dev',
+      chosenHost: `*.gateway.${region}.example.test`,
+    });
+    const here = [route('stock', 'POST', '/orders', [anywhere('dev-stock', 'region-1')])];
+    const there = [route('billing', 'POST', '/orders', [anywhere('dev-billing', 'region-2')])];
+    expect(resolveUiCall(uiCall('POST', '/dev/orders'), uiIndex({ stock: here, billing: there }))).toMatchObject({ kind: 'linked', targetService: 'stock' });
+    expect(resolveUiCall(uiCall('POST', '/dev/orders', 'a1b2c3.gateway.region-2.example.test'), uiIndex({ stock: here, billing: there }))).toMatchObject({ kind: 'linked', targetService: 'billing' });
+    // An address of another region with no route for it is nobody's of the project.
+    expect(resolveUiCall(uiCall('GET', '/dev/forecast', 'a1b2c3.gateway.region-3.example.test'), uiIndex({ stock: here }))).toMatchObject({ targetService: null });
+    const answer = apiServedAt('POST', HOST, '/dev/orders', `https://${HOST}/dev/orders`, ['stock'], () => here);
+    expect(answer?.kind === 'one' ? servedAtFinding(answer.found).message : '').toContain('in whatever region it is deployed to (*.gateway.region-1.example.test where none is given)');
+  });
+
+  it('asks the routes of an API mapped onto a domain for the path with the base path its own address does not write (P298)', () => {
+    const mapped = [route('shop', 'POST', '/v1/orders', [{ host: 'api.shop.example', base: [], api: 'shop' }, { ...REST_PROD, under: '/v1' }])];
+    expect(resolveUiCall(uiCall('POST', '/prod/orders'), uiIndex({ shop: mapped }))).toMatchObject({ kind: 'linked', via: 'served-at', entry: { id: mapped[0]?.id } });
+    expect(resolveUiCall(uiCall('POST', '/v1/orders', 'api.shop.example'), uiIndex({ shop: mapped }))).toMatchObject({ kind: 'linked', entry: { id: mapped[0]?.id } });
+  });
+
   it('is a row naming them where several APIs answer there', () => {
     const other = [route('billing', 'POST', '/orders', [served('qa-billing', ['*'], 'qa')])];
     const outcome = resolveUiCall(uiCall('POST', '/dev/orders'), uiIndex({ shop, billing: other }));

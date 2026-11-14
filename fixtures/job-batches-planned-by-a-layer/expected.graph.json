@@ -1,0 +1,1508 @@
+{
+  "schemaVersion": 7,
+  "repo": "job-batches-planned-by-a-layer",
+  "generatedAt": "2026-11-14T18:09:46.592Z",
+  "nodes": [
+    {
+      "id": "channel:invoices",
+      "type": "channel",
+      "label": "invoices",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 19,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:mail",
+      "type": "channel",
+      "label": "mail",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 13,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:maintenance",
+      "type": "channel",
+      "label": "maintenance",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 29,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "consumer:job-batches-planned-by-a-layer#src/queues/worker-base.ts:InvoiceWorker.issue@src/queues/bull-client.ts:19",
+      "type": "consumer",
+      "label": "InvoiceWorker.issue",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/bull-client.ts",
+      "line": 19,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:job-batches-planned-by-a-layer:event:invoices",
+        "through": [
+          "BullClient.openWorker",
+          "InvoiceWorker"
+        ]
+      }
+    },
+    {
+      "id": "consumer:job-batches-planned-by-a-layer#src/queues/worker-base.ts:MailWorker.constructor.init@21@src/queues/bull-client.ts:19",
+      "type": "consumer",
+      "label": "MailWorker.constructor.init@21",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/bull-client.ts",
+      "line": 19,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:job-batches-planned-by-a-layer:event:mail",
+        "through": [
+          "BullClient.openWorker",
+          "MailWorker"
+        ]
+      }
+    },
+    {
+      "id": "consumer:job-batches-planned-by-a-layer#src/server.ts:(module)@34@src/server.ts:34",
+      "type": "consumer",
+      "label": "(module)@34",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 34,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:job-batches-planned-by-a-layer:event:maintenance"
+      }
+    },
+    {
+      "id": "entry:job-batches-planned-by-a-layer:event:invoices",
+      "type": "entry",
+      "label": "event invoices",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/bull-client.ts",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "pattern": "invoices",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-batches-planned-by-a-layer:event:mail",
+      "type": "entry",
+      "label": "event mail",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/bull-client.ts",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "pattern": "mail",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-batches-planned-by-a-layer:event:maintenance",
+      "type": "entry",
+      "label": "event maintenance",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 34,
+      "kind": "event",
+      "meta": {
+        "pattern": "maintenance",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-batches-planned-by-a-layer:http:POST:/orders/:param/invoices",
+      "type": "entry",
+      "label": "POST /orders/:param/invoices",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/invoices",
+        "rawPath": "/orders/:orderId/invoices",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:job-batches-planned-by-a-layer:http:POST:/signup",
+      "type": "entry",
+      "label": "POST /signup",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/signup",
+        "rawPath": "/signup",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/bull-client.ts:BullClient",
+      "type": "provider",
+      "label": "BullClient",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/bull-client.ts",
+      "line": 10,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/bull-client.ts:BullClient.add",
+      "type": "method",
+      "label": "BullClient.add",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/bull-client.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "unknown"
+            },
+            {
+              "name": "delay",
+              "type": "number",
+              "optional": true
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/bull-client.ts:BullClient.addBulk",
+      "type": "method",
+      "label": "BullClient.addBulk",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/bull-client.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobs",
+              "type": "type:job-batches-planned-by-a-layer#QueuedJob[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/bull-client.ts:BullClient.openQueue",
+      "type": "method",
+      "label": "BullClient.openQueue",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/bull-client.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "topic",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/bull-client.ts:BullClient.openWorker",
+      "type": "method",
+      "label": "BullClient.openWorker",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/bull-client.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "topic",
+              "type": "string"
+            },
+            {
+              "name": "processor",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase",
+      "type": "provider",
+      "label": "QueueBase",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/queue-base.ts",
+      "line": 43,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.add",
+      "type": "method",
+      "label": "QueueBase.add",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/queue-base.ts",
+      "line": 56,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:job-batches-planned-by-a-layer#QueuedJob"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.addAllToBull",
+      "type": "method",
+      "label": "QueueBase.addAllToBull",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/queue-base.ts",
+      "line": 114,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobs",
+              "type": "type:job-batches-planned-by-a-layer#QueuedJob[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.addBulk",
+      "type": "method",
+      "label": "QueueBase.addBulk",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/queue-base.ts",
+      "line": 61,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobs",
+              "type": "type:job-batches-planned-by-a-layer#QueuedJob[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.addToBull",
+      "type": "method",
+      "label": "QueueBase.addToBull",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/queue-base.ts",
+      "line": 119,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:job-batches-planned-by-a-layer#QueuedJob"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.dispatch",
+      "type": "method",
+      "label": "QueueBase.dispatch",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/queue-base.ts",
+      "line": 66,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobs",
+              "type": "type:job-batches-planned-by-a-layer#QueuedJob[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.fallBack",
+      "type": "method",
+      "label": "QueueBase.fallBack",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/queue-base.ts",
+      "line": 108,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "error",
+              "type": "unknown"
+            },
+            {
+              "name": "jobs",
+              "type": "type:job-batches-planned-by-a-layer#QueuedJob[]"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "warn",
+            "text": "relay refused, falling back to the queue",
+            "at": 110
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.open",
+      "type": "method",
+      "label": "QueueBase.open",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/queue-base.ts",
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.planDispatch",
+      "type": "method",
+      "label": "QueueBase.planDispatch",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/queue-base.ts",
+      "line": 76,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobs",
+              "type": "type:job-batches-planned-by-a-layer#QueuedJob[]"
+            }
+          ],
+          "returns": "{toBull:type:job-batches-planned-by-a-layer#QueuedJob[];toScheduler:type:job-batches-planned-by-a-layer#QueuedJob[];toRelay:type:job-batches-planned-by-a-layer#QueuedJob[]}"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.sendElsewhere",
+      "type": "method",
+      "label": "QueueBase.sendElsewhere",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/queue-base.ts",
+      "line": 93,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "toScheduler",
+              "type": "type:job-batches-planned-by-a-layer#QueuedJob[]"
+            },
+            {
+              "name": "toRelay",
+              "type": "type:job-batches-planned-by-a-layer#QueuedJob[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.separateByDelay",
+      "type": "method",
+      "label": "QueueBase.separateByDelay",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/queue-base.ts",
+      "line": 83,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobs",
+              "type": "type:job-batches-planned-by-a-layer#QueuedJob[]"
+            }
+          ],
+          "returns": "{later:type:job-batches-planned-by-a-layer#QueuedJob[];soon:type:job-batches-planned-by-a-layer#QueuedJob[]}"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:Relay",
+      "type": "provider",
+      "label": "Relay",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/queue-base.ts",
+      "line": 21,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:Relay.send",
+      "type": "method",
+      "label": "Relay.send",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/queue-base.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "topic",
+              "type": "string"
+            },
+            {
+              "name": "jobs",
+              "type": "type:job-batches-planned-by-a-layer#QueuedJob[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:Scheduler",
+      "type": "provider",
+      "label": "Scheduler",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/queue-base.ts",
+      "line": 29,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:Scheduler.schedule",
+      "type": "method",
+      "label": "Scheduler.schedule",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/queue-base.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "topic",
+              "type": "string"
+            },
+            {
+              "name": "jobs",
+              "type": "type:job-batches-planned-by-a-layer#QueuedJob[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:InvoiceWorker",
+      "type": "provider",
+      "label": "InvoiceWorker",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/worker-base.ts",
+      "line": 30,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:InvoiceWorker.issue",
+      "type": "method",
+      "label": "InvoiceWorker.issue",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/worker-base.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "invoice for",
+            "at": 37
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:MailWorker.constructor.init@21",
+      "type": "function",
+      "label": "MailWorker.constructor.init@21",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/worker-base.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:WorkerBase",
+      "type": "provider",
+      "label": "WorkerBase",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/worker-base.ts",
+      "line": 6,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:WorkerBase.init",
+      "type": "method",
+      "label": "WorkerBase.init",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/worker-base.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "processor",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:deliverMail",
+      "type": "function",
+      "label": "deliverMail",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/worker-base.ts",
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "email",
+              "type": "string"
+            },
+            {
+              "name": "template",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "mail",
+            "at": 42
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:recordDelivery",
+      "type": "function",
+      "label": "recordDelivery",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/queues/worker-base.ts",
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "delivered",
+            "at": 46
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/server.ts:(module)@34",
+      "type": "function",
+      "label": "(module)@34",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "maintenance",
+            "at": 34
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/server.ts:POST /orders/:orderId/invoices@17",
+      "type": "function",
+      "label": "POST /orders/:orderId/invoices@17",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/server.ts:POST /signup@12",
+      "type": "function",
+      "label": "POST /signup@12",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-batches-planned-by-a-layer#src/server.ts:scheduleMaintenance",
+      "type": "function",
+      "label": "scheduleMaintenance",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:job-batches-planned-by-a-layer#src/server.ts:13:9",
+      "type": "producer",
+      "label": "job mail",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 13,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "enum",
+        "method": "add",
+        "jobName": "welcome",
+        "through": [
+          "BullClient.add",
+          "QueueBase.addToBull",
+          "QueueBase.add"
+        ]
+      }
+    },
+    {
+      "id": "producer:job-batches-planned-by-a-layer#src/server.ts:19:9",
+      "type": "producer",
+      "label": "job invoices",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 19,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "enum",
+        "method": "add",
+        "jobName": null,
+        "through": [
+          "BullClient.add",
+          "QueueBase.addToBull",
+          "QueueBase.addAllToBull",
+          "QueueBase.dispatch",
+          "QueueBase.addBulk"
+        ],
+        "jobNames": [
+          "issue-invoice",
+          "remind-invoice"
+        ]
+      }
+    },
+    {
+      "id": "producer:job-batches-planned-by-a-layer#src/server.ts:29:9",
+      "type": "producer",
+      "label": "job maintenance",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 29,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "upsertJobScheduler",
+        "jobName": "prune-baskets"
+      }
+    },
+    {
+      "id": "producer:job-batches-planned-by-a-layer#src/server.ts:30:9",
+      "type": "producer",
+      "label": "job maintenance",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 30,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "upsertJobScheduler",
+        "jobName": "rebuild-search"
+      }
+    },
+    {
+      "id": "producer:job-batches-planned-by-a-layer#src/server.ts:31:9",
+      "type": "producer",
+      "label": "job maintenance",
+      "repo": "job-batches-planned-by-a-layer",
+      "file": "src/server.ts",
+      "line": 31,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "upsertJobScheduler",
+        "jobName": "expire-coupons"
+      }
+    },
+    {
+      "id": "repo:job-batches-planned-by-a-layer",
+      "type": "repo",
+      "label": "job-batches-planned-by-a-layer",
+      "repo": "job-batches-planned-by-a-layer",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 10,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 38
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:invoices",
+      "to": "consumer:job-batches-planned-by-a-layer#src/queues/worker-base.ts:InvoiceWorker.issue@src/queues/bull-client.ts:19",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/queues/bull-client.ts",
+      "line": 19
+    },
+    {
+      "from": "channel:mail",
+      "to": "consumer:job-batches-planned-by-a-layer#src/queues/worker-base.ts:MailWorker.constructor.init@21@src/queues/bull-client.ts:19",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/queues/bull-client.ts",
+      "line": 19
+    },
+    {
+      "from": "channel:maintenance",
+      "to": "consumer:job-batches-planned-by-a-layer#src/server.ts:(module)@34@src/server.ts:34",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 34
+    },
+    {
+      "from": "consumer:job-batches-planned-by-a-layer#src/queues/worker-base.ts:InvoiceWorker.issue@src/queues/bull-client.ts:19",
+      "to": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:InvoiceWorker.issue",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/queues/bull-client.ts",
+      "line": 19,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "consumer:job-batches-planned-by-a-layer#src/queues/worker-base.ts:MailWorker.constructor.init@21@src/queues/bull-client.ts:19",
+      "to": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:MailWorker.constructor.init@21",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/queues/bull-client.ts",
+      "line": 19
+    },
+    {
+      "from": "consumer:job-batches-planned-by-a-layer#src/server.ts:(module)@34@src/server.ts:34",
+      "to": "job-batches-planned-by-a-layer#src/server.ts:(module)@34",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 34
+    },
+    {
+      "from": "entry:job-batches-planned-by-a-layer:event:invoices",
+      "to": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:InvoiceWorker.issue",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/queues/bull-client.ts",
+      "line": 19,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-batches-planned-by-a-layer:event:mail",
+      "to": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:MailWorker.constructor.init@21",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/queues/bull-client.ts",
+      "line": 19,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-batches-planned-by-a-layer:event:maintenance",
+      "to": "job-batches-planned-by-a-layer#src/server.ts:(module)@34",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 34,
+      "params": [
+        "any"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "any"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-batches-planned-by-a-layer:http:POST:/orders/:param/invoices",
+      "to": "job-batches-planned-by-a-layer#src/server.ts:POST /orders/:orderId/invoices@17",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 17,
+      "meta": {
+        "requestRead": true,
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:job-batches-planned-by-a-layer:http:POST:/signup",
+      "to": "job-batches-planned-by-a-layer#src/server.ts:POST /signup@12",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.add",
+      "to": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.addToBull",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 57,
+      "params": [
+        "type:job-batches-planned-by-a-layer#QueuedJob"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.add",
+      "to": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.dispatch",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 58,
+      "params": [
+        "type:job-batches-planned-by-a-layer#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.addAllToBull",
+      "to": "job-batches-planned-by-a-layer#src/queues/bull-client.ts:BullClient.addBulk",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 116,
+      "params": [
+        "type:job-batches-planned-by-a-layer#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.addAllToBull",
+      "to": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.addToBull",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 115,
+      "params": [
+        "type:job-batches-planned-by-a-layer#QueuedJob"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.addBulk",
+      "to": "job-batches-planned-by-a-layer#src/queues/bull-client.ts:BullClient.addBulk",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 62,
+      "params": [
+        "type:job-batches-planned-by-a-layer#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.addBulk",
+      "to": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.dispatch",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 63,
+      "params": [
+        "type:job-batches-planned-by-a-layer#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.addToBull",
+      "to": "job-batches-planned-by-a-layer#src/queues/bull-client.ts:BullClient.add",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 120,
+      "params": [
+        "string",
+        "unknown",
+        "number"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.dispatch",
+      "to": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.addAllToBull",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 68,
+      "params": [
+        "type:job-batches-planned-by-a-layer#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.dispatch",
+      "to": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.fallBack",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 72,
+      "params": [
+        "unknown",
+        "type:job-batches-planned-by-a-layer#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.dispatch",
+      "to": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.planDispatch",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 67,
+      "params": [
+        "type:job-batches-planned-by-a-layer#QueuedJob[]"
+      ],
+      "returns": "{toBull:type:job-batches-planned-by-a-layer#QueuedJob[];toScheduler:type:job-batches-planned-by-a-layer#QueuedJob[];toRelay:type:job-batches-planned-by-a-layer#QueuedJob[]}"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.dispatch",
+      "to": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.sendElsewhere",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 70,
+      "params": [
+        "type:job-batches-planned-by-a-layer#QueuedJob[]",
+        "type:job-batches-planned-by-a-layer#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.fallBack",
+      "to": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.addAllToBull",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 111,
+      "params": [
+        "type:job-batches-planned-by-a-layer#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.open",
+      "to": "job-batches-planned-by-a-layer#src/queues/bull-client.ts:BullClient.openQueue",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 53,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.planDispatch",
+      "to": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.separateByDelay",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 77,
+      "params": [
+        "type:job-batches-planned-by-a-layer#QueuedJob[]"
+      ],
+      "returns": "{later:type:job-batches-planned-by-a-layer#QueuedJob[];soon:type:job-batches-planned-by-a-layer#QueuedJob[]}"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.sendElsewhere",
+      "to": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:Relay.send",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 102,
+      "params": [
+        "string",
+        "type:job-batches-planned-by-a-layer#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.sendElsewhere",
+      "to": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:Scheduler.schedule",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 96,
+      "params": [
+        "string",
+        "type:job-batches-planned-by-a-layer#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:MailWorker.constructor.init@21",
+      "to": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:deliverMail",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/worker-base.ts",
+      "line": 23,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:MailWorker.constructor.init@21",
+      "to": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:recordDelivery",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/worker-base.ts",
+      "line": 24,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/queues/worker-base.ts:WorkerBase.init",
+      "to": "job-batches-planned-by-a-layer#src/queues/bull-client.ts:BullClient.openWorker",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/worker-base.ts",
+      "line": 13,
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/server.ts:POST /orders/:orderId/invoices@17",
+      "to": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.addBulk",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 19,
+      "params": [
+        "type:job-batches-planned-by-a-layer#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/server.ts:POST /orders/:orderId/invoices@17",
+      "to": "producer:job-batches-planned-by-a-layer#src/server.ts:19:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 19
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/server.ts:POST /signup@12",
+      "to": "job-batches-planned-by-a-layer#src/queues/queue-base.ts:QueueBase.add",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 13,
+      "params": [
+        "type:job-batches-planned-by-a-layer#QueuedJob"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/server.ts:POST /signup@12",
+      "to": "producer:job-batches-planned-by-a-layer#src/server.ts:13:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 13
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/server.ts:scheduleMaintenance",
+      "to": "producer:job-batches-planned-by-a-layer#src/server.ts:29:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 29
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/server.ts:scheduleMaintenance",
+      "to": "producer:job-batches-planned-by-a-layer#src/server.ts:30:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 30
+    },
+    {
+      "from": "job-batches-planned-by-a-layer#src/server.ts:scheduleMaintenance",
+      "to": "producer:job-batches-planned-by-a-layer#src/server.ts:31:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 31
+    },
+    {
+      "from": "producer:job-batches-planned-by-a-layer#src/server.ts:13:9",
+      "to": "channel:mail",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 13,
+      "params": [
+        "{email:string}"
+      ]
+    },
+    {
+      "from": "producer:job-batches-planned-by-a-layer#src/server.ts:19:9",
+      "to": "channel:invoices",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 19,
+      "params": [
+        "unknown"
+      ]
+    },
+    {
+      "from": "producer:job-batches-planned-by-a-layer#src/server.ts:29:9",
+      "to": "channel:maintenance",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 29,
+      "params": [
+        "{olderThanDays:number}"
+      ]
+    },
+    {
+      "from": "producer:job-batches-planned-by-a-layer#src/server.ts:30:9",
+      "to": "channel:maintenance",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 30,
+      "params": [
+        "object"
+      ]
+    },
+    {
+      "from": "producer:job-batches-planned-by-a-layer#src/server.ts:31:9",
+      "to": "channel:maintenance",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 31
+    }
+  ],
+  "types": {
+    "type:job-batches-planned-by-a-layer#QueuedJob": {
+      "name": "QueuedJob",
+      "kind": "object",
+      "declaredIn": "job-batches-planned-by-a-layer#src/queues/bull-client.ts",
+      "structuralHash": "f29201e8dd600717",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "data",
+          "type": "unknown",
+          "optional": false
+        },
+        {
+          "name": "delay",
+          "type": "number",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/queues/bull-client.ts",
+      "line": 18,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Processor",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/queues/worker-base.ts",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Processor",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/queues/worker-base.ts",
+      "line": 21,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<{ email: string; }>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/queues/worker-base.ts",
+      "line": 36,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<{ orderId: string; }>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/server.ts",
+      "line": 14,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "POST /signup@12 -> res.status(202).end",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 4,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 14,
+                "symbol": "POST /signup@12 -> res.status(202).end"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 14,
+                "symbol": "POST /signup@12 -> res.status"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 23,
+                "symbol": "POST /orders/:orderId/invoices@17 -> res.status(202).end"
+              }
+            ]
+          }
+        ]
+      },
+      "sites": 4
+    },
+    {
+      "file": "src/server.ts",
+      "line": 31,
+      "reason": "payload-type-unknown",
+      "hint": "The message is not written out where the description says it is, so nothing describes what travels on this channel.",
+      "symbol": "maintenance"
+    }
+  ]
+}

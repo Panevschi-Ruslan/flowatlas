@@ -1,4 +1,4 @@
-import { matchServedAt, SERVED_AT_META, servedAtOf, type GraphNode, type ServedAt } from '@flowatlas/core';
+import { atChosenHost, matchServedAt, SERVED_AT_META, servedAtOf, type GraphNode, type ServedAt } from '@flowatlas/core';
 import type { Finding } from './http-link.js';
 import { cmp } from './order.js';
 import { isMatch, matchRoute } from './route-match.js';
@@ -60,24 +60,35 @@ export const apiServedAt = (
         const at = byApi.get(key) ?? {
           found: { service, api: served.api, path: match.path, routes: [], served, written: match.written, address },
           routes: [],
-          exact: !served.base.includes('*'),
+          exact: !served.base.includes('*') && served.chosenHost === undefined,
         };
         at.routes.push(route);
         byApi.set(key, at);
       }
     }
   }
-  const all = [...byApi.values()];
-  // An API with a route for the request, before one without (an HTTP API at
-  // its default stage is served at every path of the host its REST API is).
-  const answering = all.filter((each) => {
+  const answers = (each: { found: ServedApi; routes: GraphNode[] }): boolean => {
     const found = matchRoute(method, each.found.path, each.routes);
     return isMatch(found) || found.reason === 'ambiguous';
-  });
+  };
+  // An API reached only because its region is left open - the address names
+  // another than the one it is deployed to by default - is taken only where it
+  // has a route for the request: an address of another region with no such
+  // route is more likely somebody else's (P298).
+  const all = [...byApi.values()].filter((each) => each.found.served.chosenHost === undefined || atChosenHost(host, each.found.served) || answers(each));
+  // An API with a route for the request, before one without (an HTTP API at
+  // its default stage is served at every path of the host its REST API is).
+  const answering = all.filter(answers);
   const among = answering.length > 0 ? answering : all;
   const exact = among.filter((each) => each.exact);
-  // Of the stages left to whoever deploys, the ones deployed to where nothing chooses at the stage the request writes (P294).
-  const byDefault = among.filter((each) => !each.exact && each.found.served.chosenDefault !== undefined && each.found.written.join('/') === each.found.served.chosenDefault);
+  // Of the stages left to whoever deploys, the ones deployed to where nothing chooses at the stage the request writes (P294),
+  // and of the regions so left, the one deployed to where nothing chooses at the host it writes (P298).
+  const byDefault = among.filter((each) => {
+    if (each.exact) return false;
+    const { served, written } = each.found;
+    const stageHolds = !served.base.includes('*') || (served.chosenDefault !== undefined && written.join('/') === served.chosenDefault);
+    return stageHolds && (served.chosenHost === undefined || atChosenHost(host, served));
+  });
   const asked = exact.length > 0 ? exact : byDefault.length > 0 ? byDefault : among;
   const [only] = asked;
   if (only === undefined) return undefined;
@@ -100,6 +111,7 @@ export const servedAtFinding = (found: ServedApi): Finding => {
       (chosen
         ? `, at whatever stage it is run with (${found.served.chosenDefault ?? 'one'} where none is given), so ${stage === '' ? 'the address' : `the stage ${stage}`} is taken as one of its`
         : '') +
+      (found.served.chosenHost === undefined ? '' : `, in whatever region it is deployed to (${found.served.chosenHost} where none is given)`) +
       `, and the request as one for ${found.path} on it`,
     hint: 'Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.',
   };
