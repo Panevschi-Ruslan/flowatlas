@@ -1,5 +1,5 @@
 import { normalizePath, wasRead, type Confidence, type GraphNode } from '@flowatlas/core';
-import { branchClaims, branchSaid, settingsAfter, type BaseUrlAnswer, type FoundValue } from './base-url-value.js';
+import { chooseAmongSettings, claimantsOfSetting, howChosen, settingCandidates, settingsAfter, type BaseUrlAnswer, type FoundValue, type SettingCandidates } from './base-url-value.js';
 import { localGraphqlEndpoint, sendsOperation, unservedFinding } from './graphql-value.js';
 import { MARKER_FINDINGS, pathOfValue, unreadRouteFinding, type Finding } from './http-link.js';
 import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
@@ -148,8 +148,10 @@ interface Details {
     path: string;
     candidates: readonly string[];
     applications?: readonly string[];
-    /** The settings of a condition's branches nobody settles the candidates claim, as `ORDERS_URL (orders)` (P309). */
+    /** The settings of a condition's branches nobody settles, or of a chain, the candidates claim, as `ORDERS_URL (orders)` (P309, P313). */
     branches?: readonly string[];
+    /** How the base is read from those settings (P313). */
+    order?: SettingCandidates['order'];
   };
 }
 
@@ -216,10 +218,10 @@ const AMBIGUITY: Record<
     message: `${candidates.join(' and ')} both answer ${method} ${path}`,
     hint: 'Set services[].apiTarget on the frontend to say which service its settings key names.',
   }),
-  // A condition nobody settles reads settings different services claim, and more than one serves the request (P309).
-  branches: ({ method, path, candidates, branches = [] }) => ({
+  // A condition nobody settles, or a chain, reads settings different services claim, and more than one serves the request (P309, P313).
+  branches: ({ method, path, candidates, branches = [], order = 'either' }) => ({
     reason: 'ambiguous-route-target',
-    message: `the request's base is one of ${branches.join(' and ')}, chosen by a condition nobody settles, and ${candidates.join(' and ')} each serve ${method} ${path}`,
+    message: `the request's base is one of ${branches.join(' and ')}, ${howChosen(order)}, and ${candidates.join(' and ')} each serve ${method} ${path}`,
     hint: 'Read the base from one setting, or set services[].apiTarget on the frontend to say which service its settings key names.',
   }),
   application: ({ method, path, applications = [] }) => ({
@@ -317,29 +319,35 @@ const byApiTarget = (ask: Ask): UiOutcome | undefined => {
   return named === undefined ? undefined : within(ask, named, 'api-target');
 };
 
-/** Exactly one service declaring the same settings key as its own base. */
-/** Who claims the key, or else the first setting a chain of `||` reads after it that somebody claims (P296). */
+/**
+ * Who claims the key, or else the first setting a chain of `||` reads after
+ * it that somebody claims (P296), a key built from a variable claimed by
+ * whoever claims the variable (P313).
+ */
 const claimingOf = (ask: Ask, env: string): readonly string[] => {
-  const own = ask.index.claimantsOf(env);
-  return own.length > 0 ? own : (settingsAfter(ask.call).map((each) => ask.index.claimantsOf(each)).find((each) => each.length > 0) ?? own);
+  const claimantsOf = (setting: string): readonly string[] => claimantsOfSetting(ask.call, setting, (each) => ask.index.claimantsOf(each));
+  const own = claimantsOf(env);
+  return own.length > 0 ? own : (settingsAfter(ask.call).map(claimantsOf).find((each) => each.length > 0) ?? own);
 };
 
 /**
  * The settings of a condition's branches nobody settles, each the request's
- * base (P309): where different services claim them, the one serving the
- * request is the answer, a guess, and several serving it are a row; where
- * none does, nothing, and the first branch's claimant is asked as before.
+ * base (P309), and a chain's later settings where the first claimant does
+ * not serve it (P313): the one serving the request is the answer, a guess,
+ * and several serving it are a row; where none does, nothing, and the first
+ * claimant is asked as before.
  */
 const byBranches = (ask: Ask): UiOutcome | undefined => {
-  const branches = branchClaims(ask.call, (setting) => ask.index.claimantsOf(setting));
-  if (branches === undefined) return undefined;
-  const serving = branches
-    .map((claim) => ({ claim, found: within(ask, claim.service, 'base-url-env') }))
-    .filter(({ found }) => found.kind === 'linked' || found.kind === 'ambiguous');
-  const said = branches.map(branchSaid);
-  const [only] = serving;
-  if (only !== undefined && serving.length === 1) return only.found.kind === 'linked' ? { ...only.found, branches: said } : only.found;
-  if (serving.length > 1) return { kind: 'ambiguous', method: ask.method, path: ask.path, candidates: serving.map(({ claim }) => claim.service), branches: said };
+  const candidates = settingCandidates(ask.call, (setting) => ask.index.claimantsOf(setting));
+  if (candidates === undefined) return undefined;
+  const chosen = chooseAmongSettings(candidates, (service) => {
+    const found = within(ask, service, 'base-url-env');
+    return found.kind === 'linked' || found.kind === 'ambiguous' ? found : undefined;
+  });
+  if (chosen?.kind === 'one') return chosen.found.kind === 'linked' ? { ...chosen.found, branches: chosen.said } : chosen.found;
+  if (chosen?.kind === 'several') {
+    return { kind: 'ambiguous', method: ask.method, path: ask.path, candidates: chosen.serving.map(({ claim }) => claim.service), branches: chosen.said, order: chosen.order };
+  }
   return undefined;
 };
 

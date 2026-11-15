@@ -1,0 +1,211 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-15T17:18:32.159Z",
+  "configHash": "01887afcf3aa",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "chain-candidates-written-fallback-api",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "archive",
+      "repo": "./archive",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "chain-candidates-written-fallback-archive",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 21,
+      "edges": 14,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 0,
+      "packages": {
+        "name": "chain-candidates-written-fallback-jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "legacy",
+      "repo": "./legacy",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "chain-candidates-written-fallback-legacy",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "chain-candidates-written-fallback-orders",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "portal",
+      "repo": "./portal",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 15,
+      "edges": 10,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1543,
+      "packages": {
+        "name": "chain-candidates-written-fallback-portal",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "chain-candidates-written-fallback-shop",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 10,
+    "linked": 7,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 2,
+    "ambiguous": 1,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 8,
+    "called": 5,
+    "uncalled": [
+      "entry:archive:http:GET:/status",
+      "entry:legacy:http:GET:/status",
+      "entry:orders:http:GET:/health"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "jobs",
+      "file": "src/calls.ts",
+      "line": 14,
+      "reason": "ambiguous-route-target",
+      "message": "the request's base is one of ORDERS_URL (orders) and LEGACY_URL (legacy) and LEGACY_URL (archive), read from the first of them that is set, and legacy and archive each serve GET /status",
+      "hint": "Read the base from one setting, or annotate the call with @CallsService naming the service it reaches.",
+      "symbol": "http_out:jobs#src/calls.ts:14:35"
+    },
+    {
+      "service": "jobs",
+      "file": "src/calls.ts",
+      "line": 17,
+      "reason": "target-route-not-found",
+      "message": "target service orders has no route GET /nowhere",
+      "hint": "Route renamed? Check orders's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:jobs#src/calls.ts:17:36"
+    },
+    {
+      "service": "jobs",
+      "file": "src/calls.ts",
+      "line": 32,
+      "reason": "target-route-not-found",
+      "message": "target service api has no route GET /stray",
+      "hint": "Route renamed? Check api's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:jobs#src/calls.ts:32:28"
+    }
+  ],
+  "totals": {
+    "nodes": 57,
+    "edges": 37,
+    "types": 2,
+    "missed": 5,
+    "sites": 5,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 5
+  }
+}

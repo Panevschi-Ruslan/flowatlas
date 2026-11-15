@@ -2042,6 +2042,16 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     const writtenIn = info.baseUrlDefault !== undefined ? info.baseUrlDefaultFile : loaded?.file;
     const writtenAt = baseUrlDefault === undefined || writtenIn === undefined ? undefined : relative(ctx.repoDir, writtenIn).split(sep).join('/');
     const defaultFrom = writtenAt === owner.file ? undefined : writtenAt;
+    // The variable each later setting of a chain or a condition's branches
+    // is built from, as the first's is (P313).
+    const laterVariables = Object.fromEntries(
+      info.baseUrlEnv === null
+        ? []
+        : [...new Set([...(info.baseUrlAlso ?? []), ...(info.baseUrlEither ?? [])])].flatMap((key) => {
+            const variable = key === info.baseUrlEnv ? undefined : loadedSettingOf(key)?.variable;
+            return variable === undefined || variable === key ? [] : [[key, variable]];
+          }),
+    );
     // Which application this request is written in, asked of the file through
     // the one function every browser reader asks too, so the two halves' readings
     // of one call cannot disagree about it (R136). A map keyed by declaration
@@ -2060,6 +2070,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         path: info.path,
         baseUrlEnv: info.baseUrlEnv,
         ...(loaded?.variable === undefined || loaded.variable === info.baseUrlEnv ? {} : { baseUrlVariable: loaded.variable }),
+        ...(Object.keys(laterVariables).length === 0 ? {} : { baseUrlVariables: laterVariables }),
         ...(baseUrlDefault === undefined ? {} : { baseUrlDefault }),
         ...(defaultFrom === undefined ? {} : { baseUrlDefaultFrom: defaultFrom }),
         ...(info.baseUrlEnv === null || info.baseUrlAlso === undefined ? {} : { baseUrlAlso: info.baseUrlAlso }),

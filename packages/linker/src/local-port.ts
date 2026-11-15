@@ -117,12 +117,45 @@ const portsOf = (node: GraphNode): readonly ListenPort[] => {
 const isSure = (listening: Listening): boolean =>
   literalPort(listening) && listening.valueFrom === undefined && listening.published === undefined && listening.routed === undefined;
 
-/** One service listening at a port, kept once: the surer word where one service says the port twice. */
+/**
+ * Whether a port is only the fallback the code writes for a setting,
+ * `process.env.PORT ?? 3000`, with nothing on this machine giving the setting
+ * where it is heard (P313): what the code assumes where nothing sets the
+ * setting, not where a run is placed. A port a file the framework loads gives
+ * the setting, or one a container publishes, is no fallback.
+ */
+const isFallback = (listening: Listening): boolean =>
+  listening.setting !== undefined &&
+  listening.default !== true &&
+  listening.merged === undefined &&
+  listening.valueFrom === undefined &&
+  listening.published === undefined &&
+  listening.routed === undefined &&
+  listening.inContainer === undefined;
+
+/**
+ * Whether a service is heard at a port only by a guess: its framework's or
+ * library's default (an example file's value kept as a candidate of it), a
+ * port read through a merge helper (P305), the value an example environment
+ * file offers the setting its code reads the port from (P309), or the
+ * fallback the code writes for a setting nothing gives (P313). A port the
+ * code writes as a number, a file the framework loads, or a published port is
+ * no guess.
+ */
+const isGuessed = (listening: Listening): boolean =>
+  listening.default === true || listening.merged !== undefined || listening.example === true || isFallback(listening);
+
+/**
+ * One service listening at a port, kept once: the surer word where one
+ * service says the port twice, and a firm one over a guess (P313), so a
+ * published port is not lost behind the fallback it publishes.
+ */
 const addListening = (into: Map<number, Listening[]>, port: number, listening: Listening): void => {
   const list = into.get(port) ?? [];
   const seen = list.findIndex((each) => each.service === listening.service);
-  if (seen < 0) list.push(listening);
-  else if (!isSure(list[seen] as Listening) && isSure(listening)) list[seen] = listening;
+  const kept = list[seen];
+  if (kept === undefined) list.push(listening);
+  else if ((!isSure(kept) && isSure(listening)) || (isGuessed(kept) && !isGuessed(listening))) list[seen] = listening;
   into.set(port, list.sort((a, b) => cmp(a.service, b.service)));
 };
 
@@ -357,26 +390,19 @@ const whereShort = (listening: Listening): string =>
   `${listening.file}:${listening.line}${listening.published === undefined ? '' : `, published by ${listening.published.file}`}`;
 
 /**
- * Whether a service is heard at a port only by a guess: its framework's or
- * library's default (an example file's value kept as a candidate of it), a
- * port read through a merge helper (P305), or the value an example
- * environment file offers the setting its code reads the port from (P309).
- * A port the code writes, a file the framework loads, or a published port is
- * no guess.
- */
-const isGuessed = (listening: Listening): boolean => listening.default === true || listening.merged !== undefined || listening.example === true;
-
-/**
  * The services a port only guesses at answers a request with (P300, P307):
  * those that serve it, defaults and guesses asked alike, the services an
  * example environment file alone places there among them (P309); where none
- * does, the guesses firmer than a default, which outrank them (P305); and
- * where there are none, nobody, so the request is joined as with nobody heard.
+ * does, the fallbacks the code writes (P313), then the other guesses firmer
+ * than a default, which outrank them (P305); and where there are none,
+ * nobody, so the request is joined as with nobody heard.
  */
 const guessedAt = (heard: readonly Listening[], offered: readonly string[], serves: ServesRequest | undefined): ReadonlySet<string> => {
   const all = [...new Set([...heard.map((each) => each.service), ...offered])];
   const served = serves === undefined ? [] : all.filter((service) => serves(service));
   if (served.length > 0) return new Set(served);
+  const written = heard.filter(isFallback).map((each) => each.service);
+  if (written.length > 0) return new Set(written);
   return new Set(all.filter((service) => offered.includes(service) || heard.some((each) => each.service === service && each.default !== true)));
 };
 
@@ -441,7 +467,13 @@ export interface PortIndex {
  * a row - and only where none does do the guesses outrank the defaults, as
  * they did (P305). A port an example environment file offers - `PORT=` in
  * `.env.example`, the value it gives a setting the code reads alone - is such
- * a guess too (P309): the file is a candidate, not what a run is given.
+ * a guess too (P309): the file is a candidate, not what a run is given. So is
+ * the fallback the code writes for a setting, `process.env.PORT ?? 3000`
+ * (P313): what the code assumes where nothing sets the setting, asked whether
+ * it serves the request like the others and outranking them where nobody
+ * does. A port a loaded environment file or a deployment gives the setting,
+ * and a port a container publishes, are written facts about where the
+ * service is reached, and stay firm.
  */
 export const atLocalPort = (address: string, index: PortIndex, serves?: ServesRequest): PortAnswer | undefined => {
   const port = localPortOf(address);

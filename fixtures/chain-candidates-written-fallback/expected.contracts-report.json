@@ -1,0 +1,189 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-15T17:18:32.904Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:jobs#src/calls.ts:11:37",
+        "to": "entry:legacy:http:GET:/archive",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/calls.ts:11:37|http_calls|entry:legacy:http:GET:/archive",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/calls.ts:archivedOrders declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/calls.ts:11:37",
+        "to": "entry:legacy:http:GET:/archive",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/calls.ts:11:37|http_calls|entry:legacy:http:GET:/archive",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "legacy#src/app.ts:GET /archive@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/calls.ts:23:34",
+        "to": "entry:archive:http:GET:/exports",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/calls.ts:23:34|http_calls|entry:archive:http:GET:/exports",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/calls.ts:exportsList declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/calls.ts:23:34",
+        "to": "entry:archive:http:GET:/exports",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/calls.ts:23:34|http_calls|entry:archive:http:GET:/exports",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "archive#src/app.ts:GET /exports@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/calls.ts:26:27",
+        "to": "entry:shop:http:GET:/api/cart",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/calls.ts:26:27|http_calls|entry:shop:http:GET:/api/cart",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/calls.ts:cart declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/calls.ts:26:27",
+        "to": "entry:shop:http:GET:/api/cart",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/calls.ts:26:27|http_calls|entry:shop:http:GET:/api/cart",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "jobs#src/calls.ts:cart declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/calls.ts:29:28",
+        "to": "entry:api:http:GET:/items",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/calls.ts:29:28|http_calls|entry:api:http:GET:/items",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/calls.ts:items declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/calls.ts:29:28",
+        "to": "entry:api:http:GET:/items",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/calls.ts:29:28|http_calls|entry:api:http:GET:/items",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "api#src/app.ts:GET /items@10 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/calls.ts:8:33",
+        "to": "entry:orders:http:GET:/orders/open",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/calls.ts:8:33|http_calls|entry:orders:http:GET:/orders/open",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/calls.ts:openOrders declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/calls.ts:8:33",
+        "to": "entry:orders:http:GET:/orders/open",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/calls.ts:8:33|http_calls|entry:orders:http:GET:/orders/open",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/app.ts:GET /orders/open@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:portal#src/orders.client.ts:15:12",
+        "to": "entry:legacy:http:GET:/archive",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:portal#src/orders.client.ts:15:12|http_calls|entry:legacy:http:GET:/archive",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "portal#src/orders.client.ts:OrdersClient.archived declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:portal#src/orders.client.ts:15:12",
+        "to": "entry:legacy:http:GET:/archive",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:portal#src/orders.client.ts:15:12|http_calls|entry:legacy:http:GET:/archive",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "legacy#src/app.ts:GET /archive@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:portal#src/orders.client.ts:20:12",
+        "to": "entry:archive:http:GET:/exports",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:portal#src/orders.client.ts:20:12|http_calls|entry:archive:http:GET:/exports",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "portal#src/orders.client.ts:OrdersClient.exports declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:portal#src/orders.client.ts:20:12",
+        "to": "entry:archive:http:GET:/exports",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:portal#src/orders.client.ts:20:12|http_calls|entry:archive:http:GET:/exports",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "archive#src/app.ts:GET /exports@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 14,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

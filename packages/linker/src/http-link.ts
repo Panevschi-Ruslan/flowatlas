@@ -9,7 +9,7 @@ import {
   type RouteResult,
 } from './route-match.js';
 import { chooseByApiName } from './api-choice.js';
-import { branchClaims, branchSaid, settingsAfter, whereFound, type BaseUrlAnswer, type FoundValue } from './base-url-value.js';
+import { chooseAmongSettings, claimantsOfSetting, howChosen, settingCandidates, settingsAfter, whereFound, type BaseUrlAnswer, type FoundValue, type SettingCandidates } from './base-url-value.js';
 import { localGraphqlEndpoint, sendsOperation, undecidedFinding, unservedFinding } from './graphql-value.js';
 import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
 import { defaultPortOf, forwardedAgain, proxyChainFinding, PROXY_HOPS, type Forward } from './proxy-forward.js';
@@ -114,16 +114,18 @@ interface Details {
     /** The proxy rule the request was forwarded by, and how (P257). */
     proxied?: Forward;
     /**
-     * The settings of the condition's branches the service was chosen among
-     * by serving the request, as `ORDERS_URL (orders)` (P309): a guess.
+     * The settings of the condition's branches, or of the chain, the service
+     * was chosen among by serving the request, as `ORDERS_URL (orders)`
+     * (P309, P313): a guess.
      */
     branches?: readonly string[];
   };
   /**
-   * The settings of a condition's branches nobody settles are claimed by
-   * several services, and more than one serves the request (P309).
+   * The settings of a condition's branches nobody settles, or a chain's
+   * later settings, are claimed by several services, and more than one
+   * serves the request (P309, P313).
    */
-  branchesServed: { method: string; path: string; branches: readonly string[]; services: readonly string[] };
+  branchesServed: { method: string; path: string; branches: readonly string[]; services: readonly string[]; order?: SettingCandidates['order'] };
   /** Two or more services listen on the port an address on this machine names (P250). */
   portShared: { port: number; said: readonly string[]; services: readonly string[] };
   /** A host on a network names the service at a port it is not reached at there (P257). */
@@ -205,7 +207,7 @@ const FINDINGS: { [K in OutcomeKind]: ((detail: Details[K]) => Finding) | null }
   linked: null,
   external: null,
   dynamic: null,
-  branchesServed: ({ method, path, branches, services }) => branchesServedFinding(method, path, branches, services),
+  branchesServed: ({ method, path, branches, services, order }) => branchesServedFinding(method, path, branches, services, order),
   portShared: ({ port, said }) => portSharedFinding(port, said),
   portClosed: ({ host, closed }) => portClosedFinding(host, closed),
   proxyChain: ({ services, loop }) => proxyChainFinding(services, loop),
@@ -254,12 +256,12 @@ const FINDINGS: { [K in OutcomeKind]: ((detail: Details[K]) => Finding) | null }
 };
 
 /**
- * Why a request whose base is one of a condition's settings, claimed by
- * several services that each serve it, is not joined (P309).
+ * Why a request whose base is one of a condition's settings, or of a chain's
+ * (P313), claimed by several services that each serve it, is not joined (P309).
  */
-export const branchesServedFinding = (method: string, path: string, branches: readonly string[], services: readonly string[]): Finding => ({
+export const branchesServedFinding = (method: string, path: string, branches: readonly string[], services: readonly string[], order: SettingCandidates['order'] = 'either'): Finding => ({
   reason: 'ambiguous-route-target',
-  message: `the request's base is one of ${branches.join(' and ')}, chosen by a condition nobody settles, and ${services.join(' and ')} each serve ${method} ${path}`,
+  message: `the request's base is one of ${branches.join(' and ')}, ${howChosen(order)}, and ${services.join(' and ')} each serve ${method} ${path}`,
   hint: 'Read the base from one setting, or annotate the call with @CallsService naming the service it reaches.',
 });
 
@@ -865,29 +867,34 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
   }
 
   // A key a settings factory builds from a variable of the environment is
-  // claimed by whoever claims the variable (P77).
-  const variable = call.meta?.['baseUrlVariable'];
-  const own = index.claimantsOf(env);
-  const claimed = own.length === 0 && typeof variable === 'string' ? index.claimantsOf(variable) : own;
+  // claimed by whoever claims the variable (P77), the key of each setting
+  // after it as much as its own (P313).
+  const claimantsOf = (setting: string): readonly string[] => claimantsOfSetting(call, setting, (each) => index.claimantsOf(each));
+  const claimed = claimantsOf(env);
   // A setting a chain of `||` reads after it, where nobody claims the ones before (P296).
-  const claiming = claimed.length > 0 ? claimed : (settingsAfter(call).map((each) => index.claimantsOf(each)).find((each) => each.length > 0) ?? claimed);
+  const claiming = claimed.length > 0 ? claimed : (settingsAfter(call).map(claimantsOf).find((each) => each.length > 0) ?? claimed);
   // The settings of a condition's branches nobody settles are each the
-  // request's base (P309): where different services claim them, the one that
-  // serves the request is the answer, a guess; several serving it are a row;
-  // none, and the first branch's claimant is asked as it always was.
-  const branches = branchClaims(call, (setting) => index.claimantsOf(setting));
-  if (branches !== undefined) {
-    const asked = branches.map((claim) => ({ claim, reached: within(claim.service, 'baseUrlEnv', {}) }));
-    const serving = asked.filter(({ reached }) => reached.outcome.kind === 'linked' || reached.outcome.kind === 'ambiguous');
-    const said = branches.map(branchSaid);
-    const [only] = serving;
-    if (only !== undefined && serving.length === 1) {
-      const { reached } = only;
-      return reached.outcome.kind === 'linked' ? { ...reached, outcome: { ...reached.outcome, branches: said } } : reached;
-    }
-    if (serving.length > 1 && typeof path === 'string') {
-      return { outcome: { kind: 'branchesServed', method, path, branches: said, services: serving.map(({ claim }) => claim.service) }, notes };
-    }
+  // request's base (P309), and a chain's later settings are where it goes
+  // where the first claimant does not serve it (P313): the one that serves
+  // the request is the answer, a guess; several serving it are a row; none,
+  // and the first claimant is asked as it always was.
+  const candidates = settingCandidates(call, (setting) => index.claimantsOf(setting));
+  const chosen =
+    candidates === undefined
+      ? undefined
+      : chooseAmongSettings(candidates, (service) => {
+          const reached = within(service, 'baseUrlEnv', {});
+          return reached.outcome.kind === 'linked' || reached.outcome.kind === 'ambiguous' ? reached : undefined;
+        });
+  if (chosen?.kind === 'one') {
+    const reached = chosen.found;
+    return reached.outcome.kind === 'linked' ? { ...reached, outcome: { ...reached.outcome, branches: chosen.said } } : reached;
+  }
+  if (chosen?.kind === 'several' && typeof path === 'string') {
+    return {
+      outcome: { kind: 'branchesServed', method, path, branches: chosen.said, services: chosen.serving.map(({ claim }) => claim.service), order: chosen.order },
+      notes,
+    };
   }
   // A setting no service claims may hold a function's own URL, which answers
   // every verb and path: the request reaches the function whatever it asks.

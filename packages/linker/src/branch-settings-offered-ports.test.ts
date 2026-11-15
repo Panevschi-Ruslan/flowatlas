@@ -99,17 +99,19 @@ describe("a condition's branches over settings different services claim (P309)",
     expect(row?.message).toContain('ORDERS_URL (orders) and LEGACY_URL (legacy)');
   });
 
-  it('leaves a chain of || to its first claimant: only branches are equal candidates', () => {
+  it("follows a chain of || to a later setting's claimant only where the first's lacks the route (P313)", () => {
     const chain = graph('web', [request('web', { method: 'GET', path: '/v1/orders', baseUrlEnv: 'ORDERS_URL', baseUrlAlso: ['LEGACY_URL'] })]);
     const result = linkGraphs([...targets, chain], services, { builtAt: FIXED });
-    expect(joins(result)).toEqual([]);
-    expect(result.project.unresolved.map((row) => row.reason)).toEqual(['target-route-not-found']);
+    expect(joins(result)).toEqual(['http_out entry:legacy:http:GET:/v1/orders heuristic']);
   });
 
-  it('names nothing where the branches are claimed by one service, or a setting by several', () => {
+  it('names nothing where the branches are claimed by one service, and every claimant of a setting several claim (P313)', () => {
     const claims = (claimed: Record<string, readonly string[]>) => branchClaims(branched('/x').nodes[0] as GraphNode, (setting) => claimed[setting] ?? []);
     expect(claims({ ORDERS_URL: ['orders'], LEGACY_URL: ['orders'] })).toBeUndefined();
-    expect(claims({ ORDERS_URL: ['orders'], LEGACY_URL: ['legacy', 'orders'] })).toBeUndefined();
+    expect(claims({ ORDERS_URL: ['orders'], LEGACY_URL: ['legacy', 'orders'] })).toEqual([
+      { service: 'orders', settings: ['ORDERS_URL', 'LEGACY_URL'] },
+      { service: 'legacy', settings: ['LEGACY_URL'] },
+    ]);
     expect(claims({ ORDERS_URL: ['orders'], LEGACY_URL: ['legacy'] })).toEqual([
       { service: 'orders', settings: ['ORDERS_URL'] },
       { service: 'legacy', settings: ['LEGACY_URL'] },

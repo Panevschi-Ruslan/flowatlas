@@ -196,35 +196,141 @@ export const settingsEither = (call: GraphNode): readonly string[] => {
   return Array.isArray(either) ? either.filter((each): each is string => typeof each === 'string') : [];
 };
 
-/** The services a condition's branches reach, each with the settings of the branches it claims. */
+/**
+ * The variable of the environment a settings factory builds a setting's key
+ * from (P77), for the key a request is rooted at and for each setting of a
+ * chain or a condition's branches after it (P313): `config.get('orders.url')`
+ * read from `ORDERS_URL`.
+ */
+export const variableOfSetting = (call: GraphNode, setting: string): string | undefined => {
+  if (setting === call.meta?.['baseUrlEnv']) {
+    const variable = call.meta?.['baseUrlVariable'];
+    if (typeof variable === 'string') return variable;
+  }
+  const variables = call.meta?.['baseUrlVariables'];
+  const variable = typeof variables === 'object' && variables !== null ? (variables as Record<string, unknown>)[setting] : undefined;
+  return typeof variable === 'string' ? variable : undefined;
+};
+
+/** Who claims a setting of a request's base: whoever claims its key, else whoever claims the variable its key is built from (P77, P313). */
+export const claimantsOfSetting = (call: GraphNode, setting: string, claimantsOf: (setting: string) => readonly string[]): readonly string[] => {
+  const own = claimantsOf(setting);
+  if (own.length > 0) return own;
+  const variable = variableOfSetting(call, setting);
+  return variable === undefined ? own : claimantsOf(variable);
+};
+
+/** A service a setting of a request's base reaches, with the settings of the base it claims. */
 export interface BranchClaim {
   readonly service: string;
   readonly settings: readonly string[];
 }
 
 /**
- * Who claims each setting of a condition's branches nobody settles (P309),
- * where they are claimed by more than one service: each service with the
- * branch settings it alone claims, in the order the branches are written.
- * Nothing where the branches name one service or none, so the setting the
- * request is rooted at is looked up as it always was.
+ * The services a request's base may be, where its settings are claimed by
+ * more than one (P309, P313), asked in tiers:
+ *
+ * - `either`: a condition's branches nobody settles, one tier, every
+ *   claimant of every branch's setting as much the base as another, a setting
+ *   several services claim naming each of them;
+ * - `chain`: `A || B`, `A ?? B`, one tier per setting someone claims, in the
+ *   order they are read, a service counted at the first setting it claims.
  */
-export const branchClaims = (call: GraphNode, claimantsOf: (setting: string) => readonly string[]): readonly BranchClaim[] | undefined => {
+export interface SettingCandidates {
+  readonly order: 'either' | 'chain';
+  readonly tiers: readonly (readonly BranchClaim[])[];
+}
+
+const claimsOf = (call: GraphNode, settings: readonly string[], claimantsOf: (setting: string) => readonly string[], seen: ReadonlySet<string>): BranchClaim[] => {
   const claims: { service: string; settings: string[] }[] = [];
-  for (const setting of settingsEither(call)) {
-    const claiming = claimantsOf(setting);
-    // A setting several services claim names none of them.
-    if (claiming.length !== 1) continue;
-    const service = claiming[0] as string;
-    const seen = claims.find((each) => each.service === service);
-    if (seen === undefined) claims.push({ service, settings: [setting] });
-    else if (!seen.settings.includes(setting)) seen.settings.push(setting);
+  for (const setting of settings) {
+    for (const service of claimantsOfSetting(call, setting, claimantsOf)) {
+      if (seen.has(service)) continue;
+      const claim = claims.find((each) => each.service === service);
+      if (claim === undefined) claims.push({ service, settings: [setting] });
+      else if (!claim.settings.includes(setting)) claim.settings.push(setting);
+    }
   }
-  return claims.length > 1 ? claims : undefined;
+  return claims;
 };
 
-/** A branch's claim as a row names it: `ORDERS_URL (orders)`. */
+/**
+ * Who may be a request's base among the settings it is read from (P313): a
+ * condition's branches as one tier, else the settings of a chain, each its
+ * own tier. Nothing where they name one service or none, so the setting the
+ * request is rooted at is looked up as it always was.
+ */
+export const settingCandidates = (call: GraphNode, claimantsOf: (setting: string) => readonly string[]): SettingCandidates | undefined => {
+  const either = settingsEither(call);
+  if (either.length > 0) {
+    const claims = claimsOf(call, either, claimantsOf, new Set());
+    return claims.length > 1 ? { order: 'either', tiers: [claims] } : undefined;
+  }
+  const env = call.meta?.['baseUrlEnv'];
+  if (typeof env !== 'string') return undefined;
+  const seen = new Set<string>();
+  const tiers: BranchClaim[][] = [];
+  for (const setting of [env, ...settingsAfter(call)]) {
+    const tier = claimsOf(call, [setting], claimantsOf, seen);
+    if (tier.length === 0) continue;
+    for (const claim of tier) seen.add(claim.service);
+    tiers.push(tier);
+  }
+  return seen.size > 1 ? { order: 'chain', tiers } : undefined;
+};
+
+/**
+ * Who claims each setting of a condition's branches nobody settles (P309):
+ * every claimant of every branch's setting, each with the branch settings it
+ * claims, in the order the branches are written (P313). Nothing where they
+ * name one service or none.
+ */
+export const branchClaims = (call: GraphNode, claimantsOf: (setting: string) => readonly string[]): readonly BranchClaim[] | undefined => {
+  const candidates = settingCandidates(call, claimantsOf);
+  return candidates?.order === 'either' ? candidates.tiers[0] : undefined;
+};
+
+/** A claim as a row names it: `ORDERS_URL (orders)`. */
 export const branchSaid = (claim: BranchClaim): string => `${claim.settings.join(', ')} (${claim.service})`;
+
+/** The service a request's base was chosen as among its settings' claimants, or the several serving it. */
+export type SettingChoice<T> =
+  | { readonly kind: 'one'; readonly claim: BranchClaim; readonly found: T; readonly said: readonly string[]; readonly order: SettingCandidates['order'] }
+  | {
+      readonly kind: 'several';
+      readonly serving: readonly { readonly claim: BranchClaim; readonly found: T }[];
+      readonly said: readonly string[];
+      readonly order: SettingCandidates['order'];
+    };
+
+/**
+ * The claimant serving the request among a request's base settings (P309,
+ * P313), `ask` answering for a service that serves it and nothing for one
+ * that does not. Tier by tier: the first tier anyone serves it in is the
+ * answer, one service the join, a guess, several a row. A chain's first tier
+ * serving it is the join it always was, so nothing; and where nobody serves
+ * it, nothing, and the first claimant is asked as before.
+ */
+export const chooseAmongSettings = <T>(candidates: SettingCandidates, ask: (service: string) => T | undefined): SettingChoice<T> | undefined => {
+  const said = candidates.tiers.flat().map(branchSaid);
+  for (const [index, tier] of candidates.tiers.entries()) {
+    const serving = tier.flatMap((claim) => {
+      const found = ask(claim.service);
+      return found === undefined ? [] : [{ claim, found }];
+    });
+    if (serving.length === 0) continue;
+    if (candidates.order === 'chain' && index === 0) return undefined;
+    const [only] = serving;
+    return only !== undefined && serving.length === 1
+      ? { kind: 'one', claim: only.claim, found: only.found, said, order: candidates.order }
+      : { kind: 'several', serving, said, order: candidates.order };
+  }
+  return undefined;
+};
+
+/** How a row says the base was read from its settings: chosen by a condition, or the first of a chain that is set. */
+export const howChosen = (order: SettingCandidates['order']): string =>
+  order === 'either' ? 'chosen by a condition nobody settles' : 'read from the first of them that is set';
 
 /** Every value the setting is found with, strongest first: the deployment's alone, where it says. */
 export const valuesOf = (input: BaseUrlInput): FoundValue[] => {

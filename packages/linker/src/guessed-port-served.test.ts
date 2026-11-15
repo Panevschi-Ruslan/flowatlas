@@ -56,11 +56,15 @@ describe('atLocalPort where a default and a merged port meet (P307)', () => {
     expect(atLocalPort(`${LOCAL}/api/cart`, example, asked('GET', '/api/cart'))).toMatchObject({ kind: 'service', service: 'shop' });
   });
 
-  it('lets a port the code writes win outright, a served default or not', () => {
+  it('lets a port the code writes as a number win outright, a served default or not', () => {
     const written = heard({ service: 'api', file: 'src/main.ts', line: 9 }, { service: 'shop', ...ASSUMED });
     expect(atLocalPort(`${LOCAL}/api/cart`, written, asked('GET', '/api/cart'))).toMatchObject({ kind: 'service', service: 'api', sure: true });
+  });
+
+  it("takes a setting's written fallback as a guess that yields to a served default, and outranks it where nobody serves the request (P313)", () => {
     const fallback = heard({ service: 'api', file: 'src/main.ts', line: 9, setting: 'PORT' }, { service: 'shop', ...ASSUMED });
-    expect(atLocalPort(`${LOCAL}/api/cart`, fallback, asked('GET', '/api/cart'))).toMatchObject({ kind: 'service', service: 'api' });
+    expect(atLocalPort(`${LOCAL}/api/cart`, fallback, asked('GET', '/api/cart'))).toMatchObject({ kind: 'service', service: 'shop' });
+    expect(atLocalPort(`${LOCAL}/items`, fallback, asked('GET', '/items'))).toMatchObject({ kind: 'service', service: 'api', sure: false });
   });
 
   it('lets a file placing a service win outright', () => {
