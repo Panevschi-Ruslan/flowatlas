@@ -202,6 +202,26 @@ describe('plain browser code (P284)', () => {
     expect(requests(graph).map((node) => node.meta?.['url'])).toEqual(['https://reviews.example.test/latest']);
   });
 
+  it('follows a path a parameter puts straight after a host out to each caller, and leaves one nobody hands unread, never the root (P308)', () => {
+    const graph = read({
+      '/js/api.js': [
+        "function getJson(path) { return fetch('https://shop.example.test' + path); }",
+        'function postJson(path, body) { return fetch(`https://shop.example.test${path}`, { method: \'POST\', body }); }',
+        "function products() { return getJson('/products'); }",
+        'function product(id) { return getJson(`/products/${id}`); }',
+        "function order(body) { return postJson('/orders', body); }",
+        "function lost(path) { return fetch('https://shop.example.test' + path); }",
+      ].join('\n'),
+    });
+    expect(requests(graph).map((node) => [node.meta?.['method'], node.meta?.['host'], node.meta?.['path']]).sort()).toEqual([
+      ['GET', 'shop.example.test', '${…}'],
+      ['GET', 'shop.example.test', '/products'],
+      ['GET', 'shop.example.test', '/products/:param'],
+      ['POST', 'shop.example.test', '/orders'],
+    ]);
+    expect(graph.unresolved.filter((row) => row.reason === 'api-path-dynamic').map((row) => row.line)).toEqual([6]);
+  });
+
   it('leaves a verb it cannot read as unread', () => {
     const graph = read({ '/js/any.js': "function send(verb) {\n  const request = new XMLHttpRequest();\n  request.open(verb, 'https://api.example.test/orders');\n}\n" });
     expect(requests(graph).map((node) => node.meta?.['method'])).toEqual([null]);

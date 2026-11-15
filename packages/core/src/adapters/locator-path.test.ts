@@ -245,6 +245,47 @@ flows.addBulk([{ queueName: 'a' }, { queueName: 'b', children: later }]);`);
     expect(slots(callTo(file, 'add'), { kind: 'receiver-constructed-path', class: 'Queue', path: [] })).toEqual(['topic']);
   });
 
+  it('reads a queue a field is declared with, with or without modifiers, static through the class (P308)', () => {
+    const MADE: NameLocator = { kind: 'receiver-constructed-path', class: 'Queue', path: [] };
+    const kept = parse(`class Mailer {
+  private readonly queue = new Queue('emails');
+  send(job: string) { return this.queue.add(job); }
+}`);
+    expect(slots(callTo(kept, 'add'), MADE)).toEqual(["'emails'"]);
+    const bare = parse(`class Mailer {
+  queue = new Queue('emails');
+  send(job: string) { return this.queue.add(job); }
+}`);
+    expect(slots(callTo(bare, 'add'), MADE)).toEqual(["'emails'"]);
+    const shared = parse(`class Reports {
+  static readonly queue = new Queue('reports');
+  static daily() { return Reports.queue.add('daily'); }
+}`);
+    expect(slots(callTo(shared, 'add'), MADE)).toEqual(["'reports'"]);
+    const inStatic = parse(`class Reports {
+  static queue = new Queue('reports');
+  static daily() { return this.queue.add('daily'); }
+}`);
+    expect(slots(callTo(inStatic, 'add'), MADE)).toEqual(["'reports'"]);
+  });
+
+  it('does not read a declared value a field is given another value beside, or changed in place', () => {
+    const MADE: NameLocator = { kind: 'receiver-constructed-path', class: 'Queue', path: [] };
+    const reset = parse(`class Mailer {
+  private queue = new Queue('emails');
+  constructor(name: string) { this.queue = new Queue(name); }
+  send(job: string) { return this.queue.add(job); }
+}`);
+    expect(slots(callTo(reset, 'add'), MADE)).toEqual(['stopped at this.queue']);
+    const swapped = parse(`class Mailer {
+  private queue = new Queue('emails');
+  private spare = new Queue('spare');
+  swap() { [this.queue, this.spare] = [this.spare, this.queue]; }
+  send(job: string) { return this.queue.add(job); }
+}`);
+    expect(slots(callTo(swapped, 'add'), MADE)).toEqual(['stopped at this.queue']);
+  });
+
   it('reads each record a function may answer, awaited', () => {
     const file = parse(`async function build(kind: boolean) {
   if (kind) return { type: 'a' };

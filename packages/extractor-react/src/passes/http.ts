@@ -16,6 +16,7 @@ import {
   verbAlong,
   verbParameterOf,
   verbsAtCallers,
+  UNREAD_SPAN,
   wasRead,
   writtenKeysOf,
   describedRequestsAt,
@@ -598,6 +599,18 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         line: at.line,
         reason: 'api-path-dynamic',
         hint: 'The address is built at run time. Annotate the function with /** @flowatlas-calls METHOD /path */.',
+        symbol: network.getText().slice(0, 80),
+      });
+    } else if (address.host !== null && address.path === UNREAD_SPAN) {
+      // `'https://shop.example' + path` where no caller hands the path in a
+      // form that is read (P308): the host is known and the path is not,
+      // which is no request to the host's root.
+      ctx.report({
+        file: site.file,
+        line: at.line,
+        reason: 'api-path-dynamic',
+        message: `The path after ${address.host} is a value nothing here reads, and no caller hands it one that is read.`,
+        hint: 'Call the function with the path written out, or annotate it with /** @flowatlas-calls METHOD /path */.',
         symbol: network.getText().slice(0, 80),
       });
     }

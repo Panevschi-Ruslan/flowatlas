@@ -9,6 +9,7 @@ import {
   type Node as TsNode,
   type ObjectLiteralExpression,
   type ParameterDeclaration,
+  type PropertyDeclaration,
   type VariableDeclaration,
 } from 'ts-morph';
 import { classMembersOf } from '../di/class-members.js';
@@ -618,37 +619,66 @@ const constValue = (node: TsNode): TsNode | undefined => {
 };
 
 /**
- * What a field of the class is set to, where the class sets it in one place
- * only and declares it with no value of its own: `this.queue = new
- * Queue(name)` in the method that opens the queue, read wherever
- * `this.queue` is used (P286). A field set in two places holds whichever
- * ran last, which nothing here can say.
+ * Whether `target` names the field `declaration` of its class: `this.queue`
+ * in a member of the class (a static member for a static field), or
+ * `Reports.queue` through the class itself for a static one (P308).
+ */
+const namesField = (target: TsNode, declaration: PropertyDeclaration): boolean => {
+  if (!Node.isPropertyAccessExpression(target) || target.getName() !== declaration.getName()) return false;
+  const owner = declaration.getParent();
+  const object = peeled(target.getExpression());
+  if (Node.isThisExpression(object)) {
+    const member = target.getFirstAncestor(
+      (node) => Node.isMethodDeclaration(node) || Node.isConstructorDeclaration(node) || Node.isPropertyDeclaration(node) || Node.isGetAccessorDeclaration(node) || Node.isSetAccessorDeclaration(node) || Node.isClassStaticBlockDeclaration(node),
+    );
+    if (member === undefined || member.getParent() !== owner) return false;
+    const staticMember = Node.isClassStaticBlockDeclaration(member) || (!Node.isConstructorDeclaration(member) && (member as PropertyDeclaration).isStatic());
+    return staticMember === declaration.isStatic();
+  }
+  return declaration.isStatic() && Node.isIdentifier(object) && declarationNamed(object) === owner;
+};
+
+/**
+ * What a field of the class is set to, where it is given one value only:
+ * `this.queue = new Queue(name)` in the method that opens the queue, or the
+ * value it is declared with - `private readonly queue = new Queue('emails')`,
+ * a static field read as `Reports.queue` included - read wherever the field
+ * is used (P286, P308). A field set in two places holds whichever ran last,
+ * which nothing here can say.
  */
 const assignedField = (node: TsNode): TsNode | undefined => {
-  if (!Node.isPropertyAccessExpression(node) || !Node.isThisExpression(peeled(node.getExpression()))) return undefined;
-  const owner = node.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+  if (!Node.isPropertyAccessExpression(node)) return undefined;
+  const object = peeled(node.getExpression());
+  if (!Node.isThisExpression(object) && !Node.isIdentifier(object)) return undefined;
   const declaration = node.getNameNode().getSymbol()?.getDeclarations()[0];
-  if (
-    owner === undefined ||
-    declaration === undefined ||
-    !Node.isPropertyDeclaration(declaration) ||
-    declaration.getParent() !== owner ||
-    declaration.isStatic() ||
-    declaration.getInitializer() !== undefined
-  ) {
-    return undefined;
-  }
-  const name = node.getName();
-  const values: TsNode[] = [];
-  owner.forEachDescendant((each) => {
-    if (!Node.isBinaryExpression(each) || each.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) return;
-    const left = peeled(each.getLeft());
-    if (Node.isPropertyAccessExpression(left) && Node.isThisExpression(peeled(left.getExpression())) && left.getName() === name) {
-      values.push(each.getRight());
+  if (declaration === undefined || !Node.isPropertyDeclaration(declaration) || !namesField(node, declaration)) return undefined;
+  const owner = declaration.getParent();
+  if (!Node.isClassDeclaration(owner) && !Node.isClassExpression(owner)) return undefined;
+  const initializer = declaration.getInitializer();
+  const values: TsNode[] = initializer === undefined ? [] : [initializer];
+  let changed = false;
+  // A static field may be written through the class anywhere in its module;
+  // an instance field is written by the class's own members. One changed in
+  // place - `+=`, `++`, a destructuring - holds a value none of these is.
+  (declaration.isStatic() ? declaration.getSourceFile() : owner).forEachDescendant((each) => {
+    if (Node.isBinaryExpression(each)) {
+      const operator = each.getOperatorToken().getKind();
+      const left = peeled(each.getLeft());
+      if (operator === SyntaxKind.EqualsToken && namesField(left, declaration)) values.push(each.getRight());
+      else if (operator >= SyntaxKind.FirstCompoundAssignment && operator <= SyntaxKind.LastCompoundAssignment && namesField(left, declaration)) changed = true;
+      else if (operator === SyntaxKind.EqualsToken && (Node.isArrayLiteralExpression(left) || Node.isObjectLiteralExpression(left))) {
+        left.forEachDescendant((inner) => {
+          if (namesField(inner, declaration)) changed = true;
+        });
+      }
+      return;
+    }
+    if ((Node.isPrefixUnaryExpression(each) || Node.isPostfixUnaryExpression(each)) && (each.getOperatorToken() === SyntaxKind.PlusPlusToken || each.getOperatorToken() === SyntaxKind.MinusMinusToken)) {
+      if (namesField(peeled(each.getOperand()), declaration)) changed = true;
     }
   });
   const [only, ...more] = values;
-  if (only === undefined || more.length > 0) return undefined;
+  if (changed || only === undefined || more.length > 0) return undefined;
   // A field the constructor keeps a parameter of in is what each instance was
   // built with, which the reader of a publish follows to whoever built it.
   const kept = declarationNamed(peeled(only));

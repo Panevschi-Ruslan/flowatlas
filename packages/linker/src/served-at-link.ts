@@ -40,6 +40,10 @@ export type ServedAnswer =
   | { readonly kind: 'one'; readonly found: ServedApi }
   | { readonly kind: 'several'; readonly host: string; readonly apis: readonly string[] };
 
+/** How well a place open at a chosen stage says the request's: the stage it writes, then the one nothing chooses (P308). */
+const rankOf = (served: ServedAt, written: readonly string[]): number =>
+  (served.chosenDefault !== undefined && served.chosenDefault === written.join('/') ? 2 : 0) + (served.chosenIn === undefined ? 1 : 0);
+
 /** Every route of every service, read as where its API is served. */
 export const apiServedAt = (
   method: string,
@@ -62,7 +66,13 @@ export const apiServedAt = (
           routes: [],
           exact: !served.base.includes('*') && served.chosenHost === undefined,
         };
-        at.routes.push(route);
+        // One API open at a stage the deployment chooses may name several it
+        // takes - a Terraform workspace's each (P308): the one the request
+        // writes is said, else the one where nothing chooses.
+        if (byApi.has(key) && rankOf(served, match.written) > rankOf(at.found.served, at.found.written)) {
+          at.found = { ...at.found, path: match.path, served, written: match.written };
+        }
+        if (!at.routes.includes(route)) at.routes.push(route);
         byApi.set(key, at);
       }
     }
@@ -99,6 +109,19 @@ export const apiServedAt = (
 /** The place an API is served, as a person reads it: `*.gateway.example.test/prod`. */
 const placeOf = (served: ServedAt): string => `${served.host}${served.base.map((segment) => `/${segment}`).join('')}`;
 
+/**
+ * The stage a place chosen when the deployment is run is at, as a person
+ * reads it: the one where none is given, or the one a choice deploys to -
+ * `live in the workspace production` - only the default being the stage
+ * where none is given (P308).
+ */
+const chosenStage = (served: ServedAt): string =>
+  served.chosenDefault === undefined
+    ? 'one where none is given'
+    : served.chosenIn === undefined
+      ? `${served.chosenDefault} where none is given`
+      : `${served.chosenDefault} in ${served.chosenIn}`;
+
 /** What is said beside a request taken as an API's by where it is served. `info`: nothing is wrong. */
 export const servedAtFinding = (found: ServedApi): Finding => {
   const chosen = found.served.base.includes('*');
@@ -109,7 +132,7 @@ export const servedAtFinding = (found: ServedApi): Finding => {
     message:
       `${found.address} names its API by an id no file holds; it is taken as ${found.api} of ${found.service}, the API of the project served at ${placeOf(found.served)} with a route for it` +
       (chosen
-        ? `, at whatever stage it is run with (${found.served.chosenDefault ?? 'one'} where none is given), so ${stage === '' ? 'the address' : `the stage ${stage}`} is taken as one of its`
+        ? `, at whatever stage it is run with (${chosenStage(found.served)}), so ${stage === '' ? 'the address' : `the stage ${stage}`} is taken as one of its`
         : '') +
       (found.served.chosenHost === undefined ? '' : `, in whatever region it is deployed to (${found.served.chosenHost} where none is given)`) +
       `, and the request as one for ${found.path} on it`,

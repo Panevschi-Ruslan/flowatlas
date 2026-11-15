@@ -85,14 +85,18 @@ const prefixOf = (value: Value | undefined): string | undefined => {
 
 const sorted = (values: Iterable<string>): string[] => [...new Set(values)].sort();
 
-/** The stages an API is deployed to, as the files name them. */
+/**
+ * The stages an API is deployed to, as the files name them: a stage the
+ * workspace names by each name it takes, in the default workspace and in each
+ * workspace a map it is looked up in is written for (P308).
+ */
 const stagesOf = (api: Instance, reading: ResourceReading): string[] =>
   sorted(
     STAGES.flatMap((stage) =>
       reading
         .ofType('managed', stage.type)
         .filter((instance) => referenced(argument(instance, stage.api)) === api)
-        .flatMap((instance) => textOf(argument(instance, stage.name)) ?? []),
+        .flatMap((instance) => textOf(argument(instance, stage.name)) ?? workspaceNames(instance, stage.name).map((each) => each.name)),
     ),
   );
 
@@ -207,18 +211,31 @@ const inWorkspace = (expression: Expression, scope: Scope, workspace: string, de
   return evaluate(expression, withNames(scope, names));
 };
 
+/** A name an argument the workspace decides takes, and the workspace it takes it in. */
+interface WorkspaceName {
+  readonly name: string;
+  readonly workspace: string;
+}
+
 /**
  * The names an argument the workspace decides takes (P304): what it is in
  * the default workspace, and in each workspace a map it is looked up in is
- * written for. None where the workspace does not decide it.
+ * written for, each with the workspace it is taken in - the default
+ * workspace's where two take the same name (P308). None where the workspace
+ * does not decide it.
  */
-const workspaceNames = (instance: Instance, name: string): string[] => {
+const workspaceNames = (instance: Instance, name: string): WorkspaceName[] => {
   const written = attributeOf(instance.block.body, name);
   if (written === undefined || !chosenIn(written.expression, instance.module, 0, true)) return [];
   const scope = instance.module.scopeOf(instance);
-  const workspaces = new Set<string>([DEFAULT_WORKSPACE]);
+  const workspaces = new Set<string>();
   workspacesKeyed(written.expression, scope, 0, workspaces);
-  return sorted([...workspaces].flatMap((workspace) => textOf(inWorkspace(written.expression, scope, workspace, 0)) ?? []));
+  const byName = new Map<string, string>();
+  for (const workspace of [DEFAULT_WORKSPACE, ...sorted(workspaces)]) {
+    const taken = textOf(inWorkspace(written.expression, scope, workspace, 0));
+    if (taken !== undefined && !byName.has(taken)) byName.set(taken, workspace);
+  }
+  return [...byName].map(([each, workspace]) => ({ name: each, workspace })).sort((a, b) => a.name.localeCompare(b.name));
 };
 
 /** The region the AWS provider a block is created with is configured for, where the files settle it (P294). */
@@ -240,16 +257,19 @@ const regionOf = (instance: Instance): string | undefined => {
 const servedOf = (api: Instance, reading: ResourceReading): ServedAt[] => {
   const disabled = argument(api, 'disable_execute_api_endpoint');
   if (disabled?.kind === 'bool' && disabled.value) return [];
-  const stages: { name?: string; chosen?: boolean }[] = STAGES.flatMap((stage) =>
+  const stages: { name?: string; chosen?: boolean; chosenIn?: string }[] = STAGES.flatMap((stage) =>
     reading
       .ofType('managed', stage.type)
       .filter((instance) => referenced(argument(instance, stage.api)) === api && argument(instance, stage.name) !== undefined)
       .flatMap((instance) => {
         const name = textOf(argument(instance, stage.name));
         // A stage the workspace names is open, with the name it takes in the
-        // default workspace and in each workspace a map is written for (P304).
+        // default workspace and in each workspace a map is written for (P304),
+        // a name another workspace takes said to be that workspace's (P308).
         const named = name === undefined ? workspaceNames(instance, stage.name) : [];
-        if (named.length > 0) return named.map((each) => ({ name: each, chosen: true }));
+        if (named.length > 0) {
+          return named.map((each) => ({ name: each.name, chosen: true, ...(each.workspace === DEFAULT_WORKSPACE ? {} : { chosenIn: `the workspace ${each.workspace}` }) }));
+        }
         const chosen = name === undefined || chosenOnApply(instance, stage.name);
         return [{ ...(name === undefined ? {} : { name }), ...(chosen ? { chosen } : {}) }];
       }),

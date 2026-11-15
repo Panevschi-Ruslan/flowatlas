@@ -7085,6 +7085,12 @@ root, any other stage under its name, a stage named by a root module's
 `var.<name>` or `terraform.workspace` - directly, or through a `local` or a
 child module's input written over either (P298) - open with the value it has
 where nothing sets it, and a stage chosen elsewhere where none is read. A
+stage the workspace names is open once with what it is in the `default`
+workspace and once with what it is in each workspace a map it is looked up in
+is keyed by (P304); only the default's is the stage where none is given, each
+other one carrying the workspace that deploys to it (`chosenIn: "the workspace
+production"`, said so in the note), and an API nothing maps lists them all
+under `stages` (P308). A
 quick-create HTTP API (`target`) is served at its `$default` stage, and an API
 whose `disable_execute_api_endpoint` is `true` is served at none. A request
 written out with the id is joined to it as a Serverless API's is

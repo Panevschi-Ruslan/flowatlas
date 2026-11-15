@@ -27,8 +27,17 @@ export interface ServedAt {
   readonly base: readonly string[];
   /** The API, by name: the routes of one API are one answer. */
   readonly api: string;
-  /** For a base chosen when the deployment is run: what it is where nothing chooses. */
+  /**
+   * For a base chosen when the deployment is run: what it is where nothing
+   * chooses, or - with `chosenIn` - what the choice `chosenIn` says makes it.
+   */
   readonly chosenDefault?: string;
+  /**
+   * The choice that deploys the base `chosenDefault` names, where it is not
+   * what nothing chooses: `the workspace production` for a stage a Terraform
+   * workspace other than the default names (P308).
+   */
+  readonly chosenIn?: string;
   /**
    * For a host part chosen when the deployment is run - a region the host
    * names, `*` in `host`: the host where nothing chooses (P298).

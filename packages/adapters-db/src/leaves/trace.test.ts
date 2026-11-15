@@ -195,6 +195,32 @@ describe('splitting an address at the part a caller supplies', () => {
     const split = splitAtParameter(address(file));
     expect(forwardedFrom(split!.parameter)).toEqual({ calls: [], undecided: false });
   });
+
+  it('splits an address joined with + as the template it spells, the host kept (P308)', () => {
+    const file = parse(`
+      export function get(path: string) { return fetch('https://shop.example' + path); }
+      export const all = () => get('/products');
+    `);
+    const split = splitAtParameter(address(file));
+    expect(split?.parameter.getName()).toBe('path');
+    expect(split?.before).toBe('https://shop.example');
+    expect(split?.after).toBe('');
+    const [caller] = forwardedFrom(split!.parameter).calls;
+    expect(composeAddress(analyzeUrl(caller!.argument), split)).toMatchObject({ path: '/products', host: 'shop.example' });
+    // Two parameters joined are no address written here: the first is the whole address, as before.
+    const whole = parse(`export function go(base: string, path: string) { return fetch(base + path); }`);
+    expect(splitAtParameter(address(whole))?.parameter.getName()).toBe('base');
+  });
+
+  it('reads the path after a host as unread where a value is written straight after it, never the root (P308)', () => {
+    const joined = parse(`export function go(path: string) { return fetch('https://shop.example' + path); }`);
+    expect(analyzeUrl(address(joined))).toMatchObject({ path: '${…}', host: 'shop.example' });
+    const template = parse(`export function go(path: string) { return fetch(\`https://shop.example\${path}\`); }`);
+    expect(analyzeUrl(address(template))).toMatchObject({ path: '${…}', host: 'shop.example' });
+    // A host built from a value, a path after it, is read as it was.
+    const tenant = parse(`export function go(tenant: string) { return fetch(\`https://\${tenant}.shop.example/orders\`); }`);
+    expect(analyzeUrl(address(tenant))).toMatchObject({ path: '/orders' });
+  });
 });
 
 /**

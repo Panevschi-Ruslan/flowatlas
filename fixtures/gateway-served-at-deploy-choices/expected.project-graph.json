@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-15T14:55:44.058Z",
+  "builtAt": "2026-11-15T16:06:03.057Z",
   "services": [
     {
       "name": "orders",
@@ -164,6 +164,9 @@
         "api": "shop-payments",
         "function": "shop-pay",
         "declaredAs": "aws_apigatewayv2_route.pay",
+        "stages": [
+          "default"
+        ],
         "servedAt": [
           {
             "host": "*.execute-api.us-east-1.amazonaws.com",

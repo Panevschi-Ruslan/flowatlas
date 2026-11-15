@@ -2153,6 +2153,46 @@ export interface SplitAddress {
   after: string;
 }
 
+/** An address as text written out and the values between: a template's head and spans, or a `+` chain's. */
+interface AddressPieces {
+  readonly head: string;
+  readonly spans: readonly { readonly expression: TsNode; readonly literal: string }[];
+}
+
+const templatePieces = (node: TemplateExpression): AddressPieces => ({
+  head: node.getHead().getLiteralText(),
+  spans: node.getTemplateSpans().map((span) => ({ expression: span.getExpression(), literal: span.getLiteral().getLiteralText() })),
+});
+
+/**
+ * `'https://shop.example' + path + '/items'` as a template's pieces (P308):
+ * each operand read as text where it is text, a value between where it is
+ * not. Only a chain holding some text or a value no parameter hands in -
+ * `this.baseUrl + path` - is read so: `a + b` of two parameters is no address
+ * written here.
+ */
+const concatenatedPieces = (node: TsNode, handed: (expression: TsNode) => boolean): AddressPieces | undefined => {
+  const operands = joinedPieces(node);
+  if (operands.length < 2) return undefined;
+  let head = '';
+  const spans: { expression: TsNode; literal: string }[] = [];
+  let texts = 0;
+  for (const operand of operands) {
+    const value = evaluateExpression(operand);
+    const text = value.resolved && (typeof value.value === 'string' || typeof value.value === 'number') ? String(value.value) : undefined;
+    if (text === undefined) {
+      spans.push({ expression: operand, literal: '' });
+      continue;
+    }
+    texts += 1;
+    const last = spans.at(-1);
+    if (last === undefined) head += text;
+    else spans[spans.length - 1] = { ...last, literal: last.literal + text };
+  }
+  if (spans.length === 0 || (texts === 0 && spans.every((span) => handed(span.expression)))) return undefined;
+  return { head, spans };
+};
+
 /**
  * Splits an address at the one piece the caller decides.
  *
@@ -2167,17 +2207,23 @@ export const splitAtParameter = (
   const budget = options.budget ?? BUDGET;
   const node = deref(value, budget);
 
+  // `'https://shop.example' + path` is written as a template would be, and
+  // read as one (P308): the whole address is not the parameter, only the
+  // piece after the text.
+  const joined = concatenatedPieces(node, (expression) => handedBy(expression, budget) !== undefined);
+
   // The whole address is the parameter, or a member of it.
-  const whole = handedBy(node, budget);
+  const whole = joined === undefined ? handedBy(node, budget) : undefined;
   if (whole !== undefined) return { ...whole, baseUrlEnv: null, before: '', after: '' };
 
-  if (!Node.isTemplateExpression(node)) return undefined;
+  const pieces = joined ?? (Node.isTemplateExpression(node) ? templatePieces(node) : undefined);
+  if (pieces === undefined) return undefined;
 
-  const spans = node.getTemplateSpans();
+  const spans = pieces.spans;
   let baseUrlEnv: string | null = null;
   let otherwise: string | undefined;
   let rootedAt: SettingAddress | null = null;
-  let text = node.getHead().getLiteralText();
+  let text = pieces.head;
   let start = 0;
 
   // An address that opens with an interpolation opens with its base. Whether
@@ -2187,15 +2233,15 @@ export const splitAtParameter = (
   if (
     text === '' &&
     first !== undefined &&
-    handedBy(first.getExpression(), budget) === undefined
+    handedBy(first.expression, budget) === undefined
   ) {
-    const literal = evaluateExpression(first.getExpression());
+    const literal = evaluateExpression(first.expression);
     if (!(literal.resolved && typeof literal.value === 'string')) {
-      const rooted = rootSettingAddress(first.getExpression(), options);
+      const rooted = rootSettingAddress(first.expression, options);
       baseUrlEnv = rooted?.key ?? null;
       otherwise = rooted?.otherwise;
       rootedAt = rooted;
-      text = first.getLiteral().getLiteralText();
+      text = first.literal;
       start = 1;
     }
   }
@@ -2204,8 +2250,8 @@ export const splitAtParameter = (
   for (let index = start; index < spans.length; index += 1) {
     const span = spans[index];
     if (span === undefined) continue;
-    const literal = span.getLiteral().getLiteralText();
-    const handed = handedBy(span.getExpression(), budget);
+    const literal = span.literal;
+    const handed = handedBy(span.expression, budget);
 
     if (handed !== undefined) {
       if (split !== undefined) return undefined;
@@ -2221,7 +2267,7 @@ export const splitAtParameter = (
       text = '';
       continue;
     }
-    const value = evaluateExpression(span.getExpression());
+    const value = evaluateExpression(span.expression);
     const hole = holeIn(split === undefined ? text : split.after, literal, index === spans.length - 1);
     const piece = value.resolved && typeof value.value === 'string' ? value.value : hole;
     if (split === undefined) text += piece + literal;

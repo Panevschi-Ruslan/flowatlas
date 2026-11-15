@@ -315,11 +315,19 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
   const guessed = resolved.guessed === true;
   const absolute = ABSOLUTE.exec(resolved.value);
   if (absolute !== null) {
+    const authority = absolute[2] ?? '';
+    // `'https://shop.example' + path`, `` `https://shop.example${path}` ``
+    // (P308): a value nobody read written straight after the host, with
+    // nothing after it, is what follows the host - the path - and the path
+    // is unread, never the host's root. A host itself built from values
+    // (`https://${tenant}.shop.example/orders`) is read as it was.
+    const tail = authority.endsWith(UNREAD_SPAN) && (absolute[3] ?? '') === '' ? authority.slice(0, -UNREAD_SPAN.length) : undefined;
+    const hostOnly = tail !== undefined && tail !== '' && !tail.includes(UNREAD_SPAN) ? tail : undefined;
     return {
       url: resolved.value,
-      path: routePathOf(absolute[3] ?? ''),
+      path: hostOnly === undefined ? routePathOf(absolute[3] ?? '') : UNREAD_SPAN,
       baseUrlEnv: null,
-      host: (absolute[2] ?? '').toLowerCase(),
+      host: (hostOnly ?? authority).toLowerCase(),
       via,
       guessed,
     };

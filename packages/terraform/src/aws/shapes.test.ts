@@ -254,15 +254,29 @@ describe('where an API is served by its own address (P294)', () => {
       ].join('\n'),
       'api/main.tf': ['variable "stage" {}', http('child'), route('child'), stage('child', 's', 'var.stage')].join('\n'),
     });
-    const at = (api: string, ...stages: string[]): unknown[] => [
+    // Only the default workspace's stage is the one where none is given; another
+    // workspace's says which workspace deploys to it (P308).
+    const at = (api: string, ...stages: (string | [string, string])[]): unknown[] => [
       api,
-      stages.map((each) => ({ host: '*.execute-api.eu-west-1.amazonaws.com', base: ['*'], api, chosenDefault: each })),
+      stages.map((each) => ({
+        host: '*.execute-api.eu-west-1.amazonaws.com',
+        base: ['*'],
+        api,
+        ...(typeof each === 'string' ? { chosenDefault: each } : { chosenDefault: each[0], chosenIn: `the workspace ${each[1]}` }),
+      })),
     ];
     expect(servedOf(deployment)).toEqual([
       at('plain', 'default'),
-      at('looked', 'dev', 'live'),
-      at('keyed', 'preview', 'sandbox'),
+      at('looked', 'dev', ['live', 'production']),
+      at('keyed', ['preview', 'staging'], 'sandbox'),
       at('child', 'default-v2'),
+    ]);
+    // The stages of an API nothing maps name each workspace's (P308).
+    expect(deployment.routes.map((each) => [each.api, each.meta?.['stages']])).toEqual([
+      ['plain', ['default']],
+      ['looked', ['dev', 'live']],
+      ['keyed', ['preview', 'sandbox']],
+      ['child', ['default-v2']],
     ]);
   });
 });

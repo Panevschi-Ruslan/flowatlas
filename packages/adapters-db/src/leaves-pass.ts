@@ -51,6 +51,7 @@ import {
   precedenceRows,
   withdrawDescribedCalls,
   jsDocCallsMarkers,
+  UNREAD_SPAN,
   wasRead,
   type BuiltQuery,
   type GraphEdge,
@@ -2128,6 +2129,18 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         line: place.line,
         reason: 'dynamic-http-url',
         hint: 'The address is built at run time. Annotate the call with the service and route it reaches.',
+        symbol: site.getText().slice(0, 80),
+      });
+    } else if (info.host !== null && info.path === UNREAD_SPAN) {
+      // `'https://shop.example' + path` where no caller hands the path in a
+      // form that is read (P308): the host is known and the path is not,
+      // which is no request to the host's root.
+      ctx.report({
+        file: owner.file,
+        line: place.line,
+        reason: 'dynamic-http-url',
+        message: `The path after ${info.host} is a value nothing here reads, and no caller hands it one that is read.`,
+        hint: 'Call the function with the path written out, or annotate the call with the service and route it reaches.',
         symbol: site.getText().slice(0, 80),
       });
     }

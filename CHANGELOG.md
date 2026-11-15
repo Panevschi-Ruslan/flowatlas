@@ -1560,6 +1560,21 @@ only one of them moved.
 
 ### Fixed
 
+- **A queue a field is declared with, a path handed in after a host, and a
+  Terraform workspace's stage (P308).** A queue kept in a field set where it
+  is declared - `private readonly queue = new Queue('emails')`, a field with
+  no modifiers, a static one read through the class - was
+  `channel-const-unresolved` at `this.queue.add(...)`; it is now the queue
+  the field is made with, wherever it is given its one value, and a job a
+  layer is handed is walked out to its callers. `'https://host' + path` and
+  `` `https://host${path}` `` with `path` a parameter were read as the
+  host's root and could join a `/` route; the path is now followed to each
+  caller (a `+` chain split as the template it spells, the host kept), and
+  where nobody hands a read path it stays unread with an `api-path-dynamic`
+  or `dynamic-http-url` row. A stage a Terraform workspace other than the
+  default names is said to be that workspace's (`live in the workspace
+  production`), only the default's being the stage where none is given, and
+  an unmapped API's `stages` list every workspace's.
 - **A service's package declared by another service gives it types, not
   ways in (P282).** A front end that declares its API's workspace package to
   import the API's types read the API's resolvers, controllers and consumers

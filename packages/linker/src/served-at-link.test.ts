@@ -106,6 +106,18 @@ describe('a browser request to an address where one API of the project is served
     expect(answer?.kind === 'one' ? servedAtFinding(answer.found).message : '').toContain('in whatever region it is deployed to (*.gateway.region-1.example.test where none is given)');
   });
 
+  it('says only the stage nothing chooses is the one where none is given, another the choice that deploys it (P308)', () => {
+    const live = { ...served('shop', ['*'], 'live'), chosenIn: 'the workspace production' };
+    const sandbox = served('shop', ['*'], 'sandbox');
+    const workspaces = [route('shop', 'POST', '/orders', [live, sandbox])];
+    const at = (stage: string): string => {
+      const answer = apiServedAt('POST', HOST, `/${stage}/orders`, `https://${HOST}/${stage}/orders`, ['shop'], () => workspaces);
+      return answer?.kind === 'one' ? servedAtFinding(answer.found).message : '';
+    };
+    expect(at('live')).toContain('at whatever stage it is run with (live in the workspace production), so the stage live is taken as one of its');
+    expect(at('sandbox')).toContain('at whatever stage it is run with (sandbox where none is given), so the stage sandbox is taken as one of its');
+  });
+
   it('asks the routes of an API mapped onto a domain for the path with the base path its own address does not write (P298)', () => {
     const mapped = [route('shop', 'POST', '/v1/orders', [{ host: 'api.shop.example', base: [], api: 'shop' }, { ...REST_PROD, under: '/v1' }])];
     expect(resolveUiCall(uiCall('POST', '/prod/orders'), uiIndex({ shop: mapped }))).toMatchObject({ kind: 'linked', via: 'served-at', entry: { id: mapped[0]?.id } });

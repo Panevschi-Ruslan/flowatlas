@@ -73,14 +73,15 @@ export const DEFAULT_STAGE = '$default';
  * where the deployment does not state one (`undefined`, or text that is not
  * one). The base is the stage: `'*'` where it is chosen when the deployment
  * is run (`chosen`), with the one it deploys to where nothing chooses
- * (`name`) when that is read; the stage itself where it is fixed; or nothing
+ * (`name`) when that is read - or the one a choice (`chosenIn`, P308) deploys
+ * to; the stage itself where it is fixed; or nothing
  * for an HTTP API's default stage (no name, or `$default`), which writes
  * none (P294).
  */
 export const executeApiServedAt = (
   region: string | { readonly name?: string; readonly chosen?: boolean } | undefined,
   api: string,
-  stage: { readonly name?: string; readonly chosen?: boolean },
+  stage: { readonly name?: string; readonly chosen?: boolean; readonly chosenIn?: string },
 ): ServedAt => {
   const chosen = stage.chosen === true;
   const name = stage.name === DEFAULT_STAGE ? undefined : stage.name;
@@ -95,6 +96,7 @@ export const executeApiServedAt = (
     base: chosen ? ['*'] : name === undefined ? [] : [name],
     api,
     ...(chosen && name !== undefined ? { chosenDefault: name } : {}),
+    ...(chosen && name !== undefined && stage.chosenIn !== undefined ? { chosenIn: stage.chosenIn } : {}),
     ...(regionChosen && named !== undefined ? { chosenHost: gateway(named) } : {}),
   };
 };

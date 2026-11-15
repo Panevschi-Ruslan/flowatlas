@@ -54,9 +54,15 @@ const HOLE = '${…}';
 const fromAbsolute = (text: string): UrlInfo | null => {
   const match = /^([a-z][a-z0-9+.-]*):\/\/([^/?#]+)([^?#]*)/i.exec(text);
   if (match === null) return null;
-  const host = (match[2] ?? '').toLowerCase();
+  const authority = match[2] ?? '';
   const path = match[3] ?? '';
-  return { url: text, path: routePathOf(path), baseUrlEnv: null, host };
+  // `'https://shop.example' + path`, `` `https://shop.example${path}` ``
+  // (P308): a value nobody read straight after the host, with nothing after
+  // it, is what follows the host - the path - and the path is unread, never
+  // the host's root. A host itself built from values is read as it was.
+  const before = authority.endsWith(UNREAD_SPAN) && path === '' ? authority.slice(0, -UNREAD_SPAN.length) : '';
+  if (before !== '' && !before.includes(UNREAD_SPAN)) return { url: text, path: UNREAD_SPAN, baseUrlEnv: null, host: before.toLowerCase() };
+  return { url: text, path: routePathOf(path), baseUrlEnv: null, host: authority.toLowerCase() };
 };
 
 /**
