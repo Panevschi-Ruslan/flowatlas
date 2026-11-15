@@ -6,7 +6,7 @@ import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { componentIn } from '../util/component.js';
 import { boundRead, type Bindings } from '../util/bound-entries.js';
-import { listedKey, listEntries } from '../util/list-entries.js';
+import { entryValue, listedKey, listEntries } from '../util/list-entries.js';
 import { beforeQuery, holdsHole, spelledPaths } from '../util/path-text.js';
 import { definePass } from './types.js';
 
@@ -109,8 +109,9 @@ export const listedRoutes = (pathValue: TsNode | undefined, screenValue: TsNode 
   if (read === undefined) return { routes: [], unread: 1 };
   const screenKey = screenValue === undefined ? undefined : screenKeyOf(screenValue, listed.parameter);
   const routes = read.entries.map((entry) => ({
-    path: valueOf(entry.object, listed.key),
-    screen: screenKey === undefined ? screenValue : screenKey === null ? undefined : valueOf(entry.object, screenKey),
+    // Through the entry's spreads, the element a mapped entry is written over among them (P314).
+    path: entryValue(entry, listed.key),
+    screen: screenKey === undefined ? screenValue : screenKey === null ? undefined : entryValue(entry, screenKey),
     ...(entry.bound === undefined ? {} : { bound: entry.bound }),
   }));
   return { routes, unread: read.unread };

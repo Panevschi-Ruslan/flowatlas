@@ -1,0 +1,12 @@
+{
+  "name": "registry-reach-views-handed-links-site",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^19.0.0"
+  }
+}

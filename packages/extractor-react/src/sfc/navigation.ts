@@ -5,6 +5,7 @@ import type { CallExpression, Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
+import { entryValue, listedKey, listEntries } from '../util/list-entries.js';
 import { spelledPaths } from '../util/path-text.js';
 import { svelteMarkupEvents, svelteMarkupTags, vueTemplateEvents, vueTemplateTags } from './events.js';
 
@@ -356,6 +357,9 @@ const landingsOf = (pages: readonly Page[], to: TsNode | undefined, options: TsN
   if (to === undefined) return [{ kind: 'unresolved', why: 'dynamic', written: '' }];
   const text = addressText(to);
   if (text !== undefined && !Node.isTemplateExpression(to)) return [pathLanding(pages, text, from, external, false, via)];
+  // An entry's member read over a list: one landing per entry, before any one value the checker guesses for it (P314).
+  const listed = listedLandings(pages, to, from, external, via);
+  if (listed !== undefined) return listed;
   const spelled = Node.isObjectLiteralExpression(to) ? undefined : spelledPaths(to);
   if (spelled !== undefined) return branchLandings(spelled.map((each) => ({ landing: pathLanding(pages, each.text, from, external, each.guessed === true, via), guessed: each.guessed === true })));
   if (Node.isObjectLiteralExpression(to)) {
@@ -365,6 +369,31 @@ const landingsOf = (pages: readonly Page[], to: TsNode | undefined, options: TsN
     if (read !== undefined) return branchLandings(read.map((each) => ({ landing: pathLanding(pages, each.text, from, false, each.guessed === true, via), guessed: each.guessed === true })));
   }
   return [landingOf(pages, to, options, from, via)];
+};
+
+/**
+ * Where an address read off a list's entry lands (P314): `items.map((item) =>
+ * <Link to={item.path} />)` renders one link per entry, so one landing per
+ * address an entry's member spells, each the entry's own and none a guess;
+ * the entries whose member is not read, and those of the list not read, are
+ * one landing written as code, said once. Nothing where the value is not an
+ * entry's member, or the list holds no entry written in place.
+ */
+const listedLandings = (pages: readonly Page[], to: TsNode, from: string, external: boolean, via?: Via): Landing[] | undefined => {
+  const listed = listedKey(to);
+  const read = listed === undefined ? undefined : listEntries(listed.list);
+  if (listed === undefined || read === undefined || read.entries.length === 0) return undefined;
+  const landings: Landing[] = [];
+  let unread = read.unread > 0;
+  for (const entry of read.entries) {
+    const member = entryValue(entry, listed.key);
+    if (member === undefined) continue;
+    const spelled = spelledPaths(member, entry.bound);
+    if (spelled === undefined) unread = true;
+    else for (const each of spelled) landings.push(pathLanding(pages, each.text, from, external, each.guessed === true, via));
+  }
+  if (unread) landings.push({ kind: 'unresolved', why: 'dynamic', written: to.getText().replace(/\s+/g, ' ').slice(0, 60) });
+  return landings.length === 0 ? undefined : landings;
 };
 
 /**
@@ -658,35 +687,106 @@ const componentNameNode = (fn: TsNode): TsNode | undefined => {
   return holder !== undefined && Node.isVariableDeclaration(holder) ? holder.getNameNode() : undefined;
 };
 
-const ADDRESS_USES = new WeakMap<TsNode, Map<string, boolean>>();
+/**
+ * The texts a value handed to a link spells, and how many it hands that are
+ * not read (P314): a literal or a template, a `const`, a function of the
+ * repository handing text back, and an entry's member read over a list
+ * (`items.map((item) => <NavLink to={item.path} />)`), one text per entry of
+ * the list whose member is read.
+ */
+const handedTexts = (value: TsNode): { readonly texts: readonly string[]; readonly unread: number } => {
+  const read = bare(value);
+  const text = addressText(read);
+  if (text !== undefined && !Node.isTemplateExpression(read)) return { texts: [text], unread: 0 };
+  // An entry's member read over a list: each entry's, before any one value the checker guesses for it.
+  const listed = listedKey(read);
+  const entries = listed === undefined ? undefined : listEntries(listed.list);
+  if (listed === undefined || entries === undefined || entries.entries.length === 0) {
+    const spelled = spelledPaths(read);
+    return spelled === undefined ? { texts: [], unread: 1 } : { texts: spelled.map((each) => each.text), unread: 0 };
+  }
+  const texts: string[] = [];
+  let unread = entries.unread;
+  for (const entry of entries.entries) {
+    const member = entryValue(entry, listed.key);
+    // An entry writing no such member renders no address.
+    if (member === undefined) continue;
+    const each = spelledPaths(member, entry.bound);
+    if (each === undefined) unread += 1;
+    else texts.push(...each.map((path) => path.text));
+  }
+  return { texts, unread };
+};
+
+/** What the uses of a component hand a prop: how many texts are addresses (`/...`), how many are not, and how many values are not read (P314). */
+interface HandedProp {
+  readonly addresses: number;
+  readonly other: number;
+  readonly unread: number;
+}
+
+const ADDRESS_USES = new WeakMap<TsNode, Map<string, HandedProp>>();
 
 /**
- * Whether the uses of a component that write a prop as text all write an
- * address of the application (`<NavLink to="/pricing">`), and one at least
- * does (P303): the prop is where a use writes the address, whatever its name.
+ * What every use of a component hands a prop (P303, P314): each written as
+ * text (`<NavLink to="/pricing">`) or as a value followed to the texts it
+ * spells (`to={item.path}` over a list of entries, `to={HOME}`), the texts
+ * that are addresses of the application told from the others, and the values
+ * not read counted.
  */
-const usesWriteAddresses = (fn: TsNode, prop: string): boolean => {
+const handedToProp = (fn: TsNode, prop: string): HandedProp => {
   const known = ADDRESS_USES.get(fn)?.get(prop);
   if (known !== undefined) return known;
   const name = componentNameNode(fn);
   let addresses = 0;
   let other = 0;
-  for (const reference of name !== undefined && Node.isIdentifier(name) ? name.findReferencesAsNodes() : []) {
+  let unread = 0;
+  let references: TsNode[] = [];
+  try {
+    references = name !== undefined && Node.isIdentifier(name) ? name.findReferencesAsNodes() : [];
+  } catch {
+    references = [];
+  }
+  for (const reference of references) {
     const element = reference.getParent();
     if (element === undefined || (!Node.isJsxSelfClosingElement(element) && !Node.isJsxOpeningElement(element)) || element.getTagNameNode() !== reference) continue;
     const written = element.getAttributes().find((each) => Node.isJsxAttribute(each) && each.getNameNode().getText() === prop);
     const initializer = written !== undefined && Node.isJsxAttribute(written) ? written.getInitializer() : undefined;
     const value = initializer !== undefined && Node.isJsxExpression(initializer) ? initializer.getExpression() : initializer;
-    const text = value === undefined ? undefined : addressText(bare(value));
-    if (text === undefined) continue;
-    if (text.startsWith('/')) addresses += 1;
-    else other += 1;
+    if (value === undefined) continue;
+    const handed = handedTexts(value);
+    unread += handed.unread;
+    for (const text of handed.texts) {
+      if (text.startsWith('/')) addresses += 1;
+      // A text opening with a value read at run time says nothing of its shape.
+      else if (text.startsWith('${')) unread += 1;
+      else other += 1;
+    }
   }
-  const found = addresses > 0 && other === 0;
-  const byProp = ADDRESS_USES.get(fn) ?? new Map<string, boolean>();
+  const found = { addresses, other, unread };
+  const byProp = ADDRESS_USES.get(fn) ?? new Map<string, HandedProp>();
   byProp.set(prop, found);
   ADDRESS_USES.set(fn, byProp);
   return found;
+};
+
+/** Whether text written before a prop ends in a segment that is all values (`/${locale}`): what follows it starts a segment of its own, so it is an address. */
+const endsInValueSegment = (before: string): boolean => /^(?:\$\{[^}]*\})+$/.test(before.slice(before.lastIndexOf('/') + 1));
+
+/**
+ * Whether a prop of another name than the link's attribute, put after text
+ * that does not end a segment, is the address its uses hand (P303, P314): no
+ * use hands text that is not an address, and one at least hands an address -
+ * or, where every value handed is not read, the text before it ends in a
+ * segment that is all values (`/${locale}${to}`), so the prop can only be an
+ * address. Its values are then read at each use, and one not read is said
+ * there, never taken as the component's own navigation.
+ */
+const isHandedAddress = (fn: TsNode, prop: string, before: string): boolean => {
+  if (before === '' || before.endsWith('/')) return false;
+  const handed = handedToProp(fn, prop);
+  if (handed.other > 0) return false;
+  return handed.addresses > 0 || (handed.unread > 0 && endsInValueSegment(before));
 };
 
 /** What a wrapper's inner link is handed: a prop as it is, put inside a template, or handed to a call among other values. */
@@ -721,9 +821,9 @@ const wrappedOf = (fn: TsNode, value: TsNode, attribute: string): { readonly pro
       const prop = propReadOf(fn, pieces[at] as TsNode) as string;
       const before = pieces.slice(0, at).map(text).join('');
       // Text put around a prop of the link's own name is a wrapper's; around any other (`/orders/${id}`) it is the
-      // component's own navigation, unless the prop is an address itself (P303): it starts no segment of its own
-      // (`/${locale}${to}`), and every use writing it as text writes an address (`<NavLink to="/pricing">`).
-      if (prop !== attribute && (before === '' || before.endsWith('/') || !usesWriteAddresses(fn, prop))) return undefined;
+      // component's own navigation, unless the prop is an address itself (P303, P314): it starts no segment of its own
+      // (`/${locale}${to}`), and what every use hands it - as text or as a value followed - is an address.
+      if (prop !== attribute && !isHandedAddress(fn, prop, before)) return undefined;
       return { prop, before, after: pieces.slice(at + 1).map(text).join(''), localized: false };
     }
   }
@@ -885,8 +985,12 @@ export const nuxtPages = (
     return [{ file, route, fn, ...(name === undefined ? {} : { name }) }];
   });
 
-/** Words a file must hold for any of its calls or elements to be a navigation, so most files are passed over unread. */
-const MAY_NAVIGATE = /navigateTo|abortNavigation|\$router|useRouter|useNavigate|useHistory|\bNavigate\b|\bRedirect\b|\bgoto\b|\bredirect\b|createRouter|create(?:Browser|Hash|Memory)Router|next\/link|next\/router|\bLink\b|\.(?:push|replace|navigate)\(|\s(?:href|to)=/;
+/**
+ * Words a file must hold for any of its calls or elements to be a navigation,
+ * so most files are passed over unread; a tag ending in `Link` may be a link
+ * of the application's own whatever its address prop is called (P314).
+ */
+const MAY_NAVIGATE = /navigateTo|abortNavigation|\$router|useRouter|useNavigate|useHistory|\bNavigate\b|\bRedirect\b|\bgoto\b|\bredirect\b|createRouter|create(?:Browser|Hash|Memory)Router|next\/link|next\/router|Link\b|\.(?:push|replace|navigate)\(|\s(?:href|to)=/;
 
 export const drawNavigations = (
   ctx: ReactExtractContext,

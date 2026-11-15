@@ -22,7 +22,33 @@ export interface ListEntry {
   readonly bound?: Bindings;
 }
 
-const sameBindings = (a: Bindings | undefined, b: Bindings | undefined): boolean => {
+/**
+ * The value an entry writes under a key: its own property, or one of the
+ * object it spreads - an object written in place, a `const` holding one, or
+ * the element it is written over (`{ ...route, path: base + route.path }`
+ * spreading `route`, P314) - the last that writes it.
+ */
+export const entryValue = (entry: ListEntry, key: string): TsNode | undefined => {
+  const valueIn = (object: ObjectLiteralExpression, depth: number): TsNode | undefined => {
+    if (depth > 6) return undefined;
+    const properties = object.getProperties();
+    for (let at = properties.length - 1; at >= 0; at -= 1) {
+      const property = properties[at] as TsNode;
+      if (Node.isPropertyAssignment(property) && property.getName().replace(/^['"]|['"]$/g, '') === key) return property.getInitializer();
+      if (Node.isShorthandPropertyAssignment(property) && property.getName() === key) return property.getNameNode();
+      if (!Node.isSpreadAssignment(property)) continue;
+      const spread = bare(property.getExpression());
+      const bound = Node.isIdentifier(spread) ? (spread.getSymbol()?.getDeclarations() ?? []).map((declaration) => entry.bound?.get(declaration)).find((each) => each !== undefined) : undefined;
+      const inner = Node.isObjectLiteralExpression(spread) ? spread : (bound ?? heldObjectOf(spread));
+      const found = inner === undefined ? undefined : valueIn(inner, depth + 1);
+      if (found !== undefined) return found;
+    }
+    return undefined;
+  };
+  return valueIn(entry.object, 0);
+};
+
+const sameBindings =(a: Bindings | undefined, b: Bindings | undefined): boolean => {
   if (a === undefined || b === undefined) return a === b;
   return a.size === b.size && [...a].every(([key, value]) => b.get(key) === value);
 };
@@ -325,24 +351,196 @@ const writtenIn = (fn: TsNode, isStore: StoreTest): TsNode[] => {
   return found;
 };
 
-/** The items written into a store kept under a variable: its array written in place, and what the module adds to it outside any function. */
+/** Whether a node is written as a function: a declaration, an arrow, a function expression or a method. */
+const isFunctionNode = (node: TsNode): boolean =>
+  Node.isFunctionDeclaration(node) || Node.isArrowFunction(node) || Node.isFunctionExpression(node) || Node.isMethodDeclaration(node) || Node.isConstructorDeclaration(node) || Node.isGetAccessorDeclaration(node) || Node.isSetAccessorDeclaration(node);
+
+/** The values a statement written outside any function adds to a store: `routes.set(key, route)`, `routes.push(route)`, `routes[key] = route`. */
+const addedAtTop = (statement: TsNode, isStore: StoreTest): TsNode[] => {
+  const found: TsNode[] = [];
+  statement.forEachDescendant((node, traversal) => {
+    if (isFunctionNode(node) || Node.isClassDeclaration(node) || Node.isClassExpression(node)) {
+      traversal.skip();
+      return;
+    }
+    const callee = Node.isCallExpression(node) ? node.getExpression() : undefined;
+    if (Node.isCallExpression(node) && callee !== undefined && Node.isPropertyAccessExpression(callee) && STORING_METHODS.has(callee.getName()) && isStore(storeRoot(callee.getExpression()))) {
+      const args = node.getArguments();
+      found.push(...(callee.getName() === 'set' ? args.slice(-1) : callee.getName() === 'splice' ? args.slice(2) : args));
+    }
+    const left = Node.isBinaryExpression(node) && node.getOperatorToken().getText() === '=' ? node.getLeft() : undefined;
+    if (left !== undefined && Node.isBinaryExpression(node) && Node.isElementAccessExpression(left) && isStore(storeRoot(left.getExpression()))) found.push(node.getRight());
+  });
+  return found;
+};
+
+/** Where a store a module keeps is reached from across the repository: the functions written at the top of a module that name it, and what statements outside any function add to it (P314). */
+interface StoreReach {
+  readonly functions: readonly TsNode[];
+  readonly added: readonly TsNode[];
+}
+
+const REACHES = new WeakMap<TsNode, StoreReach>();
+
+/** The function at the top of a module a node is written in - the outermost one, so a callback inside it is its own - or nothing outside any function. */
+const outermostFunction = (node: TsNode): TsNode | undefined => {
+  let found: TsNode | undefined;
+  for (let at = node.getParent(); at !== undefined && !Node.isSourceFile(at); at = at.getParent()) if (isFunctionNode(at)) found = at;
+  return found;
+};
+
+/**
+ * Every place the repository names a store a module keeps, found by the
+ * checker's references so an import under another name is the same store
+ * (P314): the functions naming it, each a function that may add to it, and
+ * the values added to it outside any function, in any module.
+ */
+const storeReach = (declaration: VariableDeclaration): StoreReach => {
+  const known = REACHES.get(declaration);
+  if (known !== undefined) return known;
+  const functions = new Set<TsNode>();
+  const statements = new Set<TsNode>();
+  const name = declaration.getNameNode();
+  let references: TsNode[] = [];
+  try {
+    references = Node.isIdentifier(name) ? name.findReferencesAsNodes() : [];
+  } catch {
+    references = [];
+  }
+  for (const reference of references) {
+    if (reference === name || inLibrary(reference)) continue;
+    const fn = outermostFunction(reference);
+    if (fn !== undefined) {
+      functions.add(fn);
+      continue;
+    }
+    const statement = reference.getFirstAncestor((each) => Node.isSourceFile(each.getParent()));
+    if (statement !== undefined && statement !== declaration.getVariableStatement()) statements.add(statement);
+  }
+  const isStore: StoreTest = (root) => Node.isIdentifier(root) && declarationOf(root) === declaration;
+  const reach = { functions: [...functions], added: [...statements].flatMap((statement) => addedAtTop(statement, isStore)) };
+  REACHES.set(declaration, reach);
+  return reach;
+};
+
+/** Whether a store a module keeps is one to look for across the repository: a `Map`, a `Set`, an array or an object made empty or written in place, or a variable given none. */
+const isKeptStore = (declaration: VariableDeclaration): boolean => {
+  const value = declaration.getInitializer();
+  const held = value === undefined ? undefined : bare(value);
+  return held === undefined || Node.isNewExpression(held) || Node.isArrayLiteralExpression(held) || Node.isObjectLiteralExpression(held);
+};
+
+/** The items written into a store kept under a variable: its array written in place, and what any module adds to it outside a function (P314). */
 const writtenInto = (declaration: TsNode): TsNode[] => {
   if (!Node.isVariableDeclaration(declaration)) return [];
   const value = declaration.getInitializer();
   const held = value === undefined ? undefined : bare(value);
   const found: TsNode[] = held !== undefined && Node.isArrayLiteralExpression(held) ? [...held.getElements()] : [];
-  declaration.getSourceFile().forEachDescendant((node, traversal) => {
-    if (Node.isFunctionLikeDeclaration(node) || Node.isClassDeclaration(node)) {
+  return isKeptStore(declaration) ? [...found, ...storeReach(declaration).added] : found;
+};
+
+/** The object literal a function written as a member of one is held by. */
+const holderOf = (fn: TsNode): ObjectLiteralExpression | undefined => {
+  const parent = fn.getParent();
+  const holder = parent !== undefined && Node.isPropertyAssignment(parent) ? parent.getParent() : parent;
+  return holder !== undefined && Node.isObjectLiteralExpression(holder) ? holder : undefined;
+};
+
+/** The expressions a function hands back: its concise body, or each of its own `return`s, whatever kind of function it is. */
+const handedBackBy = (fn: TsNode): TsNode[] => {
+  if (!isFunctionNode(fn)) return [];
+  const body = (fn as unknown as { getBody(): TsNode | undefined }).getBody();
+  if (body === undefined) return [];
+  if (!Node.isBlock(body)) return [body];
+  const found: TsNode[] = [];
+  body.forEachDescendant((node, traversal) => {
+    if (isFunctionNode(node) || Node.isClassDeclaration(node) || Node.isClassExpression(node)) {
       traversal.skip();
       return;
     }
-    if (!Node.isCallExpression(node)) return;
-    const callee = node.getExpression();
-    if (!Node.isPropertyAccessExpression(callee) || !['push', 'unshift'].includes(callee.getName())) return;
-    const receiver = bare(callee.getExpression());
-    if (Node.isIdentifier(receiver) && declarationOf(receiver) === declaration) found.push(...node.getArguments());
+    if (Node.isReturnStatement(node)) {
+      const value = node.getExpression();
+      if (value !== undefined) found.push(value);
+    }
   });
   return found;
+};
+
+/**
+ * What a registry's reader hands back of its store (P314): its entries as
+ * they are (`store`, `store.get(key)`, `[...store.values()]`,
+ * `Object.values(store)`, a `filter` / `sort` / `slice` of them), each mapped
+ * to an object written over the entry (`store.map((route) => ({ ...route,
+ * path: base + route.path }))`), or something else made of them, which is not
+ * read.
+ */
+type StoreView =
+  | { readonly kind: 'entries' }
+  | { readonly kind: 'mapped'; readonly object: ObjectLiteralExpression; readonly parameter: ParameterDeclaration }
+  | { readonly kind: 'unread'; readonly why: string };
+
+const ENTRIES: StoreView = { kind: 'entries' };
+
+/** The methods of a list a view of a store passes through keeping its entries as they are. */
+const VIEW_KEEPING: ReadonlySet<string> = new Set(['filter', 'find', 'slice', 'sort', 'reverse', 'toSorted', 'toReversed', 'concat', 'values', 'flat']);
+
+/** The object a function handed to `map` writes for each entry, and the entry's name: `(route) => ({ ...route, path })`. */
+const mappedBy = (handed: TsNode | undefined): StoreView => {
+  const fn = handed === undefined ? undefined : bare(handed);
+  if (fn === undefined || !(Node.isArrowFunction(fn) || Node.isFunctionExpression(fn))) return { kind: 'unread', why: 'a function of its own maps each entry' };
+  const [parameter] = fn.getParameters();
+  const returned = handedBackBy(fn);
+  const object = returned.length === 1 ? bare(returned[0] as TsNode) : undefined;
+  if (parameter === undefined || !Node.isIdentifier(parameter.getNameNode()) || object === undefined || !Node.isObjectLiteralExpression(object)) return { kind: 'unread', why: 'each entry is mapped to something other than an object written over it' };
+  return { kind: 'mapped', object, parameter };
+};
+
+/** The view of a store an expression of its reader is, or nothing where it reads no store. */
+const viewIn = (node: TsNode, isStore: StoreTest, reader: TsNode, depth = 0): StoreView | undefined => {
+  if (depth > 6) return undefined;
+  const value = bare(node);
+  if (Node.isBinaryExpression(value) && ['??', '||'].includes(value.getOperatorToken().getText())) return viewIn(value.getLeft(), isStore, reader, depth + 1) ?? viewIn(value.getRight(), isStore, reader, depth + 1);
+  if (isStore(storeRoot(value))) return ENTRIES;
+  if (Node.isArrayLiteralExpression(value)) {
+    const [only, ...rest] = value.getElements();
+    return only !== undefined && rest.length === 0 && Node.isSpreadElement(only) ? viewIn(only.getExpression(), isStore, reader, depth + 1) : undefined;
+  }
+  if (Node.isIdentifier(value)) {
+    const declaration = declarationOf(value);
+    const initializer = declaration !== undefined && Node.isVariableDeclaration(declaration) && declaration.getFirstAncestor((each) => each === reader) !== undefined ? declaration.getInitializer() : undefined;
+    return initializer === undefined ? undefined : viewIn(initializer, isStore, reader, depth + 1);
+  }
+  if (!Node.isCallExpression(value)) return undefined;
+  const callee = value.getExpression();
+  const args = value.getArguments();
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const owner = bare(callee.getExpression());
+  const name = callee.getName();
+  // `Object.values(store)`, `Array.from(store.values(), fn)`: the entries, mapped where a function is handed.
+  const global = Node.isIdentifier(owner) && ['Object', 'Array'].includes(owner.getText()) ? declarationOf(owner) : null;
+  if (global !== null && (global === undefined || inLibrary(global))) {
+    const inner = args[0] === undefined ? undefined : viewIn(args[0], isStore, reader, depth + 1);
+    if (inner === undefined) return undefined;
+    if (owner.getText() === 'Object' && name === 'values') return inner;
+    if (owner.getText() === 'Array' && name === 'from') return args.length < 2 ? inner : inner.kind === 'entries' ? mappedBy(args[1]) : { kind: 'unread', why: 'its entries are mapped twice' };
+    return { kind: 'unread', why: `${owner.getText()}.${name}(...) is made of its entries` };
+  }
+  const inner = viewIn(owner, isStore, reader, depth + 1);
+  if (inner === undefined) return undefined;
+  if (VIEW_KEEPING.has(name)) return inner;
+  if (name === 'map') return inner.kind === 'entries' ? mappedBy(args[0]) : { kind: 'unread', why: 'its entries are mapped twice' };
+  return { kind: 'unread', why: `.${name}(...) is made of its entries` };
+};
+
+/** What a registry's reader hands back of its store, over all its `return`s: one view, or none read where they differ. */
+const viewOf = (reader: TsNode, isStore: StoreTest): StoreView => {
+  const views = handedBackBy(reader).flatMap((returned) => [viewIn(returned, isStore, reader)].filter((each): each is StoreView => each !== undefined));
+  const [first] = views;
+  if (first === undefined) return ENTRIES;
+  const unread = views.find((each) => each.kind === 'unread');
+  if (unread !== undefined) return unread;
+  if (views.every((each) => each.kind === first.kind && (each.kind !== 'mapped' || (first.kind === 'mapped' && each.object === first.object)))) return first;
+  return { kind: 'unread', why: 'its returns hand back different views of its entries' };
 };
 
 /** Whether two expressions name one store: the same variable, field or parameter, through an import. */
@@ -435,22 +633,34 @@ const functionRegistry = (call: CallExpression): Registry | undefined => {
   const own = ownFunctionOf(call.getExpression());
   if (own === undefined) return undefined;
   const { fn: reader, holder } = own;
-  const beside = functionsBeside(reader, holder);
-  beside.delete(reader);
-  if (beside.size === 0) return undefined;
-  const modules = new Set<TsNode>();
+  const modules = new Set<VariableDeclaration>();
   reader.forEachDescendant((node) => {
     if (!Node.isIdentifier(node)) return;
     const declaration = declarationOf(node);
     if (isModuleStore(declaration)) modules.add(declaration);
   });
+  // The functions beside the reader, and those of any module naming a store it reads, with the ones beside each (P314).
+  const beside = functionsBeside(reader, holder);
+  let addedOutside = false;
+  for (const store of modules) {
+    if (!isKeptStore(store)) continue;
+    const reach = storeReach(store);
+    if (reach.added.length > 0) addedOutside = true;
+    for (const fn of reach.functions) {
+      if (fn === reader) continue;
+      beside.add(fn);
+      for (const other of functionsBeside(fn, holderOf(fn))) beside.add(other);
+    }
+  }
+  beside.delete(reader);
+  if (beside.size === 0 && !addedOutside) return undefined;
   const fields = new Set<string>();
   for (const property of holder?.getProperties() ?? []) {
     if (Node.isPropertyAssignment(property) && memberFunction(holder as ObjectLiteralExpression, property.getName()) === undefined) fields.add(property.getName());
   }
   const fixed: StoreTest = (root) =>
-    (Node.isIdentifier(root) && modules.has(declarationOf(root) as TsNode)) ||
-    (Node.isPropertyAccessExpression(root) && Node.isThisExpression(root.getExpression()) && fields.has(root.getName()));
+    (Node.isIdentifier(root) && modules.has(declarationOf(root) as VariableDeclaration)) ||
+    (Node.isPropertyAccessExpression(root) && Node.isThisExpression(root.getExpression()) && fields.has(root.getName()) && root.getFirstAncestor((each) => each === holder) !== undefined);
   // A parameter of the reader its store is handed in by: one it reads entries off, or hands back.
   const handedIn = parametersOf(reader).flatMap((_, place) => {
     const isStore = parameterStore(reader, place);
@@ -465,15 +675,17 @@ const functionRegistry = (call: CallExpression): Registry | undefined => {
     return read ? [place] : [];
   });
   /** A function beside the reader a call names: `register(route)`, `this.register(route)`. */
-  const besideCalled = (node: TsNode): TsNode | undefined => {
+  const besideCalled = (node: TsNode, from: TsNode): TsNode | undefined => {
     if (!Node.isCallExpression(node)) return undefined;
     const callee = node.getExpression();
-    if (holder !== undefined && Node.isPropertyAccessExpression(callee) && Node.isThisExpression(callee.getExpression())) return memberFunction(holder, callee.getName());
+    // `this.register(route)` in a member of an object: the object's own member, the reader's or another module's (P314).
+    const held = from === reader ? holder : (holderOf(from) ?? holder);
+    if (held !== undefined && Node.isPropertyAccessExpression(callee) && Node.isThisExpression(callee.getExpression())) return memberFunction(held, callee.getName());
     const found = ownFunctionOf(callee)?.fn;
     return found !== undefined && (beside.has(found) || found === reader) ? found : undefined;
   };
   const calls = (node: TsNode, adder: Adder): Adder[] => {
-    const called = besideCalled(node);
+    const called = besideCalled(node, adder.fn);
     if (called === undefined || !Node.isCallExpression(node)) return [];
     if (adder.storeParameter === undefined) return [{ fn: called, isStore: adder.isStore }];
     // A store handed on: the parameter of the function called it is handed to.
@@ -496,7 +708,7 @@ const functionRegistry = (call: CallExpression): Registry | undefined => {
       break;
     }
   }
-  if (adders.size === 0) return undefined;
+  if (adders.size === 0 && !addedOutside) return undefined;
   const nameOf = (fn: TsNode): string | undefined => {
     if (Node.isFunctionDeclaration(fn) || Node.isMethodDeclaration(fn)) return fn.getName();
     const parent = fn.getParent();
@@ -535,7 +747,14 @@ const functionRegistry = (call: CallExpression): Registry | undefined => {
   };
 };
 
-const REGISTRIES = new WeakMap<TsNode, { readonly items: readonly TsNode[]; readonly unread: number } | null>();
+/** The entries a registry holds as its reader hands them back: the entries, the view of them it hands back (P314), and how many are not read. */
+interface RegistryRead {
+  readonly items: readonly TsNode[];
+  readonly unread: number;
+  readonly view: StoreView;
+}
+
+const REGISTRIES = new WeakMap<TsNode, RegistryRead | null>();
 
 /**
  * The entries a registry of the repository's own holds, where a list is read
@@ -553,15 +772,19 @@ const REGISTRIES = new WeakMap<TsNode, { readonly items: readonly TsNode[]; read
  * the reader add to, a field of the object holding them, or a store handed
  * to both; an entry is the argument the adding function files, and a test
  * on a key (`routes.filter((route) => route.area === area)`) looks entries up
- * as `get` does.
+ * as `get` does. A module's store is followed wherever the repository names
+ * it (P314): the functions of any module adding to it, and what any module
+ * adds to it outside a function. What the reader hands back of the store is
+ * read too (P314): its entries as they are, each mapped to an object written
+ * over the entry, or a view made of them otherwise, which is not read.
  */
-const registryEntries = (call: TsNode): { readonly items: readonly TsNode[]; readonly unread: number } | undefined => {
+const registryEntries = (call: TsNode): RegistryRead | undefined => {
   if (!Node.isCallExpression(call)) return undefined;
   const known = REGISTRIES.get(call);
   if (known !== undefined) return known ?? undefined;
   REGISTRIES.set(call, null);
   const registry = classRegistry(call) ?? functionRegistry(call);
-  if (registry === undefined || registry.adders.size === 0) return undefined;
+  if (registry === undefined || (registry.adders.size === 0 && registry.written.length === 0)) return undefined;
   const readKey = readKeyOf(registry.reader, registry.isStore);
   const keyArgument = readKey === undefined ? undefined : call.getArguments()[readKey.parameter];
   const items: TsNode[] = [];
@@ -569,7 +792,7 @@ const registryEntries = (call: TsNode): { readonly items: readonly TsNode[]; rea
   const matches = (item: TsNode, filed: string | undefined): boolean => {
     const key = readKey?.key ?? filed;
     if (key === undefined || keyArgument === undefined) return true;
-    const object = bare(item);
+    const object = heldObjectOf(bare(item)) ?? bare(item);
     if (!Node.isObjectLiteralExpression(object)) return true;
     const written = memberOf(object, key);
     if (written === undefined) return false;
@@ -586,7 +809,8 @@ const registryEntries = (call: TsNode): { readonly items: readonly TsNode[]; rea
   const take = (handed: readonly TsNode[], filed: string | undefined): void => {
     for (const each of handed) {
       if (items.length >= MOST) break;
-      if (!Node.isObjectLiteralExpression(bare(each)) && !Node.isSpreadElement(each)) {
+      // An object written in place, a spread, or a `const` holding an object (P314).
+      if (!Node.isObjectLiteralExpression(bare(each)) && !Node.isSpreadElement(each) && heldObjectOf(bare(each)) === undefined) {
         unread += 1;
         continue;
       }
@@ -613,7 +837,7 @@ const registryEntries = (call: TsNode): { readonly items: readonly TsNode[]; rea
       take(Node.isArrayLiteralExpression(value) ? value.getElements() : [value], stores.key);
     }
   }
-  const read = { items, unread };
+  const read = { items, unread, view: viewOf(registry.reader, registry.isStore) };
   REGISTRIES.set(call, read);
   return read;
 };
@@ -780,7 +1004,16 @@ export const listEntries = (expression: TsNode, outerDepth = 0): ListEntries | u
     // A registry of the repository's own read by a method: the entries handed to its adding methods (P297).
     const registered = registryEntries(value);
     if (registered !== undefined) {
+      const { view } = registered;
+      // A view of the entries made otherwise than by mapping each to an object over it: none is read (P314).
+      if (view.kind === 'unread') {
+        unread += registered.items.length + registered.unread;
+        return true;
+      }
+      const from = entries.length;
       for (const each of registered.items) item(each, depth + 1);
+      // Each entry mapped to an object written over it: that object, the entry bound to the function's parameter (P314).
+      if (view.kind === 'mapped') for (const entry of entries.splice(from)) push({ object: view.object, bound: new Map([...(entry.bound ?? []), [view.parameter, entry.object]]) });
       unread += registered.unread;
       return true;
     }
