@@ -224,6 +224,53 @@ describe('plain browser code (P284)', () => {
     expect(graph.unresolved.filter((row) => row.reason === 'api-path-dynamic').map((row) => row.line)).toEqual([6]);
   });
 
+  it('reads a receiver handed through a function that sends it, one request per caller handing an instance with its own base, and a value after a host by what it is (P312)', () => {
+    const graph = read({
+      '/js/api.js': [
+        "import axios from 'axios';",
+        "function start(request) { request.open('POST', 'https://notes.example.test/notes'); }",
+        'function middle(r, text) { start(r); r.send(JSON.stringify({ text })); }',
+        "function note() { const request = new XMLHttpRequest(); middle(request, 'hello'); }",
+        "function latest(client) { return client.get('/latest'); }",
+        "function reviews() { return latest(axios.create({ baseURL: 'https://reviews.example.test' })); }",
+        "function ratings() { return latest(axios.create({ baseURL: 'https://ratings.example.test' })); }",
+        'function versioned(version) { return fetch(`https://shop.example.test${version}/products`); }',
+        "function first() { return versioned('/v1'); }",
+        "function second() { return versioned('/v2'); }",
+        'function local(port) { return fetch(`http://localhost${port}/health`); }',
+        "function check() { return local(':8080'); }",
+        "function lost(z) { return fetch('https://shop.example.test' + z + '/lost'); }",
+      ].join('\n'),
+    });
+    const found = requests(graph).map((node) => [node.meta?.['method'], node.meta?.['host'], node.meta?.['path'], node.meta?.['bodyKeys'], node.meta?.['through']]);
+    expect(found.sort((a, b) => `${a[1]}${a[2]}`.localeCompare(`${b[1]}${b[2]}`))).toEqual([
+      ['GET', 'localhost${…}', '/health', undefined, undefined],
+      ['POST', 'notes.example.test', '/notes', ['text'], undefined],
+      ['GET', 'ratings.example.test', '/latest', undefined, 'latest'],
+      ['GET', 'reviews.example.test', '/latest', undefined, 'latest'],
+      ['GET', 'shop.example.test', '/${…}/lost', undefined, undefined],
+      ['GET', 'shop.example.test', '/v1/products', undefined, 'versioned'],
+      ['GET', 'shop.example.test', '/v2/products', undefined, 'versioned'],
+    ]);
+    expect(graph.unresolved.filter((row) => row.reason === 'api-path-dynamic').map((row) => row.line)).toEqual([13]);
+  });
+
+  it('keeps instances with different bases handed outside any function on the request, the path alone, and says so (P312)', () => {
+    const graph = read({
+      '/js/catalog.js': [
+        "import axios from 'axios';",
+        'class Catalog {',
+        '  constructor(client) { this.client = client; }',
+        "  list() { return this.client.get('/products'); }",
+        '}',
+        "new Catalog(axios.create({ baseURL: 'https://one.example.test' }));",
+        "new Catalog(axios.create({ baseURL: 'https://two.example.test' }));",
+      ].join('\n'),
+    });
+    expect(requests(graph).map((node) => node.meta?.['url'])).toEqual(['/products']);
+    expect(graph.unresolved.filter((row) => row.reason === 'api-client-base-unread').map((row) => row.line)).toEqual([4]);
+  });
+
   it("reads a request in an object's method and a prototype's member, and joins the calls to them (P310)", () => {
     const graph = read({
       '/js/api.js': [

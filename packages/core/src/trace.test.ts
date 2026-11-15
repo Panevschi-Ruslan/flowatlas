@@ -18,8 +18,10 @@ import {
   literalChoices,
   memberBehind,
   splitAtParameter,
+  continuesHost,
   returnedExpression,
   rootSettingAddress,
+  valueAfterHost,
 } from './trace.js';
 
 const HEADER = `
@@ -904,5 +906,30 @@ describe('a function a library composes into another (P285)', () => {
       ].join('\n'),
     });
     expect(sites).toEqual([]);
+  });
+});
+
+describe('a value written straight after a host (P312)', () => {
+  const after = (source: string) => {
+    const value = valueAfterHost(address(parse(source)));
+    return value === undefined ? undefined : { text: value.getText(), own: continuesHost(value) };
+  };
+
+  it('is found after the host with a path after it, and is the host\'s own only where everything it is followed to is a port or the rest of its name', () => {
+    expect(after("function go(t: string) { return http.get(`https://shop${t}/orders`); } go('.example'); go('-eu.example');")).toEqual({ text: 't', own: true });
+    expect(after("function go(v: string) { return http.get(`https://shop.example${v}/orders`); } go('/v1'); go('/v2');")).toEqual({ text: 'v', own: false });
+    expect(after("function go(p: string) { return http.get(`http://localhost${p}/orders`); } go(':3000'); go(':3001');")).toEqual({ text: 'p', own: true });
+    expect(after("function go(p: string) { return http.get(`http://localhost${p}/orders`); } go(':3000'); go('/v1');")).toEqual({ text: 'p', own: false });
+    expect(after('function go(p: number) { return http.get(`http://localhost${p}/orders`); }')).toEqual({ text: 'p', own: true });
+    expect(after("declare const on: boolean; declare const n: number; function go() { return http.get('http://localhost' + (on ? `:${n}` : '') + '/orders'); }")).toEqual({ text: "on ? `:${n}` : ''", own: true });
+    expect(after('declare const x: string; function go() { return http.get(`https://shop.example${x}/orders`); }')).toEqual({ text: 'x', own: false });
+  });
+
+  it('is none after a colon, a dot or a dash, after a slash, or with nothing after it', () => {
+    expect(after('declare const x: string; function go() { return http.get(`http://localhost:${x}/orders`); }')).toBeUndefined();
+    expect(after('declare const x: string; function go() { return http.get(`https://calendar.example.${x}/api/v1`); }')).toBeUndefined();
+    expect(after('declare const x: string; function go() { return http.get(`https://shop-${x}/orders`); }')).toBeUndefined();
+    expect(after('declare const x: string; function go() { return http.get(`https://shop.example/${x}/orders`); }')).toBeUndefined();
+    expect(after('declare const x: string; function go() { return http.get(`https://shop.example${x}`); }')).toBeUndefined();
   });
 });

@@ -2202,6 +2202,101 @@ const concatenatedPieces = (node: TsNode, handed: (expression: TsNode) => boolea
   return { head, spans };
 };
 
+/** `scheme://host`, and nothing after it: no path, no value nobody read. */
+const AUTHORITY_ONLY = /^[a-z][a-z0-9+.-]*:\/\/[^/?#$]+$/i;
+
+/**
+ * Whether text is an address's host and nothing after it, ending where a
+ * value written next could only follow it (P312): not at a `:` (a port's
+ * place) nor in the middle of a name (`.`, `-`: `https://calendar.example.${region}`).
+ */
+export const endsAtHost = (text: string): boolean => AUTHORITY_ONLY.test(text) && !/[:.-]$/.test(text);
+
+/** A port as it is written after a host, `:3000`, or the rest of a host's name, `.example`. */
+const HOST_TEXT = /^(:\d*|[.-][a-z0-9.-]*)$/i;
+
+/**
+ * The value written straight after an address's host, with a path written
+ * after it: `x` in `` `https://shop.example${x}/orders` `` and in
+ * `'https://shop.example' + x + '/orders'` (P312). Nothing where the value
+ * follows a `:` (a port's place), a `/` (a segment's), a `.` or a `-` (part
+ * of the name), or where no such value is written.
+ */
+export const valueAfterHost = (value: TsNode): TsNode | undefined => {
+  const node = deref(value);
+  const pieces = Node.isTemplateExpression(node) ? templatePieces(node) : concatenatedPieces(node, () => false);
+  if (pieces === undefined) return undefined;
+  let text = pieces.head;
+  for (const span of pieces.spans) {
+    const read = evaluateExpression(span.expression);
+    if (read.resolved && (typeof read.value === 'string' || typeof read.value === 'number')) {
+      text += String(read.value) + span.literal;
+      continue;
+    }
+    if (endsAtHost(text) && span.literal.startsWith('/')) return span.expression;
+    text += UNREAD_SPAN + span.literal;
+  }
+  return undefined;
+};
+
+/** What a value after a host is: the host's own (a port, the rest of its name), a path, nothing, or unknown. */
+type AfterHost = 'host' | 'path' | 'empty' | 'unknown';
+
+/** What several values written in one place are together: one kind where all agree, an empty string agreeing with any. */
+const togetherAfterHost = (kinds: readonly AfterHost[]): AfterHost => {
+  const said = new Set(kinds.filter((kind) => kind !== 'empty'));
+  if (said.size === 0) return kinds.length === 0 ? 'unknown' : 'empty';
+  const [only] = said;
+  return said.size === 1 && only !== undefined ? only : 'unknown';
+};
+
+/** What text written after a host is: the host's, a path, or neither. */
+const afterHostText = (text: string): AfterHost =>
+  text === '' ? 'empty' : HOST_TEXT.test(text) ? 'host' : text.startsWith('/') ? 'path' : 'unknown';
+
+/**
+ * What a value written straight after a host is (P312): the host's own - a
+ * port (`:3000`, a number) or the rest of its name (`.example`) - or a path
+ * (`/orders`), by every value it is followed to - each caller's argument for
+ * a parameter, a constant's value, each side of a condition - or unknown
+ * where they disagree or nothing says.
+ */
+const afterHostOf = (value: TsNode, budget: number): AfterHost => {
+  if (budget <= 0) return 'unknown';
+  const node = unwrap(value);
+  if (Node.isConditionalExpression(node)) return togetherAfterHost([afterHostOf(node.getWhenTrue(), budget - 1), afterHostOf(node.getWhenFalse(), budget - 1)]);
+  if (Node.isBinaryExpression(node)) {
+    const operator = node.getOperatorToken().getKind();
+    if (operator === SyntaxKind.BarBarToken || operator === SyntaxKind.QuestionQuestionToken) {
+      return togetherAfterHost([afterHostOf(node.getLeft(), budget - 1), afterHostOf(node.getRight(), budget - 1)]);
+    }
+  }
+  const read = evaluateExpression(node);
+  if (read.resolved && typeof read.value === 'number') return 'host';
+  if (read.resolved && typeof read.value === 'string') return afterHostText(read.value);
+  const type = node.getType();
+  if (type.isNumber() || type.isNumberLiteral()) return 'host';
+  // `:${port}`, `/${path}`, `':' + port`: the text it opens with says.
+  const pieces = Node.isTemplateExpression(node) ? templatePieces(node) : concatenatedPieces(node, () => false);
+  if (pieces !== undefined && pieces.head !== '') return /^[:.-]/.test(pieces.head) ? 'host' : pieces.head.startsWith('/') ? 'path' : 'unknown';
+  if (!Node.isIdentifier(node)) return 'unknown';
+  const declaration = node.getSymbol()?.getDeclarations()[0];
+  if (declaration !== undefined && Node.isParameterDeclaration(declaration)) {
+    const fallback = declaration.getInitializer();
+    const handed = forwardedFrom(declaration).calls.map((call) => call.argument);
+    return togetherAfterHost([...handed, ...(fallback === undefined ? [] : [fallback])].map((each) => afterHostOf(each, budget - 1)));
+  }
+  const held = deref(node, budget);
+  return held === node ? 'unknown' : afterHostOf(held, budget - 1);
+};
+
+/**
+ * Whether a value written straight after a host is the host's own (P312):
+ * every value it is followed to is a port or the rest of its name. A path,
+ * or a value nothing reads, is not, and the host is the text before it.
+ */
+export const continuesHost = (value: TsNode): boolean => afterHostOf(value, BUDGET) === 'host';
+
 /**
  * Splits an address at the one piece the caller decides.
  *
@@ -2278,7 +2373,11 @@ export const splitAtParameter = (
       continue;
     }
     const value = evaluateExpression(span.expression);
-    const hole = holeIn(split === undefined ? text : split.after, literal, index === spans.length - 1);
+    // A value nobody read straight after the host, a path after it, is the
+    // opening of the path unless it is the host's port or the rest of its
+    // name (P312): the host is the text before it.
+    const opensPath = split === undefined && endsAtHost(text) && literal.startsWith('/') && !continuesHost(span.expression);
+    const hole = opensPath ? `/${UNREAD_SPAN}` : holeIn(split === undefined ? text : split.after, literal, index === spans.length - 1);
     const piece = value.resolved && typeof value.value === 'string' ? value.value : hole;
     if (split === undefined) text += piece + literal;
     else split.after += piece + literal;
@@ -2373,6 +2472,24 @@ export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4, membe
     out.calls.push({ site: call, argument, hops: [call] });
   }
   return out;
+};
+
+/**
+ * What each call of a function hands a parameter, one call out (P312): the
+ * argument as the caller writes it, its default where it writes none - a
+ * name the caller was itself handed included, which {@link forwardedFrom}
+ * walks past to the outermost caller. A call that may run another
+ * implementation instead is passed over.
+ */
+export const handedByEachCall = (parameter: ParameterDeclaration): { readonly call: CallExpression; readonly argument: TsNode }[] => {
+  const holder = forwarderOf(parameter);
+  const index = positionOf(parameter);
+  if (holder === undefined || index < 0) return [];
+  return callSitesOf(holder).flatMap((call) => {
+    if (dispatchAt(call, holder) === 'undecided') return [];
+    const argument = call.getArguments()[index] ?? parameter.getInitializer();
+    return argument === undefined ? [] : [{ call, argument }];
+  });
 };
 
 /**

@@ -1,5 +1,5 @@
-import { forwardedFrom } from '@flowatlas/core';
-import type { NewExpression, Node as TsNode, ParameterDeclaration } from 'ts-morph';
+import { handedByEachCall } from '@flowatlas/core';
+import type { CallExpression, NewExpression, Node as TsNode, ParameterDeclaration } from 'ts-morph';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 
 /**
@@ -11,15 +11,15 @@ import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
  * has no type, `this.request` is a field the class declares as `null` and
  * fills in later, or is handed in to the constructor. What the receiver holds
  * is then read where it is given its values: a parameter by what each caller
- * hands it (`forwardedFrom`, as an address handed in is read), a constructor's
+ * hands it, one call out at a time (P312), a constructor's
  * parameter by each `new`, a field of a class or of an object by its
  * initializer and every `this.<field> = ...` its methods write, a variable by
  * its initializer and what is assigned to it. Followed until `isLeaf` says a
  * value is known for what it is, and a few steps at most.
  */
 
-/** How many names a receiver is followed through. */
-const DEPTH = 4;
+/** How many names a receiver is followed through: each caller one at a time (P312). */
+const DEPTH = 6;
 
 const unwrap = (node: TsNode): TsNode => {
   let current = node;
@@ -88,8 +88,20 @@ const constructions = (owner: TsNode): NewExpression[] => {
   });
 };
 
-/** What each caller hands a parameter: through the function's calls, or each `new` of a constructor's class. */
-export const handedTo = (parameter: ParameterDeclaration): TsNode[] => {
+/** What one call hands a parameter: the call, none for the parameter's own default, and the argument. */
+export interface Handed {
+  readonly call: CallExpression | NewExpression | undefined;
+  readonly argument: TsNode;
+}
+
+/**
+ * What each caller hands a parameter, one call out: through the function's
+ * calls, or each `new` of a constructor's class. A caller that hands on a
+ * parameter of its own is one of them (P312) - `mid(r) { start(r); r.send() }`
+ * hands `start` its `r`, which is where the request is sent - and the name
+ * is followed out from there, to its own callers, one level at a time.
+ */
+export const handedAt = (parameter: ParameterDeclaration): Handed[] => {
   const owner = parameter.getParent();
   const index = Node.isParametered(owner) ? owner.getParameters().indexOf(parameter) : -1;
   if (index < 0) return [];
@@ -97,10 +109,21 @@ export const handedTo = (parameter: ParameterDeclaration): TsNode[] => {
   if (Node.isConstructorDeclaration(owner)) {
     return constructions(owner.getParent()).flatMap((made) => {
       const argument = made.getArguments()[index];
-      return argument === undefined ? (fallback === undefined ? [] : [fallback]) : [argument];
+      return argument === undefined ? (fallback === undefined ? [] : [{ call: made, argument: fallback }]) : [{ call: made, argument }];
     });
   }
-  return [...forwardedFrom(parameter).calls.map((call) => call.argument), ...(fallback === undefined ? [] : [fallback])];
+  const calls: Handed[] = handedByEachCall(parameter);
+  return fallback === undefined || calls.some((each) => each.argument === fallback) ? calls : [...calls, { call: undefined, argument: fallback }];
+};
+
+/** What each caller hands a parameter, one call out. */
+export const handedTo = (parameter: ParameterDeclaration): TsNode[] => handedAt(parameter).map((each) => each.argument);
+
+/** The parameter a value names, where it is one: what a caller was itself handed. */
+export const parameterNamed = (value: TsNode): ParameterDeclaration | undefined => {
+  const target = unwrap(value);
+  const declaration = Node.isIdentifier(target) ? target.getSymbol()?.getDeclarations()[0] : undefined;
+  return declaration !== undefined && Node.isParameterDeclaration(declaration) && Node.isIdentifier(declaration.getNameNode()) ? declaration : undefined;
 };
 
 /** Every value assigned to a variable or a parameter after it is declared, in the scope it is declared in. */

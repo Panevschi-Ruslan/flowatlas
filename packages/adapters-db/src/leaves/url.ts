@@ -1,4 +1,4 @@
-import { choosesASegment, constantPropertyValue, holeIn, normalizePath, PARAM_PLACEHOLDER, UNREAD_SPAN } from '@flowatlas/core';
+import { choosesASegment, constantPropertyValue, continuesHost, endsAtHost, holeIn, normalizePath, PARAM_PLACEHOLDER, UNREAD_SPAN } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { evaluateExpression } from '@flowatlas/extractor-nestjs';
@@ -63,10 +63,22 @@ const fromAbsolute = (text: string): UrlInfo | null => {
   // (P308): a value nobody read straight after the host, with nothing after
   // it, is what follows the host - the path - and the path is unread, never
   // the host's root. A host itself built from values is read as it was.
+  // A port's place, `https://shop.example:${port}`, and the middle of the
+  // host's name, `https://calendar.example.${region}`, are the host's (P312).
   const before = authority.endsWith(UNREAD_SPAN) && path === '' ? authority.slice(0, -UNREAD_SPAN.length) : '';
-  if (before !== '' && !before.includes(UNREAD_SPAN)) return { url: text, path: UNREAD_SPAN, baseUrlEnv: null, host: before.toLowerCase() };
+  if (before !== '' && endsAtHost(`${match[1] ?? ''}://${before}`)) return { url: text, path: UNREAD_SPAN, baseUrlEnv: null, host: before.toLowerCase() };
   return { url: text, path: routePathOf(path), baseUrlEnv: null, host: authority.toLowerCase() };
 };
+
+/**
+ * The hole a value nobody read leaves straight after the host, a path
+ * written after it (P312): the opening of the path, unless everything the
+ * value is followed to is the host's own - its port, the rest of its name -
+ * then it is part of the host as before. The host is the text before a path
+ * or a value nothing reads.
+ */
+const holeAfterHost = (before: string, after: string, expression: TsNode): string | undefined =>
+  endsAtHost(before) && after.startsWith('/') && !continuesHost(expression) ? `/${UNREAD_SPAN}` : undefined;
 
 /**
  * Works out what address a call reaches.
@@ -151,9 +163,9 @@ export const analyzeUrl = (node: TsNode, options: { readonly whole?: boolean } =
     // a separator is a hole in what was read, and the address it sits in matches
     // no route at all. Both used to become `:param`, which is how an address
     // nobody could read became an edge marked `static`.
-    const hole = choosesASegment(span.getExpression())
-      ? UNREAD_SPAN
-      : holeIn(rest, text, index === spans.length - 1);
+    const hole =
+      holeAfterHost(rest, text, span.getExpression()) ??
+      (choosesASegment(span.getExpression()) ? UNREAD_SPAN : holeIn(rest, text, index === spans.length - 1));
     rest += (read ?? hole) + text;
     // The address as written keeps every hole a hole, whichever it turned out
     // to be. It is what a person reads; the path is what a route is matched on.
@@ -237,7 +249,7 @@ const fromWrittenConcatenation = (argument: TsNode): UrlInfo => {
     const next = more[index + 1];
     const after = next === undefined ? undefined : evaluateExpression(next);
     const text = after?.resolved === true && typeof after.value === 'string' ? after.value : '';
-    rest += holeIn(rest, text, index === more.length - 1);
+    rest += holeAfterHost(rest, text, piece) ?? holeIn(rest, text, index === more.length - 1);
     written += HOLE;
   });
   const absolute = fromAbsolute(rest);
@@ -281,6 +293,12 @@ export const composeAddress = (info: UrlInfo, split?: SplitAddress): UrlInfo => 
   const origin = ORIGIN.exec(split.before);
   const stated = origin?.[1] ?? '';
   const before = split.before.slice(stated.length);
+  // A caller's `:3000` or `.example` straight after the host is the host's
+  // port or the rest of its name, not a segment of the path (P312).
+  if (origin !== null && before === '' && info.baseUrlEnv === null && info.url !== null && /^(:\d+|[.-][a-z0-9.-]*)$/i.test(info.url)) {
+    const path = routePathOf(split.after);
+    return { url: `${stated}${info.url}${split.after}`, path, baseUrlEnv: null, host: `${origin[2] ?? ''}${info.url}`.toLowerCase() };
+  }
   const unread = info.url === null && holeIn(before, split.after, true) === PARAM_PLACEHOLDER;
   const filled = info.path === null ? (unread ? PARAM_PLACEHOLDER : null) : asWritten(info, info.path);
   const path = filled === null ? null : routePathOf(before + filled + split.after);

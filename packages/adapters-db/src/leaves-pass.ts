@@ -2143,10 +2143,11 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         hint: 'The address is built at run time. Annotate the call with the service and route it reaches.',
         symbol: site.getText().slice(0, 80),
       });
-    } else if (info.host !== null && info.path === UNREAD_SPAN) {
+    } else if (info.host !== null && (info.path === UNREAD_SPAN || info.path.startsWith(`/${UNREAD_SPAN}`))) {
       // `'https://shop.example' + path` where no caller hands the path in a
       // form that is read (P308): the host is known and the path is not,
-      // which is no request to the host's root.
+      // which is no request to the host's root; nor is a path opened by a
+      // value that is no port, `https://shop.example${x}/orders` (P312).
       ctx.report({
         file: owner.file,
         line: place.line,

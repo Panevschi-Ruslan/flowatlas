@@ -55,6 +55,19 @@ describe('where a request opened on a receiver is sent (P296)', () => {
     ).toEqual({ "'/files'": 'file', "'/notes'": 'this.note' });
   });
 
+  it('follows a receiver handed on through a function in between to where it is sent, at every level (P312)', () => {
+    expect(
+      sent(`
+        function start(request: XMLHttpRequest): void { request.open('PUT', '/files'); }
+        function middle(r: XMLHttpRequest, file: Blob): void { start(r); r.send(file); }
+        function upload(file: Blob): void { const request = new XMLHttpRequest(); middle(request, file); }
+        function begin(request: XMLHttpRequest): void { request.open('POST', '/notes'); }
+        function pass(r: XMLHttpRequest): void { begin(r); }
+        function note(text: string): void { const request = new XMLHttpRequest(); pass(request); request.send(text); }
+      `),
+    ).toEqual({ "'/files'": 'file', "'/notes'": 'text' });
+  });
+
   it('follows a field of an object written in place to its other methods (P301)', () => {
     expect(
       sent(`

@@ -223,6 +223,43 @@ describe('splitting an address at the part a caller supplies', () => {
     const tenant = parse(`export function go(tenant: string) { return fetch(\`https://\${tenant}.shop.example/orders\`); }`);
     expect(analyzeUrl(address(tenant))).toMatchObject({ path: '/orders' });
   });
+
+  it('reads a value straight after the host, a path after it, by what it is followed to: a port stays the host, anything else opens the path (P312)', () => {
+    // Every caller hands a path: the host is the text before it, and each caller's path is read.
+    const paths = parse(`
+      export function go(version: string) { return fetch(\`https://shop.example\${version}/orders\`); }
+      export const one = () => go('/v1');
+    `);
+    expect(analyzeUrl(address(paths))).toMatchObject({ path: '/${…}/orders', host: 'shop.example' });
+    const split = splitAtParameter(address(paths));
+    expect(split).toMatchObject({ before: 'https://shop.example', after: '/orders' });
+    const [caller] = forwardedFrom(split!.parameter).calls;
+    expect(composeAddress(analyzeUrl(caller!.argument), split)).toMatchObject({ path: '/v1/orders', host: 'shop.example' });
+    // Every caller hands a port: part of the host, as before; and a caller's port fills the host, not the path.
+    const ports = parse(`
+      export function go(port: string) { return fetch(\`http://localhost\${port}/orders\`); }
+      export const one = () => go(':3000');
+    `);
+    expect(analyzeUrl(address(ports))).toMatchObject({ path: '/orders', host: 'localhost${…}' });
+    const portSplit = splitAtParameter(address(ports));
+    const [portCaller] = forwardedFrom(portSplit!.parameter).calls;
+    expect(composeAddress(analyzeUrl(portCaller!.argument), portSplit)).toMatchObject({ path: '/orders', host: 'localhost:3000' });
+    // A number is a port; nothing known is no port, joined with + or written as a template.
+    const number = parse(`export function go(port: number) { return fetch(\`http://localhost\${port}/orders\`); }`);
+    expect(analyzeUrl(address(number))).toMatchObject({ path: '/orders', host: 'localhost${…}' });
+    const unknown = parse(`declare const x: string; export function go() { return fetch('https://shop.example' + x + '/orders'); }`);
+    expect(analyzeUrl(address(unknown))).toMatchObject({ path: '/${…}/orders', host: 'shop.example' });
+    // A port's place, after a colon, and the middle of a name, after a dot, are the host's whatever fills them.
+    const colon = parse(`declare const x: string; export function go() { return fetch(\`http://localhost:\${x}/orders\`); }`);
+    expect(analyzeUrl(address(colon))).toMatchObject({ path: '/orders', host: 'localhost:${…}' });
+    const region = parse(`export function go(region: string) { return fetch(\`https://calendar.example.\${region}/api/v1\`); }`);
+    expect(analyzeUrl(address(region))).toMatchObject({ path: '/api/v1', host: 'calendar.example.${…}' });
+    const regionOnly = parse(`export function go(region: string) { return fetch(\`https://calendar.example.\${region}\`); }`);
+    expect(analyzeUrl(address(regionOnly))).toMatchObject({ path: '/', host: 'calendar.example.${…}' });
+    // An unread value after the host ahead of the parameter a caller fills: the host kept, the path unread.
+    const ahead = parse(`declare const x: string; export function go(id: string) { return fetch(\`https://shop.example\${x}/orders/\${id}\`); }`);
+    expect(splitAtParameter(address(ahead))).toMatchObject({ before: 'https://shop.example/${…}/orders/' });
+  });
 });
 
 /**

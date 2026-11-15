@@ -1,6 +1,6 @@
-import type { ArrowFunction, CallExpression, FunctionDeclaration, FunctionExpression, MethodDeclaration, Node as TsNode, Symbol as TsSymbol } from 'ts-morph';
+import type { ArrowFunction, CallExpression, FunctionDeclaration, FunctionExpression, MethodDeclaration, Node as TsNode, ParameterDeclaration, Symbol as TsSymbol } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
-import { handedTo, thisOwnerOf } from './receiver-values.js';
+import { handedAt, parameterNamed, thisOwnerOf } from './receiver-values.js';
 
 /**
  * Where a request opened on a receiver is sent (P294, P296, P301).
@@ -16,8 +16,9 @@ import { handedTo, thisOwnerOf } from './receiver-values.js';
  * returns it (the name they keep it in), and the field it is put in; a
  * receiver the function is handed, to what each caller sends after handing
  * it, and a field of an object written in place, to the object's other
- * methods (P301). A few steps out at most: past that the receiver is
- * somebody else's.
+ * methods (P301); a receiver handed on through a function in between, to
+ * where that function sends it, one call out at a time (P312). A few steps
+ * out at most: past that the receiver is somebody else's.
  */
 
 /** How far out the receiver is followed. */
@@ -151,9 +152,27 @@ export const sentThrough = (open: CallExpression, method: string): CallExpressio
   const sent = sentFrom(symbol, home, method, home === scope ? open.getEnd() : -1, STEPS);
   if (sent !== undefined || !Node.isParameterDeclaration(declaration)) return sent;
   // Handed in by the callers (P301): wherever each sends what it handed, after the call.
-  for (const handed of handedTo(declaration)) {
-    const after = handed.getFirstAncestor((node) => Node.isCallExpression(node) || Node.isNewExpression(node)) ?? handed;
-    const there = sentAfter(handed, after, method);
+  return sentByCallers(declaration, method, STEPS, new Set());
+};
+
+/**
+ * Where the callers of a function send a receiver they hand it (P301), one
+ * call out at a time (P312): each caller, after the call, and where a caller
+ * hands on a receiver it was itself handed and sends it nowhere, that
+ * caller's own callers - so `mid(r) { start(r); r.send() }` is sent in `mid`,
+ * however far out the receiver is made.
+ */
+const sentByCallers = (parameter: ParameterDeclaration, method: string, steps: number, seen: Set<ParameterDeclaration>): CallExpression | undefined => {
+  if (steps < 0 || seen.has(parameter)) return undefined;
+  seen.add(parameter);
+  const handed = handedAt(parameter);
+  for (const { call, argument } of handed) {
+    const there = sentAfter(argument, call ?? argument, method);
+    if (there !== undefined) return there;
+  }
+  for (const { argument } of handed) {
+    const outer = parameterNamed(argument);
+    const there = outer === undefined ? undefined : sentByCallers(outer, method, steps - 1, seen);
     if (there !== undefined) return there;
   }
   return undefined;

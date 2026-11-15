@@ -1,6 +1,8 @@
 import {
   constantMethodResult,
   constantPropertyValue,
+  continuesHost,
+  endsAtHost,
   normalizePath,
   resolveStaticString,
   returnedExpression,
@@ -8,6 +10,7 @@ import {
   settingKeyIn,
   takenMember,
   UNREAD_SPAN,
+  valueAfterHost,
   type SettingBehind,
 } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
@@ -122,6 +125,17 @@ const boundTo = (
   const expr = bindings.values.get(declaration);
   if (expr === undefined) return undefined;
   return { expr, ...(bindings.under === undefined ? {} : { bindings: bindings.under }) };
+};
+
+/**
+ * Whether the value an address writes straight after its host, a path after
+ * it, is the host's own - its port, the rest of its name (P312): read under
+ * what the callers on the way out handed, where they handed it.
+ */
+const hostWrittenAfterHost = (node: TsNode, bindings: Bindings | undefined): boolean => {
+  const value = valueAfterHost(node);
+  if (value === undefined) return false;
+  return continuesHost(boundTo(value, bindings)?.expr ?? value);
 };
 
 export interface ApiUrl {
@@ -335,11 +349,19 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
     // nothing after it, is what follows the host - the path - and the path
     // is unread, never the host's root. A host itself built from values
     // (`https://${tenant}.shop.example/orders`) is read as it was.
-    const tail = authority.endsWith(UNREAD_SPAN) && (absolute[3] ?? '') === '' ? authority.slice(0, -UNREAD_SPAN.length) : undefined;
-    const hostOnly = tail !== undefined && tail !== '' && !tail.includes(UNREAD_SPAN) ? tail : undefined;
+    const rest = absolute[3] ?? '';
+    const tail = authority.endsWith(UNREAD_SPAN) ? authority.slice(0, -UNREAD_SPAN.length) : undefined;
+    // Not after a `:`, a `.` or a `-`: a port's place, or the middle of the
+    // host's name (`https://calendar.example.${region}`), is the host's (P312).
+    const before = tail !== undefined && endsAtHost(`${absolute[1] ?? ''}://${tail}`) ? tail : undefined;
+    // `` `https://shop.example${x}/orders` `` (P312): the value is the
+    // host's own only where everything it is followed to is a port or the
+    // rest of its name; a path, or a value nothing reads, opens the path, and
+    // the path is unread rather than the value folded into the host.
+    const hostOnly = before !== undefined && (rest === '' || !hostWrittenAfterHost(node, bindings)) ? before : undefined;
     return {
       url: resolved.value,
-      path: hostOnly === undefined ? routePathOf(absolute[3] ?? '') : UNREAD_SPAN,
+      path: hostOnly === undefined ? routePathOf(rest) : rest === '' ? UNREAD_SPAN : routePathOf(`/${UNREAD_SPAN}${rest}`),
       baseUrlEnv: null,
       host: (hostOnly ?? authority).toLowerCase(),
       via,

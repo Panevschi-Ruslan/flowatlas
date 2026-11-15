@@ -84,6 +84,12 @@ interface FoundCall {
    * followed to where it is made (P239): its base is the client's for this call.
    */
   instance?: ClientInstance;
+  /**
+   * The instances a receiver the compiler knows nothing of is handed, each
+   * with where it is handed, where they are made with different bases
+   * (P312): one request is read per caller that hands them, under its own.
+   */
+  held?: readonly { readonly instance: ClientInstance; readonly at: TsNode }[];
 }
 
 /** The object written in place at an argument, when one was. */
@@ -656,10 +662,11 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         hint: 'The address is built at run time. Annotate the function with /** @flowatlas-calls METHOD /path */.',
         symbol: network.getText().slice(0, 80),
       });
-    } else if (address.host !== null && address.path === UNREAD_SPAN) {
+    } else if (address.host !== null && (address.path === UNREAD_SPAN || address.path.startsWith(`/${UNREAD_SPAN}`))) {
       // `'https://shop.example' + path` where no caller hands the path in a
       // form that is read (P308): the host is known and the path is not,
-      // which is no request to the host's root.
+      // which is no request to the host's root; nor is a path opened by a
+      // value that is no port, `https://shop.example${x}/orders` (P312).
       ctx.report({
         file: site.file,
         line: at.line,
@@ -800,19 +807,21 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    * platform's `XMLHttpRequest`, or an instance of an installed client - and
    * at least one is. Values nothing knows (a parameter nobody hands anything)
    * are passed over; one known for something else makes it no request.
-   * Instances made with different bases leave the request the path the call
-   * writes, under none of them.
+   * Instances made with different bases are each the request's at the caller
+   * that hands it (P312), see {@link recordHeld}.
    */
   const heldCallAt = (node: CallExpression, receiver: TsNode, method: string): FoundCall | undefined => {
     const typed = typedClientsOf(method);
     if ((typed.length === 0 && !INSTANCE_VERBS.has(method)) || !untyped(receiver)) return undefined;
     const clients = new Set<RequestClient>();
     const held = new Set<ClientInstance>();
+    const handed: { instance: ClientInstance; at: TsNode }[] = [];
     for (const value of heldBy(receiver)) {
       if (holdsNothing(value)) continue;
       const instance = instances.of(value);
       if (instance !== undefined) {
         held.add(instance);
+        handed.push({ instance, at: value });
         continue;
       }
       const client = typed.find((each) => isClientValue(resolveTypeOrigin(value), each));
@@ -829,8 +838,63 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     if (first === undefined || [...held].some((each) => each.factory !== first.factory)) return undefined;
     const shape = Object.hasOwn(first.factory.verbs, method) ? first.factory.verbs[method] : undefined;
     if (shape === undefined) return undefined;
-    const agreed = held.size === 1 || [...held].every((each) => each.rewrite === undefined && each.rewriteUnread === undefined && JSON.stringify(each.base ?? null) === JSON.stringify(first.base ?? null));
-    return agreed ? { call: node, client: clientOf(first), shape, instance: first } : { call: node, client: first.factory.client, shape };
+    const agreed = agreedInstance([...held]);
+    return agreed !== undefined ? { call: node, client: clientOf(agreed), shape, instance: agreed } : { call: node, client: first.factory.client, shape, held: handed };
+  };
+
+  /** The one instance several stand for, where they are one or are made with one base and nothing rewrites it. */
+  const agreedInstance = (held: readonly ClientInstance[]): ClientInstance | undefined => {
+    const [first] = held;
+    if (first === undefined) return undefined;
+    const same = (each: ClientInstance): boolean =>
+      each === first || (each.factory === first.factory && each.rewrite === undefined && each.rewriteUnread === undefined && first.rewrite === undefined && first.rewriteUnread === undefined && JSON.stringify(each.base ?? null) === JSON.stringify(first.base ?? null));
+    return held.every(same) ? first : undefined;
+  };
+
+  /**
+   * A request on a receiver handed instances made with different bases
+   * (P312): one per caller that hands them, attributed to it and carrying
+   * the base of what it hands, as an address handed in is read at each
+   * caller. What is handed outside any function, or in the function the
+   * request is written in, stays with the request where it is written,
+   * under its base where those agree and the path alone where they do not,
+   * which is said.
+   */
+  const recordHeld = (found: FoundCall, request: ReadRequest, through: string): void => {
+    const groups = new Map<string, { owner: IndexedFunction | undefined; at: TsNode; instances: ClientInstance[] }>();
+    for (const { instance, at } of found.held ?? []) {
+      const caller = enclosingIndexed(ctx, at, isClientClass);
+      const owner = caller === undefined || caller.id === request.site.ownerId ? undefined : caller;
+      const key = owner?.id ?? '';
+      const group = groups.get(key) ?? { owner, at, instances: [] };
+      group.instances.push(instance);
+      groups.set(key, group);
+    }
+    for (const { owner, at, instances: held } of groups.values()) {
+      const agreed = agreedInstance(held);
+      const { held: _held, ...rest } = found;
+      const one: FoundCall = agreed === undefined ? rest : { ...rest, client: clientOf(agreed), instance: agreed };
+      if (owner === undefined) {
+        if (agreed === undefined) reportBasesDisagree(found, held);
+        record(one, request);
+        continue;
+      }
+      ensureOwner(ctx, owner.id);
+      const handing = at.getFirstAncestor((node) => Node.isCallExpression(node) || Node.isNewExpression(node)) ?? at;
+      record(one, { ...request, site: { call: handing, ownerId: owner.id, file: owner.file }, depth: request.depth + 1, through, calls: [] });
+    }
+  };
+
+  /** Instances with different bases handed where no one caller can carry each, said once at the request. */
+  const reportBasesDisagree = (found: FoundCall, held: readonly ClientInstance[]): void => {
+    const at = siteOf(found.call);
+    ctx.report({
+      file: ctx.fileOf(found.call),
+      line: at.line,
+      reason: 'api-client-base-unread',
+      hint: `The receiver is handed ${held.length} ${found.client.name} instances made with different bases outside any function that could carry each, so the request is recorded under the path it writes. Hand each instance from a function of its own, or write one base.`,
+      symbol: found.call.getText().slice(0, 80),
+    });
   };
 
   /**
@@ -1050,6 +1114,10 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       const site: RequestSite = { call: call.call, ownerId: indexed.id, file: indexed.file };
       for (const request of requestsOf(ctx, urlArg, indexed, site, isClientClass)) {
         ensureOwner(ctx, request.site.ownerId);
+        if (request.depth === 0 && call.held !== undefined) {
+          recordHeld(call, request, indexed.name);
+          continue;
+        }
         if (request.depth === 0 && call.described === undefined && perVerbCaller(call, request)) continue;
         record(call, request);
       }
