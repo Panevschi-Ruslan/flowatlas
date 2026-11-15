@@ -1,0 +1,11 @@
+{
+  "services": [
+    { "name": "catalog", "repo": "./catalog", "type": "express" },
+    { "name": "search", "repo": "./search", "type": "express" },
+    { "name": "orders", "repo": "./orders", "type": "express" },
+    { "name": "legacy", "repo": "./legacy", "type": "express" },
+    { "name": "site", "repo": "./site", "type": "react" },
+    { "name": "jobs", "repo": "./jobs", "type": "express" }
+  ],
+  "output": ".flowatlas"
+}

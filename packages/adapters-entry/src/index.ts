@@ -239,7 +239,7 @@ export {
   repoSources,
   unwrapValue,
 } from './shared.js';
-export { frameworkListens, NITRO_ENV, REMIX_ENV, scriptCommands, scriptPorts } from './listen-ports.js';
+export { envFilePort, filledFromEnv, frameworkListens, loadedEnvFiles, NITRO_ENV, REMIX_ENV, scriptCommands, scriptPorts } from './listen-ports.js';
 export type { EnvLoading, ScriptCommand } from './listen-ports.js';
 export { factoryPorts, settingsReading } from './listen-settings.js';
 export { keyLine, nextProxies, nitroProxies, proxyConfigFile, proxyTableRules, rewriteOfFunction } from './proxy-config.js';

@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   configValueAt,
+  isEnvironmentName,
   isTestFile,
   listenAt,
   listenCallsIn,
@@ -9,10 +10,12 @@ import {
   normalizeFilePath,
   placedPort,
   portIn,
+  portUnreadRow,
   readConfigLiteral,
   type ExtractContext,
   type ListenAt,
   type ListenPort,
+  type PortUnread,
 } from '@flowatlas/core';
 import { Node, SyntaxKind, type SourceFile } from 'ts-morph';
 import { settingsReading } from './listen-settings.js';
@@ -40,8 +43,139 @@ import { repoSources } from './shared.js';
  * repository, a settings getter read through the settings libraries the
  * repository builds its settings with (P254).
  */
-export const listensByCall = (ctx: ExtractContext): ListenPort[] =>
-  listenCallsIn(repoSources(ctx), settingsReading(ctx)).map((port) => placedPort(port, ctx.repoDir));
+export const listensByCall = (ctx: ExtractContext): ListenPort[] => {
+  const files = loadedEnvFiles(ctx);
+  return listenCallsIn(repoSources(ctx), settingsReading(ctx), (unread) => ctx.builder.addUnresolved(portUnreadRow(unread, ctx.repoDir)))
+    .map((port) => placedPort(port, ctx.repoDir))
+    .map((port) => filledFromEnv(port, ctx.repoDir, files));
+};
+
+/**
+ * The environment files a service's own code or its scripts load before its
+ * server listens, the one whose value wins first (P315). A server reading
+ * `process.env.PORT` listens where such a file sets `PORT`, whatever its
+ * fallback; one whose code loads nothing keeps its fallback, whatever its
+ * `.env` says, since nothing puts the file in its environment.
+ *
+ * What loads a file, as each tool documents it: dotenv
+ * (`import 'dotenv/config'`, `dotenv.config({ path })`), NestJS's
+ * `ConfigModule.forRoot({ envFilePath })` (`.env` unless `ignoreEnvFile`),
+ * Node's own `process.loadEnvFile(path)` and `--env-file`, Deno's
+ * `--env-file`, the `dotenv` and `env-cmd` commands a script runs a server
+ * with, and Bun, which loads `.env.local` and `.env` before it runs a file. A
+ * path given as anything but a literal names no file this reads.
+ */
+export const loadedEnvFiles = (ctx: ExtractContext): string[] => {
+  const files: string[] = [];
+  const add = (named: readonly string[] | undefined, otherwise: readonly string[]): void => {
+    for (const file of named ?? otherwise) files.push(file.replace(/^\.\//, ''));
+  };
+  for (const sourceFile of repoSources(ctx)) {
+    if (isTestFile(normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir))) continue;
+    const text = sourceFile.getFullText();
+    if (/\bBun\.serve\s*\(/.test(text)) add(undefined, BUN_ENV_FILES);
+    if (!/dotenv|loadEnvFile|ConfigModule/.test(text)) continue;
+    if (sourceFile.getImportDeclarations().some((each) => each.getModuleSpecifierValue() === 'dotenv/config')) add(undefined, ['.env']);
+    for (const call of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+      const callee = call.getExpression();
+      const first = call.getArguments()[0];
+      const literal = first !== undefined && (Node.isStringLiteral(first) || Node.isNoSubstitutionTemplateLiteral(first)) ? first.getLiteralValue() : undefined;
+      if (callee.getText() === 'require' && literal === 'dotenv/config') add(undefined, ['.env']);
+      else if (callee.getText() === 'process.loadEnvFile') {
+        // `process.loadEnvFile()` loads `.env`; a path not written as a literal names no file read.
+        if (first === undefined) add(undefined, ['.env']);
+        else if (literal !== undefined) add([literal], []);
+      } else if (isDotenvConfig(call, sourceFile)) add(hasOption(first, 'path') ? (pathsOption(first, 'path') ?? []) : undefined, ['.env']);
+      else if (Node.isPropertyAccessExpression(callee) && callee.getName() === 'forRoot' && callee.getExpression().getText() === 'ConfigModule' && importOf(sourceFile, 'ConfigModule') === '@nestjs/config') {
+        if (first !== undefined && Node.isObjectLiteralExpression(first) && first.getProperty('ignoreEnvFile')?.getText().endsWith('true') === true) continue;
+        add(hasOption(first, 'envFilePath') ? (pathsOption(first, 'envFilePath') ?? []) : undefined, ['.env']);
+      }
+    }
+  }
+  for (const each of scriptCommands(ctx.repoDir, SCRIPT_LOADS_ENV)) {
+    if (/\b(?:jest|vitest|mocha|playwright|cypress)\b/.test(each.command)) continue;
+    const command = each.command;
+    for (const match of command.matchAll(/(?:^|\s)--env-file(?:-if-exists)?(?:=(\S+)|\s+(\S+))?/g)) {
+      const value = match[1] ?? match[2];
+      add(value === undefined || value.startsWith('-') || /\.[cm]?[jt]sx?$/.test(value) ? undefined : [value], ['.env']);
+    }
+    if (/(?:^|\s)dotenv(?:-cli)?\s/.test(command)) {
+      const named = [...command.matchAll(/(?:^|\s)-e\s+(\S+)/g)].map((match) => match[1] as string);
+      add(named.length === 0 ? undefined : named, ['.env']);
+    }
+    if (/(?:^|\s)env-cmd\s/.test(command)) {
+      const named = /(?:^|\s)(?:-f|--file)\s+(\S+)/.exec(command)?.[1];
+      add(named === undefined ? undefined : [named], ['.env']);
+    }
+    if (/(?:^|\s)bun\s+(?:run\s+)?(?:--[\w-]+\s+)*[\w./-]+\.[cm]?[jt]sx?(?:\s|$)/.test(command)) add(undefined, BUN_ENV_FILES);
+  }
+  return [...new Set(files.map((file) => file.replace(/^['"]|['"]$/g, '')))];
+};
+
+/** The script commands that load an environment file before what they run (P315). */
+const SCRIPT_LOADS_ENV = /--env-file|(?:^|\s)dotenv(?:-cli)?\s|(?:^|\s)env-cmd\s|(?:^|\s)bun\s/;
+
+/** The files Bun loads before it runs a file, the one whose value wins first (P315). */
+const BUN_ENV_FILES = ['.env.local', '.env'] as const;
+
+/** Whether a call is dotenv's `config`: `dotenv.config()`, `config()` imported from it, `require('dotenv').config()`. */
+const isDotenvConfig = (call: Node, sourceFile: SourceFile): boolean => {
+  if (!Node.isCallExpression(call)) return false;
+  const callee = call.getExpression();
+  if (Node.isIdentifier(callee)) return callee.getText() === 'config' && importOf(sourceFile, 'config') === 'dotenv';
+  if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'config') return false;
+  const owner = callee.getExpression();
+  if (owner.getText() === "require('dotenv')" || owner.getText() === 'require("dotenv")') return true;
+  if (!Node.isIdentifier(owner)) return false;
+  const name = owner.getText();
+  return (
+    importOf(sourceFile, name) === 'dotenv' ||
+    sourceFile.getImportDeclarations().some((each) => each.getModuleSpecifierValue() === 'dotenv' && each.getNamespaceImport()?.getText() === name)
+  );
+};
+
+/** Whether an options object writes a key at all. */
+const hasOption = (options: Node | undefined, key: string): boolean =>
+  options !== undefined && Node.isObjectLiteralExpression(options) && options.getProperty(key) !== undefined;
+
+/** The files an option names as literals, `path: '.env.local'` or `envFilePath: ['.env.local', '.env']`, or nothing. */
+const pathsOption = (options: Node | undefined, key: string): string[] | undefined => {
+  if (options === undefined || !Node.isObjectLiteralExpression(options)) return undefined;
+  const property = options.getProperty(key);
+  const value = property !== undefined && Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+  const text = (node: Node): string | undefined => (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node) ? node.getLiteralValue() : undefined);
+  if (value === undefined) return undefined;
+  if (Node.isArrayLiteralExpression(value)) {
+    const files = value.getElements().map(text);
+    return files.every((file) => file !== undefined) ? (files as string[]) : undefined;
+  }
+  const file = text(value);
+  return file === undefined ? undefined : [file];
+};
+
+/**
+ * A port the code reads from a setting, where an environment file the
+ * service loads before it listens sets that setting (P315): the file's
+ * number, `valueFrom` it, in place of the code's fallback. The first loaded
+ * file that is committed and writes the setting as a number gives it.
+ */
+export const filledFromEnv = (port: ListenPort, repoDir: string, files: readonly string[], settings?: readonly string[]): ListenPort => {
+  const asked = settings ?? (port.setting !== undefined && isEnvironmentName(port.setting) ? [port.setting] : []);
+  if (asked.length === 0 || port.valueFrom !== undefined || files.length === 0) return port;
+  for (const file of files) {
+    let text: string;
+    try {
+      text = readFileSync(join(repoDir, file), 'utf8');
+    } catch {
+      continue;
+    }
+    const found = portInEnvFile(text, asked);
+    if (found === undefined) continue;
+    const { default: _default, ...rest } = port;
+    return { ...rest, port: found.port, setting: found.setting, valueFrom: file };
+  }
+  return port;
+};
 
 /** Where a runtime's or a library's own server function starts, and the port it listens on when none is written. */
 interface ServeShape {
@@ -51,6 +185,12 @@ interface ServeShape {
   readonly optionsAt: number;
   /** The port it listens on where the options write none. */
   readonly otherwise: number;
+  /**
+   * The settings it takes that port from before its own default, and the
+   * environment files its runtime loads before it runs (P315): Bun's server
+   * listens on `BUN_PORT`, `PORT` or `NODE_PORT`, which Bun's `.env` may set.
+   */
+  readonly fromEnv?: { readonly settings: readonly string[]; readonly files: readonly string[] };
 }
 
 /** The module a name in a file is imported from. */
@@ -72,7 +212,12 @@ const HONO_SERVES: readonly ServeShape[] = [
     optionsAt: 0,
     otherwise: 3000,
   },
-  { starts: (callee) => callee.getText() === 'Bun.serve', optionsAt: 0, otherwise: 3000 },
+  {
+    starts: (callee) => callee.getText() === 'Bun.serve',
+    optionsAt: 0,
+    otherwise: 3000,
+    fromEnv: { settings: ['BUN_PORT', 'PORT', 'NODE_PORT'], files: ['.env.local', '.env'] },
+  },
   { starts: (callee) => callee.getText() === 'Deno.serve', optionsAt: 0, otherwise: 8000 },
 ];
 
@@ -92,7 +237,10 @@ const exportedServerIn = (sourceFile: SourceFile): ListenAt | undefined => {
 /** Every port a Hono application's server listens on, beside the generic reading. */
 export const honoListens = (ctx: ExtractContext): ListenPort[] => {
   const found: ListenAt[] = [];
+  // A runtime's own default, moved by the environment file the runtime loads (P315).
+  const runtimeDefaults: ListenPort[] = [];
   const reading = settingsReading(ctx);
+  const unread = (each: PortUnread): void => void ctx.builder.addUnresolved(portUnreadRow(each, ctx.repoDir));
   for (const sourceFile of repoSources(ctx)) {
     if (isTestFile(normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir))) continue;
     const text = sourceFile.getFullText();
@@ -107,15 +255,18 @@ export const honoListens = (ctx: ExtractContext): ListenPort[] => {
       const written = options !== undefined && Node.isObjectLiteralExpression(options) && options.getProperty('port') !== undefined;
       if (!written) {
         const read = listenAt({ port: shape.otherwise }, call, { default: true });
-        if (read !== undefined) found.push(read);
+        if (read === undefined) continue;
+        if (shape.fromEnv === undefined) found.push(read);
+        else runtimeDefaults.push(filledFromEnv(placedPort(read, ctx.repoDir), ctx.repoDir, shape.fromEnv.files, shape.fromEnv.settings));
         continue;
       }
-      found.push(...listensIn(options, call, { reading }));
+      found.push(...listensIn(options, call, { reading, unread }));
     }
     const exported = exportedServerIn(sourceFile);
     if (exported !== undefined) found.push(exported);
   }
-  return [...listensByCall(ctx), ...found.map((port) => placedPort(port, ctx.repoDir))];
+  const files = loadedEnvFiles(ctx);
+  return [...listensByCall(ctx), ...found.map((port) => filledFromEnv(placedPort(port, ctx.repoDir), ctx.repoDir, files)), ...runtimeDefaults];
 };
 
 /** The line of a file's text an offset is on. */
@@ -231,7 +382,14 @@ export const frameworkListens = (
  * `.env` and starts the application's server with it, which listens on
  * `PORT`. Next decides its port before it loads any file, so a `PORT` in its
  * `.env` moves nothing, and a framework nothing here says about keeps its
- * default.
+ * default. Of the others (P315): Create React App's `react-scripts start`
+ * loads its `.env` files and listens on `PORT`; Vite's and Astro's dev
+ * servers load `.env` only for the application's own variables and take no
+ * port from it; SvelteKit's Node adapter and Remix's and React Router's own
+ * servers read `PORT` from the environment they are started in and load no
+ * file; a server of the code's own (`app.listen(process.env.PORT ?? 3000)`)
+ * listens where the file its code or its script loads says
+ * ({@link loadedEnvFiles}).
  */
 export interface EnvLoading {
   /** The script commands that load the files: `nuxi dev`. */
@@ -273,7 +431,7 @@ const portInEnvFile = (text: string, settings: readonly string[]): { setting: st
  * file's other values are none of this. Nothing where no script runs a command
  * that loads the file.
  */
-const envFilePort = (repoDir: string, scripts: readonly ScriptCommand[], loads: EnvLoading): ListenPort | undefined => {
+export const envFilePort = (repoDir: string, scripts: readonly ScriptCommand[], loads: EnvLoading): ListenPort | undefined => {
   const loading = scripts.filter((each) => loads.commands.test(each.command));
   if (loading.length === 0) return undefined;
   const option = loads.fileOption === undefined ? undefined : new RegExp(`(?:^|\\s)${loads.fileOption}(?:\\s+|=)(\\S+)`);

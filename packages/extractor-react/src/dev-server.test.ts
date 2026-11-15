@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { ListenPort } from '@flowatlas/core';
 import { afterAll, describe, expect, it } from 'vitest';
-import { astroListens, viteListens } from './dev-server.js';
+import { astroListens, createReactAppListens, viteListens } from './dev-server.js';
 
 const roots: string[] = [];
 afterAll(() => {
@@ -126,7 +126,42 @@ describe("where an Astro site's dev server listens (P254)", () => {
     expect(said(astroListens(repo({ 'astro.config.mjs': 'export default defineConfig({\n  server: { port: 4330 },\n});', 'package.json': scripts({ dev: 'astro dev' }) })))).toEqual(['astro.config.mjs:2 4330']);
     expect(said(astroListens(repo({ 'package.json': scripts({ dev: 'astro dev', preview: 'astro preview --port 4400' }) })))).toEqual(['package.json:3 4321 default', 'package.json:4 4400']);
     expect(said(astroListens(repo({ 'package.json': scripts({ dev: 'astro dev --port $PORT' }) })))).toEqual([]);
-    expect(said(astroListens(repo({ 'astro.config.mjs': 'export default defineConfig({\n  server: ({ command }) => ({ port: command === "dev" ? 4500 : 4501 }),\n});', 'package.json': scripts({ dev: 'astro dev' }) })))).toEqual([]);
     expect(said(astroListens(repo({ 'astro.config.mjs': 'export default defineConfig({});' })))).toEqual([]);
+  });
+
+  it('reads `server` written as a function of the command: the dev port for `astro dev`, the preview port for `astro preview` (P315)', () => {
+    const config = 'export default defineConfig({\n  server: ({ command }) => ({ port: command === "dev" ? 4500 : 4501 }),\n});';
+    expect(said(astroListens(repo({ 'astro.config.mjs': config, 'package.json': scripts({ dev: 'astro dev' }) })))).toEqual(['astro.config.mjs:2 4500']);
+    expect(said(astroListens(repo({ 'astro.config.mjs': config, 'package.json': scripts({ dev: 'astro dev', preview: 'astro preview' }) })))).toEqual([
+      'astro.config.mjs:2 4500',
+      'astro.config.mjs:2 4501',
+    ]);
+    // A block returning the object, the command renamed, a condition the other way round, a setting with its fallback.
+    const block = "export default defineConfig({\n  server: ({ command: run }) => {\n    return { port: 'preview' !== run ? Number(process.env.PORT) || 4600 : 4601 };\n  },\n});";
+    expect(said(astroListens(repo({ 'astro.config.mjs': block, 'package.json': scripts({ dev: 'astro dev', preview: 'astro preview' }) })))).toEqual([
+      'astro.config.mjs:3 4600[PORT]',
+      'astro.config.mjs:3 4601',
+    ]);
+    // A port for one command only: the other keeps Astro's default where a script runs it.
+    const onlyDev = 'export default defineConfig({\n  server: ({ command }) => ({ port: command === "dev" ? 4700 : undefined }),\n});';
+    expect(said(astroListens(repo({ 'astro.config.mjs': onlyDev, 'package.json': scripts({ dev: 'astro dev', preview: 'astro preview' }) })))).toEqual([
+      'astro.config.mjs:2 4700',
+      'package.json:4 4321 default',
+    ]);
+    // A condition on something other than the command is not read, and assumes no default either.
+    const other = 'export default defineConfig({\n  server: () => ({ port: process.env.CI ? 4800 : 4801 }),\n});';
+    expect(said(astroListens(repo({ 'astro.config.mjs': other, 'package.json': scripts({ dev: 'astro dev' }) })))).toEqual([]);
+  });
+});
+
+describe("where Create React App's development server listens (P315)", () => {
+  it('reads PORT from a script or from the environment files it loads, and assumes nothing otherwise', () => {
+    expect(said(createReactAppListens(repo({ 'package.json': scripts({ start: 'react-scripts start' }), '.env': 'BROWSER=none\nPORT=3105\n' })))).toEqual(['.env:2 3105[PORT]']);
+    expect(said(createReactAppListens(repo({ 'package.json': scripts({ start: 'react-scripts start' }), '.env.development': 'PORT=3106\n', '.env': 'PORT=3107\n' })))).toEqual([
+      '.env.development:1 3106[PORT]',
+    ]);
+    expect(said(createReactAppListens(repo({ 'package.json': scripts({ start: 'PORT=3108 craco start' }), '.env': 'PORT=3109\n' })))).toEqual(['package.json:3 3108']);
+    expect(said(createReactAppListens(repo({ 'package.json': scripts({ start: 'react-scripts start' }) })))).toEqual([]);
+    expect(said(createReactAppListens(repo({ 'package.json': scripts({ build: 'react-scripts build' }), '.env': 'PORT=3110\n' })))).toEqual([]);
   });
 });

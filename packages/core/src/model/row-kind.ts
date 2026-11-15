@@ -415,6 +415,8 @@ const GAPS: readonly string[] = [
   'ambiguous-route-target',
   // Two services listen on the port an address on this machine names (P250)
   'local-port-shared',
+  // A server's port that comes from a module loaded by a path decided at run time (P315)
+  'listen-port-unread',
   // A server's proxy rule written in a way the reader does not follow (P257)
   'proxy-rule-unread',
   // A request forwarded through more servers than are followed, or in a circle (P260)

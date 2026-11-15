@@ -104,6 +104,88 @@ describe('where a framework server listens by the environment file it loads (P30
   });
 });
 
+describe("a server of the code's own listens where the environment file its code or its script loads says (P315)", () => {
+  const listen = 'const app = express();\napp.listen(process.env.PORT ?? 3000);';
+
+  it('reads the setting from .env where the code loads it with dotenv, and keeps the fallback where nothing loads it', () => {
+    expect(listening([expressRoutesAdapter], { 'src/main.ts': `import 'dotenv/config';\n${listen}` }, { '.env': 'DEBUG=1\nPORT=4010\n' })).toEqual([
+      'src/main.ts:3 4010[PORT] from .env',
+    ]);
+    expect(listening([expressRoutesAdapter], { 'src/main.ts': listen }, { '.env': 'PORT=4010\n' })).toEqual(['src/main.ts:2 3000[PORT]']);
+    // dotenv's `config` with a path, imported by name or as the module.
+    expect(
+      listening([expressRoutesAdapter], { 'src/main.ts': `import dotenv from 'dotenv';\ndotenv.config({ path: '.env.dev' });\n${listen}` }, { '.env.dev': 'PORT=4011\n', '.env': 'PORT=4999\n' }),
+    ).toEqual(['src/main.ts:4 4011[PORT] from .env.dev']);
+    expect(listening([expressRoutesAdapter], { 'src/main.ts': `import { config } from 'dotenv';\nconfig();\n${listen}` }, { '.env': 'PORT=4012\n' })).toEqual([
+      'src/main.ts:4 4012[PORT] from .env',
+    ]);
+  });
+
+  it("reads NestJS's ConfigModule, which loads .env or the files it names, and not where it ignores them", () => {
+    const main = 'async function bootstrap() {\n  const app = await NestFactory.create(AppModule);\n  await app.listen(process.env.PORT || 3005);\n}';
+    const module = (options: string): string => `import { ConfigModule } from '@nestjs/config';\n@Module({ imports: [ConfigModule.forRoot(${options})] })\nexport class AppModule {}`;
+    expect(listening([nestjsHttpAdapter], { 'src/main.ts': main, 'src/app.module.ts': module('') }, { '.env': 'PORT=4013\n' })).toEqual([
+      'src/main.ts:3 4013[PORT] from .env',
+    ]);
+    expect(
+      listening([nestjsHttpAdapter], { 'src/main.ts': main, 'src/app.module.ts': module("{ envFilePath: ['.env.local', '.env'] }") }, { '.env.local': 'PORT=4014\n', '.env': 'PORT=4015\n' }),
+    ).toEqual(['src/main.ts:3 4014[PORT] from .env.local']);
+    expect(listening([nestjsHttpAdapter], { 'src/main.ts': main, 'src/app.module.ts': module('{ ignoreEnvFile: true }') }, { '.env': 'PORT=4016\n' })).toEqual([
+      'src/main.ts:3 3005[PORT]',
+    ]);
+  });
+
+  it("reads the file a script's command loads: Node's --env-file, dotenv-cli, env-cmd", () => {
+    const pkg = (start: string): string => JSON.stringify({ scripts: { start, test: 'dotenv -e .env.test -- vitest' } }, null, 2);
+    expect(listening([expressRoutesAdapter], { 'src/main.ts': listen }, { 'package.json': pkg('node --env-file=.env.local dist/main.js'), '.env.local': 'PORT=4017\n' })).toEqual([
+      'src/main.ts:2 4017[PORT] from .env.local',
+    ]);
+    expect(listening([expressRoutesAdapter], { 'src/main.ts': listen }, { 'package.json': pkg('dotenv -e .env.dev -- node dist/main.js'), '.env.dev': 'PORT=4018\n', '.env.test': 'PORT=4998\n' })).toEqual([
+      'src/main.ts:2 4018[PORT] from .env.dev',
+    ]);
+    expect(listening([expressRoutesAdapter], { 'src/main.ts': listen }, { 'package.json': pkg('env-cmd node dist/main.js'), '.env': 'PORT=4019\n' })).toEqual([
+      'src/main.ts:2 4019[PORT] from .env',
+    ]);
+    // A test runner's file is the test's.
+    expect(listening([expressRoutesAdapter], { 'src/main.ts': listen }, { 'package.json': pkg('node dist/main.js'), '.env.test': 'PORT=4998\n' })).toEqual(['src/main.ts:2 3000[PORT]']);
+  });
+
+  it("moves Bun's own default to the BUN_PORT, PORT or NODE_PORT the .env Bun loads gives it", () => {
+    expect(listening([honoRoutesAdapter], { 'src/index.ts': 'Bun.serve({ fetch: app.fetch });' }, { '.env': 'PORT=4020\n' })).toEqual(['src/index.ts:1 4020[PORT] from .env']);
+    expect(listening([honoRoutesAdapter], { 'src/index.ts': 'Bun.serve({ fetch: app.fetch });' }, { '.env': 'NAME=x\n' })).toEqual(['src/index.ts:1 3000 default']);
+  });
+});
+
+describe('a port that comes from defaults loaded by a path decided at run time (P315)', () => {
+  it('reads no port and leaves a row saying why', () => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), 'flowatlas-listen-')));
+    roots.push(root);
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: false } });
+    project.createSourceFile(
+      join(root, 'src/config.ts'),
+      "import path from 'path';\nlet active: any;\nexport async function load() { active = (await import(path.join(__dirname, 'defaults'))).defaults; }\nexport function getConfig() { return active; }",
+    );
+    project.createSourceFile(join(root, 'src/main.ts'), "import { getConfig, load } from './config';\nexport async function bootstrap() {\n  await load();\n  await app.listen(getConfig().api.port);\n}");
+    const builder = new GraphBuilder({ repo: 'api' });
+    const ctx: ExtractContext = {
+      repo: 'api',
+      repoDir: root,
+      service: { name: 'api', repo: root, type: 'nestjs' },
+      config: parseConfig({}),
+      pkg: {},
+      project,
+      checker: project.getTypeChecker(),
+      builder,
+      adapters: { ...noAdapters, entry: [nestjsHttpAdapter] },
+      logger: silentLogger,
+    };
+    expect(listeningOf(ctx)).toEqual([]);
+    const rows = builder.build().unresolved.filter((row) => row.reason === 'listen-port-unread');
+    expect(rows.map((row) => `${row.file}:${row.line}`)).toEqual(['src/main.ts:4']);
+    expect(rows[0]?.message).toContain("import(path.join(__dirname, 'defaults'))");
+  });
+});
+
 describe('where each framework server listens (P250)', () => {
   it('reads `app.listen` for express, koa, fastify and NestJS, each once', () => {
     expect(

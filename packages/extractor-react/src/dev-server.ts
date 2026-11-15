@@ -1,7 +1,30 @@
 import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
-import { frameworkListens, REMIX_ENV, scriptCommands, targetPorts, VITE_CONFIGS, VITE_SERVER_EXECUTORS, WEBPACK_SERVER_EXECUTORS, type ScriptCommand } from '@flowatlas/adapters-entry';
-import { NotLiteral, configValueAt, hasAnyDependency, isEnvironmentName, readConfigLiteral, readPackageJson, toPosixPath, type ExtractContext, type ListenPort } from '@flowatlas/core';
+import {
+  envFilePort,
+  frameworkListens,
+  REMIX_ENV,
+  scriptCommands,
+  targetPorts,
+  VITE_CONFIGS,
+  VITE_SERVER_EXECUTORS,
+  WEBPACK_SERVER_EXECUTORS,
+  type EnvLoading,
+  type ScriptCommand,
+} from '@flowatlas/adapters-entry';
+import {
+  NotLiteral,
+  configValueAt,
+  hasAnyDependency,
+  isEnvironmentName,
+  parseSyntax,
+  readConfigLiteral,
+  readPackageJson,
+  toPosixPath,
+  type ExtractContext,
+  type ListenPort,
+} from '@flowatlas/core';
+import { ts } from 'ts-morph';
 
 /**
  * Where a front end's own development and preview servers listen (P254).
@@ -151,24 +174,134 @@ const ASTRO_DEFAULT = 4321;
  * writes its port, it listens on Astro's own 4321 as a default (P310): Astro
  * moves to the next free port when that one is taken, so it is the weakest
  * word for a port (P296) and places a request only where the site serves it
- * (P300, P307).
+ * (P300, P307). A `server` written as a function of the command gives each
+ * command its own port (P315): the dev server's for `astro dev`, the
+ * preview's for `astro preview`.
  */
 export const astroListens = (repoDir: string): ListenPort[] => {
   const { ports } = configuredPorts(repoDir, ASTRO_CONFIGS, ['server']);
   const scripts = scriptCommands(repoDir, /\bastro\s+(?:dev|preview)\b/);
-  const found: ListenPort[] = [...ports.values()];
-  // A `server` written as something not read (`server: ({ command }) => ({ port })`) may set the port: no default.
   const config = readConfigLiteral(repoDir, ASTRO_CONFIGS);
-  const serverUnread = config !== undefined && (configValueAt(config.value, 'server') instanceof NotLiteral || configValueAt(config.value, 'server.port') instanceof NotLiteral);
+  const server = config === undefined ? undefined : configValueAt(config.value, 'server');
+  // `server: ({ command }) => ({ port })`: the port of each command (P315).
+  const perCommand = config !== undefined && server instanceof NotLiteral ? astroServerOfCommand(server.text, config.file, repoDir) : undefined;
+  const found: ListenPort[] = perCommand === undefined ? [...ports.values()] : [];
+  // A `server` written as something not read may set the port: no default.
+  const serverUnread =
+    config !== undefined && perCommand === undefined && (server instanceof NotLiteral || configValueAt(config.value, 'server.port') instanceof NotLiteral);
   if (serverUnread && ports.size === 0) return found.concat(scripts.flatMap((each) => (each.port === undefined ? [] : [{ port: each.port, file: 'package.json', line: each.line, devServer: true as const }])));
-  for (const preview of [false, true]) {
-    const commands = scripts.filter((each) => /\bastro\s+preview\b/.test(each.command) === preview);
+  for (const command of ['dev', 'preview'] as const) {
+    const commands = scripts.filter((each) => /\bastro\s+preview\b/.test(each.command) === (command === 'preview'));
     const written = commands.filter((each) => each.port !== undefined);
     for (const each of written) found.push({ port: each.port as number, file: 'package.json', line: each.line, devServer: true });
-    if (ports.size > 0 || written.length > 0 || commands.length === 0 || commands.some((each) => each.portUnread === true)) continue;
+    // The dev server's port is kept as a configuration's `server.port` is; the preview's where a script serves it.
+    const configured = perCommand?.get(command);
+    if (configured !== undefined && (command === 'dev' || commands.length > 0)) found.push(configured);
+    const said = perCommand === undefined ? ports.size > 0 : configured !== undefined;
+    if (said || written.length > 0 || commands.length === 0 || commands.some((each) => each.portUnread === true)) continue;
     found.push({ port: ASTRO_DEFAULT, file: 'package.json', line: (commands[0] as ScriptCommand).line, default: true, devServer: true });
   }
   return found;
+};
+
+type AstroCommand = 'dev' | 'preview';
+
+/**
+ * Astro's `server` written as a function of the command it runs for (P315):
+ * `server: ({ command }) => ({ port: command === 'dev' ? 4000 : 8080 })`,
+ * which Astro calls with `command` `'dev'` for `astro dev` and `'preview'`
+ * for `astro preview`. The function's object is read for each command, a
+ * condition on the command settled by it; a port written as a setting with a
+ * fallback is read as a configuration's is. Undefined where the function is
+ * not one this reads (a body that does more than return an object, a
+ * condition on something else), so that nothing is assumed in its place.
+ */
+const astroServerOfCommand = (text: string, file: string, repoDir: string): Map<AstroCommand, ListenPort> | undefined => {
+  const syntax = parseSyntax(`const server = (${text});`, 'server.ts');
+  const statement = syntax.statements[0];
+  const declared = statement !== undefined && ts.isVariableStatement(statement) ? statement.declarationList.declarations[0]?.initializer : undefined;
+  const fn = declared === undefined ? undefined : unwrapTs(declared);
+  if (fn === undefined || !(ts.isArrowFunction(fn) || ts.isFunctionExpression(fn))) return undefined;
+  // What the command is called inside: `{ command }`, `{ command: cmd }`, or `options.command`.
+  const parameter = fn.parameters[0];
+  let commandName: string | undefined;
+  if (parameter !== undefined && ts.isObjectBindingPattern(parameter.name)) {
+    const element = parameter.name.elements.find((each) => (each.propertyName ?? each.name).getText(syntax) === 'command');
+    commandName = element === undefined ? undefined : element.name.getText(syntax);
+  } else if (parameter !== undefined && ts.isIdentifier(parameter.name)) {
+    commandName = `${parameter.name.text}.command`;
+  }
+  let body: ts.Expression | undefined;
+  if (ts.isBlock(fn.body)) {
+    const statements = fn.body.statements;
+    const returned = statements.length === 1 ? statements[0] : undefined;
+    body = returned !== undefined && ts.isReturnStatement(returned) ? returned.expression : undefined;
+  } else {
+    body = fn.body;
+  }
+  const object = body === undefined ? undefined : unwrapTs(body);
+  if (object === undefined || !ts.isObjectLiteralExpression(object)) return undefined;
+  const property = object.properties.find((each) => ts.isPropertyAssignment(each) && each.name.getText(syntax) === 'port');
+  const out = new Map<AstroCommand, ListenPort>();
+  if (property === undefined || !ts.isPropertyAssignment(property)) return out;
+  let configText = '';
+  try {
+    configText = readFileSync(file, 'utf8');
+  } catch {
+    // The line falls back to the first.
+  }
+  const at = /\bserver\s*:[\s\S]*?\bport\s*:/.exec(configText);
+  const line = at === null ? 1 : configText.slice(0, at.index + at[0].length).split('\n').length;
+  const where = toPosixPath(relative(repoDir, file));
+  for (const command of ['dev', 'preview'] as const) {
+    const value = valueForCommand(property.initializer, command, commandName, syntax);
+    if (value === 'unread') return undefined;
+    if (value !== undefined) out.set(command, { ...value, file: where, line, devServer: true });
+  }
+  return out;
+};
+
+/** An expression under parentheses, `as` and `satisfies`. */
+const unwrapTs = (node: ts.Expression): ts.Expression => {
+  let at = node;
+  while (ts.isParenthesizedExpression(at) || ts.isAsExpression(at) || ts.isSatisfiesExpression(at)) at = at.expression;
+  return at;
+};
+
+/** Whether a condition on the command holds for one: `command === 'dev'`, `command !== 'preview'`, `!(…)`; undefined where it is on something else. */
+const holdsFor = (node: ts.Expression, command: AstroCommand, commandName: string | undefined, syntax: ts.SourceFile): boolean | undefined => {
+  const at = unwrapTs(node);
+  if (ts.isPrefixUnaryExpression(at) && at.operator === ts.SyntaxKind.ExclamationToken) {
+    const inner = holdsFor(at.operand, command, commandName, syntax);
+    return inner === undefined ? undefined : !inner;
+  }
+  if (!ts.isBinaryExpression(at) || commandName === undefined) return undefined;
+  const operator = at.operatorToken.kind;
+  const equal = operator === ts.SyntaxKind.EqualsEqualsEqualsToken || operator === ts.SyntaxKind.EqualsEqualsToken;
+  const unequal = operator === ts.SyntaxKind.ExclamationEqualsEqualsToken || operator === ts.SyntaxKind.ExclamationEqualsToken;
+  if (!equal && !unequal) return undefined;
+  const [named, literal] = at.left.getText(syntax) === commandName ? [at.left, at.right] : [at.right, at.left];
+  if (named.getText(syntax) !== commandName || !(ts.isStringLiteral(literal) || ts.isNoSubstitutionTemplateLiteral(literal))) return undefined;
+  return (literal.text === command) === equal;
+};
+
+/** The port an expression gives for one command, `'unread'` where a condition it turns on is not on the command. */
+const valueForCommand = (
+  node: ts.Expression,
+  command: AstroCommand,
+  commandName: string | undefined,
+  syntax: ts.SourceFile,
+): Pick<ListenPort, 'port' | 'setting'> | 'unread' | undefined => {
+  const at = unwrapTs(node);
+  if (ts.isConditionalExpression(at)) {
+    const holds = holdsFor(at.condition, command, commandName, syntax);
+    if (holds === undefined) return 'unread';
+    return valueForCommand(holds ? at.whenTrue : at.whenFalse, command, commandName, syntax);
+  }
+  if (ts.isNumericLiteral(at)) return configPort(Number(at.text));
+  if (ts.isStringLiteral(at) || ts.isNoSubstitutionTemplateLiteral(at)) return configPort(at.text);
+  if (at.kind === ts.SyntaxKind.UndefinedKeyword || (ts.isIdentifier(at) && at.text === 'undefined')) return undefined;
+  return configPort(new NotLiteral(at.getText(syntax))) ?? 'unread';
 };
 
 /** The scripts that start a Remix or React Router application's own server, not a bundler's dev server. */
@@ -185,6 +318,34 @@ export const appServerListens = (repoDir: string): ListenPort[] =>
   scriptCommands(repoDir, APP_SERVES).length === 0 ? [] : frameworkListens(repoDir, APP_SERVES, 3000, [], REMIX_ENV);
 
 /**
+ * Create React App's development server, `react-scripts start` (or CRACO's
+ * `craco start`, which runs it): it loads `.env.development.local`,
+ * `.env.local`, `.env.development` and `.env` before it starts, and listens
+ * on `PORT` (P315). A port a script gives (`PORT=3005 react-scripts start`)
+ * or a loaded file sets is where it listens; where neither says, nothing is
+ * assumed, since it offers the next free port when 3000 is taken, as Vite's
+ * dev server takes one.
+ */
+const CRA_ENV: EnvLoading = {
+  commands: /\b(?:react-scripts|craco)\s+start\b/,
+  files: ['.env.development.local', '.env.local', '.env.development', '.env'],
+  settings: ['PORT'],
+};
+
+/** Where Create React App's development server listens, where a script or a file it loads says (P315). */
+export const createReactAppListens = (repoDir: string): ListenPort[] => {
+  const scripts = scriptCommands(repoDir, CRA_ENV.commands);
+  if (scripts.length === 0) return [];
+  const given = scripts.flatMap((each) => {
+    const port = each.environmentPort ?? each.port;
+    return port === undefined ? [] : [{ port, file: 'package.json', line: each.line, devServer: true as const }];
+  });
+  if (given.length > 0 || scripts.some((each) => each.portUnread === true)) return given;
+  const filed = envFilePort(repoDir, scripts, CRA_ENV);
+  return filed === undefined ? [] : [{ ...filed, devServer: true }];
+};
+
+/**
  * Where a React, Vue or Svelte front end's own servers listen: its bundler's
  * configuration and scripts, and the dev server targets a workspace tool's
  * `project.json` runs it by (P257).
@@ -193,6 +354,7 @@ export const frontEndListens = (ctx: ExtractContext): ListenPort[] => [
   ...viteListens(ctx.repoDir),
   ...astroListens(ctx.repoDir),
   ...appServerListens(ctx.repoDir),
+  ...createReactAppListens(ctx.repoDir),
   ...targetPorts(ctx.repoDir, VITE_SERVER_EXECUTORS, true),
   ...targetPorts(ctx.repoDir, WEBPACK_SERVER_EXECUTORS, true),
 ];
