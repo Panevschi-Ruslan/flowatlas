@@ -90,6 +90,27 @@ describe("where a Vite front end's dev and preview servers listen (P254)", () =>
   });
 });
 
+describe("where a full-stack framework run through Vite listens (P303)", () => {
+  it("assumes Vite's 5173 for `remix vite:dev`, `react-router dev` and SvelteKit's `vite dev` where nothing writes a port", () => {
+    expect(said(viteListens(repo({ 'package.json': scripts({ dev: 'remix vite:dev', build: 'remix vite:build' }) })))).toEqual(['package.json:3 5173 default']);
+    expect(said(viteListens(repo({ 'package.json': scripts({ dev: 'react-router dev', start: 'react-router-serve ./build/server/index.js' }) })))).toEqual(['package.json:3 5173 default']);
+    const kit = JSON.stringify({ scripts: { dev: 'vite dev' }, devDependencies: { '@sveltejs/kit': '^2.8.0' } }, null, 2);
+    expect(said(viteListens(repo({ 'package.json': kit })))).toEqual(['package.json:3 5173 default']);
+    // React Router's own plugin under a plain `vite`.
+    const router = JSON.stringify({ scripts: { dev: 'vite' }, devDependencies: { '@react-router/dev': '^7.0.0' } }, null, 2);
+    expect(said(viteListens(repo({ 'package.json': router })))).toEqual(['package.json:3 5173 default']);
+  });
+
+  it("reads the port the configuration or the script writes instead, and assumes none for a single-page application or a preview", () => {
+    const written = { 'vite.config.ts': 'export default defineConfig({\n  plugins: [remix()],\n  server: { port: 5190 },\n});', 'package.json': scripts({ dev: 'remix vite:dev' }) };
+    expect(said(viteListens(repo(written)))).toEqual(['vite.config.ts:3 5190']);
+    expect(said(viteListens(repo({ 'package.json': scripts({ dev: 'react-router dev --port 5191' }) })))).toEqual(['package.json:3 5191']);
+    // A front end serving no routes of its own, and a preview nobody configures: Vite moves to the next free port.
+    expect(said(viteListens(repo({ 'package.json': JSON.stringify({ scripts: { dev: 'vite' }, dependencies: { react: '^18.3.0' } }) })))).toEqual([]);
+    expect(said(viteListens(repo({ 'package.json': JSON.stringify({ scripts: { preview: 'vite preview' }, devDependencies: { '@sveltejs/kit': '^2.8.0' } }) })))).toEqual([]);
+  });
+});
+
 describe("where an Astro site's dev server listens (P254)", () => {
   it("reads `server.port` and a script's `--port`, and assumes no default", () => {
     expect(said(astroListens(repo({ 'astro.config.mjs': "export default defineConfig({\n  output: 'server',\n  server: { port: 4330 },\n});", 'package.json': scripts({ dev: 'astro dev --port 4331' }) })))).toEqual([

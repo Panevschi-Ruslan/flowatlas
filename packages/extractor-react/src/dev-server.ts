@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import { frameworkListens, REMIX_ENV, scriptCommands, targetPorts, VITE_CONFIGS, VITE_SERVER_EXECUTORS, WEBPACK_SERVER_EXECUTORS, type ScriptCommand } from '@flowatlas/adapters-entry';
-import { NotLiteral, configValueAt, isEnvironmentName, readConfigLiteral, toPosixPath, type ExtractContext, type ListenPort } from '@flowatlas/core';
+import { NotLiteral, configValueAt, hasAnyDependency, isEnvironmentName, readConfigLiteral, readPackageJson, toPosixPath, type ExtractContext, type ListenPort } from '@flowatlas/core';
 
 /**
  * Where a front end's own development and preview servers listen (P254).
@@ -22,6 +22,14 @@ import { NotLiteral, configValueAt, isEnvironmentName, readConfigLiteral, toPosi
  * assuming it would place every two front ends of a project on one port. A
  * default is where it listens only if it listens at all, and says so
  * (`default: true`).
+ *
+ * A full-stack framework run through Vite is the exception (P303): Remix's
+ * `remix vite:dev`, React Router's `react-router dev` and SvelteKit's `vite
+ * dev` serve the application's own routes from Vite's dev server, so where
+ * no configuration or script writes its port it listens on Vite's 5173, as
+ * the weakest word for a port (P296): a port the code or the files place is
+ * not taken from anyone by it, and it places a request only where the
+ * application serves it (P300).
  */
 
 const ASTRO_CONFIGS = ['astro.config.mjs', 'astro.config.ts', 'astro.config.js', 'astro.config.mts', 'astro.config.cjs'];
@@ -41,6 +49,19 @@ const serverOf = (command: string): Server | undefined => {
 };
 
 const STARTS = /\b(?:vite|svelte-kit|remix|react-router|astro)\b/;
+
+/** The commands that start a full-stack framework's own routes on Vite's dev server, whatever the application declares. */
+const FRAMEWORK_DEV = /\b(?:remix\s+vite:dev|react-router\s+dev|svelte-kit\s+dev)\b/;
+
+/** The packages that make Vite's dev server serve an application's own routes: Remix's and React Router's Vite plugins, SvelteKit. */
+const ROUTES_ON_VITE = ['@remix-run/dev', '@react-router/dev', '@sveltejs/kit'] as const;
+
+/** Whether a command starts Vite's dev server serving a full-stack framework's own routes (P303). */
+const servesRoutes = (command: string, repoDir: string): boolean => {
+  if (FRAMEWORK_DEV.test(command)) return true;
+  const pkg = readPackageJson(repoDir);
+  return pkg !== undefined && hasAnyDependency(pkg, ROUTES_ON_VITE);
+};
 
 /** The port a configuration writes: a number, or a setting with the number it falls back to, read off its text. */
 const configPort = (value: unknown): Pick<ListenPort, 'port' | 'setting'> | undefined => {
@@ -112,6 +133,11 @@ export const viteListens = (repoDir: string): ListenPort[] => {
     const strictLine = strict.get(server);
     if (strictLine !== undefined && file !== undefined) found.push({ port: VITE_DEFAULT[server], file, line: strictLine, default: true, devServer: true });
     else if (strictScript !== undefined) found.push({ port: VITE_DEFAULT[server], file: 'package.json', line: strictScript.line, default: true, devServer: true });
+    else if (server === 'server') {
+      // A full-stack framework's dev server, started by a script: on Vite's own port where nothing says (P303).
+      const framework = commands.find((each) => servesRoutes(each.command, repoDir));
+      if (framework !== undefined) found.push({ port: VITE_DEFAULT.server, file: 'package.json', line: framework.line, default: true, devServer: true });
+    }
   }
   return found;
 };

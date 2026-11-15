@@ -650,6 +650,45 @@ const propReadOf = (fn: TsNode, value: TsNode): string | undefined => {
   return undefined;
 };
 
+/** The name a component is declared under: its function's, or the `const` holding it, through `memo` / `forwardRef` / `observer`. */
+const componentNameNode = (fn: TsNode): TsNode | undefined => {
+  if (Node.isFunctionDeclaration(fn)) return fn.getNameNode();
+  let holder = fn.getParent();
+  while (holder !== undefined && Node.isCallExpression(holder) && COMPONENT_WRAPPERS.has(holder.getExpression().getText())) holder = holder.getParent();
+  return holder !== undefined && Node.isVariableDeclaration(holder) ? holder.getNameNode() : undefined;
+};
+
+const ADDRESS_USES = new WeakMap<TsNode, Map<string, boolean>>();
+
+/**
+ * Whether the uses of a component that write a prop as text all write an
+ * address of the application (`<NavLink to="/pricing">`), and one at least
+ * does (P303): the prop is where a use writes the address, whatever its name.
+ */
+const usesWriteAddresses = (fn: TsNode, prop: string): boolean => {
+  const known = ADDRESS_USES.get(fn)?.get(prop);
+  if (known !== undefined) return known;
+  const name = componentNameNode(fn);
+  let addresses = 0;
+  let other = 0;
+  for (const reference of name !== undefined && Node.isIdentifier(name) ? name.findReferencesAsNodes() : []) {
+    const element = reference.getParent();
+    if (element === undefined || (!Node.isJsxSelfClosingElement(element) && !Node.isJsxOpeningElement(element)) || element.getTagNameNode() !== reference) continue;
+    const written = element.getAttributes().find((each) => Node.isJsxAttribute(each) && each.getNameNode().getText() === prop);
+    const initializer = written !== undefined && Node.isJsxAttribute(written) ? written.getInitializer() : undefined;
+    const value = initializer !== undefined && Node.isJsxExpression(initializer) ? initializer.getExpression() : initializer;
+    const text = value === undefined ? undefined : addressText(bare(value));
+    if (text === undefined) continue;
+    if (text.startsWith('/')) addresses += 1;
+    else other += 1;
+  }
+  const found = addresses > 0 && other === 0;
+  const byProp = ADDRESS_USES.get(fn) ?? new Map<string, boolean>();
+  byProp.set(prop, found);
+  ADDRESS_USES.set(fn, byProp);
+  return found;
+};
+
 /** What a wrapper's inner link is handed: a prop as it is, put inside a template, or handed to a call among other values. */
 const wrappedOf = (fn: TsNode, value: TsNode, attribute: string): { readonly prop: string; readonly before: string; readonly after: string; readonly localized: boolean } | undefined => {
   const read = bare(Node.isJsxExpression(value) ? (value.getExpression() ?? value) : value);
@@ -680,9 +719,12 @@ const wrappedOf = (fn: TsNode, value: TsNode, attribute: string): { readonly pro
             ? piece.getLiteralText()
             : `\${${piece.getText().replace(/[{}\s]/g, '')}}`;
       const prop = propReadOf(fn, pieces[at] as TsNode) as string;
-      // Text put around a prop of the link's own name is a wrapper's; around any other (`/orders/${id}`) it is the component's own navigation.
-      if (prop !== attribute) return undefined;
-      return { prop, before: pieces.slice(0, at).map(text).join(''), after: pieces.slice(at + 1).map(text).join(''), localized: false };
+      const before = pieces.slice(0, at).map(text).join('');
+      // Text put around a prop of the link's own name is a wrapper's; around any other (`/orders/${id}`) it is the
+      // component's own navigation, unless the prop is an address itself (P303): it starts no segment of its own
+      // (`/${locale}${to}`), and every use writing it as text writes an address (`<NavLink to="/pricing">`).
+      if (prop !== attribute && (before === '' || before.endsWith('/') || !usesWriteAddresses(fn, prop))) return undefined;
+      return { prop, before, after: pieces.slice(at + 1).map(text).join(''), localized: false };
     }
   }
   // `withLang(locale, href)`: the prop handed to a function with the locale; the function puts it in front.

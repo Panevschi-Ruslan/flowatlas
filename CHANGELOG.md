@@ -19,6 +19,22 @@ only one of them moved.
   function of the repository called with nothing, `apiBase()` returning
   `process.env.API_URL ?? 'http://localhost:4000'`, is the setting it
   returns, a parameter it is not handed at its default.
+- **Registries, link props and Vite ports P296 and P297 left open (P303).**
+  A route table read off a registry whose store no class keeps is followed
+  as the class one is: a function of the repository, or a method an object
+  holds, reading a module's `Map`, array or object, a field of the object
+  holding it, or a store handed in, every entry handed to the functions
+  beside it that add to that store (a handed store only where both calls
+  name it), kept by the key it is filed by or a `filter` / `find` test reads
+  (`store.filter((entry) => entry.group === group)`), with the entries
+  written into the store itself. A link of the application's own whose
+  address prop is named apart from the link's attribute (`NavLink({ to })`
+  rendering `` <Link href={`/${locale}${to}`}> ``) is read through to the
+  link it renders where the prop starts no segment of its own and its uses
+  write addresses. Remix's `remix vite:dev`, React Router's `react-router
+  dev` and SvelteKit's `vite dev` listen on Vite's 5173 where neither the
+  configuration nor the script writes a port, as a default that places a
+  request only where the application serves it.
 - **The rest of the deployment templating and grants P289 and P295 left open
   (P299).** A command keeping releases with a selector and `--include-needs`
   keeps what they need from any sub-helmfile of the state (transitively with
