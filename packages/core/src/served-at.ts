@@ -34,8 +34,8 @@ export interface ServedAt {
   readonly chosenDefault?: string;
   /**
    * The choice that deploys the base `chosenDefault` names, where it is not
-   * what nothing chooses: `the workspace production` for a stage a Terraform
-   * workspace other than the default names (P308).
+   * what nothing chooses: `the workspace production` for a stage a
+   * deployment's workspace other than the default names (P308).
    */
   readonly chosenIn?: string;
   /**
