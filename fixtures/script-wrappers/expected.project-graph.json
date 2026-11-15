@@ -1,0 +1,1143 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-15T17:31:18.116Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop:http:GET:/cart/total",
+      "type": "entry",
+      "label": "GET /cart/total",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/cart/total",
+        "rawPath": "/cart/total",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/items/:param/reviews",
+      "type": "entry",
+      "label": "GET /items/:param/reviews",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items/:param/reviews",
+        "rawPath": "/items/:id/reviews",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/stock",
+      "type": "entry",
+      "label": "GET /stock",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 30,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/stock",
+        "rawPath": "/stock",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/cart",
+      "type": "entry",
+      "label": "POST /cart",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/cart",
+        "rawPath": "/cart",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:shop:http:PUT:/cart/coupon",
+      "type": "entry",
+      "label": "PUT /cart/coupon",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/cart/coupon",
+        "rawPath": "/cart/coupon",
+        "adapter": "express-routes",
+        "registration": "app.put",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4710,
+            "file": "src/index.ts",
+            "line": 34
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "functions": 9,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "browser"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "shop#src/index.ts:GET /cart/total@18",
+      "type": "function",
+      "label": "GET /cart/total@18",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/index.ts:GET /items/:id/reviews@10",
+      "type": "function",
+      "label": "GET /items/:id/reviews@10",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/index.ts:GET /items@6",
+      "type": "function",
+      "label": "GET /items@6",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/index.ts:GET /stock@30",
+      "type": "function",
+      "label": "GET /stock@30",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/index.ts:POST /cart@14",
+      "type": "function",
+      "label": "POST /cart@14",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/index.ts:POST /orders@26",
+      "type": "function",
+      "label": "POST /orders@26",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/index.ts:PUT /cart/coupon@22",
+      "type": "function",
+      "label": "PUT /cart/coupon@22",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/index.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 4,
+      "kind": "function"
+    },
+    {
+      "id": "ui_api_call:web#js/orders.js:5:12",
+      "type": "ui_api_call",
+      "label": "POST /orders",
+      "repo": "web",
+      "file": "js/orders.js",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "http://localhost:4710/orders",
+        "path": "/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{cart:any}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "cart"
+        ],
+        "package": "superagent",
+        "client": "superagent",
+        "via": "const",
+        "host": "localhost:4710",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/reviews.js:5:14",
+      "type": "ui_api_call",
+      "label": "GET /items/:param/reviews",
+      "repo": "web",
+      "file": "js/reviews.js",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4710/items/:param/reviews",
+        "path": "/items/:param/reviews",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "jquery",
+        "client": "jquery",
+        "via": "literal",
+        "host": "localhost:4710",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/stock.js:4:12",
+      "type": "ui_api_call",
+      "label": "GET /stock",
+      "repo": "web",
+      "file": "js/stock.js",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4710/stock",
+        "path": "/stock",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "ky",
+        "client": "ky",
+        "via": "const",
+        "host": "localhost:4710",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/store.js:17:12",
+      "type": "ui_api_call",
+      "label": "POST /cart",
+      "repo": "web",
+      "file": "js/store.js",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "http://localhost:4710/cart",
+        "path": "/cart",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{item:any;quantity:any}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "item",
+          "quantity"
+        ],
+        "headerKeys": [
+          "content-type"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "const",
+        "host": "localhost:4710",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/store.js:26:14",
+      "type": "ui_api_call",
+      "label": "GET /cart/total",
+      "repo": "web",
+      "file": "js/store.js",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4710/cart/total",
+        "path": "/cart/total",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "const",
+        "host": "localhost:4710",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/store.js:31:7",
+      "type": "ui_api_call",
+      "label": "PUT /cart/coupon",
+      "repo": "web",
+      "file": "js/store.js",
+      "line": 31,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "url": "http://localhost:4710/cart/coupon",
+        "path": "/cart/coupon",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{code:any}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "code"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "const",
+        "host": "localhost:4710",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/store.js:6:14",
+      "type": "ui_api_call",
+      "label": "GET /items",
+      "repo": "web",
+      "file": "js/store.js",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4710/items",
+        "path": "/items",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "const",
+        "host": "localhost:4710",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "web#js/orders.js:orders.place",
+      "type": "function",
+      "label": "orders.place",
+      "repo": "web",
+      "file": "js/orders.js",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "cart",
+              "type": "any"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#js/page.js:start",
+      "type": "function",
+      "label": "start",
+      "repo": "web",
+      "file": "js/page.js",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#js/reviews.js:reviews.list",
+      "type": "function",
+      "label": "reviews.list",
+      "repo": "web",
+      "file": "js/reviews.js",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "any"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#js/stock.js:load",
+      "type": "function",
+      "label": "load",
+      "repo": "web",
+      "file": "js/stock.js",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#js/store.js:Cart.add",
+      "type": "function",
+      "label": "Cart.add",
+      "repo": "web",
+      "file": "js/store.js",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "any"
+            },
+            {
+              "name": "quantity",
+              "type": "any"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/store.js:Cart.coupon=",
+      "type": "function",
+      "label": "Cart.coupon=",
+      "repo": "web",
+      "file": "js/store.js",
+      "line": 30
+    },
+    {
+      "id": "web#js/store.js:Cart.total",
+      "type": "function",
+      "label": "Cart.total",
+      "repo": "web",
+      "file": "js/store.js",
+      "line": 25
+    },
+    {
+      "id": "web#js/store.js:api.items",
+      "type": "function",
+      "label": "api.items",
+      "repo": "web",
+      "file": "js/store.js",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop:http:GET:/cart/total",
+      "to": "shop#src/index.ts:GET /cart/total@18",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{total:number}",
+      "file": "src/index.ts",
+      "line": 18,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/cart/total",
+      "to": "shop#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/items",
+      "to": "shop#src/index.ts:GET /items@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/items",
+      "to": "shop#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/items/:param/reviews",
+      "to": "shop#src/index.ts:GET /items/:id/reviews@10",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/items/:param/reviews",
+      "to": "shop#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/stock",
+      "to": "shop#src/index.ts:GET /stock@30",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 30,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/stock",
+      "to": "shop#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/cart",
+      "to": "shop#src/index.ts:POST /cart@14",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{item:any;quantity:any}",
+      "file": "src/index.ts",
+      "line": 14,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/cart",
+      "to": "shop#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/orders",
+      "to": "shop#src/index.ts:POST /orders@26",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{cart:any}",
+      "file": "src/index.ts",
+      "line": 26,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/orders",
+      "to": "shop#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:shop:http:PUT:/cart/coupon",
+      "to": "shop#src/index.ts:PUT /cart/coupon@22",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{code:any}",
+      "file": "src/index.ts",
+      "line": 22,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:PUT:/cart/coupon",
+      "to": "shop#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/orders.js:5:12",
+      "to": "entry:shop:http:POST:/orders",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/orders.js",
+      "line": 5,
+      "params": [
+        "{cart:any}"
+      ],
+      "meta": {
+        "via": "host",
+        "targetService": "shop",
+        "listensAt": "src/index.ts:34"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/reviews.js:5:14",
+      "to": "entry:shop:http:GET:/items/:param/reviews",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/reviews.js",
+      "line": 5,
+      "meta": {
+        "via": "host",
+        "targetService": "shop",
+        "listensAt": "src/index.ts:34"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/stock.js:4:12",
+      "to": "entry:shop:http:GET:/stock",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/stock.js",
+      "line": 4,
+      "meta": {
+        "via": "host",
+        "targetService": "shop",
+        "listensAt": "src/index.ts:34"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/store.js:17:12",
+      "to": "entry:shop:http:POST:/cart",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/store.js",
+      "line": 17,
+      "params": [
+        "{item:any;quantity:any}"
+      ],
+      "meta": {
+        "via": "host",
+        "targetService": "shop",
+        "listensAt": "src/index.ts:34"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/store.js:26:14",
+      "to": "entry:shop:http:GET:/cart/total",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/store.js",
+      "line": 26,
+      "meta": {
+        "via": "host",
+        "targetService": "shop",
+        "listensAt": "src/index.ts:34"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/store.js:31:7",
+      "to": "entry:shop:http:PUT:/cart/coupon",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/store.js",
+      "line": 31,
+      "params": [
+        "{code:any}"
+      ],
+      "meta": {
+        "via": "host",
+        "targetService": "shop",
+        "listensAt": "src/index.ts:34"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/store.js:6:14",
+      "to": "entry:shop:http:GET:/items",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/store.js",
+      "line": 6,
+      "meta": {
+        "via": "host",
+        "targetService": "shop",
+        "listensAt": "src/index.ts:34"
+      }
+    },
+    {
+      "from": "web#js/orders.js:orders.place",
+      "to": "ui_api_call:web#js/orders.js:5:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/orders.js",
+      "line": 5
+    },
+    {
+      "from": "web#js/page.js:start",
+      "to": "web#js/orders.js:orders.place",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "unknown",
+      "file": "js/page.js",
+      "line": 11
+    },
+    {
+      "from": "web#js/page.js:start",
+      "to": "web#js/reviews.js:reviews.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "unknown",
+      "file": "js/page.js",
+      "line": 8
+    },
+    {
+      "from": "web#js/page.js:start",
+      "to": "web#js/stock.js:load",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "js/page.js",
+      "line": 9
+    },
+    {
+      "from": "web#js/page.js:start",
+      "to": "web#js/store.js:Cart.add",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any",
+        "any"
+      ],
+      "returns": "Response",
+      "file": "js/page.js",
+      "line": 5
+    },
+    {
+      "from": "web#js/page.js:start",
+      "to": "web#js/store.js:Cart.coupon=",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/page.js",
+      "line": 7
+    },
+    {
+      "from": "web#js/page.js:start",
+      "to": "web#js/store.js:Cart.total",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/page.js",
+      "line": 10
+    },
+    {
+      "from": "web#js/page.js:start",
+      "to": "web#js/store.js:api.items",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "js/page.js",
+      "line": 4
+    },
+    {
+      "from": "web#js/reviews.js:reviews.list",
+      "to": "ui_api_call:web#js/reviews.js:5:14",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/reviews.js",
+      "line": 5
+    },
+    {
+      "from": "web#js/stock.js:load",
+      "to": "ui_api_call:web#js/stock.js:4:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/stock.js",
+      "line": 4
+    },
+    {
+      "from": "web#js/store.js:Cart.add",
+      "to": "ui_api_call:web#js/store.js:17:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/store.js",
+      "line": 17
+    },
+    {
+      "from": "web#js/store.js:Cart.coupon=",
+      "to": "ui_api_call:web#js/store.js:31:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/store.js",
+      "line": 31
+    },
+    {
+      "from": "web#js/store.js:Cart.total",
+      "to": "ui_api_call:web#js/store.js:26:14",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/store.js",
+      "line": 26
+    },
+    {
+      "from": "web#js/store.js:api.items",
+      "to": "ui_api_call:web#js/store.js:6:14",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/store.js",
+      "line": 6
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/index.ts",
+      "line": 7,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 9,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /items@6 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 9,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 7,
+                "symbol": "GET /items@6 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 11,
+                "symbol": "GET /items/:id/reviews@10 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 15,
+                "symbol": "POST /cart@14 -> res.status(201).json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "file": "js/orders.js",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "js/page.js",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "js/reviews.js",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "js/stock.js",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    }
+  ]
+}

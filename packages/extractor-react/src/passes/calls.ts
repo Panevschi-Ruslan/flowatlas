@@ -3,6 +3,8 @@ import type { Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
+import { keptAt } from '../script-members.js';
+import { methodIndexed } from '../util/forward.js';
 import { receiverValues } from '../util/receiver-values.js';
 import { definePass } from './types.js';
 
@@ -33,7 +35,7 @@ const constructorsOf = (ctx: ReactExtractContext, receiver: TsNode, heldBy: (rec
     for (let at = receiver.getParent(); at !== undefined; at = at.getParent()) {
       // A constructor's own body: `this` is the instance it makes.
       if (Node.isFunctionDeclaration(at)) return [at];
-      if (Node.isFunctionExpression(at) || Node.isMethodDeclaration(at)) {
+      if (Node.isFunctionExpression(at) || Node.isMethodDeclaration(at) || Node.isGetAccessorDeclaration(at) || Node.isSetAccessorDeclaration(at)) {
         const holder = at.getParent();
         const member = ctx.functions.scriptMember(at) ?? (holder === undefined ? undefined : ctx.functions.scriptMember(holder));
         return member === undefined ? [] : [...ctx.functions.ownersOf(member.id)];
@@ -44,8 +46,44 @@ const constructorsOf = (ctx: ReactExtractContext, receiver: TsNode, heldBy: (rec
   return heldBy(receiver).flatMap((value) => {
     if (!Node.isNewExpression(value)) return [];
     const made = value.getExpression();
-    return Node.isIdentifier(made) ? declarationsOf(made) : [];
+    const declared = Node.isIdentifier(made) ? declarationsOf(made) : [];
+    if (declared.length > 0) return declared;
+    // A constructor nothing declares: the one a script hands the page by its name (P311).
+    const name = pageName(made);
+    return name === undefined ? [] : [...ctx.functions.globalConstructor(name)];
   });
+};
+
+/**
+ * The name a script calls something the page holds by (P311): `window.shop.load`
+ * and `shop.load` alike are `shop.load`, where nothing declares `shop`.
+ */
+const pageName = (node: TsNode): string | undefined => {
+  const kept = keptAt(node);
+  if (kept === undefined) return undefined;
+  if (kept.page) return kept.names.join('.');
+  let root = node;
+  while (Node.isPropertyAccessExpression(root) || Node.isElementAccessExpression(root) || Node.isParenthesizedExpression(root)) root = root.getExpression();
+  return Node.isIdentifier(root) && root.getSymbol() === undefined ? kept.names.join('.') : undefined;
+};
+
+/**
+ * The function a declaration the checker hands back names by a name of its
+ * own (P311): `{ list }` and `{ list: list }` in what a module exports or a
+ * wrapper returns are the function `list`.
+ */
+const namedBy = (ctx: ReactExtractContext, declaration: TsNode): IndexedFunction | undefined => {
+  const symbol = Node.isShorthandPropertyAssignment(declaration)
+    ? declaration.getValueSymbol()
+    : Node.isPropertyAssignment(declaration)
+      ? declaration.getInitializer()?.getSymbol()
+      : undefined;
+  if (symbol === undefined) return undefined;
+  for (const each of (symbol.getAliasedSymbol() ?? symbol).getDeclarations()) {
+    const indexed = ctx.functions.get(each);
+    if (indexed !== undefined) return indexed;
+  }
+  return undefined;
 };
 
 /** The functions of this repository a call names, when it names any: the one its name is declared by, or a prototype's member of each instance it is called on (P310). */
@@ -56,15 +94,105 @@ const calledFunctions = (
 ): IndexedFunction[] => {
   const named = Node.isPropertyAccessExpression(callee) ? callee.getNameNode() : callee;
   if (!Node.isIdentifier(named)) return [];
-  for (const declaration of declarationsOf(named)) {
+  const declarations = declarationsOf(named);
+  for (const declaration of declarations) {
     const indexed = ctx.functions.get(declaration as never);
     if (indexed !== undefined) return [indexed];
   }
+  if (ctx.functions.readsMembers) {
+    for (const declaration of declarations) {
+      const indexed = namedBy(ctx, declaration);
+      if (indexed !== undefined) return [indexed];
+    }
+  }
+  // A function a script hands the page, called by its name there (P311).
+  const onPage = declarations.length === 0 && ctx.functions.hasGlobals ? pageName(callee) : undefined;
+  const global = onPage === undefined ? undefined : ctx.functions.global(onPage);
+  if (global !== undefined) return [global];
   if (!Node.isPropertyAccessExpression(callee) || !ctx.functions.hasPrototypeMembers) return [];
   const found = new Set<IndexedFunction>();
   for (const owner of constructorsOf(ctx, callee.getExpression(), heldBy)) {
     const member = ctx.functions.member(owner, callee.getName());
     if (member !== undefined) found.add(member);
+  }
+  return [...found];
+};
+
+const NO_NAMES: ReadonlySet<string> = new Set();
+
+/** A script that may declare an accessor, told by its text before it is walked. */
+const MAY_DECLARE_ACCESSOR = /\b(?:get|set)\s+[\w$#]+\s*\(/;
+
+/**
+ * The names the repository's getters and setters are declared under (P311),
+ * so a property read is asked of the checker only where one of them may run.
+ */
+const accessorNames = (ctx: ReactExtractContext): ReadonlySet<string> => {
+  const names = new Set<string>();
+  for (const file of ctx.project.getSourceFiles()) {
+    if (file.isInNodeModules() || file.isDeclarationFile() || !MAY_DECLARE_ACCESSOR.test(file.getFullText())) continue;
+    for (const kind of [SyntaxKind.GetAccessor, SyntaxKind.SetAccessor] as const) {
+      for (const accessor of file.getDescendantsOfKind(kind)) names.add(accessor.getName());
+    }
+  }
+  return names;
+};
+
+/**
+ * Every property a body reads or writes outside a call of it (P311), with
+ * whether it is written: `api.items` and `api.items = v`. A class written
+ * inside is its own, as for calls.
+ */
+const forEachAccess = (body: TsNode, visit: (access: TsNode & { getName(): string; getExpression(): TsNode }, written: boolean) => void): void => {
+  body.forEachDescendant((node, traversal) => {
+    if (Node.isClassDeclaration(node) || Node.isClassExpression(node)) {
+      traversal.skip();
+      return;
+    }
+    if (!Node.isPropertyAccessExpression(node)) return;
+    const parent = node.getParent();
+    if (Node.isCallExpression(parent) && parent.getExpression() === node) return;
+    const written =
+      Node.isBinaryExpression(parent) && parent.getLeft() === node && parent.getOperatorToken().getKind() === SyntaxKind.EqualsToken;
+    visit(node, written);
+  });
+};
+
+const isAccessor = (node: TsNode, written: boolean): boolean => (written ? Node.isSetAccessorDeclaration(node) : Node.isGetAccessorDeclaration(node));
+
+/**
+ * The getters a property read runs, or the setters a write runs (P311): the
+ * accessor the compiler resolves it to - an object's, or a class's, indexed
+ * where it is met - the one a script hands the page under the name read, or a
+ * prototype's of each instance the receiver holds.
+ */
+const accessorsRun = (
+  ctx: ReactExtractContext,
+  access: TsNode & { getName(): string; getExpression(): TsNode },
+  written: boolean,
+  names: ReadonlySet<string>,
+  heldBy: (receiver: TsNode) => TsNode[],
+): IndexedFunction[] => {
+  const name = access.getName();
+  if (names.has(name)) {
+    const declarations = Node.isPropertyAccessExpression(access) ? declarationsOf(access.getNameNode()) : [];
+    for (const declaration of declarations) {
+      if (!isAccessor(declaration, written)) continue;
+      const indexed = ctx.functions.get(declaration) ?? methodIndexed(ctx, declaration);
+      if (indexed !== undefined) return [indexed];
+    }
+    if (declarations.length > 0) return [];
+  }
+  if (ctx.functions.hasGlobals) {
+    const onPage = pageName(access);
+    const global = onPage === undefined ? undefined : ctx.functions.global(written ? `${onPage}=` : onPage);
+    if (global !== undefined && isAccessor(global.fn.declaration, written)) return [global];
+  }
+  if (!names.has(name) || !ctx.functions.hasPrototypeMembers) return [];
+  const found = new Set<IndexedFunction>();
+  for (const owner of constructorsOf(ctx, access.getExpression(), heldBy)) {
+    const member = ctx.functions.member(owner, written ? `${name}=` : name);
+    if (member !== undefined && isAccessor(member.fn.declaration, written)) found.add(member);
   }
   return [...found];
 };
@@ -110,8 +238,29 @@ const externalPackage = (callee: TsNode): string | null => {
 export const callsPass = definePass('calls', (ctx: ReactExtractContext) => {
   // An instance a call is made on, read once per receiver (P310).
   const heldBy = receiverValues((value) => Node.isNewExpression(value));
+  // A property read or written where a getter or a setter runs (P311).
+  const accessors = ctx.functions.readsMembers ? accessorNames(ctx) : NO_NAMES;
+  const readsAccessors = accessors.size > 0 || ctx.functions.hasGlobals;
   for (const indexed of ctx.functions.all()) {
     let created = false;
+    const draw = (each: IndexedFunction, at: TsNode): void => {
+      // A function that calls itself says nothing about the shape of the
+      // system, and a self-edge is read as a cycle by everything downstream.
+      if (each.id === indexed.id) return;
+      if (!created) {
+        ctx.ensureFunctionNode(indexed.fn);
+        created = true;
+      }
+      ctx.ensureFunctionNode(each.fn);
+      ctx.builder.addEdge({
+        from: indexed.id,
+        to: each.id,
+        type: 'calls',
+        confidence: 'static',
+        file: indexed.file,
+        line: lineOf(at),
+      });
+    };
 
     forEachCall(indexed.fn.body, (call) => {
       const callee = call.getExpression();
@@ -121,25 +270,12 @@ export const callsPass = definePass('calls', (ctx: ReactExtractContext) => {
         if (pkg !== null) ctx.countExternalCall(pkg);
         return;
       }
-      for (const each of called) {
-        // A function that calls itself says nothing about the shape of the
-        // system, and a self-edge is read as a cycle by everything downstream.
-        if (each.id === indexed.id) continue;
-
-        if (!created) {
-          ctx.ensureFunctionNode(indexed.fn);
-          created = true;
-        }
-        ctx.ensureFunctionNode(each.fn);
-        ctx.builder.addEdge({
-          from: indexed.id,
-          to: each.id,
-          type: 'calls',
-          confidence: 'static',
-          file: indexed.file,
-          line: lineOf(call),
-        });
-      }
+      for (const each of called) draw(each, call);
     });
+    if (readsAccessors) {
+      forEachAccess(indexed.fn.body, (access, written) => {
+        for (const each of accessorsRun(ctx, access, written, accessors, heldBy)) draw(each, access);
+      });
+    }
   }
 });

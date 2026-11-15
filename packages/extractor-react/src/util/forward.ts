@@ -176,10 +176,17 @@ const callSitesOf = (fn: NamedFunction): CallExpression[] => {
  * function of a class nobody names, nor of a package.
  */
 export const methodIndexed = (ctx: ReactExtractContext, member: TsNode): IndexedFunction | undefined => {
-  if (!Node.isMethodDeclaration(member) && !Node.isPropertyDeclaration(member)) return undefined;
+  if (!Node.isMethodDeclaration(member) && !Node.isPropertyDeclaration(member) && !Node.isGetAccessorDeclaration(member) && !Node.isSetAccessorDeclaration(member)) return undefined;
   const owner = member.getParent();
   const className = Node.isClassDeclaration(owner) ? owner.getName() : undefined;
   if (className === undefined || member.getSourceFile().isInNodeModules() || member.getSourceFile().isDeclarationFile()) return undefined;
+  // A getter runs where its property is read, a setter where it is written (P311).
+  if (Node.isGetAccessorDeclaration(member) || Node.isSetAccessorDeclaration(member)) {
+    const body = member.getBody();
+    if (body === undefined) return undefined;
+    const name = Node.isSetAccessorDeclaration(member) ? `${className}.${member.getName()}=` : `${className}.${member.getName()}`;
+    return ctx.functions.adoptCaller({ name, declaration: member, body, line: startLineOf(member) });
+  }
   if (Node.isMethodDeclaration(member)) {
     const body = member.getBody();
     if (body === undefined) return undefined;

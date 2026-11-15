@@ -165,7 +165,15 @@ TypeScript, JSX or component file, is `browser`: plain browser code, read by the
 browser reader for the requests its scripts send - `fetch` and
 `XMLHttpRequest`'s `open(verb, address)`, with the body its `send` is handed
 after it (P294) - with the scripts of one page sharing
-their globals as the browser runs them (P284). Those sixteen are every type there is. Hono and Telegraf have
+their globals as the browser runs them (P284). Its functions are where a plain
+script keeps them: an object's methods, getters and setters, a prototype's
+members, the top of a wrapper run at once (`(function () { … })()`), and what
+`window.x =`, `module.exports =` and `exports.m =` are given, each called by the
+name it is kept under (P310, P311). A client a page loads by a script tag -
+axios, jQuery's `$.ajax`, `$.get`, `$.post` and `$.getJSON`, superagent, ky, the
+`unfetch` ponyfill - or one a `/* global */` comment or the linter's
+configuration (`globals`, `env: { jquery: true }`) declares, is read as the
+installed client. Those sixteen are every type there is. Hono and Telegraf have
 no type of their own: they are frameworks the server reader finds inside a
 repository whichever server type it is given, so a repository whose only
 framework is Hono is

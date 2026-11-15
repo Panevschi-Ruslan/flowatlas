@@ -61,6 +61,8 @@ export interface InstanceOptions {
   readonly sharedPackages?: readonly string[];
   /** The packages a page of the repository loads by a script tag, whose browser build is a global (P310): asked only where such a global is called. */
   readonly pageLoaded?: () => ReadonlySet<string>;
+  /** The globals a script declares for its linter, in a comment or the linter's configuration (P310, P311): the comment alone where not said. */
+  readonly declared?: (file: SourceFile) => ReadonlySet<string>;
   /** The repository's own source files, where `defaults` assignments are looked for. */
   readonly files: () => readonly SourceFile[];
 }
@@ -105,16 +107,42 @@ const importedFrom = (node: TsNode): string | undefined => {
  * the same instance a built one does. A name declared in the repository is never
  * the module, whatever it is called.
  */
-export const moduleFactory = (node: TsNode, pageLoaded: () => ReadonlySet<string> = () => NOTHING_LOADED): ClientFactory | undefined => {
+export const moduleFactory = (
+  node: TsNode,
+  pageLoaded: () => ReadonlySet<string> = () => NOTHING_LOADED,
+  declared: (file: SourceFile) => ReadonlySet<string> = declaredGlobals,
+  depth = 0,
+): ClientFactory | undefined => {
   const target = unwrap(node);
   if (!Node.isIdentifier(target)) return undefined;
   const from = importedFrom(target);
   if (from !== undefined) return CLIENT_FACTORIES.find((factory) => factory.modules.includes(from));
+  // A wrapper's parameter is what the wrapper is run with (P311): `$` in
+  // `(function ($) { … })(jQuery)`.
+  const handed = depth < 2 ? wrapperArgument(target) : undefined;
+  if (handed !== undefined) return moduleFactory(handed, pageLoaded, declared, depth + 1);
   const name = target.getText();
-  // The global a page's script tag loads, or the script declares (P310).
+  // The global a page's script tag loads, or the script or its linter's configuration declares (P310, P311).
   const loaded = (factory: ClientFactory): boolean =>
-    factory.pageGlobal === name && (factory.modules.some((module) => pageLoaded().has(module)) || declaredGlobals(target.getSourceFile()).has(name));
+    factory.pageGlobals?.includes(name) === true && (factory.modules.some((module) => pageLoaded().has(module)) || declared(target.getSourceFile()).has(name));
   return CLIENT_FACTORIES.find((factory) => (factory.globals?.includes(name) === true || loaded(factory)) && isPlatformProvided(target));
+};
+
+/** What a parameter of a function run at once is handed, where the name is one (P311). */
+const wrapperArgument = (name: TsNode): TsNode | undefined => {
+  const declarations = name.getSymbol()?.getDeclarations() ?? [];
+  const [parameter] = declarations;
+  if (declarations.length !== 1 || parameter === undefined || !Node.isParameterDeclaration(parameter)) return undefined;
+  const fn = parameter.getParent();
+  if (!Node.isFunctionExpression(fn) && !Node.isArrowFunction(fn)) return undefined;
+  let callee: TsNode = fn;
+  let call = fn.getParent();
+  while (call !== undefined && Node.isParenthesizedExpression(call)) {
+    callee = call;
+    call = call.getParent();
+  }
+  if (call === undefined || !Node.isCallExpression(call) || call.getExpression() !== callee) return undefined;
+  return call.getArguments()[fn.getParameters().indexOf(parameter)];
 };
 
 const NOTHING_LOADED: ReadonlySet<string> = new Set();
@@ -319,7 +347,7 @@ const bindingsAt = (call: CallExpression, fn: TsNode, under: Bindings | undefine
 export const clientInstances = (options: InstanceOptions) => {
   const { sharedPackages = [] } = options;
   const byDeclaration = new Map<TsNode, ClientInstance | null>();
-  const factoryOfModule = (node: TsNode): ClientFactory | undefined => moduleFactory(node, options.pageLoaded);
+  const factoryOfModule = (node: TsNode): ClientFactory | undefined => moduleFactory(node, options.pageLoaded, options.declared);
 
   /**
    * `x.defaults.baseURL = ...` and `x.interceptors.request.use(fn)` anywhere in

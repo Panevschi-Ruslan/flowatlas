@@ -2,9 +2,11 @@ import type {
   ArrowFunction,
   FunctionDeclaration,
   FunctionExpression,
+  GetAccessorDeclaration,
   MethodDeclaration,
   Node as TsNode,
   PropertyAssignment,
+  SetAccessorDeclaration,
   SourceFile,
   VariableDeclaration,
 } from 'ts-morph';
@@ -20,14 +22,19 @@ import { lineAndColumnAt, startLineOf } from './line-numbers.js';
  */
 export interface NamedFunction {
   name: string;
-  /** The declaration itself, which is what a set of already-visited ones is keyed on. */
+  /**
+   * The declaration itself, which is what a set of already-visited ones is keyed on.
+   * An accessor is a plain script's getter or setter, read as a function of its own (P311).
+   */
   declaration:
     | FunctionDeclaration
     | VariableDeclaration
     | ArrowFunction
     | FunctionExpression
     | PropertyAssignment
-    | MethodDeclaration;
+    | MethodDeclaration
+    | GetAccessorDeclaration
+    | SetAccessorDeclaration;
   /** The body, for walking the calls inside it. */
   body: TsNode;
   line: number;

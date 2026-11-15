@@ -136,8 +136,15 @@ export class ReactFunctionIndex {
   readonly #members = new Map<TsNode, Map<string, IndexedFunction>>();
   readonly #memberOwners = new Map<string, readonly TsNode[]>();
   readonly #memberDeclarations = new Set<TsNode>();
+  readonly #globals = new Map<string, IndexedFunction>();
+  readonly #globalConstructors = new Map<string, readonly TsNode[]>();
   readonly #repo: string;
   readonly #repoDir: string;
+  /**
+   * Whether this is a plain script's reading, whose members are functions
+   * (P310) and whose exports name the functions they hold (P311).
+   */
+  readsMembers = false;
 
   constructor(options: ReactFunctionIndexOptions) {
     this.#repo = options.repo;
@@ -224,6 +231,7 @@ export class ReactFunctionIndex {
     this.add(indexed);
     this.#memberDeclarations.add(member.fn.declaration);
     for (const node of member.also) if (!this.#byDeclaration.has(node)) this.#byDeclaration.set(node, indexed);
+    for (const name of member.globals) if (!this.#globals.has(name)) this.#globals.set(name, indexed);
     if (member.owners.length === 0) return;
     this.#memberOwners.set(indexed.id, member.owners);
     const name = indexed.name.slice(indexed.name.lastIndexOf('.') + 1);
@@ -232,6 +240,30 @@ export class ReactFunctionIndex {
       if (!members.has(name)) members.set(name, indexed);
       this.#members.set(owner, members);
     }
+  }
+
+  /** A constructor a script hands the page under a name (P311): `window.Store = Store` inside a wrapper. */
+  addGlobalConstructor(name: string, declarations: readonly TsNode[]): void {
+    if (!this.#globalConstructors.has(name)) this.#globalConstructors.set(name, declarations);
+  }
+
+  /**
+   * The member function a script hands the page under a name, which another
+   * script calls by that name with nothing declared (P311): `shop.load` for
+   * `window.shop = { load() {} }`.
+   */
+  global(name: string): IndexedFunction | undefined {
+    return this.#globals.get(name);
+  }
+
+  /** Whether any function or constructor is handed to the page by a name (P311). */
+  get hasGlobals(): boolean {
+    return this.#globals.size > 0 || this.#globalConstructors.size > 0;
+  }
+
+  /** The declarations of a constructor a script hands the page under `name` (P311). */
+  globalConstructor(name: string): readonly TsNode[] {
+    return this.#globalConstructors.get(name) ?? [];
   }
 
   /** Whether any function is a prototype's member, so a call on an instance is worth following to its constructor. */
@@ -369,6 +401,7 @@ export const buildReactFunctionIndex = (
 ): ReactFunctionIndex => {
   const { project, repo, repoDir, reads = () => true, skip = () => false, members = false } = options;
   const index = new ReactFunctionIndex({ repo, repoDir });
+  index.readsMembers = members;
 
   for (const sourceFile of project.getSourceFiles()) {
     if (!isRepoFile(sourceFile) || !reads(sourceFile.getFilePath())) continue;
@@ -389,12 +422,17 @@ export const buildReactFunctionIndex = (
       });
     }
     if (!members) continue;
-    for (const member of scriptMembers(sourceFile)) {
+    const reading = scriptMembers(sourceFile);
+    for (const member of reading.members) {
       const { fn } = member;
       if (skip(fn) || index.get(fn.declaration) !== undefined) continue;
+      // Two wrappers of one script may each keep an `init` (P311): the
+      // second is told apart by the line it starts on.
+      const named = index.byId(makeSymbolId(repo, file, fn.name)) === undefined ? fn : { ...fn, name: `${fn.name}@${fn.line}` };
       // A member is neither a screen nor a hook, whatever it is called.
-      index.addMember(member, { id: makeSymbolId(repo, file, fn.name), name: fn.name, role: 'plain', file, line: fn.line, fn });
+      index.addMember({ ...member, fn: named }, { id: makeSymbolId(repo, file, named.name), name: named.name, role: 'plain', file, line: named.line, fn: named });
     }
+    for (const [name, declarations] of reading.constructors) index.addGlobalConstructor(name, declarations);
   }
   return index;
 };

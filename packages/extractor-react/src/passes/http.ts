@@ -52,7 +52,7 @@ import type { IndexedFunction } from '../index-functions.js';
 import { clientInstances, type ClientInstance } from '../util/client-instance.js';
 import { classMethods, enclosingIndexed, requestsOf, type ReadRequest, type RequestSite } from '../util/forward.js';
 import { localClientOf, type LocalClientReading } from '../util/local-client.js';
-import { pageLoadedPackages } from '../util/page-globals.js';
+import { linterGlobals, pageLoadedPackages } from '../util/page-globals.js';
 import { basedBy, rewriteFor, unreadOpening } from '../util/request-rewrite.js';
 import { receiverValues } from '../util/receiver-values.js';
 import { sentThrough } from '../util/sent-later.js';
@@ -113,6 +113,44 @@ const addressWrittenIn = (call: CallExpression, shape: CallShape): TsNode | unde
   return Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
 };
 
+/**
+ * The option a call writes its verb under (P311): the first of its shape's
+ * that its options write, the first of them where none is written, the
+ * platform's `method` where the shape names none.
+ */
+const verbKeyOf = (call: CallExpression, shape: CallShape): string => {
+  const keys = shape.verbKeys;
+  if (keys === undefined || keys.length === 0) return PLATFORM_FETCH.verbKey;
+  const object = shape.optionsAt === undefined ? undefined : objectAt(call, shape.optionsAt);
+  return keys.find((key) => object?.getProperty(key) !== undefined) ?? keys[0] ?? PLATFORM_FETCH.verbKey;
+};
+
+/** A call's shape, or the shape of the same call handed one settings object in place of an address (P311). */
+const settledShape = (call: CallExpression, shape: CallShape): CallShape => {
+  const [first] = call.getArguments();
+  return shape.settings !== undefined && first !== undefined && Node.isObjectLiteralExpression(first) ? shape.settings : shape;
+};
+
+/** How many calls of a chain are walked along for the one that hands the body. */
+const CHAIN_LIMIT = 8;
+
+/**
+ * The first argument of `.method(...)` called further along the chain a call
+ * starts (P311): `send` of `request.post(url).set(headers).send(order)`.
+ */
+const chainedArgument = (call: CallExpression, method: string): TsNode | undefined => {
+  let at: TsNode = call;
+  for (let step = 0; step < CHAIN_LIMIT; step += 1) {
+    const access = at.getParent();
+    if (access === undefined || !Node.isPropertyAccessExpression(access) || access.getExpression() !== at) return undefined;
+    const next = access.getParent();
+    if (next === undefined || !Node.isCallExpression(next) || next.getExpression() !== access) return undefined;
+    if (access.getName() === method) return next.getArguments()[0];
+    at = next;
+  }
+  return undefined;
+};
+
 /** Every verb an instance of an installed client answers to as a method (P239). */
 const INSTANCE_VERBS: ReadonlySet<string> = new Set(CLIENT_FACTORIES.flatMap((factory) => Object.keys(factory.verbs)));
 
@@ -152,7 +190,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       const value = written === undefined ? undefined : evaluateExpression(written);
       return value?.resolved === true && typeof value.value === 'string' ? value.value.toUpperCase() : null;
     }
-    const read = requestVerbOf(call, { ...PLATFORM_FETCH, optionsAt: shape.optionsAt ?? PLATFORM_FETCH.optionsAt });
+    const read = requestVerbOf(call, { ...PLATFORM_FETCH, optionsAt: shape.optionsAt ?? PLATFORM_FETCH.optionsAt, verbKey: verbKeyOf(call, shape) });
     if (read !== null || chain.length === 0) return read;
     // A verb the wrapper is handed, read at the caller its address was read
     // at, along the same calls (P91); or a member of the options it is
@@ -167,7 +205,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
   /** Where a call writes its verb, when it writes one in its options. */
   const verbWrittenIn = (call: CallExpression, shape: CallShape): TsNode | undefined => {
     if (shape.method !== null || shape.optionsAt === undefined) return undefined;
-    return objectAt(call, shape.optionsAt)?.getProperty('method');
+    return objectAt(call, shape.optionsAt)?.getProperty(verbKeyOf(call, shape));
   };
 
   const typeOfResponse = (call: CallExpression): string | null => {
@@ -221,6 +259,13 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     // Handed to the receiver afterwards, `xhr.send(JSON.stringify(order))` (P294).
     if (shape.sentBy !== undefined) {
       const sent = sentBodyOf(call, shape.sentBy);
+      if (sent === undefined) return { type: null };
+      const sentKeys = writtenKeysOf([sent]);
+      return { type: ctx.types.collectType(sent.getType(), sent), ...(sentKeys === undefined ? {} : { keys: sentKeys }) };
+    }
+    // Handed further along the chain, `request.post(url).send(order)` (P311).
+    if (shape.chainedBody !== undefined) {
+      const sent = chainedArgument(call, shape.chainedBody);
       if (sent === undefined) return { type: null };
       const sentKeys = writtenKeysOf([sent]);
       return { type: ctx.types.collectType(sent.getType(), sent), ...(sentKeys === undefined ? {} : { keys: sentKeys }) };
@@ -360,9 +405,11 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     sharedPackages: ctx.config.sharedPackages,
     // A client a page loads by a script tag is the global it leaves (P310).
     pageLoaded: () => {
-      loaded ??= pageLoadedPackages(ctx.project.getFileSystem(), ctx.repoDir, CLIENT_FACTORIES.flatMap((factory) => (factory.pageGlobal === undefined ? [] : factory.modules)));
+      loaded ??= pageLoadedPackages(ctx.project.getFileSystem(), ctx.repoDir, CLIENT_FACTORIES.flatMap((factory) => (factory.pageGlobals === undefined ? [] : factory.modules)));
       return loaded;
     },
+    // A global the linter's configuration declares, as the script's own comment does (P311).
+    declared: linterGlobals(ctx.project.getFileSystem(), ctx.repoDir),
     files: () =>
       ctx.project.getSourceFiles().filter((file) => {
         const path = toPosixPath(file.getFilePath());
@@ -719,7 +766,11 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       const held = heldCallAt(node, receiver, method);
       if (held !== undefined) found.push(held);
     });
-    return found;
+    // `$.ajax({ url, type })` is the settings spelling of `$.ajax(url, { type })` (P311).
+    return found.map((each) => {
+      const shape = settledShape(each.call, each.shape);
+      return shape === each.shape ? each : { ...each, shape };
+    });
   };
 
   /** The clients whose values are known by their type and answer to a method. */

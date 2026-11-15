@@ -110,6 +110,24 @@ export interface CallShape {
    * The options are then the object at `optionsAt`, and `urlAt` is not read.
    */
   readonly urlKey?: string;
+  /**
+   * The options the verb may be written under, the first one written winning,
+   * where it is not the platform's `method` (P311): jQuery's settings take
+   * `method` or the older `type`.
+   */
+  readonly verbKeys?: readonly string[];
+  /**
+   * The shape of the same call handed one settings object in place of an
+   * address (P311): `$.ajax({ url, type, data })` beside `$.ajax(url, {
+   * type })`. Chosen where the first argument is an object written in place.
+   */
+  readonly settings?: CallShape;
+  /**
+   * The method called on the call's own result that hands the body (P311):
+   * superagent's `request.post(url).send(order)`, through any other calls of
+   * the chain (`.set(...)`, `.query(...)`).
+   */
+  readonly chainedBody?: string;
 }
 
 /**
@@ -316,6 +334,61 @@ export const XHR: RequestClient = {
   },
 };
 
+/**
+ * jQuery's requests (P311), on the module and never on a selection:
+ * `$.ajax(url, settings)` or `$.ajax(settings)` with the verb under `method` or
+ * `type` (`GET` where neither is written) and the body under `data`;
+ * `$.get(url, data)` and `$.getJSON(url, data)`, whose data is the query;
+ * `$.post(url, data)`, whose data is the body. Each is handed one settings
+ * object as `$.ajax` is, its verb fixed by its name. Zepto writes the same.
+ * Verbs are matched in lower case, as the request pass reads them.
+ */
+const JQUERY_SETTINGS: CallShape = { method: null, verbKeys: ['method', 'type'], urlAt: 0, urlKey: 'url', optionsAt: 0, bodyKeys: ['data'] };
+
+const JQUERY_VERBS: Readonly<Record<string, CallShape>> = {
+  ajax: { method: null, verbKeys: ['method', 'type'], urlAt: 0, optionsAt: 1, bodyKeys: ['data'], settings: JQUERY_SETTINGS },
+  get: { method: 'GET', urlAt: 0, settings: { ...JQUERY_SETTINGS, method: 'GET' } },
+  getjson: { method: 'GET', urlAt: 0, settings: { ...JQUERY_SETTINGS, method: 'GET' } },
+  post: { method: 'POST', urlAt: 0, bodyAt: 1, settings: { ...JQUERY_SETTINGS, method: 'POST' } },
+};
+
+export const JQUERY: RequestClient = {
+  name: 'jquery',
+  package: 'jquery',
+  packages: ['jquery', 'zepto'],
+};
+
+/**
+ * superagent (P311): the verb in the name, `request.get(url)`, `request.del(url)`,
+ * and the body handed to `.send(body)` on what the call answers, further along
+ * the chain.
+ */
+const SUPERAGENT_VERBS: Readonly<Record<string, CallShape>> = Object.fromEntries(
+  [['get', 'GET'], ['head', 'HEAD'], ['options', 'OPTIONS'], ['delete', 'DELETE'], ['del', 'DELETE'], ['post', 'POST'], ['put', 'PUT'], ['patch', 'PATCH']].map(([verb, method]) => [
+    verb,
+    { method, urlAt: 0, ...(['POST', 'PUT', 'PATCH', 'DELETE'].includes(method as string) ? { chainedBody: 'send' } : {}) } as CallShape,
+  ]),
+);
+
+export const SUPERAGENT: RequestClient = {
+  name: 'superagent',
+  package: 'superagent',
+  packages: ['superagent'],
+};
+
+/**
+ * A ponyfill of the platform's client that leaves a global of its own name
+ * rather than `fetch` (P311): `unfetch(url, init)`, read as `fetch` is. A
+ * polyfill that installs `fetch` itself needs nothing: `fetch` is the
+ * platform's wherever nothing in the repository declares it.
+ */
+export const UNFETCH: RequestClient = {
+  name: 'unfetch',
+  package: 'unfetch',
+  packages: ['unfetch', 'isomorphic-unfetch'],
+  callee: { names: [], method: null, urlAt: PLATFORM_FETCH.urlAt, optionsAt: PLATFORM_FETCH.optionsAt, bodyAt: PLATFORM_FETCH.optionsAt },
+};
+
 /** Every client this extractor reads without being told anything. */
 export const REQUEST_CLIENTS: readonly RequestClient[] = [FETCH, AXIOS, OFETCH, KY, XHR];
 
@@ -335,7 +408,7 @@ export const REQUEST_CLIENTS: readonly RequestClient[] = [FETCH, AXIOS, OFETCH, 
  *   is told apart by how it was made, the import naming its package, so it is
  *   read in a clone with nothing installed, where its type is unknown.
  * - `globals`: names the framework provides without an import (Nuxt's `$fetch`).
- * - `pageGlobal`: the name the client's browser build leaves on `window`, which
+ * - `pageGlobals`: the names the client's browser build leaves on `window`, which
  *   is the client where a page of the repository loads that build by a script
  *   tag, or the script declares it for its linter (P310).
  * - `methods`: the calls that make an instance, on the module or on an instance,
@@ -354,7 +427,7 @@ export interface ClientFactory {
   readonly client: RequestClient;
   readonly modules: readonly string[];
   readonly globals?: readonly string[];
-  readonly pageGlobal?: string;
+  readonly pageGlobals?: readonly string[];
   readonly methods: readonly string[];
   readonly baseKey: string;
   readonly called?: CallShape;
@@ -412,7 +485,7 @@ export const CLIENT_FACTORIES: readonly ClientFactory[] = [
   {
     client: AXIOS,
     modules: ['axios'],
-    pageGlobal: 'axios',
+    pageGlobals: ['axios'],
     methods: ['create'],
     baseKey: 'baseURL',
     called: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, bodyKeys: ['data'], queryKeys: ['params'] },
@@ -434,11 +507,38 @@ export const CLIENT_FACTORIES: readonly ClientFactory[] = [
   {
     client: KY,
     modules: ['ky'],
+    pageGlobals: ['ky'],
     methods: ['create', 'extend'],
     baseKey: 'prefixUrl',
     called: KY.callee,
     verbs: KY_VERBS,
     rewrites: { optionAt: ['hooks', 'beforeRequest'], handed: 'request', addressKey: 'url', inherited: 'merged' },
+  },
+  // The module alone makes requests; nothing makes an instance of it (P311).
+  {
+    client: JQUERY,
+    modules: ['jquery', 'zepto'],
+    pageGlobals: ['$', 'jQuery', 'Zepto'],
+    methods: [],
+    baseKey: 'url',
+    verbs: JQUERY_VERBS,
+  },
+  {
+    client: SUPERAGENT,
+    modules: ['superagent'],
+    pageGlobals: ['superagent'],
+    methods: [],
+    baseKey: 'url',
+    verbs: SUPERAGENT_VERBS,
+  },
+  {
+    client: UNFETCH,
+    modules: ['unfetch', 'isomorphic-unfetch'],
+    pageGlobals: ['unfetch'],
+    methods: [],
+    baseKey: 'url',
+    called: UNFETCH.callee,
+    verbs: {},
   },
 ];
 

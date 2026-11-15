@@ -287,6 +287,181 @@ describe('plain browser code (P284)', () => {
     expect(urls(read({ '/js/own.js': own }, { '/index.html': '<script src="vendor/axios.js"></script>' }))).toEqual([]);
   });
 
+  /** Each request as `<function it is drawn from> <verb> <path>`, and each call between functions as `<from> -> <to>`. */
+  const drawn = (graph: RepoGraph): { found: string[]; calls: string[] } => {
+    const label = (id: string): string | undefined => graph.nodes.find((node) => node.id === id)?.label;
+    const isFunction = (id: string): boolean => graph.nodes.find((node) => node.id === id)?.type === 'function';
+    return {
+      found: requests(graph)
+        .map((node) => `${label(graph.edges.find((edge) => edge.to === node.id)?.from ?? '')} ${node.meta?.['method']} ${node.meta?.['path']}`)
+        .sort(),
+      calls: graph.edges
+        .filter((edge) => edge.type === 'calls' && isFunction(edge.to))
+        .map((edge) => `${label(edge.from)} -> ${label(edge.to)}`)
+        .sort(),
+    };
+  };
+
+  it('reads the functions and members a wrapper run at once keeps, and joins calls through what it hands the page or returns (P311)', () => {
+    const graph = read({
+      '/js/shop.js': [
+        '(function () {',
+        "  const api = { load() { return fetch('https://api.example.test/items'); } };",
+        '  function Store() {}',
+        "  Store.prototype.save = function (item) { return fetch('https://api.example.test/items', { method: 'POST', body: JSON.stringify(item) }); };",
+        "  function init() { return fetch('https://api.example.test/init'); }",
+        '  window.api = api;',
+        '  window.Store = Store;',
+        '})();',
+        "!function () { function init() { return fetch('https://api.example.test/other'); } }();",
+        "(() => { const views = { recent() { return fetch('https://api.example.test/views'); } }; window.views = views; })();",
+        'var Cart = (function () {',
+        "  function add(item) { return fetch('https://api.example.test/cart', { method: 'POST', body: JSON.stringify(item) }); }",
+        "  return { add: add, clear() { return fetch('https://api.example.test/cart', { method: 'DELETE' }); } };",
+        '})();',
+      ].join('\n'),
+      '/js/page.js': 'function start() {\n  api.load();\n  window.views.recent();\n  const store = new Store();\n  store.save({});\n  Cart.add({});\n  Cart.clear();\n}\n',
+    });
+    const { found, calls } = drawn(graph);
+    expect(found).toEqual([
+      'Cart.clear DELETE /cart',
+      'Store.save POST /items',
+      'add POST /cart',
+      'api.load GET /items',
+      'init GET /init',
+      'init@9 GET /other',
+      'views.recent GET /views',
+    ]);
+    expect(calls).toEqual(['start -> Cart.clear', 'start -> Store.save', 'start -> add', 'start -> api.load', 'start -> views.recent']);
+  });
+
+  it("reads what a module's exports and the page are given as members, and joins require and the page's names to them (P311)", () => {
+    const graph = read({
+      '/js/api.js': [
+        "exports.load = function () { return fetch('https://api.example.test/items'); };",
+        "module.exports.save = function (item) { return fetch('https://api.example.test/items', { method: 'POST', body: JSON.stringify(item) }); };",
+      ].join('\n'),
+      '/js/lib.js': [
+        "function list() { return fetch('https://api.example.test/list'); }",
+        "module.exports = { remove(id) { return fetch(`https://api.example.test/items/${id}`, { method: 'DELETE' }); }, list };",
+      ].join('\n'),
+      '/js/globals.js': [
+        "window.shop = { items() { return fetch('https://api.example.test/shop'); } };",
+        "window.ping = function () { return fetch('https://api.example.test/ping'); };",
+        "globalThis.stats = { load: () => fetch('https://api.example.test/stats') };",
+      ].join('\n'),
+      '/js/page.js': [
+        "const api = require('./api');",
+        'function start() {',
+        '  api.load();',
+        '  api.save({});',
+        "  require('./lib').remove(1);",
+        "  require('./lib').list();",
+        '  shop.items();',
+        '  ping();',
+        '  window.stats.load();',
+        '}',
+      ].join('\n'),
+    });
+    const { found, calls } = drawn(graph);
+    expect(found).toEqual([
+      'list GET /list',
+      'module.load GET /items',
+      'module.remove DELETE /items/:param',
+      'module.save POST /items',
+      'ping GET /ping',
+      'shop.items GET /shop',
+      'stats.load GET /stats',
+    ]);
+    expect(calls).toEqual([
+      'start -> list',
+      'start -> module.load',
+      'start -> module.remove',
+      'start -> module.save',
+      'start -> ping',
+      'start -> shop.items',
+      'start -> stats.load',
+    ]);
+  });
+
+  it("reads a getter and a setter as functions run where the property is read or written, an object's and a class's (P311)", () => {
+    const graph = read({
+      '/js/api.js': [
+        'const api = {',
+        "  get items() { return fetch('https://api.example.test/items'); },",
+        "  set filter(value) { fetch('https://api.example.test/filter', { method: 'PUT', body: JSON.stringify(value) }); },",
+        '};',
+        "class Store { get orders() { return fetch('https://api.example.test/orders'); } }",
+        "window.shop = { get stock() { return fetch('https://api.example.test/stock'); } };",
+      ].join('\n'),
+      '/js/page.js': "function start() {\n  const list = api.items;\n  api.filter = 'new';\n  const store = new Store();\n  const stock = shop.stock;\n  return [list, stock, store.orders];\n}\n",
+    });
+    const { found, calls } = drawn(graph);
+    expect(found).toEqual(['Store.orders GET /orders', 'api.filter= PUT /filter', 'api.items GET /items', 'shop.stock GET /stock']);
+    expect(calls).toEqual(['start -> Store.orders', 'start -> api.filter=', 'start -> api.items', 'start -> shop.stock']);
+  });
+
+  it('reads jQuery, superagent, ky and a fetch ponyfill as the installed client where a page loads them, as axios is (P311)', () => {
+    const urls = (graph: RepoGraph): string[] => requests(graph).map((node) => `${node.meta?.['method']} ${node.meta?.['url']}`).sort();
+    const jquery = [
+      "function load() { return $.ajax({ url: 'https://api.example.test/items', type: 'POST', data: { item: 1 } }); }",
+      "function more() { return $.get('https://api.example.test/more'); }",
+      "function save() { return jQuery.post('https://api.example.test/save', { item: 2 }); }",
+      "function json() { return $.getJSON('https://api.example.test/json'); }",
+      "function put() { return $.ajax('https://api.example.test/put', { method: 'PUT' }); }",
+      "(function ($) { window.wrapped = function () { return $.ajax({ url: 'https://api.example.test/wrapped' }); }; })(jQuery);",
+    ].join('\n');
+    const all = [
+      'GET https://api.example.test/json',
+      'GET https://api.example.test/more',
+      'GET https://api.example.test/wrapped',
+      'POST https://api.example.test/items',
+      'POST https://api.example.test/save',
+      'PUT https://api.example.test/put',
+    ];
+    expect(urls(read({ '/js/shop.js': jquery }, { '/index.html': '<script src="https://code.example.test/jquery-3.7.1.min.js"></script>' }))).toEqual(all);
+    expect(urls(read({ '/js/shop.js': `/* global $, jQuery */\n${jquery}` }))).toEqual(all);
+    // A slim build leaves the requests out; nothing loaded, nothing read.
+    expect(urls(read({ '/js/shop.js': jquery }, { '/index.html': '<script src="https://code.example.test/jquery-3.7.1.slim.min.js"></script>' }))).toEqual([]);
+    expect(urls(read({ '/js/shop.js': jquery }))).toEqual([]);
+    // The body is what the settings or `.send` hand over.
+    const posted = read({ '/js/shop.js': jquery }, { '/index.html': '<script src="vendor/jquery.min.js"></script>' });
+    expect(requests(posted).find((node) => node.meta?.['path'] === '/items')?.meta?.['bodyKeys']).toEqual(['item']);
+    const agent = "function order() { return superagent.post('https://api.example.test/orders').set('Accept', 'application/json').send({ id: 1 }); }\nfunction gone() { return superagent.del('https://api.example.test/orders/1'); }\n";
+    const sent = read({ '/js/order.js': agent }, { '/index.html': '<script src="https://cdn.example.test/npm/superagent@8.1.2/dist/superagent.min.js"></script>' });
+    expect(urls(sent)).toEqual(['DELETE https://api.example.test/orders/1', 'POST https://api.example.test/orders']);
+    expect(requests(sent).find((node) => node.meta?.['method'] === 'POST')?.meta?.['bodyKeys']).toEqual(['id']);
+    const kyScript = "function items() { return ky.get('https://api.example.test/items'); }\n";
+    expect(urls(read({ '/js/items.js': kyScript }, { '/index.html': '<script src="https://cdn.example.test/npm/ky@0.33.3/umd.js"></script>' }))).toEqual(['GET https://api.example.test/items']);
+    expect(urls(read({ '/js/items.js': kyScript }))).toEqual([]);
+    const ponyfill = "function items() { return unfetch('https://api.example.test/items', { method: 'POST' }); }\n";
+    expect(urls(read({ '/js/items.js': ponyfill }, { '/index.html': '<script src="https://cdn.example.test/npm/unfetch@4.2.0/dist/unfetch.umd.js"></script>' }))).toEqual(['POST https://api.example.test/items']);
+    expect(urls(read({ '/js/items.js': ponyfill }))).toEqual([]);
+    // A polyfill installs `fetch` itself, which is read wherever nothing declares it.
+    const polyfilled = "function items() { return fetch('https://api.example.test/items'); }\n";
+    expect(urls(read({ '/js/items.js': polyfilled }, { '/index.html': '<script src="vendor/whatwg-fetch/fetch.umd.js"></script>' }))).toEqual(['GET https://api.example.test/items']);
+  });
+
+  it("counts the globals the linter's configuration declares as the script's own comment (P311)", () => {
+    const script = "function items() { return axios.get('https://api.example.test/items'); }\n";
+    const urls = (graph: RepoGraph): unknown[] => requests(graph).map((node) => node.meta?.['url']);
+    const items = ['https://api.example.test/items'];
+    expect(urls(read({ '/js/shop.js': script }, { '/.eslintrc.json': '{ "env": { "browser": true }, "globals": { "axios": "readonly" } }' }))).toEqual(items);
+    expect(urls(read({ '/js/shop.js': script }, { '/js/.eslintrc': '// the scripts\n{ globals: { axios: false } }' }))).toEqual(items);
+    expect(urls(read({ '/js/shop.js': script }, { '/.eslintrc.yml': 'root: true\nglobals:\n  axios: readonly\n' }))).toEqual(items);
+    expect(urls(read({ '/js/shop.js': script }, { '/package.json': '{ "name": "shop", "eslintConfig": { "globals": { "axios": "writable" } } }' }))).toEqual(items);
+    const flat = "import globals from 'globals';\nexport default [{ files: ['js/**'], languageOptions: { globals: { ...globals.browser, axios: 'readonly' } } }];\n";
+    expect(urls(read({ '/js/shop.js': script }, { '/eslint.config.js': flat }))).toEqual(items);
+    // An environment declares its globals: jQuery's `$`.
+    const jquery = "function items() { return $.get('https://api.example.test/items'); }\n";
+    expect(urls(read({ '/js/shop.js': jquery }, { '/.eslintrc.yaml': 'env:\n  browser: true\n  jquery: true\n' }))).toEqual(items);
+    expect(urls(read({ '/js/shop.js': jquery }, { '/eslint.config.mjs': 'export default [{ languageOptions: { globals: { ...globals.jquery } } }];\n' }))).toEqual(items);
+    // Turned off, in another directory than the script's, or a manifest's other keys: no declaration.
+    expect(urls(read({ '/js/shop.js': script }, { '/.eslintrc.json': '{ "globals": { "axios": "off" } }' }))).toEqual([]);
+    expect(urls(read({ '/js/shop.js': script }, { '/tools/.eslintrc.json': '{ "globals": { "axios": "readonly" } }' }))).toEqual([]);
+    expect(urls(read({ '/js/shop.js': script }, { '/package.json': '{ "jest": { "globals": { "axios": true } } }' }))).toEqual([]);
+  });
+
   it('leaves a verb it cannot read as unread', () => {
     const graph = read({ '/js/any.js': "function send(verb) {\n  const request = new XMLHttpRequest();\n  request.open(verb, 'https://api.example.test/orders');\n}\n" });
     expect(requests(graph).map((node) => node.meta?.['method'])).toEqual([null]);
