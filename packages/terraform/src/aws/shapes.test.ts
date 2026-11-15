@@ -234,4 +234,35 @@ describe('where an API is served by its own address (P294)', () => {
     const domainOnly = readFiles({ 'main.tf': rest('  disable_execute_api_endpoint = true\n') });
     expect(servedOf(domainOnly)).toEqual([['shop', [{ host: 'api.shop.example', base: [], api: 'shop' }]]]);
   });
+
+  it('opens a stage the workspace names with the default workspace, and with each workspace a map it is looked up in is written for (P304)', () => {
+    const deployment = readFiles({
+      'main.tf': [
+        'provider "aws" {\n  region = "eu-west-1"\n}',
+        'variable "stage_names" {\n  default = {\n    default = "dev"\n    production = "live"\n  }\n}',
+        'locals {\n  env = {\n    default = { stage = "sandbox" }\n    staging = { stage = "preview" }\n  }\n  stage = local.env[terraform.workspace].stage\n}',
+        http('plain'),
+        route('plain'),
+        stage('plain', 'plain_ws', 'terraform.workspace'),
+        http('looked'),
+        route('looked'),
+        stage('looked', 'looked_ws', 'lookup(var.stage_names, terraform.workspace)'),
+        http('keyed'),
+        route('keyed'),
+        stage('keyed', 'keyed_ws', 'local.stage'),
+        'module "handed" {\n  source = "./api"\n  stage = "${terraform.workspace}-v2"\n}',
+      ].join('\n'),
+      'api/main.tf': ['variable "stage" {}', http('child'), route('child'), stage('child', 's', 'var.stage')].join('\n'),
+    });
+    const at = (api: string, ...stages: string[]): unknown[] => [
+      api,
+      stages.map((each) => ({ host: '*.execute-api.eu-west-1.amazonaws.com', base: ['*'], api, chosenDefault: each })),
+    ];
+    expect(servedOf(deployment)).toEqual([
+      at('plain', 'default'),
+      at('looked', 'dev', 'live'),
+      at('keyed', 'preview', 'sandbox'),
+      at('child', 'default-v2'),
+    ]);
+  });
 });

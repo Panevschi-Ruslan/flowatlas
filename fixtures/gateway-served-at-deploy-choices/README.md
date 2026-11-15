@@ -19,7 +19,7 @@ and the plain page that calls each by the address it is served at (P298):
 |---|---|
 | ``fetch(`${ORDERS_DOMAIN}/submit`)``, `https://api.shop.example/orders` | `POST /orders/submit` of `orders`, served at the domain with the base path in front of its routes |
 | ``fetch(`${ORDERS_API}/submit`)``, the API's own address in `eu-west-2` at `staging` | the same route: the API's own address serves it without the base path (`under: /orders`), at any stage `-var` names, `staging` where none is |
-| ``fetch(`${PAYMENTS_API}/payments`)`` | `POST /payments` of `orders`, at whatever stage the workspace names |
+| ``fetch(`${PAYMENTS_API}/payments`)`` | `POST /payments` of `orders`, at whatever stage the workspace names, `default` where none is selected (P304) |
 | ``fetch(`${SHIPPING_API}/rates`)`` | `GET /rates` of `shipping`, in any region `--region` names, `eu-central-1` where none is |
 | ``fetch(`${CATALOG_API}/products`)`` | `GET /products` of `catalog`, at any stage and in any region `-c` names, `beta` and `eu-west-1` where none is |
 | ``fetch(`${REVIEWS_API}/reviews`)`` | `GET /reviews` of `reviews`, at any stage the parent's deployment is handed, `qa` where none is |

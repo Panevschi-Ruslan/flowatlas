@@ -125,6 +125,11 @@ const holdsValue = (node: TsNode): boolean => {
     }
     if (Node.isVariableDeclaration(parent)) return parent.getInitializer() === at;
     if (Node.isPropertyAssignment(parent)) return parent.getInitializer() === at;
+    // A field's initializer, a parameter's default, and an argument handed
+    // to a call or a construction: held by the field or the parameter, and
+    // `#settled` makes it plain for a call that is not the app's own (P304).
+    if (Node.isPropertyDeclaration(parent) || Node.isParameterDeclaration(parent) || Node.isBindingElement(parent)) return parent.getInitializer() === at;
+    if (Node.isCallExpression(parent) || Node.isNewExpression(parent)) return parent.getArguments().includes(at);
     if (Node.isShorthandPropertyAssignment(parent) || Node.isReturnStatement(parent)) return true;
     if (Node.isArrowFunction(parent)) return parent.getBody() === at;
     if (Node.isBinaryExpression(parent)) {
@@ -281,9 +286,10 @@ export class Interpreter {
     if (Node.isObjectBindingPattern(name)) {
       for (const element of name.getElements()) {
         const key = element.getPropertyNameNode()?.getText() ?? element.getName();
-        let member = value instanceof ObjectValue ? value.get(key) : value instanceof Unread ? value : new Unread(`${key} of a value that is not an object`, 'not-an-object');
+        // A context value a record holds is still one once taken out of it (P304).
+        let member = value instanceof ObjectValue ? chosenEntry(value, key, value.get(key)) : value instanceof Unread ? value : new Unread(`${key} of a value that is not an object`, 'not-an-object');
         const fallback = element.getInitializer();
-        if (member === undefined && fallback !== undefined) member = this.value(fallback, scope, frame);
+        if (fallback !== undefined) member = this.#orDefault(member, fallback, scope, frame);
         this.#bind(element.getNameNode(), member, scope, frame);
       }
       return;
@@ -293,6 +299,23 @@ export class Interpreter {
         if (Node.isBindingElement(element)) this.#bind(element.getNameNode(), Array.isArray(value) ? value[index] : value instanceof Unread ? value : undefined, scope, frame);
       });
     }
+  }
+
+  /**
+   * A value, or the default written for it where it is nothing - a context
+   * value nothing gives taking the default and staying one `-c` may set (P304).
+   */
+  #orDefault(value: Value, fallback: TsNode, scope: Scope, frame: Frame): Value {
+    if (value instanceof Chosen && value.value === undefined) {
+      const written = settle(this.value(fallback, scope, frame));
+      return typeof written === 'string' || typeof written === 'number' || written === undefined ? new Chosen(value.key, written) : written;
+    }
+    return value === undefined ? this.value(fallback, scope, frame) : value;
+  }
+
+  /** What the arguments of a call are to anything but a function of the app's own: plain values (P304). */
+  #settled(args: readonly Value[]): Value[] {
+    return args.map(settle);
   }
 
   // ---------------------------------------------------------- expressions
@@ -415,7 +438,8 @@ export class Interpreter {
       if (Node.isIdentifier(left)) scope.assign(left.getText(), value);
       else if (Node.isPropertyAccessExpression(left)) {
         const owner = this.value(left.getExpression(), scope, frame);
-        if (owner instanceof Construct) owner.fields.set(left.getName(), settle(value));
+        // A field keeps a context value as one, which reading it elsewhere settles where it is used (P304).
+        if (owner instanceof Construct) owner.fields.set(left.getName(), value);
         else if (owner instanceof ObjectValue) owner.put(left.getName(), value);
       }
       return value;
@@ -568,7 +592,7 @@ export class Interpreter {
       const receiverNode = callee.getExpression();
       const global = receiverNode.getText();
       if (global === 'JSON' && name === 'stringify') {
-        const [value] = this.#args(node, scope, frame);
+        const [value] = this.#settled(this.#args(node, scope, frame));
         const json = toJson(value as Value);
         return json === undefined ? new Built('json', [value as Value], this.site(node)) : JSON.stringify(json);
       }
@@ -590,12 +614,14 @@ export class Interpreter {
     const target = this.value(callee, scope, frame);
     const args = this.#args(node, scope, frame);
     if (target instanceof FunctionValue) return this.callFunction(target, args, frame.self, frame, node);
-    if (target instanceof CdkRef && target.module === 'path') return pathCall(target.path[target.path.length - 1], args);
+    if (target instanceof CdkRef && target.module === 'path') return pathCall(target.path[target.path.length - 1], this.#settled(args));
     return target instanceof Unread ? target : new Unread(`${shorten(node.getText())} is not a function this reads`, 'not-read');
   }
 
-  #method(receiver: Value, name: string, args: Value[], node: TsNode, frame: Frame): Value {
+  #method(receiver: Value, name: string, held: Value[], node: TsNode, frame: Frame): Value {
     const site = this.#placed(node, frame);
+    // A function of the app's own is handed its arguments as they are held; anything else, plain (P304).
+    const args = this.#settled(held);
     if (receiver instanceof CdkRef) {
       if (receiver.module === 'path') return pathCall(name, args);
       const imported = importedConstruct(receiver, name, args, site, frame, this.constructs);
@@ -622,10 +648,10 @@ export class Interpreter {
     if (receiver instanceof Construct) {
       if (receiver.type.startsWith('app:')) {
         const method = this.#methodOf(receiver, name);
-        if (method !== undefined) return this.callFunction(method, args, receiver, frame, node);
+        if (method !== undefined) return this.callFunction(method, held, receiver, frame, node);
         if (name === 'exportValue') return this.#exportValue(receiver, args, site, frame);
         const field = receiver.fields.get(name);
-        if (field instanceof FunctionValue) return this.callFunction(field, args, receiver, frame, node);
+        if (field instanceof FunctionValue) return this.callFunction(field, held, receiver, frame, node);
         return new Unread(`${name} of ${receiver.path} is not read`, 'not-read');
       }
       receiver.add(name, args, site, frame.conditional);
@@ -646,7 +672,7 @@ export class Interpreter {
       return receiver;
     }
     if (receiver instanceof Built) return isChainable(receiver) ? chainMethod(receiver, name, args, site) : new Unread(`${name} of ${receiver.what} is not read`, 'not-read');
-    if (receiver instanceof FunctionValue && (name === 'call' || name === 'apply')) return this.callFunction(receiver, name === 'call' ? args.slice(1) : [], frame.self, frame, node);
+    if (receiver instanceof FunctionValue && (name === 'call' || name === 'apply')) return this.callFunction(receiver, name === 'call' ? held.slice(1) : [], frame.self, frame, node);
     if (Array.isArray(receiver)) return this.#arrayMethod(receiver, name, args, frame, node);
     if (typeof receiver === 'string') return stringMethod(receiver, name, args);
     if (receiver instanceof Unread) return receiver;
@@ -725,7 +751,7 @@ export class Interpreter {
     node.getParameters().forEach((parameter, index) => {
       let value: Value = parameter.isRestParameter() ? args.slice(index) : args[index];
       const fallback = parameter.getInitializer();
-      if (value === undefined && fallback !== undefined) value = this.value(fallback, scope, inner);
+      if (fallback !== undefined) value = this.#orDefault(value, fallback, scope, inner);
       this.#bind(parameter.getNameNode(), value, scope, inner);
       // A parameter property is a field of the construct too.
       if (Node.isConstructorDeclaration(node) && parameter.getScope() !== undefined && self !== undefined) self.fields.set(parameter.getName(), value);
@@ -763,7 +789,10 @@ export class Interpreter {
 
   #new(node: TsNode & { getExpression(): TsNode; getArguments(): TsNode[] }, scope: Scope, frame: Frame): Value {
     const target = this.value(node.getExpression(), scope, frame);
-    const args = this.#args(node, scope, frame);
+    const held = this.#args(node, scope, frame);
+    // A class of the app's own is handed its arguments as they are held; anything else, plain (P304).
+    if (target instanceof ClassValue) return this.#instantiate(target, held, node, frame);
+    const args = this.#settled(held);
     const site = this.#placed(node, frame);
     if (target instanceof CdkRef) {
       if (target.key === 'core.App') {
@@ -778,12 +807,13 @@ export class Interpreter {
       }
       return new Built(target.key, args, site);
     }
-    if (target instanceof ClassValue) return this.#instantiate(target, args, node, frame);
     return target instanceof Unread ? target : new Unread(`${shorten(node.getText())} makes nothing this reads`, 'not-read');
   }
 
-  #instantiate(target: ClassValue, args: readonly Value[], at: TsNode, frame: Frame): Value {
+  #instantiate(target: ClassValue, held: readonly Value[], at: TsNode, frame: Frame): Value {
     const cls = target.node;
+    // The construct keeps what it was made with as plain values; its constructor is handed them as held (P304).
+    const args = this.#settled(held);
     this.instantiated.add(cls);
     const name = cls.getName() ?? 'Construct';
     const isConstruct = this.isConstructClass(cls);
@@ -791,7 +821,7 @@ export class Interpreter {
     const self = new Construct(`app:${name}`, path, this.site(at), args[2] instanceof ObjectValue ? args[2] : undefined, args, frame.conditional, frame.repeated);
     this.#classes.set(self, cls);
     this.constructs.push(self);
-    this.#construct(cls, self, args, at, frame);
+    this.#construct(cls, self, held, at, frame);
     return self;
   }
 

@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-15T14:55:41.510Z",
+  "configHash": "552198ef3a8f",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 1063,
+      "packages": {
+        "name": "shop-catalog",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 28,
+      "edges": 25,
+      "types": 0,
+      "unresolved": 5,
+      "durationMs": 1043,
+      "packages": {
+        "name": "shop-jobs",
+        "runtime": [
+          "axios",
+          "bullmq",
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "payments",
+      "repo": "./payments",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 3,
+      "durationMs": 967,
+      "packages": {
+        "name": "shop-payments",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 10,
+      "edges": 6,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 967
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 3,
+    "resolved": 3,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 3,
+    "linked": 0,
+    "noConsumers": [
+      "channel:notifications"
+    ],
+    "noProducers": [
+      "channel:receipts",
+      "channel:refunds"
+    ]
+  },
+  "routes": {
+    "total": 6,
+    "called": 3,
+    "uncalled": [
+      "entry:jobs:http:POST:/orders/:param/notify",
+      "entry:jobs:http:POST:/orders/:param/pushed",
+      "entry:jobs:http:POST:/orders/:param/remind"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 2,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://p6q7r8s9t0.execute-api.eu-west-1.amazonaws.com/beta/products names its API by an id no file holds; it is taken as shop-catalog of catalog, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (beta where none is given), so the stage beta is taken as one of its, and the request as one for /products on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:2:24"
+    },
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 7,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://f6g7h8i9j0.execute-api.eu-west-1.amazonaws.com/live/payments names its API by an id no file holds; it is taken as shop-payments of payments, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (live where none is given), so the stage live is taken as one of its, and the request as one for /payments on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:7:24"
+    },
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 12,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://k1l2m3n4o5.execute-api.eu-west-1.amazonaws.com/default/receipts names its API by an id no file holds; it is taken as shop-receipts of payments, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (default where none is given), so the stage default is taken as one of its, and the request as one for /receipts on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:12:24"
+    }
+  ],
+  "totals": {
+    "nodes": 44,
+    "edges": 36,
+    "types": 0,
+    "missed": 10,
+    "sites": 18,
+    "notes": 3,
+    "findings": 0,
+    "unresolved": 10
+  }
+}

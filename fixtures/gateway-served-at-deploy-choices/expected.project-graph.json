@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T18:09:14.094Z",
+  "builtAt": "2026-11-15T14:55:44.058Z",
   "services": [
     {
       "name": "orders",
@@ -170,7 +170,8 @@
             "base": [
               "*"
             ],
-            "api": "shop-payments"
+            "api": "shop-payments",
+            "chosenDefault": "default"
           }
         ],
         "adapter": "aws-lambda"
@@ -1164,7 +1165,7 @@
       "line": 12,
       "reason": "base-url-from-files",
       "level": "info",
-      "message": "https://f6g7h8i9j0.execute-api.us-east-1.amazonaws.com/default/payments names its API by an id no file holds; it is taken as shop-payments of orders, the API of the project served at *.execute-api.us-east-1.amazonaws.com/* with a route for it, at whatever stage it is run with (one where none is given), so the stage default is taken as one of its, and the request as one for /payments on it",
+      "message": "https://f6g7h8i9j0.execute-api.us-east-1.amazonaws.com/default/payments names its API by an id no file holds; it is taken as shop-payments of orders, the API of the project served at *.execute-api.us-east-1.amazonaws.com/* with a route for it, at whatever stage it is run with (default where none is given), so the stage default is taken as one of its, and the request as one for /payments on it",
       "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
       "symbol": "ui_api_call:web#js/shop.js:12:24"
     },

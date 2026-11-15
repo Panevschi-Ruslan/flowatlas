@@ -1,8 +1,9 @@
 import { executeApiServedAt } from '@flowatlas/aws';
 import { SERVED_AT_META, type ServedAt } from '@flowatlas/core';
-import type { Instance, ModuleInstance, Value } from '../eval/values.js';
+import { evaluate, withNames, type Scope } from '../eval/evaluate.js';
+import { object, str, type Instance, type ModuleInstance, type Value } from '../eval/values.js';
 import { attributeOf, type Expression } from '../hcl/ast.js';
-import { referencesIn } from '../hcl/walk.js';
+import { expressionsIn } from '../hcl/walk.js';
 import { argument, textOf, unreadRow, whyNot } from './arguments.js';
 import type { ResourceReader, ResourceReading } from './reading.js';
 
@@ -108,26 +109,116 @@ const chosenOnApply = (instance: Instance, name: string): boolean => {
 /** How many locals and module inputs a value is followed through to the root. */
 const MOST_HOPS = 16;
 
+/** `terraform.workspace`. */
+const isWorkspace = (expression: Expression): boolean =>
+  expression.type === 'traversal' &&
+  expression.source.type === 'variable' &&
+  expression.source.name === 'terraform' &&
+  expression.steps[0]?.kind === 'attr' &&
+  expression.steps[0].name === 'workspace';
+
+/** `var.<name>` or `local.<name>`, by the kind and the name. */
+const namedValue = (expression: Expression): { kind: 'var' | 'local'; name: string } | undefined => {
+  if (expression.type !== 'traversal' || expression.source.type !== 'variable') return undefined;
+  const kind = expression.source.name;
+  const [step] = expression.steps;
+  return (kind === 'var' || kind === 'local') && step?.kind === 'attr' ? { kind, name: step.name } : undefined;
+};
+
 /**
  * Whether an expression of a module reads a value whoever applies the
  * configuration sets (P294, P298): `terraform.workspace`, a root module's
- * `var.<name>`, or a local or a child module's input written over either -
- * `local.stage = terraform.workspace`, `stage = var.stage` in the call of
- * the module the stage is created in.
+ * `var.<name>` (unless `workspaceOnly`), or a local or a child module's input
+ * written over either - `local.stage = terraform.workspace`, `stage =
+ * var.stage` in the call of the module the stage is created in - anywhere in
+ * it, the key of an index step too (P304).
  */
-const chosenIn = (expression: Expression, module: ModuleInstance, depth: number): boolean => {
+const chosenIn = (expression: Expression, module: ModuleInstance, depth: number, workspaceOnly = false): boolean => {
   if (depth > MOST_HOPS) return false;
-  for (const reference of referencesIn(expression)) {
-    if (reference.source.type !== 'variable') continue;
-    const [step] = reference.steps;
-    const named = step?.kind === 'attr' ? step.name : undefined;
-    if (reference.source.name === 'terraform' && named === 'workspace') return true;
-    if (named === undefined || (reference.source.name !== 'var' && reference.source.name !== 'local')) continue;
-    if (reference.source.name === 'var' && module.root === undefined) return true;
-    const written = module.written(reference.source.name, named);
-    if (written !== undefined && chosenIn(written.expression, written.scope.module, depth + 1)) return true;
+  for (const each of expressionsIn(expression)) {
+    if (isWorkspace(each)) return true;
+    const named = namedValue(each);
+    if (named === undefined) continue;
+    if (named.kind === 'var' && module.root === undefined) {
+      if (workspaceOnly) continue;
+      return true;
+    }
+    const written = module.written(named.kind, named.name);
+    if (written !== undefined && chosenIn(written.expression, written.scope.module, depth + 1, workspaceOnly)) return true;
   }
   return false;
+};
+
+/** Terraform's workspace where none is selected. */
+const DEFAULT_WORKSPACE = 'default';
+
+/**
+ * The workspaces a value is written for (P304): the keys of each map it
+ * looks up by the workspace - `lookup(var.stages, terraform.workspace)`,
+ * `local.env[terraform.workspace].stage` - here or in a local or an input it
+ * reads.
+ */
+const workspacesKeyed = (expression: Expression, scope: Scope, depth: number, out: Set<string>): void => {
+  if (depth > MOST_HOPS) return;
+  const { module } = scope;
+  const keysOf = (map: Expression): void => {
+    const value = evaluate(map, scope);
+    if (value.kind === 'object') for (const key of value.entries.keys()) out.add(key);
+  };
+  for (const each of expressionsIn(expression)) {
+    if (each.type === 'call' && each.name === 'lookup' && each.args[0] !== undefined && each.args[1] !== undefined && chosenIn(each.args[1], module, 0, true)) {
+      keysOf(each.args[0]);
+    }
+    if (each.type === 'traversal') {
+      each.steps.forEach((step, index) => {
+        if (index > 0 && step.kind === 'index' && chosenIn(step.key, module, 0, true)) keysOf({ ...each, steps: each.steps.slice(0, index) });
+      });
+    }
+    const named = namedValue(each);
+    const written = named === undefined ? undefined : module.written(named.kind, named.name);
+    if (written !== undefined) workspacesKeyed(written.expression, written.scope, depth + 1, out);
+  }
+};
+
+/**
+ * What a value is in one workspace (P304): the expression evaluated with
+ * `terraform.workspace` that workspace, and each local and input it reads
+ * that the workspace decides evaluated the same way.
+ */
+const inWorkspace = (expression: Expression, scope: Scope, workspace: string, depth: number): Value => {
+  const { module } = scope;
+  const locals = new Map<string, Value>();
+  const inputs = new Map<string, Value>();
+  for (const each of expressionsIn(expression)) {
+    const named = namedValue(each);
+    if (named === undefined) continue;
+    const into = named.kind === 'local' ? locals : inputs;
+    if (into.has(named.name)) continue;
+    const written = module.written(named.kind, named.name);
+    const decided = written !== undefined && depth < MOST_HOPS && chosenIn(written.expression, written.scope.module, 0, true);
+    into.set(
+      named.name,
+      decided ? inWorkspace(written.expression, written.scope, workspace, depth + 1) : named.kind === 'local' ? module.local(named.name) : module.variable(named.name),
+    );
+  }
+  const names = new Map<string, Value>([['terraform', object(new Map([['workspace', str(workspace)]]))]]);
+  if (locals.size > 0) names.set('local', object(locals));
+  if (inputs.size > 0) names.set('var', object(inputs));
+  return evaluate(expression, withNames(scope, names));
+};
+
+/**
+ * The names an argument the workspace decides takes (P304): what it is in
+ * the default workspace, and in each workspace a map it is looked up in is
+ * written for. None where the workspace does not decide it.
+ */
+const workspaceNames = (instance: Instance, name: string): string[] => {
+  const written = attributeOf(instance.block.body, name);
+  if (written === undefined || !chosenIn(written.expression, instance.module, 0, true)) return [];
+  const scope = instance.module.scopeOf(instance);
+  const workspaces = new Set<string>([DEFAULT_WORKSPACE]);
+  workspacesKeyed(written.expression, scope, 0, workspaces);
+  return sorted([...workspaces].flatMap((workspace) => textOf(inWorkspace(written.expression, scope, workspace, 0)) ?? []));
 };
 
 /** The region the AWS provider a block is created with is configured for, where the files settle it (P294). */
@@ -153,10 +244,14 @@ const servedOf = (api: Instance, reading: ResourceReading): ServedAt[] => {
     reading
       .ofType('managed', stage.type)
       .filter((instance) => referenced(argument(instance, stage.api)) === api && argument(instance, stage.name) !== undefined)
-      .map((instance) => {
+      .flatMap((instance) => {
         const name = textOf(argument(instance, stage.name));
+        // A stage the workspace names is open, with the name it takes in the
+        // default workspace and in each workspace a map is written for (P304).
+        const named = name === undefined ? workspaceNames(instance, stage.name) : [];
+        if (named.length > 0) return named.map((each) => ({ name: each, chosen: true }));
         const chosen = name === undefined || chosenOnApply(instance, stage.name);
-        return { ...(name === undefined ? {} : { name }), ...(chosen ? { chosen } : {}) };
+        return [{ ...(name === undefined ? {} : { name }), ...(chosen ? { chosen } : {}) }];
       }),
   );
   if (api.type === 'aws_apigatewayv2_api' && argument(api, 'target') !== undefined) stages.push({});

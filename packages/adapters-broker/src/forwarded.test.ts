@@ -454,3 +454,120 @@ class Layer {
     ]);
   });
 });
+
+describe('what a catch is handed, where a package may have thrown it (P304)', () => {
+  const file = (source: string): SourceFile => new Project({ useInMemoryFileSystem: true }).createSourceFile('a.ts', source);
+  const heldAtSend = (source: string, path: readonly string[]): Held => {
+    const read = file(source);
+    const call = read.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'send') as CallExpression;
+    return heldValues(call.getArguments()[0] as never, path, call);
+  };
+  const HEAD = `
+import axios from 'axios';
+import { Queue } from 'bullmq';
+declare function send(job: unknown): void;
+class Rejected extends Error {
+  constructor(public readonly jobType: string) { super(jobType); }
+}
+`;
+
+  it('says a field read off an error a package throws is not read, naming the call', () => {
+    const held = heldAtSend(
+      `${HEAD}
+class Relay {
+  async push() {
+    try {
+      await axios.post('relay', {});
+    } catch (error) {
+      send({ type: error.response.data.type });
+    }
+  }
+}`,
+      ['type'],
+    );
+    expect(held.kind).toBe('unread');
+    expect(held.kind === 'unread' ? held.why : '').toMatch(/error of axios, which axios\.post\(\) throws/);
+  });
+
+  it('reads what the repository throws and keeps why the package error is not read beside it', () => {
+    const held = heldAtSend(
+      `${HEAD}
+class Relay {
+  private readonly queue = new Queue('relay');
+  private check(type: string): void {
+    if (type === '') throw new Rejected('audit');
+  }
+  async push(type: string) {
+    try {
+      this.check(type);
+      await this.queue.add(type, {});
+    } catch (error) {
+      send({ type: error.jobType });
+    }
+  }
+}`,
+      ['type'],
+    );
+    expect(held.kind).toBe('written');
+    expect(held.kind === 'written' ? (held.choices ?? [held.expression]).map((each) => each.getText()) : []).toEqual(["'audit'"]);
+    expect(held.kind === 'written' ? held.partial : '').toMatch(/error of bullmq, which this\.queue\.add\(\) throws/);
+  });
+
+  it('follows a method of another instance of the repository for what it throws', () => {
+    const held = heldAtSend(
+      `${HEAD}
+class Checker {
+  check(type: string): void {
+    if (type === '') throw new Rejected('audit');
+  }
+}
+class Relay {
+  constructor(private readonly checker: Checker) {}
+  push(type: string) {
+    try {
+      this.checker.check(type);
+    } catch (error) {
+      send({ type: error.jobType });
+    }
+  }
+}`,
+      ['type'],
+    );
+    expect(held.kind === 'written' ? [(held.choices ?? [held.expression]).map((each) => each.getText()), held.partial] : held.kind).toEqual([["'audit'"], undefined]);
+  });
+
+  it('keeps following a value of the scope around the try block a catch only re-uses', () => {
+    const read = file(`${HEAD}
+class Relay {
+  async push(type: string) {
+    try {
+      await axios.post('relay', { type });
+    } catch (error) {
+      send({ type });
+    }
+  }
+}
+new Relay().push('remind');`);
+    const call = read.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'send') as CallExpression;
+    const out = forwardedPublish([heldValues(call.getArguments()[0] as never, ['type'], call)], new DiMap());
+    expect(out.sites.map((site) => (site.values[0]?.kind === 'written' ? site.values[0].expression.getText() : site.values[0]?.kind))).toEqual(["'remind'"]);
+  });
+
+  it('does not take a call of the language, or of a value of the repository, for a package', () => {
+    const held = heldAtSend(
+      `${HEAD}
+class Relay {
+  async push(jobs: string[]) {
+    try {
+      JSON.parse('{}');
+      jobs.push('x');
+    } catch (error) {
+      send({ type: error.jobType });
+    }
+  }
+}`,
+      ['type'],
+    );
+    expect(held.kind === 'unread' ? held.why : held.kind).toMatch(/nothing it throws is written in this repository/);
+  });
+});

@@ -52,6 +52,21 @@ only one of them moved.
   to its own path, as a browser's does: the one service serving it joined as
   a guess (`externalValuePath`), several an `ambiguous-route-target` row, as
   are several serving it under the path.
+- **The queue and AWS items P298 left open (P304).** A worker's processor
+  written at its construction (`new Worker('receipts', async (job) => ...)`)
+  that does more than hand the job on is a handler of its own with the calls
+  its body makes, named by the class constructed. What a `catch` is handed is
+  each value its try block throws in the repository, a method of another
+  instance included; where a call on a package's value may throw out of it, a
+  job or queue read off the error has a row naming that call rather than
+  nothing, and the values the repository throws are read beside it. A CDK
+  context value stays one the deployment chooses when handed to a function or
+  class of the app as an argument, defaulted by a parameter, kept in a field
+  or destructured out of a record. A stage `terraform.workspace` names is open
+  with its name in the `default` workspace and in each workspace a map it is
+  looked up in is keyed by (`lookup(var.m, terraform.workspace)`,
+  `local.env[terraform.workspace].stage`), through locals and module inputs.
+
 - **The rest of the deployment templating and grants P289 and P295 left open
   (P299).** A command keeping releases with a selector and `--include-needs`
   keeps what they need from any sub-helmfile of the state (transitively with

@@ -69,7 +69,7 @@ import {
   type ReceiverEvidence,
 } from './call-site.js';
 import { addressOf, appliesAt, collapsed, messageValue, readAddress, readWritten, type AddressedElement } from './address.js';
-import { forwardedPublish, heldAtSite, heldValues, MOST_STEPS, waits, type Held } from './forwarded.js';
+import { forwardedPublish, heldAtSite, heldValues, MOST_STEPS, readOffPackageError, waits, type Held } from './forwarded.js';
 import { constructsFrom, dispatchRecord, functionBehind, handedAlong, handlerInRecord, namesHandedTo, type HandlerTarget } from './constructed.js';
 import { payloadParameter, typeAtPath } from './payload.js';
 import { isResolved, nameForKind, resolveChannelName, shapeChannelNames, type ChannelResolution } from './channel-name.js';
@@ -135,6 +135,11 @@ interface ForwardedReading {
   readonly jobName: string | null | undefined;
   /** Every job the call's entries name, where they name several (P271). */
   readonly jobNames?: readonly string[];
+  /**
+   * Why a job followed out to here is not read, or not all of it (P304): a
+   * name read off an error a package throws, say. A row says so.
+   */
+  readonly jobUnread?: { readonly text: string; readonly why: string };
   /** What the message is written as there, where it was followed out to it. */
   readonly payload: TsNode | undefined;
   /** A call on the way may run another implementation instead. */
@@ -209,8 +214,13 @@ const severalOf = (held: Held): boolean =>
   (held.kind === 'written' && (held.choices?.length ?? 0) > 1 && !Node.isConditionalExpression(held.expression));
 
 /** The job a value followed out names, or each it may name (P286). */
-const jobsHeld = (held: Held | undefined): { jobName: string | null; jobNames?: string[] } =>
-  held?.kind !== 'written' ? { jobName: null } : jobsNamed(held.choices ?? [held.expression]);
+const jobsHeld = (held: Held | undefined): { jobName: string | null; jobNames?: string[]; jobUnread?: { text: string; why: string } } => {
+  // Why it, or some of it, is not read, where it was read off an error a
+  // package throws: said in a row, where it would otherwise be left out (P304).
+  const why = held?.kind === 'unread' ? held.why : held?.kind === 'written' ? held.partial : undefined;
+  const unread = held === undefined || why === undefined || !readOffPackageError(why) ? {} : { jobUnread: { text: held.expression.getText().slice(0, 60), why } };
+  return held?.kind !== 'written' ? { jobName: null, ...unread } : { ...jobsNamed(held.choices ?? [held.expression]), ...unread };
+};
 
 /**
  * What each element of a publish's address waits on, where one of them waits
@@ -869,6 +879,16 @@ export const extractBrokers = (ctx: PassContext): void => {
         reportChannel(element.resolution, file, line, site, decidedBy);
       }
     }
+    // A job followed out to here and not read, or not all of it (P304).
+    if (from?.jobUnread !== undefined && namesJobs(pattern)) {
+      ctx.report({
+        file,
+        line,
+        reason: 'channel-dynamic',
+        hint: `The job's name: ${from.jobUnread.why} Annotate ${site.named} with the job it adds.`,
+        ...rowAbout(site, from.jobUnread.text),
+      });
+    }
     if (channelName === null) return true;
 
     // One edge per channel the address reaches. `alreadyStatic` records each of
@@ -1489,6 +1509,21 @@ export const extractBrokers = (ctx: PassContext): void => {
    * it. One function per arrow, however many workers run it.
    */
   const inlineProcessors = new Map<TsNode, NamedFunction>();
+  /**
+   * Where a processor is written, as its name: what `placeOf` says, and for
+   * one handed to a construction the class it constructs too -
+   * `MailWorker.constructor.Worker@12` for a `new Worker('mail', async (job) => ...)`
+   * written in a constructor (P304), which `placeOf`, written for calls, does
+   * not name.
+   */
+  const processorPlace = (written: ArrowFunction | FunctionExpression): string => {
+    const parent = written.getParent();
+    if (!Node.isNewExpression(parent)) return placeOf(written);
+    const constructed = parent.getExpression();
+    const name = Node.isPropertyAccessExpression(constructed) ? constructed.getName() : constructed.getText();
+    const place = placeOf(written);
+    return place === '(module)' ? name : `${place}.${name}`;
+  };
   const inlineProcessor = (written: ArrowFunction | FunctionExpression): NamedFunction => {
     const known = inlineProcessors.get(written);
     if (known !== undefined) return known;
@@ -1497,9 +1532,16 @@ export const extractBrokers = (ctx: PassContext): void => {
       (node) => Node.isConstructorDeclaration(node) || Node.isMethodDeclaration(node) || Node.isPropertyDeclaration(node) || Node.isGetAccessorDeclaration(node) || Node.isSetAccessorDeclaration(node),
     );
     const memberName = member === undefined ? undefined : Node.isConstructorDeclaration(member) ? 'constructor' : (member as MethodDeclaration).getName();
-    // Outside a class, where it is written is the name it is kept under, which `placeOf` says.
-    const where = owner !== undefined && memberName !== undefined ? `${ctx.classes.get(owner)?.name ?? owner.getName() ?? '?'}.${memberName}` : undefined;
-    const fn = inlineFunction(written, where === undefined ? placeOf(written) : `${where}.${placeOf(written)}`);
+    // Outside a class, the name it is kept under, which `placeOf` says; one
+    // handed to a construction in a function under that function (P304).
+    const writtenIn = owner === undefined && Node.isNewExpression(written.getParent()) ? holderAt(written)?.fn?.name : undefined;
+    const where =
+      owner !== undefined && memberName !== undefined
+        ? `${ctx.classes.get(owner)?.name ?? owner.getName() ?? '?'}.${memberName}`
+        : writtenIn !== undefined && !processorPlace(written).startsWith(`${writtenIn}.`)
+          ? writtenIn
+          : undefined;
+    const fn = inlineFunction(written, where === undefined ? processorPlace(written) : `${where}.${processorPlace(written)}`);
     inlineProcessors.set(written, fn);
     const from = ctx.functionIdOf(fn);
     const file = ctx.fileOf(written);
@@ -1567,12 +1609,13 @@ export const extractBrokers = (ctx: PassContext): void => {
         if (placed?.fn !== undefined) return { kind: 'function', fn: placed.fn };
         const delegated = writtenIn === undefined ? undefined : targetOfHandler(written, writtenIn);
         if (delegated !== undefined) return { kind: 'method', method: delegated };
-        // A processor a caller writes in place that does more than hand the
-        // job on is a handler of its own, as a route written in place is (P298).
-        if (written !== processor) return { kind: 'function', fn: inlineProcessor(written) };
+        // A processor that does more than hand the job on is a handler of its
+        // own, as a route written in place is: one a caller writes in place
+        // (P298), and one written at the construction itself (P304).
+        return { kind: 'function', fn: inlineProcessor(written) };
       }
-      // The body the worker is made in, as the subscriptions do, or the one
-      // a caller writes the processor in.
+      // A processor that is no function written here: the body the worker is
+      // made in, as the subscriptions do, or the one a caller writes it in.
       const body = written === processor ? around : holderAt(written);
       if (written === processor) unfollowed = true;
       else unfollowedElsewhere = true;
@@ -1619,8 +1662,8 @@ export const extractBrokers = (ctx: PassContext): void => {
         line,
         reason: 'consumer-handler-unresolved',
         hint: unfollowed
-          ? 'The processor does more than delegate, so the chain stops at the body the worker is made in.'
-          : 'The processor a caller hands in does more than delegate, so the chain stops at the body that caller writes it in.',
+          ? 'The processor is no function this reads, so the chain stops at the body the worker is made in.'
+          : 'The processor a caller hands in is no function this reads, so the chain stops at the body that caller writes it in.',
         symbol: symbolHere,
       });
     }

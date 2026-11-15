@@ -421,17 +421,80 @@ const calledBody = (call: CallExpression): TsNode | undefined => {
   const callee = unwrapped(call.getExpression());
   if (Node.isPropertyAccessExpression(callee)) {
     const target = unwrapped(callee.getExpression());
-    if (!Node.isThisExpression(target) && target.getKind() !== SyntaxKind.SuperKeyword) return undefined;
-    let cls = call.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
-    for (let depth = 0; cls !== undefined && depth < 8; depth += 1) {
-      const method = methodNamedOn(cls, callee.getName());
-      const fn = method === undefined ? undefined : functionOf(method);
-      if (fn !== undefined) return fn;
-      cls = cls.getBaseClass();
+    if (Node.isThisExpression(target) || target.getKind() === SyntaxKind.SuperKeyword) {
+      let cls = call.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+      for (let depth = 0; cls !== undefined && depth < 8; depth += 1) {
+        const method = methodNamedOn(cls, callee.getName());
+        const fn = method === undefined ? undefined : functionOf(method);
+        if (fn !== undefined) return fn;
+        cls = cls.getBaseClass();
+      }
+      return undefined;
     }
-    return undefined;
+    // A method of another instance the checker names, written in the repository (P304).
+    const declared = callee.getNameNode().getSymbol()?.getDeclarations()[0];
+    return declared !== undefined && Node.isMethodDeclaration(declared) && !declared.getSourceFile().isDeclarationFile() ? functionOf(declared) : undefined;
   }
   return Node.isIdentifier(callee) ? functionNamed(callee) : undefined;
+};
+
+/** How the reason a value read off a package's error is not read ends (P304). */
+const PACKAGE_ERROR_UNREAD = "and what a package's error carries is not read.";
+
+/** Whether a value stopped where a package's error was caught: a stop a reader says, never leaves out (P304). */
+export const readOffPackageError = (why: string | undefined): boolean => why?.endsWith(PACKAGE_ERROR_UNREAD) === true;
+
+/** Whether an import names a package: a module written bare that is no source file of the repository. */
+const packageImported = (binding: TsNode): string | undefined => {
+  const imported = importOf(binding);
+  if (imported === undefined || imported.module.startsWith('.')) return undefined;
+  const declaration = binding.getSymbol()?.getDeclarations()[0];
+  const statement = declaration?.getFirstAncestorByKind(SyntaxKind.ImportDeclaration);
+  const resolved = statement?.getModuleSpecifierSourceFile();
+  return resolved !== undefined && !resolved.isDeclarationFile() ? undefined : imported.module;
+};
+
+/** The package a type written as a reference names, where it is imported from one. */
+const packageOfType = (type: TsNode | undefined): string | undefined => {
+  if (type === undefined || !Node.isTypeReference(type)) return undefined;
+  let name: TsNode = type.getTypeName();
+  while (Node.isQualifiedName(name)) name = name.getLeft();
+  return packageImported(name);
+};
+
+/**
+ * The package what a call is made on comes from (P304): the import its root
+ * names - `axios.post`, `queue.add` of a `const queue = new Queue(...)`, a
+ * parameter or a field typed with a package's class - read off what is
+ * written, so that it holds with nothing installed. `undefined` for the
+ * repository's own values and the language's.
+ */
+const packageBehind = (expression: TsNode, depth = 0): string | undefined => {
+  if (depth > MOST_THROWN_DEPTH) return undefined;
+  let at = unwrapped(expression);
+  for (let step = 0; step < 16; step += 1) {
+    if (Node.isAwaitExpression(at) || Node.isCallExpression(at) || Node.isNewExpression(at) || Node.isElementAccessExpression(at)) at = unwrapped(at.getExpression());
+    else if (Node.isPropertyAccessExpression(at) && !Node.isThisExpression(unwrapped(at.getExpression()))) at = unwrapped(at.getExpression());
+    else break;
+  }
+  // `this.client`: the field, by its type or what it is set to.
+  if (Node.isPropertyAccessExpression(at)) {
+    const field = at.getNameNode().getSymbol()?.getDeclarations()[0];
+    if (field === undefined || (!Node.isPropertyDeclaration(field) && !Node.isParameterDeclaration(field))) return undefined;
+    const initial = field.getInitializer();
+    return packageOfType(field.getTypeNode()) ?? (initial === undefined ? undefined : packageBehind(initial, depth + 1));
+  }
+  if (!Node.isIdentifier(at)) return undefined;
+  const imported = packageImported(at);
+  if (imported !== undefined) return imported;
+  const declaration = declarationOf(at);
+  if (declaration === undefined || declaration.getSourceFile().isDeclarationFile()) return undefined;
+  if (Node.isParameterDeclaration(declaration)) return packageOfType(declaration.getTypeNode());
+  if (Node.isVariableDeclaration(declaration)) {
+    const initial = declaration.getInitializer();
+    return packageOfType(declaration.getTypeNode()) ?? (initial === undefined ? undefined : packageBehind(initial, depth + 1));
+  }
+  return undefined;
 };
 
 /** How many functions deep, and how many values, the throws of a try block are read (P298). */
@@ -443,21 +506,37 @@ const MOST_THROWN = 32;
  * (P298): each `throw` of its own, and each of a function of the repository
  * it calls - `this.sendElsewhere(...)` - with that function's parameters
  * bound to what the call hands them. A throw a `try` inside the block
- * catches is not thrown out of it; an error a package throws is not one
- * this reads.
+ * catches is not thrown out of it.
+ *
+ * An error a package throws is none of those values, and what it carries is
+ * not read (P304): each call on a package's value that may throw out of the
+ * block - in it, or in a function of the repository it calls - is kept in
+ * `packaged`, so that a field read off what the `catch` is handed says it
+ * may be that error's, rather than nothing.
  */
-const thrownBy = (block: TsNode, bound: Bindings, depth: number, seen: Set<TsNode>): { value: TsNode; bound: Bindings }[] => {
+const thrownBy = (
+  block: TsNode,
+  bound: Bindings,
+  depth: number,
+  seen: Set<TsNode>,
+): { values: { value: TsNode; bound: Bindings }[]; packaged: { call: CallExpression; module: string }[] } => {
   const own = functionAround(block);
-  const out: { value: TsNode; bound: Bindings }[] = [];
+  const values: { value: TsNode; bound: Bindings }[] = [];
+  const packaged: { call: CallExpression; module: string }[] = [];
   for (const statement of block.getDescendantsOfKind(SyntaxKind.ThrowStatement)) {
     if (functionAround(statement) !== own || caughtWithin(statement, block)) continue;
-    out.push({ value: statement.getExpression(), bound });
+    values.push({ value: statement.getExpression(), bound });
   }
-  if (depth >= MOST_THROWN_DEPTH) return out.slice(0, MOST_THROWN);
+  const done = (): ReturnType<typeof thrownBy> => ({ values: values.slice(0, MOST_THROWN), packaged: packaged.slice(0, MOST_THROWN) });
   for (const call of block.getDescendantsOfKind(SyntaxKind.CallExpression)) {
     if (functionAround(call) !== own || caughtWithin(call, block)) continue;
     const fn = calledBody(call);
-    if (fn === undefined || seen.has(fn) || fn.getSourceFile().isDeclarationFile()) continue;
+    if (fn === undefined) {
+      const module = packageBehind(call.getExpression());
+      if (module !== undefined) packaged.push({ call, module });
+      continue;
+    }
+    if (depth >= MOST_THROWN_DEPTH || seen.has(fn) || fn.getSourceFile().isDeclarationFile()) continue;
     if (!Node.isMethodDeclaration(fn) && !Node.isFunctionDeclaration(fn) && !Node.isArrowFunction(fn) && !Node.isFunctionExpression(fn)) continue;
     const body = fn.getBody();
     if (body === undefined) continue;
@@ -467,10 +546,12 @@ const thrownBy = (block: TsNode, bound: Bindings, depth: number, seen: Set<TsNod
       const argument = call.getArguments()[index];
       if (argument !== undefined && !Node.isSpreadElement(argument)) handed.set(parameter, argument);
     });
-    out.push(...thrownBy(body, handed, depth + 1, seen));
-    if (out.length >= MOST_THROWN) break;
+    const inner = thrownBy(body, handed, depth + 1, seen);
+    values.push(...inner.values);
+    packaged.push(...inner.packaged);
+    if (values.length >= MOST_THROWN) break;
   }
-  return out.slice(0, MOST_THROWN);
+  return done();
 };
 
 /** One value the walk reached, read past the bindings and destructurings it names (P286). */
@@ -520,15 +601,25 @@ const heldIn = (expression: TsNode, bound: Bindings, site: TsNode, depth: number
     const clause = declaration?.getParent();
     if (rest.length > 0 && clause !== undefined && Node.isCatchClause(clause)) {
       const guarded = clause.getParentIfKind(SyntaxKind.TryStatement)?.getTryBlock();
-      const thrown = guarded === undefined ? [] : thrownBy(guarded, bound, 0, new Set());
-      if (thrown.length === 0) {
+      const { values: thrown, packaged } = guarded === undefined ? { values: [], packaged: [] } : thrownBy(guarded, bound, 0, new Set());
+      const [first] = packaged;
+      // An error a package throws carries nothing read: said, not left out (P304).
+      const fromPackage: Held[] =
+        first === undefined
+          ? []
+          : [
+              {
+                kind: 'unread',
+                expression: node,
+                why: `${node.getText()}.${rest.map((key) => (key === EVERY_ELEMENT ? '[]' : key)).join('.')} may be read off an error of ${first.module}, which ${first.call.getExpression().getText().slice(0, 60)}() throws, ${PACKAGE_ERROR_UNREAD}`,
+              },
+            ];
+      if (thrown.length === 0 && fromPackage.length === 0) {
         return { kind: 'unread', expression: node, why: `${node.getText()} is what its try block throws, and nothing it throws is written in this repository.` };
       }
-      return combined(
-        thrown.map((each) => heldValues(each.value, rest, site, each.bound, depth + 1)),
-        node,
-        rest.includes(EVERY_ELEMENT),
-      );
+      // Each value it may be is read on its own: those written are read, and
+      // why the others are not is kept beside them.
+      return combined([...thrown.map((each) => heldValues(each.value, rest, site, each.bound, depth + 1)), ...fromPackage], node, true);
     }
     // An element of a list not written where it is named: each element of
     // that list, which whoever hands the list in writes (P290).
@@ -545,11 +636,17 @@ const heldIn = (expression: TsNode, bound: Bindings, site: TsNode, depth: number
       }
     }
   } else if (Node.isPropertyAccessExpression(node) && !Node.isThisExpression(unwrapped(node.getExpression()))) {
-    const inner = unwrapped(node.getExpression());
+    // `error.response.data.type`: the keys down from the name it starts at (P304).
+    const keys = [node.getName()];
+    let inner = unwrapped(node.getExpression());
+    while (Node.isPropertyAccessExpression(inner) && !Node.isThisExpression(unwrapped(inner.getExpression())) && keys.length < 8) {
+      keys.unshift(inner.getName());
+      inner = unwrapped(inner.getExpression());
+    }
     const root = Node.isIdentifier(inner) ? declarationOf(inner) : undefined;
-    // `job.type` where `job` is a parameter the walk bound, or a name taken out of one.
+    // `job.type` where `job` is a parameter the walk bound, a name taken out of one, or what a catch is handed.
     if (root !== undefined && (bound.has(root) || Node.isBindingElement(root) || Node.isVariableDeclaration(root))) {
-      return heldValues(inner, [node.getName(), ...rest], site, bound, depth + 1);
+      return heldValues(inner, [...keys, ...rest], site, bound, depth + 1);
     }
   }
   const held = heldAtSite(node, site);

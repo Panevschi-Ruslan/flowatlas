@@ -89,3 +89,53 @@ describe('a stage and a region the app takes from its context (P298)', () => {
     ]);
   });
 });
+
+describe('a context value handed on as an argument or kept in a field (P304)', () => {
+  const open = [['POST', '/orders', [{ host: '*.execute-api.eu-west-1.amazonaws.com', base: ['*'], api: 'shop-api', chosenDefault: 'beta' }]]];
+  const region = ", { env: { region: 'eu-west-1' } }";
+
+  it('stays chosen handed to a function of the app as a bare argument, its default too', () => {
+    const body = `const ctx = this.node.tryGetContext('stage');
+    const makeApi = (scope: Construct, stage: string = 'beta') => new apigw.RestApi(scope, 'Api', { restApiName: 'shop-api', deployOptions: { stageName: stage } });
+    const api = makeApi(this, ctx);
+    api.root.addResource('orders').addMethod('POST', new apigw.LambdaIntegration(place));`;
+    expect(servedOf(stack(body, region))).toEqual(open);
+  });
+
+  it('stays chosen kept in a field of the construct and read in another method', () => {
+    const body = `this.stage = this.node.tryGetContext('stage') ?? 'beta';
+    this.addApi();
+  }
+  stage: string;
+  addApi() {
+    const api = new apigw.RestApi(this, 'Api', { restApiName: 'shop-api', deployOptions: { stageName: this.stage } });
+    api.root.addResource('orders').addMethod('POST', new apigw.LambdaIntegration(place));`;
+    expect(servedOf(stack(body, region))).toEqual(open);
+  });
+
+  it("stays chosen handed to a construct of the app's own and destructured out of its props", () => {
+    const body = `new Orders(this, 'Orders', { stage: this.node.tryGetContext('stage') ?? 'beta' });
+  }
+}
+class Orders extends Construct {
+  constructor(scope: Construct, id: string, { stage }: { stage: string }) {
+    super(scope, id);
+    const fn = new lambda.Function(this, 'Place', { functionName: 'shop-orders', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset('src'), handler: 'place.handler' });
+    const api = new apigw.RestApi(this, 'Api', { restApiName: 'shop-api', deployOptions: { stageName: stage } });
+    api.root.addResource('orders').addMethod('POST', new apigw.LambdaIntegration(fn));`;
+    expect(servedOf(stack(body, region))).toEqual(open);
+  });
+
+  it('is the plain value where the configured options fix it', () => {
+    const body = `this.stage = this.node.tryGetContext('stage') ?? 'beta';
+    this.addApi();
+  }
+  stage: string;
+  addApi() {
+    const api = new apigw.RestApi(this, 'Api', { restApiName: 'shop-api', deployOptions: { stageName: this.stage } });
+    api.root.addResource('orders').addMethod('POST', new apigw.LambdaIntegration(place));`;
+    expect(servedOf(stack(body, region, { stage: 'qa' }))).toEqual([
+      ['POST', '/orders', [{ host: '*.execute-api.eu-west-1.amazonaws.com', base: ['qa'], api: 'shop-api' }]],
+    ]);
+  });
+});
