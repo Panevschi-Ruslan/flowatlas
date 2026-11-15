@@ -35,6 +35,23 @@ only one of them moved.
   dev` and SvelteKit's `vite dev` listen on Vite's 5173 where neither the
   configuration nor the script writes a port, as a default that places a
   request only where the application serves it.
+- **Requests on receivers the compiler knows nothing of, and a public
+  address whose path serves nothing (P301).** A request opened on a receiver
+  with no type - a parameter, a field declared `null` and filled in later, a
+  field the constructor is handed, a parameter property whose type is not
+  installed - is read by what the receiver is given: each caller's argument
+  (each `new` for a constructor's), a field's initializer and every
+  `this.<field> = ...` its class writes, a variable's assignments. Where every
+  value known for anything is an `XMLHttpRequest`, one instance of an
+  installed client, or one client class of the repository's own, and one is,
+  the call is that request; a value known for something else (an object with
+  an `open` of its own) makes it none. An `XMLHttpRequest` handed in is sent
+  where each caller sends it after handing it, and a field of an object
+  written in place where its other methods send it. A server's request under
+  a public address whose path no service serves the request under falls back
+  to its own path, as a browser's does: the one service serving it joined as
+  a guess (`externalValuePath`), several an `ambiguous-route-target` row, as
+  are several serving it under the path.
 - **The rest of the deployment templating and grants P289 and P295 left open
   (P299).** A command keeping releases with a selector and `--include-needs`
   keeps what they need from any sub-helmfile of the state (transitively with

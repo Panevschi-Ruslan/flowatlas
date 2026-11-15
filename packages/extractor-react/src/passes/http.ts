@@ -52,6 +52,7 @@ import { clientInstances, type ClientInstance } from '../util/client-instance.js
 import { classMethods, enclosingIndexed, requestsOf, type ReadRequest, type RequestSite } from '../util/forward.js';
 import { localClientOf, type LocalClientReading } from '../util/local-client.js';
 import { basedBy, rewriteFor, unreadOpening } from '../util/request-rewrite.js';
+import { receiverValues } from '../util/receiver-values.js';
 import { sentThrough } from '../util/sent-later.js';
 import { analyzeApiUrl, analyzeClientBase, isSomewhere, underBase, type ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
@@ -686,14 +687,78 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       // Known by how it was made, where its type is not known: the package's
       // own import, followed to the instance it makes (P239). Asked only of a
       // name some instance answers to, since every member call passes here.
-      if (!INSTANCE_VERBS.has(method)) return;
-      const instance = instances.of(receiver);
-      if (instance === undefined) return;
-      const verbs = instance.factory.verbs;
-      const shape = Object.hasOwn(verbs, method) ? verbs[method] : undefined;
-      if (shape !== undefined) found.push({ call: node, client: clientOf(instance), shape, instance });
+      const instance = INSTANCE_VERBS.has(method) ? instances.of(receiver) : undefined;
+      if (instance !== undefined) {
+        const verbs = instance.factory.verbs;
+        const shape = Object.hasOwn(verbs, method) ? verbs[method] : undefined;
+        if (shape !== undefined) found.push({ call: node, client: clientOf(instance), shape, instance });
+        return;
+      }
+      // Known by what it is handed, where neither says (P301).
+      const held = heldCallAt(node, receiver, method);
+      if (held !== undefined) found.push(held);
     });
     return found;
+  };
+
+  /** The clients whose values are known by their type and answer to a method. */
+  const typedClientsOf = (method: string): RequestClient[] => REQUEST_CLIENTS.filter((client) => Object.hasOwn(client.receiver?.verbs ?? {}, method));
+
+  /** Whether the compiler says nothing of what a node is. */
+  const untyped = (node: TsNode): boolean => {
+    const type = node.getType();
+    return type.isAny() || type.isUnknown();
+  };
+
+  /** A value that is no value: a field declared `null` before it is filled in. */
+  const holdsNothing = (value: TsNode): boolean => Node.isNullLiteral(value) || (Node.isIdentifier(value) && value.getText() === 'undefined');
+
+  /** What a receiver may hold, followed to where it is given each value (P301). */
+  const heldBy = receiverValues((value) => {
+    if (instances.of(value) !== undefined || localClassOf(value) !== undefined) return true;
+    const origin = resolveTypeOrigin(value);
+    return REQUEST_CLIENTS.some((client) => isClientValue(origin, client));
+  });
+
+  /**
+   * A request made on a receiver the compiler knows nothing of (P301): a
+   * parameter with no type, a field declared `null` and filled in later or
+   * handed to the constructor. Read as a request where every value it may
+   * hold that is known for anything is a value of one client - the
+   * platform's `XMLHttpRequest`, or an instance of an installed client - and
+   * at least one is. Values nothing knows (a parameter nobody hands anything)
+   * are passed over; one known for something else makes it no request.
+   * Instances made with different bases leave the request the path the call
+   * writes, under none of them.
+   */
+  const heldCallAt = (node: CallExpression, receiver: TsNode, method: string): FoundCall | undefined => {
+    const typed = typedClientsOf(method);
+    if ((typed.length === 0 && !INSTANCE_VERBS.has(method)) || !untyped(receiver)) return undefined;
+    const clients = new Set<RequestClient>();
+    const held = new Set<ClientInstance>();
+    for (const value of heldBy(receiver)) {
+      if (holdsNothing(value)) continue;
+      const instance = instances.of(value);
+      if (instance !== undefined) {
+        held.add(instance);
+        continue;
+      }
+      const client = typed.find((each) => isClientValue(resolveTypeOrigin(value), each));
+      if (client !== undefined) clients.add(client);
+      else if (!untyped(value)) return undefined;
+    }
+    if (clients.size + (held.size > 0 ? 1 : 0) !== 1) return undefined;
+    const [client] = clients;
+    if (client !== undefined) {
+      const shape = client.receiver?.verbs[method];
+      return shape === undefined ? undefined : { call: node, client, shape };
+    }
+    const [first] = held;
+    if (first === undefined || [...held].some((each) => each.factory !== first.factory)) return undefined;
+    const shape = Object.hasOwn(first.factory.verbs, method) ? first.factory.verbs[method] : undefined;
+    if (shape === undefined) return undefined;
+    const agreed = held.size === 1 || [...held].every((each) => each.rewrite === undefined && each.rewriteUnread === undefined && JSON.stringify(each.base ?? null) === JSON.stringify(first.base ?? null));
+    return agreed ? { call: node, client: clientOf(first), shape, instance: first } : { call: node, client: first.factory.client, shape };
   };
 
   /**
@@ -773,6 +838,24 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
   };
 
   /**
+   * The class of this repository a receiver the compiler knows nothing of
+   * holds (P301): `this.api.get(...)` where the constructor is handed
+   * `new ApiClient()`. The one class every value known for anything is an
+   * instance of; none where a value is known for something else.
+   */
+  const heldClassOf = (receiver: TsNode): ClassDeclaration | undefined => {
+    if (!untyped(receiver)) return undefined;
+    const classes = new Set<ClassDeclaration>();
+    for (const value of heldBy(receiver)) {
+      const cls = localClassOf(value);
+      if (cls !== undefined) classes.add(cls);
+      else if (!holdsNothing(value) && !untyped(value)) return undefined;
+    }
+    const [only] = classes;
+    return classes.size === 1 ? only : undefined;
+  };
+
+  /**
    * A verb called on a class this repository wrote, when that is what it is.
    *
    * The two installed clients are asked first, so nothing here can change what
@@ -783,7 +866,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    */
   const localCallAt = (node: CallExpression, callee: TsNode, verb: string): FoundCall | undefined => {
     if (!Object.hasOwn(VERB_CALLS, verb)) return undefined;
-    const cls = localClassOf(callee);
+    const cls = localClassOf(callee) ?? heldClassOf(callee);
     if (cls === undefined) return undefined;
     const reading = readingOf(cls);
     if (reading === undefined) return undefined;

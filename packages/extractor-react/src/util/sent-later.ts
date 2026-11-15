@@ -1,8 +1,9 @@
 import type { ArrowFunction, CallExpression, FunctionDeclaration, FunctionExpression, MethodDeclaration, Node as TsNode, Symbol as TsSymbol } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
+import { handedTo, thisOwnerOf } from './receiver-values.js';
 
 /**
- * Where a request opened on a receiver is sent (P294, P296).
+ * Where a request opened on a receiver is sent (P294, P296, P301).
  *
  * `xhr.open('POST', url)` says where a request goes, and `xhr.send(body)`
  * what it carries. The two are often written one after the other, and read so
@@ -12,8 +13,11 @@ import { Node, SyntaxKind } from 'ts-morph';
  * function that does. The receiver is followed to each: the class's other
  * methods for `this.request`, the module for a value it holds, the function a
  * local value is handed to (its parameter), the callers of a function that
- * returns it (the name they keep it in), and the field it is put in. A few
- * steps out at most: past that the receiver is somebody else's.
+ * returns it (the name they keep it in), and the field it is put in; a
+ * receiver the function is handed, to what each caller sends after handing
+ * it, and a field of an object written in place, to the object's other
+ * methods (P301). A few steps out at most: past that the receiver is
+ * somebody else's.
  */
 
 /** How far out the receiver is followed. */
@@ -131,9 +135,10 @@ export const sentThrough = (open: CallExpression, method: string): CallExpressio
   const scope = enclosingScope(open);
   const inPlace = firstSend(scope, method, (each) => each.getText() === text, open.getEnd());
   if (inPlace !== undefined) return inPlace;
-  // `this.request.open(...)` in one method, `this.request.send(...)` in another.
+  // `this.request.open(...)` in one method, `this.request.send(...)` in
+  // another, of a class or an object written in place (P301).
   if (Node.isPropertyAccessExpression(receiver) && receiver.getExpression().getKind() === SyntaxKind.ThisKeyword) {
-    const owner = open.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+    const owner = thisOwnerOf(receiver);
     return owner === undefined ? undefined : firstSend(owner, method, thisField(receiver.getName()));
   }
   if (!Node.isIdentifier(receiver)) return undefined;
@@ -143,5 +148,28 @@ export const sentThrough = (open: CallExpression, method: string): CallExpressio
   // A value the module holds: wherever the module sends it.
   const home = enclosingScope(declaration);
   if (home === declaration.getSourceFile()) return firstSend(home, method, named(symbol));
-  return sentFrom(symbol, home, method, home === scope ? open.getEnd() : -1, STEPS);
+  const sent = sentFrom(symbol, home, method, home === scope ? open.getEnd() : -1, STEPS);
+  if (sent !== undefined || !Node.isParameterDeclaration(declaration)) return sent;
+  // Handed in by the callers (P301): wherever each sends what it handed, after the call.
+  for (const handed of handedTo(declaration)) {
+    const after = handed.getFirstAncestor((node) => Node.isCallExpression(node) || Node.isNewExpression(node)) ?? handed;
+    const there = sentAfter(handed, after, method);
+    if (there !== undefined) return there;
+  }
+  return undefined;
+};
+
+/** Where a value a caller hands on is sent after the call it hands it to: a name it holds it by, or a field. */
+const sentAfter = (handed: TsNode, call: TsNode, method: string): CallExpression | undefined => {
+  if (Node.isPropertyAccessExpression(handed) && handed.getExpression().getKind() === SyntaxKind.ThisKeyword) {
+    const owner = thisOwnerOf(handed);
+    return owner === undefined ? undefined : firstSend(owner, method, thisField(handed.getName()));
+  }
+  if (!Node.isIdentifier(handed)) return undefined;
+  const symbol = handed.getSymbol();
+  const declaration = symbol?.getDeclarations()[0];
+  if (symbol === undefined || declaration === undefined) return undefined;
+  const home = enclosingScope(declaration);
+  if (home === declaration.getSourceFile()) return firstSend(home, method, named(symbol));
+  return sentFrom(symbol, enclosingScope(call), method, call.getEnd(), STEPS - 1);
 };

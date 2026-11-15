@@ -619,20 +619,36 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     // a browser's request under it is asked (P280), where every value agrees
     // there is none; one service answering it is the guess, several a row.
     if (start === undefined) {
-      // An operation is asked of the endpoints, not of a route its path matches (P281).
-      if (values.some((value) => pathOfValue(value) !== undefined) || found.byName === true || sendsOperation(call)) return undefined;
-      const answering = answeringServices(path);
-      const [only] = answering;
-      if (answering.length > 1) notes.push(externalPathSharedFinding(found, method, path, answering));
-      if (only === undefined || answering.length > 1) return undefined;
-      const reached = within(only, 'externalValuePath', { baseUrl: found });
-      return reached.outcome.kind === 'linked' ? reached : undefined;
+      if (values.some((value) => pathOfValue(value) !== undefined)) return undefined;
+      return underBarePath(found);
     }
     const whole = normalizePath(`${start}/${path}`);
     const answering = answeringServices(whole);
     const [only] = answering;
+    if (answering.length > 1) notes.push(externalPathSharedFinding(found, method, whole, answering));
+    // A path in front that no service serves the address under (P301): the
+    // request's own path alone, as a browser's request under the value falls
+    // back to its route (P280).
+    if (answering.length === 0) return underBarePath(found, start);
     if (only === undefined || answering.length > 1) return undefined;
     const reached = within(only, 'externalValuePath', { baseUrl: found }, whole);
+    return reached.outcome.kind === 'linked' ? reached : undefined;
+  };
+
+  /**
+   * The one service serving the request's own path, under a public host
+   * whose value puts no path in front of it (P296) or one under which nothing
+   * is served (P301): a guess, joined there; several are a row naming them,
+   * none nothing. An operation is asked of the endpoints, not of a route its
+   * path matches (P281).
+   */
+  const underBarePath = (found: FoundValue, start?: string): Resolution | undefined => {
+    if (typeof path !== 'string' || found.byName === true || sendsOperation(call)) return undefined;
+    const answering = answeringServices(path);
+    const [only] = answering;
+    if (answering.length > 1) notes.push(externalPathSharedFinding(found, method, path, answering, start));
+    if (only === undefined || answering.length > 1) return undefined;
+    const reached = within(only, 'externalValuePath', { baseUrl: found });
     return reached.outcome.kind === 'linked' ? reached : undefined;
   };
 
@@ -889,13 +905,17 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
 };
 
 /**
- * Why a request under a host no service is reached at, with no path after
- * it, is not joined by its own path (P296): several services serve that
- * path, so the host is taken as no one's.
+ * Why a request under a host no service is reached at is not joined (P296):
+ * several services serve its path - under the value's path, or its own
+ * where the value has none or nothing is served under it (P301) - so the
+ * host is taken as no one's.
  */
-export const externalPathSharedFinding = (found: FoundValue, method: string, path: string, services: readonly string[]): Finding => ({
+export const externalPathSharedFinding = (found: FoundValue, method: string, path: string, services: readonly string[], unservedUnder?: string): Finding => ({
   reason: 'ambiguous-route-target',
-  message: `${found.variable} is ${found.value} (${whereFound(found)}), a host no service is reached at, and ${method} ${path} is served by ${services.join(' and ')}, so the request is taken as a third party's`,
+  message:
+    `${found.variable} is ${found.value} (${whereFound(found)}), a host no service is reached at` +
+    `${unservedUnder === undefined ? '' : `, under whose path ${unservedUnder} no service serves the request`}` +
+    `, and ${method} ${path} is served by ${services.join(' and ')}, so the request is taken as a third party's`,
   hint: `Add ${found.variable} to services[].baseUrlEnv of the service whose deployment ${found.value} is, or the host to its services[].hosts.`,
 });
 

@@ -40,6 +40,33 @@ describe('where a request opened on a receiver is sent (P296)', () => {
     ).toEqual({ "'/files'": 'file' });
   });
 
+  it('follows a receiver handed in to what each caller sends after handing it (P301)', () => {
+    expect(
+      sent(`
+        function start(request: XMLHttpRequest): void { request.open('PUT', '/files'); }
+        function upload(file: Blob): void { const request = new XMLHttpRequest(); start(request); request.send(file); }
+        class Notes {
+          private request = new XMLHttpRequest();
+          constructor(private readonly note: string) {}
+          write(): void { begin(this.request); this.request.send(this.note); }
+        }
+        function begin(request: XMLHttpRequest): void { request.open('POST', '/notes'); }
+      `),
+    ).toEqual({ "'/files'": 'file', "'/notes'": 'this.note' });
+  });
+
+  it('follows a field of an object written in place to its other methods (P301)', () => {
+    expect(
+      sent(`
+        const uploader = {
+          request: new XMLHttpRequest(),
+          start(): void { this.request.open('PUT', '/files'); },
+          finish(file: Blob): void { this.request.send(file); },
+        };
+      `),
+    ).toEqual({ "'/files'": 'file' });
+  });
+
   it('stops at a receiver handed in from where nothing follows it, and at another receiver', () => {
     expect(
       sent(`

@@ -114,6 +114,94 @@ describe('plain browser code (P284)', () => {
     ]);
   });
 
+  it('reads a request on a receiver handed in, by what each caller hands it and sends after (P301)', () => {
+    const graph = read({
+      '/js/handed.js': [
+        'function start(request, id) {',
+        "  request.open('POST', `https://api.example.test/orders/${id}/notes`);",
+        '}',
+        'function note(id, text) {',
+        '  const request = new XMLHttpRequest();',
+        '  start(request, id);',
+        '  request.send(JSON.stringify({ text }));',
+        '}',
+        'function load(xhr, url) {',
+        "  xhr.open('GET', url);",
+        '  xhr.send();',
+        '}',
+        "function items() { load(new XMLHttpRequest(), 'https://api.example.test/items'); }",
+        "function nobody(thing) { thing.open('GET', 'https://api.example.test/never'); }",
+        'const popup = { open() {} };',
+        "function show(target) { target.open('GET', 'https://api.example.test/popup'); }",
+        'show(popup);',
+      ].join('\n'),
+    });
+    const found = requests(graph).map((node) => [node.meta?.['method'], node.meta?.['path'], node.meta?.['bodyKeys']]);
+    expect(found.sort((a, b) => String(a[1]).localeCompare(String(b[1])))).toEqual([
+      ['GET', '/items', undefined],
+      ['POST', '/orders/:param/notes', ['text']],
+    ]);
+  });
+
+  it('reads a request opened on a field the compiler knows nothing of, by what the class gives it (P301)', () => {
+    const graph = read({
+      '/js/fields.js': [
+        "import axios from 'axios';",
+        "const shop = axios.create({ baseURL: 'https://shop.example.test/api' });",
+        'class Uploader {',
+        '  request = null;',
+        '  begin() {',
+        '    this.request = new XMLHttpRequest();',
+        "    this.request.open('PUT', 'https://files.example.test/files');",
+        '  }',
+        '  finish(file) { this.request.send(file); }',
+        '}',
+        'class Poller {',
+        '  constructor(request) { this.request = request; }',
+        "  poll() { this.request.open('GET', 'https://api.example.test/status'); this.request.send(); }",
+        '}',
+        'new Poller(new XMLHttpRequest());',
+        'class Catalog {',
+        '  constructor(client) { this.client = client; }',
+        "  list() { return this.client.get('/products'); }",
+        '}',
+        'new Catalog(shop);',
+        'class Cart {',
+        '  constructor() { this.client = null; }',
+        "  connect() { this.client = axios.create({ baseURL: 'https://shop.example.test/api' }); }",
+        "  lines() { return this.client.get('/cart'); }",
+        '}',
+        'class Window {',
+        '  constructor(target) { this.target = target; }',
+        "  show() { this.target.open('GET', 'https://api.example.test/never'); }",
+        '}',
+        'new Window({ open() {} });',
+      ].join('\n'),
+    });
+    const found = requests(graph).map((node) => [node.meta?.['method'], node.meta?.['url'], node.meta?.['bodyType']]);
+    expect(found.sort((a, b) => String(a[1]).localeCompare(String(b[1])))).toEqual([
+      ['GET', 'https://api.example.test/status', null],
+      ['PUT', 'https://files.example.test/files', 'any'],
+      ['GET', 'https://shop.example.test/api/cart', null],
+      ['GET', 'https://shop.example.test/api/products', null],
+    ]);
+  });
+
+  it('reads an instance a parameter property is handed where its type is not installed (P301)', () => {
+    const graph = read({
+      '/src/reviews.ts': [
+        "import axios, { type AxiosInstance } from 'axios';",
+        "const reviews = axios.create({ baseURL: 'https://reviews.example.test' });",
+        'export class ReviewList {',
+        '  constructor(private readonly http: AxiosInstance) {}',
+        "  latest() { return this.http.get('/latest'); }",
+        '}',
+        'export const list = new ReviewList(reviews);',
+      ].join('\n'),
+    });
+    expect(requests(graph).map((node) => node.meta?.['url'])).toEqual(['https://reviews.example.test/latest']);
+  });
+
   it('leaves a verb it cannot read as unread', () => {
     const graph = read({ '/js/any.js': "function send(verb) {\n  const request = new XMLHttpRequest();\n  request.open(verb, 'https://api.example.test/orders');\n}\n" });
     expect(requests(graph).map((node) => node.meta?.['method'])).toEqual([null]);

@@ -1,0 +1,1316 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-15T14:48:10.011Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/index.ts:GET /health@26",
+      "type": "function",
+      "label": "GET /health@26",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /items@6",
+      "type": "function",
+      "label": "GET /items@6",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /products@10",
+      "type": "function",
+      "label": "GET /products@10",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /status@22",
+      "type": "function",
+      "label": "GET /status@22",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:POST /orders/:id/notes@14",
+      "type": "function",
+      "label": "POST /orders/:id/notes@14",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:PUT /files@18",
+      "type": "function",
+      "label": "PUT /files@18",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 4,
+      "kind": "function"
+    },
+    {
+      "id": "config_key:jobs#SHOP_URL",
+      "type": "config_key",
+      "label": "SHOP_URL",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 7,
+      "meta": {
+        "key": "SHOP_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/products",
+      "type": "entry",
+      "label": "GET /products",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products",
+        "rawPath": "/products",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/status",
+      "type": "entry",
+      "label": "GET /status",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/status",
+        "rawPath": "/status",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:catalog:http:POST:/orders/:param/notes",
+      "type": "entry",
+      "label": "POST /orders/:param/notes",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/notes",
+        "rawPath": "/orders/:id/notes",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:catalog:http:PUT:/files",
+      "type": "entry",
+      "label": "PUT /files",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/files",
+        "rawPath": "/files",
+        "adapter": "express-routes",
+        "registration": "app.put",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:jobs:http:POST:/sync",
+      "type": "entry",
+      "label": "POST /sync",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/sync",
+        "rawPath": "/sync",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "external_api:shop.example.test",
+      "type": "external_api",
+      "label": "shop.example.test",
+      "repo": "web",
+      "meta": {
+        "host": "shop.example.test"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/index.ts:13:21",
+      "type": "http_out",
+      "label": "GET /health",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "method": "GET",
+        "url": "${SHOP_URL}/health",
+        "path": "/health",
+        "baseUrlEnv": "SHOP_URL",
+        "responseType": null,
+        "bodyType": null,
+        "baseUrl": "https://shop.example.test/api",
+        "baseUrlFrom": ".env.example",
+        "host": "shop.example.test"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/index.ts:7:21",
+      "type": "http_out",
+      "label": "GET /items",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 7,
+      "meta": {
+        "method": "GET",
+        "url": "${SHOP_URL}/items",
+        "path": "/items",
+        "baseUrlEnv": "SHOP_URL",
+        "responseType": null,
+        "bodyType": null,
+        "baseUrl": "https://shop.example.test/api",
+        "baseUrlFrom": ".env.example",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:POST /sync@17",
+      "type": "function",
+      "label": "POST /sync@17",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:readHealth",
+      "type": "function",
+      "label": "readHealth",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:readItems",
+      "type": "function",
+      "label": "readItems",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "orders#src/index.ts:GET /health@5",
+      "type": "function",
+      "label": "GET /health@5",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4600,
+            "file": "src/index.ts",
+            "line": 30
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4800,
+            "file": "src/index.ts",
+            "line": 21
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4700,
+            "file": "src/index.ts",
+            "line": 9
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "functions": 5,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "browser"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/catalog.js:14:12",
+      "type": "ui_api_call",
+      "label": "GET /products",
+      "repo": "web",
+      "file": "js/catalog.js",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/products",
+        "path": "/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ShopClient",
+        "localClient": "recognised",
+        "via": "literal",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/requests.js:19:3@14:3",
+      "type": "ui_api_call",
+      "label": "GET /items",
+      "repo": "web",
+      "file": "js/requests.js",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://shop.example.test/items",
+        "path": "/items",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "xhr",
+        "via": "literal",
+        "host": "shop.example.test",
+        "through": "load",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/requests.js:3:3",
+      "type": "ui_api_call",
+      "label": "POST /orders/:param/notes",
+      "repo": "web",
+      "file": "js/requests.js",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "https://shop.example.test/orders/:param/notes",
+        "path": "/orders/:param/notes",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{text:any}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "text"
+        ],
+        "package": null,
+        "client": "xhr",
+        "via": "literal",
+        "host": "shop.example.test",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/uploader.js:22:5",
+      "type": "ui_api_call",
+      "label": "GET /status",
+      "repo": "web",
+      "file": "js/uploader.js",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://shop.example.test/status",
+        "path": "/status",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "xhr",
+        "via": "literal",
+        "host": "shop.example.test",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/uploader.js:7:5",
+      "type": "ui_api_call",
+      "label": "PUT /files",
+      "repo": "web",
+      "file": "js/uploader.js",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "url": "https://shop.example.test/files",
+        "path": "/files",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "any",
+        "bodyFrom": "literal",
+        "package": null,
+        "client": "xhr",
+        "via": "literal",
+        "host": "shop.example.test",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "web#js/catalog.js:ProductList.products",
+      "type": "function",
+      "label": "ProductList.products",
+      "repo": "web",
+      "file": "js/catalog.js",
+      "line": 13
+    },
+    {
+      "id": "web#js/requests.js:addNote",
+      "type": "function",
+      "label": "addNote",
+      "repo": "web",
+      "file": "js/requests.js",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "any"
+            },
+            {
+              "name": "text",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#js/requests.js:load",
+      "type": "function",
+      "label": "load",
+      "repo": "web",
+      "file": "js/requests.js",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "xhr",
+              "type": "any"
+            },
+            {
+              "name": "url",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#js/requests.js:loadItems",
+      "type": "function",
+      "label": "loadItems",
+      "repo": "web",
+      "file": "js/requests.js",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#js/requests.js:start",
+      "type": "function",
+      "label": "start",
+      "repo": "web",
+      "file": "js/requests.js",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "any"
+            },
+            {
+              "name": "id",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#js/uploader.js:StatusPoller.poll",
+      "type": "function",
+      "label": "StatusPoller.poll",
+      "repo": "web",
+      "file": "js/uploader.js",
+      "line": 21
+    },
+    {
+      "id": "web#js/uploader.js:Uploader.begin",
+      "type": "function",
+      "label": "Uploader.begin",
+      "repo": "web",
+      "file": "js/uploader.js",
+      "line": 5
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:http:GET:/health",
+      "to": "catalog#src/index.ts:GET /health@26",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 26,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/health",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/items",
+      "to": "catalog#src/index.ts:GET /items@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/items",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/products",
+      "to": "catalog#src/index.ts:GET /products@10",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/products",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/status",
+      "to": "catalog#src/index.ts:GET /status@22",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 22,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/status",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:catalog:http:POST:/orders/:param/notes",
+      "to": "catalog#src/index.ts:POST /orders/:id/notes@14",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{text:any}",
+      "file": "src/index.ts",
+      "line": 14,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:POST:/orders/:param/notes",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:catalog:http:PUT:/files",
+      "to": "catalog#src/index.ts:PUT /files@18",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 18,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:PUT:/files",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:jobs:http:POST:/sync",
+      "to": "jobs#src/index.ts:POST /sync@17",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{items:any;health:any}",
+      "file": "src/index.ts",
+      "line": 17,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/health",
+      "to": "orders#src/index.ts:GET /health@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:jobs#src/index.ts:13:21",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "baseUrl": "https://shop.example.test/api",
+        "baseUrlFrom": ".env.example"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/index.ts:7:21",
+      "to": "entry:catalog:http:GET:/items",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/index.ts",
+      "line": 7,
+      "meta": {
+        "via": "externalValuePath",
+        "targetService": "catalog",
+        "baseUrl": "https://shop.example.test/api",
+        "baseUrlFrom": ".env.example"
+      }
+    },
+    {
+      "from": "jobs#src/index.ts:POST /sync@17",
+      "to": "jobs#src/index.ts:readHealth",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "src/index.ts",
+      "line": 18
+    },
+    {
+      "from": "jobs#src/index.ts:POST /sync@17",
+      "to": "jobs#src/index.ts:readItems",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "src/index.ts",
+      "line": 18
+    },
+    {
+      "from": "jobs#src/index.ts:readHealth",
+      "to": "config_key:jobs#SHOP_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 13
+    },
+    {
+      "from": "jobs#src/index.ts:readHealth",
+      "to": "http_out:jobs#src/index.ts:13:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 13
+    },
+    {
+      "from": "jobs#src/index.ts:readItems",
+      "to": "config_key:jobs#SHOP_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 7
+    },
+    {
+      "from": "jobs#src/index.ts:readItems",
+      "to": "http_out:jobs#src/index.ts:7:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 7
+    },
+    {
+      "from": "ui_api_call:web#js/catalog.js:14:12",
+      "to": "entry:catalog:http:GET:/products",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/catalog.js",
+      "line": 14,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/requests.js:19:3@14:3",
+      "to": "entry:catalog:http:GET:/items",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/requests.js",
+      "line": 19,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/requests.js:19:3@14:3",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/requests.js",
+      "line": 19
+    },
+    {
+      "from": "ui_api_call:web#js/requests.js:3:3",
+      "to": "entry:catalog:http:POST:/orders/:param/notes",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/requests.js",
+      "line": 3,
+      "params": [
+        "{text:any}"
+      ],
+      "meta": {
+        "via": "unique-route",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/requests.js:3:3",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/requests.js",
+      "line": 3
+    },
+    {
+      "from": "ui_api_call:web#js/uploader.js:22:5",
+      "to": "entry:catalog:http:GET:/status",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/uploader.js",
+      "line": 22,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/uploader.js:22:5",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/uploader.js",
+      "line": 22
+    },
+    {
+      "from": "ui_api_call:web#js/uploader.js:7:5",
+      "to": "entry:catalog:http:PUT:/files",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/uploader.js",
+      "line": 7,
+      "params": [
+        "any"
+      ],
+      "meta": {
+        "via": "unique-route",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/uploader.js:7:5",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/uploader.js",
+      "line": 7
+    },
+    {
+      "from": "web#js/catalog.js:ProductList.products",
+      "to": "ui_api_call:web#js/catalog.js:14:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/catalog.js",
+      "line": 14
+    },
+    {
+      "from": "web#js/requests.js:addNote",
+      "to": "web#js/requests.js:start",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any",
+        "any"
+      ],
+      "returns": "void",
+      "file": "js/requests.js",
+      "line": 8
+    },
+    {
+      "from": "web#js/requests.js:loadItems",
+      "to": "ui_api_call:web#js/requests.js:19:3@14:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/requests.js",
+      "line": 19
+    },
+    {
+      "from": "web#js/requests.js:loadItems",
+      "to": "web#js/requests.js:load",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any",
+        "any"
+      ],
+      "returns": "void",
+      "file": "js/requests.js",
+      "line": 19
+    },
+    {
+      "from": "web#js/requests.js:start",
+      "to": "ui_api_call:web#js/requests.js:3:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/requests.js",
+      "line": 3
+    },
+    {
+      "from": "web#js/uploader.js:StatusPoller.poll",
+      "to": "ui_api_call:web#js/uploader.js:22:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/uploader.js",
+      "line": 22
+    },
+    {
+      "from": "web#js/uploader.js:Uploader.begin",
+      "to": "ui_api_call:web#js/uploader.js:7:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/uploader.js",
+      "line": 7
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/index.ts",
+      "line": 7,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 8,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /items@6 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 8,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 7,
+                "symbol": "GET /items@6 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 11,
+                "symbol": "GET /products@10 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 15,
+                "symbol": "POST /orders/:id/notes@14 -> res.status(201).json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "service": "jobs",
+      "file": "src/index.ts",
+      "line": 7,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "SHOP_URL is https://shop.example.test/api in .env.example, which is taken as catalog",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add SHOP_URL to services[].baseUrlEnv of catalog to say so outright.",
+      "symbol": "http_out:jobs#src/index.ts:7:21",
+      "meta": {
+        "variable": "SHOP_URL",
+        "value": "https://shop.example.test/api",
+        "from": ".env.example"
+      }
+    },
+    {
+      "service": "jobs",
+      "file": "src/index.ts",
+      "line": 13,
+      "reason": "ambiguous-route-target",
+      "message": "SHOP_URL is https://shop.example.test/api (.env.example), a host no service is reached at, under whose path /api no service serves the request, and GET /health is served by catalog and orders, so the request is taken as a third party's",
+      "hint": "Add SHOP_URL to services[].baseUrlEnv of the service whose deployment https://shop.example.test/api is, or the host to its services[].hosts.",
+      "symbol": "http_out:jobs#src/index.ts:13:21"
+    },
+    {
+      "service": "jobs",
+      "file": "src/index.ts",
+      "line": 13,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "SHOP_URL is https://shop.example.test/api in .env.example, which is taken as shop.example.test",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add SHOP_URL to services[].baseUrlEnv of shop.example.test to say so outright.",
+      "symbol": "http_out:jobs#src/index.ts:13:21",
+      "meta": {
+        "variable": "SHOP_URL",
+        "value": "https://shop.example.test/api",
+        "from": ".env.example"
+      }
+    },
+    {
+      "file": "src/index.ts",
+      "line": 18,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "POST /sync@17 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "jobs"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /health@5 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "orders"
+    }
+  ]
+}
