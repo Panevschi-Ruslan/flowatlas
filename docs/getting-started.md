@@ -72,7 +72,9 @@ flowatlas init --dir .    # look under this directory instead
 > `init` with no `--dir` scans the *parent* directory, which is what you want
 > when the configuration lives inside one of the repositories. Pass `--dir .`
 > when it lives above them. It looks one level down, at each directory with a
-> `package.json`.
+> `package.json`, and at each directory of plain pages and the scripts they
+> load with no manifest and nothing that builds them, which it offers as
+> `browser`.
 
 Over a copy of `fixtures/multi-repo`, with its configuration deleted, it
 proposes this:
@@ -91,7 +93,8 @@ opens a repository, and it is read from the manifest: a server type wins over a
 browser type when a repository declares both, because the server reader reads
 the browser half too. A framework nothing here reads — Astro, Solid — is
 named rather than silently skipped; SvelteKit, Nuxt and Remix are read for
-their file routes, loads and actions, and Vue and Svelte for their components.
+their file routes, loads and actions, Vue and Svelte for their components, and
+a plain page for the requests its scripts make.
 
 **A monorepo is proposed as its applications.** A repository that declares a
 workspace, in `workspaces` or a `pnpm-workspace.yaml`, becomes one service per
@@ -119,14 +122,14 @@ One service, and one graph that runs from its route into the package:
       →  readOrders             web/../../packages/orders-lib/src/store.ts:13
         ⚙  ORDERS_UPSTREAM_URL  web/../../packages/orders-lib/src/store.ts:14
         ↗  GET /orders          web/../../packages/orders-lib/src/store.ts:16
-        ↗  GET /orders          web/../../packages/orders-lib/src/store.ts:16
-unresolved on this path: 2
+unresolved on this path: 1
 ```
 
-The request is there twice because one `fetch` is read by both halves of a
-repository that is a server and a browser at once, and the two rows are true: the
-far side is not in this configuration, and nothing declares
-`ORDERS_UPSTREAM_URL`.
+Both halves of a repository that is a server and a browser at once read that
+`fetch`, and it is drawn once, on the server, because what reaches it is a
+route's handler; a call a screen and a handler both reach is drawn on both
+sides, each naming the other. The one row is true: the far side is not in this
+configuration, and nothing declares `ORDERS_UPSTREAM_URL`.
 
 `flowatlas link ../gateway ../orders ../web` is the same thing with the
 repositories named rather than discovered, for when they are not all in one
@@ -160,7 +163,7 @@ channels: 3 total, 1 joined, 1 with no handler, 1 with no publisher
 routes: 15 total, 7 reached, 8 never called, 1 claimed by two handlers
 ways in: 17 found, 17 with a handler that was read, 0 without — only the second number is coverage of what happens after the request arrives
 types: 15 (4 from shared packages)
-missed: 9 · notes: 0 · findings: 4
+missed: 11 · notes: 0 · findings: 4
 ```
 
 A first build is rarely all joined, and it is not supposed to be. Nothing was
@@ -202,10 +205,10 @@ pnpm flowatlas doctor --config fixtures/multi-repo/flowatlas.config.json
 The first line is the verdict:
 
 ```
-unresolved: total=11 (missing) · markers: errors=0 warnings=0 · desync=5 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=13 (missing) · markers: errors=0 warnings=0 · desync=5 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 ```
 
-`total=11` is the rows somebody could act on. The places static reading cannot
+`total=13` is the rows somebody could act on. The places static reading cannot
 see at all are counted beside them and never added in, and neither are the
 places where nothing joins because there is nothing to join. `(missing)` says
 there is no baseline yet; `flowatlas doctor --accept` writes one, to commit like
@@ -400,6 +403,13 @@ to look for.
 | [`nest-mount-empty`](../fixtures/nest-mount-empty) | a route behind a mount every environment file leaves empty, joined and marked as a guess |
 | [`express-not-installed`](../fixtures/express-not-installed) | an Express service with no `node_modules`, read from what its source states |
 | [`koa-react-full-stack`](../fixtures/koa-react-full-stack) | one directory that is a server and a browser, read by the reader that reads both |
+| [`script-wrappers`](../fixtures/script-wrappers) | a plain page with no manifest, its functions kept in wrappers, and jQuery, superagent and ky as globals a script tag or the linter declares |
+| [`graphql-codegen-sdk`](../fixtures/graphql-codegen-sdk) | calls through the SDK GraphQL Code Generator writes, joined to the operations they send |
+| [`grpc-contract-messages`](../fixtures/grpc-contract-messages) | what a gRPC call sends compared with its contract's message, and a server that disagrees with its contract |
+| [`front-end-route-branches`](../fixtures/front-end-route-branches) | a route table written over a list, pages a condition chooses between, a locale prefix and Angular's guards |
+| [`assumed-port-requests`](../fixtures/assumed-port-requests) | two servers heard on one port only by guesses - a framework's default and a port read through a merge - each request placed at the one that serves it |
+| [`gateway-served-everywhere`](../fixtures/gateway-served-everywhere) | APIs deployed four ways, called by the address API Gateway serves each at |
+| [`job-queue-layers`](../fixtures/job-queue-layers) | BullMQ queues behind layers of the repository's own, read where each caller names them |
 
 A fixture with a `flowatlas.config.json` is a project:
 

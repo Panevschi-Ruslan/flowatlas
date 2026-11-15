@@ -10,11 +10,14 @@ One map of a project that lives in several repositories.
 **A command-line tool that reads several TypeScript repositories with the
 compiler's own checker, without running them, and joins them into one graph you
 can query — from a terminal or from a coding agent over the Model Context
-Protocol.** It knows NestJS and Angular, React and Next.js, Vue and Nuxt, Svelte and SvelteKit, Remix, GraphQL,
+Protocol.** It knows NestJS and Angular, React and Next.js, Vue and Nuxt, Svelte and SvelteKit, Remix,
+plain pages and the scripts they load, GraphQL, gRPC,
 Express, Fastify, Koa and Hono, Medusa, tRPC, oRPC and Telegraf; TypeORM, Prisma, Drizzle, Mongoose,
 Sequelize, Kysely, Knex, MongoDB and node-postgres; Redis, Kafka, RabbitMQ,
-BullMQ and socket.io; and OpenAPI and AsyncAPI documents for the services whose
-source you do not have.
+BullMQ and socket.io; AWS functions, APIs, queues and workflows as Terraform,
+the Serverless Framework, the CDK, SAM and CloudFormation deploy them, and the
+charts, kustomizations and helmfiles that route a request in a cluster; and
+OpenAPI and AsyncAPI documents for the services whose source you do not have.
 
 Each repository is read on its own, then the readings are joined: a request made
 in one service is matched to the route that answers it in another, a message
@@ -214,7 +217,8 @@ markdown is [docs/getting-started.md](docs/getting-started.md), and
 a change, from before you start to after it runs.
 
 `init` writes `flowatlas.config.json`, works out each repository's name and kind
-from its manifest, and registers the graph server in every one of them so an
+from its manifest - a directory of plain pages and scripts with none is
+offered as `browser` - and registers the graph server in every one of them so an
 agent in any repository can query the whole project. A repository that declares
 a workspace is proposed as the applications in it, one service each, with the
 packages they import read as part of whichever service declares them.
@@ -610,9 +614,11 @@ The two keys that matter most:
 **`baseUrlEnv`** is what turns a request into an edge. A service declares the
 settings keys other services use to address it; when a request is rooted at one
 of them, it resolves to that service's route. Without it, the setting's value is
-looked for in what the repositories write down - example environment files, a
-compose file, `serverless.yml`, `wrangler` variables, the code's own fallback -
-and its host matched to a service by name or by `services[].hosts`; only the
+looked for in what the repositories write down - example environment files,
+those at a workspace's top for its packages, an Angular application's
+`environments/` files, a compose file, `serverless.yml`, `wrangler` variables,
+the code's own fallback - and its host matched to a service by name or by
+`services[].hosts`, and a port of this machine to the service listening there; only the
 address is kept, never a secret, and such a join is `heuristic`. A request whose
 setting is given nowhere is recorded but joined to nothing.
 
@@ -704,13 +710,15 @@ recorded with a reason and a location rather than guessed at or dropped:
 | `unknown-base-url-env` | a settings key no service claims |
 | `ambiguous-route` | two routes answer equally; registration order decides |
 | `ambiguous-route-application` | two applications in one service serve it; deployment decides |
+| `ambiguous-route-target` | the request could go to more than one service, and more than one serves it |
 | `dynamic-http-url` | the address is built at run time and cannot be read |
+| `api-client-base-unread` | the base a client or its interceptor puts in front was not read, so its requests keep a hole there |
 | `route-handler-unread` | a way in was found and the code behind it was not |
 | `route-mount-unread` | the route was read, the prefix it is mounted under was not |
 | `db-layer-unread` | a class of the project's own looks like a data layer nobody named |
 | `marker-route-not-found` | an annotation points at a route that is gone |
 
-Those are a handful of about a hundred; the whole list, grouped by what each is
+Those are a handful of close to three hundred; the whole list, grouped by what each is
 about, is in [the command reference](docs/CLI.md#the-reasons-a-row-can-carry).
 `flowatlas doctor` groups them with what to do, `flowatlas stats` counts them
 and `flowatlas dead` explains the routes nothing calls: the ones something
@@ -731,6 +739,14 @@ were inferred and carry `confidence: "heuristic"`. An inference is a guess with
 its reasoning attached, and the field is there so you can filter on it, not so
 the word can be avoided. What cannot be inferred either is recorded as
 unresolved with a file, a line and a reason.
+
+A guess also never outranks what is written. A port a framework only assumes,
+one an example environment file offers or one the code writes as a fallback
+places a request only at a service that serves it; a base that is one of
+several settings - each side of a condition nobody settles, each link of an
+`A || B` chain - is asked of every service that may be behind it, and the one
+that serves the request is the join, named as chosen among the others. Where
+two of them serve it, the row names both and neither is chosen.
 
 ### When reading is not enough
 
@@ -823,7 +839,17 @@ prove, and the path is given so you can run it.
   interface whose owner can say no type of it is a finding
   (`fixtures/graphql-federation-gaps`); a field using `@requires` that does not
   ask at least what the fields it requires ask is a finding, scopes compared by
-  which implies which (`fixtures/graphql-requires-scopes`).
+  which implies which (`fixtures/graphql-requires-scopes`). An operation a
+  server posts as `JSON.stringify({ query })`, with any of the usual `fetch`
+  packages, joins its root fields (`fixtures/lambda-graphql-values-posted`); a
+  method of a GraphQL Code Generator SDK - `getSdk`, re-exported under another
+  name or reached through a barrel, the SWR hooks it writes and
+  typescript-apollo-angular's services - is the operation it sends, read from
+  the codegen's documents where nobody committed its output
+  (`fixtures/graphql-codegen-sdk`, `fixtures/rewrite-branches-composed-sends`,
+  `fixtures/locale-links-registries-sdk-grpc`); and a function handed to
+  `flow`, `pipe`, `compose` or Remeda's `piped` is called wherever the
+  composition is (`fixtures/interceptor-sdk-composition-grpc`).
 - **Components in files of their own format.** A `.vue` or `.svelte` file's
   scripts are read by the checker as TypeScript, every position named by the
   component file at its own line, and the event bindings of its markup are the
@@ -876,6 +902,23 @@ prove, and the path is given so you can run it.
   a name written in part or carried by a registry's records is read as far as
   the source states it, and a server function handed to a client the
   repository builds is called from that client (`fixtures/mcp-clients-registries`).
+- **Pages and navigations.** A navigation is a call to the page it shows on
+  every router - Vue Router's, Next's and React Router's `push`, SvelteKit's
+  `goto`, Angular's `navigate`, a `redirect` and the link components - and one
+  out of the application or to no page is said (`fixtures/front-end-navigations`).
+  A route's path or a navigation's address a helper of the repository hands
+  back is read with the call's arguments, a screen through any lazy loader,
+  and a condition nothing settles is one page per branch, each a guess
+  (`fixtures/front-end-route-helpers`). A route table written over a list, or
+  read off a registry of the repository's own however its store is kept and
+  viewed, places one page per entry; Angular's guards and resolvers are drawn
+  from the screen in the order the router runs them; and an address written
+  without the locale prefix a middleware or next-intl puts in front lands on
+  the page under it, said as a note (`fixtures/front-end-route-branches`,
+  `fixtures/registry-stores-address-props-vite`,
+  `fixtures/registry-reach-views-handed-links`). A link component of the
+  application's own is read through to the link it renders, the address each
+  use hands it included (`fixtures/locale-links-registries-sdk-grpc`).
 - **Procedures.** A tRPC tree is read on the server as one way in per procedure,
   addressed by the dotted path its callers write, with the guards inherited
   through the procedure it was built from (`fixtures/trpc-router`); a tree or a
@@ -918,7 +961,14 @@ prove, and the path is given so you can run it.
   NestJS's `getService` - join the service their address names, and a service
   written in another language is declared by its contract; a plain JavaScript
   server is read too (`fixtures/grpc-shared-contract`,
-  `fixtures/nest-grpc-services`).
+  `fixtures/nest-grpc-services`). A contract's messages are the payload of
+  every method, so `contracts` compares what a call writes and reads back with
+  them, under the field names the loader's `keepCase` chooses; the health and
+  reflection services a package hands a server are drawn; and a method the
+  contract declares that nothing implements, a member it does not declare and a
+  handler reading a field its message lacks are findings
+  (`fixtures/grpc-contract-messages`, `fixtures/interceptor-sdk-composition-grpc`,
+  `fixtures/locale-links-registries-sdk-grpc`).
 - **Applications.** Two applications in one service — a NestJS API and a worker,
   or a second Next.js application under `examples/` — serving the same path are
   two entries, and a request written inside one reaches its own
@@ -936,7 +986,11 @@ prove, and the path is given so you can run it.
   `libs/` with none of their own, as a Nest CLI, Nx or Angular workspace does -
   is linked one application at a time (`flowatlas link apps/orders`), built with
   the root's manifest and the libraries its code imports through the tsconfig's
-  `paths` (`fixtures/workspace-one-manifest`).
+  `paths` (`fixtures/workspace-one-manifest`). A front end that declares its
+  API's workspace package only to import its types does not take the API's
+  ways in as its own (`fixtures/service-package-types`), and the environment
+  and compose files at a workspace's top give its packages the settings their
+  own files do not (`fixtures/workspace-env-greedy-sides`).
 - **Data layers** for TypeORM, Prisma, Drizzle, Mongoose, Sequelize (including
   models declared with decorators), Kysely, Knex, node-postgres and MongoDB, and
   a repository base named in the configuration (`fixtures/nest-typeorm`,
@@ -974,7 +1028,18 @@ prove, and the path is given so you can run it.
   its instance was built with, to the decorator that asked the container for
   that instance and the provider that built it, and a job named after its
   handler's class (`SendMailJob.name`) is that job at both ends
-  (`fixtures/nest-queue-wrapper`). socket.io is read
+  (`fixtures/nest-queue-wrapper`). So is a BullMQ queue a base class keeps
+  from what each class extending it hands `super(...)`, one a field is set to
+  where it is declared or another module writes once, the job records a layer
+  builds, plans and splits, followed out to the callers that decide them, a
+  flow's tree of jobs, and a worker's processor, handed in by each subclass or
+  written at its construction with the calls it makes; a job named off an
+  error a `catch` is handed is read from what the `try` block throws
+  (`fixtures/job-queue-layers`, `fixtures/job-flows-from-callers`,
+  `fixtures/job-batches-planned-by-a-layer`,
+  `fixtures/declared-queues-and-handed-paths`,
+  `fixtures/choices-carried-and-errors-caught`,
+  `fixtures/shared-queues-and-resource-grants`). socket.io is read
   from both ends under the namespace each end is on, whether a gateway declares
   it or the server opens it with `io.of('/live')` (`fixtures/socket-channels`,
   `fixtures/socket-namespaces`). An in-house bus is described in configuration,
@@ -997,7 +1062,24 @@ prove, and the path is given so you can run it.
   service at that base (`fixtures/client-instance-base`); so does one whose
   base an axios interceptor, an ofetch `onRequest` hook or a ky
   `beforeRequest` hook sets, and a server's request to a host a configured
-  service is reached at joins that service (`fixtures/client-interceptor-base`). A request
+  service is reached at joins that service (`fixtures/client-interceptor-base`).
+  An interceptor that rewrites the address - a host written in front, a prefix
+  chosen by a test of the address - is applied to the requests whose address
+  passes the test, and one that cannot be read leaves a hole in front of each
+  request rather than a join by its path alone (`fixtures/angular-interceptor-host`,
+  `fixtures/rewrite-branches-composed-sends`,
+  `fixtures/interceptor-sdk-composition-grpc`). `XMLHttpRequest` is read as
+  `fetch` is and sent wherever its receiver goes, and a request on a receiver
+  the compiler knows nothing of is read by what each caller hands it, each
+  caller's base its own (`fixtures/handed-receivers`,
+  `fixtures/receivers-handed-on`). A call both halves of a full-stack
+  application read is drawn on the side it runs on, by its file's name or
+  directive or by what reaches it, and on both, paired, where both do
+  (`fixtures/workspace-env-greedy-sides`, `fixtures/settings-chains-paired-calls`).
+  A base read through a chain of settings or a condition nobody settles is
+  asked of each service its settings may name (`fixtures/settings-branches-helpers`,
+  `fixtures/branch-settings-offered-ports`,
+  `fixtures/chain-candidates-written-fallback`). A request
   to `localhost:<port>` joins the service whose server listens there, as its
   code (`app.listen(3001)`, Hono's `serve({ port })`, NestJS's bootstrap) or
   its framework's configuration (`devServer.port`, `next dev -p`) says, and a
@@ -1009,6 +1091,17 @@ prove, and the path is given so you can run it.
   example environment file fills, and a compose or `docker run` mapping,
   reconciled with the code so `localhost:3001` and `orders:3000` are one
   service, each edge saying its side (`fixtures/port-sources-joins`). A
+  full-stack framework's own server listens on its documented port where
+  nothing writes one - Next, Nuxt, Nitro, Remix and React Router on 3000, the
+  ones run through Vite's dev server on 5173, Astro on 4321 - and where the
+  environment file its command, `dotenv`, NestJS's `ConfigModule`,
+  `--env-file` or Bun loads sets the port, there; a port kept in a
+  configuration a setter merges, handed in by each caller or written as
+  `PORT ?? 3000` is read too. A port only assumed, offered by an example file
+  or written as a fallback is a guess, and places a request only at a service
+  that serves it (`fixtures/framework-ports-chains`,
+  `fixtures/assumed-port-requests`, `fixtures/env-file-ports`,
+  `fixtures/held-config-ports`, `fixtures/registry-stores-address-props-vite`). A
   request a server's proxy forwards joins where it is forwarded: Vite's
   `server.proxy`, an Angular dev server's proxy configuration, Nuxt's
   `devProxy` and route rules, Next's `rewrites()` and Create React App's
@@ -1031,9 +1124,24 @@ prove, and the path is given so you can run it.
   GitLab jobs are read (`fixtures/cluster-install-joins`), and a Next or Nitro
   server's own `fetch('/api/x')` is a finding where it will not work, while
   Nitro's `$fetch` joins its own route in process
-  (`fixtures/own-origin-requests`). A
+  (`fixtures/own-origin-requests`). A kustomization's transformers,
+  generators, configurations and name references, a helmfile's sub-helmfiles,
+  release templates and `--include-needs`, and a chart's packed dependencies
+  and `import-values` are read as the tools that install them read them, and
+  what those tools fetch or run when they do is a row saying so
+  (`fixtures/cluster-transformer-joins`, `fixtures/cluster-templating-needs`). A
   browser holding a stream open is a request like any other
   (`fixtures/sse-stream`).
+- **Plain pages.** A directory with no manifest that holds a page and the
+  scripts it loads, and nothing that builds them, is a front end of the type
+  `browser`, which `init` and `link` offer. Its classic scripts share their
+  globals; an object's methods, a prototype's members, a getter or a setter,
+  and what a wrapper run at once hands to `window` or `module.exports` are
+  functions of their own, joined where the page calls them; and jQuery's
+  `$.ajax` and its kin, superagent, ky, unfetch and axios are the installed
+  client where a script tag loads them, a comment declares them or the ESLint
+  configuration lists them as globals (`fixtures/browser-gateway-address`,
+  `fixtures/script-members`, `fixtures/script-wrappers`).
 - **Bots.** Telegraf, both the decorator style and the imperative one, and a
   table of handlers the project keeps itself (`fixtures/nest-telegraf`,
   `fixtures/bot-registry`).
@@ -1107,6 +1215,26 @@ prove, and the path is given so you can run it.
   run where the files decide them, and Terraform's `%{ if }` / `%{ for }`
   directives around an import are read part by part, every way a condition
   nothing decides goes (`fixtures/multi-repo-failure-values`).
+  Every reader records where API Gateway serves an API's routes - its region's
+  gateway host, under each stage a parameter, a workspace or the command may
+  choose, and the custom domain a mapping puts it under - so a request written
+  out as `https://<id>.execute-api.<region>.amazonaws.com/<stage>/<path>`
+  joins the one API served there (`fixtures/browser-gateway-address`,
+  `fixtures/gateway-served-everywhere`,
+  `fixtures/gateway-served-at-deploy-choices`,
+  `fixtures/declared-queues-and-handed-paths`); a greedy `{proxy+}` is a
+  catch-all (`fixtures/workspace-env-greedy-sides`). A send whose address only the
+  running code decides is drawn, as a guess, to each queue, topic, bus, table,
+  stream or bucket its function is granted by name - a SAM policy template,
+  an IAM role or policy, a service file's role statements, a Terraform role's
+  policies, a CDK grant, a role handed to a function, and the grant the CDK
+  writes into a resource's own policy for a role of another account - while a
+  grant on `*` draws nothing and says so (`fixtures/sam-policy-grants`,
+  `fixtures/serverless-iam-grants`, `fixtures/terraform-role-grants`,
+  `fixtures/cdk-grants`, `fixtures/cdk-imported-role-grants`,
+  `fixtures/shared-queues-and-resource-grants`). A table written through a
+  repository base class is the one each class extending it names
+  (`fixtures/sam-repository-tables`).
 - **Guards.** Everything in front of a way in is a node and an ordered
   `guarded_by` edge — NestJS guards, interceptors and pipes, call-registered
   middleware, a procedure's `.use(…)`, a file-system router's declarative list —
@@ -1171,10 +1299,16 @@ prove, and the path is given so you can run it.
 Known gaps in what it can read:
 
 - A repository built on anything but the frameworks above. Astro and Solid are
-  recognised by name and read by nothing: `init` and `build` both say which
+  recognised by name and their code is read by nothing - of Astro, only the
+  port its server listens on: `init` and `build` both say which
   repository and which framework, and the graph is smaller than the project by
   exactly that much. Remix and React Router are read for their file routes,
   loads and actions, and for their React components.
+- In a plain page, a wrapper the page runs later (`$(function () {...})`, a
+  `DOMContentLoaded` listener) is not a scope of its own, and a client a
+  CommonJS script `require`s is not read as the client.
+- A port decided where reading stops - defaults loaded from a path built at
+  run time - is an info `listen-port-unread` row rather than a port guessed.
 - What a framework adds beyond its documented defaults. SvelteKit's `$lib`
   and Nuxt's `~` are read as each documents them when `.svelte-kit/` and
   `.nuxt/` are not there, and the names Nuxt imports from `composables/` and
