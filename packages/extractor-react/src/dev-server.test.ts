@@ -112,11 +112,21 @@ describe("where a full-stack framework run through Vite listens (P303)", () => {
 });
 
 describe("where an Astro site's dev server listens (P254)", () => {
-  it("reads `server.port` and a script's `--port`, and assumes no default", () => {
+  it("reads `server.port` and a script's `--port`", () => {
     expect(said(astroListens(repo({ 'astro.config.mjs': "export default defineConfig({\n  output: 'server',\n  server: { port: 4330 },\n});", 'package.json': scripts({ dev: 'astro dev --port 4331' }) })))).toEqual([
       'astro.config.mjs:3 4330',
       'package.json:3 4331',
     ]);
-    expect(said(astroListens(repo({ 'package.json': scripts({ dev: 'astro dev' }) })))).toEqual([]);
+  });
+
+  it("assumes Astro's own 4321 as a default where a script starts it and nothing writes its port (P310)", () => {
+    expect(said(astroListens(repo({ 'package.json': scripts({ dev: 'astro dev' }) })))).toEqual(['package.json:3 4321 default']);
+    expect(said(astroListens(repo({ 'package.json': scripts({ dev: 'astro dev', preview: 'astro preview' }) })))).toEqual(['package.json:3 4321 default', 'package.json:4 4321 default']);
+    // A port written in the configuration or on the script, one handed in from elsewhere, or no script: no default.
+    expect(said(astroListens(repo({ 'astro.config.mjs': 'export default defineConfig({\n  server: { port: 4330 },\n});', 'package.json': scripts({ dev: 'astro dev' }) })))).toEqual(['astro.config.mjs:2 4330']);
+    expect(said(astroListens(repo({ 'package.json': scripts({ dev: 'astro dev', preview: 'astro preview --port 4400' }) })))).toEqual(['package.json:3 4321 default', 'package.json:4 4400']);
+    expect(said(astroListens(repo({ 'package.json': scripts({ dev: 'astro dev --port $PORT' }) })))).toEqual([]);
+    expect(said(astroListens(repo({ 'astro.config.mjs': 'export default defineConfig({\n  server: ({ command }) => ({ port: command === "dev" ? 4500 : 4501 }),\n});', 'package.json': scripts({ dev: 'astro dev' }) })))).toEqual([]);
+    expect(said(astroListens(repo({ 'astro.config.mjs': 'export default defineConfig({});' })))).toEqual([]);
   });
 });

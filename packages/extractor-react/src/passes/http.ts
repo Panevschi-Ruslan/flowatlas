@@ -52,6 +52,7 @@ import type { IndexedFunction } from '../index-functions.js';
 import { clientInstances, type ClientInstance } from '../util/client-instance.js';
 import { classMethods, enclosingIndexed, requestsOf, type ReadRequest, type RequestSite } from '../util/forward.js';
 import { localClientOf, type LocalClientReading } from '../util/local-client.js';
+import { pageLoadedPackages } from '../util/page-globals.js';
 import { basedBy, rewriteFor, unreadOpening } from '../util/request-rewrite.js';
 import { receiverValues } from '../util/receiver-values.js';
 import { sentThrough } from '../util/sent-later.js';
@@ -354,8 +355,14 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    * instance is made, `api.defaults.baseURL = …`, and they are searched once.
    */
   const repoDir = toPosixPath(ctx.repoDir).replace(/[/]+$/, '');
+  let loaded: ReadonlySet<string> | undefined;
   const instances = clientInstances({
     sharedPackages: ctx.config.sharedPackages,
+    // A client a page loads by a script tag is the global it leaves (P310).
+    pageLoaded: () => {
+      loaded ??= pageLoadedPackages(ctx.project.getFileSystem(), ctx.repoDir, CLIENT_FACTORIES.flatMap((factory) => (factory.pageGlobal === undefined ? [] : factory.modules)));
+      return loaded;
+    },
     files: () =>
       ctx.project.getSourceFiles().filter((file) => {
         const path = toPosixPath(file.getFilePath());

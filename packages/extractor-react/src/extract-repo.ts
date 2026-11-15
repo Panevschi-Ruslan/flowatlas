@@ -168,6 +168,8 @@ export interface BrowserReading {
   readonly formats?: readonly EmbeddedFormat[];
   /** Repo-relative directories that are not this framework's code. */
   readonly elsewhere?: (base: ExtractContext) => readonly string[];
+  /** Whether the methods of objects written in place and of prototypes are functions of their own (P310): a plain script's. */
+  readonly members?: boolean;
 }
 
 export const REACT_READING: BrowserReading = { declares: declaresReact };
@@ -217,6 +219,7 @@ export const extractBrowser = (base: ExtractContext, options: FrontendExtractOpt
     repoDir: base.repoDir,
     reads: (file) => supplied(file) && !elsewhere.some((dir) => toPosixPath(file).startsWith(dir)),
     skip: (fn) => fn.name === COMPONENT_TAIL_NAME,
+    ...(reading.members === true ? { members: true } : {}),
   });
   const ctx = createReactContext({
     base,

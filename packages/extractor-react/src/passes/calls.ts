@@ -1,8 +1,9 @@
 import { forEachCall, isLibFile, lineOf, packageOfPath } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { Node, SyntaxKind } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
+import { receiverValues } from '../util/receiver-values.js';
 import { definePass } from './types.js';
 
 /**
@@ -20,18 +21,52 @@ const declarationsOf = (node: TsNode): TsNode[] => {
   return (aliased ?? symbol).getDeclarations();
 };
 
-/** The function of this repository a call names, when it names one. */
-const calledFunction = (
+/**
+ * The constructors whose instance a call's receiver is, where the compiler
+ * does not say (P310): `this` in a prototype's member is an instance of its
+ * constructor, and any other receiver is what it is given - `new Store()`,
+ * handed in by each caller, kept in a field - as a request's receiver is read
+ * (P301).
+ */
+const constructorsOf = (ctx: ReactExtractContext, receiver: TsNode, heldBy: (receiver: TsNode) => TsNode[]): TsNode[] => {
+  if (receiver.getKind() === SyntaxKind.ThisKeyword) {
+    for (let at = receiver.getParent(); at !== undefined; at = at.getParent()) {
+      // A constructor's own body: `this` is the instance it makes.
+      if (Node.isFunctionDeclaration(at)) return [at];
+      if (Node.isFunctionExpression(at) || Node.isMethodDeclaration(at)) {
+        const holder = at.getParent();
+        const member = ctx.functions.scriptMember(at) ?? (holder === undefined ? undefined : ctx.functions.scriptMember(holder));
+        return member === undefined ? [] : [...ctx.functions.ownersOf(member.id)];
+      }
+    }
+    return [];
+  }
+  return heldBy(receiver).flatMap((value) => {
+    if (!Node.isNewExpression(value)) return [];
+    const made = value.getExpression();
+    return Node.isIdentifier(made) ? declarationsOf(made) : [];
+  });
+};
+
+/** The functions of this repository a call names, when it names any: the one its name is declared by, or a prototype's member of each instance it is called on (P310). */
+const calledFunctions = (
   ctx: ReactExtractContext,
   callee: TsNode,
-): IndexedFunction | undefined => {
+  heldBy: (receiver: TsNode) => TsNode[],
+): IndexedFunction[] => {
   const named = Node.isPropertyAccessExpression(callee) ? callee.getNameNode() : callee;
-  if (!Node.isIdentifier(named)) return undefined;
+  if (!Node.isIdentifier(named)) return [];
   for (const declaration of declarationsOf(named)) {
     const indexed = ctx.functions.get(declaration as never);
-    if (indexed !== undefined) return indexed;
+    if (indexed !== undefined) return [indexed];
   }
-  return undefined;
+  if (!Node.isPropertyAccessExpression(callee) || !ctx.functions.hasPrototypeMembers) return [];
+  const found = new Set<IndexedFunction>();
+  for (const owner of constructorsOf(ctx, callee.getExpression(), heldBy)) {
+    const member = ctx.functions.member(owner, callee.getName());
+    if (member !== undefined) found.add(member);
+  }
+  return [...found];
 };
 
 /**
@@ -73,34 +108,38 @@ const externalPackage = (callee: TsNode): string | null => {
  * screen out of the graph.
  */
 export const callsPass = definePass('calls', (ctx: ReactExtractContext) => {
+  // An instance a call is made on, read once per receiver (P310).
+  const heldBy = receiverValues((value) => Node.isNewExpression(value));
   for (const indexed of ctx.functions.all()) {
     let created = false;
 
     forEachCall(indexed.fn.body, (call) => {
       const callee = call.getExpression();
-      const called = calledFunction(ctx, callee);
-      if (called === undefined) {
+      const called = calledFunctions(ctx, callee, heldBy);
+      if (called.length === 0) {
         const pkg = externalPackage(callee);
         if (pkg !== null) ctx.countExternalCall(pkg);
         return;
       }
-      // A function that calls itself says nothing about the shape of the
-      // system, and a self-edge is read as a cycle by everything downstream.
-      if (called.id === indexed.id) return;
+      for (const each of called) {
+        // A function that calls itself says nothing about the shape of the
+        // system, and a self-edge is read as a cycle by everything downstream.
+        if (each.id === indexed.id) continue;
 
-      if (!created) {
-        ctx.ensureFunctionNode(indexed.fn);
-        created = true;
+        if (!created) {
+          ctx.ensureFunctionNode(indexed.fn);
+          created = true;
+        }
+        ctx.ensureFunctionNode(each.fn);
+        ctx.builder.addEdge({
+          from: indexed.id,
+          to: each.id,
+          type: 'calls',
+          confidence: 'static',
+          file: indexed.file,
+          line: lineOf(call),
+        });
       }
-      ctx.ensureFunctionNode(called.fn);
-      ctx.builder.addEdge({
-        from: indexed.id,
-        to: called.id,
-        type: 'calls',
-        confidence: 'static',
-        file: indexed.file,
-        line: lineOf(call),
-      });
     });
   }
 });

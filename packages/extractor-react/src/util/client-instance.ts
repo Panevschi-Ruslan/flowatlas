@@ -2,6 +2,7 @@ import { declarationOf, defaultHeadersWritten, headersAHookAdds, isPlatformProvi
 import type { CallExpression, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { CLIENT_FACTORIES, type ClientFactory } from '../clients.js';
+import { declaredGlobals } from './page-globals.js';
 import { branchedRewrite, functionsOf, rewriteKey, rewritesOf, type Rewrite, type RewriteReading } from './request-rewrite.js';
 import { analyzeClientBase, isSomewhere, type ApiUrl, type Bindings } from './url.js';
 
@@ -58,6 +59,8 @@ export interface ClientInstance {
 
 export interface InstanceOptions {
   readonly sharedPackages?: readonly string[];
+  /** The packages a page of the repository loads by a script tag, whose browser build is a global (P310): asked only where such a global is called. */
+  readonly pageLoaded?: () => ReadonlySet<string>;
   /** The repository's own source files, where `defaults` assignments are looked for. */
   readonly files: () => readonly SourceFile[];
 }
@@ -95,20 +98,26 @@ const importedFrom = (node: TsNode): string | undefined => {
 
 /**
  * The client a name is the module of, when it is: imported from the client's
- * package, or one of the names the framework provides without an import.
+ * package, one of the names the framework provides without an import, or the
+ * global a page loads its browser build as (P310).
  *
  * Read off the import and not the type, so a clone with nothing installed reads
  * the same instance a built one does. A name declared in the repository is never
  * the module, whatever it is called.
  */
-export const factoryOfModule = (node: TsNode): ClientFactory | undefined => {
+export const moduleFactory = (node: TsNode, pageLoaded: () => ReadonlySet<string> = () => NOTHING_LOADED): ClientFactory | undefined => {
   const target = unwrap(node);
   if (!Node.isIdentifier(target)) return undefined;
   const from = importedFrom(target);
   if (from !== undefined) return CLIENT_FACTORIES.find((factory) => factory.modules.includes(from));
   const name = target.getText();
-  return CLIENT_FACTORIES.find((factory) => factory.globals?.includes(name) === true && isPlatformProvided(target));
+  // The global a page's script tag loads, or the script declares (P310).
+  const loaded = (factory: ClientFactory): boolean =>
+    factory.pageGlobal === name && (factory.modules.some((module) => pageLoaded().has(module)) || declaredGlobals(target.getSourceFile()).has(name));
+  return CLIENT_FACTORIES.find((factory) => (factory.globals?.includes(name) === true || loaded(factory)) && isPlatformProvided(target));
 };
+
+const NOTHING_LOADED: ReadonlySet<string> = new Set();
 
 /** The one expression a function of the repository answers with, when it has one. */
 const returnedBy = (fn: TsNode): TsNode | undefined => {
@@ -310,6 +319,7 @@ const bindingsAt = (call: CallExpression, fn: TsNode, under: Bindings | undefine
 export const clientInstances = (options: InstanceOptions) => {
   const { sharedPackages = [] } = options;
   const byDeclaration = new Map<TsNode, ClientInstance | null>();
+  const factoryOfModule = (node: TsNode): ClientFactory | undefined => moduleFactory(node, options.pageLoaded);
 
   /**
    * `x.defaults.baseURL = ...` and `x.interceptors.request.use(fn)` anywhere in

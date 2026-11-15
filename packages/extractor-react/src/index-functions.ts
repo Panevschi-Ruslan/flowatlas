@@ -2,6 +2,7 @@ import { builtExportFunctions } from '@flowatlas/adapters-entry';
 import { makeSymbolId, moduleFunctions, normalizeFilePath, type NamedFunction, startLineOf } from '@flowatlas/core';
 import type { Node as TsNode, Project, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
+import { scriptMembers, type ScriptMember } from './script-members.js';
 
 /**
  * What a function is, as far as the graph is concerned.
@@ -132,6 +133,9 @@ export class ReactFunctionIndex {
   readonly #byId = new Map<string, IndexedFunction>();
   readonly #byPosition = new Map<string, IndexedFunction>();
   readonly #callersOnly = new Set<string>();
+  readonly #members = new Map<TsNode, Map<string, IndexedFunction>>();
+  readonly #memberOwners = new Map<string, readonly TsNode[]>();
+  readonly #memberDeclarations = new Set<TsNode>();
   readonly #repo: string;
   readonly #repoDir: string;
 
@@ -212,6 +216,49 @@ export class ReactFunctionIndex {
   }
 
   /**
+   * Indexes a function a plain script writes as a member (P310): of an
+   * object written in place, or of a constructor's prototype, which a `new`
+   * of the constructor answers by its member's name ({@link member}).
+   */
+  addMember(member: ScriptMember, indexed: IndexedFunction): void {
+    this.add(indexed);
+    this.#memberDeclarations.add(member.fn.declaration);
+    for (const node of member.also) if (!this.#byDeclaration.has(node)) this.#byDeclaration.set(node, indexed);
+    if (member.owners.length === 0) return;
+    this.#memberOwners.set(indexed.id, member.owners);
+    const name = indexed.name.slice(indexed.name.lastIndexOf('.') + 1);
+    for (const owner of member.owners) {
+      const members = this.#members.get(owner) ?? new Map<string, IndexedFunction>();
+      if (!members.has(name)) members.set(name, indexed);
+      this.#members.set(owner, members);
+    }
+  }
+
+  /** Whether any function is a prototype's member, so a call on an instance is worth following to its constructor. */
+  get hasPrototypeMembers(): boolean {
+    return this.#members.size > 0;
+  }
+
+  /** The member `name` an instance of the constructor declared by `owner` has through its prototype (P310). */
+  member(owner: TsNode, name: string): IndexedFunction | undefined {
+    return this.#members.get(owner)?.get(name);
+  }
+
+  /** The constructor declarations whose prototype holds a function, where it is a prototype's member (P310). */
+  ownersOf(id: string): readonly TsNode[] {
+    return this.#memberOwners.get(id) ?? [];
+  }
+
+  /**
+   * The member function of a plain script a node declares - an object's
+   * method or property, or the function a prototype's member is assigned -
+   * which a walk up from a call stops at as it stops at a declaration (P310).
+   */
+  scriptMember(node: TsNode): IndexedFunction | undefined {
+    return this.#memberDeclarations.has(node) ? this.#byDeclaration.get(node) : undefined;
+  }
+
+  /**
    * The function a declaration the checker handed back stands for: a declaration
    * this index read, or the element of a pattern one of its names is taken out of.
    */
@@ -252,6 +299,8 @@ export interface BuildFunctionIndexOptions {
   reads?: (file: string) => boolean;
   /** Functions a reading wrote itself and indexes its own way: a component file's tail (P233). */
   skip?: (fn: NamedFunction) => boolean;
+  /** Whether the members of objects written in place and of prototypes are functions of their own: plain scripts (P310). */
+  members?: boolean;
 }
 
 /**
@@ -318,7 +367,7 @@ const defaultExportFunction = (sourceFile: SourceFile, file: string): NamedFunct
 export const buildReactFunctionIndex = (
   options: BuildFunctionIndexOptions,
 ): ReactFunctionIndex => {
-  const { project, repo, repoDir, reads = () => true, skip = () => false } = options;
+  const { project, repo, repoDir, reads = () => true, skip = () => false, members = false } = options;
   const index = new ReactFunctionIndex({ repo, repoDir });
 
   for (const sourceFile of project.getSourceFiles()) {
@@ -338,6 +387,13 @@ export const buildReactFunctionIndex = (
         line: fn.line,
         fn,
       });
+    }
+    if (!members) continue;
+    for (const member of scriptMembers(sourceFile)) {
+      const { fn } = member;
+      if (skip(fn) || index.get(fn.declaration) !== undefined) continue;
+      // A member is neither a screen nor a hook, whatever it is called.
+      index.addMember(member, { id: makeSymbolId(repo, file, fn.name), name: fn.name, role: 'plain', file, line: fn.line, fn });
     }
   }
   return index;

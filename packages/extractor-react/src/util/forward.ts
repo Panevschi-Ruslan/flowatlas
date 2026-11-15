@@ -252,7 +252,7 @@ export const enclosingIndexed = (
         ? ctx.functions.get(at)
         : owner !== undefined && Node.isClassDeclaration(owner) && isClient(owner)
           ? undefined
-          : methodIndexed(ctx, at);
+          : (ctx.functions.scriptMember(at) ?? methodIndexed(ctx, at));
     if (indexed !== undefined) return indexed;
     // An arrow written inside another function belongs to whatever declares
     // that one, so the walk carries on rather than stopping at it.
@@ -417,9 +417,12 @@ const parameterRead = (value: TsNode, depth = 0): { parameter: ParameterDeclarat
 const functionOfParameter = (ctx: ReactExtractContext, parameter: ParameterDeclaration): IndexedFunction | undefined => {
   const fn = parameter.getParent();
   if (Node.isFunctionDeclaration(fn)) return ctx.functions.get(fn);
-  // A method handing its own parameter on, followed out to its callers (P293).
-  if (Node.isMethodDeclaration(fn)) return methodIndexed(ctx, fn);
+  // A method handing its own parameter on, followed out to its callers (P293),
+  // and a plain script's member: an object's method, a prototype's function (P310).
+  if (Node.isMethodDeclaration(fn)) return ctx.functions.scriptMember(fn) ?? methodIndexed(ctx, fn);
   if (!Node.isArrowFunction(fn) && !Node.isFunctionExpression(fn)) return undefined;
+  const member = ctx.functions.scriptMember(fn);
+  if (member !== undefined) return member;
   let holder: TsNode | undefined = fn.getParent();
   while (holder !== undefined && (Node.isParenthesizedExpression(holder) || Node.isAsExpression(holder) || Node.isSatisfiesExpression(holder))) holder = holder.getParent();
   if (holder !== undefined && Node.isPropertyDeclaration(holder)) return methodIndexed(ctx, holder);

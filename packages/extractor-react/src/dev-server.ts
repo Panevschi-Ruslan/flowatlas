@@ -29,7 +29,7 @@ import { NotLiteral, configValueAt, hasAnyDependency, isEnvironmentName, readCon
  * no configuration or script writes its port it listens on Vite's 5173, as
  * the weakest word for a port (P296): a port the code or the files place is
  * not taken from anyone by it, and it places a request only where the
- * application serves it (P300).
+ * application serves it (P300). Astro's own 4321 is read the same way (P310).
  */
 
 const ASTRO_CONFIGS = ['astro.config.mjs', 'astro.config.ts', 'astro.config.js', 'astro.config.mts', 'astro.config.cjs'];
@@ -142,11 +142,33 @@ export const viteListens = (repoDir: string): ListenPort[] => {
   return found;
 };
 
-/** Astro's dev server: `server.port` in its configuration, and a script's `--port`. Astro's own default is not assumed. */
+/** Astro's own port, for its dev server and its preview alike, where nothing writes one (P310). */
+const ASTRO_DEFAULT = 4321;
+
+/**
+ * Astro's dev server and preview: `server.port` in its configuration (both
+ * read it), and a script's `--port`. Where a script starts one and neither
+ * writes its port, it listens on Astro's own 4321 as a default (P310): Astro
+ * moves to the next free port when that one is taken, so it is the weakest
+ * word for a port (P296) and places a request only where the site serves it
+ * (P300, P307).
+ */
 export const astroListens = (repoDir: string): ListenPort[] => {
   const { ports } = configuredPorts(repoDir, ASTRO_CONFIGS, ['server']);
-  const scripts = scriptCommands(repoDir, /\bastro\s+(?:dev|preview)\b/).filter((each) => each.port !== undefined);
-  return [...ports.values(), ...scripts.map((each) => ({ port: each.port as number, file: 'package.json', line: each.line, devServer: true as const }))];
+  const scripts = scriptCommands(repoDir, /\bastro\s+(?:dev|preview)\b/);
+  const found: ListenPort[] = [...ports.values()];
+  // A `server` written as something not read (`server: ({ command }) => ({ port })`) may set the port: no default.
+  const config = readConfigLiteral(repoDir, ASTRO_CONFIGS);
+  const serverUnread = config !== undefined && (configValueAt(config.value, 'server') instanceof NotLiteral || configValueAt(config.value, 'server.port') instanceof NotLiteral);
+  if (serverUnread && ports.size === 0) return found.concat(scripts.flatMap((each) => (each.port === undefined ? [] : [{ port: each.port, file: 'package.json', line: each.line, devServer: true as const }])));
+  for (const preview of [false, true]) {
+    const commands = scripts.filter((each) => /\bastro\s+preview\b/.test(each.command) === preview);
+    const written = commands.filter((each) => each.port !== undefined);
+    for (const each of written) found.push({ port: each.port as number, file: 'package.json', line: each.line, devServer: true });
+    if (ports.size > 0 || written.length > 0 || commands.length === 0 || commands.some((each) => each.portUnread === true)) continue;
+    found.push({ port: ASTRO_DEFAULT, file: 'package.json', line: (commands[0] as ScriptCommand).line, default: true, devServer: true });
+  }
+  return found;
 };
 
 /** The scripts that start a Remix or React Router application's own server, not a bundler's dev server. */

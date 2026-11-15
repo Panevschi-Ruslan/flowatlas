@@ -77,8 +77,9 @@ export const svelteFrontendAdapter: FrontendAdapter = {
  * any front end's scripts say: the requests they send and the calls between
  * them. Never detected - a manifest that declares nothing says nothing - and
  * chosen by the service's type (`forcedFor`).
+ * An object's methods and a prototype's members are its functions too (P310).
  */
-export const PLAIN_READING: BrowserReading = { declares: () => true };
+export const PLAIN_READING: BrowserReading = { declares: () => true, members: true };
 
 export const plainBrowserAdapter: FrontendAdapter = {
   name: PLAIN_BROWSER_ADAPTER,

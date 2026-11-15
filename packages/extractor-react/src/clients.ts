@@ -335,6 +335,9 @@ export const REQUEST_CLIENTS: readonly RequestClient[] = [FETCH, AXIOS, OFETCH, 
  *   is told apart by how it was made, the import naming its package, so it is
  *   read in a clone with nothing installed, where its type is unknown.
  * - `globals`: names the framework provides without an import (Nuxt's `$fetch`).
+ * - `pageGlobal`: the name the client's browser build leaves on `window`, which
+ *   is the client where a page of the repository loads that build by a script
+ *   tag, or the script declares it for its linter (P310).
  * - `methods`: the calls that make an instance, on the module or on an instance,
  *   which then inherits the base it does not write.
  * - `baseKey`: the option the base is written under.
@@ -351,6 +354,7 @@ export interface ClientFactory {
   readonly client: RequestClient;
   readonly modules: readonly string[];
   readonly globals?: readonly string[];
+  readonly pageGlobal?: string;
   readonly methods: readonly string[];
   readonly baseKey: string;
   readonly called?: CallShape;
@@ -408,6 +412,7 @@ export const CLIENT_FACTORIES: readonly ClientFactory[] = [
   {
     client: AXIOS,
     modules: ['axios'],
+    pageGlobal: 'axios',
     methods: ['create'],
     baseKey: 'baseURL',
     called: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, bodyKeys: ['data'], queryKeys: ['params'] },

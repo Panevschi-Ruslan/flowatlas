@@ -5,9 +5,11 @@ import { plainBrowserAdapter, registerFrontendAdapters } from './adapter.js';
 import { forcedFor, PLAIN_BROWSER_ADAPTER, PLAIN_BROWSER_TYPE } from './framework.js';
 
 /** Pages' scripts written in memory, read by the plain adapter as the build would hand them over (P284). */
-const read = (files: Record<string, string>): RepoGraph => {
+const read = (files: Record<string, string>, pages: Record<string, string> = {}): RepoGraph => {
   const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true, checkJs: false, strict: false } });
   for (const [path, source] of Object.entries(files)) project.createSourceFile(path, source);
+  // The pages that load them, beside them on the project's file system (P310).
+  for (const [path, html] of Object.entries(pages)) project.getFileSystem().writeFileSync(path, html);
   const builder = new GraphBuilder({ repo: 'web' });
   const ctx: ExtractContext = {
     repo: 'web',
@@ -220,6 +222,69 @@ describe('plain browser code (P284)', () => {
       ['POST', 'shop.example.test', '/orders'],
     ]);
     expect(graph.unresolved.filter((row) => row.reason === 'api-path-dynamic').map((row) => row.line)).toEqual([6]);
+  });
+
+  it("reads a request in an object's method and a prototype's member, and joins the calls to them (P310)", () => {
+    const graph = read({
+      '/js/api.js': [
+        'const api = {',
+        '  load() {',
+        '    const xhr = new XMLHttpRequest();',
+        "    xhr.open('GET', 'https://api.example.test/items');",
+        '    xhr.send();',
+        '  },',
+        "  remove: function (id) { return fetch(`https://api.example.test/items/${id}`, { method: 'DELETE' }); },",
+        "  users: { list: () => fetch('https://api.example.test/users') },",
+        '};',
+        'function Store(base) { this.base = base; }',
+        "Store.prototype.save = function (item) { return fetch('https://api.example.test/items', { method: 'POST', body: JSON.stringify(item) }); };",
+        'Store.prototype.saveAll = function (items) { items.forEach((item) => this.save(item)); };',
+        'function Pager() {}',
+        "Object.assign(Pager.prototype, { next() { return fetch('https://api.example.test/pages/next'); } });",
+        'function get(url) { return fetch(url); }',
+        "const views = { recent() { return get('https://api.example.test/views'); } };",
+      ].join('\n'),
+      '/js/page.js': [
+        'function start() {',
+        '  api.load();',
+        '  api.users.list();',
+        "  const store = new Store('https://api.example.test');",
+        '  store.saveAll([]);',
+        '  const pager = new Pager();',
+        '  pager.next();',
+        '}',
+      ].join('\n'),
+      '/js/settings.js': "export default {\n  fetchUsers() { return fetch('https://api.example.test/settings'); },\n};\n",
+    });
+    const label = (id: string): string | undefined => graph.nodes.find((node) => node.id === id)?.label;
+    const found = requests(graph).map((node) => [label(graph.edges.find((edge) => edge.to === node.id)?.from ?? ''), node.meta?.['method'], node.meta?.['path']]);
+    expect(found.map((each) => each.join(' ')).sort()).toEqual([
+      'Pager.next GET /pages/next',
+      'Store.save POST /items',
+      'api.load GET /items',
+      'api.remove DELETE /items/:param',
+      'api.users.list GET /users',
+      'default.fetchUsers GET /settings',
+      'views.recent GET /views',
+    ]);
+    const isFunction = (id: string): boolean => graph.nodes.find((node) => node.id === id)?.type === 'function';
+    const calls = graph.edges.filter((edge) => edge.type === 'calls' && isFunction(edge.to)).map((edge) => `${label(edge.from)} -> ${label(edge.to)}`);
+    expect(calls.sort()).toEqual(['Store.saveAll -> Store.save', 'start -> Pager.next', 'start -> Store.saveAll', 'start -> api.load', 'start -> api.users.list', 'views.recent -> get']);
+  });
+
+  it('reads axios as the installed client where a page loads it by a script tag or the script declares it (P310)', () => {
+    const script = "function items() { return axios.get('https://api.example.test/items'); }\nconst shop = axios.create({ baseURL: 'https://shop.example.test/api' });\nfunction cart() { return shop.post('/cart', { item: 1 }); }\n";
+    const urls = (graph: RepoGraph): unknown[] => requests(graph).map((node) => node.meta?.['url']).sort();
+    const both = ['https://api.example.test/items', 'https://shop.example.test/api/cart'];
+    expect(urls(read({ '/js/shop.js': script }, { '/index.html': '<html><head><script src="https://cdn.example.test/npm/axios@1.7.2/dist/axios.min.js"></script><script src="js/shop.js"></script></head></html>' }))).toEqual(both);
+    expect(urls(read({ '/js/shop.js': script }, { '/pages/cart.html': "<script src='../vendor/axios.min.js'></script>" }))).toEqual(both);
+    expect(urls(read({ '/js/shop.js': `/* global axios */\n${script}` }))).toEqual(both);
+    // Nothing loads it, or the page loads a plugin of it: a name nothing says is the client.
+    expect(urls(read({ '/js/shop.js': script }))).toEqual([]);
+    expect(urls(read({ '/js/shop.js': script }, { '/index.html': '<script src="https://cdn.example.test/npm/axios-retry/dist/index.js"></script>' }))).toEqual([]);
+    // A name the repository declares is its own, whatever the page loads.
+    const own = "const axios = { get(path) { return path; } };\nfunction items() { return axios.get('https://api.example.test/items'); }\n";
+    expect(urls(read({ '/js/own.js': own }, { '/index.html': '<script src="vendor/axios.js"></script>' }))).toEqual([]);
   });
 
   it('leaves a verb it cannot read as unread', () => {
