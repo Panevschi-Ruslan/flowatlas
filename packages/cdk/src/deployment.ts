@@ -180,6 +180,32 @@ const managedPolicyGrants = (policy: Value, at: Site): DeployedGrant[] => {
   return [];
 };
 
+/** Whether a principal is a role the app imports rather than creates: `Role.fromRoleArn`, `Role.fromRoleName` (P306). */
+const isImportedRole = (holder: Construct): boolean => holder.type === 'aws-iam.Role' && holder.imported !== undefined;
+
+/**
+ * Whether the app may add to what a principal is allowed (P306): a role it
+ * imports with `mutable: false` takes nothing the app attaches - its
+ * statements, policies and grants are dropped, as the CDK drops them.
+ */
+const takesPolicies = (holder: Construct): boolean => {
+  if (!isImportedRole(holder)) return true;
+  const options = holder.args[3];
+  return !(options instanceof ObjectValue && options.get('mutable') === false);
+};
+
+/**
+ * What a role the app imports is allowed by the account (P306): every kind
+ * left open, by a row naming the role, since the policies the account
+ * attaches to it are not in the repository.
+ */
+const importedRoleGrants = (role: Construct): DeployedGrant[] => {
+  const { arn, name, unread } = role.imported ?? {};
+  const named = arn ?? name;
+  const said = named === undefined ? `the role ${role.id} is imported, by ${unread?.text ?? 'what is not text'}` : `the role ${named} is imported by its ${arn === undefined ? 'name' : 'ARN'}`;
+  return EVERY_KIND.map((kind) => ({ kind, unread: `${said}, and the policies the account attaches to it are not in the app`, by: role.id, ...role.site }));
+};
+
 /** An event pattern of the CDK, as the JSON the template holds: `detailType` is `detail-type`, a `Match` is a content filter. */
 const patternJson = (value: Value): unknown => {
   if (value instanceof Built && value.what.startsWith('aws-events.Match.')) {
@@ -660,11 +686,18 @@ export class AppDeployment {
    * policies (`managedPolicies`, `addManagedPolicy`, a `ManagedPolicy`
    * attached to it): one the app creates by its statements, one it looks up
    * as `managedPolicyGrants` says; a grant to a `CompositePrincipal` reaches
-   * each of its members.
+   * each of its members. A role it is handed that the app imports
+   * (`Role.fromRoleArn`) leaves every kind open, by the role, as what the
+   * account attaches to it is not in the repository; what the app attaches to
+   * it is read as for any role (P306).
    */
   #grants(fn: Construct): DeployedGrant[] {
     const out: DeployedGrant[] = [];
-    const holders = this.#principalsOf(fn);
+    const principals = this.#principalsOf(fn);
+    // A role the app imports is allowed what the account attaches to it, which is not read (P306); what the app
+    // attaches to it is read, unless it is imported as one that takes nothing (`mutable: false`).
+    for (const holder of principals) if (isImportedRole(holder)) out.push(...importedRoleGrants(holder));
+    const holders = principals.filter(takesPolicies);
     const isFn = (grantee: Value): boolean => principalHolders(grantee).some((holder) => holders.includes(holder));
     for (const construct of this.constructs) {
       for (const [method, calls] of construct.added) {

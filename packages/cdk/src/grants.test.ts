@@ -168,3 +168,48 @@ describe('what a CDK function is granted through managed policies, groups and co
     expect(grantsOf(deployment)).toEqual(['queue stock-restock grantSendMessages', 'queue stock-later PolicyStatement']);
   });
 });
+
+describe('what a CDK function is granted through a secret value wrapping an access key and a role imported by its ARN (P306)', () => {
+  const grantsOf = (deployment: Deployment): string[] =>
+    (deployment.functions[0]?.grants ?? []).map(({ kind, name, any, unread, by }) => `${kind} ${name ?? any ?? `open: ${unread ?? '?'}`} ${by}`);
+  const KINDS = ['queue', 'topic', 'bus', 'stream', 'table', 'bucket', 'function', 'workflow'];
+
+  it("follows an access key's id a secret holds wrapped in SecretValue.unsafePlainText to the user whose key it is", () => {
+    for (const wrap of ['unsafePlainText', 'plainText']) {
+      const deployment = stack(`
+    const restock = new sqs.Queue(this, 'Restock', { queueName: 'stock-restock' });
+    const user = new iam.User(this, 'Mover');
+    const key = new iam.AccessKey(this, 'MoverKey', { user });
+    const secret = new cdk.aws_secretsmanager.Secret(this, 'MoverSecret', { secretObjectValue: { id: cdk.SecretValue.${wrap}(key.accessKeyId) } });
+    restock.grantSendMessages(user);
+    const move = new lambda.Function(this, 'Move', { functionName: 'stock-move', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset(path.join(__dirname, '..', 'src')), handler: 'move.handler', environment: { KEY_SECRET: secret.secretArn } });`);
+      expect(grantsOf(deployment)).toEqual(['queue stock-restock grantSendMessages']);
+    }
+  });
+
+  it('leaves every kind open for a role imported by its ARN, and reads what the app attaches to it', () => {
+    const deployment = stack(`
+    const restock = new sqs.Queue(this, 'Restock', { queueName: 'stock-restock' });
+    const audit = new sqs.Queue(this, 'Audit', { queueName: 'stock-audit' });
+    const notices = new sns.Topic(this, 'Notices', { topicName: 'stock-notices' });
+    const role = iam.Role.fromRoleArn(this, 'MoveRole', 'arn:aws:iam::111122223333:role/stock-mover');
+    role.addToPrincipalPolicy(new iam.PolicyStatement({ actions: ['sqs:SendMessage'], resources: [restock.queueArn] }));
+    role.attachInlinePolicy(new iam.Policy(this, 'AuditPolicy', { statements: [new iam.PolicyStatement({ actions: ['sqs:SendMessage'], resources: [audit.queueArn] })] }));
+    notices.grantPublish(role);
+    const move = new lambda.Function(this, 'Move', { functionName: 'stock-move', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset(path.join(__dirname, '..', 'src')), handler: 'move.handler', role });`);
+    const open = 'open: the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app MoveRole';
+    expect(grantsOf(deployment)).toEqual([...KINDS.map((kind) => `${kind} ${open}`), 'topic stock-notices grantPublish', 'queue stock-restock PolicyStatement', 'queue stock-audit PolicyStatement']);
+  });
+
+  it('reads nothing the app attaches to a role imported as one that takes nothing', () => {
+    const deployment = stack(`
+    const restock = new sqs.Queue(this, 'Restock', { queueName: 'stock-restock' });
+    const role = iam.Role.fromRoleArn(this, 'MoveRole', 'arn:aws:iam::111122223333:role/stock-mover', { mutable: false });
+    role.addToPrincipalPolicy(new iam.PolicyStatement({ actions: ['sqs:SendMessage'], resources: [restock.queueArn] }));
+    restock.grantSendMessages(role);
+    const move = new lambda.Function(this, 'Move', { functionName: 'stock-move', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset(path.join(__dirname, '..', 'src')), handler: 'move.handler', role });`);
+    const grants = grantsOf(deployment);
+    expect(grants).toHaveLength(KINDS.length);
+    expect(grants.every((each) => each.includes('open: the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN'))).toBe(true);
+  });
+});

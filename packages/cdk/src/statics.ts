@@ -144,6 +144,9 @@ const join: StaticCall = (args, site) => {
   return embedding(parts, site, `Fn.join(${JSON.stringify(separator)}, ...)`) ?? new Built('core.Fn.join', args, site);
 };
 
+/** `SecretValue.unsafePlainText(value)` and its kind: the value it wraps, which the CDK writes into the template as it is (P306). */
+const wrapped: StaticCall = (args) => args[0] ?? new Unread('the secret value wraps nothing written', 'token');
+
 /**
  * Static calls whose result the reading needs as a value, by what is called.
  * Every other static call is kept as a {@link Built} of what it was handed.
@@ -162,6 +165,10 @@ const STATIC_CALLS: ReadonlyMap<string, StaticCall> = new Map<string, StaticCall
   ['core.Fn.sub', sub],
   ['core.Fn.join', join],
   ['core.Stack.of', () => new Unread('the stack is read through what it creates, not as a value', 'stack')],
+  // A secret value wrapping a value of the app is that value (P306): an access key's id a secret holds, a text written out.
+  ['core.SecretValue.unsafePlainText', wrapped],
+  ['core.SecretValue.plainText', wrapped],
+  ['core.SecretValue.resourceAttribute', wrapped],
   // A parameter of the account, read when deployed or looked up when the app is: the same parameter either way (P253).
   ['aws-ssm.StringParameter.valueForStringParameter', parameterValue],
   ['aws-ssm.StringParameter.valueForTypedStringParameterV2', parameterValue],

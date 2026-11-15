@@ -259,13 +259,18 @@ const NAMED_FILE = /\{%-?\s*(?:extends|include|import|from)\s+(['"])([^'"]+)\1/g
  */
 export const jinjaFileRole = (repoDir: string, file: string): 'template' | 'part' | 'neither' | undefined => {
   const root = sceptreRoot(repoDir, file);
-  if (root === undefined) return undefined;
-  for (const config of yamlFilesUnder(repoDir, under(root, 'config'))) {
-    for (const match of (textAt(repoDir, config) ?? '').matchAll(/^\s*(?:template_path|path)\s*:\s*['"]?([^'"\s#{}]+)/gm)) {
-      const path = match[1] as string;
-      if (under(root, path.startsWith('templates/') ? path : `templates/${path}`) === file) return 'template';
+  // A template another project names by a relative path is that project's (P306).
+  const projects = projectsDeploying(repoDir, file);
+  if (projects.length === 0) return undefined;
+  for (const project of projects) {
+    for (const config of yamlFilesUnder(repoDir, under(project, 'config'))) {
+      for (const match of (textAt(repoDir, config) ?? '').matchAll(/^\s*(?:template_path|path)\s*:\s*['"]?([^'"\s#{}]+)/gm)) {
+        const path = match[1] as string;
+        if (under(project, path.startsWith('templates/') ? path : `templates/${path}`) === file) return 'template';
+      }
     }
   }
+  if (root === undefined) return 'neither';
   for (const other of filesUnder(repoDir, under(root, 'templates'), JINJA_TEMPLATE)) {
     if (other === file) continue;
     for (const match of (textAt(repoDir, other) ?? '').matchAll(NAMED_FILE)) {
@@ -589,15 +594,141 @@ const projectsBeside = (repoDir: string, root: string): string[] => {
   return found;
 };
 
+/** How deep below the repository's root a sceptre project is looked for (P306). */
+const MOST_PROJECT_DEPTH = 8;
+
+/** Folders no sceptre project is looked for in. */
+const NOT_PROJECTS = new Set(['node_modules', 'dist', 'build', 'cdk.out', 'vendor']);
+
+/** Every sceptre project of a repository, by its directory (P306): read once per repository. */
+const PROJECTS = new Map<string, readonly string[]>();
+
+const sceptreProjects = (repoDir: string): readonly string[] => {
+  const known = PROJECTS.get(repoDir);
+  if (known !== undefined) return known;
+  const found: string[] = [];
+  const walk = (dir: string, depth: number): void => {
+    let entries;
+    try {
+      entries = readdirSync(join(repoDir, dir), { withFileTypes: true }).filter((entry) => entry.isDirectory());
+    } catch {
+      return;
+    }
+    if (entries.some((entry) => entry.name === 'config') && entries.some((entry) => entry.name === 'templates')) found.push(dir);
+    if (depth >= MOST_PROJECT_DEPTH) return;
+    for (const entry of entries.sort((a, b) => (a.name < b.name ? -1 : 1))) {
+      if (!entry.name.startsWith('.') && !NOT_PROJECTS.has(entry.name)) walk(dir === '.' ? entry.name : `${dir}/${entry.name}`, depth + 1);
+    }
+  };
+  walk('.', 0);
+  PROJECTS.set(repoDir, found);
+  return found;
+};
+
+/**
+ * Forget the sceptre projects and what their configurations name (P306): read
+ * again from the disk as it is now by the next reading, as a watch's next
+ * build reads what changed.
+ */
+export const forgetSceptreProjects = (): void => {
+  PROJECTS.clear();
+  NAMED.clear();
+};
+
+/** Whether a path is a directory or inside it, repo-relative. */
+const within = (path: string, dir: string): boolean => dir === '.' || path === dir || path.startsWith(`${dir}/`);
+
+/** Whether a repo-relative path names a file or a directory there. */
+const exists = (repoDir: string, path: string): boolean => {
+  try {
+    statSync(join(repoDir, path));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/** A relative path a configuration writes that climbs out of where it is read from (P306): `../../shared/templates/vpc.yaml`. */
+const CLIMBING = /(?:^|[\s'"[,=])((?:\.\.\/)+[^\s'"#{}\],]+)(?![^\s'"#\],]*\{)/gm;
+
+/** What each project's configuration names outside it, by the project (P306): read once per repository. */
+const NAMED = new Map<string, Map<string, readonly string[]>>();
+
+/**
+ * The files and folders outside a sceptre project its configuration names by
+ * a relative path (P306): any value of a stack's or a stack group's
+ * configuration that climbs out (`template_path: ../../shared/templates/x`, a
+ * `project_path`, a var file), read from the configuration's own folder, from
+ * the project's and from its `templates/`, as sceptre reads a path from one
+ * of them - each one there is, inside the repository read. A path climbing
+ * out of the repository names nothing read.
+ */
+const namedOutside = (repoDir: string, root: string): readonly string[] => {
+  const byProject = NAMED.get(repoDir) ?? new Map<string, readonly string[]>();
+  NAMED.set(repoDir, byProject);
+  const known = byProject.get(root);
+  if (known !== undefined) return known;
+  const found = new Set<string>();
+  for (const file of yamlFilesUnder(repoDir, under(root, 'config'))) {
+    for (const match of (textAt(repoDir, file) ?? '').matchAll(CLIMBING)) {
+      const written = (match[1] as string).replace(/\/+$/, '');
+      for (const base of [posix.dirname(file), root, under(root, 'templates')]) {
+        const path = under(base, written);
+        if (path === '..' || path.startsWith('../') || posix.isAbsolute(path) || within(path, root) || !exists(repoDir, path)) continue;
+        found.add(path);
+      }
+    }
+  }
+  const out = [...found].sort();
+  byProject.set(root, out);
+  return out;
+};
+
+/** The sceptre project a path is in: the nearest one holding it, if any (P306). */
+const projectHolding = (repoDir: string, path: string): string | undefined =>
+  sceptreProjects(repoDir)
+    .filter((project) => project !== '.' && within(path, project))
+    .sort((a, b) => b.length - a.length)[0];
+
+/**
+ * The sceptre projects tied to a project by what a configuration names
+ * (P306): the ones its own configuration names a file or folder of by a
+ * relative path, and the ones whose configuration names it, or a file of it,
+ * so - a project anywhere in the repository, not only beside it.
+ */
+const projectsNamed = (repoDir: string, root: string): string[] => {
+  const found = new Set<string>();
+  for (const path of namedOutside(repoDir, root)) {
+    const project = projectHolding(repoDir, path);
+    if (project !== undefined && project !== root && !within(root, project)) found.add(project);
+  }
+  for (const project of sceptreProjects(repoDir)) {
+    if (project !== root && !found.has(project) && namedOutside(repoDir, project).some((path) => within(path, root) || within(root, path))) found.add(project);
+  }
+  return [...found];
+};
+
+/**
+ * The sceptre projects whose stacks may deploy a template (P306): the one it
+ * is in, and every other whose configuration names it, or a folder holding
+ * it, by a relative path climbing out of that project.
+ */
+const projectsDeploying = (repoDir: string, template: string): string[] => {
+  const own = sceptreRoot(repoDir, template);
+  const naming = sceptreProjects(repoDir).filter((project) => project !== own && !within(template, project) && namedOutside(repoDir, project).some((path) => within(template, path)));
+  return [...(own === undefined ? [] : [own]), ...naming];
+};
+
 /**
  * Every command that may launch a project's stacks: the ones written around
  * it, and the ones written around another sceptre project beside it (P299) -
  * a recipe there that runs `sceptre --dir ../<project> launch ...` launches
- * this project's stacks, and what they depend on, as one written here would.
+ * this project's stacks, and what they depend on, as one written here would -
+ * or one a configuration ties to it by a relative path, wherever it is (P306).
  */
 const commandsLaunching = (repoDir: string, root: string): Command[] => {
   const seen = new Set<string>();
-  return [root, ...projectsBeside(repoDir, root)]
+  return [...new Set([root, ...projectsBeside(repoDir, root), ...projectsNamed(repoDir, root)])]
     .flatMap((dir) => commandsAround(repoDir, dir))
     .filter((command) => {
       const key = `${command.file}:${command.line}:${command.words.join(' ')}`;
@@ -728,10 +859,15 @@ const dependenciesOf = (stack: Stack): string[] => {
   return [...out];
 };
 
-/** The deployments of a template by sceptre stacks of the project it is in, once per command that launches each. */
-const sceptreDeployers = (repoDir: string, template: string, vars: readonly string[]): Deployer[] => {
-  const root = sceptreRoot(repoDir, template);
-  if (root === undefined) return [];
+/**
+ * The deployments of a template by sceptre stacks of the project it is in,
+ * and of every project naming it by a relative path (P306), once per command
+ * that launches each.
+ */
+const sceptreDeployers = (repoDir: string, template: string, vars: readonly string[]): Deployer[] => projectsDeploying(repoDir, template).flatMap((root) => projectDeployers(repoDir, root, template, vars));
+
+/** The deployments of a template by the sceptre stacks of one project, once per command that launches each. */
+const projectDeployers = (repoDir: string, root: string, template: string, vars: readonly string[]): Deployer[] => {
   const configDir = under(root, 'config');
   const files = yamlFilesUnder(repoDir, configDir);
   const project: Project = { root, configDir, files, groups: new Map(files.filter((file) => GROUP_FILE.test(file)).map((file) => [posix.dirname(file), file])) };

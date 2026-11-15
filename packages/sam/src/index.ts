@@ -2,6 +2,7 @@ import { statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { toPosixPath, type Deployment, type DeploymentReadOptions, type DeploymentReader } from '@flowatlas/core';
 import { emptyParts } from '@flowatlas/serverless';
+import { forgetSceptreProjects } from './deployers.js';
 import { importsAny, repositoryExports } from './exports.js';
 import { cloudFormationFiles, templateCopies, templateFiles } from './files.js';
 import { readTemplate } from './template.js';
@@ -48,6 +49,8 @@ const templateReader = (name: string, sam: boolean): DeploymentReader => {
   const readings = new Map<string, Reading>();
   const readingOf = (options: DeploymentReadOptions): Reading => {
     const { repoDir } = options;
+    // The sceptre projects of the repository are read from the disk as it is now (P306).
+    forgetSceptreProjects();
     const files = filesOf(repoDir);
     const all = allTemplates(repoDir);
     const copies = templateCopies(repoDir, sam);
@@ -79,7 +82,10 @@ const templateReader = (name: string, sam: boolean): DeploymentReader => {
   };
   return {
     name,
-    declares: (repoDir) => filesOf(repoDir).length > 0,
+    declares: (repoDir) => {
+      forgetSceptreProjects();
+      return filesOf(repoDir).length > 0;
+    },
     read: (options) => readingOf(options).deployment,
     files: (repoDir, options) => {
       const files = filesOf(repoDir);

@@ -1334,3 +1334,74 @@ describe('kustomize value-add, prefix and suffix transformers, transformer kusto
     expect(read.rows ?? []).toEqual([]);
   });
 });
+
+describe("kustomize's name references past its common defaults (P306)", () => {
+  it('renames the storage, priority and ingress classes and the volume a resource names with the prefix the class or volume takes', () => {
+    const NAMES = ['CLAIM_CLASS', 'CLAIM_VOLUME', 'TEMPLATE_CLASS', 'PRIORITY', 'INGRESS_CLASS', 'OTHER_CLASS'];
+    const dir = project({
+      'shop/k8s/kustomization.yaml': lines(
+        'resources:',
+        '  - orders.yaml',
+        'namePrefix: shop-',
+        'vars:',
+        '  - name: CLAIM_CLASS',
+        '    objref: { kind: PersistentVolumeClaim, name: data, apiVersion: v1 }',
+        '    fieldref: { fieldpath: spec.storageClassName }',
+        '  - name: CLAIM_VOLUME',
+        '    objref: { kind: PersistentVolumeClaim, name: data, apiVersion: v1 }',
+        '    fieldref: { fieldpath: spec.volumeName }',
+        '  - name: TEMPLATE_CLASS',
+        '    objref: { kind: StatefulSet, name: ledger, apiVersion: apps/v1 }',
+        '    fieldref: { fieldpath: "spec.volumeClaimTemplates[0].spec.storageClassName" }',
+        '  - name: PRIORITY',
+        '    objref: { kind: StatefulSet, name: ledger, apiVersion: apps/v1 }',
+        '    fieldref: { fieldpath: spec.template.spec.priorityClassName }',
+        '  - name: INGRESS_CLASS',
+        '    objref: { kind: Ingress, name: orders, apiVersion: networking.k8s.io/v1 }',
+        '    fieldref: { fieldpath: spec.ingressClassName }',
+        '  - name: OTHER_CLASS',
+        '    objref: { kind: PersistentVolumeClaim, name: scratch, apiVersion: v1 }',
+        '    fieldref: { fieldpath: spec.storageClassName }',
+      ),
+      'shop/k8s/orders.yaml': [
+        DEPLOYMENT('orders', 3000, ['          env:', ...NAMES.flatMap((name) => [`            - name: ${name}`, `              value: $(${name})`])]),
+        lines('apiVersion: storage.k8s.io/v1', 'kind: StorageClass', 'metadata:', '  name: fast', 'provisioner: example.test/disk'),
+        lines('apiVersion: scheduling.k8s.io/v1', 'kind: PriorityClass', 'metadata:', '  name: high', 'value: 1000'),
+        lines('apiVersion: networking.k8s.io/v1', 'kind: IngressClass', 'metadata:', '  name: public', 'spec:', '  controller: example.test/ingress'),
+        lines('apiVersion: v1', 'kind: PersistentVolume', 'metadata:', '  name: disk', 'spec:', '  storageClassName: fast', '  capacity:', '    storage: 1Gi'),
+        lines('apiVersion: v1', 'kind: PersistentVolumeClaim', 'metadata:', '  name: data', 'spec:', '  storageClassName: fast', '  volumeName: disk'),
+        lines('apiVersion: v1', 'kind: PersistentVolumeClaim', 'metadata:', '  name: scratch', 'spec:', '  storageClassName: standard'),
+        lines(
+          'apiVersion: apps/v1',
+          'kind: StatefulSet',
+          'metadata:',
+          '  name: ledger',
+          'spec:',
+          '  template:',
+          '    spec:',
+          '      priorityClassName: high',
+          '      containers:',
+          '        - name: ledger',
+          '          image: ledger',
+          '  volumeClaimTemplates:',
+          '    - metadata:',
+          '        name: data',
+          '      spec:',
+          '        storageClassName: fast',
+        ),
+        lines('apiVersion: networking.k8s.io/v1', 'kind: Ingress', 'metadata:', '  name: orders', 'spec:', '  ingressClassName: public', '  defaultBackend:', '    service:', '      name: orders', '      port:', '        number: 80'),
+      ].join('\n---\n'),
+    });
+    const read = readManifestsUnder(join(dir, 'shop'));
+    const orders = read.workloads.find((each) => each.name === 'shop-orders');
+    // A class the build does not hold (standard) is the cluster's, and keeps its name.
+    expect(orders?.containers[0]?.environment.map((each) => `${each.name}=${each.raw}`)).toEqual([
+      'CLAIM_CLASS=shop-fast',
+      'CLAIM_VOLUME=shop-disk',
+      'TEMPLATE_CLASS=shop-fast',
+      'PRIORITY=shop-high',
+      'INGRESS_CLASS=shop-public',
+      'OTHER_CLASS=standard',
+    ]);
+  });
+});

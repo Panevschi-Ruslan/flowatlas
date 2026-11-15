@@ -1015,7 +1015,10 @@ const CONTAINER_LISTS = ['containers', 'initContainers', 'ephemeralContainers'];
  * name, an `Ingress`'s TLS secret; the service an `Ingress`, a stateful set,
  * an API service or a webhook names; the service account a pod runs as and a
  * binding's subjects; the claim a volume names; a role a binding names; and
- * the workload an autoscaler or a disruption budget's target names.
+ * the workload an autoscaler or a disruption budget's target names; and
+ * (P306) the storage class a volume, a claim or a stateful set's claim
+ * templates name, the priority class a pod spec names, the ingress class an
+ * `Ingress` names, and the volume a claim binds.
  */
 const DEFAULT_NAME_REFERENCES: readonly NameReference[] = [
   {
@@ -1053,6 +1056,10 @@ const DEFAULT_NAME_REFERENCES: readonly NameReference[] = [
   { kind: 'Role', fields: specs(false, ['RoleBinding'], 'roleRef/name') },
   { kind: 'ClusterRole', fields: specs(false, ['RoleBinding', 'ClusterRoleBinding'], 'roleRef/name') },
   ...[...POD_OWNERS, 'ReplicationController'].map((kind): NameReference => ({ kind, fields: specs(false, ['HorizontalPodAutoscaler', 'VerticalPodAutoscaler'], 'spec/scaleTargetRef/name', 'spec/targetRef/name') })),
+  { kind: 'StorageClass', fields: [...specs(false, ['PersistentVolume', 'PersistentVolumeClaim'], 'spec/storageClassName'), ...specs(false, ['StatefulSet'], 'spec/volumeClaimTemplates/spec/storageClassName')] },
+  { kind: 'PriorityClass', fields: podSpecFields('priorityClassName') },
+  { kind: 'IngressClass', fields: specs(false, ['Ingress'], 'spec/ingressClassName') },
+  { kind: 'PersistentVolume', fields: specs(false, ['PersistentVolumeClaim'], 'spec/volumeName') },
 ];
 
 /** Every text at a kustomize field path (P289), each as its holder and key: a list on the way is every item of it, as kustomize walks one. */

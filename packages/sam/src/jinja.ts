@@ -45,7 +45,15 @@
  *
  * sceptre renders with Jinja's strict undefined: a name nothing gives is an
  * error in the text, but `default` and `is defined` see it as undefined, and
- * a default is what is written where the files give nothing (P261).
+ * a default is what is written where the files give nothing (P261). A text
+ * rendered with Jinja's default undefined reads such a value as false, and
+ * writes nothing for it (P306).
+ *
+ * What a template's objects share is shared as Jinja shares it (P306): a
+ * namespace set inside a macro's body, a set block, a filter block or a
+ * recursive `loop(...)` is set for what follows the call, and
+ * `loop.changed(...)` compares what it is handed with what the loop's call
+ * before it was handed, two calls in one item each with the one before.
  */
 
 /** What renders an expression read here: `undefined` where the files do not give its value. */
@@ -73,6 +81,14 @@ export type Loader = (name: string) => { readonly text: string; readonly file: s
 export interface JinjaOptions {
   /** The files `include`, `import`, `from` and `extends` name; none where nothing loads them. */
   readonly load?: Loader;
+  /**
+   * Whether the text is rendered with Jinja's strict undefined, as sceptre
+   * renders it (the default), or with its default one (P306): then a value
+   * the files leave undefined - a key a record of a tree does not hold - is
+   * false in a condition, writes nothing and loops over nothing, as Jinja
+   * does, rather than a condition not decided.
+   */
+  readonly strictUndefined?: boolean;
 }
 
 /** A text rendered as far as the files settle it. */
@@ -138,8 +154,22 @@ class Namespace {
   ) {}
 }
 
+/**
+ * The names of what a template's objects share past the scope they are
+ * changed in (P306): a namespace's attributes, and what a loop's
+ * `loop.changed` was last handed. Kept on the way, so each way a condition
+ * goes keeps its own, and handed back past loops, blocks, macros and files.
+ */
+const SHARED = '__jinja_shared_';
+
 /** The name a namespace's attributes set since it was made are kept under on a way, its number after it (P299). */
-const NAMESPACE = '__jinja_namespace_';
+const NAMESPACE = `${SHARED}namespace_`;
+
+/** The name what a loop's `loop.changed` was last handed is kept under on a way, the loop's number after it (P306). */
+const CHANGED = `${SHARED}changed_`;
+
+/** How many loops have been run, each numbered apart (P306). */
+let loops = 0;
 
 /** How many namespaces have been made, each numbered apart. */
 let namespaces = 0;
@@ -147,17 +177,24 @@ let namespaces = 0;
 /** The pairs `groupby` gives (P299): each a list of its grouper and its items, read by place and as `.grouper` and `.list`. */
 const GROUPS = new WeakSet<object>();
 
-/** The names a rendering inside a loop, a block or a file it names hands back: the outer ones, with every namespace's attributes as they now are (P299). */
+/** What a rendering changed of what is shared (P306): each shared name the inner names hold otherwise than the outer. */
+const sharedChanges = (inner: ReadonlyMap<string, JinjaValue>, outer: ReadonlyMap<string, JinjaValue>): ReadonlyMap<string, JinjaValue> => new Map([...inner].filter(([name, value]) => name.startsWith(SHARED) && outer.get(name) !== value));
+
+/** The names a rendering inside a loop, a block, a macro or a file it names hands back: the outer ones, with what is shared as it now is (P299, P306). */
 const handedBack = (inner: ReadonlyMap<string, JinjaValue>, outer: ReadonlyMap<string, JinjaValue>): ReadonlyMap<string, JinjaValue> => {
-  const changed = [...inner].filter(([name, value]) => name.startsWith(NAMESPACE) && outer.get(name) !== value);
-  return changed.length === 0 ? outer : new Map([...outer, ...changed]);
+  const changed = sharedChanges(inner, outer);
+  return changed.size === 0 ? outer : new Map([...outer, ...changed]);
 };
+
+/** Names with others over them; the same names where there are none. */
+const overlaid = (names: ReadonlyMap<string, JinjaValue>, changes: ReadonlyMap<string, JinjaValue>): ReadonlyMap<string, JinjaValue> => (changes.size === 0 ? names : new Map([...names, ...changes]));
 
 /** A function Jinja gives a template (P289): `loop.cycle`, `range`, `dict`, a method of a text, a list or a mapping; called with what it is handed. */
 class Builtin {
   constructor(
     readonly name: string,
-    readonly call: (positional: readonly JinjaValue[], named: ReadonlyMap<string, JinjaValue>) => JinjaValue,
+    /** Called with the scope it is called in (P306): what it changes of what is shared is written to the scope's `changes`. */
+    readonly call: (positional: readonly JinjaValue[], named: ReadonlyMap<string, JinjaValue>, scope: Scope) => JinjaValue,
   ) {}
 }
 
@@ -1149,7 +1186,62 @@ interface Scope {
   readonly lookup: Lookup;
   /** What a macro is rendered with; none where nothing runs a macro (P273). */
   readonly run?: Run;
+  /**
+   * What the expression changes of what is shared as it is evaluated (P306):
+   * a namespace a macro or a recursive `loop(...)` it calls sets, what
+   * `loop.changed` is handed - read by what is evaluated after it, and kept
+   * on the way the statement goes on with.
+   */
+  readonly changes?: Map<string, JinjaValue>;
 }
+
+/** A shared name as an expression sees it: as it changed while the expression is evaluated, else as the way holds it (P306). */
+const sharedNow = (scope: Scope, name: string): JinjaValue | undefined => (scope.changes?.has(name) === true ? scope.changes.get(name) : scope.names.get(name));
+
+/** The names a scope sees, with what its expression has changed so far over them (P306). */
+const namesNow = (scope: Scope): ReadonlyMap<string, JinjaValue> => overlaid(scope.names, scope.changes ?? new Map());
+
+/** A rendering of a macro's body or of a recursive loop: its text, and what it changed of what is shared (P306). */
+interface Rendered {
+  readonly text: string;
+  readonly shared: ReadonlyMap<string, JinjaValue>;
+}
+
+/** What several ways hold of a shared name: the same, else what they agree on of a namespace's attributes, the rest not known (P306). */
+const agreed = (name: string, values: readonly (JinjaValue | undefined)[]): JinjaValue | undefined => {
+  const [first] = values;
+  if (values.every((value) => value === first || (value !== undefined && first !== undefined && same(value, first)))) return first;
+  if (!values.every((value) => value === undefined || isRecord(value))) return new Unknown(name);
+  const records = values.map((value) => (value ?? {}) as Readonly<Record<string, JinjaValue>>);
+  const keys = new Set(records.flatMap((record) => Object.keys(record)));
+  return Object.fromEntries([...keys].map((key) => [key, agreed(key, records.map((record) => record[key])) ?? new Unknown(key)]));
+};
+
+/**
+ * What a macro or a recursive loop an expression calls renders, as the
+ * expression's value (P306): its text where every way renders it alike, and
+ * what it changed of what is shared written to the scope's changes - where
+ * the ways change it differently, what they agree on.
+ */
+const handedOver = (renderings: readonly Rendered[], scope: Scope, written: string): JinjaValue => {
+  const names = new Set(renderings.flatMap((each) => [...each.shared.keys()]));
+  for (const name of names) {
+    const before = sharedNow(scope, name);
+    const value = agreed(name, renderings.map((each) => (each.shared.has(name) ? each.shared.get(name) : before)));
+    if (value !== undefined) scope.changes?.set(name, value);
+  }
+  const texts = [...new Set(renderings.map((each) => each.text))];
+  return texts.length === 1 ? (texts[0] as string) : new Unknown(written);
+};
+
+/** Renderings with the same text and the same changes, once (P306). */
+const distinct = (renderings: readonly Rendered[]): Rendered[] => {
+  const sameShared = (a: ReadonlyMap<string, JinjaValue>, b: ReadonlyMap<string, JinjaValue>): boolean =>
+    a.size === b.size && [...a].every(([name, value]) => b.has(name) && (b.get(name) === value || same(b.get(name) as JinjaValue, value)));
+  const out: Rendered[] = [];
+  for (const each of renderings) if (!out.some((other) => other.text === each.text && sameShared(other.shared, each.shared))) out.push(each);
+  return out;
+};
 
 /** A call of a macro: the macro, and what it is handed. */
 interface MacroCall {
@@ -1172,7 +1264,7 @@ const macroCalled = (expression: Expression, scope: Scope): MacroCall | undefine
     if (arg.name === undefined) positional.push(value);
     else named.set(arg.name, value);
   }
-  return { macro: callee, positional, named, from: scope.names };
+  return { macro: callee, positional, named, from: namesNow(scope) };
 };
 
 /**
@@ -1194,7 +1286,7 @@ const readsOf = (body: readonly Node[]): ReadonlySet<string> => {
   return found;
 };
 
-const renderMacro = (call: MacroCall, run: Run, caller?: Macro): string[] => {
+const renderMacro = (call: MacroCall, run: Run, caller?: Macro): Rendered[] => {
   const { macro, positional, named } = call;
   if (run.depth.value >= MOST_DEPTH) throw new NotRead('macros call each other deeper than is followed');
   // What a macro is handed past its parameters is `varargs` and `kwargs`, where its body reads them (P289).
@@ -1209,6 +1301,8 @@ const renderMacro = (call: MacroCall, run: Run, caller?: Macro): string[] => {
   // but not what a loop, a with or a macro around the call binds.
   for (const [name, value] of macro.late ?? []) names.set(name, value);
   if (macro.home === run.home) for (const [name, value] of call.from) if (!run.locals.has(name)) names.set(name, value);
+  // What is shared is as it is where the macro is called, wherever the macro is defined (P306): a namespace is one object.
+  for (const [name, value] of call.from) if (name.startsWith(SHARED)) names.set(name, value);
   names.set('varargs', extra);
   names.set('kwargs', Object.fromEntries(extraNamed));
   names.set(macro.name, macro);
@@ -1220,7 +1314,8 @@ const renderMacro = (call: MacroCall, run: Run, caller?: Macro): string[] => {
   if (caller !== undefined) names.set('caller', caller);
   run.depth.value += 1;
   try {
-    return [...new Set(renderNodes(macro.body, [{ text: '', names, lines: [] }], inner).map((way) => way.text))];
+    // What its body changes of what is shared is handed back to the caller (P306).
+    return distinct(renderNodes(macro.body, [{ text: '', names, lines: [] }], inner).map((way) => ({ text: way.text, shared: sharedChanges(way.names, call.from) })));
   } finally {
     run.depth.value -= 1;
   }
@@ -1244,7 +1339,7 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
       if (of instanceof Undefined) return new Undefined(of.written);
       // A namespace's attribute: what was set on this way since it was made, else what it was made with (P299).
       if (of instanceof Namespace && typeof key === 'string') {
-        const since = scope.names.get(NAMESPACE + of.id) as Readonly<Record<string, JinjaValue>> | undefined;
+        const since = sharedNow(scope, NAMESPACE + of.id) as Readonly<Record<string, JinjaValue>> | undefined;
         return since?.[key] ?? of.initial[key] ?? new Undefined(key);
       }
       // A group `groupby` gives, by its names (P299).
@@ -1269,10 +1364,7 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
       }
       // A macro, where what calls it can render one (P273): what it writes, where every way writes it alike.
       const called = scope.run === undefined ? undefined : macroCalled(expression, scope);
-      if (called !== undefined) {
-        const texts = renderMacro(called, scope.run as Run);
-        return texts.length === 1 ? (texts[0] as string) : new Unknown(`${called.macro.name}()`);
-      }
+      if (called !== undefined) return handedOver(renderMacro(called, scope.run as Run), scope, `${called.macro.name}()`);
       // A function Jinja gives, or a method of a value (P289).
       if (expression.of.kind === 'name' || expression.of.kind === 'member') {
         const written = evaluate(expression.of, scope);
@@ -1286,7 +1378,7 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
             if (arg.name === undefined) positional.push(value);
             else named.set(arg.name, value);
           }
-          return callee.call(positional, named);
+          return callee.call(positional, named, scope);
         }
         if (callee instanceof Unknown) return new Unknown(`${callee.written}()`);
       }
@@ -1317,7 +1409,7 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
     case 'unary': {
       const of = evaluate(expression.of, scope);
       if (expression.operator === 'not') {
-        const value = truth(of);
+        const value = truthIn(of, scope.run);
         return value === undefined ? new Unknown('not') : !value;
       }
       return typeof of === 'number' ? -of : new Unknown('-');
@@ -1328,19 +1420,25 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
       return answer === undefined ? new Unknown('a test') : answer !== expression.negated;
     }
     case 'conditional': {
-      const test = truth(evaluate(expression.test, scope));
+      const test = truthIn(evaluate(expression.test, scope), scope.run);
       if (test === undefined) return new Unknown('a condition');
       return test ? evaluate(expression.then, scope) : expression.otherwise === undefined ? '' : evaluate(expression.otherwise, scope);
     }
     case 'binary': {
       const left = evaluate(expression.left, scope);
       if (expression.operator === 'and' || expression.operator === 'or') {
-        const first = truth(left);
+        const first = truthIn(left, scope.run);
         if (first === undefined) return new Unknown(expression.operator);
         if (expression.operator === 'and' ? !first : first) return left;
         return evaluate(expression.right, scope);
       }
       const right = evaluate(expression.right, scope);
+      // An undefined value is written as nothing where the text is rendered with Jinja's default undefined (P306).
+      if (expression.operator === '~' && scope.run?.lenient === true && (left instanceof Undefined || right instanceof Undefined) && !(left instanceof Unknown) && !(right instanceof Unknown)) {
+        const a = left instanceof Undefined ? '' : rendered(left);
+        const b = right instanceof Undefined ? '' : rendered(right);
+        return a === undefined || b === undefined ? new Unknown('~') : a + b;
+      }
       if (isUnsettled(left) || isUnsettled(right)) return new Unknown(expression.operator);
       switch (expression.operator) {
         case '~': {
@@ -1433,7 +1531,12 @@ interface Run {
   /** The rendering of the file whose nodes are rendered, and the names a loop, a with or a macro around them binds (P299). */
   readonly home: object;
   readonly locals: ReadonlySet<string>;
+  /** Whether the text is rendered with Jinja's default undefined rather than the strict one (P306): an undefined value is false, and written as nothing. */
+  readonly lenient: boolean;
 }
+
+/** A value's truth as the text is rendered (P306): an undefined value is false under Jinja's default undefined, and not known under the strict one. */
+const truthIn = (value: JinjaValue, run: Run | undefined): boolean | undefined => (value instanceof Undefined && run?.lenient === true ? false : truth(value));
 
 /** The file a statement names, parsed; `undefined` where the repository has no such file. */
 const loadNamed = (name: Expression, written: string, scope: Scope, run: Run): Loaded | undefined => {
@@ -1458,7 +1561,8 @@ const loadNamed = (name: Expression, written: string, scope: Scope, run: Run): L
 
 /** A value written into a way's text, or kept by a stand-in for the place it is written where it is not one Jinja writes plainly. */
 const written = (way: Way, value: JinjaValue, at: object, as: string, run: Run): Way => {
-  const text = rendered(value);
+  // An undefined value is written as nothing where the text is rendered with Jinja's default undefined (P306).
+  const text = value instanceof Undefined && run.lenient ? '' : rendered(value);
   const here = (): number => run.anchor ?? 1;
   if (text !== undefined) return appended(way, text, here);
   let kept = run.kept.get(at);
@@ -1564,13 +1668,18 @@ const renderNodes = (nodes: readonly Node[], ways: readonly Way[], run: Run): Wa
   return out;
 };
 
-/** A text rendered on its own from a way, and handed back to it with the names it had. */
-const renderApart = (body: readonly Node[], way: Way, run: Run): string[] => renderNodes(body, [{ text: '', names: way.names, lines: [] }], run).map((done) => done.text);
+/** A text rendered on its own from a way: each text, and the way's names with what it changed of what is shared (P306). */
+const renderApart = (body: readonly Node[], way: Way, run: Run): Array<{ readonly text: string; readonly names: ReadonlyMap<string, JinjaValue> }> =>
+  renderNodes(body, [{ text: '', names: way.names, lines: [] }], run).map((done) => ({ text: done.text, names: handedBack(done.names, way.names) }));
 
 const renderNode = (node: Node, way: Way, outer: Run): Way[] => {
   // What a node of the file rendered writes through another file or a macro is said at its line (P273).
   const run: Run = node.line === undefined ? outer : { ...outer, anchor: node.line };
-  const scope: Scope = { names: way.names, lookup: run.lookup, run };
+  // What the node's expressions change of what is shared, kept on the way it goes on with (P306).
+  const changes = new Map<string, JinjaValue>();
+  const scope: Scope = { names: way.names, lookup: run.lookup, run, changes };
+  /** The way with what the expressions evaluated so far changed; `names` the names it goes on from. */
+  const settled = (names: ReadonlyMap<string, JinjaValue> = way.names): Way => ({ ...way, names: overlaid(names, changes) });
   const here = (): number => run.anchor ?? 1;
   switch (node.kind) {
     case 'text':
@@ -1578,18 +1687,23 @@ const renderNode = (node: Node, way: Way, outer: Run): Way[] => {
     case 'output': {
       // A macro called where its text is written is written every way it renders (P273).
       const called = macroCalled(node.expression, scope);
-      if (called !== undefined) return renderMacro(called, run).map((text) => appended(way, text, here));
-      return [written(way, evaluate(node.expression, scope), node, node.written, run)];
+      // What the macro changes of what is shared is the caller's after it (P306).
+      if (called !== undefined) return renderMacro(called, run).map((done) => appended(settled(overlaid(way.names, done.shared)), done.text, here));
+      const value = evaluate(node.expression, scope);
+      return [written(settled(), value, node, node.written, run)];
     }
-    case 'set':
-      return [{ ...way, names: new Map([...way.names, [node.name, evaluate(node.value, scope)]]) }];
+    case 'set': {
+      const value = evaluate(node.value, scope);
+      return [{ ...way, names: new Map([...settled().names, [node.name, value]]) }];
+    }
     case 'set-attribute': {
-      // Only a namespace's attributes are set, as Jinja allows (P299); kept on the way, and handed back past loops and blocks.
+      // Only a namespace's attributes are set, as Jinja allows (P299); kept on the way, and handed back past loops, blocks and macros.
       const target = evaluate({ kind: 'name', name: node.name }, scope);
       if (!(target instanceof Namespace)) throw new NotRead(`${node.written} sets an attribute of what is not a namespace`);
+      const value = evaluate(node.value, scope);
       const key = NAMESPACE + target.id;
-      const since = (way.names.get(key) ?? {}) as Readonly<Record<string, JinjaValue>>;
-      return [{ ...way, names: new Map([...way.names, [key, { ...since, [node.attribute]: evaluate(node.value, scope) }]]) }];
+      const since = (sharedNow(scope, key) ?? {}) as Readonly<Record<string, JinjaValue>>;
+      return [{ ...way, names: new Map([...settled().names, [key, { ...since, [node.attribute]: value }]]) }];
     }
     case 'set-many': {
       const value = evaluate(node.value, scope);
@@ -1597,18 +1711,25 @@ const renderNode = (node: Node, way: Way, outer: Run): Way[] => {
       if (items === undefined || items.length !== node.names.length) {
         // A value the files do not give leaves every name not known; one that holds another number of items is not read.
         if (!isUnsettled(value)) throw new NotRead(`${node.written} unpacks what it does not hold`);
-        return [{ ...way, names: new Map([...way.names, ...node.names.map((name): [string, JinjaValue] => [name, new Unknown(name)])]) }];
+        return [{ ...way, names: new Map([...settled().names, ...node.names.map((name): [string, JinjaValue] => [name, new Unknown(name)])]) }];
       }
-      return [{ ...way, names: new Map([...way.names, ...node.names.map((name, at): [string, JinjaValue] => [name, items[at] as JinjaValue])]) }];
+      return [{ ...way, names: new Map([...settled().names, ...node.names.map((name, at): [string, JinjaValue] => [name, items[at] as JinjaValue])]) }];
     }
     case 'set-block':
-      return renderApart(node.body, way, run).map((text) => ({ ...way, names: new Map([...way.names, [node.name, evaluate(node.filtered, { ...scope, names: new Map([...way.names, [HELD, text]]) })]]) }));
+      // What the block's body changes of what is shared stays changed (P306).
+      return renderApart(node.body, way, run).map((done) => {
+        const value = evaluate(node.filtered, { ...scope, names: new Map([...done.names, [HELD, done.text]]) });
+        return { ...way, names: new Map([...settled(done.names).names, [node.name, value]]) };
+      });
     case 'filter-block':
-      return renderApart(node.body, way, run).map((text) => written(way, evaluate(node.filtered, { ...scope, names: new Map([...way.names, [HELD, text]]) }), node, node.written, run));
+      return renderApart(node.body, way, run).map((done) => {
+        const value = evaluate(node.filtered, { ...scope, names: new Map([...done.names, [HELD, done.text]]) });
+        return written(settled(done.names), value, node, node.written, run);
+      });
     case 'with': {
-      const bound = new Map(way.names);
-      for (const [name, value] of node.assignments) bound.set(name, evaluate(value, scope));
-      return renderNodes(node.body, [{ ...way, names: bound }], { ...run, locals: new Set([...run.locals, ...node.assignments.map(([name]) => name)]) }).map((done) => ({ ...done, names: handedBack(done.names, way.names) }));
+      const values = node.assignments.map(([name, value]): [string, JinjaValue] => [name, evaluate(value, scope)]);
+      const start = settled();
+      return renderNodes(node.body, [{ ...start, names: new Map([...start.names, ...values]) }], { ...run, locals: new Set([...run.locals, ...node.assignments.map(([name]) => name)]) }).map((done) => ({ ...done, names: handedBack(done.names, start.names) }));
     }
     case 'macro':
       return [{ ...way, names: new Map([...way.names, [node.name, new Macro(node.name, node.parameters, node.body, way.names, run.lookup, run.home)]]) }];
@@ -1616,7 +1737,7 @@ const renderNode = (node: Node, way: Way, outer: Run): Way[] => {
       const called = macroCalled(node.call, scope);
       if (called === undefined) throw new NotRead(`${node.written} calls no macro the files define`);
       const caller = new Macro('caller', node.parameters, node.body, way.names, run.lookup);
-      return renderMacro(called, run, caller).map((text) => appended(way, text, here));
+      return renderMacro(called, run, caller).map((done) => appended(settled(overlaid(way.names, done.shared)), done.text, here));
     }
     case 'include': {
       const loaded = loadNamed(node.name, node.written, scope, run);
@@ -1642,18 +1763,21 @@ const renderNode = (node: Node, way: Way, outer: Run): Way[] => {
       return renderBlock(node.chain, way, run);
     case 'if': {
       for (const [index, branch] of node.branches.entries()) {
-        const test = truth(evaluate(branch.test, scope));
-        if (test === true) return renderNodes(branch.body, [way], run);
+        // What a test changes of what is shared - `loop.changed`, a macro setting a namespace - is kept past it (P306).
+        const test = truthIn(evaluate(branch.test, scope), run);
+        if (test === true) return renderNodes(branch.body, [settled()], run);
         if (test === false) continue;
         // Not decided by what the files give: this branch, and every way the rest can go (P264).
         if (!run.undecided.includes(branch.written)) run.undecided.push(branch.written);
         const rest: Node = { kind: 'if', branches: node.branches.slice(index + 1), otherwise: node.otherwise };
-        return [...renderNodes(branch.body, [way], run), ...renderNode(rest, way, run)];
+        return [...renderNodes(branch.body, [settled()], run), ...renderNode(rest, settled(), run)];
       }
-      return renderNodes(node.otherwise, [way], run);
+      return renderNodes(node.otherwise, [settled()], run);
     }
-    case 'for':
-      return loopOver(node, evaluate(node.over, scope), way, run, 0);
+    case 'for': {
+      const value = evaluate(node.over, scope);
+      return loopOver(node, value, settled(), run, 0);
+    }
   }
 };
 
@@ -1666,6 +1790,8 @@ const renderNode = (node: Node, way: Way, outer: Run): Way[] => {
  * sets on a namespace.
  */
 const loopOver = (node: Extract<Node, { kind: 'for' }>, over: JinjaValue, way: Way, outer: Run, depth: number): Way[] => {
+  // Nothing is looped over an undefined value where the text is rendered with Jinja's default undefined (P306).
+  if (over instanceof Undefined && outer.lenient) return renderNodes(node.otherwise, [way], outer);
   if (!(over instanceof Pairs) && !Array.isArray(over) && !isRecord(over) && typeof over !== 'string') throw new NotRead(`${node.written} loops over what the files do not give`);
   const all: JinjaValue[] = over instanceof Pairs ? over.pairs.map(([key, value]) => [key, value]) : Array.isArray(over) ? [...(over as JinjaValue[])] : isRecord(over) ? Object.keys(over) : [...over];
   const bind = (item: JinjaValue): Map<string, JinjaValue> => {
@@ -1682,37 +1808,47 @@ const loopOver = (node: Extract<Node, { kind: 'for' }>, over: JinjaValue, way: W
     filter === undefined
       ? all
       : all.filter((item) => {
-          const kept = truth(evaluate(filter, { names: new Map([...way.names, ...bind(item)]), lookup: outer.lookup, run: outer }));
+          const kept = truthIn(evaluate(filter, { names: new Map([...way.names, ...bind(item)]), lookup: outer.lookup, run: outer }), outer);
           if (kept === undefined) throw new NotRead(`${node.written} keeps items by what the files do not decide`);
           return kept;
         });
   if (items.length === 0) return renderNodes(node.otherwise, [way], outer);
   const run: Run = { ...outer, locals: new Set([...outer.locals, ...node.names, 'loop']) };
-  // What `loop.changed(...)` was last handed, by the place it was handed at; `null` where the ways disagree (P299).
-  const handed = new Map<number, string | null>();
+  /**
+   * What `loop.changed(...)` was last handed in this loop (P299, P306): kept on
+   * the way under the loop's own name, so every call - two in one item too -
+   * is compared with the call before it, as Jinja keeps one value per loop.
+   */
+  const handed = CHANGED + (loops += 1);
+  const changed = new Builtin('changed', (args, _named, scope) => {
+    const now = args.some(holdsUnsettled) ? new Unknown('loop.changed') : json(args);
+    const last = sharedNow(scope, handed);
+    scope.changes?.set(handed, now);
+    if (now instanceof Unknown || last instanceof Unknown) return new Unknown('loop.changed');
+    return last !== now;
+  });
+  /**
+   * A recursive loop's `loop(...)` (P299): the same loop over what it is
+   * handed, one deeper, from the names the loop started with and what is
+   * shared as it is at the call; what it changes of that is the caller's (P306).
+   */
+  const again = new Builtin('loop', ([inner], _named, scope) => {
+    if (inner instanceof Undefined) return '';
+    if (inner === undefined || isUnsettled(inner)) return new Unknown('loop()');
+    if (run.depth.value >= MOST_DEPTH) throw new NotRead(`${node.written} recurses deeper than is followed`);
+    const from = namesNow(scope);
+    const start = new Map(way.names);
+    for (const [name, value] of from) if (name.startsWith(SHARED)) start.set(name, value);
+    run.depth.value += 1;
+    try {
+      return handedOver(distinct(loopOver(node, inner, { text: '', names: start, lines: [] }, outer, depth + 1).map((done) => ({ text: done.text, shared: sharedChanges(done.names, from) }))), scope, 'loop()');
+    } finally {
+      run.depth.value -= 1;
+    }
+  });
   let ways: Way[] = [way];
   items.forEach((item, index) => {
     const bound = bind(item);
-    const changed = new Builtin('changed', (args) => {
-      const now = args.some(holdsUnsettled) ? null : json(args);
-      const before = handed.has(index) ? handed.get(index) : undefined;
-      handed.set(index, before !== undefined && before !== now ? null : now);
-      const last = [...handed.keys()].filter((at) => at < index).sort((a, b) => b - a)[0];
-      if (now === null || (last !== undefined && handed.get(last) === null)) return new Unknown('loop.changed');
-      return last === undefined || handed.get(last) !== now;
-    });
-    const again = new Builtin('loop', ([inner]) => {
-      if (inner instanceof Undefined) return '';
-      if (inner === undefined || isUnsettled(inner)) return new Unknown('loop()');
-      if (run.depth.value >= MOST_DEPTH) throw new NotRead(`${node.written} recurses deeper than is followed`);
-      run.depth.value += 1;
-      try {
-        const texts = [...new Set(loopOver(node, inner, { text: '', names: way.names, lines: [] }, outer, depth + 1).map((done) => done.text))];
-        return texts.length === 1 ? (texts[0] as string) : new Unknown('loop()');
-      } finally {
-        run.depth.value -= 1;
-      }
-    });
     // The loop's own record (P289).
     bound.set('loop', {
       index: index + 1,
@@ -1732,7 +1868,13 @@ const loopOver = (node: Extract<Node, { kind: 'for' }>, over: JinjaValue, way: W
     });
     ways = ways.flatMap((at) => renderNodes(node.body, [{ ...at, names: new Map([...at.names, ...bound]) }], run).map((done) => ({ ...done, names: handedBack(done.names, at.names) })));
   });
-  return ways;
+  // What `loop.changed` was last handed ends with the loop (P306), and is not handed past it.
+  return ways.map((done) => {
+    if (!done.names.has(handed)) return done;
+    const names = new Map(done.names);
+    names.delete(handed);
+    return { ...done, names };
+  });
 };
 
 /** The text as P261 read it: every expression it settles rendered, every statement kept by a stand-in. */
@@ -1769,7 +1911,7 @@ const keptStatements = (text: string, lookup: Lookup, file: number): Rendering =
 export const renderJinja = (text: string, lookup: Lookup, file = 0, options: JinjaOptions = {}): Rendering => {
   try {
     const nodes = parseTemplate(text);
-    const run: Run = { lookup, file, kept: new Map(), unrendered: new Map(), undecided: [], load: options.load, templates: new Map(), loaded: new Set(), blocks: new Map(), depth: { value: 0 }, home: nodes, locals: new Set() };
+    const run: Run = { lookup, file, kept: new Map(), unrendered: new Map(), undecided: [], load: options.load, templates: new Map(), loaded: new Set(), blocks: new Map(), depth: { value: 0 }, home: nodes, locals: new Set(), lenient: options.strictUndefined === false };
     const all = renderTemplate(nodes, [{ text: '', names: new Map(), lines: [] }], run);
     const ways = [...new Set(all.map((way) => way.text))];
     return { text: ways[0] ?? '', unrendered: run.unrendered, ways, undecided: run.undecided, loaded: [...run.loaded].sort(), lines: settledLines(all[0]?.lines ?? []) };

@@ -337,3 +337,93 @@ describe('namespaces, select and groupby, late names, loop.changed and recursive
     expect(row?.message).not.toContain('after_create');
   });
 });
+
+describe('sceptre projects a configuration names by a relative path (P306)', () => {
+  const SHOP_GROUP = 'project_code: shop\nregion: eu-west-1\n';
+  const STACK = (template: string) => `template_path: ${template}\nparameters:\n  Prefix: '{{ var.prefix | default("acme") }}'\n  Stage: prod\n`;
+
+  it('reads a stack deploying a template kept outside the project, or in another, by a path climbing out of its templates', () => {
+    const outside = read({
+      'shared/cfn/stack.yaml': TEMPLATE,
+      'infra/shop/templates/.keep': '',
+      'infra/shop/config/config.yaml': SHOP_GROUP,
+      'infra/shop/config/prod/fn.yaml': STACK('../../../shared/cfn/stack.yaml'),
+    });
+    expect(names(outside)).toEqual(['acme-prod-fn']);
+    const another = read({
+      'infra/network/templates/stack.yaml': TEMPLATE,
+      'infra/network/config/config.yaml': 'project_code: net\n',
+      'infra/shop/templates/.keep': '',
+      'infra/shop/config/config.yaml': SHOP_GROUP,
+      'infra/shop/config/prod/fn.yaml': STACK('../../network/templates/stack.yaml'),
+    });
+    // The template's own project deploys nothing of it; the project naming it does.
+    expect(names(another)).toEqual(['acme-prod-fn']);
+  });
+
+  it('launches the stacks a command written around a project anywhere launches, where a configuration ties the two by a relative path', () => {
+    const files = {
+      'infra/shop/templates/stack.yaml': TEMPLATE,
+      'infra/shop/config/config.yaml': SHOP_GROUP,
+      'infra/shop/config/prod/fn.yaml': STACK('stack.yaml'),
+      'ops/deploy/runner/templates/.keep': '',
+      'ops/deploy/runner/Makefile': 'deploy:\n\tsceptre --dir ../../../infra/shop --var prefix=shop launch -y prod/fn.yaml\n',
+    };
+    // Not beside it, and named by neither: the command is not this project's.
+    expect(names(read({ ...files, 'ops/deploy/runner/config/config.yaml': 'project_code: runner\n' }))).toEqual(['acme-prod-fn']);
+    // The runner's stack group configuration names the project.
+    expect(names(read({ ...files, 'ops/deploy/runner/config/config.yaml': 'project_code: runner\nproject_path: ../../../infra/shop\n' }))).toEqual(['shop-prod-fn']);
+    // The project's own configuration names a file of the runner.
+    expect(names(read({ ...files, 'ops/deploy/runner/config/config.yaml': 'project_code: runner\n', 'ops/deploy/runner/vars.yaml': 'prefix: ops\n', 'infra/shop/config/config.yaml': `${SHOP_GROUP}notes: ../../ops/deploy/runner/vars.yaml\n` }))).toEqual(['shop-prod-fn']);
+    // A path climbing out of the repository names nothing.
+    expect(names(read({ ...files, 'ops/deploy/runner/config/config.yaml': 'project_code: runner\nproject_path: ../../../../../../infra/shop\n' }))).toEqual(['acme-prod-fn']);
+  });
+});
+
+describe("what a namespace and loop.changed share, and Jinja's default undefined (P306)", () => {
+  const render = (text: string, roots: Record<string, unknown> = {}, options: { strictUndefined?: boolean } = {}) => renderJinja(text, lookupIn(roots), 0, options);
+
+  it('keeps what a macro sets on a namespace it is handed, or one it sees, for what follows the call', () => {
+    expect(render("{% macro mark(ns, x) %}{% set ns.seen = ns.seen ~ x %}{% endmacro %}{% set ns = namespace(seen='') %}{{ mark(ns, 'a') }}{% set _ = mark(ns, 'b') %}{{ ns.seen }}").text).toBe('ab');
+    // A macro defined before the namespace is set reads it as it is at the call, and sets it there.
+    expect(render('{% set ns = namespace(n=0) %}{% macro bump() %}{% set ns.n = ns.n + 1 %}{% endmacro %}{% for i in [1, 2, 3] %}{{ bump() }}{% endfor %}{{ ns.n }}').text).toBe('3');
+    // A call block's body runs inside the macro's, and what it sets is the caller's too.
+    expect(render("{% macro wrap() %}[{{ caller() }}]{% endmacro %}{% set ns = namespace(x='a') %}{% call wrap() %}{% set ns.x = 'b' %}in{% endcall %}{{ ns.x }}").text).toBe('[in]b');
+  });
+
+  it('keeps what a set block, a filter block and a recursive loop set on a namespace', () => {
+    expect(render('{% set ns = namespace(x=1) %}{% set held %}{% set ns.x = 2 %}text{% endset %}{{ held }}{{ ns.x }}').text).toBe('text2');
+    expect(render('{% set ns = namespace(x=1) %}{% filter upper %}{% set ns.x = 3 %}a{% endfilter %}{{ ns.x }}').text).toBe('A3');
+    const tree = { var: { tree: [{ name: 'shop', children: [{ name: 'orders', children: [] }, { name: 'stock', children: [{ name: 'moves', children: [] }] }] }] } };
+    expect(render('{% set ns = namespace(count=0) %}{% for node in var.tree recursive %}{% set ns.count = ns.count + 1 %}{% if node.children %}{{ loop(node.children) }}{% endif %}{% endfor %}{{ ns.count }}', tree).text).toBe('4');
+  });
+
+  it('keeps what ways rendering a call alike set apart where they set it differently', () => {
+    const differs = render("{% macro m(ns) %}{% if var.flag %}{% set ns.x = 'b' %}{% endif %}{% endmacro %}{% set ns = namespace(x='a') %}{% set _ = m(ns) %}{{ ns.x }}");
+    expect([...differs.unrendered.values()]).toEqual(['{{ ns.x }}']);
+    // Where every way sets the namespace alike, it is read.
+    expect(render("{% macro m(ns) %}{% if var.flag %}{% set ns.x = 'b' %}{% else %}{% set ns.x = 'b' %}{% endif %}{% endmacro %}{% set ns = namespace(x='a') %}{% set _ = m(ns) %}{{ ns.x }}").text).toBe('b');
+  });
+
+  it('compares each call of loop.changed with the call before it, two in one item too', () => {
+    const roots = { var: { rows: [{ a: 1, b: 1 }, { a: 1, b: 2 }, { a: 2, b: 2 }] } };
+    // Jinja keeps one value per loop: the second call of an item is compared with the first.
+    expect(render('{% for r in var.rows %}{{ loop.changed(r.a) }}/{{ loop.changed(r.b) }} {% endfor %}', roots).text).toBe('True/False False/True False/False ');
+    expect(render('{% for r in var.rows %}{{ loop.changed(r.a) }}{{ loop.changed(r.a) }} {% endfor %}', roots).text).toBe('TrueFalse FalseFalse TrueFalse ');
+    // A recursive loop's deeper loop compares its own calls.
+    const tree = { var: { tree: [{ k: 'x', children: [{ k: 'x', children: [] }] }] } };
+    expect(render('{% for n in var.tree recursive %}{{ loop.changed(n.k) }}{% if n.children %}({{ loop(n.children) }}){% endif %}{% endfor %}', tree).text).toBe('True(True)');
+  });
+
+  it("reads a key a tree's record does not hold as false where the text is rendered with Jinja's default undefined", () => {
+    const tree = { var: { tree: [{ name: 'shop', children: [{ name: 'orders' }, { name: 'stock', children: [{ name: 'moves' }] }] }] } };
+    const text = '{% for node in var.tree recursive %}{{ node.name }}{{ node.note }}{% if node.children %}({{ loop(node.children) }}){% endif %} {% endfor %}';
+    const lenient = render(text, tree, { strictUndefined: false });
+    expect(lenient.text).toBe('shop(orders stock(moves ) ) ');
+    expect(lenient.ways).toHaveLength(1);
+    expect(render('{% for x in var.none %}a{% else %}none{% endfor %}{% if not var.missing %}!{% endif %}{{ var.missing ~ "-" }}', { var: {} }, { strictUndefined: false }).text).toBe('none!-');
+    // sceptre renders with the strict one: the key is not known, and the text is not one rendering.
+    const strict = render(text, tree);
+    expect(strict.ways.length > 1 || strict.unrendered.size > 0).toBe(true);
+  });
+});
