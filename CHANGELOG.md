@@ -8,6 +8,17 @@ only one of them moved.
 
 ### Added
 
+- **Settings chosen by a branch, and read inside a function handed nothing
+  (P302).** A condition nobody settles whose branches read different
+  settings, `isProd ? process.env.API_URL : process.env.DEV_API_URL`, written
+  in place, held in a constant or returned by a helper, is rooted at the
+  first branch's setting with the others where it may go instead
+  (`baseUrlAlso`), the address a guess; a helper's returns that nothing
+  chooses between are read together as the branches of a condition in place
+  are, on one setting the path they agree on with the rest a hole. A
+  function of the repository called with nothing, `apiBase()` returning
+  `process.env.API_URL ?? 'http://localhost:4000'`, is the setting it
+  returns, a parameter it is not handed at its default.
 - **The rest of the deployment templating and grants P289 and P295 left open
   (P299).** A command keeping releases with a selector and `--include-needs`
   keeps what they need from any sub-helmfile of the state (transitively with

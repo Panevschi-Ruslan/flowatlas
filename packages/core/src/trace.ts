@@ -237,10 +237,11 @@ export interface SettingAddress {
   /**
    * Whether a branch nobody settled was taken to get here.
    *
-   * Only the path can be reached this way; the key is the same on both sides of
-   * such a branch or there is no answer at all. Whoever turns this address into
-   * an edge has to carry it: an address arrived at through a guess is a
-   * `heuristic` edge, never a `static` one.
+   * The path can be reached this way, and the key where the branches are
+   * rooted at different settings: the first branch's is the key and the
+   * others' are in `also` (P302). Whoever turns this address into an edge has
+   * to carry it: an address arrived at through a guess is a `heuristic` edge,
+   * never a `static` one.
    */
   guessed?: boolean;
   /**
@@ -258,7 +259,10 @@ export interface SettingAddress {
   /**
    * The settings a chain of `||` or `??` reads after the one the address is
    * rooted at, in order (P296): `process.env.A || process.env.B || 'x'` is
-   * rooted at `A`, and `B` is where it goes where `A` is not set.
+   * rooted at `A`, and `B` is where it goes where `A` is not set. A condition
+   * nobody settles whose branches read different settings,
+   * `isProd ? process.env.A : process.env.B`, is rooted at `A` with `B` here
+   * and the address `guessed` (P302).
    */
   also?: readonly string[];
 }
@@ -858,6 +862,37 @@ const sharedStart = (a: string, b: string): string => {
 };
 
 /**
+ * Two addresses a value may be where nobody settled which, as one: the two
+ * branches of a condition written in place, or two returns of a helper the
+ * call does not choose between (P302). Where a caller wrote an argument
+ * nobody can read, the branch it would take is the answer and the address
+ * says it was guessed. Otherwise the two agree on the path as far as they
+ * agree and the rest is a hole: picking one there would be inventing a path.
+ *
+ * Where the two are rooted at different settings, `isProd ? process.env.A :
+ * process.env.B`, the value is one of the two: the first is the key, the
+ * second is where it may go instead (`also`, looked up after the first), and
+ * the address is `guessed`, since which one a deployment reads is not
+ * written. The first fallback either writes is the fallback.
+ */
+const eitherAddress = (a: SettingAddress, b: SettingAddress, settled?: Truth): SettingAddress => {
+  if (a.key === b.key) {
+    if (a.prefix === b.prefix) return a;
+    if (settled === 'given') return { ...a, guessed: true };
+    return { key: a.key, prefix: sharedStart(a.prefix, b.prefix) + UNREAD_SPAN };
+  }
+  const also = [...new Set([...(a.also ?? []), b.key, ...(b.also ?? [])])].filter((key) => key !== a.key);
+  const prefix = a.prefix === b.prefix || settled === 'given' ? a.prefix : sharedStart(a.prefix, b.prefix) + UNREAD_SPAN;
+  const fallback =
+    a.otherwise !== undefined
+      ? { otherwise: a.otherwise, ...(a.otherwiseFile === undefined ? {} : { otherwiseFile: a.otherwiseFile }) }
+      : b.otherwise !== undefined
+        ? { otherwise: b.otherwise, ...(b.otherwiseFile === undefined ? {} : { otherwiseFile: b.otherwiseFile }) }
+        : {};
+  return { key: a.key, prefix, guessed: true, ...fallback, also };
+};
+
+/**
  * Why this reads strings at all, when `evaluateExpression` already does.
  *
  * The two are not the same question and both have to exist. `evaluateExpression`
@@ -936,10 +971,7 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
   }
 
   // `a ? b : c`. Where the caller settled the condition, that branch is the
-  // answer. Where a caller wrote an argument nobody can read, the branch it
-  // would take is the answer and the address says it was guessed. Where nobody
-  // decided anything, the two branches agree as far as they agree and the rest
-  // is a hole: picking one there would be inventing a path.
+  // answer; where nobody did, both branches are, as {@link eitherAddress} says.
   if (Node.isConditionalExpression(node)) {
     const settled = truthOf(node.getCondition(), scope, budget);
     if (settled === true) return addressOf(node.getWhenTrue(), scope, budget - 1);
@@ -948,15 +980,7 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
     const whenFalse = addressOf(node.getWhenFalse(), scope, budget - 1);
     if (whenTrue === null) return whenFalse;
     if (whenFalse === null) return whenTrue;
-    // The key is settled before anything is guessed, so a guess can only ever
-    // reach the path. A caller reading the key alone is left where it was.
-    if (whenTrue.key !== whenFalse.key) return null;
-    if (whenTrue.prefix === whenFalse.prefix) return whenTrue;
-    if (settled === 'given') return { ...whenTrue, guessed: true };
-    return {
-      key: whenTrue.key,
-      prefix: sharedStart(whenTrue.prefix, whenFalse.prefix) + UNREAD_SPAN,
-    };
+    return eitherAddress(whenTrue, whenFalse, settled);
   }
 
   if (Node.isBinaryExpression(node)) {
@@ -1135,7 +1159,7 @@ const answeredBy = (value: TsNode, scope: Scope, budget: number): Answered | nul
     const settled = truthOf(node.getCondition(), scope, budget);
     if (settled === true) return answeredBy(node.getWhenTrue(), scope, budget - 1);
     if (settled === false) return answeredBy(node.getWhenFalse(), scope, budget - 1);
-    return agreeing([answeredBy(node.getWhenTrue(), scope, budget - 1), answeredBy(node.getWhenFalse(), scope, budget - 1)]);
+    return agreeing([answeredBy(node.getWhenTrue(), scope, budget - 1), answeredBy(node.getWhenFalse(), scope, budget - 1)], settled);
   }
   // A constant holding such a condition: `const PREVIEW = process.env.HOST ? `https://${…}` : ''`.
   if (Node.isIdentifier(node)) {
@@ -1150,12 +1174,13 @@ const answeredBy = (value: TsNode, scope: Scope, budget: number): Answered | nul
 };
 
 /**
- * What several answers say together: the address every one that has a value
- * is rooted at, with the first text one writes out as its fallback; nothing
- * where one cannot be read or two disagree; the text alone, or no value,
- * where none is rooted at a setting.
+ * What several answers say together, where nothing settles which is given:
+ * the addresses those with a value are rooted at, read together as the two
+ * branches of a condition in place are ({@link eitherAddress}, P302), with the
+ * first text one writes out as their fallback; nothing where one cannot be
+ * read; the text alone, or no value, where none is rooted at a setting.
  */
-const agreeing = (answers: readonly (Answered | null)[]): Answered | null => {
+const agreeing = (answers: readonly (Answered | null)[], settled?: Truth): Answered | null => {
   let found: SettingAddress | undefined;
   let text: { readonly value: string; readonly file: string } | undefined;
   for (const answer of answers) {
@@ -1165,8 +1190,7 @@ const agreeing = (answers: readonly (Answered | null)[]): Answered | null => {
       text ??= answer;
       continue;
     }
-    if (found !== undefined && (found.key !== answer.address.key || found.prefix !== answer.address.prefix)) return null;
-    found ??= answer.address;
+    found = found === undefined ? answer.address : eitherAddress(found, answer.address, settled);
   }
   if (found === undefined) return text === undefined ? { kind: 'none' } : { kind: 'text', value: text.value, file: text.file };
   const address = found.otherwise === undefined && text !== undefined ? { ...found, otherwise: text.value, otherwiseFile: text.file } : found;
@@ -1199,6 +1223,11 @@ const boundArguments = (fn: HelperFunction, call: CallExpression, scope: Scope):
   fn.getParameters().forEach((parameter, index) => {
     const argument = args[index];
     if (argument !== undefined) bound.set(parameter, { node: argument, scope });
+    else {
+      // Nothing handed: the parameter holds its default, as a method's does (P302).
+      const fallback = parameter.getInitializer();
+      if (fallback !== undefined) bound.set(parameter, { node: fallback, scope: { ...scope, bound: NOTHING } });
+    }
   });
   return bound;
 };
@@ -1212,14 +1241,16 @@ const boundArguments = (fn: HelperFunction, call: CallExpression, scope: Scope):
  * `https://${url}`). A return of the empty text, `null` or `undefined` is no
  * value, which a `||` after the call falls through; another text written out
  * is what the function falls back to. A branch the arguments settle is the
- * one taken (P296). Anything else is no address.
+ * one taken (P296); returns nothing settles between are read together as the
+ * branches of a condition in place are (P302). A function handed nothing,
+ * `apiBase()` returning `process.env.API_URL ?? 'http://localhost:4000'`, is
+ * read the same way: what it returns is the setting, a parameter it is not
+ * handed unbound (P302). Anything else is no address.
  */
 const throughFunction = (call: CallExpression, scope: Scope, budget: number): SettingAddress | null => {
   const fn = plainFunctionOf(call);
   if (fn === undefined) return null;
-  const bound = boundArguments(fn, call, scope);
-  if (bound.size === 0) return null;
-  return helperAddress(fn, { ...scope, self: enclosingClass(fn), bound }, budget) ?? null;
+  return helperAddress(fn, { ...scope, self: enclosingClass(fn), bound: boundArguments(fn, call, scope) }, budget) ?? null;
 };
 
 /**
@@ -1239,9 +1270,7 @@ const throughMember = (call: CallExpression, callee: PropertyAccessExpression, s
       ? initializer
       : undefined;
   if (fn === undefined) return null;
-  const bound = boundArguments(fn, call, scope);
-  if (bound.size === 0) return null;
-  return helperAddress(fn, { ...scope, self: enclosingClass(fn), bound }, budget) ?? null;
+  return helperAddress(fn, { ...scope, self: enclosingClass(fn), bound: boundArguments(fn, call, scope) }, budget) ?? null;
 };
 
 /** The operands of a chain of one operator, `a || b || c`, left to right. */
@@ -1310,10 +1339,11 @@ const chainAddress = (node: BinaryExpression, scope: Scope, budget: number): Set
  * reads as the other service having dropped a route.
  *
  * Where the path stops being readable the rest is a hole, and a hole makes the
- * whole address unmatchable rather than approximately right. The one exception
- * is a branch a caller's own argument decides, which is answered with the branch
- * that argument takes and marked `guessed`; nothing else here guesses, and the
- * settings key never does.
+ * whole address unmatchable rather than approximately right. The exceptions are
+ * a branch a caller's own argument decides, which is answered with the branch
+ * that argument takes, and branches nobody settles that read different
+ * settings, answered with the first and the others in `also` (P302); both are
+ * marked `guessed`, and nothing else here guesses.
  */
 export const rootSettingAddress = (
   value: TsNode,

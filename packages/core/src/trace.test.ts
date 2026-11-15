@@ -210,7 +210,7 @@ describe('a settings value kept in a static property', () => {
     });
   });
 
-  it('reads a function per branch where its arguments settle the branch, and none where nothing does', () => {
+  it('reads a function per branch where its arguments settle the branch, and both as a condition in place where nothing does', () => {
     const settled = parse(`
       function pick(url: string, flag: boolean): string {
         if (flag) return \`\${url}/admin\`;
@@ -239,7 +239,64 @@ describe('a settings value kept in a static property', () => {
       const BASE = pick(environment.apiUrl, flag);
       http.get(\`\${BASE}/orders\`);
     `);
-    expect(rootSettingAddress(address(open).getDescendantsOfKind(SyntaxKind.Identifier)[0]!, { readSetting })).toBeNull();
+    // P302: the two returns agree on the setting, and on the path as far as
+    // they agree with the rest a hole, as the same condition written in place does.
+    expect(rootSettingAddress(address(open).getDescendantsOfKind(SyntaxKind.Identifier)[0]!, { readSetting })).toEqual({ key: 'apiUrl', prefix: UNREAD_SPAN });
+  });
+
+  // P302: branches nobody settles that read different settings are one of the
+  // two: the first is the key, the second where it may go instead, guessed.
+  it('reads a condition nobody settles over two settings as the first with the second as also, in place and in a helper alike', () => {
+    const expected = { key: 'apiUrl', prefix: '', guessed: true, also: ['devUrl'] };
+    const inPlace = parse(`
+      declare const isProd: boolean;
+      http.get(\`\${isProd ? environment.apiUrl : environment.devUrl}/orders\`);
+    `);
+    const branch = address(inPlace).getDescendantsOfKind(SyntaxKind.ConditionalExpression)[0]!;
+    expect(rootSettingAddress(branch, { readSetting })).toEqual(expected);
+    const call = (file: SourceFile) => address(file).getDescendantsOfKind(SyntaxKind.CallExpression)[0]!;
+    const helper = parse(`
+      declare const isProd: boolean;
+      const base = () => isProd ? environment.apiUrl : environment.devUrl;
+      http.get(\`\${base()}/orders\`);
+    `);
+    expect(rootSettingAddress(call(helper), { readSetting })).toEqual(expected);
+    const returns = parse(`
+      declare const isProd: boolean;
+      function base(): string {
+        if (isProd) return \`\${environment.apiUrl}/v1\`;
+        return \`\${environment.devUrl}/v1\`;
+      }
+      http.get(\`\${base()}/orders\`);
+    `);
+    expect(rootSettingAddress(call(returns), { readSetting })).toEqual({ key: 'apiUrl', prefix: '/v1', guessed: true, also: ['devUrl'] });
+    const fallback = parse(`
+      declare const isProd: boolean;
+      const base = () => isProd ? environment.apiUrl : environment.devUrl ?? 'http://localhost:4000';
+      http.get(\`\${base()}/orders\`);
+    `);
+    expect(rootSettingAddress(call(fallback), { readSetting })).toEqual({ ...expected, otherwise: 'http://localhost:4000', otherwiseFile: '/a.ts' });
+  });
+
+  // P302: a function handed nothing that reads the setting inside is the setting.
+  it('reads a function called with no arguments as what it returns', () => {
+    const call = (file: SourceFile) => address(file).getDescendantsOfKind(SyntaxKind.CallExpression)[0]!;
+    const plain = parse(`
+      function apiBase() { return environment.apiUrl ?? 'http://localhost:4000'; }
+      http.get(\`\${apiBase()}/users\`);
+    `);
+    expect(rootSettingAddress(call(plain), { readSetting })).toEqual({ key: 'apiUrl', prefix: '', otherwise: 'http://localhost:4000', otherwiseFile: '/a.ts' });
+    const member = parse(`
+      const urls = { api: () => \`\${environment.apiUrl}/api\` };
+      http.get(\`\${urls.api()}/users\`);
+    `);
+    expect(rootSettingAddress(call(member), { readSetting })).toEqual({ key: 'apiUrl', prefix: '/api' });
+    // A parameter it is not handed holds its default, which settles the branch.
+    const optional = parse(`
+      function api(tail = '') { return tail ? \`\${environment.apiUrl}/\${tail}\` : environment.apiUrl; }
+      http.get(\`\${api()}/users\`);
+    `);
+    expect(rootSettingAddress(call(optional), { readSetting })).toEqual({ key: 'apiUrl', prefix: '' });
   });
 
   it('reads a function an object holds as a plain one', () => {
