@@ -12,13 +12,15 @@ fallback (P296): `meta.listen` `{ port: 3000, setting: 'PORT', default: true }`.
 
 | Call | Joined to |
 |---|---|
-| `listProducts()`, `request(STORE_API_URL, PRODUCTS)` | the server's `POST /store-api`, the endpoint at the value's path (`graphqlPath`, P281): the storefront serves nothing at `/store-api`, so its assumed port does not place the operation |
+| `listProducts()`, `request(STORE_API_URL, PRODUCTS)` | the server's `POST /store-api` (`graphqlPath`), as a guess: the server's port read through the merge places it at 3000, and the storefront's assumed 3000 yields to it (P305) |
 | `addToCart()`, the same for a mutation | the same |
-| `readCart()`, `fetch(`${APP_URL ?? 'http://localhost:3000'}/api/cart`)` | the storefront's own `GET /api/cart` (`baseUrlValue`): it serves the path, so the port it assumes places the request there (P296) |
+| `readCart()`, `fetch(`${APP_URL ?? 'http://localhost:3000'}/api/cart`)` | nothing: 3000 is the server's, which has no `GET /api/cart`, so the row is `target-route-not-found` (P305). Before the server's port was read, the storefront's assumed port placed it at its own route (P300) |
 
-## server: a port nothing reads
+## server: a port read through a merge
 
-`bootstrap()` listens on `mergeConfig(given).apiOptions.port`, whose default
-is kept in `config/defaults.ts` and merged at run time; nothing reads it, so
-no port is said for the server. `GraphQLModule.forRoot({ path: '/store-api' })`
+`bootstrap()` listens on `mergeConfig(given).apiOptions.port`. `mergeConfig`
+is the repository's own helper laying what it is handed over `defaults`
+(`config/defaults.ts`), and `bootstrap()` is handed nothing, so the port is
+the defaults' 3000 (P305): `meta.listen` `{ port: 3000, merged:
+'src/main.ts:8' }`, a guess. `GraphQLModule.forRoot({ path: '/store-api' })`
 serves `Query.products` and `Mutation.addToCart`.

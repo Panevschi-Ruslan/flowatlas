@@ -38,9 +38,71 @@ const listening = (adapters: EntryAdapter[], code: Record<string, string>, files
     logger: silentLogger,
   };
   const said = (port: ListenPort): string =>
-    `${port.file}:${port.line} ${port.port}${port.setting === undefined ? '' : `[${port.setting}]`}${port.default === true ? ' default' : ''}`;
+    `${port.file}:${port.line} ${port.port}${port.setting === undefined ? '' : `[${port.setting}]`}${port.default === true ? ' default' : ''}` +
+    `${port.valueFrom === undefined ? '' : ` from ${port.valueFrom}`}${port.merged === undefined ? '' : ` merged at ${port.merged}`}`;
   return listeningOf(ctx).map(said);
 };
+
+describe('where a framework server listens by the environment file it loads (P305)', () => {
+  const scripts = (dev: string): string => JSON.stringify({ scripts: { dev } }, null, 2);
+
+  it("moves Nuxt's default to the port its dev command's .env gives NUXT_PORT, NITRO_PORT or PORT", () => {
+    expect(listening([nitroRoutesAdapter], {}, { 'package.json': scripts('nuxi dev'), '.env': 'API_URL=http://localhost:4000\nPORT=3010\n' })).toEqual([
+      '.env:2 3010[PORT] from .env',
+    ]);
+    expect(listening([nitroRoutesAdapter], {}, { 'package.json': scripts('nuxt dev'), '.env': 'PORT=3010\nNUXT_PORT="3011"\n' })).toEqual([
+      '.env:2 3011[NUXT_PORT] from .env',
+    ]);
+    // `--dotenv` names the file the command loads instead.
+    expect(listening([nitroRoutesAdapter], {}, { 'package.json': scripts('nuxi dev --dotenv .env.dev'), '.env.dev': 'PORT=3012\n' })).toEqual([
+      '.env.dev:1 3012[PORT] from .env.dev',
+    ]);
+  });
+
+  it('takes an example file only as a candidate, as weak as the default, and only where no .env is committed', () => {
+    expect(listening([nitroRoutesAdapter], {}, { 'package.json': scripts('nuxi dev'), '.env.example': '# the dev port\nPORT=3020\n' })).toEqual([
+      '.env.example:2 3020[PORT] default from .env.example',
+    ]);
+    expect(listening([nitroRoutesAdapter], {}, { 'package.json': scripts('nuxi dev'), '.env': 'API_URL=x\n', '.env.example': 'PORT=3020\n' })).toEqual([
+      'package.json:3 3000[PORT] default',
+    ]);
+  });
+
+  it("keeps Next's default whatever its .env says, and a command that loads no file", () => {
+    expect(listening([nextjsRoutesAdapter], {}, { 'package.json': scripts('next dev'), '.env': 'PORT=3030\n', '.env.example': 'PORT=3031\n' })).toEqual([
+      'package.json:3 3000[PORT] default',
+    ]);
+    expect(
+      listening([nitroRoutesAdapter], {}, { 'package.json': JSON.stringify({ scripts: { start: 'nuxi preview' } }, null, 2), '.env': 'PORT=3040\n' }),
+    ).toEqual(['package.json:3 3000[PORT] default']);
+    // A value nothing here can read is no port.
+    expect(listening([nitroRoutesAdapter], {}, { 'package.json': scripts('nuxi dev'), '.env': 'PORT=${DEV_PORT}\n' })).toEqual(['package.json:3 3000[PORT] default']);
+  });
+
+  it('reads a NestJS bootstrap port through a merge of the given configuration over defaults another module keeps', () => {
+    expect(
+      listening([nestjsHttpAdapter], {
+        'src/config/defaults.ts': "export const defaults = { apiOptions: { hostname: '', port: 3000 } };",
+        'src/config/merge.ts': [
+          "import { defaults } from './defaults';",
+          'export function mergeConfig(given: any) {',
+          '  const out: any = { ...defaults };',
+          '  for (const [key, value] of Object.entries(given)) out[key] = { ...out[key], ...(value as object) };',
+          '  return out;',
+          '}',
+        ].join('\n'),
+        'src/main.ts': [
+          "import { mergeConfig } from './config/merge';",
+          'export async function bootstrap(given = {}) {',
+          '  const { hostname, port } = mergeConfig(given).apiOptions;',
+          '  const app = await NestFactory.create(AppModule);',
+          '  await app.listen(port, hostname);',
+          '}',
+        ].join('\n'),
+      }),
+    ).toEqual(['src/main.ts:5 3000 merged at src/main.ts:3']);
+  });
+});
 
 describe('where each framework server listens (P250)', () => {
   it('reads `app.listen` for express, koa, fastify and NestJS, each once', () => {

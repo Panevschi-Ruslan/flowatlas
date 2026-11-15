@@ -82,3 +82,26 @@ export const pathsUnder = (address: string, path: unknown): string[] => {
   const start = pathOfAddress(address);
   return start === undefined ? [path] : [normalizePath(`${start}/${path}`), path];
 };
+
+/** The procedures a service declares, as the procedure index answers them. */
+export interface ProceduresDeclared {
+  proceduresOf(service: string): ReadonlyMap<string, GraphNode>;
+  matching?(service: string, procedure: string): GraphNode | undefined;
+}
+
+/**
+ * Whether a service serves a procedure a client's link asks for (P305), asked
+ * where only a framework's assumed default port places it at the link's
+ * address, as a request's route is (P300): it declares the procedure - by its
+ * key, or by a pattern the path matches - or, for a gRPC method, it
+ * implements the gRPC service the method is of, which the procedure's own
+ * resolution then says the method is missing from.
+ */
+export const servesProcedure =
+  (index: ProceduresDeclared, procedure: string): ServesRequest =>
+  (service) => {
+    const declared = index.proceduresOf(service);
+    if (declared.has(procedure) || index.matching?.(service, procedure) !== undefined) return true;
+    const grpc = /^(grpc:[^/]+\/)[^/]+$/.exec(procedure)?.[1];
+    return grpc !== undefined && [...declared.keys()].some((key) => key.startsWith(grpc));
+  };

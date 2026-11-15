@@ -1,0 +1,672 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-15T14:48:51.828Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "dashboard",
+      "repo": "./dashboard",
+      "type": "nuxt",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "board",
+      "repo": "./board",
+      "type": "remix",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "board#app/routes/api.health.ts:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "board",
+      "file": "app/routes/api.health.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "dashboard#server/api/stats.get.ts:GET /api/stats@1",
+      "type": "function",
+      "label": "GET /api/stats@1",
+      "repo": "dashboard",
+      "file": "server/api/stats.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{orders:0}"
+        }
+      }
+    },
+    {
+      "id": "entry:board:http:GET:/api/health",
+      "type": "entry",
+      "label": "GET /api/health",
+      "repo": "board",
+      "file": "app/routes/api.health.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/health",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:dashboard:http:GET:/api/stats",
+      "type": "entry",
+      "label": "GET /api/stats",
+      "repo": "dashboard",
+      "file": "server/api/stats.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/stats",
+        "rawPath": "/api/stats",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:ALL:/api/trpc/:param",
+      "type": "entry",
+      "label": "ALL /api/trpc/:param",
+      "repo": "shop",
+      "file": "src/pages/api/trpc/[trpc].ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/trpc/:param",
+        "rawPath": "/api/trpc/:trpc",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "unread",
+        "handlerBodyRead": false
+      }
+    },
+    {
+      "id": "entry:shop:rpc:orders.list",
+      "type": "entry",
+      "label": "rpc orders.list",
+      "repo": "shop",
+      "file": "src/server/root.ts",
+      "line": 7,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string}[]"
+        },
+        "key": "orders.list",
+        "adapter": "trpc-procedures",
+        "call": "query",
+        "registration": "router({ … })",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "served": [
+          "src/pages/api/trpc/[trpc].ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/api/trpc",
+            "file": "src/pages/api/trpc/[trpc].ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "external_api:localhost:3000",
+      "type": "external_api",
+      "label": "localhost:3000",
+      "repo": "jobs",
+      "meta": {
+        "host": "localhost:3000"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/clients.ts:10:35",
+      "type": "http_out",
+      "label": "rpc reports.weekly",
+      "repo": "jobs",
+      "file": "src/clients.ts",
+      "line": 10,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "reports.weekly",
+        "call": "query",
+        "operation": "query",
+        "client": "trpc-client",
+        "inputNone": true,
+        "outputType": "any",
+        "link": {
+          "protocol": "trpc",
+          "path": "/api/trpc",
+          "host": "localhost:3000"
+        }
+      }
+    },
+    {
+      "id": "http_out:jobs#src/clients.ts:13:37",
+      "type": "http_out",
+      "label": "GET /api/stats",
+      "repo": "jobs",
+      "file": "src/clients.ts",
+      "line": 13,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3010/api/stats",
+        "path": "/api/stats",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:3010",
+        "targetService": "dashboard"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/clients.ts:16:34",
+      "type": "http_out",
+      "label": "GET /api/health",
+      "repo": "jobs",
+      "file": "src/clients.ts",
+      "line": 16,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:8002/api/health",
+        "path": "/api/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:8002",
+        "targetService": "board"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/clients.ts:19:34",
+      "type": "http_out",
+      "label": "GET /api/health",
+      "repo": "jobs",
+      "file": "src/clients.ts",
+      "line": 19,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3000/api/health",
+        "path": "/api/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:3000"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/clients.ts:7:36",
+      "type": "http_out",
+      "label": "rpc orders.list",
+      "repo": "jobs",
+      "file": "src/clients.ts",
+      "line": 7,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.list",
+        "call": "query",
+        "operation": "query",
+        "client": "trpc-client",
+        "inputNone": true,
+        "outputType": "any",
+        "link": {
+          "protocol": "trpc",
+          "path": "/api/trpc",
+          "host": "localhost:3000"
+        },
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "jobs#src/clients.ts:boardHealth",
+      "type": "function",
+      "label": "boardHealth",
+      "repo": "jobs",
+      "file": "src/clients.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/clients.ts:dashboardStats",
+      "type": "function",
+      "label": "dashboardStats",
+      "repo": "jobs",
+      "file": "src/clients.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/clients.ts:pendingOrders",
+      "type": "function",
+      "label": "pendingOrders",
+      "repo": "jobs",
+      "file": "src/clients.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/clients.ts:strayHealth",
+      "type": "function",
+      "label": "strayHealth",
+      "repo": "jobs",
+      "file": "src/clients.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/clients.ts:weeklyReport",
+      "type": "function",
+      "label": "weeklyReport",
+      "repo": "jobs",
+      "file": "src/clients.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "repo:board",
+      "type": "repo",
+      "label": "board",
+      "repo": "board",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 1,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "remix-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 8002,
+            "file": ".env.example",
+            "line": 2,
+            "setting": "PORT",
+            "default": true,
+            "valueFrom": ".env.example"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:dashboard",
+      "type": "repo",
+      "label": "dashboard",
+      "repo": "dashboard",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 0,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "vue"
+          ],
+          "entry": [
+            "nitro-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3010,
+            "file": ".env",
+            "line": 2,
+            "setting": "NUXT_PORT",
+            "valueFrom": ".env"
+          }
+        ],
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@trpc/server": 1
+          },
+          "functions": 2,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes",
+            "trpc-procedures"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 6,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "shop#src/server/root.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "shop",
+      "file": "src/server/root.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string}[]"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:board:http:GET:/api/health",
+      "to": "board#app/routes/api.health.ts:loader",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "Response",
+      "file": "app/routes/api.health.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:dashboard:http:GET:/api/stats",
+      "to": "dashboard#server/api/stats.get.ts:GET /api/stats@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{orders:0}",
+      "file": "server/api/stats.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:rpc:orders.list",
+      "to": "shop#src/server/root.ts:listOrders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/root.ts",
+      "line": 3
+    },
+    {
+      "from": "http_out:jobs#src/clients.ts:10:35",
+      "to": "external_api:localhost:3000",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 10
+    },
+    {
+      "from": "http_out:jobs#src/clients.ts:13:37",
+      "to": "entry:dashboard:http:GET:/api/stats",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/clients.ts",
+      "line": 13,
+      "meta": {
+        "via": "host",
+        "targetService": "dashboard",
+        "listensAt": ".env:2 (NUXT_PORT from .env)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/clients.ts:16:34",
+      "to": "entry:board:http:GET:/api/health",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/clients.ts",
+      "line": 16,
+      "meta": {
+        "via": "host",
+        "targetService": "board",
+        "listensAt": ".env.example:2 (PORT from .env.example) (an example value)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/clients.ts:19:34",
+      "to": "external_api:localhost:3000",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 19
+    },
+    {
+      "from": "http_out:jobs#src/clients.ts:7:36",
+      "to": "entry:shop:rpc:orders.list",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/clients.ts",
+      "line": 7,
+      "returns": "any",
+      "meta": {
+        "via": "link-url",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "jobs#src/clients.ts:boardHealth",
+      "to": "http_out:jobs#src/clients.ts:16:34",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 16
+    },
+    {
+      "from": "jobs#src/clients.ts:dashboardStats",
+      "to": "http_out:jobs#src/clients.ts:13:37",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 13
+    },
+    {
+      "from": "jobs#src/clients.ts:pendingOrders",
+      "to": "http_out:jobs#src/clients.ts:7:36",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 7
+    },
+    {
+      "from": "jobs#src/clients.ts:strayHealth",
+      "to": "http_out:jobs#src/clients.ts:19:34",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 19
+    },
+    {
+      "from": "jobs#src/clients.ts:weeklyReport",
+      "to": "http_out:jobs#src/clients.ts:10:35",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 10
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "tsconfig.json",
+      "line": 1,
+      "reason": "aliases-from-convention",
+      "level": "info",
+      "message": ".nuxt/tsconfig.json is not there (`nuxi prepare` writes it), so ~ -> ., @ -> ., ~~ -> ., @@ -> ., #shared -> shared, #app -> node_modules/nuxt/dist/app resolve as Nuxt documents them",
+      "hint": "Nothing to do. Run `nuxi prepare` before building to read the aliases the framework writes, which win over these.",
+      "symbol": ".nuxt/tsconfig.json",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "aliases-from-convention",
+        "by": [
+          "Nuxt"
+        ],
+        "aliases": {
+          "~": [
+            "."
+          ],
+          "~/*": [
+            "./*"
+          ],
+          "@": [
+            "."
+          ],
+          "@/*": [
+            "./*"
+          ],
+          "~~": [
+            "."
+          ],
+          "~~/*": [
+            "./*"
+          ],
+          "@@": [
+            "."
+          ],
+          "@@/*": [
+            "./*"
+          ],
+          "#shared": [
+            "shared"
+          ],
+          "#shared/*": [
+            "shared/*"
+          ],
+          "#app": [
+            "node_modules/nuxt/dist/app"
+          ],
+          "#app/*": [
+            "node_modules/nuxt/dist/app/*"
+          ]
+        }
+      },
+      "service": "dashboard"
+    },
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "jobs"
+    },
+    {
+      "file": "src/pages/api/trpc/[trpc].ts",
+      "line": 4,
+      "reason": "route-handler-unread",
+      "message": "ALL /api/trpc/:param is the value a call handed back, and neither the function called nor anything handed to it is declared in this repository, so the way in has no handler that could be read. It answers at /api/trpc/:param.",
+      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
+      "symbol": "ALL /api/trpc/:param",
+      "adapter": "nextjs-routes",
+      "service": "shop"
+    }
+  ]
+}

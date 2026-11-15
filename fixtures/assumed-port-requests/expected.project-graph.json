@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T18:45:17.472Z",
+  "builtAt": "2026-11-15T14:37:21.576Z",
   "services": [
     {
       "name": "storefront",
@@ -141,7 +141,15 @@
                 }
               }
             }
-          }
+          },
+          "listen": [
+            {
+              "port": 3000,
+              "file": "src/main.ts",
+              "line": 11,
+              "merged": "src/main.ts:8"
+            }
+          ]
         }
       }
     },
@@ -307,7 +315,7 @@
         "bodyType": null,
         "baseUrl": "http://localhost:3000",
         "baseUrlFrom": "app/lib/store.ts (the code’s own fallback)",
-        "targetService": "storefront"
+        "targetService": "server"
       }
     },
     {
@@ -329,7 +337,15 @@
             "nestjs-http",
             "graphql-resolvers"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 11,
+            "merged": "src/main.ts:8"
+          }
+        ]
       }
     },
     {
@@ -666,20 +682,6 @@
       }
     },
     {
-      "from": "http_out:storefront#app/lib/store.ts:32:21",
-      "to": "entry:storefront:http:GET:/api/cart",
-      "type": "http_calls",
-      "confidence": "heuristic",
-      "file": "app/lib/store.ts",
-      "line": 32,
-      "meta": {
-        "via": "baseUrlValue",
-        "targetService": "storefront",
-        "baseUrl": "http://localhost:3000",
-        "baseUrlFrom": "app/lib/store.ts (the code’s own fallback)"
-      }
-    },
-    {
       "from": "server#src/app.module.ts:AppModule",
       "to": "server#node_modules/@nestjs/graphql:GraphQLModule",
       "type": "imports",
@@ -863,14 +865,23 @@
       "line": 32,
       "reason": "base-url-from-files",
       "level": "info",
-      "message": "APP_URL is http://localhost:3000 in app/lib/store.ts (the code’s own fallback), which is taken as storefront",
-      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add APP_URL to services[].baseUrlEnv of storefront to say so outright.",
+      "message": "APP_URL is http://localhost:3000 in app/lib/store.ts (the code’s own fallback), which is taken as server",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add APP_URL to services[].baseUrlEnv of server to say so outright.",
       "symbol": "http_out:storefront#app/lib/store.ts:32:21",
       "meta": {
         "variable": "APP_URL",
         "value": "http://localhost:3000",
         "from": "app/lib/store.ts (the code’s own fallback)"
       }
+    },
+    {
+      "service": "storefront",
+      "file": "app/lib/store.ts",
+      "line": 32,
+      "reason": "target-route-not-found",
+      "message": "target service server has no route GET /api/cart",
+      "hint": "Route renamed? Check server's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:storefront#app/lib/store.ts:32:21"
     },
     {
       "file": "app/routes/products.tsx",

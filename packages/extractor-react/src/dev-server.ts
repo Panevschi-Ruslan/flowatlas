@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
-import { frameworkListens, scriptCommands, targetPorts, VITE_CONFIGS, VITE_SERVER_EXECUTORS, WEBPACK_SERVER_EXECUTORS, type ScriptCommand } from '@flowatlas/adapters-entry';
+import { frameworkListens, REMIX_ENV, scriptCommands, targetPorts, VITE_CONFIGS, VITE_SERVER_EXECUTORS, WEBPACK_SERVER_EXECUTORS, type ScriptCommand } from '@flowatlas/adapters-entry';
 import { NotLiteral, configValueAt, isEnvironmentName, readConfigLiteral, toPosixPath, type ExtractContext, type ListenPort } from '@flowatlas/core';
 
 /**
@@ -130,10 +130,11 @@ const APP_SERVES = /\b(?:remix-serve|react-router-serve)\b|\bremix\s+dev\b/;
  * Remix's and React Router's own servers (`remix-serve`, `react-router-serve`,
  * the classic `remix dev`), where a script starts one (P296): they serve the
  * application's resource routes, so they are no dev server, and listen on
- * `PORT`, 3000 where nothing says.
+ * `PORT`, 3000 where nothing says - or the `PORT` the `.env` that `remix dev`
+ * loads gives it (P305).
  */
 export const appServerListens = (repoDir: string): ListenPort[] =>
-  scriptCommands(repoDir, APP_SERVES).length === 0 ? [] : frameworkListens(repoDir, APP_SERVES, 3000);
+  scriptCommands(repoDir, APP_SERVES).length === 0 ? [] : frameworkListens(repoDir, APP_SERVES, 3000, [], REMIX_ENV);
 
 /**
  * Where a React, Vue or Svelte front end's own servers listen: its bundler's

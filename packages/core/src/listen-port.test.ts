@@ -148,3 +148,68 @@ describe('a port decided away from the line that starts the server (P254)', () =
     ).toEqual(['src/a.ts:1 3008[PORT]', 'src/b.ts:1 3009[PORT]']);
   });
 });
+
+describe('a port read through a merge helper of the repository (P305)', () => {
+  /** The ports read in some files, with the merge each is read through. */
+  const merged = (files: Record<string, string>): string[] => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sources = Object.entries(files).map(([path, text]) => project.createSourceFile(path, text));
+    return listenCallsIn(sources).map((read) => {
+      const placed = placedPort(read, '/');
+      return `${placed.file}:${placed.line} ${placed.port}${placed.merged === undefined ? '' : ` merged at ${placed.merged}`}`;
+    });
+  };
+  const defaults = "export const defaults = { api: { host: '', port: 3000, path: 'shop' } };";
+  const helper = [
+    "import { defaults } from './defaults';",
+    'export function mergeConfig(given: Record<string, any>) {',
+    '  const out: Record<string, any> = { ...defaults };',
+    '  for (const [key, value] of Object.entries(given)) out[key] = { ...out[key], ...value };',
+    '  return out;',
+    '}',
+  ].join('\n');
+
+  it("reads the defaults' value where what is handed in leaves the key out, and marks it", () => {
+    expect(
+      merged({
+        '/src/defaults.ts': defaults,
+        '/src/merge.ts': helper,
+        '/src/main.ts': [
+          "import { mergeConfig } from './merge';",
+          'export async function bootstrap(given = {}) {',
+          '  const config = mergeConfig(given);',
+          '  const { host, port } = config.api;',
+          '  await app.listen(port, host);',
+          '}',
+        ].join('\n'),
+      }),
+    ).toEqual(['src/main.ts:5 3000 merged at src/main.ts:3']);
+    expect(literalPort({ merged: 'src/main.ts:3' })).toBe(false);
+  });
+
+  it("reads the given object's value where it writes the key, at the whole path, and a helper handed both", () => {
+    expect(
+      merged({
+        '/src/defaults.ts': defaults,
+        '/src/merge.ts': helper,
+        '/src/a.ts': "import { mergeConfig } from './merge';\nconst { port } = mergeConfig({ api: { host: 'x', port: 4100 } }).api;\napp.listen(port);",
+        '/src/b.ts': "import { mergeConfig } from './merge';\napp.listen(mergeConfig({ api: { host: 'x' } }).api.port);",
+        '/src/c.ts': [
+          "import { defaults } from './defaults';",
+          'const deep = (target: any, source: any): any => { for (const key in source) target[key] = source[key]; return target; };',
+          'app.listen(deep(defaults, { other: 1 }).api.port);',
+        ].join('\n'),
+      }),
+    ).toEqual(['src/a.ts:3 4100 merged at src/a.ts:2', 'src/b.ts:2 3000 merged at src/b.ts:2', 'src/c.ts:3 3000 merged at src/c.ts:3']);
+  });
+
+  it('reads nothing through a function that does not merge, or one of a library', () => {
+    expect(
+      merged({
+        '/src/defaults.ts': defaults,
+        '/src/a.ts': "import { defaults } from './defaults';\nconst pick = (given: any) => given;\napp.listen(pick(defaults).api.port);",
+        '/src/b.ts': "import merge from 'lodash/merge';\nimport { defaults } from './defaults';\napp.listen(merge({}, defaults).api.port);",
+      }),
+    ).toEqual([]);
+  });
+});

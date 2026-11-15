@@ -203,7 +203,13 @@ export const scriptPorts = (repoDir: string, commands: RegExp): ListenPort[] =>
  * so it is no dev server forwarding what it does not serve; a default is the
  * weakest word for a port, and yields to any other (`atLocalPort`).
  */
-export const frameworkListens = (repoDir: string, commands: RegExp, otherwise: number, written: readonly ListenPort[] = []): ListenPort[] => {
+export const frameworkListens = (
+  repoDir: string,
+  commands: RegExp,
+  otherwise: number,
+  written: readonly ListenPort[] = [],
+  loads?: EnvLoading,
+): ListenPort[] => {
   const scripts = scriptCommands(repoDir, commands);
   const found: ListenPort[] = [...written];
   for (const each of scripts) {
@@ -211,10 +217,112 @@ export const frameworkListens = (repoDir: string, commands: RegExp, otherwise: n
     else if (each.environmentPort !== undefined) found.push({ port: each.environmentPort, file: 'package.json', line: each.line });
   }
   if (found.length > 0 || scripts.some((each) => each.portUnread === true) || !existsSync(join(repoDir, 'package.json'))) return found;
+  const filed = loads === undefined ? undefined : envFilePort(repoDir, scripts, loads);
+  if (filed !== undefined) return [filed];
   return [{ port: otherwise, file: 'package.json', line: scripts[0]?.line ?? 1, setting: 'PORT', default: true }];
 };
 
-/** Next's own server, started by a script or by a workspace tool's target (P257), on 3000 where nothing says (P296). */
+/**
+ * Whether a framework's command loads an environment file before its server
+ * listens, and which settings it takes its port from (P305). Where it does, a
+ * port the file gives one of them is where the server listens instead of the
+ * framework's default: Nuxt's and Nitro's dev command loads `.env` and listens
+ * on `NUXT_PORT`, `NITRO_PORT` or `PORT`; Remix's classic `remix dev` loads
+ * `.env` and starts the application's server with it, which listens on
+ * `PORT`. Next decides its port before it loads any file, so a `PORT` in its
+ * `.env` moves nothing, and a framework nothing here says about keeps its
+ * default.
+ */
+export interface EnvLoading {
+  /** The script commands that load the files: `nuxi dev`. */
+  readonly commands: RegExp;
+  /** The files they load, the one whose value wins first. */
+  readonly files: readonly string[];
+  /** The settings the server takes its port from, the one it reads first first. */
+  readonly settings: readonly string[];
+  /** The option of the command that names another file to load instead: `--dotenv`. */
+  readonly fileOption?: string;
+}
+
+/**
+ * The files written as a template of `.env`, committed for everybody to copy:
+ * their value is only where a developer's `.env` is likely to put the port,
+ * so a port read from one is a candidate, kept as weak as a default.
+ */
+const ENV_EXAMPLES = ['.env.example', '.env.sample', '.env.template', '.env.dist', '.env.defaults', 'env.example'];
+
+/** The line and the port an environment file gives the first of some settings that it writes as a number. */
+const portInEnvFile = (text: string, settings: readonly string[]): { setting: string; port: number; line: number } | undefined => {
+  const lines = text.split(/\r?\n/);
+  for (const setting of settings) {
+    for (const [index, line] of lines.entries()) {
+      const match = new RegExp(`^\\s*(?:export\\s+)?${setting}\\s*=\\s*['"]?(\\d{2,5})['"]?\\s*(?:#.*)?$`).exec(line);
+      const port = match?.[1] === undefined ? undefined : Number(match[1]);
+      if (port !== undefined && port > 0 && port < 65536) return { setting, port, line: index + 1 };
+    }
+  }
+  return undefined;
+};
+
+/**
+ * Where a framework's server listens by the environment file its command
+ * loads before it listens (P305): the port the first loaded file gives one of
+ * its settings, `valueFrom` that file. Where no loaded file is committed, the
+ * port an example of it gives, as a candidate (`default` kept). Only a number
+ * is read, and only for the settings the framework takes its port from: a
+ * file's other values are none of this. Nothing where no script runs a command
+ * that loads the file.
+ */
+const envFilePort = (repoDir: string, scripts: readonly ScriptCommand[], loads: EnvLoading): ListenPort | undefined => {
+  const loading = scripts.filter((each) => loads.commands.test(each.command));
+  if (loading.length === 0) return undefined;
+  const option = loads.fileOption === undefined ? undefined : new RegExp(`(?:^|\\s)${loads.fileOption}(?:\\s+|=)(\\S+)`);
+  const named = loading.flatMap((each) => {
+    const file = option?.exec(each.command)?.[1];
+    return file === undefined ? [] : [file.replace(/^\.\//, '').replace(/^['"]|['"]$/g, '')];
+  });
+  const loaded = named.length > 0 ? [...new Set(named)] : loads.files;
+  const textOf = (file: string): string | undefined => {
+    try {
+      return readFileSync(join(repoDir, file), 'utf8');
+    } catch {
+      return undefined;
+    }
+  };
+  let committed = false;
+  for (const file of loaded) {
+    const text = textOf(file);
+    if (text === undefined) continue;
+    committed = true;
+    const found = portInEnvFile(text, loads.settings);
+    if (found !== undefined) return { port: found.port, file, line: found.line, setting: found.setting, valueFrom: file };
+  }
+  // A committed `.env` that sets no port leaves the default; an example is read only where none is.
+  if (committed) return undefined;
+  for (const file of ENV_EXAMPLES) {
+    const text = textOf(file);
+    const found = text === undefined ? undefined : portInEnvFile(text, loads.settings);
+    if (found !== undefined) return { port: found.port, file, line: found.line, setting: found.setting, default: true, valueFrom: file };
+  }
+  return undefined;
+};
+
+/** Nuxt's and Nitro's dev command: `.env`, or the file `--dotenv` names, and the port of `NUXT_PORT`, `NITRO_PORT` or `PORT` (P305). */
+export const NITRO_ENV: EnvLoading = {
+  commands: /\b(nuxi|nuxt|nitro|nitropack)\s+dev\b/,
+  files: ['.env'],
+  settings: ['NUXT_PORT', 'NITRO_PORT', 'PORT'],
+  fileOption: '--dotenv',
+};
+
+/** Remix's classic `remix dev`: `.env`, loaded before it starts the application's server on `PORT` (P305). */
+export const REMIX_ENV: EnvLoading = { commands: /\bremix\s+dev\b/, files: ['.env'], settings: ['PORT'] };
+
+/**
+ * Next's own server, started by a script or by a workspace tool's target
+ * (P257), on 3000 where nothing says (P296). Next takes no port from `.env`
+ * (P305): it decides it before it loads the file.
+ */
 export const nextListens = (ctx: ExtractContext): ListenPort[] =>
   frameworkListens(ctx.repoDir, /\bnext\s+(dev|start)\b/, 3000, targetPorts(ctx.repoDir, NEXT_SERVER_EXECUTORS, false));
 
@@ -235,5 +343,5 @@ export const nitroListens = (ctx: ExtractContext): ListenPort[] => {
     found.push({ port, file: normalizeFilePath(config.file, ctx.repoDir), line: at === null ? 1 : lineAt(text, at.index + at[0].length) });
   }
   // Nuxt's and Nitro's servers listen on 3000 where nothing says (P296).
-  return frameworkListens(ctx.repoDir, /\b(nuxi|nuxt|nitro|nitropack)\s+(dev|preview|start)\b/, 3000, found);
+  return frameworkListens(ctx.repoDir, /\b(nuxi|nuxt|nitro|nitropack)\s+(dev|preview|start)\b/, 3000, found, NITRO_ENV);
 };

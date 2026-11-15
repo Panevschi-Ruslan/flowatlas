@@ -1,0 +1,9 @@
+{
+  "services": [
+    { "name": "shop", "repo": "./shop", "type": "nextjs" },
+    { "name": "dashboard", "repo": "./dashboard", "type": "nuxt" },
+    { "name": "board", "repo": "./board", "type": "remix" },
+    { "name": "jobs", "repo": "./jobs", "type": "express" }
+  ],
+  "output": ".flowatlas"
+}

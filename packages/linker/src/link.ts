@@ -35,7 +35,7 @@ import {
   type RouteIndex,
 } from './http-link.js';
 import { servedAtFinding } from './served-at-link.js';
-import { pathsUnder, servesRequest } from './request-served.js';
+import { pathsUnder, servesProcedure, servesRequest, type ProceduresDeclared } from './request-served.js';
 import { sendsOperation } from './graphql-value.js';
 import { joinDeployments } from './deployment-link.js';
 import { joinImports } from './import-link.js';
@@ -366,16 +366,24 @@ const procedureEdge = (
 const procedureAddressLookup = (
   index: RouteIndex,
   serviceAtHost: NonNullable<UiIndex['serviceAtHost']>,
+  procedures: ProceduresDeclared,
 ): NonNullable<ProcedureIndex['addressOf']> => (call) => {
   const link = call.meta?.['link'];
   if (link === null || typeof link !== 'object') return undefined;
   const { baseUrlEnv, baseUrlDefault, host } = link as Record<string, unknown>;
   const server = call.type === 'http_out';
+  // A port only a framework assumes places the link where that service serves the procedure (P305).
+  const procedure = call.meta?.['procedure'];
   if (typeof baseUrlEnv === 'string') {
     if (!server) return undefined;
     const probe: GraphNode = {
       ...call,
-      meta: { method: 'POST', baseUrlEnv, ...(typeof baseUrlDefault === 'string' ? { baseUrlDefault } : {}) },
+      meta: {
+        method: 'POST',
+        baseUrlEnv,
+        ...(typeof baseUrlDefault === 'string' ? { baseUrlDefault } : {}),
+        ...(typeof procedure === 'string' ? { procedure } : {}),
+      },
     };
     const { outcome, baseUrl } = resolveCall(probe, index);
     const service = aimOf(outcome);
@@ -401,7 +409,7 @@ const procedureAddressLookup = (
     return finding === undefined ? undefined : { kind: 'unplaced', finding, ...(values.length === 0 ? {} : { values }) };
   }
   if (typeof host === 'string') {
-    const found = serviceAtHost(host);
+    const found = serviceAtHost(host, undefined, typeof procedure === 'string' ? servesProcedure(procedures, procedure) : undefined);
     if (found?.kind === 'service') return { kind: 'service', service: found.service, confidence: found.sure ? 'static' : 'heuristic' };
     // Two services listen where the link sends (P250).
     if (found?.kind === 'shared') return { kind: 'unplaced', finding: portSharedFinding(found.port, found.said) };
@@ -783,6 +791,7 @@ const baseUrlLookup = (
   settings: Readonly<Record<string, RepoSettings>>,
   ports: PortIndex,
   routesOf: (service: string) => readonly GraphNode[] | undefined,
+  procedures?: ProceduresDeclared,
 ): RouteIndex['baseUrlOf'] => {
   if (config.settingFiles.read === false) return undefined;
   const hosts = hostIndexOf(config, settings);
@@ -790,11 +799,15 @@ const baseUrlLookup = (
   // listens on among them (P292); a front end's dev server forwards what it
   // does not serve, so it places nothing here (P254). A port only a
   // framework assumes places the request where that service serves it at the
-  // value's path or its own (P300).
+  // value's path or its own (P300), and a procedure's link where that
+  // service declares the procedure (P305).
   const atPortFor = (call: GraphNode) => (address: string): readonly string[] | undefined => {
     const stated = call.meta?.['method'];
+    const procedure = call.meta?.['procedure'];
     const serves =
-      stated === null
+      typeof procedure === 'string' && procedures !== undefined
+        ? servesProcedure(procedures, procedure)
+        : stated === null
         ? undefined
         : servesRequest(routesOf, { method: typeof stated === 'string' ? stated : 'GET', paths: pathsUnder(address, call.meta?.['path']), operation: sendsOperation(call), call });
     const found = atLocalPort(address, ports, serves);
@@ -992,7 +1005,9 @@ export const linkGraphs = (
   // One lookup for both halves of a call: a browser's request is placed by its
   // setting's values and, where they settle nothing, its name, as one between
   // services is (P292).
-  const valuedBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, hosts, (service) => routesByService.get(service));
+  // The procedures each service declares, asked where a link names a port only a framework assumes (P305).
+  const procedures = buildProcedureIndex(nodes, config, servicesByEnv);
+  const valuedBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, hosts, (service) => routesByService.get(service), procedures);
   const index: RouteIndex = {
     ...buildRouteIndex(nodes, edges.values(), config, routesByService, servicesByEnv),
     functionUrlsOf: (callId) => urls.get(callId) ?? [],
@@ -1013,8 +1028,8 @@ export const linkGraphs = (
     publicHostsOf: ways.publicHostsOf,
   };
   const procedureIndex: ProcedureIndex = {
-    ...buildProcedureIndex(nodes, config, servicesByEnv),
-    addressOf: procedureAddressLookup(index, hostLookup(hosts)),
+    ...procedures,
+    addressOf: procedureAddressLookup(index, hostLookup(hosts), procedures),
   };
 
   /** Where a finding happened; the finding itself says what and what to do. */

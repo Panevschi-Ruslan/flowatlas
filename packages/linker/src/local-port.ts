@@ -68,8 +68,14 @@ export interface Listening {
   readonly handed?: string;
   /** A front end's dev server, which forwards what it does not serve (P254). */
   readonly devServer?: true;
-  /** The file that gives the setting the code reads its port from alone its value (P254). */
+  /**
+   * The file that gives the setting the code reads its port from alone its
+   * value (P254), or the environment file the framework loads, or an example
+   * of it, that moves its default (P305).
+   */
   readonly valueFrom?: string;
+  /** The merge helper's call the port is read through, `file:line` (P305). */
+  readonly merged?: string;
   /**
    * The published side of a container's mapping this port is reached through
    * on the machine (P254); or a port this machine forwards to a cluster's
@@ -123,6 +129,8 @@ const listeningOf = (service: string, port: ListenPort): Listening => ({
   ...(port.default === undefined ? {} : { default: port.default }),
   ...(port.handed === undefined ? {} : { handed: port.handed }),
   ...(port.devServer === undefined ? {} : { devServer: port.devServer }),
+  ...(port.valueFrom === undefined ? {} : { valueFrom: port.valueFrom }),
+  ...(port.merged === undefined ? {} : { merged: port.merged }),
 });
 
 /** Every port each service's code says it listens on, a setting alone included, by service. */
@@ -326,13 +334,14 @@ const publishedAs = (published: NonNullable<Listening['published']>): string =>
 /**
  * Where a service listens, as a reader is told it: `src/main.ts:7`, with the
  * setting a fallback is behind, where the setting's value is from, the call
- * that hands the port in, and the side of a container's mapping it is
- * reached through.
+ * that hands the port in, the merge it is read through, and the side of a
+ * container's mapping it is reached through.
  */
 export const whereListening = (listening: Listening): string =>
   `${listening.file}:${listening.line}` +
   (listening.setting === undefined ? '' : listening.valueFrom === undefined ? ` (${listening.setting})` : ` (${listening.setting} from ${listening.valueFrom})`) +
-  (listening.default === true ? ' (its default)' : '') +
+  (listening.default !== true ? '' : listening.valueFrom === undefined ? ' (its default)' : ' (an example value)') +
+  (listening.merged === undefined ? '' : ` (read through the merge at ${listening.merged})`) +
   (listening.handed === undefined ? '' : ` (handed at ${listening.handed})`) +
   (listening.published === undefined ? '' : publishedAs(listening.published)) +
   (listening.inContainer === undefined ? '' : `, in the container ${listening.inContainer.name} (${listening.inContainer.file})`) +

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T18:45:17.472Z",
+  "builtAt": "2026-11-15T14:37:21.576Z",
   "configHash": "9846fd790518",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 833,
+      "durationMs": 965,
       "packages": {
         "name": "server",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 12,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 685,
+      "durationMs": 772,
       "packages": {
         "name": "storefront",
         "runtime": [
@@ -52,10 +52,10 @@
   ],
   "httpOut": {
     "total": 3,
-    "linked": 3,
+    "linked": 2,
     "byMarker": 0,
     "unknownEnv": 0,
-    "noRoute": 0,
+    "noRoute": 1,
     "ambiguous": 0,
     "external": 0,
     "dynamic": 0
@@ -74,8 +74,9 @@
   },
   "routes": {
     "total": 4,
-    "called": 2,
+    "called": 1,
     "uncalled": [
+      "entry:storefront:http:GET:/api/cart",
       "entry:storefront:http:GET:/products",
       "entry:storefront:http:POST:/products"
     ],
@@ -106,10 +107,19 @@
       "service": "storefront",
       "file": "app/lib/store.ts",
       "line": 32,
+      "reason": "target-route-not-found",
+      "message": "target service server has no route GET /api/cart",
+      "hint": "Route renamed? Check server's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:storefront#app/lib/store.ts:32:21"
+    },
+    {
+      "service": "storefront",
+      "file": "app/lib/store.ts",
+      "line": 32,
       "reason": "base-url-from-files",
       "level": "info",
-      "message": "APP_URL is http://localhost:3000 in app/lib/store.ts (the code’s own fallback), which is taken as storefront",
-      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add APP_URL to services[].baseUrlEnv of storefront to say so outright.",
+      "message": "APP_URL is http://localhost:3000 in app/lib/store.ts (the code’s own fallback), which is taken as server",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add APP_URL to services[].baseUrlEnv of server to say so outright.",
       "symbol": "http_out:storefront#app/lib/store.ts:32:21",
       "meta": {
         "variable": "APP_URL",
@@ -120,12 +130,12 @@
   ],
   "totals": {
     "nodes": 25,
-    "edges": 20,
+    "edges": 19,
     "types": 2,
-    "missed": 6,
-    "sites": 6,
+    "missed": 7,
+    "sites": 7,
     "notes": 2,
     "findings": 0,
-    "unresolved": 6
+    "unresolved": 7
   }
 }

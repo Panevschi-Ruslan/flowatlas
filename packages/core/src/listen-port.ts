@@ -1,5 +1,5 @@
 import type { CallExpression, Node as TsNode, PropertyAccessExpression, SourceFile } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { Node, SyntaxKind } from 'ts-morph';
 import type { ExtractContext } from './adapters/context.js';
 import { normalizeFilePath } from './ids.js';
 import { startLineOf } from './line-numbers.js';
@@ -62,6 +62,20 @@ export interface ListenPort {
    * request it has no route for is not settled by it.
    */
   readonly devServer?: true;
+  /**
+   * Where the port is read through a merge helper of the repository's own
+   * (P305): the call that lays the configuration it is handed over the
+   * defaults another module keeps, `file:line`. The port is the defaults'
+   * where what is handed in does not write it, so a join made from it says it
+   * is a guess.
+   */
+  readonly merged?: string;
+  /**
+   * The environment file that gives the setting the port falls back from its
+   * value (P305): one the framework loads before it listens (`.env`), or an
+   * example of it, read only as a candidate (`default` kept).
+   */
+  readonly valueFrom?: string;
 }
 
 /** A port read at a node, before it is placed in a file. */
@@ -73,12 +87,16 @@ export interface ListenAt {
   /** The call that hands the port to the function starting the server (P254). */
   readonly handedAt?: TsNode;
   readonly devServer?: true;
+  /** The merge helper's call the port is read through (P305). */
+  readonly mergedAt?: TsNode;
 }
 
 /** What an expression says of a port: the number, and the setting it falls back from. */
 export interface WrittenPort {
   readonly port?: number;
   readonly setting?: string;
+  /** The merge helper's call the port is read through, where it is (P305). */
+  readonly mergedAt?: TsNode;
 }
 
 /**
@@ -97,7 +115,8 @@ export interface PortReading {
 }
 
 /** Whether a port is written as a number the server listens on wherever it runs. */
-export const literalPort = (port: Pick<ListenPort, 'setting' | 'default'>): boolean => port.setting === undefined && port.default !== true;
+export const literalPort = (port: Pick<ListenPort, 'setting' | 'default' | 'merged'>): boolean =>
+  port.setting === undefined && port.default !== true && port.merged === undefined;
 
 /**
  * Whether a setting is named as a variable of the environment is: `PORT`,
@@ -119,11 +138,17 @@ const propertyValue = (declaration: TsNode): TsNode | undefined => {
   return undefined;
 };
 
+/** What following an expression passed through on the way, for the port read at its end to say (P305). */
+interface Trail {
+  /** The merge helper's call a value was read through. */
+  mergedAt?: TsNode;
+}
+
 /** An expression through the names and wrappers in front of it: a constant's value. */
-const followed = (node: TsNode | undefined, depth = 0): TsNode | undefined => {
+const followed = (node: TsNode | undefined, depth = 0, trail?: Trail): TsNode | undefined => {
   if (node === undefined || depth > DEPTH) return node;
   if (Node.isAsExpression(node) || Node.isSatisfiesExpression(node) || Node.isParenthesizedExpression(node) || Node.isNonNullExpression(node)) {
-    return followed(node.getExpression(), depth + 1);
+    return followed(node.getExpression(), depth + 1, trail);
   }
   // `config.port`, `settings.server.port`: the property where a literal
   // object declares it, in this file or another (P254). `process.env.PORT` is
@@ -131,35 +156,171 @@ const followed = (node: TsNode | undefined, depth = 0): TsNode | undefined => {
   if (Node.isPropertyAccessExpression(node) && node.getExpression().getText() !== 'process.env') {
     for (const declaration of node.getNameNode().getSymbol()?.getDeclarations() ?? []) {
       const value = propertyValue(declaration);
-      if (value !== undefined) return followed(value, depth + 1);
+      if (value !== undefined) return followed(value, depth + 1, trail);
     }
-    return node;
+    // `mergeConfig(given).apiOptions.port`: the key of what a merge helper answers (P305).
+    const merged = throughMerge(node, [], depth, trail);
+    return merged ?? node;
   }
   if (!Node.isIdentifier(node)) return node;
   const symbol = node.getSymbol();
   for (const declaration of (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []) {
     if (Node.isVariableDeclaration(declaration)) {
       const initializer = declaration.getInitializer();
-      if (initializer !== undefined) return followed(initializer, depth + 1);
+      if (initializer !== undefined) return followed(initializer, depth + 1, trail);
     }
     // `const { port } = config`: the property of the object it is taken from.
-    const taken = destructured(declaration, depth);
+    const taken = destructured(declaration, depth, trail);
     if (taken !== undefined) return taken;
   }
   return node;
 };
 
 /** The value a name destructured from a literal object is: `const { port } = { port: 3001 }`. */
-const destructured = (element: TsNode, depth: number): TsNode | undefined => {
+const destructured = (element: TsNode, depth: number, trail?: Trail): TsNode | undefined => {
   if (!Node.isBindingElement(element)) return undefined;
   const pattern = element.getParent();
   const declaration = pattern.getParent();
   if (!Node.isObjectBindingPattern(pattern) || !Node.isVariableDeclaration(declaration)) return undefined;
-  const from = followed(declaration.getInitializer(), depth + 1);
+  const key = element.getPropertyNameNode()?.getText() ?? element.getName();
+  const initializer = declaration.getInitializer();
+  // `const { port } = mergeConfig(given).apiOptions`: read at the whole path, so
+  // a key the given object leaves out of the object it writes is the defaults' (P305).
+  const merged = initializer === undefined ? undefined : throughMerge(initializer, [key], depth, trail);
+  if (merged !== undefined) return merged;
+  const from = followed(initializer, depth + 1, trail);
   if (from === undefined || !Node.isObjectLiteralExpression(from)) return undefined;
-  const property = from.getProperty(element.getPropertyNameNode()?.getText() ?? element.getName());
+  const property = from.getProperty(key);
   const value = property === undefined ? undefined : propertyValue(property);
-  return value === undefined ? undefined : followed(value, depth + 1);
+  return value === undefined ? undefined : followed(value, depth + 1, trail);
+};
+
+/**
+ * A configuration merged over defaults by a helper of the repository's own
+ * (P305): `mergeConfig(given)`, whose body lays `given` over a `defaults`
+ * object another module keeps, or `mergeConfig(defaults, given)`, handed both.
+ * The bootstrap that starts the server often reads its port off the result
+ * (`const { port } = mergeConfig(given).apiOptions`), and the number is
+ * written only in the defaults.
+ *
+ * A function is such a helper where it is the repository's own (a body in a
+ * file of the repository), takes at least one argument, and merges: its body
+ * spreads, calls `Object.assign`, walks the keys of what it is handed, or
+ * calls itself. What it answers is the objects it lays over each other, in
+ * order: every object literal outside it its body names (the defaults), then
+ * every argument of the call. A key of the result is the last of them that
+ * writes it, at its whole path, as a deep merge answers it; an argument this
+ * cannot see into (a parameter nothing gives a default) is taken to leave the
+ * key out, and the read is marked as one through a merge, a guess.
+ */
+const MERGES = /\.\.\.|\bObject\.(assign|entries|keys)\(|\bfor\s*\([^)]*\bin\b/;
+
+/** The function a callee names, where it is the repository's own and has a body. */
+const ownFunction = (callee: TsNode): TsNode | undefined => {
+  if (!Node.isIdentifier(callee)) return undefined;
+  const symbol = callee.getSymbol();
+  for (const declaration of (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []) {
+    const file = declaration.getSourceFile();
+    if (file.isInNodeModules() || file.isDeclarationFile()) continue;
+    if (Node.isFunctionDeclaration(declaration) && declaration.getBody() !== undefined) return declaration;
+    if (Node.isVariableDeclaration(declaration)) {
+      const value = declaration.getInitializer();
+      if (value !== undefined && (Node.isArrowFunction(value) || Node.isFunctionExpression(value))) return value;
+    }
+  }
+  return undefined;
+};
+
+/** Whether a function of the repository's own merges what it is handed, and calls itself or merges in its body. */
+const isMergeHelper = (fn: TsNode): boolean => {
+  if (parametersOf(fn).length === 0) return false;
+  const body = Node.isFunctionDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) ? fn.getBody() : undefined;
+  if (body === undefined) return false;
+  if (MERGES.test(body.getText())) return true;
+  const name = nameOfFunction(fn)?.getText();
+  return name !== undefined && body.getDescendantsOfKind(SyntaxKind.CallExpression).some((call) => call.getExpression().getText() === name);
+};
+
+/** The object literals outside a function its body names: the defaults it lays what it is handed over. */
+const defaultsNamed = (fn: TsNode): TsNode[] => {
+  const found: TsNode[] = [];
+  const seen = new Set<TsNode>();
+  for (const name of fn.getDescendantsOfKind(SyntaxKind.Identifier)) {
+    const symbol = name.getSymbol();
+    for (const declaration of (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []) {
+      if (!Node.isVariableDeclaration(declaration) || seen.has(declaration)) continue;
+      // A local of the helper is how it merges, not what.
+      if (declaration.getSourceFile() === fn.getSourceFile() && declaration.getStart() >= fn.getStart() && declaration.getEnd() <= fn.getEnd()) continue;
+      seen.add(declaration);
+      const value = followed(declaration.getInitializer());
+      if (value !== undefined && Node.isObjectLiteralExpression(value)) found.push(value);
+    }
+  }
+  return found;
+};
+
+/** An expression through `await`, wrappers and the constants that hold it, to the call it is, if any. */
+const callBehind = (node: TsNode | undefined, depth: number): CallExpression | undefined => {
+  if (node === undefined || depth > DEPTH) return undefined;
+  if (Node.isAwaitExpression(node) || Node.isParenthesizedExpression(node) || Node.isAsExpression(node) || Node.isNonNullExpression(node)) {
+    return callBehind(node.getExpression(), depth + 1);
+  }
+  if (Node.isCallExpression(node)) return node;
+  if (!Node.isIdentifier(node)) return undefined;
+  const declaration = node.getSymbol()?.getDeclarations()[0];
+  return declaration !== undefined && Node.isVariableDeclaration(declaration) ? callBehind(declaration.getInitializer(), depth + 1) : undefined;
+};
+
+/** What an object an argument or a default is writes at a path, followed through spreads; nothing where it leaves it out. */
+const writtenAt = (layer: TsNode | undefined, keys: readonly string[], depth: number): TsNode | undefined => {
+  let node = followed(layer, depth + 1);
+  // A parameter given a default where nothing is handed in: `given = {}`.
+  if (node !== undefined && Node.isIdentifier(node)) {
+    const declaration = node.getSymbol()?.getDeclarations()[0];
+    if (declaration !== undefined && Node.isParameterDeclaration(declaration)) node = followed(declaration.getInitializer(), depth + 1);
+  }
+  if (keys.length === 0) return node;
+  if (node === undefined || !Node.isObjectLiteralExpression(node) || depth > DEPTH) return undefined;
+  const [key, ...rest] = keys as [string, ...string[]];
+  // The last of the object's properties that writes the key, a spread included.
+  for (const property of [...node.getProperties()].reverse()) {
+    if (Node.isSpreadAssignment(property)) {
+      const spread = writtenAt(property.getExpression(), keys, depth + 1);
+      if (spread !== undefined) return spread;
+      continue;
+    }
+    if (!Node.isPropertyAssignment(property) && !Node.isShorthandPropertyAssignment(property)) continue;
+    if (property.getName() !== key) continue;
+    return writtenAt(propertyValue(property), rest, depth + 1);
+  }
+  return undefined;
+};
+
+/**
+ * The value at a path of what a merge helper of the repository's own answers
+ * (P305), `expression` an access of it (`config.apiOptions`, `config` a
+ * constant holding the call) and `more` the keys read after it.
+ */
+const throughMerge = (expression: TsNode, more: readonly string[], depth: number, trail: Trail | undefined): TsNode | undefined => {
+  if (depth > DEPTH) return undefined;
+  const keys: string[] = [...more];
+  let base = expression;
+  while (Node.isPropertyAccessExpression(base)) {
+    keys.unshift(base.getName());
+    base = base.getExpression();
+  }
+  const call = callBehind(base, depth + 1);
+  if (call === undefined || keys.length === 0) return undefined;
+  const fn = ownFunction(call.getExpression());
+  if (fn === undefined || !isMergeHelper(fn)) return undefined;
+  const layers = [...defaultsNamed(fn), ...call.getArguments()];
+  for (const layer of [...layers].reverse()) {
+    const value = writtenAt(layer, keys, depth + 1);
+    if (value === undefined) continue;
+    if (trail !== undefined) trail.mergedAt = call;
+    return followed(value, depth + 1, trail);
+  }
+  return undefined;
 };
 
 /** A literal key of an access or a call: `process.env['PORT']`, `config.get('PORT')`. */
@@ -210,7 +371,13 @@ const settingRead = (node: TsNode, reading: PortReading | undefined): WrittenPor
  * files give where they do (P77), and no port of the code's.
  */
 export const portWritten = (written: TsNode | undefined, reading?: PortReading, depth = 0): WrittenPort => {
-  const node = followed(written);
+  const trail: Trail = {};
+  const read = portRead(written, reading, depth, trail);
+  return trail.mergedAt === undefined ? read : { ...read, mergedAt: trail.mergedAt };
+};
+
+const portRead = (written: TsNode | undefined, reading: PortReading | undefined, depth: number, trail: Trail): WrittenPort => {
+  const node = followed(written, 0, trail);
   if (node === undefined || depth > DEPTH) return {};
   const number = portNumber(node);
   if (number !== undefined) return { port: number };
@@ -221,15 +388,15 @@ export const portWritten = (written: TsNode | undefined, reading?: PortReading, 
     if (answered !== undefined) return answered;
   }
   if (Node.isBinaryExpression(node) && ['??', '||'].includes(node.getOperatorToken().getText())) {
-    const left = portWritten(node.getLeft(), reading, depth + 1);
-    const right = portWritten(node.getRight(), reading, depth + 1);
+    const left = portRead(node.getLeft(), reading, depth + 1, trail);
+    const right = portRead(node.getRight(), reading, depth + 1, trail);
     const port = left.port ?? right.port;
     return { ...(left.setting === undefined ? {} : { setting: left.setting }), ...(port === undefined ? {} : { port }) };
   }
   if (Node.isCallExpression(node) && /^(Number|parseInt|parseFloat)$/.test(node.getExpression().getText())) {
-    return portWritten(node.getArguments()[0], reading, depth + 1);
+    return portRead(node.getArguments()[0], reading, depth + 1, trail);
   }
-  if (Node.isPrefixUnaryExpression(node)) return portWritten(node.getOperand(), reading, depth + 1);
+  if (Node.isPrefixUnaryExpression(node)) return portRead(node.getOperand(), reading, depth + 1, trail);
   return {};
 };
 
@@ -256,7 +423,13 @@ export const listenAt = (
 ): ListenAt | undefined =>
   !says(read)
     ? undefined
-    : { ...(read.port === undefined ? {} : { port: read.port }), at, ...(read.setting === undefined ? {} : { setting: read.setting }), ...extra };
+    : {
+        ...(read.port === undefined ? {} : { port: read.port }),
+        at,
+        ...(read.setting === undefined ? {} : { setting: read.setting }),
+        ...(read.mergedAt === undefined ? {} : { mergedAt: read.mergedAt }),
+        ...extra,
+      };
 
 /** How many functions a port is followed back through, from the one that starts the server. */
 const HANDED_DEPTH = 3;
@@ -346,7 +519,8 @@ const fromParameter = (parameter: Parameter | undefined, reading: PortReading | 
  * functions. An options object is read at `key` (`port` where none is asked).
  */
 const handedPorts = (argument: TsNode | undefined, key: string | undefined, reading: PortReading | undefined, depth: number): Handed[] => {
-  const node = followed(argument);
+  const trail: Trail = {};
+  const node = followed(argument, 0, trail);
   if (node === undefined) return [];
   if (Node.isObjectLiteralExpression(node)) {
     const property = node.getProperty(key ?? 'port');
@@ -359,7 +533,9 @@ const handedPorts = (argument: TsNode | undefined, key: string | undefined, read
     }
     return handedPorts(propertyValue(property), undefined, reading, depth);
   }
-  const read = key === undefined ? portWritten(node, reading) : {};
+  const written = key === undefined ? portWritten(node, reading) : {};
+  // A port read through a merge helper on the way here says so (P305).
+  const read = trail.mergedAt === undefined || written.mergedAt !== undefined ? written : { ...written, mergedAt: trail.mergedAt };
   if (says(read)) return [{ read }];
   const parameter = parameterOf(node);
   if (parameter === undefined) return [];
@@ -419,6 +595,9 @@ export const placedPort = (read: ListenAt, repoDir: string): ListenPort => ({
     ? {}
     : { handed: `${normalizeFilePath(read.handedAt.getSourceFile().getFilePath(), repoDir)}:${startLineOf(read.handedAt)}` }),
   ...(read.devServer === undefined ? {} : { devServer: read.devServer }),
+  ...(read.mergedAt === undefined
+    ? {}
+    : { merged: `${normalizeFilePath(read.mergedAt.getSourceFile().getFilePath(), repoDir)}:${startLineOf(read.mergedAt)}` }),
 });
 
 /**
