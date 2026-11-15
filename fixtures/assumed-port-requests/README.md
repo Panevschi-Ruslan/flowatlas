@@ -12,9 +12,9 @@ fallback (P296): `meta.listen` `{ port: 3000, setting: 'PORT', default: true }`.
 
 | Call | Joined to |
 |---|---|
-| `listProducts()`, `request(STORE_API_URL, PRODUCTS)` | the server's `POST /store-api` (`graphqlPath`), as a guess: the server's port read through the merge places it at 3000, and the storefront's assumed 3000 yields to it (P305) |
+| `listProducts()`, `request(STORE_API_URL, PRODUCTS)` | the server's `POST /store-api` (`graphqlPath`), as a guess: the server's port read through the merge places it at 3000 beside the storefront's assumed 3000, both guesses, and only the server serves the operation (P305, P307) |
 | `addToCart()`, the same for a mutation | the same |
-| `readCart()`, `fetch(`${APP_URL ?? 'http://localhost:3000'}/api/cart`)` | nothing: 3000 is the server's, which has no `GET /api/cart`, so the row is `target-route-not-found` (P305). Before the server's port was read, the storefront's assumed port placed it at its own route (P300) |
+| `readCart()`, `fetch(`${APP_URL ?? 'http://localhost:3000'}/api/cart`)` | the storefront's own `GET /api/cart` (`baseUrlValue`), as a guess: a port read through a merge is a guess like the storefront's default, so where both are heard at 3000 the request goes where it is served, and only the storefront serves it (P307). A guess outranks a default only where neither serves the request (P305) |
 
 ## server: a port read through a merge
 

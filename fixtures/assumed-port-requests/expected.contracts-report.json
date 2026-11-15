@@ -1,17 +1,42 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 7,
-  "generatedAt": "2026-11-15T14:37:22.130Z",
+  "generatedAt": "2026-11-15T15:02:13.529Z",
   "edges": [],
   "findings": [],
   "ignored": [],
-  "unchecked": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:storefront#app/lib/store.ts:32:21",
+        "to": "entry:storefront:http:GET:/api/cart",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#app/lib/store.ts:32:21|http_calls|entry:storefront:http:GET:/api/cart",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#app/lib/store.ts:readCart declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#app/lib/store.ts:32:21",
+        "to": "entry:storefront:http:GET:/api/cart",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#app/lib/store.ts:32:21|http_calls|entry:storefront:http:GET:/api/cart",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "storefront#app/lib/store.ts:readCart declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
   "summary": {
     "edges": 0,
     "shared": 0,
     "identical": 0,
     "hash_differs": 0,
-    "unchecked": 0,
+    "unchecked": 2,
     "errors": 0,
     "warnings": 0,
     "infos": 0,

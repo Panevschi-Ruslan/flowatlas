@@ -351,6 +351,25 @@ export const whereListening = (listening: Listening): string =>
 const whereShort = (listening: Listening): string =>
   `${listening.file}:${listening.line}${listening.published === undefined ? '' : `, published by ${listening.published.file}`}`;
 
+/**
+ * Whether a service is heard at a port only by a guess: its framework's or
+ * library's default (an example file's value kept as a candidate of it), or
+ * a port read through a merge helper (P305). A port the code writes, a file
+ * the framework loads, or a published port is no guess.
+ */
+const isGuessed = (listening: Listening): boolean => listening.default === true || listening.merged !== undefined;
+
+/**
+ * The services a port only guesses at answers a request with (P300, P307):
+ * those that serve it, defaults and guesses asked alike; where none does,
+ * the guesses firmer than a default, which outrank them (P305); and where
+ * there are none, nobody, so the request is joined as with nobody heard.
+ */
+const guessedAt = (heard: readonly Listening[], serves: ServesRequest | undefined): readonly Listening[] => {
+  const served = serves === undefined ? [] : heard.filter((each) => serves(each.service));
+  return served.length > 0 ? served : heard.filter((each) => each.default !== true);
+};
+
 /** What the port of an address on this machine says. */
 export type PortAnswer =
   | {
@@ -397,6 +416,14 @@ export interface PortIndex {
  * only where that service serves it (`serves`), and nothing where it does
  * not, or where nothing says what the request asks. The request is then
  * joined as it would be with nobody heard at the port.
+ *
+ * A port read through a merge (P305) is a guess too, only firmer than a
+ * default: where every service heard at the port is placed there by a
+ * default or by such a guess, and none by a port the code or a file writes,
+ * a guess takes no request from a service that serves it (P307). The request
+ * goes where the services heard there serve it - one is the answer, several
+ * a row - and only where none does do the guesses outrank the defaults, as
+ * they did (P305).
  */
 export const atLocalPort = (address: string, index: PortIndex, serves?: ServesRequest): PortAnswer | undefined => {
   const port = localPortOf(address);
@@ -411,10 +438,8 @@ export const atLocalPort = (address: string, index: PortIndex, serves?: ServesRe
   // (P296): it yields to a service the code or the files place there, and
   // only defaults left together are two services' at once.
   const heard = index.listening.get(port) ?? [];
-  const firm = heard.some((each) => each.default !== true) || fromFiles.length > 0;
-  const listening = firm
-    ? heard.filter((each) => each.default !== true || fromFiles.includes(each.service))
-    : heard.filter((each) => serves?.(each.service) === true);
+  const firm = heard.some((each) => !isGuessed(each)) || fromFiles.length > 0;
+  const listening = firm ? heard.filter((each) => each.default !== true || fromFiles.includes(each.service)) : guessedAt(heard, serves);
   const services = [...new Set([...fromFiles, ...listening.map((each) => each.service)])].sort(cmp);
   if (services.length === 0) return undefined;
   if (services.length === 1) {
