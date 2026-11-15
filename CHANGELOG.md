@@ -8,6 +8,56 @@ only one of them moved.
 
 ### Added
 
+- **A port a framework only assumes places only the requests its service
+  serves (P300, P307).** Where every server heard at a port of this machine
+  is there by its framework's default, a merge, an example environment file
+  or a written fallback (`process.env.PORT ?? 3000`), a request is placed at
+  the one serving its verb and path, operation or procedure; several serving
+  it are a `local-port-shared` row, and a written, published or loaded port
+  still wins outright.
+- **Ports read through merges, callers, held configuration and loaded
+  `.env` files (P305, P315).** A port a repository's own merge helper lays
+  over its defaults, a module variable a setter fills before the read, each
+  caller's argument to a port parameter, and the `PORT` a loaded `.env`
+  sets (Nuxt/Nitro, classic Remix, dotenv, NestJS `ConfigModule`,
+  `--env-file`, Bun, Create React App) are read; an example file is only a
+  candidate. Defaults loaded from a computed path are a `listen-port-unread`
+  row. Astro's `server` written as a function is read per command. A tRPC or
+  gRPC link at a port only a default answers is placed where the procedure
+  is served.
+- **Jinja, kustomize, sceptre and CDK items (P306).** Namespaces are shared
+  back out of macros, set and filter blocks and recursive loops, and
+  `loop.changed` compares as Jinja does; kustomize name references for
+  storage, priority and ingress classes and persistent volumes; sceptre
+  projects anywhere in the repository and through `../` paths; CDK
+  `SecretValue.unsafePlainText` is followed to what it wraps, and a role
+  imported by ARN carries a row for the policies its account attaches.
+- **Settings offered as candidates (P309, P313).** The settings of a
+  condition nobody settles (`baseUrlEither`) and of an `A || B` chain are
+  each asked in turn: the request joins the service that serves its route,
+  as a guess, several serving it an `ambiguous-route-target` row, and a key
+  built from a variable is looked up for every one of them.
+- **Plain scripts (P310, P311).** An object's methods, a prototype's
+  members, members inside a wrapper run at once, `window.x`,
+  `module.exports` and `exports.m`, and getters and setters are functions of
+  their own, their requests drawn and calls joined. A client a page loads by
+  a script tag - axios, jQuery (`$.ajax`, `$.get`, `$.getJSON`, `$.post`),
+  superagent, ky - is the installed client where a page loads it, a
+  `/* global */` comment or an ESLint configuration declares it. Astro's dev
+  and preview servers listen on 4321 by default.
+- **Receivers handed on, bases per caller and values after a host (P312).**
+  A request object handed through functions is followed one call at a time
+  to where each sends it; instances with different bases handed to one
+  receiver are one request per caller with its own base; and in
+  `https://host${x}/rest` the value is a port or a host's rest where it is
+  followed to one, otherwise the opening of a path followed to the callers.
+- **Route registries reached across modules and read through views, and
+  link props followed through what each use hands (P314).** A store a
+  module exports and others add to is found by every reference; a reader
+  that filters, sorts or maps the store over the entry's path is read as
+  that view, any other view its entries unread; a link prop of another name
+  is followed through the values each use hands, and a link rendered over a
+  list lands once per entry.
 - **Settings chosen by a branch, and read inside a function handed nothing
   (P302).** A condition nobody settles whose branches read different
   settings, `isProd ? process.env.API_URL : process.env.DEV_API_URL`, written
