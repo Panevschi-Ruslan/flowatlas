@@ -27,6 +27,126 @@ shape does, and the schema's name carries the version.
 The schemas' `$id` is the file's address in this repository's main branch. A
 validator for draft 2020-12 reads them (Ajv's `ajv/dist/2020`, for one).
 
+## What a node, an edge and a row carry
+
+The schema fixes a node's `id`, `type`, `label`, `repo`, `file`, `line` and
+`kind`, an edge's ends, `type` and `confidence`, and a row's fields. `meta` is
+open: each reader records there what it read, and a new key does not move the
+version. The keys a script is most likely to build on - where a request goes,
+where a way in is served, how sure a join is - are these.
+
+### Rows
+
+Every row of `unresolved` has a `reason`, a stable kebab-case word, and may
+have a `level` (`action` where absent, `info`, or `nothing`), a `message`, a
+`hint`, the `service`, `file` and `line` it is about, and `sites` where one
+informational row stands for several places. What a row is about is decided
+from its reason in one place, `packages/core/src/model/row-kind.ts`: a **gap**
+(something was not followed, the only kind counted as missed), a **note** (how
+a join was made, with nothing missed) or a **finding** (something about the
+code itself). The reasons added most recently:
+
+| reason | kind | level | says |
+|---|---|---|---|
+| `grpc-package-service` | note | `info` | a gRPC server registers a service a package implements whose contract is none the tool knows; health checking and reflection are known and drawn |
+| `grpc-method-unimplemented` | finding | `info` | a `.proto` contract declares a method the server registering the service implements no member for |
+| `grpc-method-undeclared` | finding | `info` | the server implements a member the service's contract does not declare |
+| `grpc-field-undeclared` | finding | `info` | a gRPC handler reads a request field the method's message does not declare under the names its loader hands |
+| `navigation-locale-prefixed` | note | `info` | a navigation written without the locale the application puts in front of every address, joined to the page under the locale segment, as a guess |
+| `listen-port-unread` | gap | `info` | a server's port comes from defaults a module loads by a path decided at run time, so no request to a port on this machine is joined to it by that port |
+
+Some older reasons now say more. `ambiguous-route-target` also names the
+services a request's base may be - a condition's branches nobody settles, or a
+chain of `||` and `??` over settings - where more than one serves the request,
+and the APIs served where an address naming its API by an id is written.
+`base-url-from-files` (a note) says when a request was taken as an API's by
+where the API is served. `local-port-shared` is said only where a port places
+more than one service firmly, or several that only guess at it each serve the
+request. `api-client-base-unread` is said where client instances made with
+different bases are handed to one receiver outside any function. A
+`channel-dynamic` row's hint names the package whose error may be the value a
+`catch` reads the name from.
+
+`link-report.json` counts the rows of the whole project in `totals` as
+`missed`, `sites`, `notes` and `findings`, and a browser's requests that were
+not joined in `ui.byReason`, by reason. A call both halves of a full-stack
+application read is counted in `httpOut` and in `ui`, once in each.
+
+### Requests
+
+On an `http_out` (a request between services) and a `ui_api_call` (one made
+in a browser), beside `url`, `path` and `host`:
+
+| key | holds |
+|---|---|
+| `baseUrlEnv` | the setting the address is rooted at |
+| `baseUrlDefault`, `baseUrlDefaultFrom` | what the code falls back to where that setting is not given, and the module the fallback is written in where it is not the request's |
+| `baseUrlAlso` | the settings a chain of `\|\|` or `??` reads after `baseUrlEnv`, in order |
+| `baseUrlEither` | the settings of a condition's branches nobody settles, the first branch's first, `baseUrlEnv` among them: each as much the base as another |
+| `baseUrlVariables` | for each setting of the chain or the branches that a settings factory builds from a variable of the environment, that variable: `{ "legacy.url": "LEGACY_URL" }` |
+| `baseUrl`, `baseUrlFrom` | the value the base was taken from and where it was found, written by the linker where a join rests on it; `baseUrlFrom` is `its name` where the setting's name decided |
+| `sameCall` | the id of the other half of one call both halves of a full-stack application read, reached from both sides or from neither; the linker joins the two to one target and a reader counts them once |
+| `through` | the function of the repository the request was read through, its node standing at the caller: a wrapper, or a function a client is handed to |
+| `protoFieldNames` | `proto` on a gRPC call whose client loads its contract keeping the contract's field names (`keepCase`) |
+
+### Ways in
+
+On an `entry`:
+
+| key | holds |
+|---|---|
+| `servedAt` | where a deployment's API is served, a list of `{ host, base, api }`: the host with `*` for a label the platform assigns, the segments in front of every route (`'*'` for a stage chosen when the deployment is run), and the API by name. `chosenDefault` is that stage where nothing chooses it, or with `chosenIn` (`the workspace production`) the stage that choice deploys; `chosenHost` is the host where nothing chooses a region; `under` is the base path a custom domain maps the API at, which this address does not write |
+| `stages` | the stages a Terraform API is deployed to; a stage the workspace names lists each workspace's |
+| `implementedBy` | the package whose code answers the way in: a gRPC health or reflection service handed to the server |
+| `protoFieldNames` | as on a request, for the service's contract |
+
+A type the tool read from a `.proto` contract carries `declaredBy: protobuf`
+with `protoMessage` or `protoEnum`, and each field `protoName` where its name
+differs from the contract's, `protoPresence` (`implicit`, `explicit`), `oneof`,
+and `protoForm: library` where a library decides how the value reaches the
+reader.
+
+### Ports
+
+A repository node's `listen`, and a GraphQL endpoint's `graphql.listen`, list
+where its server listens: `port`, `file`, `line`, the `setting` that moves it,
+`default` for the library's own port, `handed` where the port is handed to the
+function that starts the server, and `devServer` for a front end's development
+or preview server. Two keys are new: `merged`, the call of a merge helper of
+the repository the port is read through (`file:line`), which makes a join on it
+a guess; and `valueFrom`, the environment file that gives the setting its
+value - one the framework loads before it listens, or an example of it, read
+only as a candidate.
+
+### Edges
+
+An edge's `meta.via` says how a request was joined. On `http_calls`,
+`graphqlPath` (the GraphQL endpoint at the path a setting's value names),
+`externalValuePath` (the one service serving the path a setting's value names
+after a host no service is reached at) and `servedAt` (the one API of the
+project served where the address is written, its id not read) are new, each
+`heuristic`; on `hits`, `served-at` is the same guess for a browser's request,
+and `same-call` marks a browser's half that follows where the server's half of
+the same call was joined, as sure as that join, its `via` in `sameCallVia`.
+`servedApi` names the API a `served-at` join took. `chosenAmong` lists the settings a service was chosen
+among by serving the request, as `ORDERS_URL (orders)`, and makes the join
+`heuristic`. `listensAt` says where the service reached at a port on this
+machine listens, with the setting, the file its value is from, the merge it is
+read through or `(its default)`.
+
+A front end's navigations and route guards are `calls` edges. A navigation's
+`meta` gains `alsoNavigates` (the other addresses written to the same page from
+the same function), `branch` (a route placed under a condition nothing written
+decides), `localePrefix` (the segment a middleware puts in front, `[locale]`),
+`handler` (the markup event it is written in, `@click`) and `byUrl` (an
+address Angular's router is handed whole, `navigateByUrl`); a `branch` or a
+`localePrefix` makes it `heuristic`. A guard or a resolver the router runs
+before a screen has `guard` (its kind), `order`, `factory` where a call of a
+factory hands the guard back (`roleGuard('admin')`), and `leaving` for what
+runs as the screen is left (`canDeactivate`). A screen placed by a route
+written under such a condition carries `routeGuessed`, the addresses it is
+placed at through it.
+
 ## The graph in other tools
 
 `flowatlas export dot | graphml | cypher | csv` writes the graph in the formats
