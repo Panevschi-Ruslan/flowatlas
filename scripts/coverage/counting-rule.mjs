@@ -709,8 +709,8 @@ const SCRIPT_FILES = /\.[cm]?jsx?$/;
  * A script that is a bundle's output under any name: a line longer than any
  * written by hand. `.min.js` says so by its name; a seed project's
  * `index.mjs` built by a bundler and committed does not, and its minified
- * React counted as two routes nobody declared on a CRM server. The tool reads
- * no such file as source either.
+ * React counted as two routes nobody declared on a CRM server. The rule counts
+ * no such file; the tool itself skips a bundle only by its `.min.js` name.
  */
 export const isBundle = (path, text) =>
   SCRIPT_FILES.test(path) && text.split('\n', 200).some((line) => line.length > BUNDLED_LINE);

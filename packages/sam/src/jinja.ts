@@ -45,9 +45,8 @@
  *
  * sceptre renders with Jinja's strict undefined: a name nothing gives is an
  * error in the text, but `default` and `is defined` see it as undefined, and
- * a default is what is written where the files give nothing (P261). A text
- * rendered with Jinja's default undefined reads such a value as false, and
- * writes nothing for it (P306).
+ * a default is what is written where the files give nothing (P261). No
+ * reader renders with Jinja's default undefined, so none is offered (P309).
  *
  * What a template's objects share is shared as Jinja shares it (P306): a
  * namespace set inside a macro's body, a set block, a filter block or a
