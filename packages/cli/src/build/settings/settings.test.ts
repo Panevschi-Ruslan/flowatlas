@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { interpolated, readComposeFile } from './compose.js';
 import { readServerlessFile, readWorkerJson, readWorkerToml } from './deployed.js';
 import { namesInEnvFile, readEnvFile } from './dotenv.js';
-import { composeEnvironment, envFileEnvironment, envFileReading } from './files.js';
+import { composeEnvironment, envFileEnvironment, envFileReading, isExampleEnvFile } from './files.js';
 import { readEnvironmentFile } from './angular-environments.js';
 import { readProjectSettings } from './read.js';
 
@@ -20,6 +20,11 @@ describe('which environment files may be read for values (P77)', () => {
     for (const name of ['.env', '.env.local', '.env.development.local', '.env.production', '.env.staging', '.env.test']) {
       expect(envFileReading(name)).toBe('names');
     }
+  });
+
+  it('tells an example or a template, which offers its values, from a file a run loads (P309)', () => {
+    for (const name of ['.env.example', '.env.template', '.env.sample', 'env.example', 'example.env', '.env.production.example']) expect(isExampleEnvFile(name)).toBe(true);
+    for (const name of ['.env', '.env.development', '.env.dev', '.env.local', 'package.json']) expect(isExampleEnvFile(name)).toBe(false);
   });
 
   it('reads nothing of a file that is not an environment file', () => {
@@ -188,6 +193,10 @@ describe('what a project’s files say its settings are', () => {
     expect(read['payments']?.hosts.map((alias) => alias.host)).toEqual(['payments-api', 'localhost:4000', '127.0.0.1:4000', '0.0.0.0:4000', 'payments-api:4000']);
     expect(read['payments']?.values).toEqual({ ORDERS_API: [{ value: 'http://orders:3000', file: 'serverless.yml' }] });
     expect(read['orders']?.hosts.map((alias) => alias.host)).toEqual(['localhost:3001', '127.0.0.1:3001', '0.0.0.0:3001']);
+    // The example offers the port, so the hosts it makes say so (P309).
+    expect(read['orders']?.hosts.every((alias) => alias.example === true)).toBe(true);
+    expect(read['orders']?.ports).toEqual({ PORT: [{ port: 3001, file: '.env.example', example: true }] });
+    expect(read['payments']?.hosts.some((alias) => alias.example === true)).toBe(false);
   });
 
   it('reads both sides of a container’s port mappings, its environment’s ports, and a `docker run` in a script (P254)', () => {
@@ -236,7 +245,7 @@ describe('what a project’s files say its settings are', () => {
       'orders:3100 container',
       'orders-api:3100 container',
     ]);
-    expect(read['orders']?.ports).toEqual({ ORDERS_PORT: [{ port: 3006, file: '.env.example' }], PORT: [{ port: 3005, file: '.env.example' }] });
+    expect(read['orders']?.ports).toEqual({ ORDERS_PORT: [{ port: 3006, file: '.env.example', example: true }], PORT: [{ port: 3005, file: '.env.example', example: true }] });
     expect(read['stock']?.containers).toEqual([
       { name: 'stock-api', names: ['stock-api'], file: 'package.json', ports: [{ published: 3002, container: 8080, file: 'package.json', line: 4 }], environment: { PORT: 8080 } },
     ]);

@@ -1,5 +1,5 @@
 import { normalizePath, wasRead, type Confidence, type GraphNode } from '@flowatlas/core';
-import { settingsAfter, type BaseUrlAnswer, type FoundValue } from './base-url-value.js';
+import { branchClaims, branchSaid, settingsAfter, type BaseUrlAnswer, type FoundValue } from './base-url-value.js';
 import { localGraphqlEndpoint, sendsOperation, unservedFinding } from './graphql-value.js';
 import { MARKER_FINDINGS, pathOfValue, unreadRouteFinding, type Finding } from './http-link.js';
 import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
@@ -94,6 +94,11 @@ interface Details {
      * joined and how sure that join is: the one call goes where it went (P292).
      */
     twin?: { via: string; confidence: Confidence };
+    /**
+     * The settings of the condition's branches the service was chosen among
+     * by serving the request, as `ORDERS_URL (orders)` (P309): a guess.
+     */
+    branches?: readonly string[];
   };
   /** Several APIs of the project are served where the address is written, its id not read (P284). */
   apiAmbiguous: { method: string; path: string; host: string; apis: readonly string[] };
@@ -143,6 +148,8 @@ interface Details {
     path: string;
     candidates: readonly string[];
     applications?: readonly string[];
+    /** The settings of a condition's branches nobody settles the candidates claim, as `ORDERS_URL (orders)` (P309). */
+    branches?: readonly string[];
   };
 }
 
@@ -185,7 +192,7 @@ const FINDINGS: { [K in UiOutcomeKind]: ((detail: Details[K]) => Finding) | null
   portClosed: ({ host, closed }) => portClosedFinding(host, closed),
   proxiedOut: ({ service, forward }) => proxiedOutFinding(service, forward),
   proxyChain: ({ services, loop }) => proxyChainFinding(services, loop),
-  ambiguous: (detail) => AMBIGUITY[detail.applications === undefined ? 'target' : 'application'](detail),
+  ambiguous: (detail) => AMBIGUITY[detail.branches !== undefined ? 'branches' : detail.applications === undefined ? 'target' : 'application'](detail),
   apiAmbiguous: ({ method, path, host, apis }) => servedAmbiguousFinding(method, path, host, apis),
 };
 
@@ -201,13 +208,19 @@ const FINDINGS: { [K in UiOutcomeKind]: ((detail: Details[K]) => Finding) | null
  * word for.
  */
 const AMBIGUITY: Record<
-  'target' | 'application',
+  'target' | 'application' | 'branches',
   (detail: Details['ambiguous']) => Finding
 > = {
   target: ({ method, path, candidates }) => ({
     reason: 'ambiguous-route-target',
     message: `${candidates.join(' and ')} both answer ${method} ${path}`,
     hint: 'Set services[].apiTarget on the frontend to say which service its settings key names.',
+  }),
+  // A condition nobody settles reads settings different services claim, and more than one serves the request (P309).
+  branches: ({ method, path, candidates, branches = [] }) => ({
+    reason: 'ambiguous-route-target',
+    message: `the request's base is one of ${branches.join(' and ')}, chosen by a condition nobody settles, and ${candidates.join(' and ')} each serve ${method} ${path}`,
+    hint: 'Read the base from one setting, or set services[].apiTarget on the frontend to say which service its settings key names.',
   }),
   application: ({ method, path, applications = [] }) => ({
     reason: 'ambiguous-route-application',
@@ -311,9 +324,30 @@ const claimingOf = (ask: Ask, env: string): readonly string[] => {
   return own.length > 0 ? own : (settingsAfter(ask.call).map((each) => ask.index.claimantsOf(each)).find((each) => each.length > 0) ?? own);
 };
 
+/**
+ * The settings of a condition's branches nobody settles, each the request's
+ * base (P309): where different services claim them, the one serving the
+ * request is the answer, a guess, and several serving it are a row; where
+ * none does, nothing, and the first branch's claimant is asked as before.
+ */
+const byBranches = (ask: Ask): UiOutcome | undefined => {
+  const branches = branchClaims(ask.call, (setting) => ask.index.claimantsOf(setting));
+  if (branches === undefined) return undefined;
+  const serving = branches
+    .map((claim) => ({ claim, found: within(ask, claim.service, 'base-url-env') }))
+    .filter(({ found }) => found.kind === 'linked' || found.kind === 'ambiguous');
+  const said = branches.map(branchSaid);
+  const [only] = serving;
+  if (only !== undefined && serving.length === 1) return only.found.kind === 'linked' ? { ...only.found, branches: said } : only.found;
+  if (serving.length > 1) return { kind: 'ambiguous', method: ask.method, path: ask.path, candidates: serving.map(({ claim }) => claim.service), branches: said };
+  return undefined;
+};
+
 const byBaseUrlEnv = (ask: Ask): UiOutcome | undefined => {
   const { env } = ask;
   if (env === undefined) return undefined;
+  const branched = byBranches(ask);
+  if (branched !== undefined) return branched;
   const claiming = claimingOf(ask, env);
   return claiming.length === 1 ? within(ask, claiming[0] as string, 'base-url-env') : undefined;
 };

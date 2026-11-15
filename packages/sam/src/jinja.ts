@@ -81,14 +81,6 @@ export type Loader = (name: string) => { readonly text: string; readonly file: s
 export interface JinjaOptions {
   /** The files `include`, `import`, `from` and `extends` name; none where nothing loads them. */
   readonly load?: Loader;
-  /**
-   * Whether the text is rendered with Jinja's strict undefined, as sceptre
-   * renders it (the default), or with its default one (P306): then a value
-   * the files leave undefined - a key a record of a tree does not hold - is
-   * false in a condition, writes nothing and loops over nothing, as Jinja
-   * does, rather than a condition not decided.
-   */
-  readonly strictUndefined?: boolean;
 }
 
 /** A text rendered as far as the files settle it. */
@@ -1409,7 +1401,7 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
     case 'unary': {
       const of = evaluate(expression.of, scope);
       if (expression.operator === 'not') {
-        const value = truthIn(of, scope.run);
+        const value = truth(of);
         return value === undefined ? new Unknown('not') : !value;
       }
       return typeof of === 'number' ? -of : new Unknown('-');
@@ -1420,25 +1412,19 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
       return answer === undefined ? new Unknown('a test') : answer !== expression.negated;
     }
     case 'conditional': {
-      const test = truthIn(evaluate(expression.test, scope), scope.run);
+      const test = truth(evaluate(expression.test, scope));
       if (test === undefined) return new Unknown('a condition');
       return test ? evaluate(expression.then, scope) : expression.otherwise === undefined ? '' : evaluate(expression.otherwise, scope);
     }
     case 'binary': {
       const left = evaluate(expression.left, scope);
       if (expression.operator === 'and' || expression.operator === 'or') {
-        const first = truthIn(left, scope.run);
+        const first = truth(left);
         if (first === undefined) return new Unknown(expression.operator);
         if (expression.operator === 'and' ? !first : first) return left;
         return evaluate(expression.right, scope);
       }
       const right = evaluate(expression.right, scope);
-      // An undefined value is written as nothing where the text is rendered with Jinja's default undefined (P306).
-      if (expression.operator === '~' && scope.run?.lenient === true && (left instanceof Undefined || right instanceof Undefined) && !(left instanceof Unknown) && !(right instanceof Unknown)) {
-        const a = left instanceof Undefined ? '' : rendered(left);
-        const b = right instanceof Undefined ? '' : rendered(right);
-        return a === undefined || b === undefined ? new Unknown('~') : a + b;
-      }
       if (isUnsettled(left) || isUnsettled(right)) return new Unknown(expression.operator);
       switch (expression.operator) {
         case '~': {
@@ -1531,12 +1517,7 @@ interface Run {
   /** The rendering of the file whose nodes are rendered, and the names a loop, a with or a macro around them binds (P299). */
   readonly home: object;
   readonly locals: ReadonlySet<string>;
-  /** Whether the text is rendered with Jinja's default undefined rather than the strict one (P306): an undefined value is false, and written as nothing. */
-  readonly lenient: boolean;
 }
-
-/** A value's truth as the text is rendered (P306): an undefined value is false under Jinja's default undefined, and not known under the strict one. */
-const truthIn = (value: JinjaValue, run: Run | undefined): boolean | undefined => (value instanceof Undefined && run?.lenient === true ? false : truth(value));
 
 /** The file a statement names, parsed; `undefined` where the repository has no such file. */
 const loadNamed = (name: Expression, written: string, scope: Scope, run: Run): Loaded | undefined => {
@@ -1561,8 +1542,7 @@ const loadNamed = (name: Expression, written: string, scope: Scope, run: Run): L
 
 /** A value written into a way's text, or kept by a stand-in for the place it is written where it is not one Jinja writes plainly. */
 const written = (way: Way, value: JinjaValue, at: object, as: string, run: Run): Way => {
-  // An undefined value is written as nothing where the text is rendered with Jinja's default undefined (P306).
-  const text = value instanceof Undefined && run.lenient ? '' : rendered(value);
+  const text = rendered(value);
   const here = (): number => run.anchor ?? 1;
   if (text !== undefined) return appended(way, text, here);
   let kept = run.kept.get(at);
@@ -1764,7 +1744,7 @@ const renderNode = (node: Node, way: Way, outer: Run): Way[] => {
     case 'if': {
       for (const [index, branch] of node.branches.entries()) {
         // What a test changes of what is shared - `loop.changed`, a macro setting a namespace - is kept past it (P306).
-        const test = truthIn(evaluate(branch.test, scope), run);
+        const test = truth(evaluate(branch.test, scope));
         if (test === true) return renderNodes(branch.body, [settled()], run);
         if (test === false) continue;
         // Not decided by what the files give: this branch, and every way the rest can go (P264).
@@ -1790,8 +1770,6 @@ const renderNode = (node: Node, way: Way, outer: Run): Way[] => {
  * sets on a namespace.
  */
 const loopOver = (node: Extract<Node, { kind: 'for' }>, over: JinjaValue, way: Way, outer: Run, depth: number): Way[] => {
-  // Nothing is looped over an undefined value where the text is rendered with Jinja's default undefined (P306).
-  if (over instanceof Undefined && outer.lenient) return renderNodes(node.otherwise, [way], outer);
   if (!(over instanceof Pairs) && !Array.isArray(over) && !isRecord(over) && typeof over !== 'string') throw new NotRead(`${node.written} loops over what the files do not give`);
   const all: JinjaValue[] = over instanceof Pairs ? over.pairs.map(([key, value]) => [key, value]) : Array.isArray(over) ? [...(over as JinjaValue[])] : isRecord(over) ? Object.keys(over) : [...over];
   const bind = (item: JinjaValue): Map<string, JinjaValue> => {
@@ -1808,7 +1786,7 @@ const loopOver = (node: Extract<Node, { kind: 'for' }>, over: JinjaValue, way: W
     filter === undefined
       ? all
       : all.filter((item) => {
-          const kept = truthIn(evaluate(filter, { names: new Map([...way.names, ...bind(item)]), lookup: outer.lookup, run: outer }), outer);
+          const kept = truth(evaluate(filter, { names: new Map([...way.names, ...bind(item)]), lookup: outer.lookup, run: outer }));
           if (kept === undefined) throw new NotRead(`${node.written} keeps items by what the files do not decide`);
           return kept;
         });
@@ -1911,7 +1889,7 @@ const keptStatements = (text: string, lookup: Lookup, file: number): Rendering =
 export const renderJinja = (text: string, lookup: Lookup, file = 0, options: JinjaOptions = {}): Rendering => {
   try {
     const nodes = parseTemplate(text);
-    const run: Run = { lookup, file, kept: new Map(), unrendered: new Map(), undecided: [], load: options.load, templates: new Map(), loaded: new Set(), blocks: new Map(), depth: { value: 0 }, home: nodes, locals: new Set(), lenient: options.strictUndefined === false };
+    const run: Run = { lookup, file, kept: new Map(), unrendered: new Map(), undecided: [], load: options.load, templates: new Map(), loaded: new Set(), blocks: new Map(), depth: { value: 0 }, home: nodes, locals: new Set() };
     const all = renderTemplate(nodes, [{ text: '', names: new Map(), lines: [] }], run);
     const ways = [...new Set(all.map((way) => way.text))];
     return { text: ways[0] ?? '', unrendered: run.unrendered, ways, undecided: run.undecided, loaded: [...run.loaded].sort(), lines: settledLines(all[0]?.lines ?? []) };

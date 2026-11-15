@@ -106,6 +106,21 @@ export const hostIndexOf = (config: FlowatlasConfig, settings: Readonly<Record<s
   return index;
 };
 
+/**
+ * The hosts only an example environment file gives a service (P309): each
+ * host with the services every file placing them there at it is an example
+ * or a template of. Such a host is offered, not where a run is placed.
+ */
+export const offeredHostsOf = (settings: Readonly<Record<string, RepoSettings>>): HostIndex => {
+  const index = new Map<string, string[]>();
+  for (const [service, own] of Object.entries(settings)) {
+    const firm = new Set(own.hosts.filter((alias) => alias.example !== true).map((alias) => alias.host.toLowerCase()));
+    for (const alias of own.hosts) if (alias.example === true && !firm.has(alias.host.toLowerCase())) addTo(index, alias.host, service);
+  }
+  for (const list of index.values()) list.sort(cmp);
+  return index;
+};
+
 /** The services a value's host names, by every name it may be known by. */
 export const servicesAt = (address: string, index: HostIndex): readonly string[] | 'external' | 'inner' | undefined => {
   const host = hostOf(address);
@@ -170,6 +185,46 @@ export const settingsAfter = (call: GraphNode): readonly string[] => {
   const also = call.meta?.['baseUrlAlso'];
   return Array.isArray(also) ? also.filter((each): each is string => typeof each === 'string') : [];
 };
+
+/**
+ * The settings of a condition's branches nobody settles, the first branch's
+ * first (P309): `isProd ? process.env.A : process.env.B` is `['A', 'B']`,
+ * each as much the request's base as the other.
+ */
+export const settingsEither = (call: GraphNode): readonly string[] => {
+  const either = call.meta?.['baseUrlEither'];
+  return Array.isArray(either) ? either.filter((each): each is string => typeof each === 'string') : [];
+};
+
+/** The services a condition's branches reach, each with the settings of the branches it claims. */
+export interface BranchClaim {
+  readonly service: string;
+  readonly settings: readonly string[];
+}
+
+/**
+ * Who claims each setting of a condition's branches nobody settles (P309),
+ * where they are claimed by more than one service: each service with the
+ * branch settings it alone claims, in the order the branches are written.
+ * Nothing where the branches name one service or none, so the setting the
+ * request is rooted at is looked up as it always was.
+ */
+export const branchClaims = (call: GraphNode, claimantsOf: (setting: string) => readonly string[]): readonly BranchClaim[] | undefined => {
+  const claims: { service: string; settings: string[] }[] = [];
+  for (const setting of settingsEither(call)) {
+    const claiming = claimantsOf(setting);
+    // A setting several services claim names none of them.
+    if (claiming.length !== 1) continue;
+    const service = claiming[0] as string;
+    const seen = claims.find((each) => each.service === service);
+    if (seen === undefined) claims.push({ service, settings: [setting] });
+    else if (!seen.settings.includes(setting)) seen.settings.push(setting);
+  }
+  return claims.length > 1 ? claims : undefined;
+};
+
+/** A branch's claim as a row names it: `ORDERS_URL (orders)`. */
+export const branchSaid = (claim: BranchClaim): string => `${claim.settings.join(', ')} (${claim.service})`;
 
 /** Every value the setting is found with, strongest first: the deployment's alone, where it says. */
 export const valuesOf = (input: BaseUrlInput): FoundValue[] => {

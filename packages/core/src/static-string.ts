@@ -24,6 +24,8 @@ export interface StaticString {
   fallbackFile?: string;
   /** The settings a chain of `||` reads after the one it opens with, in order (P296). */
   also?: readonly string[];
+  /** The settings of a condition's branches nobody settles it opens with, as equal candidates (P309). */
+  either?: readonly string[];
 }
 
 /**
@@ -44,6 +46,8 @@ export interface SettingBehind {
   otherwiseFile?: string;
   /** The settings a chain of `||` reads after this one, in order (P296). */
   also?: readonly string[];
+  /** The settings of a condition's branches nobody settles, as equal candidates (P309). */
+  either?: readonly string[];
 }
 
 export interface StaticStringOptions {
@@ -262,6 +266,7 @@ const fromSpans = (head: string, all: readonly Span[], options: StaticStringOpti
   let fallback: string | undefined;
   let fallbackFile: string | undefined;
   let also: readonly string[] | undefined;
+  let either: readonly string[] | undefined;
 
   let end = all.length;
   // Trailing holes that are only ever a query string or nothing add nothing to
@@ -294,6 +299,7 @@ const fromSpans = (head: string, all: readonly Span[], options: StaticStringOpti
       fallback = root?.otherwise;
       fallbackFile = root?.otherwise === undefined ? undefined : root.otherwiseFile;
       also = root?.also;
+      either = root?.either;
       value = (root?.prefix ?? '') + tail;
       continue;
     }
@@ -318,6 +324,7 @@ const fromSpans = (head: string, all: readonly Span[], options: StaticStringOpti
     ...(fallback === undefined ? {} : { fallback }),
     ...(fallbackFile === undefined ? {} : { fallbackFile }),
     ...(also === undefined || also.length === 0 ? {} : { also }),
+    ...(either === undefined || either.length === 0 ? {} : { either }),
   };
 };
 

@@ -380,8 +380,8 @@ describe('sceptre projects a configuration names by a relative path (P306)', () 
   });
 });
 
-describe("what a namespace and loop.changed share, and Jinja's default undefined (P306)", () => {
-  const render = (text: string, roots: Record<string, unknown> = {}, options: { strictUndefined?: boolean } = {}) => renderJinja(text, lookupIn(roots), 0, options);
+describe('what a namespace and loop.changed share (P306)', () => {
+  const render = (text: string, roots: Record<string, unknown> = {}) => renderJinja(text, lookupIn(roots), 0);
 
   it('keeps what a macro sets on a namespace it is handed, or one it sees, for what follows the call', () => {
     expect(render("{% macro mark(ns, x) %}{% set ns.seen = ns.seen ~ x %}{% endmacro %}{% set ns = namespace(seen='') %}{{ mark(ns, 'a') }}{% set _ = mark(ns, 'b') %}{{ ns.seen }}").text).toBe('ab');
@@ -415,15 +415,9 @@ describe("what a namespace and loop.changed share, and Jinja's default undefined
     expect(render('{% for n in var.tree recursive %}{{ loop.changed(n.k) }}{% if n.children %}({{ loop(n.children) }}){% endif %}{% endfor %}', tree).text).toBe('True(True)');
   });
 
-  it("reads a key a tree's record does not hold as false where the text is rendered with Jinja's default undefined", () => {
+  it("leaves a key a tree's record does not hold undecided, as sceptre's strict undefined does", () => {
     const tree = { var: { tree: [{ name: 'shop', children: [{ name: 'orders' }, { name: 'stock', children: [{ name: 'moves' }] }] }] } };
-    const text = '{% for node in var.tree recursive %}{{ node.name }}{{ node.note }}{% if node.children %}({{ loop(node.children) }}){% endif %} {% endfor %}';
-    const lenient = render(text, tree, { strictUndefined: false });
-    expect(lenient.text).toBe('shop(orders stock(moves ) ) ');
-    expect(lenient.ways).toHaveLength(1);
-    expect(render('{% for x in var.none %}a{% else %}none{% endfor %}{% if not var.missing %}!{% endif %}{{ var.missing ~ "-" }}', { var: {} }, { strictUndefined: false }).text).toBe('none!-');
-    // sceptre renders with the strict one: the key is not known, and the text is not one rendering.
-    const strict = render(text, tree);
+    const strict = render('{% for node in var.tree recursive %}{{ node.name }}{{ node.note }}{% if node.children %}({{ loop(node.children) }}){% endif %} {% endfor %}', tree);
     expect(strict.ways.length > 1 || strict.unrendered.size > 0).toBe(true);
   });
 });

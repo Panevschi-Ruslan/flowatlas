@@ -9,7 +9,7 @@ import {
   type RouteResult,
 } from './route-match.js';
 import { chooseByApiName } from './api-choice.js';
-import { settingsAfter, whereFound, type BaseUrlAnswer, type FoundValue } from './base-url-value.js';
+import { branchClaims, branchSaid, settingsAfter, whereFound, type BaseUrlAnswer, type FoundValue } from './base-url-value.js';
 import { localGraphqlEndpoint, sendsOperation, undecidedFinding, unservedFinding } from './graphql-value.js';
 import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
 import { defaultPortOf, forwardedAgain, proxyChainFinding, PROXY_HOPS, type Forward } from './proxy-forward.js';
@@ -113,7 +113,17 @@ interface Details {
     listening?: Listening;
     /** The proxy rule the request was forwarded by, and how (P257). */
     proxied?: Forward;
+    /**
+     * The settings of the condition's branches the service was chosen among
+     * by serving the request, as `ORDERS_URL (orders)` (P309): a guess.
+     */
+    branches?: readonly string[];
   };
+  /**
+   * The settings of a condition's branches nobody settles are claimed by
+   * several services, and more than one serves the request (P309).
+   */
+  branchesServed: { method: string; path: string; branches: readonly string[]; services: readonly string[] };
   /** Two or more services listen on the port an address on this machine names (P250). */
   portShared: { port: number; said: readonly string[]; services: readonly string[] };
   /** A host on a network names the service at a port it is not reached at there (P257). */
@@ -195,6 +205,7 @@ const FINDINGS: { [K in OutcomeKind]: ((detail: Details[K]) => Finding) | null }
   linked: null,
   external: null,
   dynamic: null,
+  branchesServed: ({ method, path, branches, services }) => branchesServedFinding(method, path, branches, services),
   portShared: ({ port, said }) => portSharedFinding(port, said),
   portClosed: ({ host, closed }) => portClosedFinding(host, closed),
   proxyChain: ({ services, loop }) => proxyChainFinding(services, loop),
@@ -241,6 +252,16 @@ const FINDINGS: { [K in OutcomeKind]: ((detail: Details[K]) => Finding) | null }
   ambiguous: (detail) =>
     AMBIGUITY[detail.apis !== undefined ? 'api' : detail.applications === undefined ? 'route' : 'application'](detail),
 };
+
+/**
+ * Why a request whose base is one of a condition's settings, claimed by
+ * several services that each serve it, is not joined (P309).
+ */
+export const branchesServedFinding = (method: string, path: string, branches: readonly string[], services: readonly string[]): Finding => ({
+  reason: 'ambiguous-route-target',
+  message: `the request's base is one of ${branches.join(' and ')}, chosen by a condition nobody settles, and ${services.join(' and ')} each serve ${method} ${path}`,
+  hint: 'Read the base from one setting, or annotate the call with @CallsService naming the service it reaches.',
+});
 
 /** How many of a setting's values a row names before it counts the rest. */
 const VALUES_NAMED = 3;
@@ -850,6 +871,24 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
   const claimed = own.length === 0 && typeof variable === 'string' ? index.claimantsOf(variable) : own;
   // A setting a chain of `||` reads after it, where nobody claims the ones before (P296).
   const claiming = claimed.length > 0 ? claimed : (settingsAfter(call).map((each) => index.claimantsOf(each)).find((each) => each.length > 0) ?? claimed);
+  // The settings of a condition's branches nobody settles are each the
+  // request's base (P309): where different services claim them, the one that
+  // serves the request is the answer, a guess; several serving it are a row;
+  // none, and the first branch's claimant is asked as it always was.
+  const branches = branchClaims(call, (setting) => index.claimantsOf(setting));
+  if (branches !== undefined) {
+    const asked = branches.map((claim) => ({ claim, reached: within(claim.service, 'baseUrlEnv', {}) }));
+    const serving = asked.filter(({ reached }) => reached.outcome.kind === 'linked' || reached.outcome.kind === 'ambiguous');
+    const said = branches.map(branchSaid);
+    const [only] = serving;
+    if (only !== undefined && serving.length === 1) {
+      const { reached } = only;
+      return reached.outcome.kind === 'linked' ? { ...reached, outcome: { ...reached.outcome, branches: said } } : reached;
+    }
+    if (serving.length > 1 && typeof path === 'string') {
+      return { outcome: { kind: 'branchesServed', method, path, branches: said, services: serving.map(({ claim }) => claim.service) }, notes };
+    }
+  }
   // A setting no service claims may hold a function's own URL, which answers
   // every verb and path: the request reaches the function whatever it asks.
   const [url, ...urls] = claiming.length === 0 ? (index.functionUrlsOf?.(call.id) ?? []) : [];

@@ -50,6 +50,12 @@ export interface HostAlias {
    * `published` is then the port of the name, not of this machine.
    */
   readonly mapped?: { readonly published: number; readonly container: number; readonly side: 'published' | 'container' | 'routed' };
+  /**
+   * The host is a port an example environment file gives (`PORT=` in
+   * `.env.example`, a template): a value offered to whoever runs the service,
+   * not one a run is given, so it places the service only as a guess (P309).
+   */
+  readonly example?: true;
 }
 
 /** A port a container publishes on the machine running it, and the port inside it that it reaches (P254). */
@@ -135,6 +141,8 @@ export interface PortValue {
   readonly port: number;
   readonly file: string;
   readonly environment?: string;
+  /** The file is an example or a template, which offers the value rather than giving it (P309). */
+  readonly example?: true;
 }
 
 /** Everything a service's own files say about its settings. */

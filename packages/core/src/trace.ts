@@ -265,6 +265,14 @@ export interface SettingAddress {
    * and the address `guessed` (P302).
    */
   also?: readonly string[];
+  /**
+   * The settings of a condition's branches nobody settles, each one as much
+   * the address's as the others, the first branch's first (P309):
+   * `isProd ? process.env.A : process.env.B` is `['A', 'B']`. Where they are
+   * claimed by different services, the linker asks each claimant whether it
+   * serves the request rather than taking the first's.
+   */
+  either?: readonly string[];
 }
 
 /**
@@ -873,7 +881,9 @@ const sharedStart = (a: string, b: string): string => {
  * process.env.B`, the value is one of the two: the first is the key, the
  * second is where it may go instead (`also`, looked up after the first), and
  * the address is `guessed`, since which one a deployment reads is not
- * written. The first fallback either writes is the fallback.
+ * written. The first fallback either writes is the fallback. Every branch's
+ * setting is kept in `either` as well, as an equal candidate (P309), where
+ * no caller's argument chose the first.
  */
 const eitherAddress = (a: SettingAddress, b: SettingAddress, settled?: Truth): SettingAddress => {
   if (a.key === b.key) {
@@ -882,6 +892,7 @@ const eitherAddress = (a: SettingAddress, b: SettingAddress, settled?: Truth): S
     return { key: a.key, prefix: sharedStart(a.prefix, b.prefix) + UNREAD_SPAN };
   }
   const also = [...new Set([...(a.also ?? []), b.key, ...(b.also ?? [])])].filter((key) => key !== a.key);
+  const either = [...new Set([...(a.either ?? [a.key]), ...(b.either ?? [b.key])])];
   const prefix = a.prefix === b.prefix || settled === 'given' ? a.prefix : sharedStart(a.prefix, b.prefix) + UNREAD_SPAN;
   const fallback =
     a.otherwise !== undefined
@@ -889,7 +900,7 @@ const eitherAddress = (a: SettingAddress, b: SettingAddress, settled?: Truth): S
       : b.otherwise !== undefined
         ? { otherwise: b.otherwise, ...(b.otherwiseFile === undefined ? {} : { otherwiseFile: b.otherwiseFile }) }
         : {};
-  return { key: a.key, prefix, guessed: true, ...fallback, also };
+  return { key: a.key, prefix, guessed: true, ...fallback, also, ...(settled === 'given' ? {} : { either }) };
 };
 
 /**
@@ -2047,10 +2058,6 @@ const queryOnly = (value: TsNode, scope: Scope, budget: number): boolean => {
 export const isQueryTail = (value: TsNode): boolean =>
   queryOnly(value, { readSetting: () => null, self: enclosingClass(value), bound: NOTHING }, BUDGET);
 
-/** The key alone, for callers with nothing to do with the path. */
-export const rootSettingKey = (value: TsNode, options: RootSettingOptions): string | null =>
-  rootSettingAddress(value, options)?.key ?? null;
-
 /** The parameter a value ultimately comes from, when it comes from one. */
 export const parameterBehind = (value: TsNode, budget = BUDGET): ParameterDeclaration | undefined => {
   if (budget <= 0) return undefined;
@@ -2148,6 +2155,8 @@ export interface SplitAddress {
   otherwiseFile?: string;
   /** The settings a chain of `||` reads after that key, in order (P296). */
   also?: readonly string[];
+  /** The settings of a condition's branches nobody settles, as equal candidates (P309). */
+  either?: readonly string[];
   /** Literal text before and after the part the caller supplies. */
   before: string;
   after: string;
@@ -2261,6 +2270,7 @@ export const splitAtParameter = (
         ...(otherwise === undefined ? {} : { otherwise }),
         ...(otherwise === undefined || rootedAt?.otherwiseFile === undefined ? {} : { otherwiseFile: rootedAt.otherwiseFile }),
         ...(rootedAt?.also === undefined ? {} : { also: rootedAt.also }),
+        ...(rootedAt?.either === undefined ? {} : { either: rootedAt.either }),
         before: text,
         after: literal,
       };

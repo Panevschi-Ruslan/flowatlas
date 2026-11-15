@@ -38,7 +38,7 @@ import { dockerRunsOf, readHelmfileRuns, readHelmInstalls, readKustomizeApplies,
 import { helmfilesAt, helmfilesIn, readHelmfile } from './helmfile.js';
 import { namesInEnvFile, readEnvFile, type Written } from './dotenv.js';
 import { angularEnvironmentsOf } from './angular-environments.js';
-import { composeEnvironment, envFileEnvironment, envFileReading, environmentName, isComposeFile } from './files.js';
+import { composeEnvironment, envFileEnvironment, envFileReading, environmentName, isComposeFile, isExampleEnvFile } from './files.js';
 
 /**
  * Reads what the files at the top of each repository say its settings are
@@ -130,8 +130,8 @@ const add = (into: Gathered, name: string, value: SettingValue): void => {
   into.values.set(name, list);
 };
 
-const addPort = (into: Gathered, port: number, file: string): void => {
-  for (const host of localHostsOf(port)) into.hosts.push({ host, file });
+const addPort = (into: Gathered, port: number, file: string, example = false): void => {
+  for (const host of localHostsOf(port)) into.hosts.push({ host, file, ...(example ? { example: true as const } : {}) });
 };
 
 const read = (path: string): string | undefined => {
@@ -157,15 +157,19 @@ const readEnv = (into: Gathered, path: string, file: string, container?: Record<
     return;
   }
   const environment = envFileEnvironment(basename(path));
+  // An example's port is offered, not given (P309).
+  const example = isExampleEnvFile(basename(path));
   for (const written of readEnvFile(text)) {
     const { name, raw } = written;
     const port = portSetting(written);
     if (port !== undefined && container !== undefined) container[name] ??= port;
     if (port !== undefined && container === undefined) {
-      if (PORT_SETTINGS.has(name)) addPort(into, port, file);
+      if (PORT_SETTINGS.has(name)) addPort(into, port, file, example);
       // Any setting's port, for the code that reads it alone (P254).
       const list = into.ports.get(name) ?? [];
-      if (!list.some((seen) => seen.port === port && seen.file === file)) list.push({ port, file, ...(environment === undefined ? {} : { environment }) });
+      if (!list.some((seen) => seen.port === port && seen.file === file)) {
+        list.push({ port, file, ...(environment === undefined ? {} : { environment }), ...(example ? { example: true as const } : {}) });
+      }
       into.ports.set(name, list);
     }
     const value = keptValue(name, raw);

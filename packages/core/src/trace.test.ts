@@ -20,7 +20,6 @@ import {
   splitAtParameter,
   returnedExpression,
   rootSettingAddress,
-  rootSettingKey,
 } from './trace.js';
 
 const HEADER = `
@@ -47,7 +46,7 @@ const ROOTS = ['environment'] as const;
 const readSetting = (node: Parameters<typeof settingKeyIn>[0]) => settingKeyIn(node, ROOTS);
 
 /** How a browser application is read, with both halves of an address followed. */
-const settingBehind = (node: Parameters<typeof rootSettingKey>[0]) => {
+const settingBehind = (node: Parameters<typeof rootSettingAddress>[0]) => {
   const returned = returnedExpression(node);
   if (returned !== null) {
     const inner = resolveStaticString(returned, {
@@ -59,8 +58,8 @@ const settingBehind = (node: Parameters<typeof rootSettingKey>[0]) => {
     const [key] = inner?.envRefs ?? [];
     if (key !== undefined) return { key, prefix: inner?.value ?? '' };
   }
-  const key = rootSettingKey(node, { readSetting });
-  return key === null ? null : { key };
+  const key = rootSettingAddress(node, { readSetting })?.key;
+  return key === undefined ? null : { key };
 };
 
 const read = (file: SourceFile) =>
@@ -247,7 +246,7 @@ describe('a settings value kept in a static property', () => {
   // P302: branches nobody settles that read different settings are one of the
   // two: the first is the key, the second where it may go instead, guessed.
   it('reads a condition nobody settles over two settings as the first with the second as also, in place and in a helper alike', () => {
-    const expected = { key: 'apiUrl', prefix: '', guessed: true, also: ['devUrl'] };
+    const expected = { key: 'apiUrl', prefix: '', guessed: true, also: ['devUrl'], either: ['apiUrl', 'devUrl'] };
     const inPlace = parse(`
       declare const isProd: boolean;
       http.get(\`\${isProd ? environment.apiUrl : environment.devUrl}/orders\`);
@@ -269,13 +268,30 @@ describe('a settings value kept in a static property', () => {
       }
       http.get(\`\${base()}/orders\`);
     `);
-    expect(rootSettingAddress(call(returns), { readSetting })).toEqual({ key: 'apiUrl', prefix: '/v1', guessed: true, also: ['devUrl'] });
+    expect(rootSettingAddress(call(returns), { readSetting })).toEqual({ key: 'apiUrl', prefix: '/v1', guessed: true, also: ['devUrl'], either: ['apiUrl', 'devUrl'] });
     const fallback = parse(`
       declare const isProd: boolean;
       const base = () => isProd ? environment.apiUrl : environment.devUrl ?? 'http://localhost:4000';
       http.get(\`\${base()}/orders\`);
     `);
     expect(rootSettingAddress(call(fallback), { readSetting })).toEqual({ ...expected, otherwise: 'http://localhost:4000', otherwiseFile: '/a.ts' });
+  });
+
+  // P309: every branch's setting is an equal candidate, nested conditions too.
+  it('keeps the settings of every branch nobody settles in either, the first branch first', () => {
+    const nested = parse(`
+      declare const isProd: boolean;
+      declare const isStage: boolean;
+      http.get(\`\${isProd ? environment.apiUrl : isStage ? environment.stageUrl : environment.devUrl}/orders\`);
+    `);
+    const branch = address(nested).getDescendantsOfKind(SyntaxKind.ConditionalExpression)[0]!;
+    expect(rootSettingAddress(branch, { readSetting })).toMatchObject({ key: 'apiUrl', either: ['apiUrl', 'stageUrl', 'devUrl'] });
+    // One setting on both sides is no choice between settings.
+    const same = parse(`
+      declare const isProd: boolean;
+      http.get(\`\${isProd ? \`\${environment.apiUrl}/v1\` : \`\${environment.apiUrl}/v2\`}/orders\`);
+    `);
+    expect(rootSettingAddress(address(same).getDescendantsOfKind(SyntaxKind.ConditionalExpression)[0]!, { readSetting })?.either).toBeUndefined();
   });
 
   // P302: a function handed nothing that reads the setting inside is the setting.
@@ -446,7 +462,7 @@ describe('what the settings reader is asked', () => {
       }
     `);
     const asked: string[] = [];
-    rootSettingKey(address(file), {
+    rootSettingAddress(address(file), {
       readSetting: (node) => {
         asked.push(node.getKindName());
         return null;

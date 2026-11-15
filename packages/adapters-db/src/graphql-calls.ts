@@ -96,6 +96,7 @@ export const graphqlCallsPass: NestExtractorPass = definePass('graphql-calls', (
           baseUrlEnv: info?.baseUrlEnv ?? null,
           ...(info?.baseUrlDefault === undefined ? {} : { baseUrlDefault: info.baseUrlDefault }),
           ...(info?.baseUrlEnv == null || info.baseUrlAlso === undefined ? {} : { baseUrlAlso: info.baseUrlAlso }),
+          ...(info?.baseUrlEnv == null || info.baseUrlEither === undefined ? {} : { baseUrlEither: info.baseUrlEither }),
           ...(info?.host === null || info?.host === undefined ? {} : { host: info.host }),
           responseType: null,
           bodyType: null,

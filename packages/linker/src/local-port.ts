@@ -77,6 +77,11 @@ export interface Listening {
   /** The merge helper's call the port is read through, `file:line` (P305). */
   readonly merged?: string;
   /**
+   * `valueFrom` is an example environment file (`.env.example`, a template),
+   * which offers the value rather than giving it: a guess (P309).
+   */
+  readonly example?: true;
+  /**
    * The published side of a container's mapping this port is reached through
    * on the machine (P254); or a port this machine forwards to a cluster's
    * object, or one every node of a cluster opens for it (P260), with the
@@ -262,7 +267,7 @@ export const portsListening = (nodes: ReadonlyMap<string, GraphNode>, settings: 
     for (const port of ports) {
       if (port.port !== undefined || port.setting === undefined) continue;
       for (const value of settings[service]?.ports?.[port.setting] ?? []) {
-        addListening(byPort, value.port, { ...listeningOf(service, port), valueFrom: value.file });
+        addListening(byPort, value.port, { ...listeningOf(service, port), valueFrom: value.file, ...(value.example === true ? { example: true as const } : {}) });
       }
     }
   }
@@ -353,21 +358,26 @@ const whereShort = (listening: Listening): string =>
 
 /**
  * Whether a service is heard at a port only by a guess: its framework's or
- * library's default (an example file's value kept as a candidate of it), or
- * a port read through a merge helper (P305). A port the code writes, a file
- * the framework loads, or a published port is no guess.
+ * library's default (an example file's value kept as a candidate of it), a
+ * port read through a merge helper (P305), or the value an example
+ * environment file offers the setting its code reads the port from (P309).
+ * A port the code writes, a file the framework loads, or a published port is
+ * no guess.
  */
-const isGuessed = (listening: Listening): boolean => listening.default === true || listening.merged !== undefined;
+const isGuessed = (listening: Listening): boolean => listening.default === true || listening.merged !== undefined || listening.example === true;
 
 /**
  * The services a port only guesses at answers a request with (P300, P307):
- * those that serve it, defaults and guesses asked alike; where none does,
- * the guesses firmer than a default, which outrank them (P305); and where
- * there are none, nobody, so the request is joined as with nobody heard.
+ * those that serve it, defaults and guesses asked alike, the services an
+ * example environment file alone places there among them (P309); where none
+ * does, the guesses firmer than a default, which outrank them (P305); and
+ * where there are none, nobody, so the request is joined as with nobody heard.
  */
-const guessedAt = (heard: readonly Listening[], serves: ServesRequest | undefined): readonly Listening[] => {
-  const served = serves === undefined ? [] : heard.filter((each) => serves(each.service));
-  return served.length > 0 ? served : heard.filter((each) => each.default !== true);
+const guessedAt = (heard: readonly Listening[], offered: readonly string[], serves: ServesRequest | undefined): ReadonlySet<string> => {
+  const all = [...new Set([...heard.map((each) => each.service), ...offered])];
+  const served = serves === undefined ? [] : all.filter((service) => serves(service));
+  if (served.length > 0) return new Set(served);
+  return new Set(all.filter((service) => offered.includes(service) || heard.some((each) => each.service === service && each.default !== true)));
 };
 
 /** What the port of an address on this machine says. */
@@ -399,6 +409,12 @@ export interface PortIndex {
   readonly configured: HostIndex;
   /** The same with the hosts the setting files give, where they are read. */
   readonly all: HostIndex;
+  /**
+   * The hosts only an example environment file gives a service (`PORT=` in
+   * `.env.example`), which offers the port rather than placing the service
+   * there: a guess, as a framework's default is (P309).
+   */
+  readonly offered?: HostIndex;
   readonly listening: ReadonlyMap<number, readonly Listening[]>;
   /** Where a service listens on a container's own network, by `<name>:<port>` (P254), or on a cluster's (P257). */
   readonly inNetwork?: ReadonlyMap<string, readonly Listening[]>;
@@ -423,7 +439,9 @@ export interface PortIndex {
  * a guess takes no request from a service that serves it (P307). The request
  * goes where the services heard there serve it - one is the answer, several
  * a row - and only where none does do the guesses outrank the defaults, as
- * they did (P305).
+ * they did (P305). A port an example environment file offers - `PORT=` in
+ * `.env.example`, the value it gives a setting the code reads alone - is such
+ * a guess too (P309): the file is a candidate, not what a run is given.
  */
 export const atLocalPort = (address: string, index: PortIndex, serves?: ServesRequest): PortAnswer | undefined => {
   const port = localPortOf(address);
@@ -438,9 +456,14 @@ export const atLocalPort = (address: string, index: PortIndex, serves?: ServesRe
   // (P296): it yields to a service the code or the files place there, and
   // only defaults left together are two services' at once.
   const heard = index.listening.get(port) ?? [];
-  const firm = heard.some((each) => !isGuessed(each)) || fromFiles.length > 0;
-  const listening = firm ? heard.filter((each) => each.default !== true || fromFiles.includes(each.service)) : guessedAt(heard, serves);
-  const services = [...new Set([...fromFiles, ...listening.map((each) => each.service)])].sort(cmp);
+  // A port an example environment file alone gives a service is offered, not placed (P309).
+  const offeredAt = index.offered?.get(`localhost:${port}`) ?? [];
+  const offered = fromFiles.filter((service) => offeredAt.includes(service));
+  const firm = heard.some((each) => !isGuessed(each)) || fromFiles.some((service) => !offered.includes(service));
+  const chosen = firm ? undefined : guessedAt(heard, offered, serves);
+  const listening = chosen === undefined ? heard.filter((each) => each.default !== true || fromFiles.includes(each.service)) : heard.filter((each) => chosen.has(each.service));
+  const filedHere = chosen === undefined ? fromFiles : fromFiles.filter((service) => chosen.has(service));
+  const services = [...new Set([...filedHere, ...listening.map((each) => each.service)])].sort(cmp);
   if (services.length === 0) return undefined;
   if (services.length === 1) {
     const service = services[0] as string;

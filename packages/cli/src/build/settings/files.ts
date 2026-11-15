@@ -57,6 +57,13 @@ export const envFileReading = (name: string): Reading | undefined => {
   return 'names';
 };
 
+/**
+ * Whether an environment file is an example, a sample or a template: written
+ * to be copied and filled in, so what it sets is offered, not given (P309).
+ * A file for a developer's machine (`.env.development`) is loaded as it is.
+ */
+export const isExampleEnvFile = (name: string): boolean => ENV_FILE.test(name) && wordsOf(name).some((word) => SHARED.has(word));
+
 /** The environment an environment file is for, when its name says: `development` for `.env.dev.example`. */
 export const envFileEnvironment = (name: string): string | undefined => {
   const words = wordsOf(name).filter((word) => !SHARED.has(word) && word !== 'local');

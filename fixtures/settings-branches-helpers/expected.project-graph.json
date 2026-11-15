@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-15T14:46:35.479Z",
+  "builtAt": "2026-11-15T16:10:59.230Z",
   "services": [
     {
       "name": "web",
@@ -250,6 +250,10 @@
         "baseUrlAlso": [
           "ORDERS_DEV_URL"
         ],
+        "baseUrlEither": [
+          "ORDERS_URL",
+          "ORDERS_DEV_URL"
+        ],
         "responseType": null,
         "bodyType": null,
         "sameCall": "ui_api_call:web#server/orders.ts:12:21",
@@ -269,6 +273,10 @@
         "path": "/orders/late",
         "baseUrlEnv": "ORDERS_URL",
         "baseUrlAlso": [
+          "ORDERS_DEV_URL"
+        ],
+        "baseUrlEither": [
+          "ORDERS_URL",
           "ORDERS_DEV_URL"
         ],
         "responseType": null,
@@ -328,6 +336,10 @@
         "path": "/orders/open",
         "baseUrlEnv": "ORDERS_URL",
         "baseUrlAlso": [
+          "ORDERS_DEV_URL"
+        ],
+        "baseUrlEither": [
+          "ORDERS_URL",
           "ORDERS_DEV_URL"
         ],
         "responseType": null,
@@ -528,6 +540,10 @@
         "baseUrlAlso": [
           "NEXT_PUBLIC_ORDERS_DEV_URL"
         ],
+        "baseUrlEither": [
+          "NEXT_PUBLIC_ORDERS_URL",
+          "NEXT_PUBLIC_ORDERS_DEV_URL"
+        ],
         "responseType": null,
         "bodyType": null,
         "package": null,
@@ -575,6 +591,10 @@
         "baseUrlAlso": [
           "ORDERS_DEV_URL"
         ],
+        "baseUrlEither": [
+          "ORDERS_URL",
+          "ORDERS_DEV_URL"
+        ],
         "responseType": null,
         "bodyType": null,
         "package": null,
@@ -599,6 +619,10 @@
         "path": "/orders/late",
         "baseUrlEnv": "ORDERS_URL",
         "baseUrlAlso": [
+          "ORDERS_DEV_URL"
+        ],
+        "baseUrlEither": [
+          "ORDERS_URL",
           "ORDERS_DEV_URL"
         ],
         "responseType": null,
@@ -671,6 +695,10 @@
         "path": "/orders/open",
         "baseUrlEnv": "ORDERS_URL",
         "baseUrlAlso": [
+          "ORDERS_DEV_URL"
+        ],
+        "baseUrlEither": [
+          "ORDERS_URL",
           "ORDERS_DEV_URL"
         ],
         "responseType": null,

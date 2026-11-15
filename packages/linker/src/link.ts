@@ -23,7 +23,7 @@ import {
   type TypeEntry,
   type Unresolved,
 } from '@flowatlas/core';
-import { baseUrlOf, settingsAfter, hostIndexOf, servicesAt, takenMeta, whereFound, type FoundValue, type HostIndex } from './base-url-value.js';
+import { baseUrlOf, settingsAfter, hostIndexOf, offeredHostsOf, servicesAt, takenMeta, whereFound, type FoundValue, type HostIndex } from './base-url-value.js';
 import {
   baseUrlTakenFinding,
   findingFor,
@@ -540,8 +540,9 @@ const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked
   const returns = call.meta?.['responseType'];
   // An API's address whose id is written out is taken as the deployment's own
   // API by its region and stage, which the id may not be (P268).
+  // A service chosen among a condition's settings by serving the request is a guess (P309).
   const joinedAs =
-    outcome.hostFromFiles === true || (baseUrl?.apiPath !== undefined && baseUrl.referenced !== true)
+    outcome.hostFromFiles === true || outcome.branches !== undefined || (baseUrl?.apiPath !== undefined && baseUrl.referenced !== true)
       ? 'heuristic'
       : baseUrl?.deployed === true
         ? 'static'
@@ -561,6 +562,7 @@ const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked
       ...listensMeta(outcome.listening),
       ...proxyMeta(outcome, call),
       ...(outcome.via === 'functionUrl' ? { variable: call.meta?.['baseUrlEnv'] } : {}),
+      ...(outcome.branches === undefined ? {} : { chosenAmong: outcome.branches }),
       ...(baseUrl === undefined ? {} : takenMeta(baseUrl)),
       ...mountMeta(outcome.mountAssumed),
       ...(outcome.runnersUp.length === 0
@@ -595,6 +597,8 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
     outcome.via === 'proxy' ||
     outcome.via === 'ingress' ||
     outcome.hostFromFiles === true ||
+    // A service chosen among a condition's settings by serving the request (P309).
+    outcome.branches !== undefined ||
     (outcome.via === 'base-url-value' && outcome.baseUrl?.deployed !== true);
   return {
     from: call.id,
@@ -613,6 +617,7 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
       via: outcome.via,
       targetService: outcome.targetService,
       ...(outcome.twin === undefined ? {} : { sameCallVia: outcome.twin.via }),
+      ...(outcome.branches === undefined ? {} : { chosenAmong: outcome.branches }),
       ...listensMeta(outcome.listening),
       ...proxyMeta(outcome, call),
       ...mountMeta(outcome.mountAssumed),
@@ -730,6 +735,7 @@ const portIndexOf = (
   return {
     configured,
     all: config.settingFiles.read === false ? configured : hostIndexOf(config, settings),
+    ...(config.settingFiles.read === false ? {} : { offered: offeredHostsOf(settings) }),
     listening: listening.byPort,
     inNetwork: listening.inNetwork,
     closed: listening.closed,
@@ -1272,7 +1278,7 @@ export const linkGraphs = (
       httpOut[
         outcome.kind === 'unknownBinding'
           ? 'unknownEnv'
-          : outcome.kind === 'portShared' || outcome.kind === 'apiAmbiguous'
+          : outcome.kind === 'portShared' || outcome.kind === 'apiAmbiguous' || outcome.kind === 'branchesServed'
             ? 'ambiguous'
             : outcome.kind === 'portClosed' || outcome.kind === 'proxyChain'
               ? 'noRoute'

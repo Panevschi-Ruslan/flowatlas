@@ -1,0 +1,10 @@
+{
+  "services": [
+    { "name": "jobs", "repo": "./jobs", "type": "express" },
+    { "name": "orders", "repo": "./orders", "type": "express", "baseUrlEnv": ["ORDERS_URL"] },
+    { "name": "legacy", "repo": "./legacy", "type": "express", "baseUrlEnv": ["LEGACY_URL"] },
+    { "name": "shop", "repo": "./shop", "type": "nextjs" },
+    { "name": "api", "repo": "./api", "type": "express" }
+  ],
+  "output": ".flowatlas"
+}

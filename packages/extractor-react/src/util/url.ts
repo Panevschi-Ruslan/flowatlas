@@ -137,6 +137,8 @@ export interface ApiUrl {
   baseUrlDefaultFile?: string;
   /** The settings a chain of `||` reads after that key, in order (P296). */
   baseUrlAlso?: readonly string[];
+  /** The settings of a condition's branches nobody settles, as equal candidates (P309). */
+  baseUrlEither?: readonly string[];
   /** Host, when the address names one outright. */
   host: string | null;
   /** How the address was arrived at, for the reader of the node. */
@@ -146,17 +148,29 @@ export interface ApiUrl {
 }
 
 /** What a setting found behind an address says beyond its key, as an address carries it (P292, P296). */
-const fallbackOf = (behind: { readonly otherwise?: string | undefined; readonly otherwiseFile?: string | undefined; readonly also?: readonly string[] | undefined }): Pick<ApiUrl, 'baseUrlDefault' | 'baseUrlDefaultFile' | 'baseUrlAlso'> => ({
+const fallbackOf = (behind: {
+  readonly otherwise?: string | undefined;
+  readonly otherwiseFile?: string | undefined;
+  readonly also?: readonly string[] | undefined;
+  readonly either?: readonly string[] | undefined;
+}): Pick<ApiUrl, 'baseUrlDefault' | 'baseUrlDefaultFile' | 'baseUrlAlso' | 'baseUrlEither'> => ({
   ...(behind.otherwise === undefined ? {} : { baseUrlDefault: behind.otherwise }),
   ...(behind.otherwise === undefined || behind.otherwiseFile === undefined ? {} : { baseUrlDefaultFile: behind.otherwiseFile }),
   ...(behind.also === undefined || behind.also.length === 0 ? {} : { baseUrlAlso: behind.also }),
+  ...(behind.either === undefined || behind.either.length === 0 ? {} : { baseUrlEither: behind.either }),
 });
 
 /** The same carried back to a setting behind a hole, from an address read further in. */
-const behindOf = (address: { readonly baseUrlDefault?: string | undefined; readonly baseUrlDefaultFile?: string | undefined; readonly baseUrlAlso?: readonly string[] | undefined }): Pick<SettingBehind, 'otherwise' | 'otherwiseFile' | 'also'> => ({
+const behindOf = (address: {
+  readonly baseUrlDefault?: string | undefined;
+  readonly baseUrlDefaultFile?: string | undefined;
+  readonly baseUrlAlso?: readonly string[] | undefined;
+  readonly baseUrlEither?: readonly string[] | undefined;
+}): Pick<SettingBehind, 'otherwise' | 'otherwiseFile' | 'also' | 'either'> => ({
   ...(address.baseUrlDefault === undefined ? {} : { otherwise: address.baseUrlDefault }),
   ...(address.baseUrlDefault === undefined || address.baseUrlDefaultFile === undefined ? {} : { otherwiseFile: address.baseUrlDefaultFile }),
   ...(address.baseUrlAlso === undefined || address.baseUrlAlso.length === 0 ? {} : { also: address.baseUrlAlso }),
+  ...(address.baseUrlEither === undefined || address.baseUrlEither.length === 0 ? {} : { either: address.baseUrlEither }),
 });
 
 const EMPTY: ApiUrl = {
@@ -268,7 +282,7 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
           key,
           prefix: inner?.value ?? '',
           ...(inner?.guessed === true ? { guessed: true } : {}),
-          ...(inner === null ? {} : behindOf({ baseUrlDefault: inner.fallback, baseUrlDefaultFile: inner.fallbackFile, baseUrlAlso: inner.also })),
+          ...(inner === null ? {} : behindOf({ baseUrlDefault: inner.fallback, baseUrlDefaultFile: inner.fallbackFile, baseUrlAlso: inner.also, baseUrlEither: inner.either })),
         };
       }
     }
@@ -337,7 +351,7 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
     url: baseUrlEnv === undefined ? resolved.value : `\${${baseUrlEnv}}${resolved.value}`,
     path: routePathOf(resolved.value),
     baseUrlEnv: baseUrlEnv ?? null,
-    ...(baseUrlEnv === undefined ? {} : fallbackOf({ otherwise: resolved.fallback, otherwiseFile: resolved.fallbackFile, also: resolved.also })),
+    ...(baseUrlEnv === undefined ? {} : fallbackOf({ otherwise: resolved.fallback, otherwiseFile: resolved.fallbackFile, also: resolved.also, either: resolved.either })),
     host: null,
     via,
     guessed,

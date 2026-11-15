@@ -733,7 +733,6 @@ export {
   remembersParametersOf,
   returnedExpression,
   rootSettingAddress,
-  rootSettingKey,
   splitAtParameter,
   verbAlong,
   verbParameterOf,

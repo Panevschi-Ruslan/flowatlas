@@ -5,11 +5,13 @@ import {
   forwardedFrom,
   isReadable,
   rootConfigAddress,
-  rootConfigKey,
   settingReader,
   splitAtParameterIn,
 } from './trace.js';
 import { analyzeUrl, composeAddress, surenessOf } from './url.js';
+
+/** The settings key a value is rooted at, the key alone. */
+const rootConfigKey = (node: Parameters<typeof rootConfigAddress>[0]): string | null => rootConfigAddress(node)?.key ?? null;
 
 const splitAtParameter = (node: Parameters<typeof splitAtParameterIn>[0]) =>
   splitAtParameterIn(node, settingReader);
