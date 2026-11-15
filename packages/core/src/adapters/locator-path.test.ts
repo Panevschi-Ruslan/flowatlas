@@ -286,6 +286,46 @@ flows.addBulk([{ queueName: 'a' }, { queueName: 'b', children: later }]);`);
     expect(slots(callTo(swapped, 'add'), MADE)).toEqual(['stopped at this.queue']);
   });
 
+  it('reads a static field another module writes once, and none it writes twice (P316)', () => {
+    const MADE: NameLocator = { kind: 'receiver-constructed-path', class: 'Queue', path: [] };
+    const project = new Project({ useInMemoryFileSystem: true });
+    project.createSourceFile('queues.ts', 'export class Queues { static mail: Queue; static audit: Queue; }');
+    project.createSourceFile('setup.ts', `import { Queues } from './queues';
+export const setup = () => { Queues.mail = new Queue('mail'); Queues.audit = new Queue('audit'); };
+export const reset = () => { Queues.audit = new Queue('audit-2'); };`);
+    const user = project.createSourceFile('user.ts', `import { Queues } from './queues';
+export const welcome = () => Queues.mail.add('welcome');
+export const audit = () => Queues.audit.add('entry');`);
+    const [mail, audit] = user.getDescendantsOfKind(SyntaxKind.CallExpression);
+    expect(slots(mail as CallExpression, MADE)).toEqual(["'mail'"]);
+    expect(slots(audit as CallExpression, MADE)).toEqual(['stopped at Queues.audit']);
+  });
+
+  it('reads a field a base class declares, sets or keeps from super(...) in a class extending it (P316)', () => {
+    const MADE: NameLocator = { kind: 'receiver-constructed-path', class: 'Queue', path: [] };
+    const declared = parse(`class Base { protected queue = new Queue('base'); }
+class Mailer extends Base { send(job: string) { return this.queue.add(job); } }`);
+    expect(slots(callTo(declared, 'add'), MADE)).toEqual(["'base'"]);
+    const set = parse(`class Base { protected queue: Queue; constructor() { this.queue = new Queue('set'); } }
+class Mailer extends Base { send(job: string) { return this.queue.add(job); } }`);
+    expect(slots(callTo(set, 'add'), MADE)).toEqual(["'set'"]);
+    const handed = parse(`class Base { constructor(protected queue: Queue) {} }
+class Middle extends Base { constructor(made: Queue) { super(made); } }
+class Mailer extends Middle { constructor() { super(new Queue('handed')); } send(job: string) { return this.queue.add(job); } }`);
+    expect(slots(callTo(handed, 'add'), MADE)).toEqual(["'handed'"]);
+    const kept = parse(`class Base { protected queue: Queue; constructor(queue: Queue) { this.queue = queue; } }
+class Mailer extends Base { constructor() { super(new Queue('kept')); } send(job: string) { return this.queue.add(job); } }`);
+    expect(slots(callTo(kept, 'add'), MADE)).toEqual(["'kept'"]);
+    // Taken by the class itself: whoever builds it decides, as before.
+    const own = parse(`class Base { constructor(protected queue: Queue) {} }
+class Mailer extends Base { send(job: string) { return this.queue.add(job); } }`);
+    expect(slots(callTo(own, 'add'), MADE)).toEqual(['stopped at this.queue']);
+    // Set again in the class extending it: two values.
+    const reset = parse(`class Base { protected queue = new Queue('base'); }
+class Mailer extends Base { open() { this.queue = new Queue('other'); } send(job: string) { return this.queue.add(job); } }`);
+    expect(slots(callTo(reset, 'add'), MADE)).toEqual(['stopped at this.queue']);
+  });
+
   it('reads each record a function may answer, awaited', () => {
     const file = parse(`async function build(kind: boolean) {
   if (kind) return { type: 'a' };

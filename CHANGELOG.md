@@ -1560,6 +1560,21 @@ only one of them moved.
 
 ### Fixed
 
+- **Fields written elsewhere, jobs caught at the queue's call, mapped stages
+  and grants on a resource's own policy (P316).** A static field another
+  module writes once (`Queues.mail = new Queue('mail')` in a setup file) is
+  now the queue it is given wherever it is read, its writes found by every
+  reference the checker knows; a field a base class declares, sets in its
+  constructor or keeps from `super(new Queue('x'))` is read in a class
+  extending it. `queue.add(error.jobName)` written in the catch itself is
+  walked into the catch as a value followed out to a caller is, with the
+  `channel-dynamic` row where a package's error may be the one caught; a
+  package is also named from its installed types where nothing written
+  names it. A Terraform API mapping whose stage the workspace names lists
+  each workspace's stage under `stages`. A CDK grant of a queue, topic,
+  bucket or function to a role imported `mutable: false` from another
+  account is read as the grant the CDK writes into the resource's own
+  policy.
 - **A queue a field is declared with, a path handed in after a host, and a
   Terraform workspace's stage (P308).** A queue kept in a field set where it
   is declared - `private readonly queue = new Queue('emails')`, a field with

@@ -1,7 +1,7 @@
 import { DiMap } from '@flowatlas/core';
 import { Project, SyntaxKind, type CallExpression, type SourceFile } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
-import { forwardedPublish, heldAt, heldAtSite, heldValues, type Held } from './forwarded.js';
+import { forwardedPublish, heldAt, heldAtSite, heldValues, readOffCatch, type Held } from './forwarded.js';
 
 /**
  * Following the values of a publish out of a layer of the repository's own
@@ -569,5 +569,44 @@ class Relay {
       ['type'],
     );
     expect(held.kind === 'unread' ? held.why : held.kind).toMatch(/nothing it throws is written in this repository/);
+  });
+});
+
+describe('a job read off a caught error at the broker call, and a package the checker alone names (P316)', () => {
+  it('tells a value read off what a catch is handed, a name destructured out of it too', () => {
+    const read = new Project({ useInMemoryFileSystem: true }).createSourceFile(
+      'a.ts',
+      `declare function send(job: unknown): void;
+function push(kind: string) {
+  try { send(kind); } catch (error) {
+    send(error.jobName);
+    send(error['job']);
+    const { retryJob } = error;
+    send(retryJob);
+    send(kind);
+  }
+}`,
+    );
+    const sent = read.getDescendantsOfKind(SyntaxKind.CallExpression).filter((each) => each.getExpression().getText() === 'send').slice(1);
+    expect(sent.map((call) => readOffCatch(call.getArguments()[0] as never))).toEqual([true, true, true, false]);
+  });
+
+  it('reads an error of a package whose type only the checker knows, from the installed types', () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    project.createSourceFile('node_modules/push-sdk/package.json', JSON.stringify({ name: 'push-sdk', types: 'index.d.ts' }));
+    project.createSourceFile('node_modules/push-sdk/index.d.ts', 'export declare class PushClient { send(body: unknown): Promise<void> }');
+    project.createSourceFile('client.ts', "import { PushClient } from 'push-sdk';\nexport const makeClient = () => new PushClient();");
+    const read = project.createSourceFile(
+      'relay.ts',
+      `import { makeClient } from './client';
+declare function send(job: unknown): void;
+const client = makeClient();
+async function push() {
+  try { await client.send({}); } catch (error) { send({ type: error.jobType }); }
+}`,
+    );
+    const call = read.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'send') as CallExpression;
+    const held = heldValues(call.getArguments()[0] as never, ['type'], call);
+    expect(held.kind === 'unread' ? held.why : held.kind).toMatch(/error of push-sdk, which client\.send\(\) throws/);
   });
 });

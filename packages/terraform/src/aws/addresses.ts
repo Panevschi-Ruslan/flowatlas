@@ -238,6 +238,23 @@ const workspaceNames = (instance: Instance, name: string): WorkspaceName[] => {
   return [...byName].map(([each, workspace]) => ({ name: each, workspace })).sort((a, b) => a.name.localeCompare(b.name));
 };
 
+/**
+ * The stages a mapping maps its domain onto (P316): the name written, or
+ * the stage resource a reference names, or - where the workspace names it,
+ * in the mapping or in the stage it references - each name it takes, in the
+ * default workspace and in each workspace a map it is looked up in is
+ * written for, as a stage resource's are read (P304, P308).
+ */
+const mappedStages = (instance: Instance, name: string): string[] => {
+  const value = argument(instance, name);
+  const written = nameAt(value);
+  if (written !== undefined) return [written];
+  const target = referenced(value);
+  const namedBy = target === undefined ? undefined : NAMED_BY.get(target.type);
+  const [from, by] = target !== undefined && namedBy !== undefined ? [target, namedBy] : [instance, name];
+  return workspaceNames(from, by).map((each) => each.name);
+};
+
 /** The region the AWS provider a block is created with is configured for, where the files settle it (P294). */
 const regionOf = (instance: Instance): string | undefined => {
   const named = attributeOf(instance.block.body, 'provider')?.source.trim();
@@ -295,9 +312,8 @@ export const addressesOf = (api: Instance, reading: ResourceReading): ApiAddress
       const key = prefix ?? '\0';
       const found = byPrefix.get(key) ?? { prefix, domains: [], stages: [] };
       const domain = nameAt(argument(instance, mapping.domain));
-      const stage = nameAt(argument(instance, mapping.stage));
       if (domain !== undefined) found.domains.push(domain);
-      if (stage !== undefined) found.stages.push(stage);
+      found.stages.push(...mappedStages(instance, mapping.stage));
       byPrefix.set(key, found);
     }
   }

@@ -618,24 +618,193 @@ const constValue = (node: TsNode): TsNode | undefined => {
   return declaration.getInitializer();
 };
 
+/** How many classes up a class's bases are followed. */
+const MOST_BASES = 8;
+
+/** Whether a class is `owner` or extends it, however far up (P316). */
+const derivesFrom = (cls: TsNode | undefined, owner: TsNode): boolean => {
+  let current = cls;
+  for (let depth = 0; depth < MOST_BASES && current !== undefined; depth += 1) {
+    if (current === owner) return true;
+    if (!Node.isClassDeclaration(current) && !Node.isClassExpression(current)) return false;
+    current = current.getBaseClass();
+  }
+  return false;
+};
+
+/** The class member a node is written in: what `this` is there. */
+const memberAround = (node: TsNode): TsNode | undefined =>
+  node.getFirstAncestor(
+    (each) => Node.isMethodDeclaration(each) || Node.isConstructorDeclaration(each) || Node.isPropertyDeclaration(each) || Node.isGetAccessorDeclaration(each) || Node.isSetAccessorDeclaration(each) || Node.isClassStaticBlockDeclaration(each),
+  );
+
 /**
- * Whether `target` names the field `declaration` of its class: `this.queue`
- * in a member of the class (a static member for a static field), or
- * `Reports.queue` through the class itself for a static one (P308).
+ * The class a read of a field is made through: the class whose member says
+ * `this.queue`, or the class named in `Reports.queue`, where it is the
+ * field's class or one extending it (P308, P316). `undefined` where the read
+ * is not of that field of that class.
  */
-const namesField = (target: TsNode, declaration: PropertyDeclaration): boolean => {
-  if (!Node.isPropertyAccessExpression(target) || target.getName() !== declaration.getName()) return false;
-  const owner = declaration.getParent();
+const readerOf = (target: TsNode, name: string, owner: TsNode, isStatic: boolean): TsNode | undefined => {
+  if (!Node.isPropertyAccessExpression(target) || target.getName() !== name) return undefined;
   const object = peeled(target.getExpression());
   if (Node.isThisExpression(object)) {
-    const member = target.getFirstAncestor(
-      (node) => Node.isMethodDeclaration(node) || Node.isConstructorDeclaration(node) || Node.isPropertyDeclaration(node) || Node.isGetAccessorDeclaration(node) || Node.isSetAccessorDeclaration(node) || Node.isClassStaticBlockDeclaration(node),
-    );
-    if (member === undefined || member.getParent() !== owner) return false;
+    const member = memberAround(target);
+    const cls = member?.getParent();
+    if (member === undefined || !derivesFrom(cls, owner)) return undefined;
     const staticMember = Node.isClassStaticBlockDeclaration(member) || (!Node.isConstructorDeclaration(member) && (member as PropertyDeclaration).isStatic());
-    return staticMember === declaration.isStatic();
+    return staticMember === isStatic ? cls : undefined;
   }
-  return declaration.isStatic() && Node.isIdentifier(object) && declarationNamed(object) === owner;
+  if (!isStatic || !Node.isIdentifier(object)) return undefined;
+  const named = declarationNamed(object);
+  return derivesFrom(named, owner) ? named : undefined;
+};
+
+/** How a reference to a field is written to, where it is: given a value, or changed in place. */
+type FieldWrite = { readonly value: TsNode } | 'changed' | undefined;
+
+/**
+ * Whether the access `access` is written to (P286, P308): the left of a
+ * plain `=` gives the field a value; `+=`, `++` or a part of a destructuring
+ * changes it in place, to a value none written is.
+ */
+const writeAt = (access: TsNode): FieldWrite => {
+  let at = access;
+  for (let depth = 0; depth < MOST_LINKS; depth += 1) {
+    const parent = at.getParent();
+    if (parent === undefined || peeled(parent) !== access) break;
+    at = parent;
+  }
+  const parent = at.getParent();
+  if (parent !== undefined && Node.isBinaryExpression(parent) && parent.getLeft() === at) {
+    const operator = parent.getOperatorToken().getKind();
+    if (operator === SyntaxKind.EqualsToken) return { value: parent.getRight() };
+    if (operator >= SyntaxKind.FirstCompoundAssignment && operator <= SyntaxKind.LastCompoundAssignment) return 'changed';
+  }
+  if (
+    parent !== undefined &&
+    (Node.isPrefixUnaryExpression(parent) || Node.isPostfixUnaryExpression(parent)) &&
+    (parent.getOperatorToken() === SyntaxKind.PlusPlusToken || parent.getOperatorToken() === SyntaxKind.MinusMinusToken)
+  ) {
+    return 'changed';
+  }
+  return destructuredInto(at) ? 'changed' : undefined;
+};
+
+/** What a field is given, everywhere it may be: every value, and whether it is also changed in place. */
+interface FieldValues {
+  readonly values: readonly TsNode[];
+  readonly changed: boolean;
+}
+
+/** What each static field met is given, worked out once: finding its writes asks for every reference to it. */
+const STATIC_WRITES = new WeakMap<TsNode, FieldValues>();
+
+/**
+ * Every value a static field is given (P316): its initializer and each write
+ * to it anywhere in the program - through the class in another module, as a
+ * setup file writes `Queues.mail = new Queue('mail')`, or through anything
+ * else the checker says is the same field.
+ */
+const staticWrites = (declaration: PropertyDeclaration): FieldValues => {
+  const known = STATIC_WRITES.get(declaration);
+  if (known !== undefined) return known;
+  const initializer = declaration.getInitializer();
+  const values: TsNode[] = initializer === undefined ? [] : [initializer];
+  let changed = false;
+  const nameNode = declaration.getNameNode();
+  // A field named by a string or a computed key is not looked for: its writes stay unknown.
+  if (!Node.isIdentifier(nameNode) && !Node.isPrivateIdentifier(nameNode)) changed = true;
+  const references = Node.isIdentifier(nameNode) || Node.isPrivateIdentifier(nameNode) ? nameNode.findReferencesAsNodes() : [];
+  for (const reference of references) {
+    if (reference === nameNode) continue;
+    const access = reference.getParent();
+    if (access === undefined || !Node.isPropertyAccessExpression(access) || access.getNameNode() !== reference) continue;
+    const write = writeAt(access);
+    if (write === 'changed') changed = true;
+    else if (write !== undefined) values.push(write.value);
+  }
+  const found = { values, changed };
+  STATIC_WRITES.set(declaration, found);
+  return found;
+};
+
+/**
+ * Every value an instance field is given, read through `reader` (P286,
+ * P308, P316): its initializer, if it has one, and each `this.<field> =` the
+ * members of `reader` and of each class between it and the field's class
+ * write - a base class's own `this.queue = new Queue('x')` read in a class
+ * extending it included.
+ */
+const instanceWrites = (name: string, owner: TsNode, initializer: TsNode | undefined, reader: TsNode): FieldValues => {
+  const values: TsNode[] = initializer === undefined ? [] : [initializer];
+  let changed = false;
+  let current: TsNode | undefined = reader;
+  for (let depth = 0; depth < MOST_BASES && current !== undefined; depth += 1) {
+    if (!Node.isClassDeclaration(current) && !Node.isClassExpression(current)) break;
+    current.forEachDescendant((each) => {
+      if (!Node.isPropertyAccessExpression(each) || readerOf(each, name, owner, false) === undefined) return;
+      const write = writeAt(each);
+      if (write === 'changed') changed = true;
+      else if (write !== undefined) values.push(write.value);
+    });
+    if (current === owner) break;
+    current = current.getBaseClass();
+  }
+  return { values, changed };
+};
+
+/** The `super(...)` call a constructor makes. */
+const superCallIn = (constructor: TsNode): CallExpression | undefined => {
+  let call: CallExpression | undefined;
+  constructor.forEachDescendant((node, traversal) => {
+    if (Node.isCallExpression(node) && node.getExpression().getKind() === SyntaxKind.SuperKeyword) {
+      call = node;
+      traversal.stop();
+    }
+  });
+  return call;
+};
+
+/**
+ * What an instance of `reader` hands its base class's constructor for the
+ * argument `index` of `holder`'s constructor (P316): `super(new Queue('mail'))`
+ * in a class extending the one that keeps the queue, through each class
+ * between - one with no constructor of its own built with its base's, one
+ * that takes the value as its own constructor's argument handing that on.
+ * `undefined` where `reader` itself takes it, which whoever builds it decides.
+ */
+const handedToSuper = (reader: TsNode, holder: TsNode, index: number): TsNode | undefined => {
+  const lineage: ClassDeclaration[] = [];
+  let current: TsNode | undefined = reader;
+  while (current !== undefined && current !== holder && lineage.length < MOST_BASES) {
+    if (!Node.isClassDeclaration(current)) return undefined;
+    lineage.unshift(current);
+    current = current.getBaseClass();
+  }
+  if (current !== holder) return undefined;
+  let at = index;
+  for (const each of lineage) {
+    const [constructor] = each.getConstructors();
+    if (constructor === undefined) continue;
+    const handed = superCallIn(constructor)?.getArguments()[at];
+    if (handed === undefined || Node.isSpreadElement(handed)) return undefined;
+    const kept = declarationNamed(peeled(handed));
+    if (kept !== undefined && Node.isParameterDeclaration(kept) && kept.getParent() === constructor) {
+      at = constructor.getParameters().indexOf(kept);
+      continue;
+    }
+    return handed;
+  }
+  return undefined;
+};
+
+/** The constructor parameter a value is, where it is one: the class it is of and where it is taken. */
+const constructorParameter = (value: TsNode): { cls: TsNode; index: number } | undefined => {
+  const kept = declarationNamed(peeled(value));
+  if (kept === undefined || !Node.isParameterDeclaration(kept)) return undefined;
+  const constructor = kept.getParent();
+  if (!Node.isConstructorDeclaration(constructor)) return undefined;
+  return { cls: constructor.getParent(), index: constructor.getParameters().indexOf(kept) };
 };
 
 /**
@@ -643,46 +812,46 @@ const namesField = (target: TsNode, declaration: PropertyDeclaration): boolean =
  * `this.queue = new Queue(name)` in the method that opens the queue, or the
  * value it is declared with - `private readonly queue = new Queue('emails')`,
  * a static field read as `Reports.queue` included - read wherever the field
- * is used (P286, P308). A field set in two places holds whichever ran last,
- * which nothing here can say.
+ * is used (P286, P308). A static field's writes are read wherever the
+ * program makes them, another module's included; a field a base class
+ * declares is read in a class extending it, and one the base keeps from its
+ * constructor is what the extending class hands `super(...)` (P316). A
+ * field set in two places holds whichever ran last, which nothing here can
+ * say.
  */
 const assignedField = (node: TsNode): TsNode | undefined => {
   if (!Node.isPropertyAccessExpression(node)) return undefined;
   const object = peeled(node.getExpression());
   if (!Node.isThisExpression(object) && !Node.isIdentifier(object)) return undefined;
   const declaration = node.getNameNode().getSymbol()?.getDeclarations()[0];
-  if (declaration === undefined || !Node.isPropertyDeclaration(declaration) || !namesField(node, declaration)) return undefined;
+  if (declaration === undefined) return undefined;
+  const name = node.getName();
+  // `constructor(protected queue: Queue)`: what a class extending it hands `super(...)`.
+  if (Node.isParameterDeclaration(declaration)) {
+    const constructor = declaration.getParent();
+    if (!declaration.isParameterProperty() || !Node.isConstructorDeclaration(constructor)) return undefined;
+    const owner = constructor.getParent();
+    const reader = readerOf(node, name, owner, false);
+    if (reader === undefined || reader === owner) return undefined;
+    const { values, changed } = instanceWrites(name, owner, undefined, reader);
+    if (changed || values.length > 0) return undefined;
+    return handedToSuper(reader, owner, constructor.getParameters().indexOf(declaration));
+  }
+  if (!Node.isPropertyDeclaration(declaration)) return undefined;
   const owner = declaration.getParent();
   if (!Node.isClassDeclaration(owner) && !Node.isClassExpression(owner)) return undefined;
-  const initializer = declaration.getInitializer();
-  const values: TsNode[] = initializer === undefined ? [] : [initializer];
-  let changed = false;
-  // A static field may be written through the class anywhere in its module;
-  // an instance field is written by the class's own members. One changed in
-  // place - `+=`, `++`, a destructuring - holds a value none of these is.
-  (declaration.isStatic() ? declaration.getSourceFile() : owner).forEachDescendant((each) => {
-    if (Node.isBinaryExpression(each)) {
-      const operator = each.getOperatorToken().getKind();
-      const left = peeled(each.getLeft());
-      if (operator === SyntaxKind.EqualsToken && namesField(left, declaration)) values.push(each.getRight());
-      else if (operator >= SyntaxKind.FirstCompoundAssignment && operator <= SyntaxKind.LastCompoundAssignment && namesField(left, declaration)) changed = true;
-      else if (operator === SyntaxKind.EqualsToken && (Node.isArrayLiteralExpression(left) || Node.isObjectLiteralExpression(left))) {
-        left.forEachDescendant((inner) => {
-          if (namesField(inner, declaration)) changed = true;
-        });
-      }
-      return;
-    }
-    if ((Node.isPrefixUnaryExpression(each) || Node.isPostfixUnaryExpression(each)) && (each.getOperatorToken() === SyntaxKind.PlusPlusToken || each.getOperatorToken() === SyntaxKind.MinusMinusToken)) {
-      if (namesField(peeled(each.getOperand()), declaration)) changed = true;
-    }
-  });
+  const reader = readerOf(node, name, owner, declaration.isStatic());
+  if (reader === undefined) return undefined;
+  const { values, changed } = declaration.isStatic() ? staticWrites(declaration) : instanceWrites(name, owner, declaration.getInitializer(), reader);
   const [only, ...more] = values;
   if (changed || only === undefined || more.length > 0) return undefined;
   // A field the constructor keeps a parameter of in is what each instance was
-  // built with, which the reader of a publish follows to whoever built it.
-  const kept = declarationNamed(peeled(only));
-  return kept !== undefined && Node.isParameterDeclaration(kept) && Node.isConstructorDeclaration(kept.getParent()) ? undefined : only;
+  // built with, which the reader of a publish follows to whoever built it -
+  // unless the instance is of a class extending the one whose constructor
+  // keeps it, which hands it to `super(...)` (P316).
+  const kept = constructorParameter(only);
+  if (kept === undefined) return only;
+  return kept.cls === reader ? undefined : handedToSuper(reader, kept.cls, kept.index);
 };
 
 /** Whether a name is written to by a destructuring assignment, `[a, b] = pair`, where it is one part of the left. */

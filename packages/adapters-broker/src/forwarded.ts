@@ -438,6 +438,24 @@ const calledBody = (call: CallExpression): TsNode | undefined => {
   return Node.isIdentifier(callee) ? functionNamed(callee) : undefined;
 };
 
+/**
+ * Whether a value is read off what a `catch` is handed (P316): the caught
+ * value itself, a key down from it - `error.jobName`, `error.response.data.type`,
+ * `error['job']` - or a name destructured out of it.
+ */
+export const readOffCatch = (expression: TsNode, depth = 0): boolean => {
+  let at = unwrapped(expression);
+  for (let step = 0; step < 16 && (Node.isPropertyAccessExpression(at) || Node.isElementAccessExpression(at)); step += 1) at = unwrapped(at.getExpression());
+  if (!Node.isIdentifier(at)) return false;
+  const declaration = declarationOf(at);
+  if (declaration === undefined) return false;
+  if (Node.isCatchClause(declaration.getParent())) return true;
+  if (!Node.isBindingElement(declaration) || depth > 4) return false;
+  const holder = declaration.getFirstAncestorByKind(SyntaxKind.VariableDeclaration);
+  const source = holder?.getInitializer();
+  return source !== undefined && readOffCatch(source, depth + 1);
+};
+
 /** How the reason a value read off a package's error is not read ends (P304). */
 const PACKAGE_ERROR_UNREAD = "and what a package's error carries is not read.";
 
@@ -497,6 +515,54 @@ const packageBehind = (expression: TsNode, depth = 0): string | undefined => {
   return undefined;
 };
 
+/**
+ * The package a declaration file of the program belongs to, by where it is
+ * installed (P316): `push-sdk` for `node_modules/push-sdk/index.d.ts`,
+ * `@scope/name` for a scoped one, the package an `@types` one types. Not the
+ * language's own declarations, nor Node's: what Node's modules throw is a
+ * package's only where an import says so, as `packageImported` reads it.
+ */
+const installedPackageOf = (file: string): string | undefined => {
+  const at = file.lastIndexOf('/node_modules/');
+  if (at < 0) return undefined;
+  const [first, second] = file.slice(at + '/node_modules/'.length).split('/');
+  if (first === undefined || first === 'typescript') return undefined;
+  if (!first.startsWith('@')) return first;
+  if (second === undefined) return undefined;
+  if (first !== '@types') return `${first}/${second}`;
+  if (second === 'node') return undefined;
+  return second.includes('__') ? `@${second.replace('__', '/')}` : second;
+};
+
+/**
+ * The package a call's callee is declared in, as the checker says (P316):
+ * what a value of a package's type is called with - `client.send(...)` of a
+ * client a function of the repository makes - where nothing written names
+ * the package. Read only where the package's types are installed.
+ */
+const packageDeclaring = (callee: TsNode): string | undefined => {
+  const node = unwrapped(callee);
+  const named = Node.isPropertyAccessExpression(node) ? node.getNameNode() : Node.isIdentifier(node) ? node : undefined;
+  let symbol = named?.getSymbol();
+  if (symbol?.isAlias() === true) symbol = symbol.getAliasedSymbol();
+  for (const declaration of symbol?.getDeclarations() ?? []) {
+    const file = declaration.getSourceFile();
+    if (!file.isDeclarationFile()) continue;
+    const module = installedPackageOf(file.getFilePath());
+    if (module !== undefined) return module;
+  }
+  // A member the checker cannot name is still called on a value whose type it may know.
+  const receiver = Node.isPropertyAccessExpression(node) ? node.getExpression() : undefined;
+  const type = receiver?.getType();
+  for (const declaration of [...(type?.getSymbol()?.getDeclarations() ?? []), ...(type?.getAliasSymbol()?.getDeclarations() ?? [])]) {
+    const file = declaration.getSourceFile();
+    if (!file.isDeclarationFile()) continue;
+    const module = installedPackageOf(file.getFilePath());
+    if (module !== undefined) return module;
+  }
+  return undefined;
+};
+
 /** How many functions deep, and how many values, the throws of a try block are read (P298). */
 const MOST_THROWN_DEPTH = 4;
 const MOST_THROWN = 32;
@@ -532,7 +598,7 @@ const thrownBy = (
     if (functionAround(call) !== own || caughtWithin(call, block)) continue;
     const fn = calledBody(call);
     if (fn === undefined) {
-      const module = packageBehind(call.getExpression());
+      const module = packageBehind(call.getExpression()) ?? packageDeclaring(call.getExpression());
       if (module !== undefined) packaged.push({ call, module });
       continue;
     }

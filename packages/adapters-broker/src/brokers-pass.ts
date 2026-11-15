@@ -69,7 +69,7 @@ import {
   type ReceiverEvidence,
 } from './call-site.js';
 import { addressOf, appliesAt, collapsed, messageValue, readAddress, readWritten, type AddressedElement } from './address.js';
-import { forwardedPublish, heldAtSite, heldValues, MOST_STEPS, readOffPackageError, waits, type Held } from './forwarded.js';
+import { forwardedPublish, heldAtSite, heldValues, MOST_STEPS, readOffCatch, readOffPackageError, waits, type Held } from './forwarded.js';
 import { constructsFrom, dispatchRecord, functionBehind, handedAlong, handlerInRecord, namesHandedTo, type HandlerTarget } from './constructed.js';
 import { payloadParameter, typeAtPath } from './payload.js';
 import { isResolved, nameForKind, resolveChannelName, shapeChannelNames, type ChannelResolution } from './channel-name.js';
@@ -220,6 +220,38 @@ const jobsHeld = (held: Held | undefined): { jobName: string | null; jobNames?: 
   const why = held?.kind === 'unread' ? held.why : held?.kind === 'written' ? held.partial : undefined;
   const unread = held === undefined || why === undefined || !readOffPackageError(why) ? {} : { jobUnread: { text: held.expression.getText().slice(0, 60), why } };
   return held?.kind !== 'written' ? { jobName: null, ...unread } : { ...jobsNamed(held.choices ?? [held.expression]), ...unread };
+};
+
+/**
+ * The jobs a call names where one of them is read off what a `catch` is
+ * handed at the broker's call itself (P316): `queue.add(error.jobName)`,
+ * walked into the catch as a value followed out to a caller is (P304) -
+ * each value its try block throws in the repository, and a row where an
+ * error a package throws may be the one caught. `undefined` where none is.
+ */
+/** The jobs a call names, and why one of them is not read where that is so. */
+type CaughtJobs = { jobName: string | null; jobNames?: string[]; jobUnread?: { text: string; why: string } };
+
+const caughtJobs = (
+  expressions: readonly TsNode[],
+  call: CallExpression,
+): CaughtJobs | undefined => {
+  if (!expressions.some(readOffCatch)) return undefined;
+  const read = expressions.map((expression): CaughtJobs => (readOffCatch(expression) ? jobsHeld(heldValues(expression, [], call)) : jobsNamed([expression])));
+  const [one] = read;
+  if (one !== undefined && read.length === 1) return one;
+  const names = new Set<string>();
+  let open = false;
+  for (const each of read) {
+    if (each.jobNames !== undefined) for (const name of each.jobNames) names.add(name);
+    else if (each.jobName !== null) names.add(each.jobName);
+    else open = true;
+  }
+  const jobUnread = read.find((each) => each.jobUnread !== undefined)?.jobUnread;
+  const named = [...names].sort();
+  const [only] = named;
+  const jobs: CaughtJobs = open || only === undefined ? { jobName: null } : named.length === 1 ? { jobName: only } : { jobName: null, jobNames: named };
+  return { ...jobs, ...(jobUnread === undefined ? {} : { jobUnread }) };
 };
 
 /**
@@ -669,12 +701,12 @@ export const extractBrokers = (ctx: PassContext): void => {
     const recorded = recordedRead.length === 0 ? undefined : Object.fromEntries(recordedRead);
 
     const jobNameArgs = jobNamesAt(call, pattern, context);
-    const jobs =
+    const jobs: { jobName: string | null | undefined; jobNames?: string[]; jobUnread?: { text: string; why: string } } =
       from !== undefined
-        ? { jobName: from.jobName, ...(from.jobNames === undefined ? {} : { jobNames: [...from.jobNames] }) }
+        ? { jobName: from.jobName, ...(from.jobNames === undefined ? {} : { jobNames: [...from.jobNames] }), ...(from.jobUnread === undefined ? {} : { jobUnread: from.jobUnread }) }
         : jobNameArgs.length === 0
           ? { jobName: pattern.name === undefined ? undefined : null }
-          : jobsNamed(jobNameArgs);
+          : (caughtJobs(jobNameArgs, call) ?? jobsNamed(jobNameArgs));
     const { jobName } = jobs;
 
     const exchangeArg = from !== undefined || pattern.exchangeArg === undefined ? undefined : args[pattern.exchangeArg];
@@ -880,13 +912,14 @@ export const extractBrokers = (ctx: PassContext): void => {
       }
     }
     // A job followed out to here and not read, or not all of it (P304).
-    if (from?.jobUnread !== undefined && namesJobs(pattern)) {
+    // A job read off a caught error at the broker's call itself, the same (P316).
+    if (jobs.jobUnread !== undefined && namesJobs(pattern)) {
       ctx.report({
         file,
         line,
         reason: 'channel-dynamic',
-        hint: `The job's name: ${from.jobUnread.why} Annotate ${site.named} with the job it adds.`,
-        ...rowAbout(site, from.jobUnread.text),
+        hint: `The job's name: ${jobs.jobUnread.why} Annotate ${site.named} with the job it adds.`,
+        ...rowAbout(site, jobs.jobUnread.text),
       });
     }
     if (channelName === null) return true;

@@ -208,8 +208,51 @@ describe('what a CDK function is granted through a secret value wrapping an acce
     role.addToPrincipalPolicy(new iam.PolicyStatement({ actions: ['sqs:SendMessage'], resources: [restock.queueArn] }));
     restock.grantSendMessages(role);
     const move = new lambda.Function(this, 'Move', { functionName: 'stock-move', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset(path.join(__dirname, '..', 'src')), handler: 'move.handler', role });`);
+    // The statement added to the role is dropped; the grant goes onto the queue's own
+    // policy, the stack's account not being written and so not the role's (P316).
     const grants = grantsOf(deployment);
-    expect(grants).toHaveLength(KINDS.length);
-    expect(grants.every((each) => each.includes('open: the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN'))).toBe(true);
+    expect(grants.filter((each) => !each.includes('open: the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN'))).toEqual([
+      "queue stock-restock grantSendMessages, on the queue's own policy",
+    ]);
+    expect(grants).toHaveLength(KINDS.length + 1);
+  });
+});
+
+describe("a grant to a role imported as one that takes nothing, written into the resource's own policy (P316)", () => {
+  const grantsOf = (deployment: Deployment): string[] =>
+    (deployment.functions[0]?.grants ?? []).filter((each) => each.unread === undefined).map(({ kind, name, by }) => `${kind} ${name ?? '?'} ${by}`);
+  const ROLE = "const role = iam.Role.fromRoleArn(this, 'MoveRole', 'arn:aws:iam::111122223333:role/stock-mover', { mutable: false });";
+  const MOVE = "const move = new lambda.Function(this, 'Move', { functionName: 'stock-move', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset(path.join(__dirname, '..', 'src')), handler: 'move.handler', role });";
+
+  it('reads a grant of a queue, a topic, a bucket and a function the app creates, and none of a table or a queue it imports', () => {
+    const deployment = stack(`${ROLE}
+    ${MOVE}
+    new sqs.Queue(this, 'Restock', { queueName: 'stock-restock' }).grantSendMessages(role);
+    new sns.Topic(this, 'Notices', { topicName: 'stock-notices' }).grantPublish(role);
+    new cdk.aws_s3.Bucket(this, 'Labels', { bucketName: 'stock-labels' }).grantPut(role);
+    new lambda.Function(this, 'Count', { functionName: 'stock-count', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset(path.join(__dirname, '..', 'src')), handler: 'count.handler' }).grantInvoke(role);
+    new cdk.aws_dynamodb.Table(this, 'Ledger', { tableName: 'stock-ledger', partitionKey: { name: 'id', type: cdk.aws_dynamodb.AttributeType.STRING } }).grantWriteData(role);
+    sqs.Queue.fromQueueArn(this, 'Elsewhere', 'arn:aws:sqs:eu-west-1:444455556666:stock-elsewhere').grantSendMessages(role);`);
+    expect(grantsOf(deployment)).toEqual([
+      "queue stock-restock grantSendMessages, on the queue's own policy",
+      "topic stock-notices grantPublish, on the topic's own policy",
+      "bucket stock-labels grantPut, on the bucket's own policy",
+      "function stock-count grantInvoke, on the function's own policy",
+    ]);
+  });
+
+  it("reads none where the resource's stack is in the role's account, nor where its account is read only once the app runs", () => {
+    for (const account of ["'111122223333'", 'process.env.CDK_DEFAULT_ACCOUNT']) {
+      const deployment = stack(`${ROLE}
+    const same = new cdk.Stack(scope, 'Same', { env: { account: ${account}, region: 'eu-west-1' } });
+    new sqs.Queue(same, 'Restock', { queueName: 'stock-restock' }).grantSendMessages(role);
+    ${MOVE}`);
+      expect(grantsOf(deployment)).toEqual([]);
+    }
+    const other = stack(`${ROLE}
+    const away = new cdk.Stack(scope, 'Away', { env: { account: '999988887777', region: 'eu-west-1' } });
+    new sqs.Queue(away, 'Restock', { queueName: 'stock-restock' }).grantSendMessages(role);
+    ${MOVE}`);
+    expect(grantsOf(other)).toEqual(["queue stock-restock grantSendMessages, on the queue's own policy"]);
   });
 });

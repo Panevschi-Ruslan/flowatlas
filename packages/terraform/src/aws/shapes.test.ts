@@ -279,4 +279,31 @@ describe('where an API is served by its own address (P294)', () => {
       ['child', ['default-v2']],
     ]);
   });
+
+  it('opens the stage a mapping names by the workspace, written in the mapping or in the stage it references (P316)', () => {
+    const mapping = (api: string, value: string): string =>
+      `resource "aws_apigatewayv2_api_mapping" "m_${api}" {\n  api_id = aws_apigatewayv2_api.${api}.id\n  domain_name = "${api}.shop.example"\n  stage = ${value}\n}`;
+    const deployment = readFiles({
+      'main.tf': [
+        'provider "aws" {\n  region = "eu-west-1"\n}',
+        'variable "stage_names" {\n  default = {\n    default = "dev"\n    production = "live"\n  }\n}',
+        'locals {\n  stage = lookup(var.stage_names, terraform.workspace)\n}',
+        http('direct'),
+        route('direct'),
+        mapping('direct', 'terraform.workspace'),
+        http('looked'),
+        route('looked'),
+        mapping('looked', 'local.stage'),
+        http('through'),
+        route('through'),
+        stage('through', 'through_ws', 'lookup(var.stage_names, terraform.workspace)'),
+        mapping('through', 'aws_apigatewayv2_stage.through_ws.id'),
+      ].join('\n'),
+    });
+    expect(deployment.routes.map((each) => [each.api, each.meta?.['stages'], each.meta?.['domains']])).toEqual([
+      ['direct', ['default'], ['direct.shop.example']],
+      ['looked', ['dev', 'live'], ['looked.shop.example']],
+      ['through', ['dev', 'live'], ['through.shop.example']],
+    ]);
+  });
 });

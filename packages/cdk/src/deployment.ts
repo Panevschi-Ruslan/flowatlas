@@ -195,6 +195,18 @@ const takesPolicies = (holder: Construct): boolean => {
 };
 
 /**
+ * The kinds whose grant the CDK writes into the resource's own policy where
+ * the grantee is a principal of another account (P316): a queue's, a topic's
+ * and a bucket's resource policy, and a function's permission. A bus, a
+ * table, a stream and a state machine are granted on the principal alone
+ * here.
+ */
+const RESOURCE_POLICY_KINDS: ReadonlySet<DeployedKind> = new Set(['queue', 'topic', 'bucket', 'function']);
+
+/** The account a role is imported from, where its ARN is written out: `111122223333` of `arn:aws:iam::111122223333:role/x` (P316). */
+const importedAccount = (role: Construct): string | undefined => /^arn:[^:]+:iam::(\d{12}):/.exec(role.imported?.arn ?? '')?.[1];
+
+/**
  * What a role the app imports is allowed by the account (P306): every kind
  * left open, by a row naming the role, since the policies the account
  * attaches to it are not in the repository.
@@ -689,7 +701,9 @@ export class AppDeployment {
    * each of its members. A role it is handed that the app imports
    * (`Role.fromRoleArn`) leaves every kind open, by the role, as what the
    * account attaches to it is not in the repository; what the app attaches to
-   * it is read as for any role (P306).
+   * it is read as for any role (P306). One imported `mutable: false` takes
+   * nothing, but a grant the CDK writes into the resource's own policy for it
+   * - its account not the resource's stack's - is read (P316).
    */
   #grants(fn: Construct): DeployedGrant[] {
     const out: DeployedGrant[] = [];
@@ -698,17 +712,27 @@ export class AppDeployment {
     // attaches to it is read, unless it is imported as one that takes nothing (`mutable: false`).
     for (const holder of principals) if (isImportedRole(holder)) out.push(...importedRoleGrants(holder));
     const holders = principals.filter(takesPolicies);
+    const fixed = principals.filter((holder) => !takesPolicies(holder));
     const isFn = (grantee: Value): boolean => principalHolders(grantee).some((holder) => holders.includes(holder));
     for (const construct of this.constructs) {
       for (const [method, calls] of construct.added) {
         if (!WRITE_GRANTS.has(method)) continue;
         for (const call of calls) {
-          if (call.args[0] === undefined || !isFn(call.args[0])) continue;
+          const grantee = call.args[0];
+          if (grantee === undefined) continue;
           const kind = DECLARES.get(construct.type)?.kind;
+          // A grant to a role that takes nothing is still read where the CDK writes it
+          // into the resource's own policy instead: the role is of another account (P316).
+          const by = isFn(grantee)
+            ? method
+            : kind !== undefined && principalHolders(grantee).some((holder) => fixed.includes(holder) && this.#grantedOnResource(holder, construct, kind))
+              ? `${method}, on the ${kind}'s own policy`
+              : undefined;
+          if (by === undefined) continue;
           const found = this.deployedOf(construct);
           if (kind === undefined || found === undefined) continue;
-          if (found instanceof Unread) out.push({ kind, unread: found.text, by: method, ...call.site });
-          else if (found.kind === kind) out.push({ kind, name: found.name, by: method, ...call.site });
+          if (found instanceof Unread) out.push({ kind, unread: found.text, by, ...call.site });
+          else if (found.kind === kind) out.push({ kind, name: found.name, by, ...call.site });
         }
       }
     }
@@ -750,6 +774,31 @@ export class AppDeployment {
       }
     }
     return out;
+  }
+
+  /**
+   * Whether the CDK writes a grant of `resource` to an imported role into the
+   * resource's own policy (P316), as `Grant.addToPrincipalOrResource` does
+   * where the role's account is not the resource's stack's: the role's ARN
+   * names an account, the resource is one the app creates and of a kind with
+   * such a policy, and its stack's account is not that one - not written, or
+   * written as another. A stack whose account is a value read once the app
+   * runs (`process.env.CDK_DEFAULT_ACCOUNT`) may be the role's: not settled,
+   * and not read, the role's open row standing.
+   */
+  #grantedOnResource(role: Construct, resource: Construct, kind: DeployedKind): boolean {
+    const account = importedAccount(role);
+    if (account === undefined || resource.imported !== undefined || !RESOURCE_POLICY_KINDS.has(kind)) return false;
+    const stacks = this.constructs
+      .filter((each) => resource.path.startsWith(`${each.path}/`) && each.props?.get('env') !== undefined)
+      .sort((a, b) => b.path.length - a.path.length);
+    const env = stacks[0]?.props?.get('env');
+    if (env === undefined) return true;
+    if (!(env instanceof ObjectValue)) return false;
+    const stackAccount = env.get('account');
+    if (stackAccount === undefined) return true;
+    const written = textOf(stackAccount);
+    return written !== undefined && written !== account;
   }
 
   /**
