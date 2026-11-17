@@ -221,8 +221,9 @@ A call both halves of a full-stack application read is judged against each half
 and takes the better outcome, so it is right where either half joined the right
 way in. And a GraphQL request whose document could not be read, joined only to
 the endpoint it goes through, is a call of nothing the graph names: for
-`unread-ok` it is right where a row at the site says why the fields are unread,
-and missed where none does, rather than falsely joined.
+`unread-ok` it is right where a row stands at the site, as for a request joined
+to nothing - the row saying why the fields are unread, where the reader wrote
+one - and missed where none does, rather than falsely joined.
 
 The section is a finding, not a gate: a wrong join is a reader to fix, and a
 run that failed on one would get its labels deleted instead.

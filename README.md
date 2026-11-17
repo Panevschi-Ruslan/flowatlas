@@ -712,7 +712,7 @@ recorded with a reason and a location rather than guessed at or dropped:
 | `ambiguous-route-application` | two applications in one service serve it; deployment decides |
 | `ambiguous-route-target` | the request could go to more than one service, and more than one serves it |
 | `dynamic-http-url` | the address is built at run time and cannot be read |
-| `api-client-base-unread` | the base a client or its interceptor puts in front was not read, so its requests keep a hole there |
+| `api-client-base-unread` | the base a client instance is made with, or one its interceptor puts in front, was not read: requests through the interceptor keep a hole there, requests through the instance keep the path they write |
 | `route-handler-unread` | a way in was found and the code behind it was not |
 | `route-mount-unread` | the route was read, the prefix it is mounted under was not |
 | `db-layer-unread` | a class of the project's own looks like a data layer nobody named |
@@ -742,11 +742,13 @@ unresolved with a file, a line and a reason.
 
 A guess also never outranks what is written. A port a framework only assumes,
 one an example environment file offers or one the code writes as a fallback
-places a request only at a service that serves it; a base that is one of
-several settings - each side of a condition nobody settles, each link of an
-`A || B` chain - is asked of every service that may be behind it, and the one
-that serves the request is the join, named as chosen among the others. Where
-two of them serve it, the row names both and neither is chosen.
+places a request only at a service that serves it. A base that is one of
+several settings is asked of the services that may be behind it: each side of
+a condition nobody settles is asked alike, and the one service that serves the
+request is the join, named as chosen among the others; an `A || B` chain keeps
+the join its first setting gives where that service serves the request, and
+asks the later settings' services in order where it does not. Where two of
+them serve it, the row names both and neither is chosen.
 
 ### When reading is not enough
 
@@ -910,8 +912,10 @@ prove, and the path is given so you can run it.
   back is read with the call's arguments, a screen through any lazy loader,
   and a condition nothing settles is one page per branch, each a guess
   (`fixtures/front-end-route-helpers`). A route table written over a list, or
-  read off a registry of the repository's own however its store is kept and
-  viewed, places one page per entry; Angular's guards and resolvers are drawn
+  read off a registry of the repository's own - kept in a class's field, a
+  module's `Map` or list, or a store handed in, and handed back whole, filtered
+  or mapped - places one page per entry it reads, and an entry added in a way
+  not read is counted as not placed; Angular's guards and resolvers are drawn
   from the screen in the order the router runs them; and an address written
   without the locale prefix a middleware or next-intl puts in front lands on
   the page under it, said as a note (`fixtures/front-end-route-branches`,
@@ -1305,8 +1309,10 @@ Known gaps in what it can read:
   exactly that much. Remix and React Router are read for their file routes,
   loads and actions, and for their React components.
 - In a plain page, a wrapper the page runs later (`$(function () {...})`, a
-  `DOMContentLoaded` listener) is not a scope of its own, and a client a
-  CommonJS script `require`s is not read as the client.
+  `DOMContentLoaded` listener) written at the top of a script is not a scope
+  of its own, so neither a request written in it nor one in a function it
+  declares is read; and a client a CommonJS script `require`s is not read as
+  the client.
 - A port decided where reading stops - defaults loaded from a path built at
   run time - is an info `listen-port-unread` row rather than a port guessed.
 - What a framework adds beyond its documented defaults. SvelteKit's `$lib`

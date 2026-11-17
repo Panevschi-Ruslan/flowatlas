@@ -37,10 +37,10 @@ where a way in is served, how sure a join is - are these.
 
 ### Rows
 
-Every row of `unresolved` has a `reason`, a stable kebab-case word, and may
-have a `level` (`action` where absent, `info`, or `nothing`), a `message`, a
-`hint`, the `service`, `file` and `line` it is about, and `sites` where one
-informational row stands for several places. What a row is about is decided
+Every row of `unresolved` has a `reason`, a stable kebab-case word, and the
+`file` and `line` it is about, and may have a `level` (`action` where absent,
+`info`, or `nothing`), a `message`, a `hint`, the `service`, and `sites` where
+one informational row stands for several places. What a row is about is decided
 from its reason in one place, `packages/core/src/model/row-kind.ts`: a **gap**
 (something was not followed, the only kind counted as missed), a **note** (how
 a join was made, with nothing missed) or a **finding** (something about the
@@ -60,12 +60,16 @@ services a request's base may be - a condition's branches nobody settles, or a
 chain of `||` and `??` over settings - where more than one serves the request,
 and the APIs served where an address naming its API by an id is written.
 `base-url-from-files` (a note) says when a request was taken as an API's by
-where the API is served. `local-port-shared` is said only where a port places
-more than one service firmly, or several that only guess at it each serve the
-request. `api-client-base-unread` is said where client instances made with
-different bases are handed to one receiver outside any function. A
-`channel-dynamic` row's hint names the package whose error may be the value a
-`catch` reads the name from.
+where the API is served. `local-port-shared` is said where a port places more
+than one service firmly; where every service heard at the port only guesses at
+it - a framework's default, an example file's offer, a merged configuration, a
+written fallback - it is said only where several of them serve the request, or,
+where none does, where several written fallbacks or several guesses firmer than
+a default are left, and a port only defaults place joins nobody.
+`api-client-base-unread` is said where client instances made with different
+bases are handed to one receiver outside any function. A `channel-dynamic` row
+about a job's name read off what a `catch` is handed names in its hint the
+package whose error may be the one caught.
 
 `link-report.json` counts the rows of the whole project in `totals` as
 `missed`, `sites`, `notes` and `findings`, and a browser's requests that were
@@ -81,12 +85,12 @@ in a browser), beside `url`, `path` and `host`:
 |---|---|
 | `baseUrlEnv` | the setting the address is rooted at |
 | `baseUrlDefault`, `baseUrlDefaultFrom` | what the code falls back to where that setting is not given, and the module the fallback is written in where it is not the request's |
-| `baseUrlAlso` | the settings a chain of `\|\|` or `??` reads after `baseUrlEnv`, in order |
+| `baseUrlAlso` | the settings a chain of `\|\|` or `??` reads after `baseUrlEnv`, in order, or the settings of a condition's other branches |
 | `baseUrlEither` | the settings of a condition's branches nobody settles, the first branch's first, `baseUrlEnv` among them: each as much the base as another |
-| `baseUrlVariables` | for each setting of the chain or the branches that a settings factory builds from a variable of the environment, that variable: `{ "legacy.url": "LEGACY_URL" }` |
+| `baseUrlVariables` | on an `http_out`, for each setting of the chain or the branches that a settings factory builds from a variable of the environment, that variable: `{ "legacy.url": "LEGACY_URL" }` |
 | `baseUrl`, `baseUrlFrom` | the value the base was taken from and where it was found, written by the linker where a join rests on it; `baseUrlFrom` is `its name` where the setting's name decided |
 | `sameCall` | the id of the other half of one call both halves of a full-stack application read, reached from both sides or from neither; the linker joins the two to one target and a reader counts them once |
-| `through` | the function of the repository the request was read through, its node standing at the caller: a wrapper, or a function a client is handed to |
+| `through` | on a `ui_api_call`, the function of the repository the request was read through, its node standing at the caller: a wrapper, or a function a client is handed to |
 | `protoFieldNames` | `proto` on a gRPC call whose client loads its contract keeping the contract's field names (`keepCase`) |
 
 ### Ways in
@@ -125,14 +129,20 @@ An edge's `meta.via` says how a request was joined. On `http_calls`,
 `externalValuePath` (the one service serving the path a setting's value names
 after a host no service is reached at) and `servedAt` (the one API of the
 project served where the address is written, its id not read) are new, each
-`heuristic`; on `hits`, `served-at` is the same guess for a browser's request,
-and `same-call` marks a browser's half that follows where the server's half of
-the same call was joined, as sure as that join, its `via` in `sameCallVia`.
-`servedApi` names the API a `served-at` join took. `chosenAmong` lists the settings a service was chosen
-among by serving the request, as `ORDERS_URL (orders)`, and makes the join
-`heuristic`. `listensAt` says where the service reached at a port on this
-machine listens, with the setting, the file its value is from, the merge it is
-read through or `(its default)`.
+`heuristic` (a join on a value a deployment gives the function making the
+request is `static`, whichever way it was made); on `hits`, `served-at` is the
+same guess for a browser's request, and `same-call` marks a browser's half that
+follows where the server's half of the same call was joined, as sure as that
+join, its `via` in `sameCallVia`. Where the browser's half was joined by an
+annotation or `apiTarget`, the server's half follows it instead: its
+`http_calls` edge says `sameCall`, with the browser's `via` in `sameCallVia`.
+`servedApi` names the API a `served-at` join took. `chosenAmong` lists the
+settings a service was chosen among by serving the request, as
+`ORDERS_URL (orders)`, and makes the join `heuristic`. `listensAt` says where
+the service a request reached by a port listens - on this machine, or on a
+container's or a cluster's network - with the setting and the file its value
+is from, `(its default)`, the merge it is read through, the call the port is
+handed at, and the mapping or the cluster's service it is reached through.
 
 A front end's navigations and route guards are `calls` edges. A navigation's
 `meta` gains `alsoNavigates` (the other addresses written to the same page from
