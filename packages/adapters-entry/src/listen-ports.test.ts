@@ -492,3 +492,54 @@ describe('the loader and framework items P321 left open (P327)', () => {
     ]);
   });
 });
+
+describe('the configuration a command names and the environment a start script sets (P329)', () => {
+  const pkg = (start: string, dependencies: Record<string, string> = {}): string => JSON.stringify({ scripts: { start }, dependencies }, null, 2);
+  const app = { 'app.ts': "export default async function (fastify: any) { fastify.get('/', async () => 'ok'); }" };
+
+  it("reads the port of fastify start's --config file after -p and FASTIFY_PORT and before PORT", () => {
+    const json = { 'fastify.json': '{\n  "logLevel": "info",\n  "port": 4070\n}\n' };
+    expect(listening([fastifyRoutesAdapter], app, { 'package.json': pkg('PORT=4999 fastify start -c fastify.json app.js'), ...json })).toEqual(['fastify.json:3 4070']);
+    expect(listening([fastifyRoutesAdapter], app, { 'package.json': pkg('fastify start --config=./fastify.json app.js'), '.env': 'PORT=4999\n', ...json })).toEqual([
+      'fastify.json:3 4070',
+    ]);
+    expect(listening([fastifyRoutesAdapter], app, { 'package.json': pkg('FASTIFY_PORT=4071 fastify start -c fastify.json app.js'), ...json })).toEqual(['package.json:3 4071']);
+    expect(listening([fastifyRoutesAdapter], app, { 'package.json': pkg('fastify start -c fastify.json app.js'), '.env': 'FASTIFY_PORT=4072\n', ...json })).toEqual([
+      '.env:1 4072[FASTIFY_PORT] from .env',
+    ]);
+    expect(listening([fastifyRoutesAdapter], app, { 'package.json': pkg('fastify start -p 4073 -c fastify.json app.js'), ...json })).toEqual(['package.json:3 4073']);
+    expect(
+      listening([fastifyRoutesAdapter], app, { 'package.json': pkg('fastify start -c fastify.config.js app.js'), 'fastify.config.js': "module.exports = {\n  port: '4074',\n};\n" }),
+    ).toEqual(['fastify.config.js:2 4074']);
+  });
+
+  it('goes on to PORT where the --config file writes no port, and says where it is not read', () => {
+    const rows: string[] = [];
+    expect(
+      listening([fastifyRoutesAdapter], app, { 'package.json': pkg('PORT=4075 fastify start -c fastify.json app.js'), 'fastify.json': '{ "logLevel": "info" }\n' }),
+    ).toEqual(['package.json:3 4075']);
+    expect(listening([fastifyRoutesAdapter], app, { 'package.json': pkg('PORT=4076 fastify start -c missing.json app.js') }, rows)).toEqual(['package.json:3 4076']);
+    expect(rows).toEqual([
+      'listen-port-unread fastify start reads its port from missing.json, the --config file, before PORT; it is not a file of the repository, so the port is read from what comes after it.',
+    ]);
+  });
+
+  it('reads the Strapi environment the start script sets with NODE_ENV', () => {
+    const strapi = { '@strapi/strapi': '^5.0.0' };
+    const files = {
+      'config/server.js': "module.exports = ({ env }) => ({ port: env.int('PORT', 1337) });\n",
+      'config/env/production/server.js': 'module.exports = () => ({\n  port: 4080,\n});\n',
+      'config/env/staging/server.js': 'module.exports = () => ({\n  port: 4081,\n});\n',
+    };
+    const rows: string[] = [];
+    expect(listening([strapiServerAdapter], {}, { 'package.json': pkg('NODE_ENV=staging strapi start', strapi), ...files }, rows)).toEqual([
+      'config/env/staging/server.js:2 4081',
+    ]);
+    expect(rows).toEqual([
+      "framework-environment-differs Strapi's server is read listening on 4081, NODE_ENV=staging's, which the start script sets; for production, config/env/production/server.js moves it to 4080. Which one runs is NODE_ENV's, development where nothing sets it",
+    ]);
+    expect(listening([strapiServerAdapter], {}, { 'package.json': pkg('cross-env NODE_ENV=production strapi start', strapi), ...files })).toEqual([
+      'config/env/production/server.js:2 4080',
+    ]);
+  });
+});

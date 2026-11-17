@@ -562,4 +562,63 @@ describe('a port held where P315 left it unread: callbacks, properties, locals a
       'src/worker.ts:4 4900 handed at src/c.ts:2',
     ]);
   });
+
+  it('reads Object.assign into a held configuration reached through a getter or a parameter, and a key the literal does not declare (P329)', () => {
+    expect(
+      read({
+        '/src/a.ts': 'export {};\nconst config = { port: 3100 };\nfunction current() { return config; }\nObject.assign(current(), { port: 4100 });\napp.listen(config.port);',
+        '/src/b.ts': [
+          'export {};',
+          'const config = { port: 3200 };',
+          'function apply(target: any, overrides: any) { Object.assign(target, overrides); }',
+          'apply(config, { port: 4200 });',
+          'app.listen(config.port);',
+        ].join('\n'),
+        '/src/c.ts': 'export interface Config { port?: number }\nconst config: Config = {};\nconfig.port = 4300;\napp.listen(config.port);',
+        '/src/d.ts': 'export interface Options { port: number }\nconst options: Options = { port: 3400 };\noptions.port = 4400;\napp.listen(options);',
+        '/src/e.ts': 'const settings: Record<string, number> = {};\nexport function configure() { settings.port = 4500; }\napp.listen(settings.port);',
+        '/src/f.ts': 'export interface Config { port?: number }\nconst config: Config = {};\nObject.assign(config, { port: 4600 });\napp.listen(config);',
+      }),
+    ).toEqual(['src/a.ts:5 4100', 'src/b.ts:5 4200 handed at src/b.ts:4', 'src/c.ts:4 4300', 'src/d.ts:4 4400', 'src/e.ts:3 4500', 'src/f.ts:4 4600']);
+  });
+
+  it('reads a field for the instance a parameter or a field holds, resolved to its own new (P329)', () => {
+    const server = ['export class Server {', '  private port: number;', '  constructor(port: number) { this.port = port; }', '  start() { app.listen(this.port); }', '}'].join('\n');
+    expect(
+      read({
+        '/src/server.ts': server,
+        '/src/a.ts': "import { Server } from './server';\nconst first = new Server(4801);\nconst second = new Server(4802);\nfunction boot(server: Server) { server.start(); }\nboot(first);",
+      }),
+    ).toEqual(['src/server.ts:4 4801 handed at src/a.ts:2']);
+    expect(
+      read({
+        '/src/server.ts': server,
+        '/src/a.ts': [
+          "import { Server } from './server';",
+          'class App {',
+          '  private server = new Server(4901);',
+          '  run() { this.server.start(); }',
+          '}',
+          'new Server(4902);',
+          'new App().run();',
+        ].join('\n'),
+      }),
+    ).toEqual(['src/server.ts:4 4901 handed at src/a.ts:3']);
+    expect(
+      read({
+        '/src/server.ts': server,
+        '/src/a.ts': [
+          "import { Server } from './server';",
+          'class App {',
+          '  constructor(private readonly server: Server) {}',
+          '  run() { this.server.start(); }',
+          '}',
+          'const kept = new Server(5001);',
+          'new Server(5002);',
+          'new App(kept).run();',
+        ].join('\n'),
+        '/src/b.ts': "import { Server } from './server';\nfunction boot(server: Server) { server.start(); }\nboot(new Server(5101));\nboot(new Server(5102));",
+      }),
+    ).toEqual(['src/server.ts:4 5001 handed at src/a.ts:6', 'src/server.ts:4 5101 handed at src/b.ts:3', 'src/server.ts:4 5102 handed at src/b.ts:4']);
+  });
 });

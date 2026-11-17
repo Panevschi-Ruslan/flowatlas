@@ -70,6 +70,33 @@ only one of them moved.
   of the method reading it). Repeated `process.loadEnvFile` calls, and
   `loadEnvFile` imported from `node:process`, keep the first file's value, as
   Node sets only what is unset.
+- **Strapi plugins, policies and start environments, Gatsby plugin
+  functions, `fastify start --config`, writes through getters and per
+  instance through parameters (P329).** A Strapi local plugin
+  `config/plugins` enables with a `resolve` path is read for its server's
+  `routes`, as Strapi mounts them: a list at `/<plugin>` on the admin API,
+  routers by name on the API their `type` names (`content-api` under
+  `/api`), under their `prefix` or `/<plugin>`, each handler the plugin's
+  own controller's action; Strapi's built-in admin routes are not the
+  repository's and are not read. A routes file exporting a function, a
+  factory's result or a variable is read. A route's `config.policies` are
+  drawn as guards and its `config.middlewares` as middleware in front of
+  its handler, resolved by uid (`global::`, `api::`, `plugin::`, or a bare
+  name in the route's own API or plugin) to the file that runs; a route an
+  extension pushes into an installed plugin's router is a
+  `route-mount-unread` row. `NODE_ENV` set on the script that runs `strapi
+  start` picks the `config/env/<env>` read. A Gatsby local plugin's
+  `src/api/<plugin name>` functions are ways in at `/api/<plugin
+  name>/...`, the site's own winning at one address, and `gatsby serve
+  --prefix-paths` serves every function under the `pathPrefix` too. `fastify
+  start --config <file>` gives the port its JSON or `module.exports` file
+  writes, after `-p` and `FASTIFY_PORT` and before `PORT`. `Object.assign`
+  into a held configuration reached through a getter's return or a
+  parameter is followed, and a key the literal does not declare, or declares
+  under a type its name resolves to (`const config: Config = {};
+  config.port = 4000`), is held. An instance a parameter, a field or a
+  parameter property holds is resolved to its own `new`, a method called on
+  a parameter read once per caller, so a field is read for that instance.
 - **Jinja, kustomize, sceptre and CDK items (P306).** Namespaces are shared
   back out of macros, set and filter blocks and recursive loops, and
   `loop.changed` compares as Jinja does; kustomize name references for
