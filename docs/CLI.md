@@ -222,12 +222,18 @@ by the compiler; a call by a page name nothing declares - `shop.load()`,
 `window.shop.load()`, `new Store()` for `window.Store = Store` - joins what the
 page was handed under that name, `window.Shop = api` handing `api`'s members as
 `Shop.*`; and `{ list }` or `{ list: list }` in what a module exports or a
-wrapper returns names the function `list`. A getter is a function named by its
-property (`api.items`) and a setter by its property and `=` (`api.items=`), an
-object's or a class's, run where the property is read or written. A function
-the page runs later (`document.addEventListener('DOMContentLoaded', function
-() { … })`, `$(function () { … })`) is no such scope: what it keeps is reached
-only through it (`fixtures/script-members`, `fixtures/script-wrappers`).
+wrapper returns names the function `list` - in every reading, a framework's and
+the server's included, wherever the importer is read. A getter is a function
+named by its property (`api.items`) and a setter by its property and `=`
+(`api.items=`), an object's or a class's, run where the property is read or
+written. A function the page runs once it has loaded -
+`document.addEventListener('DOMContentLoaded', function () { … })`,
+`window.addEventListener('load', …)`, `window.onload = …`, jQuery's `$(function
+() { … })`, `$(document).ready(…)` and `$(window).on('load', …)` - is a scope
+as a wrapper run at once is, and a function of its own besides
+(`onDOMContentLoaded`, `onload`, `onready`), the one its requests are drawn from
+(`fixtures/script-members`, `fixtures/script-wrappers`,
+`fixtures/script-ready-handlers`).
 
 A client with a browser build needs no import or install where a page of the
 repository loads it by a script tag - a folder of the package's name or a file
@@ -236,14 +242,24 @@ where the script calling it declares the global for its linter: its own `/*
 global axios */` comment, or the linter's configuration in its directory or any
 above it up to the repository's root (`globals` in an `.eslintrc*`,
 `languageOptions.globals` in an `eslint.config.*`, `env: { jquery: true }` or
-`...globals.jquery`, a manifest's `eslintConfig`). The global is then the
-installed client: axios, whose `axios.create(...)` makes an instance as an
-import's does; jQuery's and Zepto's `$.ajax` (its address or settings, the verb
-under `method` or `type`, the body `data`), `$.get`, `$.post` and `$.getJSON`;
-superagent's verb methods, with the body handed to `.send` along the chain; ky;
-and the `unfetch` ponyfill, read as `fetch`. A name the repository declares is
-its own, whatever it is called, and a wrapper's parameter is what the wrapper is
-run with: `$` in `(function ($) { … })(jQuery)`.
+`...globals.jquery`, a manifest's `eslintConfig`). The walk up stops at a
+configuration saying `root: true` and at a flat configuration, which does not
+cascade; of a directory's cascading files the first the linter takes is its
+configuration; and an `overrides` entry's globals, or a flat configuration
+object's, count only for the scripts its `files` name, less its `excludedFiles`
+or `ignores` (an override's pattern without a slash names a file anywhere
+below). A CommonJS script's `const axios = require('axios')` is the client's
+import. The global is then the installed client: axios, whose
+`axios.create(...)` makes an instance as an import's does; jQuery's and Zepto's
+`$.ajax` (its address or settings, the verb under `method` or `type`, `data`
+the body - the query of a `GET` or a `HEAD`), `$.get`, `$.post` and
+`$.getJSON` (whose data is the query, a callback in its place neither);
+superagent's verb methods and superagent called as a function (`request('POST',
+url)`, `request(url)` a `GET`), with the body handed to `.send` and the query to
+`.query` along the chain; ky; and the `unfetch` ponyfill, read as `fetch`. A
+name the repository declares is its own, whatever it is called, and a wrapper's
+parameter is what the wrapper is run with: `$` in `(function ($) { … })(jQuery)`
+and in `jQuery(function ($) { … })`.
 
 **A repository that is a server and a browser in one directory declares the
 server.** Set `type` to `nestjs`, `express`, `fastify`, `koa` or `nextjs` — not to

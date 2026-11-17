@@ -88,12 +88,40 @@ const unwrap = (node: TsNode): TsNode => {
   return current;
 };
 
-/** The package a name is imported from, read off its import rather than its type. */
+/** The module a `require('…')` names, through a `.default` taken off it: `require('axios').default`. */
+const requiredModule = (node: TsNode | undefined): string | undefined => {
+  let at = node === undefined ? undefined : unwrap(node);
+  if (at !== undefined && Node.isPropertyAccessExpression(at) && at.getName() === 'default') at = unwrap(at.getExpression());
+  if (at === undefined || !Node.isCallExpression(at)) return undefined;
+  const callee = at.getExpression();
+  const [specifier] = at.getArguments();
+  if (!Node.isIdentifier(callee) || callee.getText() !== 'require' || at.getArguments().length !== 1) return undefined;
+  return specifier !== undefined && (Node.isStringLiteral(specifier) || Node.isNoSubstitutionTemplateLiteral(specifier)) ? specifier.getLiteralValue() : undefined;
+};
+
+/**
+ * The package a name is imported from, read off its import rather than its
+ * type: an `import`, an `import x = require('…')`, or a CommonJS script's
+ * `const axios = require('axios')` (P317), which is the same import spelled
+ * the older way.
+ */
 const importedFrom = (node: TsNode): string | undefined => {
   if (!Node.isIdentifier(node)) return undefined;
   for (const declaration of node.getSymbol()?.getDeclarations() ?? []) {
     const statement = declaration.getFirstAncestorByKind(SyntaxKind.ImportDeclaration);
     if (statement !== undefined) return statement.getModuleSpecifierValue();
+    if (Node.isImportEqualsDeclaration(declaration)) {
+      const reference = declaration.getModuleReference();
+      if (Node.isExternalModuleReference(reference)) {
+        const specifier = reference.getExpression();
+        if (specifier !== undefined && Node.isStringLiteral(specifier)) return specifier.getLiteralValue();
+      }
+    }
+    // The module itself, kept under a name; never a member destructured out of it.
+    if (Node.isVariableDeclaration(declaration) && Node.isIdentifier(declaration.getNameNode())) {
+      const module = requiredModule(declaration.getInitializer());
+      if (module !== undefined) return module;
+    }
   }
   return undefined;
 };
@@ -141,8 +169,21 @@ const wrapperArgument = (name: TsNode): TsNode | undefined => {
     callee = call;
     call = call.getParent();
   }
-  if (call === undefined || !Node.isCallExpression(call) || call.getExpression() !== callee) return undefined;
-  return call.getArguments()[fn.getParameters().indexOf(parameter)];
+  if (call === undefined || !Node.isCallExpression(call)) return undefined;
+  if (call.getExpression() === callee) return call.getArguments()[fn.getParameters().indexOf(parameter)];
+  // jQuery hands a function it runs once the page is ready jQuery itself
+  // (P317): `$` in `jQuery(function ($) { … })` and `jQuery(document).ready(function ($) { … })`.
+  return fn.getParameters().indexOf(parameter) === 0 && call.getArguments()[0] === callee ? readyCallee(call) : undefined;
+};
+
+/** The module a call running a function once the page is ready is made on: `jQuery` of `jQuery(fn)` or `jQuery(document).ready(fn)`. */
+const readyCallee = (call: CallExpression): TsNode | undefined => {
+  const callee = unwrap(call.getExpression());
+  if (Node.isIdentifier(callee)) return call.getArguments().length === 1 ? callee : undefined;
+  if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'ready') return undefined;
+  const selection = unwrap(callee.getExpression());
+  const root = Node.isCallExpression(selection) ? unwrap(selection.getExpression()) : selection;
+  return Node.isIdentifier(root) ? root : undefined;
 };
 
 const NOTHING_LOADED: ReadonlySet<string> = new Set();

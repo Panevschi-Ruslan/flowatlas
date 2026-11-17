@@ -1,5 +1,5 @@
 import { namedFunction, startLineOf, type NamedFunction } from '@flowatlas/core';
-import type { Block, Node as TsNode, ObjectLiteralExpression, SourceFile, Statement } from 'ts-morph';
+import type { ArrowFunction, Block, FunctionExpression, Node as TsNode, ObjectLiteralExpression, SourceFile, Statement } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 
 /**
@@ -31,9 +31,12 @@ import { Node, SyntaxKind } from 'ts-morph';
  * () { ... }()`, `(() => { ... })()`, which is the top of a plain script kept
  * out of the page's globals (P311): its functions, its objects' and
  * prototypes' members, and what it hands the page or returns to the name it is
- * kept under (`var shop = (function () { return { load: load }; })()`). A
- * member of an object built inside any other function is reachable only
- * through that function.
+ * kept under (`var shop = (function () { return { load: load }; })()`). The
+ * same for a wrapper the page runs once it has loaded (P317):
+ * `document.addEventListener('DOMContentLoaded', function () { … })`,
+ * `$(function () { … })`, which is also a function of its own, the way in its
+ * requests are made from. A member of an object built inside any other
+ * function is reachable only through that function.
  */
 
 /** One member function, with what else the checker may hand back for it and whose instances have it. */
@@ -207,6 +210,110 @@ export const wrapperBody = (expression: TsNode): Block | undefined => {
   return Node.isBlock(body) ? body : undefined;
 };
 
+/** The events a page runs a handler on once it has loaded (P317). */
+const LOAD_EVENTS = new Set(['DOMContentLoaded', 'load']);
+
+/** The objects a load event is listened for on. */
+const EVENT_TARGETS = new Set([...PAGE_ROOTS, 'document']);
+
+/**
+ * The names jQuery and the libraries written like it are loaded as, whose
+ * call with a function runs the function once the page is ready (P317).
+ */
+const READY_NAMES = new Set(['$', 'jQuery', 'Zepto']);
+
+/** A function written in place, where a node is one. */
+const inPlace = (node: TsNode | undefined): ArrowFunction | FunctionExpression | undefined => {
+  const value = node === undefined ? undefined : unwrap(node);
+  return value !== undefined && (Node.isArrowFunction(value) || Node.isFunctionExpression(value)) ? value : undefined;
+};
+
+/** A string written as one, where a node is one. */
+const textOf = (node: TsNode | undefined): string | undefined =>
+  node !== undefined && (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node)) ? node.getLiteralValue() : undefined;
+
+/**
+ * Whether a name is one the page holds rather than one the repository
+ * declares: nothing declares it, or only an installed package's typings or a
+ * wrapper's parameter do (`$` in `(function ($) { … })(jQuery)`). What a
+ * script assigns it (`window.onload = …`, which the checker counts among
+ * `window`'s declarations in a script) declares nothing.
+ */
+const isPageHeld = (name: TsNode): boolean =>
+  (name.getSymbol()?.getDeclarations() ?? []).every(
+    (declaration) =>
+      declaration.getSourceFile().isDeclarationFile() ||
+      declaration.getSourceFile().isInNodeModules() ||
+      Node.isParameterDeclaration(declaration) ||
+      Node.isBinaryExpression(declaration) ||
+      Node.isPropertyAccessExpression(declaration) ||
+      Node.isElementAccessExpression(declaration) ||
+      Node.isIdentifier(declaration),
+  );
+
+/** jQuery itself, or what a call of it selects: `$`, `jQuery(document)`, `$(window)`. */
+const isReadyRoot = (node: TsNode): boolean => {
+  const at = unwrap(node);
+  const callee = Node.isCallExpression(at) ? unwrap(at.getExpression()) : at;
+  return Node.isIdentifier(callee) && READY_NAMES.has(callee.getText()) && isPageHeld(callee);
+};
+
+/**
+ * A function a statement hands the page to run later, once it has loaded,
+ * and the name it is kept under (P317): `document.addEventListener(
+ * 'DOMContentLoaded', function () { … })` and `window.addEventListener('load',
+ * …)` (`onDOMContentLoaded`, `onload`), `window.onload = function () { … }`
+ * (`onload`), and jQuery's `$(function () { … })`, `jQuery(function ($) { …
+ * })`, `$(document).ready(…)` and `$(window).on('load', …)` (`onready`,
+ * `onload`). Its body is the top of a script as a wrapper run at once is, and
+ * it is a function of its own, the way in its requests are made from.
+ */
+export const laterWrapper = (expression: TsNode): { fn: ArrowFunction | FunctionExpression; name: string } | undefined => {
+  const at = unwrap(expression);
+  if (Node.isBinaryExpression(at) && at.getOperatorToken().getKind() === SyntaxKind.EqualsToken) {
+    const left = unwrap(at.getLeft());
+    const kept = Node.isIdentifier(left) ? (isPageHeld(left) ? { names: [left.getText()], page: true } : undefined) : keptAt(left);
+    const fn = inPlace(at.getRight());
+    return fn !== undefined && kept?.page === true && kept.names.length === 1 && kept.names[0] === 'onload' ? { fn, name: 'onload' } : undefined;
+  }
+  if (!Node.isCallExpression(at)) return undefined;
+  const callee = unwrap(at.getExpression());
+  const [first, second] = at.getArguments();
+  let receiver: TsNode | undefined;
+  let method: string;
+  if (Node.isIdentifier(callee)) {
+    // `$(function () { … })`, `jQuery(function ($) { … })`.
+    const fn = inPlace(first);
+    if (fn !== undefined && at.getArguments().length === 1 && isReadyRoot(callee)) return { fn, name: 'onready' };
+    if (callee.getText() !== 'addEventListener' || !isPageHeld(callee)) return undefined;
+    method = 'addEventListener';
+  } else if (Node.isPropertyAccessExpression(callee)) {
+    method = callee.getName();
+    receiver = unwrap(callee.getExpression());
+  } else return undefined;
+  if (method === 'addEventListener') {
+    const event = textOf(first);
+    const fn = inPlace(second);
+    const target = receiver === undefined || (Node.isIdentifier(receiver) && EVENT_TARGETS.has(receiver.getText()) && isPageHeld(receiver));
+    return fn !== undefined && target && event !== undefined && LOAD_EVENTS.has(event) ? { fn, name: `on${event}` } : undefined;
+  }
+  if (receiver === undefined || !isReadyRoot(receiver)) return undefined;
+  // `$(document).ready(function () { … })`.
+  if (method === 'ready') {
+    const fn = inPlace(first);
+    return fn === undefined ? undefined : { fn, name: 'onready' };
+  }
+  // `$(window).on('load', function () { … })`.
+  if (method === 'on' || method === 'one') {
+    const event = textOf(first);
+    const fn = inPlace(second);
+    if (fn === undefined || event === undefined) return undefined;
+    if (event === 'ready') return { fn, name: 'onready' };
+    return LOAD_EVENTS.has(event) ? { fn, name: `on${event}` } : undefined;
+  }
+  return undefined;
+};
+
 /** What one scope of a script - its top, or a wrapper's - hands elsewhere by a name. */
 interface Handed {
   /** The name it is handed out under: `Shop` for `window.Shop = api`. */
@@ -266,6 +373,15 @@ const scopeMembers = (statements: readonly Statement[], inner: boolean, returned
     const wrapped = depth < WRAPPER_DEPTH ? wrapperBody(statement.getExpression()) : undefined;
     if (wrapped !== undefined) {
       found.push(...scopeMembers(wrapped.getStatements(), true, undefined, constructors, depth + 1));
+      continue;
+    }
+    // A wrapper the page runs later is a function of its own, and the top of a script too (P317).
+    const later = depth < WRAPPER_DEPTH ? laterWrapper(statement.getExpression()) : undefined;
+    if (later !== undefined) {
+      const { fn, name } = later;
+      const body = fn.getBody();
+      found.push(member({ name, declaration: fn, body, line: startLineOf(fn) }));
+      if (Node.isBlock(body)) found.push(...scopeMembers(body.getStatements(), true, undefined, constructors, depth + 1));
       continue;
     }
     const ofPrototype = prototypeMembers(statement);

@@ -128,6 +128,25 @@ export interface CallShape {
    * the chain (`.set(...)`, `.query(...)`).
    */
   readonly chainedBody?: string;
+  /**
+   * The method called on the call's own result that hands the query (P317):
+   * superagent's `request.get(url).query({ page })`, along the chain as
+   * {@link chainedBody} is.
+   */
+  readonly chainedQuery?: string;
+  /**
+   * The verbs under which what the shape reads as the body is sent as the
+   * query instead (P317): jQuery writes `data` into the address of a `GET`
+   * or a `HEAD` - `$.get(url, data)`, `$.ajax({ type: 'GET', data })`.
+   */
+  readonly queryVerbs?: readonly string[];
+  /**
+   * The shape of the same call handed the address alone (P317), where the
+   * verb is otherwise an argument of its own: superagent's `request(url)`
+   * beside `request('POST', url)`. Chosen where the call has one argument,
+   * or a function after it.
+   */
+  readonly alone?: CallShape;
 }
 
 /**
@@ -339,16 +358,20 @@ export const XHR: RequestClient = {
  * `$.ajax(url, settings)` or `$.ajax(settings)` with the verb under `method` or
  * `type` (`GET` where neither is written) and the body under `data`;
  * `$.get(url, data)` and `$.getJSON(url, data)`, whose data is the query;
- * `$.post(url, data)`, whose data is the body. Each is handed one settings
+ * `$.post(url, data)`, whose data is the body - and `data` is the query of
+ * any `GET` or `HEAD`, `$.ajax({ type: 'GET', data })` included, as jQuery
+ * writes it into the address (P317); a function in its place is the callback. Each is handed one settings
  * object as `$.ajax` is, its verb fixed by its name. Zepto writes the same.
  * Verbs are matched in lower case, as the request pass reads them.
  */
-const JQUERY_SETTINGS: CallShape = { method: null, verbKeys: ['method', 'type'], urlAt: 0, urlKey: 'url', optionsAt: 0, bodyKeys: ['data'] };
+const JQUERY_READS = ['GET', 'HEAD'];
+
+const JQUERY_SETTINGS: CallShape = { method: null, verbKeys: ['method', 'type'], urlAt: 0, urlKey: 'url', optionsAt: 0, bodyKeys: ['data'], queryVerbs: JQUERY_READS };
 
 const JQUERY_VERBS: Readonly<Record<string, CallShape>> = {
-  ajax: { method: null, verbKeys: ['method', 'type'], urlAt: 0, optionsAt: 1, bodyKeys: ['data'], settings: JQUERY_SETTINGS },
-  get: { method: 'GET', urlAt: 0, settings: { ...JQUERY_SETTINGS, method: 'GET' } },
-  getjson: { method: 'GET', urlAt: 0, settings: { ...JQUERY_SETTINGS, method: 'GET' } },
+  ajax: { method: null, verbKeys: ['method', 'type'], urlAt: 0, optionsAt: 1, bodyKeys: ['data'], queryVerbs: JQUERY_READS, settings: JQUERY_SETTINGS },
+  get: { method: 'GET', urlAt: 0, bodyAt: 1, queryVerbs: JQUERY_READS, settings: { ...JQUERY_SETTINGS, method: 'GET' } },
+  getjson: { method: 'GET', urlAt: 0, bodyAt: 1, queryVerbs: JQUERY_READS, settings: { ...JQUERY_SETTINGS, method: 'GET' } },
   post: { method: 'POST', urlAt: 0, bodyAt: 1, settings: { ...JQUERY_SETTINGS, method: 'POST' } },
 };
 
@@ -361,14 +384,27 @@ export const JQUERY: RequestClient = {
 /**
  * superagent (P311): the verb in the name, `request.get(url)`, `request.del(url)`,
  * and the body handed to `.send(body)` on what the call answers, further along
- * the chain.
+ * the chain; the query handed to `.query(params)` the same way (P317).
  */
 const SUPERAGENT_VERBS: Readonly<Record<string, CallShape>> = Object.fromEntries(
   [['get', 'GET'], ['head', 'HEAD'], ['options', 'OPTIONS'], ['delete', 'DELETE'], ['del', 'DELETE'], ['post', 'POST'], ['put', 'PUT'], ['patch', 'PATCH']].map(([verb, method]) => [
     verb,
-    { method, urlAt: 0, ...(['POST', 'PUT', 'PATCH', 'DELETE'].includes(method as string) ? { chainedBody: 'send' } : {}) } as CallShape,
+    { method, urlAt: 0, chainedQuery: 'query', ...(['POST', 'PUT', 'PATCH', 'DELETE'].includes(method as string) ? { chainedBody: 'send' } : {}) } as CallShape,
   ]),
 );
+
+/**
+ * superagent called as a function (P317): `request('POST', url)`, the verb
+ * written as text before the address, or `request(url)`, a `GET`.
+ */
+const SUPERAGENT_CALLED: CallShape = {
+  method: null,
+  methodAt: 0,
+  urlAt: 1,
+  chainedBody: 'send',
+  chainedQuery: 'query',
+  alone: { method: 'GET', urlAt: 0, chainedQuery: 'query' },
+};
 
 export const SUPERAGENT: RequestClient = {
   name: 'superagent',
@@ -529,6 +565,7 @@ export const CLIENT_FACTORIES: readonly ClientFactory[] = [
     pageGlobals: ['superagent'],
     methods: [],
     baseKey: 'url',
+    called: SUPERAGENT_CALLED,
     verbs: SUPERAGENT_VERBS,
   },
   {

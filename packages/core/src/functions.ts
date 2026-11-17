@@ -266,6 +266,35 @@ export const objectMemberFunction = (declaration: TsNode): NamedFunction | undef
 };
 
 /**
+ * The declarations a property of an object names by a name of its own, where
+ * it names one (P311, P317): `{ list }` and `{ list: list }` stand for what
+ * `list` is declared as, wherever the object is - what a module exports
+ * (`module.exports = { list }`, `export default { list }`), what a wrapper
+ * returns. A caller the checker hands such a property, through `require` or an
+ * import, calls the function `list`. Empty for any other declaration, and for
+ * a property holding anything but a name.
+ */
+export const namedByProperty = (declaration: TsNode): TsNode[] => {
+  let symbol;
+  if (Node.isShorthandPropertyAssignment(declaration)) symbol = declaration.getValueSymbol();
+  else if (Node.isPropertyAssignment(declaration)) {
+    const value = declaration.getInitializer();
+    const bare = value === undefined ? undefined : bareValue(value);
+    symbol = bare !== undefined && Node.isIdentifier(bare) ? bare.getSymbol() : undefined;
+  }
+  return symbol === undefined ? [] : [...(symbol.getAliasedSymbol() ?? symbol).getDeclarations()];
+};
+
+/** The function of this repository a property names by its name (`{ list }`), where it names one: see {@link namedByProperty}. */
+export const propertyNamedFunction = (declaration: TsNode): NamedFunction | undefined => {
+  for (const each of namedByProperty(declaration)) {
+    const fn = namedFunction(each);
+    if (fn !== undefined) return fn;
+  }
+  return undefined;
+};
+
+/**
  * The functions a function hands back as the members of one object it writes
  * whole: `const OrdersGateway = () => ({ listOrders() {…}, placeOrder: async () => … })`
  * (P276). Empty where it hands back anything else, or more than one object.

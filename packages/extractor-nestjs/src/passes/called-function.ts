@@ -1,4 +1,4 @@
-import { memberFunction, namedFunction, objectMemberFunction, originOfValue, type NamedFunction } from '@flowatlas/core';
+import { memberFunction, namedFunction, objectMemberFunction, originOfValue, propertyNamedFunction, type NamedFunction } from '@flowatlas/core';
 import type { Identifier, Node as TsNode, PropertyAccessExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
 
@@ -10,7 +10,8 @@ import { Node } from 'ts-morph';
 /** `send()`: the function a bare name stands for, when it is one written here. */
 export const functionNamedBy = (name: Identifier): NamedFunction | undefined => {
   const origin = originOfValue(name);
-  return origin.kind === 'local' ? namedFunction(origin.declaration) : undefined;
+  // `const { list } = require('./orders')` on `module.exports = { list }` (P317).
+  return origin.kind === 'local' ? (namedFunction(origin.declaration) ?? propertyNamedFunction(origin.declaration)) : undefined;
 };
 
 /**
@@ -26,7 +27,8 @@ export const memberFunctionCalled = (access: PropertyAccessExpression): NamedFun
   if (Node.isThisExpression(receiver)) return thisMember(access);
   if (!Node.isIdentifier(receiver)) return undefined;
   const member = originOfValue(access);
-  const declared = member.kind === 'local' ? namedFunction(member.declaration) : undefined;
+  // `orders.list()` on `module.exports = { list }`: the function the property names (P317).
+  const declared = member.kind === 'local' ? (namedFunction(member.declaration) ?? propertyNamedFunction(member.declaration)) : undefined;
   if (declared !== undefined) return declared;
   // `OrdersGateway.listOrders(id)` on `export default OrdersGateway()`, where the
   // factory hands back an object of functions written whole: the checker

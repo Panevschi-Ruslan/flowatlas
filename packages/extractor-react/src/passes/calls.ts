@@ -1,4 +1,4 @@
-import { forEachCall, isLibFile, lineOf, packageOfPath } from '@flowatlas/core';
+import { forEachCall, isLibFile, lineOf, namedByProperty, packageOfPath } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
@@ -70,16 +70,11 @@ const pageName = (node: TsNode): string | undefined => {
 /**
  * The function a declaration the checker hands back names by a name of its
  * own (P311): `{ list }` and `{ list: list }` in what a module exports or a
- * wrapper returns are the function `list`.
+ * wrapper returns are the function `list` - in every reading, wherever the
+ * importer is read (P317).
  */
 const namedBy = (ctx: ReactExtractContext, declaration: TsNode): IndexedFunction | undefined => {
-  const symbol = Node.isShorthandPropertyAssignment(declaration)
-    ? declaration.getValueSymbol()
-    : Node.isPropertyAssignment(declaration)
-      ? declaration.getInitializer()?.getSymbol()
-      : undefined;
-  if (symbol === undefined) return undefined;
-  for (const each of (symbol.getAliasedSymbol() ?? symbol).getDeclarations()) {
+  for (const each of namedByProperty(declaration)) {
     const indexed = ctx.functions.get(each);
     if (indexed !== undefined) return indexed;
   }
@@ -99,11 +94,9 @@ const calledFunctions = (
     const indexed = ctx.functions.get(declaration as never);
     if (indexed !== undefined) return [indexed];
   }
-  if (ctx.functions.readsMembers) {
-    for (const declaration of declarations) {
-      const indexed = namedBy(ctx, declaration);
-      if (indexed !== undefined) return [indexed];
-    }
+  for (const declaration of declarations) {
+    const indexed = namedBy(ctx, declaration);
+    if (indexed !== undefined) return [indexed];
   }
   // A function a script hands the page, called by its name there (P311).
   const onPage = declarations.length === 0 && ctx.functions.hasGlobals ? pageName(callee) : undefined;
@@ -143,9 +136,13 @@ const accessorNames = (ctx: ReactExtractContext): ReadonlySet<string> => {
  * whether it is written: `api.items` and `api.items = v`. A class written
  * inside is its own, as for calls.
  */
-const forEachAccess = (body: TsNode, visit: (access: TsNode & { getName(): string; getExpression(): TsNode }, written: boolean) => void): void => {
+const forEachAccess = (
+  body: TsNode,
+  visit: (access: TsNode & { getName(): string; getExpression(): TsNode }, written: boolean) => void,
+  leaveOut?: ReadonlySet<TsNode>,
+): void => {
   body.forEachDescendant((node, traversal) => {
-    if (Node.isClassDeclaration(node) || Node.isClassExpression(node)) {
+    if (Node.isClassDeclaration(node) || Node.isClassExpression(node) || leaveOut?.has(node) === true) {
       traversal.skip();
       return;
     }
@@ -242,6 +239,8 @@ export const callsPass = definePass('calls', (ctx: ReactExtractContext) => {
   const accessors = ctx.functions.readsMembers ? accessorNames(ctx) : NO_NAMES;
   const readsAccessors = accessors.size > 0 || ctx.functions.hasGlobals;
   for (const indexed of ctx.functions.all()) {
+    // A function kept inside it is walked as its own (P317).
+    const nested = ctx.functions.nestedIn(indexed);
     let created = false;
     const draw = (each: IndexedFunction, at: TsNode): void => {
       // A function that calls itself says nothing about the shape of the
@@ -271,11 +270,15 @@ export const callsPass = definePass('calls', (ctx: ReactExtractContext) => {
         return;
       }
       for (const each of called) draw(each, call);
-    });
+    }, nested);
     if (readsAccessors) {
-      forEachAccess(indexed.fn.body, (access, written) => {
-        for (const each of accessorsRun(ctx, access, written, accessors, heldBy)) draw(each, access);
-      });
+      forEachAccess(
+        indexed.fn.body,
+        (access, written) => {
+          for (const each of accessorsRun(ctx, access, written, accessors, heldBy)) draw(each, access);
+        },
+        nested,
+      );
     }
   }
 });

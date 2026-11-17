@@ -138,11 +138,14 @@ export class ReactFunctionIndex {
   readonly #memberDeclarations = new Set<TsNode>();
   readonly #globals = new Map<string, IndexedFunction>();
   readonly #globalConstructors = new Map<string, readonly TsNode[]>();
+  readonly #nested = new Map<string, Set<TsNode>>();
   readonly #repo: string;
   readonly #repoDir: string;
   /**
    * Whether this is a plain script's reading, whose members are functions
-   * (P310) and whose exports name the functions they hold (P311).
+   * (P310) and whose getters and setters run where a property is read
+   * (P311). Exports naming the functions they hold are read in every
+   * reading (P317).
    */
   readsMembers = false;
 
@@ -240,6 +243,26 @@ export class ReactFunctionIndex {
       if (!members.has(name)) members.set(name, indexed);
       this.#members.set(owner, members);
     }
+  }
+
+  /**
+   * Records a function of this index written inside another one - inside a
+   * wrapper the page runs later (P317) - so a walk of the outer one leaves
+   * the inner one's body to it.
+   */
+  nest(outer: IndexedFunction, inner: IndexedFunction): void {
+    const bodies = this.#nested.get(outer.id) ?? new Set<TsNode>();
+    bodies.add(inner.fn.body);
+    this.#nested.set(outer.id, bodies);
+  }
+
+  /**
+   * The bodies of the functions of this index written inside a function,
+   * which a walk of its body leaves out because they are functions of their
+   * own (P317); nothing where it holds none.
+   */
+  nestedIn(indexed: IndexedFunction): ReadonlySet<TsNode> | undefined {
+    return this.#nested.get(indexed.id);
   }
 
   /** A constructor a script hands the page under a name (P311): `window.Store = Store` inside a wrapper. */
@@ -396,6 +419,15 @@ const defaultExportFunction = (sourceFile: SourceFile, file: string): NamedFunct
  * neither can claim a function the other does not have (R74).
  */
 
+/** The member function of a plain script a declaration is written inside, where it is written inside one. */
+const enclosingMember = (index: ReactFunctionIndex, declaration: TsNode): IndexedFunction | undefined => {
+  for (let at = declaration.getParent(); at !== undefined && !Node.isSourceFile(at); at = at.getParent()) {
+    const found = index.scriptMember(at);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+};
+
 export const buildReactFunctionIndex = (
   options: BuildFunctionIndexOptions,
 ): ReactFunctionIndex => {
@@ -431,6 +463,12 @@ export const buildReactFunctionIndex = (
       const named = index.byId(makeSymbolId(repo, file, fn.name)) === undefined ? fn : { ...fn, name: `${fn.name}@${fn.line}` };
       // A member is neither a screen nor a hook, whatever it is called.
       index.addMember({ ...member, fn: named }, { id: makeSymbolId(repo, file, named.name), name: named.name, role: 'plain', file, line: named.line, fn: named });
+    }
+    // A function kept inside a wrapper the page runs later, itself a function (P317).
+    for (const member of reading.members) {
+      const inner = index.get(member.fn.declaration);
+      const outer = inner === undefined ? undefined : enclosingMember(index, member.fn.declaration);
+      if (inner !== undefined && outer !== undefined) index.nest(outer, inner);
     }
     for (const [name, declarations] of reading.constructors) index.addGlobalConstructor(name, declarations);
   }

@@ -56,6 +56,25 @@ only one of them moved.
   superagent, ky - is the installed client where a page loads it, a
   `/* global */` comment or an ESLint configuration declares it. Astro's dev
   and preview servers listen on 4321 by default.
+- **Plain scripts' handlers, required clients and query data (P317).** A
+  handler the page runs once it has loaded - `DOMContentLoaded`, `load`,
+  `window.onload`, jQuery's `$(fn)`, `$(document).ready(fn)` and
+  `$(window).on('load', fn)` - is a function of its own (`onDOMContentLoaded`,
+  `onload`, `onready`) whose requests are drawn from it, and its inner
+  functions and members are kept as a wrapper run at once keeps them, `$` in
+  `jQuery(function ($) {})` the jQuery the page loads. `const axios =
+  require('axios')` (and jQuery, superagent, ky) is that client's import.
+  superagent called as a function, `request('POST', url)` or `request(url)`,
+  is read, `.query(...)` along its chain is the query, and jQuery's `data`
+  on a `GET` or `HEAD` - `$.get(url, data)`, `$.getJSON(url, data)`,
+  `$.ajax({ type: 'GET', data })` - is the query rather than the body, a
+  callback in its place neither. A module's exports naming a function, `{
+  list }` or `{ list: list }`, join `list` in every reading and in the
+  server's, wherever the importer is read. ESLint's `root: true` and a flat
+  configuration stop the walk up the directories, the first cascading file
+  of a directory is its configuration, and an `overrides` entry's or a flat
+  configuration object's `globals` count only for the files its `files`
+  (less `excludedFiles` or `ignores`) name.
 - **Receivers handed on, bases per caller and values after a host (P312).**
   A request object handed through functions is followed one call at a time
   to where each sends it; instances with different bases handed to one

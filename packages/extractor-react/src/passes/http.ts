@@ -131,11 +131,20 @@ const verbKeyOf = (call: CallExpression, shape: CallShape): string => {
   return keys.find((key) => object?.getProperty(key) !== undefined) ?? keys[0] ?? PLATFORM_FETCH.verbKey;
 };
 
-/** A call's shape, or the shape of the same call handed one settings object in place of an address (P311). */
+/**
+ * A call's shape, or the shape of the same call handed one settings object in
+ * place of an address (P311), or handed the address alone in place of a verb
+ * and an address (P317): `request(url)` beside `request('POST', url)`.
+ */
 const settledShape = (call: CallExpression, shape: CallShape): CallShape => {
-  const [first] = call.getArguments();
-  return shape.settings !== undefined && first !== undefined && Node.isObjectLiteralExpression(first) ? shape.settings : shape;
+  const [first, second] = call.getArguments();
+  if (shape.settings !== undefined && first !== undefined && Node.isObjectLiteralExpression(first)) return shape.settings;
+  const callback = second !== undefined && (Node.isArrowFunction(second) || Node.isFunctionExpression(second));
+  return shape.alone !== undefined && first !== undefined && (second === undefined || callback) ? shape.alone : shape;
 };
+
+/** Whether a node is a function written in place: a callback where a body or a query may also be handed (P317). */
+const isWrittenFunction = (node: TsNode): boolean => Node.isArrowFunction(node) || Node.isFunctionExpression(node);
 
 /** How many calls of a chain are walked along for the one that hands the body. */
 const CHAIN_LIMIT = 8;
@@ -289,7 +298,8 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         : client.callee === undefined
           ? call.getArguments()[shape.bodyAt as number]
           : requestBodyOf(call);
-    if (written === undefined) return { type: null };
+    // `$.get(url, function (items) { … })`: a callback where the data may be.
+    if (written === undefined || isWrittenFunction(written)) return { type: null };
     const keys = writtenKeysOf([written]);
     return {
       type: ctx.types.collectType(written.getType(), written),
@@ -313,6 +323,13 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       if (among.type !== undefined && among.keys === undefined) return among;
       return { ...(among.type === undefined ? {} : { type: among.type }), keys: [...new Set([...inAddress.keys, ...(among.keys ?? [])])].sort(), inAddress: true };
     };
+    // Handed further along the chain, `request.get(url).query({ page })` (P317).
+    if (shape.chainedQuery !== undefined) {
+      const handed = chainedArgument(call, shape.chainedQuery);
+      if (handed === undefined) return withAddress({});
+      const keys = writtenKeysOf([handed]);
+      return withAddress({ type: ctx.types.collectType(handed.getType(), handed), ...(keys === undefined ? {} : { keys }) });
+    }
     if (shape.queryKeys === undefined || shape.optionsAt === undefined) return withAddress({});
     const argument = call.getArguments()[shape.optionsAt];
     if (argument === undefined) return withAddress({});
@@ -557,8 +574,15 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
 
     const verb =
       handedIn !== undefined ? handedIn : found.described !== undefined ? found.described.verb : verbOf(network, shape, request.calls);
-    const body = found.described === undefined ? bodyOf(network, client, shape) : describedBodyOf(found.described);
-    const query = found.described === undefined ? queryOf(network, shape) : {};
+    const sent = found.described === undefined ? bodyOf(network, client, shape) : describedBodyOf(found.described);
+    // What a `GET` is handed as its data is its query, where the client writes it into the address (P317).
+    const asQuery = found.described === undefined && verb !== null && shape.queryVerbs?.includes(verb) === true && sent.type !== null;
+    const body: { type: string | null; keys?: readonly string[] } = asQuery ? { type: null } : sent;
+    const query: { type?: string; keys?: readonly string[]; unread?: true; inAddress?: true } = asQuery
+      ? { type: sent.type as string, ...(sent.keys === undefined ? {} : { keys: sent.keys }) }
+      : found.described === undefined
+        ? queryOf(network, shape)
+        : {};
     const headers = found.described === undefined ? headersOf(network, shape, hooked ?? found.instance) : {};
     // The headers the caller reads off the answer, where the request is made where it is read (P265).
     const answerHeaders = site.call === network && found.described === undefined && answersWithResponse(client, network) ? responseHeadersRead(network, 'promise') : undefined;
@@ -716,7 +740,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    * a class of this repository's own is asked whether it reaches the network, and
    * that question has to be answerable without the answer depending on itself.
    */
-  const describedCallsIn = (body: TsNode): FoundCall[] => {
+  const describedCallsIn = (body: TsNode, leaveOut?: ReadonlySet<TsNode>): FoundCall[] => {
     const found: FoundCall[] = [];
     forEachCall(body, (node) => {
       if (!Node.isCallExpression(node)) return;
@@ -772,7 +796,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       // Known by what it is handed, where neither says (P301).
       const held = heldCallAt(node, receiver, method);
       if (held !== undefined) found.push(held);
-    });
+    }, leaveOut);
     // `$.ajax({ url, type })` is the settings spelling of `$.ajax(url, { type })` (P311).
     return found.map((each) => {
       const shape = settledShape(each.call, each.shape);
@@ -1056,8 +1080,8 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
   };
 
   /** Every request spelling this reader knows, found in one body. */
-  const callsIn = (body: TsNode): FoundCall[] => {
-    const found = describedCallsIn(body);
+  const callsIn = (body: TsNode, leaveOut?: ReadonlySet<TsNode>): FoundCall[] => {
+    const found = describedCallsIn(body, leaveOut);
     const already = new Set(found.map((call) => call.call));
     if (clients.length > 0) for (const call of already) describedAt(call, true);
     forEachCall(body, (node) => {
@@ -1071,7 +1095,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       if (!Node.isPropertyAccessExpression(callee)) return;
       const local = localCallAt(node, callee.getExpression(), callee.getName().toLowerCase());
       if (local !== undefined) found.push(local);
-    });
+    }, leaveOut);
     return found;
   };
 
@@ -1105,7 +1129,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
   };
 
   for (const indexed of [...ctx.functions.all(), ...classMethods(ctx, isClientClass)]) {
-    const found = callsIn(indexed.fn.body);
+    const found = callsIn(indexed.fn.body, ctx.functions.nestedIn(indexed));
     if (found.length === 0) continue;
     ctx.ensureFunctionNode(indexed.fn);
     for (const call of found) {

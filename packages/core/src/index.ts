@@ -591,11 +591,13 @@ export {
   inlineFunction,
   memberFunction,
   moduleFunctions,
+  namedByProperty,
   namedFunction,
   objectMemberFunction,
   onlyHandsBackMembers,
   placedFunction,
   placeOf,
+  propertyNamedFunction,
 } from './functions.js';
 export {
   CARRIES_ON_META,

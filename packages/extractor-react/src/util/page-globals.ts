@@ -1,4 +1,5 @@
 import { basename, dirname, isAbsolute, join } from 'node:path';
+import { compileGlob, readDocument, type Glob } from '@flowatlas/core';
 import type { FileSystemHost, SourceFile } from 'ts-morph';
 import { ts } from 'ts-morph';
 
@@ -105,27 +106,20 @@ export const declaredGlobals = (file: SourceFile): ReadonlySet<string> => {
   declaredIn.set(file, names);
   return names;
 };
+/**
+ * The linter's flat configuration files (P311), of which the nearest one to a
+ * script is the whole of its configuration: a flat configuration does not
+ * cascade, so none above it is read (P317).
+ */
+const FLAT_CONFIGS = ['eslint.config.js', 'eslint.config.mjs', 'eslint.config.cjs', 'eslint.config.ts', 'eslint.config.mts', 'eslint.config.cts'];
 
 /**
- * The linter's configuration files one directory may hold (P311), each read
- * for the globals it declares: the flat configuration, the older cascading
- * one in every spelling, and a manifest's `eslintConfig`.
+ * The older cascading configuration's files in the order the linter takes
+ * them (P311): the first one a directory holds is its configuration, and the
+ * others beside it are not read (P317); a manifest only where it writes an
+ * `eslintConfig`.
  */
-const LINTER_CONFIGS = [
-  'eslint.config.js',
-  'eslint.config.mjs',
-  'eslint.config.cjs',
-  'eslint.config.ts',
-  'eslint.config.mts',
-  'eslint.config.cts',
-  '.eslintrc.js',
-  '.eslintrc.cjs',
-  '.eslintrc.yaml',
-  '.eslintrc.yml',
-  '.eslintrc.json',
-  '.eslintrc',
-  'package.json',
-];
+const CASCADING_CONFIGS = ['.eslintrc.js', '.eslintrc.cjs', '.eslintrc.yaml', '.eslintrc.yml', '.eslintrc.json', '.eslintrc', 'package.json'];
 
 /**
  * The globals an environment the linter is told of declares, of the ones a
@@ -136,10 +130,69 @@ const ENVIRONMENTS: Readonly<Record<string, readonly string[]>> = { jquery: ['$'
 
 const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
 
+/**
+ * The files a part of a configuration is for (P317): an `overrides` entry's
+ * `files` (and `excludedFiles`), a flat configuration's `files` (and
+ * `ignores`), relative to the directory the configuration is in. A pattern
+ * of the cascading configuration without a slash names a file by its name
+ * anywhere below; a flat configuration's names it in that directory alone.
+ */
+interface Scope {
+  readonly files: readonly Glob[];
+  readonly excluded: readonly Glob[];
+  readonly byName: boolean;
+}
+
+/** One set of globals a configuration declares, under every scope it is written in. */
+interface Declared {
+  readonly names: readonly string[];
+  readonly scopes: readonly Scope[];
+}
+
+/** What one configuration file says: the globals it declares, and whether no configuration above it is read. */
+interface LinterConfig {
+  readonly dir: string;
+  readonly declared: readonly Declared[];
+  readonly root: boolean;
+}
+
+/** A pattern with its `{a,b}` alternatives spelled out, the way the linter's glob reads them. */
+const expandBraces = (pattern: string): string[] => {
+  const match = /\{([^{}]*)\}/.exec(pattern);
+  if (match === null) return [pattern];
+  const head = pattern.slice(0, match.index);
+  const tail = pattern.slice(match.index + match[0].length);
+  return (match[1] ?? '').split(',').flatMap((choice) => expandBraces(`${head}${choice}${tail}`));
+};
+
+/** The globs a list of patterns names, `!` patterns left out. */
+const globsOf = (patterns: readonly string[]): Glob[] =>
+  patterns
+    .filter((pattern) => pattern !== '' && !pattern.startsWith('!'))
+    .flatMap(expandBraces)
+    .map((pattern) => compileGlob(pattern.replace(/^\.\//, '')));
+
+/** Whether a path, relative to a configuration's directory, is in a scope. */
+const inScope = (scope: Scope, path: string): boolean => {
+  const name = path.slice(path.lastIndexOf('/') + 1);
+  const matches = (glob: Glob): boolean => glob.test(path) || (scope.byName && !glob.pattern.includes('/') && glob.test(name));
+  return (scope.files.length === 0 || scope.files.some(matches)) && !scope.excluded.some(matches);
+};
+
+/** The strings a value of a configuration names: one string, or a list of them (a flat configuration's nested lists flattened). */
+const stringsOf = (value: unknown): string[] =>
+  typeof value === 'string' ? [value] : Array.isArray(value) ? value.flatMap((each) => stringsOf(each)) : [];
+
 const keyOf = (name: ts.PropertyName): string | undefined =>
   ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNoSubstitutionTemplateLiteral(name) ? name.text : undefined;
 
-/** The globals one `globals` value declares: its keys but those turned `off`, and an environment's spread in. */
+/** The strings an expression written in a configuration names: a string, or a list of them. */
+const writtenStrings = (node: ts.Expression): string[] => {
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return [node.text];
+  return ts.isArrayLiteralExpression(node) ? node.elements.flatMap((each) => writtenStrings(each)) : [];
+};
+
+/** The globals one `globals` value written as a script declares: its keys but those turned `off`, and an environment's spread in. */
 const globalsIn = (value: ts.Expression, names: Set<string>): void => {
   const environment = (expression: ts.Expression): void => {
     if (ts.isPropertyAccessExpression(expression)) for (const name of ENVIRONMENTS[expression.name.text] ?? []) names.add(name);
@@ -159,99 +212,151 @@ const globalsIn = (value: ts.Expression, names: Set<string>): void => {
   }
 };
 
-/** The globals a configuration written as a script or as JSON declares, under `globals` or an `env` turned on, anywhere in it. */
-const scriptConfigGlobals = (text: string, json: boolean, manifest: boolean): Set<string> => {
-  const names = new Set<string>();
+/** A scope an object written in a configuration opens, where it writes `files`. */
+const scopeOf = (files: readonly string[], excluded: readonly string[], flat: boolean): Scope => ({ files: globsOf(files), excluded: globsOf(excluded), byName: !flat });
+
+/**
+ * What a configuration written as a script or as JSON says: the globals under
+ * `globals` or an environment turned on, wherever they are written, each
+ * under the `files` of every object it is written in (P317), and `root`
+ * written outside any of those.
+ */
+const scriptConfig = (text: string, json: boolean, manifest: boolean, flat: boolean): Omit<LinterConfig, 'dir'> => {
+  const declared: Declared[] = [];
+  let root = false;
   const source = ts.createSourceFile('config.js', json ? `(${text})` : text, ts.ScriptTarget.Latest, false, ts.ScriptKind.JS);
-  const visit = (node: ts.Node, within: boolean): void => {
+  const visit = (node: ts.Node, within: boolean, scopes: readonly Scope[]): void => {
+    if (within && ts.isObjectLiteralExpression(node)) {
+      const written = new Map<string, ts.Expression>();
+      for (const property of node.properties) {
+        const key = ts.isPropertyAssignment(property) ? keyOf(property.name) : undefined;
+        if (key !== undefined && ts.isPropertyAssignment(property)) written.set(key, property.initializer);
+      }
+      const files = written.get('files');
+      if (files !== undefined) {
+        const excluded = written.get(flat ? 'ignores' : 'excludedFiles');
+        const scope = scopeOf(writtenStrings(files), excluded === undefined ? [] : writtenStrings(excluded), flat);
+        node.properties.forEach((child) => visit(child, within, [...scopes, scope]));
+        return;
+      }
+    }
     if (ts.isPropertyAssignment(node)) {
       const key = keyOf(node.name);
       // A manifest's own keys are not the linter's; only its `eslintConfig` is.
       if (!within) {
-        visit(node.initializer, key === 'eslintConfig');
+        visit(node.initializer, key === 'eslintConfig', scopes);
         return;
       }
+      if (key === 'root' && scopes.length === 0 && node.initializer.kind === ts.SyntaxKind.TrueKeyword) root = true;
       if (key === 'globals') {
+        const names = new Set<string>();
         globalsIn(node.initializer, names);
+        if (names.size > 0) declared.push({ names: [...names], scopes });
         return;
       }
       if (key === 'env' && ts.isObjectLiteralExpression(node.initializer)) {
-        for (const property of node.initializer.properties) {
-          if (!ts.isPropertyAssignment(property) || property.initializer.kind !== ts.SyntaxKind.TrueKeyword) continue;
-          for (const name of ENVIRONMENTS[keyOf(property.name) ?? ''] ?? []) names.add(name);
-        }
+        const names = node.initializer.properties.flatMap((property) =>
+          ts.isPropertyAssignment(property) && property.initializer.kind === ts.SyntaxKind.TrueKeyword ? (ENVIRONMENTS[keyOf(property.name) ?? ''] ?? []) : [],
+        );
+        if (names.length > 0) declared.push({ names, scopes });
         return;
       }
     }
-    ts.forEachChild(node, (child) => visit(child, within));
+    ts.forEachChild(node, (child) => visit(child, within, scopes));
   };
-  visit(source, !manifest);
-  return names;
+  visit(source, !manifest, []);
+  return { declared, root };
 };
 
-/** The globals a configuration written as YAML declares: the keys under `globals:` and the environments turned on under `env:`. */
-const yamlConfigGlobals = (text: string): Set<string> => {
-  const names = new Set<string>();
-  let block: 'globals' | 'env' | undefined;
-  let indent = -1;
-  for (const line of text.split(/\r?\n/)) {
-    const match = /^(\s*)(?:-\s+)?["']?([\w$-]+)["']?\s*:\s*(.*?)\s*(?:#.*)?$/.exec(line);
-    if (match === null) continue;
-    const depth = (match[1] ?? '').length;
-    const key = match[2] ?? '';
-    const value = (match[3] ?? '').replace(/^["']|["']$/g, '');
-    if (block !== undefined && depth > indent) {
-      if (block === 'globals' && IDENTIFIER.test(key) && value !== 'off') names.add(key);
-      if (block === 'env' && value === 'true') for (const name of ENVIRONMENTS[key] ?? []) names.add(name);
-      continue;
-    }
-    block = (key === 'globals' || key === 'env') && value === '' ? key : undefined;
-    indent = depth;
+/** What a configuration written as YAML says, read as the cascading configuration's keys are: `root`, `globals`, `env` and `overrides`. */
+const yamlConfig = (text: string): Omit<LinterConfig, 'dir'> => {
+  let value: unknown;
+  try {
+    value = readDocument(text, 'yaml').value;
+  } catch {
+    return { declared: [], root: false };
   }
-  return names;
-};
-
-/** The globals the linter's configuration files in one directory declare. */
-const configGlobalsIn = (fs: FileSystemHost, dir: string): ReadonlySet<string> => {
-  const names = new Set<string>();
-  for (const name of LINTER_CONFIGS) {
-    const path = join(dir, name);
-    let text: string;
-    try {
-      if (!fs.fileExistsSync(path)) continue;
-      text = fs.readFileSync(path, 'utf8');
-    } catch {
-      continue;
+  const declared: Declared[] = [];
+  const read = (config: unknown, scopes: readonly Scope[]): void => {
+    if (config === null || typeof config !== 'object' || Array.isArray(config)) return;
+    const record = config as Record<string, unknown>;
+    const globals = record['globals'];
+    if (globals !== null && typeof globals === 'object' && !Array.isArray(globals)) {
+      const names = Object.entries(globals).flatMap(([name, setting]) => (IDENTIFIER.test(name) && setting !== 'off' ? [name] : []));
+      if (names.length > 0) declared.push({ names, scopes });
     }
-    const found = /\.ya?ml$/.test(name)
-      ? yamlConfigGlobals(text)
-      : scriptConfigGlobals(text, name === '.eslintrc' || name.endsWith('.json'), name === 'package.json');
-    for (const each of found) names.add(each);
-  }
-  return names;
+    const env = record['env'];
+    if (env !== null && typeof env === 'object' && !Array.isArray(env)) {
+      const names = Object.entries(env).flatMap(([name, on]) => (on === true ? (ENVIRONMENTS[name] ?? []) : []));
+      if (names.length > 0) declared.push({ names, scopes });
+    }
+    const overrides = record['overrides'];
+    for (const entry of Array.isArray(overrides) ? overrides : []) {
+      if (entry === null || typeof entry !== 'object') continue;
+      const each = entry as Record<string, unknown>;
+      read(each, [...scopes, scopeOf(stringsOf(each['files']), stringsOf(each['excludedFiles']), false)]);
+    }
+  };
+  read(value, []);
+  const root = value !== null && typeof value === 'object' && (value as Record<string, unknown>)['root'] === true;
+  return { declared, root };
 };
 
-const NO_GLOBALS: ReadonlySet<string> = new Set();
+/** The text of a file, where the project's file system holds it. */
+const textAt = (fs: FileSystemHost, path: string): string | undefined => {
+  try {
+    return fs.fileExistsSync(path) ? fs.readFileSync(path, 'utf8') : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * The configuration one directory holds, where it holds one: its flat
+ * configuration, which no configuration above it adds to, or the first of
+ * the cascading configuration's files the linter takes (P317).
+ */
+const configIn = (fs: FileSystemHost, dir: string): LinterConfig | undefined => {
+  for (const name of FLAT_CONFIGS) {
+    const text = textAt(fs, join(dir, name));
+    if (text !== undefined) return { dir, ...scriptConfig(text, false, false, true), root: true };
+  }
+  for (const name of CASCADING_CONFIGS) {
+    const text = textAt(fs, join(dir, name));
+    if (text === undefined) continue;
+    // A manifest is a configuration only where it writes one.
+    if (name === 'package.json' && !/"eslintConfig"\s*:/.test(text)) continue;
+    const read = /\.ya?ml$/.test(name) ? yamlConfig(text) : scriptConfig(text, name === '.eslintrc' || name.endsWith('.json'), name === 'package.json', false);
+    return { dir, ...read };
+  }
+  return undefined;
+};
+
+const NO_CONFIGS: readonly LinterConfig[] = [];
 
 /**
  * The globals a script declares for its linter (P311): its own `/* global *\/`
  * comment, and what the linter's configuration declares - `globals` in an
  * `.eslintrc*`, `languageOptions.globals` in an `eslint.config.*`, an
  * environment turned on - in the script's directory or any above it up to the
- * repository's root. Read through the project's own file system, lazily and
- * once per directory.
+ * repository's root. The walk up stops at a configuration saying `root: true`
+ * and at a flat configuration, and a part of one written for some files - an
+ * `overrides` entry, a flat configuration's object with `files` - declares its
+ * globals for the files it names alone (P317). Read through the project's own
+ * file system, lazily and once per directory.
  */
 export const linterGlobals = (fs: FileSystemHost, repoDir: string): ((file: SourceFile) => ReadonlySet<string>) => {
   const root = repoDir.length > 1 ? repoDir.replace(/[\\/]+$/, '') : repoDir;
   const inside = (dir: string): boolean => dir === root || dir.startsWith(root.endsWith('/') ? root : `${root}/`);
-  const byDirectory = new Map<string, ReadonlySet<string>>();
-  const configured = (dir: string): ReadonlySet<string> => {
+  const byDirectory = new Map<string, readonly LinterConfig[]>();
+  // The configurations a script in a directory is read under, nearest first.
+  const configured = (dir: string): readonly LinterConfig[] => {
     const known = byDirectory.get(dir);
     if (known !== undefined) return known;
-    const own = configGlobalsIn(fs, dir);
+    const own = configIn(fs, dir);
     const parent = dirname(dir);
-    const above = dir === root || parent === dir || !inside(parent) ? NO_GLOBALS : configured(parent);
-    const all = own.size === 0 ? above : above.size === 0 ? own : new Set([...above, ...own]);
+    const above = own?.root === true || dir === root || parent === dir || !inside(parent) ? NO_CONFIGS : configured(parent);
+    const all = own === undefined ? above : [own, ...above];
     byDirectory.set(dir, all);
     return all;
   };
@@ -260,9 +365,16 @@ export const linterGlobals = (fs: FileSystemHost, repoDir: string): ((file: Sour
     const known = byFile.get(file);
     if (known !== undefined) return known;
     const comment = declaredGlobals(file);
-    const dir = dirname(file.getFilePath());
-    const config = inside(dir) ? configured(dir) : NO_GLOBALS;
-    const all = config.size === 0 ? comment : comment.size === 0 ? config : new Set([...comment, ...config]);
+    const path = file.getFilePath();
+    const dir = dirname(path);
+    const names = new Set(comment);
+    for (const config of inside(dir) ? configured(dir) : NO_CONFIGS) {
+      const relative = path.slice(config.dir === '/' ? 1 : config.dir.length + 1);
+      for (const declared of config.declared) {
+        if (declared.scopes.every((scope) => inScope(scope, relative))) for (const name of declared.names) names.add(name);
+      }
+    }
+    const all = names.size === comment.size ? comment : names;
     byFile.set(file, all);
     return all;
   };

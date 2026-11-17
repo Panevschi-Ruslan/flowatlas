@@ -509,6 +509,127 @@ describe('plain browser code (P284)', () => {
     expect(urls(read({ '/js/shop.js': script }, { '/package.json': '{ "jest": { "globals": { "axios": true } } }' }))).toEqual([]);
   });
 
+  it('reads a wrapper the page runs once it has loaded as a function of its own, and its functions and members as a wrapper run at once keeps them (P317)', () => {
+    const graph = read({
+      '/js/page.js': [
+        '/* global $, jQuery */',
+        "document.addEventListener('DOMContentLoaded', function () {",
+        "  fetch('https://api.example.test/items');",
+        "  function refresh() { return fetch('https://api.example.test/refresh'); }",
+        "  const panel = { open() { return fetch('https://api.example.test/panel'); } };",
+        '  refresh();',
+        '  panel.open();',
+        '});',
+        "window.addEventListener('load', () => { fetch('https://api.example.test/load'); });",
+        "$(function () { fetch('https://api.example.test/ready'); });",
+        "$(document).ready(function () { fetch('https://api.example.test/ready'); });",
+        "jQuery(function ($) { $.getJSON('https://api.example.test/json'); });",
+        "window.onload = function () { fetch('https://api.example.test/onload'); };",
+        "$(window).on('load', function () { fetch('https://api.example.test/shown'); });",
+        // Not run once the page has loaded: a click, and a `$` the script declares.
+        "document.addEventListener('click', function () { fetch('https://api.example.test/click'); });",
+      ].join('\n'),
+      '/js/other.js': "export function $(fn) { return fn; }\n$(function () { fetch('https://api.example.test/mine'); });\n",
+    });
+    const { found, calls } = drawn(graph);
+    expect(found).toEqual([
+      'onDOMContentLoaded GET /items',
+      'onload GET /load',
+      'onload@13 GET /onload',
+      'onload@14 GET /shown',
+      'onready GET /ready',
+      'onready@11 GET /ready',
+      'onready@12 GET /json',
+      'panel.open GET /panel',
+      'refresh GET /refresh',
+    ]);
+    expect(calls).toEqual(['onDOMContentLoaded -> panel.open', 'onDOMContentLoaded -> refresh']);
+  });
+
+  it('reads a client a CommonJS script requires as the client it imports (P317)', () => {
+    const urls = (graph: RepoGraph): string[] => requests(graph).map((node) => `${node.meta?.['client']} ${node.meta?.['method']} ${node.meta?.['url']}`).sort();
+    const graph = read({
+      '/js/api.js': [
+        "const axios = require('axios');",
+        "const $ = require('jquery');",
+        "const request = require('superagent');",
+        "const ky = require('ky').default;",
+        "const { get } = require('axios');",
+        "function items() { return axios.get('https://api.example.test/items'); }",
+        "function more() { return $.get('https://api.example.test/more'); }",
+        "function place(order) { return request.post('https://api.example.test/orders').send(order); }",
+        "function stock() { return ky.get('https://api.example.test/stock'); }",
+        // A member taken out of the module is not the module.
+        "function other() { return get.call(null, 'https://api.example.test/other'); }",
+      ].join('\n'),
+    });
+    expect(urls(graph)).toEqual([
+      'axios GET https://api.example.test/items',
+      'jquery GET https://api.example.test/more',
+      'ky GET https://api.example.test/stock',
+      'superagent POST https://api.example.test/orders',
+    ]);
+  });
+
+  it("reads superagent called as a function and its query, and jQuery's data on a GET as the query (P317)", () => {
+    const read1 = (script: string): GraphNode[] => requests(read({ '/js/api.js': `/* global $, superagent */\n${script}` }));
+    const row = (node: GraphNode): unknown[] => [node.meta?.['method'], node.meta?.['path'], node.meta?.['bodyKeys'], node.meta?.['queryKeys']];
+    const found = read1(
+      [
+        "function a() { return superagent('GET', 'https://api.example.test/a').query({ page: 1 }); }",
+        "function b() { return superagent('post', 'https://api.example.test/b').set('Accept', 'json').send({ id: 1 }); }",
+        "function c() { return superagent('https://api.example.test/c'); }",
+        "function d() { return superagent.get('https://api.example.test/d').query({ q: 'x', page: 2 }); }",
+        "function e() { return $.get('https://api.example.test/e', { page: 1 }); }",
+        "function f() { return $.get('https://api.example.test/f', function (items) { return items; }); }",
+        "function g() { return $.ajax({ url: 'https://api.example.test/g', type: 'GET', data: { page: 1 } }); }",
+        "function h() { return $.getJSON('https://api.example.test/h', { page: 1 }); }",
+        "function i() { return $.ajax({ url: 'https://api.example.test/i', type: 'POST', data: { item: 1 } }); }",
+        "function j() { return $.ajax('https://api.example.test/j', { data: { page: 1 } }); }",
+      ].join('\n'),
+    );
+    expect(found.map(row).sort((x, y) => String(x[1]).localeCompare(String(y[1])))).toEqual([
+      ['GET', '/a', undefined, ['page']],
+      ['POST', '/b', ['id'], undefined],
+      ['GET', '/c', undefined, undefined],
+      ['GET', '/d', undefined, ['page', 'q']],
+      ['GET', '/e', undefined, ['page']],
+      ['GET', '/f', undefined, undefined],
+      ['GET', '/g', undefined, ['page']],
+      ['GET', '/h', undefined, ['page']],
+      ['POST', '/i', ['item'], undefined],
+      ['GET', '/j', undefined, ['page']],
+    ]);
+    expect(found.find((node) => node.meta?.['path'] === '/e')?.meta?.['bodyType']).toBeNull();
+  });
+
+  it("counts a linter's globals only where its configuration reaches the script: root stops the walk, overrides and a flat configuration's files name the scripts (P317)", () => {
+    const script = "function items() { return axios.get('https://api.example.test/items'); }\n";
+    const urls = (files: Record<string, string>, pages: Record<string, string>): unknown[] => requests(read(files, pages)).map((node) => node.meta?.['url']);
+    const items = ['https://api.example.test/items'];
+    const declares = '{ "globals": { "axios": "readonly" } }';
+    // `root: true` below stops the walk before the one above.
+    expect(urls({ '/web/js/shop.js': script }, { '/.eslintrc.json': declares, '/web/.eslintrc.json': '{ "root": true }' })).toEqual([]);
+    expect(urls({ '/web/js/shop.js': script }, { '/.eslintrc.json': declares, '/web/.eslintrc.json': '{ "env": { "browser": true } }' })).toEqual(items);
+    expect(urls({ '/web/js/shop.js': script }, { '/.eslintrc.json': declares, '/web/.eslintrc.yml': 'root: true\n' })).toEqual([]);
+    // An override's globals count for the files it names: a name alone anywhere below, a path from the configuration's directory.
+    const override = (files: string, excluded = '[]'): string => `{ "overrides": [{ "files": ${files}, "excludedFiles": ${excluded}, "globals": { "axios": "readonly" } }] }`;
+    expect(urls({ '/js/shop.js': script }, { '/.eslintrc.json': override('["*.js"]') })).toEqual(items);
+    expect(urls({ '/js/shop.js': script }, { '/.eslintrc.json': override('["js/**/*.{js,mjs}"]') })).toEqual(items);
+    expect(urls({ '/js/shop.js': script }, { '/.eslintrc.json': override('["test/**"]') })).toEqual([]);
+    expect(urls({ '/js/shop.js': script }, { '/.eslintrc.json': override('["*.js"]', '["shop.js"]') })).toEqual([]);
+    expect(urls({ '/js/shop.js': script }, { '/.eslintrc.yaml': 'overrides:\n  - files: ["js/*.js"]\n    globals:\n      axios: readonly\n' })).toEqual(items);
+    expect(urls({ '/js/shop.js': script }, { '/.eslintrc.yaml': 'overrides:\n  - files:\n      - "test/*.js"\n    globals:\n      axios: readonly\n' })).toEqual([]);
+    // A flat configuration's object with `files` names the scripts from its own directory, `ignores` taking some out; and none above it is read.
+    const flat = (files: string, ignores = '[]'): string => `export default [{ files: ${files}, ignores: ${ignores}, languageOptions: { globals: { axios: 'readonly' } } }];\n`;
+    expect(urls({ '/js/shop.js': script }, { '/eslint.config.js': flat("['js/**/*.js']") })).toEqual(items);
+    expect(urls({ '/js/shop.js': script }, { '/eslint.config.js': flat("['*.js']") })).toEqual([]);
+    expect(urls({ '/js/shop.js': script }, { '/eslint.config.js': flat("['**/*.js']", "['js/shop.js']") })).toEqual([]);
+    expect(urls({ '/js/shop.js': script }, { '/.eslintrc.json': declares, '/js/eslint.config.mjs': 'export default [];\n' })).toEqual([]);
+    // Of two cascading configurations in one directory, the linter takes the first.
+    expect(urls({ '/js/shop.js': script }, { '/.eslintrc.js': 'module.exports = {};\n', '/.eslintrc.json': declares })).toEqual([]);
+  });
+
   it('leaves a verb it cannot read as unread', () => {
     const graph = read({ '/js/any.js': "function send(verb) {\n  const request = new XMLHttpRequest();\n  request.open(verb, 'https://api.example.test/orders');\n}\n" });
     expect(requests(graph).map((node) => node.meta?.['method'])).toEqual([null]);

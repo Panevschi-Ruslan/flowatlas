@@ -1140,12 +1140,15 @@ prove, and the path is given so you can run it.
   scripts it loads, and nothing that builds them, is a front end of the type
   `browser`, which `init` and `link` offer. Its classic scripts share their
   globals; an object's methods, a prototype's members, a getter or a setter,
-  and what a wrapper run at once hands to `window` or `module.exports` are
-  functions of their own, joined where the page calls them; and jQuery's
-  `$.ajax` and its kin, superagent, ky, unfetch and axios are the installed
-  client where a script tag loads them, a comment declares them or the ESLint
-  configuration lists them as globals (`fixtures/browser-gateway-address`,
-  `fixtures/script-members`, `fixtures/script-wrappers`).
+  what a wrapper run at once hands to `window` or `module.exports`, and a
+  handler the page runs once it has loaded (`DOMContentLoaded`, jQuery's
+  `$(fn)`) are functions of their own, joined where the page calls them; and
+  jQuery's `$.ajax` and its kin, superagent, ky, unfetch and axios are the
+  installed client where a script tag loads them, a CommonJS script requires
+  them, a comment declares them or the ESLint configuration lists them as
+  globals for that script (`fixtures/browser-gateway-address`,
+  `fixtures/script-members`, `fixtures/script-wrappers`,
+  `fixtures/script-ready-handlers`).
 - **Bots.** Telegraf, both the decorator style and the imperative one, and a
   table of handlers the project keeps itself (`fixtures/nest-telegraf`,
   `fixtures/bot-registry`).
@@ -1308,11 +1311,10 @@ Known gaps in what it can read:
   repository and which framework, and the graph is smaller than the project by
   exactly that much. Remix and React Router are read for their file routes,
   loads and actions, and for their React components.
-- In a plain page, a wrapper the page runs later (`$(function () {...})`, a
-  `DOMContentLoaded` listener) written at the top of a script is not a scope
-  of its own, so neither a request written in it nor one in a function it
-  declares is read; and a client a CommonJS script `require`s is not read as
-  the client.
+- In a plain page, a request written at the top of a wrapper the page runs
+  at once, outside any function in it, is not read; nor a handler for a load
+  event other than `DOMContentLoaded`, `load` or jQuery's ready
+  (`pageshow`, `readystatechange`, jQuery 1's `$(window).load(fn)`).
 - A port decided where reading stops - defaults loaded from a path built at
   run time - is an info `listen-port-unread` row rather than a port guessed.
 - What a framework adds beyond its documented defaults. SvelteKit's `$lib`
