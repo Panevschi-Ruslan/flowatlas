@@ -35,6 +35,12 @@ export interface CauseSample {
   line: number;
   symbol?: string;
   service?: string;
+  /**
+   * What this place's row says that the folded row cannot say for all of
+   * them (P338): the keys of its `meta` the rows folded together write
+   * differently - a navigation's own prefix. Written only where there is one.
+   */
+  meta?: Record<string, unknown>;
 }
 
 /** The places one cause, into one package, stands for within a row. */
@@ -93,7 +99,12 @@ const samplesOf = (value: unknown): CauseSample[] =>
     ? value.flatMap((item): CauseSample[] => {
         const sample = item as Partial<CauseSample> | null;
         if (sample === null || typeof sample.file !== 'string' || typeof sample.line !== 'number') return [];
-        return [{ file: sample.file, line: sample.line, ...(typeof sample.symbol === 'string' ? { symbol: sample.symbol } : {}) }];
+        return [{
+          file: sample.file,
+          line: sample.line,
+          ...(typeof sample.symbol === 'string' ? { symbol: sample.symbol } : {}),
+          ...(sample.meta !== null && typeof sample.meta === 'object' ? { meta: sample.meta } : {}),
+        }];
       })
     : [];
 
@@ -144,6 +155,8 @@ const partKey = (part: { cause: string; package?: string }): string => `${part.c
  */
 export class CauseTally {
   readonly #parts = new Map<string, CausePart>();
+  /** The meta of the row each sample was taken from, for what the fold cannot say for all (P338). */
+  readonly #metaOf = new Map<CauseSample, Record<string, unknown>>();
   #recorded = false;
 
   add(row: Unresolved): void {
@@ -154,7 +167,9 @@ export class CauseTally {
     this.#parts.set(key, part);
     part.sites += row.sites ?? 1;
     if (part.samples.length < CAUSE_SAMPLES) {
-      part.samples.push({ file: row.file, line: row.line, ...(row.symbol === undefined ? {} : { symbol: row.symbol }) });
+      const sample: CauseSample = { file: row.file, line: row.line, ...(row.symbol === undefined ? {} : { symbol: row.symbol }) };
+      part.samples.push(sample);
+      if (row.meta !== undefined) this.#metaOf.set(sample, row.meta);
     } else if (row.file !== '' && !part.samples.some((sample) => sample.file === row.file) && !(part.files ?? []).includes(row.file)) {
       // A place past the samples is still in a file somebody reads by (P255).
       part.files = [...(part.files ?? []), row.file];
@@ -166,9 +181,20 @@ export class CauseTally {
     return this.#recorded;
   }
 
-  /** The parts, most places first, then by cause and package; the other files in name order. */
-  parts(): CausePart[] {
-    return [...this.#parts.values()].map((part) => (part.files === undefined ? part : { ...part, files: [...part.files].sort(cmp) })).sort(
+  /**
+   * The parts, most places first, then by cause and package; the other files
+   * in name order. Each sample carries its own row's value of every key
+   * `own` names - those the rows folded together write differently (P338).
+   */
+  parts(own: ReadonlySet<string> = new Set()): CausePart[] {
+    const withOwn = (sample: CauseSample): CauseSample => {
+      const meta = this.#metaOf.get(sample);
+      const kept = meta === undefined ? [] : [...own].filter((key) => meta[key] !== undefined).map((key) => [key, meta[key]] as const);
+      return kept.length === 0 ? sample : { ...sample, meta: Object.fromEntries(kept) };
+    };
+    return [...this.#parts.values()]
+      .map((part) => ({ ...part, samples: part.samples.map(withOwn) }))
+      .map((part) => (part.files === undefined ? part : { ...part, files: [...part.files].sort(cmp) })).sort(
       (a, b) => b.sites - a.sites || cmp(a.cause, b.cause) || cmp(a.package ?? '', b.package ?? ''),
     );
   }

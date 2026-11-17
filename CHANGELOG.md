@@ -354,6 +354,29 @@ only one of them moved.
   name chosen when the app is synthesized, unread with the reason
   `context`, rather than a generated name; a stage name and a stack's
   region keep P298's reading.
+- **A pair's key, an entry handed beside its store, a receiver of several
+  instances, and an instance made where it is read (P338).** The key of a
+  `[key, entry]` pair is bound to the key its entry is kept under - a
+  property's name, a literal, or the expression a computed key or a
+  `reduce` writes it under - in a step (`` ([slug, page]) => ({ ...page,
+  path: `/pages/${slug}` }) ``) and in a route or a link written straight
+  over the pairs (`Object.entries(SCREENS).map(([path, Screen]) => <Route
+  path={path} element={<Screen />} />)`), an entry written as a component
+  rather than an object read as the screen, `([path, { Screen }])` as a key
+  of the entry. An adding function handed its entry in the object it is
+  handed the store in (`install({ registry, widget })`) adds that entry. A
+  receiver that may hold several instances of one class or one factory's
+  object - a prop handed `widgets` at one use and `gadgets` at another - is
+  read as each in turn, the entries of each counted. An instance made where
+  it is read (`makeShelf().routes()`) holds only what its class or factory
+  writes - a field's array written in place, a constructor's writes - and
+  where that is nothing the `route-entries-unread` row says so in
+  `meta.notes`; a singleton a function makes on first use (`dock ??= new
+  DockRegistry()`, a static field written the same way) is the one
+  instance every call hands back. A folded row's own `meta` keeps only what
+  every row folded into it says: two navigations under different prefixes
+  no longer show the first one's prefix for both, each place listed in
+  `meta.causes` carrying its own (`samples[i].meta`).
 - **Settings chosen by a branch, and read inside a function handed nothing
   (P302).** A condition nobody settles whose branches read different
   settings, `isProd ? process.env.API_URL : process.env.DEV_API_URL`, written

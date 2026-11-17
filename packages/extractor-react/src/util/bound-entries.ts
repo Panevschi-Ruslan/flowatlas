@@ -12,8 +12,38 @@ import { Node, SyntaxKind } from 'ts-morph';
  * bound name (`plugin.id`, `plugin.value.component`) is the element's own
  * value under that key, through its spreads - another object, a `const`
  * holding one, a JSON module imported (`...config` from `../plugin.json`).
+ * A name may stand for a node written otherwise (P338): the key an entry is
+ * kept under in an object of entries (its name, `start` of `{ start: {...} }`,
+ * or the expression a computed key or a reduce writes it under), taken out
+ * of a `[key, entry]` pair, or an entry written as something other than an
+ * object (`Start` of `{ start: Start }`).
  */
-export type Bindings = ReadonlyMap<TsNode, ObjectLiteralExpression>;
+export type Bindings = ReadonlyMap<TsNode, ObjectLiteralExpression | TsNode>;
+
+/** The declarations a name stands for: a shorthand property's value (`{ path }` names the `path` in scope, P338), or its own. */
+export const namedDeclarations = (name: TsNode): TsNode[] => {
+  const parent = name.getParent();
+  if (parent !== undefined && Node.isShorthandPropertyAssignment(parent) && parent.getNameNode() === name) return parent.getValueSymbol()?.getDeclarations() ?? [];
+  return name.getSymbol()?.getDeclarations() ?? [];
+};
+
+/** The entry object one of the declarations is bound to, where one is bound to one. */
+export const boundObject = (bindings: Bindings | undefined, declarations: readonly TsNode[]): ObjectLiteralExpression | undefined => {
+  for (const declaration of declarations) {
+    const bound = bindings?.get(declaration);
+    if (bound !== undefined && Node.isObjectLiteralExpression(bound)) return bound;
+  }
+  return undefined;
+};
+
+/** The node other than an entry object one of the declarations stands for (P338): a key, or an entry written otherwise. */
+export const boundNode = (bindings: Bindings | undefined, declarations: readonly TsNode[]): TsNode | undefined => {
+  for (const declaration of declarations) {
+    const bound = bindings?.get(declaration);
+    if (bound !== undefined && !Node.isObjectLiteralExpression(bound)) return bound;
+  }
+  return undefined;
+};
 
 /** What a member of an entry is: a value written in the source, or a value of a JSON module. */
 export type MemberValue = { readonly node: TsNode } | { readonly value: unknown };
@@ -121,7 +151,7 @@ export const boundRead = (expression: TsNode, bindings: Bindings | undefined): B
     at = bare(at.getExpression());
   }
   if (!Node.isIdentifier(at) || keys.length === 0) return undefined;
-  const object = (at.getSymbol()?.getDeclarations() ?? []).map((declaration) => bindings.get(declaration)).find((each) => each !== undefined);
+  const object = boundObject(bindings, at.getSymbol()?.getDeclarations() ?? []);
   if (object === undefined) return undefined;
   let current: ObjectLiteralExpression = object;
   for (let index = 0; index < keys.length; index += 1) {

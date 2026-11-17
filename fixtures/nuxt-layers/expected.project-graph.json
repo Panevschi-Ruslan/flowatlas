@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:53:25.901Z",
+  "builtAt": "2026-11-17T21:21:59.065Z",
   "services": [
     {
       "name": "shop",
@@ -939,9 +939,6 @@
       "symbol": "GET /health",
       "adapter": "nitro-routes",
       "meta": {
-        "key": "GET /health",
-        "chosen": "server/routes/health.get.ts",
-        "layer": "../tokens",
         "causes": [
           {
             "cause": "framework-layer-overridden",
@@ -950,12 +947,22 @@
               {
                 "file": "../tokens/server/routes/health.get.ts",
                 "line": 1,
-                "symbol": "GET /health"
+                "symbol": "GET /health",
+                "meta": {
+                  "key": "GET /health",
+                  "chosen": "server/routes/health.get.ts",
+                  "layer": "../tokens"
+                }
               },
               {
                 "file": "../ui-layer/pages/index.vue",
                 "line": 1,
-                "symbol": "/"
+                "symbol": "/",
+                "meta": {
+                  "key": "/",
+                  "chosen": "app/pages/index.vue",
+                  "layer": "../ui-layer"
+                }
               }
             ]
           }

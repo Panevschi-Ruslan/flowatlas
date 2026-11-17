@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:53:15.857Z",
+  "builtAt": "2026-11-17T21:21:57.039Z",
   "services": [
     {
       "name": "shop",
@@ -1884,8 +1884,6 @@
       "symbol": "<CartBadge>",
       "adapter": "nitro-routes",
       "meta": {
-        "key": "<CartBadge>",
-        "chosen": "app/components/CartBadge.vue",
         "layer": "../base-layer",
         "causes": [
           {
@@ -1895,12 +1893,20 @@
               {
                 "file": "../base-layer/components/CartBadge.vue",
                 "line": 1,
-                "symbol": "<CartBadge>"
+                "symbol": "<CartBadge>",
+                "meta": {
+                  "key": "<CartBadge>",
+                  "chosen": "app/components/CartBadge.vue"
+                }
               },
               {
                 "file": "../base-layer/layouts/admin.vue",
                 "line": 1,
-                "symbol": "the layout admin"
+                "symbol": "the layout admin",
+                "meta": {
+                  "key": "the layout admin",
+                  "chosen": "app/layouts/admin.vue"
+                }
               }
             ]
           }

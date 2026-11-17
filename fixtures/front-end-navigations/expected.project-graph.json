@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:48:36.058Z",
+  "builtAt": "2026-11-17T21:21:48.946Z",
   "services": [
     {
       "name": "storefront",
@@ -2377,8 +2377,6 @@
       "hint": "Write the route's path as a literal and its screen as a component of the repository, so the page is placed.",
       "symbol": "Home navigates to /archive",
       "meta": {
-        "why": "unplaced",
-        "navigates": "/archive",
         "causes": [
           {
             "cause": "navigation-unresolved",
@@ -2387,17 +2385,29 @@
               {
                 "file": "src/pages/Home.tsx",
                 "line": 19,
-                "symbol": "Home navigates to /archive"
+                "symbol": "Home navigates to /archive",
+                "meta": {
+                  "why": "unplaced",
+                  "navigates": "/archive"
+                }
               },
               {
                 "file": "src/pages/Home.tsx",
                 "line": 23,
-                "symbol": "Home navigates to next"
+                "symbol": "Home navigates to next",
+                "meta": {
+                  "why": "dynamic",
+                  "navigates": "next"
+                }
               },
               {
                 "file": "src/pages/Home.tsx",
                 "line": 32,
-                "symbol": "Home navigates to ${window.location.origin}/orders"
+                "symbol": "Home navigates to ${window.location.origin}/orders",
+                "meta": {
+                  "why": "dynamic",
+                  "navigates": "${window.location.origin}/orders"
+                }
               }
             ]
           }

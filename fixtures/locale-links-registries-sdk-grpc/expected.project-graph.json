@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T18:14:16.993Z",
+  "builtAt": "2026-11-17T21:21:55.031Z",
   "services": [
     {
       "name": "wiki",
@@ -2009,9 +2009,6 @@
       "hint": "Nothing to do: the link of the application's own that adds the locale is what places the page; the join is heuristic.",
       "symbol": "Footer navigates to /pricing",
       "meta": {
-        "navigates": "/pricing",
-        "route": "/:param/pricing",
-        "localizedBy": "LangLink",
         "causes": [
           {
             "cause": "navigation-locale-prefixed",
@@ -2020,12 +2017,22 @@
               {
                 "file": "src/components/Footer.tsx",
                 "line": 13,
-                "symbol": "Footer navigates to /pricing"
+                "symbol": "Footer navigates to /pricing",
+                "meta": {
+                  "navigates": "/pricing",
+                  "route": "/:param/pricing",
+                  "localizedBy": "LangLink"
+                }
               },
               {
                 "file": "src/components/Footer.tsx",
                 "line": 15,
-                "symbol": "Footer navigates to /partners"
+                "symbol": "Footer navigates to /partners",
+                "meta": {
+                  "navigates": "/partners",
+                  "route": "/:param/partners",
+                  "localizedBy": "Button"
+                }
               }
             ]
           }

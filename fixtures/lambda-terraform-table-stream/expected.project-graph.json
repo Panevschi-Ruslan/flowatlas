@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-12T18:48:54.374Z",
+  "builtAt": "2026-11-17T21:11:29.297Z",
   "services": [
     {
       "name": "shop",
@@ -1999,10 +1999,6 @@
       "hint": "The definition chooses this at run time, so no edge is drawn for it. Nothing to fix here.",
       "symbol": "shop#infra/main.tf:shop-fulfil-order/ArchiveSomewhere",
       "adapter": "aws-lambda",
-      "meta": {
-        "field": "TableName",
-        "written": "$.archiveTable"
-      },
       "service": "shop"
     }
   ]

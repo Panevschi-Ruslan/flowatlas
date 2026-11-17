@@ -40,7 +40,10 @@ where a way in is served, how sure a join is - are these.
 Every row of `unresolved` has a `reason`, a stable kebab-case word, and the
 `file` and `line` it is about, and may have a `level` (`action` where absent,
 `info`, or `nothing`), a `message`, a `hint`, the `service`, and `sites` where
-one informational row stands for several places. What a row is about is decided
+one informational row stands for several places - its `message` and `symbol`
+the first place's, its `meta` only what every place says, each place listed
+under `meta.causes` with what it says otherwise in its sample's own `meta`.
+What a row is about is decided
 from its reason in one place, `packages/core/src/model/row-kind.ts`: a **gap**
 (something was not followed, the only kind counted as missed), a **note** (how
 a join was made, with nothing missed) or a **finding** (something about the
@@ -56,7 +59,7 @@ code itself). The reasons added most recently:
 | `listen-port-unread` | gap | `info` | a server's port comes from defaults a module loads by a path decided at run time, or from a value a write not read sets, so no request to a port on this machine is joined to it by that port |
 | `listen-port-guessed` | note | `info` | a server's port is read only as a guess: the value from before a write whose own value is not read (`port = await getPort({ port })`, the port's `rewritten`), or a framework's default kept where an environment file the framework does not load before choosing its port sets it (Gatsby's `.env.development`) (P321) |
 | `api-client-global-undeclared` | gap | `action` | a script calls the global a client's browser build leaves (`axios.get(url)`, `ky.post(url)`, `$.ajax(...)`) with no import, no script tag of a page loading the client, no `/* global */` comment and no linter global declaring it, so the call is not read as a request; `meta.client` and `meta.global` name the client and the name (P323) |
-| `route-entries-unread` | gap | `info` | a `<Route>` is written over a list some of whose entries are not read - an item not written as an object, a view or a `map` made otherwise, an entry whose path or screen is not read - so the screens they place are not placed; `meta.unread`, `meta.read` and `meta.why` say how many and why |
+| `route-entries-unread` | gap | `info` | a `<Route>` is written over a list some of whose entries are not read - an item not written as an object, a view or a `map` made otherwise, an entry whose path or screen is not read - so the screens they place are not placed; `meta.unread`, `meta.read` and `meta.why` say how many and why. Also where a list read off a registry instance made where it is read (`makeShelf().routes()`) places nothing, `meta.notes` saying so (P338) |
 
 Some older reasons now say more. `ambiguous-route-target` also names the
 services a request's base may be - a condition's branches nobody settles, or a

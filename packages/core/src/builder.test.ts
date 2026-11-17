@@ -190,6 +190,28 @@ describe('GraphBuilder', () => {
     );
   });
 
+  it("keeps in a fold's own meta only what every row folded into it says (P338)", () => {
+    // Two navigations under different prefixes fold into one row; the fold says neither prefix for both, and each place
+    // still names its own address in the fold's list.
+    const b = builder();
+    b.addUnresolved({ file: 'src/a.ts', line: 1, reason: 'unread', level: 'info', symbol: 'A navigates to /portal/${x}', meta: { cause: 'unread', why: 'dynamic', prefix: '/portal/' } });
+    b.addUnresolved({ file: 'src/b.ts', line: 2, reason: 'unread', level: 'info', symbol: 'B navigates to /search${q}', meta: { cause: 'unread', why: 'dynamic', prefix: '/search' } });
+    const [row] = b.build().unresolved;
+    expect(row?.sites).toBe(2);
+    expect(row?.meta?.['why']).toBe('dynamic');
+    expect(row?.meta).not.toHaveProperty('prefix');
+    const causes = row?.meta?.['causes'] as Array<{ readonly samples: Array<{ readonly symbol: string; readonly meta?: Record<string, unknown> }> }>;
+    expect(causes[0]?.samples.map((sample) => [sample.symbol, sample.meta])).toEqual([
+      ['A navigates to /portal/${x}', { prefix: '/portal/' }],
+      ['B navigates to /search${q}', { prefix: '/search' }],
+    ]);
+    // Rows that agree keep what they say.
+    const same = builder();
+    same.addUnresolved({ file: 'src/a.ts', line: 1, reason: 'unread', level: 'info', meta: { prefix: '/portal/' } });
+    same.addUnresolved({ file: 'src/b.ts', line: 2, reason: 'unread', level: 'info', meta: { prefix: '/portal/' } });
+    expect(same.build().unresolved[0]?.meta).toEqual({ prefix: '/portal/' });
+  });
+
   it('keeps a row that counts its own sites, one per thing it describes', () => {
     // One row per skipped test directory, each standing for its files: folding
     // them would lose which directory, and add a row's count to a count of rows.

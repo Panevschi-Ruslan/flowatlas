@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T20:19:11.458Z",
+  "builtAt": "2026-11-17T21:21:46.884Z",
   "services": [
     {
       "name": "console",
@@ -1149,8 +1149,6 @@
       "symbol": "Footer navigates to /portal/${search.get('to')}",
       "meta": {
         "why": "dynamic",
-        "navigates": "/portal/${search.get('to')}",
-        "prefix": "/portal/",
         "causes": [
           {
             "cause": "navigation-unresolved",
@@ -1159,12 +1157,20 @@
               {
                 "file": "src/components/Footer.tsx",
                 "line": 14,
-                "symbol": "Footer navigates to /portal/${search.get('to')}"
+                "symbol": "Footer navigates to /portal/${search.get('to')}",
+                "meta": {
+                  "navigates": "/portal/${search.get('to')}",
+                  "prefix": "/portal/"
+                }
               },
               {
                 "file": "src/components/Recent.tsx",
                 "line": 9,
-                "symbol": "Recent navigates to /search${search.get('last')}"
+                "symbol": "Recent navigates to /search${search.get('last')}",
+                "meta": {
+                  "navigates": "/search${search.get('last')}",
+                  "prefix": "/search"
+                }
               }
             ]
           }

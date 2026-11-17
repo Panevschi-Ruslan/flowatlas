@@ -5,8 +5,8 @@ import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { componentIn } from '../util/component.js';
-import { boundRead, type Bindings } from '../util/bound-entries.js';
-import { entryValue, listedKey, listEntries } from '../util/list-entries.js';
+import { boundNode, boundRead, namedDeclarations, type Bindings } from '../util/bound-entries.js';
+import { entriesOf, listedBindings, listedEntries, listedKey, listedValue, type Listed } from '../util/list-entries.js';
 import { beforeQuery, holdsHole, spelledPaths } from '../util/path-text.js';
 import { definePass } from './types.js';
 
@@ -76,6 +76,9 @@ export const routeScreenOf = (ctx: ReactExtractContext, value: TsNode | undefine
   if (value === undefined) return undefined;
   // A member of an element the entry is written over (`plugin.value.component.Component`): the element's own value (P297).
   const inner = Node.isJsxExpression(value) ? (value.getExpression() ?? value) : value;
+  // A name standing for an entry written as other than an object (`Screen` of `([path, Screen]) => ...` over `{ start: Start }`): that entry (P338).
+  const stands = Node.isIdentifier(inner) ? boundNode(bound, namedDeclarations(inner)) : undefined;
+  if (stands !== undefined) return componentIn(ctx, stands);
   const read = boundRead(inner, bound);
   if (read === 'absent') return undefined;
   if (read !== undefined) {
@@ -104,21 +107,25 @@ export interface ListedRoute {
 export const listedRoutes = (
   pathValue: TsNode | undefined,
   screenValue: TsNode | undefined,
-): { readonly routes: readonly ListedRoute[]; readonly unread: number; readonly why: readonly string[]; readonly list: string } | undefined => {
+): { readonly routes: readonly ListedRoute[]; readonly unread: number; readonly why: readonly string[]; readonly list: string; readonly notes: readonly string[] } | undefined => {
   if (pathValue === undefined) return undefined;
   const listed = listedKey(pathValue);
   if (listed === undefined) return undefined;
-  const read = listEntries(listed.list);
+  const read = listedEntries(listed);
   const list = listed.list.getText().replace(/\s+/g, ' ').slice(0, 80);
-  if (read === undefined) return { routes: [], unread: 1, why: [`${list} is not read as a list`], list };
-  const screenKey = screenValue === undefined ? undefined : screenKeyOf(screenValue, listed.parameter);
-  const routes = read.entries.map((entry) => ({
-    // Through the entry's spreads, the element a mapped entry is written over among them (P314).
-    path: entryValue(entry, listed.key),
-    screen: screenKey === undefined ? screenValue : screenKey === null ? undefined : entryValue(entry, screenKey),
-    ...(entry.bound === undefined ? {} : { bound: entry.bound }),
-  }));
-  return { routes, unread: read.unread, why: read.why, list };
+  if (read === undefined) return { routes: [], unread: 1, why: [`${list} is not read as a list`], list, notes: [] };
+  const screen = screenValue === undefined ? undefined : screenListedOf(screenValue, listed.parameter);
+  const routes = entriesOf(read).map((entry) => {
+    // Over `[key, entry]` pairs, the key and the entry bound to the names the function takes them out as (P338).
+    const bound = listedBindings(entry, listed.parameter);
+    return {
+      // Through the entry's spreads, the element a mapped entry is written over among them (P314).
+      path: listedValue(entry, listed, pathValue),
+      screen: screen === undefined ? screenValue : screen === null ? undefined : listedValue(entry, screen.listed, screen.tag),
+      ...(bound === undefined ? {} : { bound }),
+    };
+  });
+  return { routes, unread: read.unread, why: read.why, list, notes: read.notes };
 };
 
 /**
@@ -145,9 +152,23 @@ const listedRow = (
       why.add(`an entry's screen ${route.screen.getText().replace(/\s+/g, ' ').slice(0, 60)} is not read`);
     }
   }
-  if (unread === 0) return;
   const read = listed.routes.length - (unread - listed.unread);
+  // Nothing unread, and nothing placed where the list is read off an instance made afresh: the row says why the list is empty (P338).
+  if (unread === 0 && (read > 0 || listed.notes.length === 0)) return;
   const file = ctx.fileOf(node);
+  if (unread === 0) {
+    ctx.report({
+      file,
+      line: startLineOf(node),
+      reason: 'route-entries-unread',
+      level: 'info',
+      symbol: `routes over ${listed.list}`,
+      message: `${listed.list}, which a route of ${file} is written over, holds no entry this reading places: ${listed.notes.join('; ')}`,
+      hint: 'Read the list off the instance the application adds its entries to - one a `const` holds, or one handed in - rather than one made where it is read.',
+      meta: { cause: 'route-entries-unread', list: listed.list, unread, read, why: [], notes: [...listed.notes] },
+    });
+    return;
+  }
   ctx.report({
     file,
     line: startLineOf(node),
@@ -156,18 +177,23 @@ const listedRow = (
     symbol: `routes over ${listed.list}`,
     message: `${unread} ${unread === 1 ? 'entry' : 'entries'} of ${listed.list}, which a route of ${file} is written over, ${unread === 1 ? 'is' : 'are'} not read, so the screen${unread === 1 ? '' : 's'} ${unread === 1 ? 'it places is' : 'they place are'} not placed (${[...why].join('; ')})${read > 0 ? `; ${read} ${read === 1 ? 'is' : 'are'} read and placed` : ''}`,
     hint: 'Write the entries as objects in place - in the list, or handed to the functions adding to a registry - with the path as text and the screen as a component of the repository, and map them, where they are mapped, to an object written over each.',
-    meta: { cause: 'route-entries-unread', list: listed.list, unread, read, why: [...why] },
+    meta: { cause: 'route-entries-unread', list: listed.list, unread, read, why: [...why], ...(listed.notes.length === 0 ? {} : { notes: [...listed.notes] }) },
   });
 };
 
-/** The key of a list's item a screen is read from, `null` for another list's item, `undefined` for a screen written outright. */
-const screenKeyOf = (screen: TsNode, parameter: TsNode): string | null | undefined => {
+/**
+ * How a screen is read off a list's item: the item's value it names and the
+ * tag naming it (`<config.Screen />`, `<Screen />` taken out of a `[key,
+ * entry]` pair, P338), `null` for another list's item, `undefined` for a
+ * screen written outright.
+ */
+const screenListedOf = (screen: TsNode, parameter: TsNode): { readonly listed: Listed; readonly tag: TsNode } | null | undefined => {
   const inner = Node.isJsxExpression(screen) ? screen.getExpression() : screen;
   if (inner === undefined) return undefined;
   // `element={<config.Screen />}`: the tag is the item's member.
   const tag = Node.isJsxSelfClosingElement(inner) ? inner.getTagNameNode() : Node.isJsxElement(inner) ? inner.getOpeningElement().getTagNameNode() : inner;
   const listed = listedKey(tag);
-  if (listed !== undefined) return listed.parameter === parameter ? listed.key : null;
+  if (listed !== undefined) return listed.parameter === parameter ? { listed, tag } : null;
   return undefined;
 };
 

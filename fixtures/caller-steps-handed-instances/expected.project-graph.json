@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T18:28:05.631Z",
+  "builtAt": "2026-11-17T21:21:45.078Z",
   "services": [
     {
       "name": "console",
@@ -950,8 +950,6 @@
       "symbol": "Back navigates to /console${search.get('back')}",
       "meta": {
         "why": "dynamic",
-        "navigates": "/console${search.get('back')}",
-        "prefix": "/console",
         "causes": [
           {
             "cause": "navigation-unresolved",
@@ -960,12 +958,20 @@
               {
                 "file": "src/components/Back.tsx",
                 "line": 9,
-                "symbol": "Back navigates to /console${search.get('back')}"
+                "symbol": "Back navigates to /console${search.get('back')}",
+                "meta": {
+                  "navigates": "/console${search.get('back')}",
+                  "prefix": "/console"
+                }
               },
               {
                 "file": "src/components/Return.tsx",
                 "line": 9,
-                "symbol": "Return navigates to /area${search.get('next')}"
+                "symbol": "Return navigates to /area${search.get('next')}",
+                "meta": {
+                  "navigates": "/area${search.get('next')}",
+                  "prefix": "/area"
+                }
               }
             ]
           }

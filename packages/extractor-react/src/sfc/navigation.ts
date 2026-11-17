@@ -5,7 +5,7 @@ import type { CallExpression, Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
-import { entryValue, listedKey, listEntries } from '../util/list-entries.js';
+import { entriesOf, listedBindings, listedEntries, listedKey, listedValue } from '../util/list-entries.js';
 import { spelledPaths } from '../util/path-text.js';
 import { svelteMarkupEvents, svelteMarkupTags, vueTemplateEvents, vueTemplateTags } from './events.js';
 
@@ -433,14 +433,15 @@ const landingsOf = (pages: readonly Page[], to: TsNode | undefined, options: TsN
  */
 const listedLandings = (pages: readonly Page[], to: TsNode, from: string, external: boolean, via?: Via): Landing[] | undefined => {
   const listed = listedKey(to);
-  const read = listed === undefined ? undefined : listEntries(listed.list);
-  if (listed === undefined || read === undefined || read.entries.length === 0) return undefined;
+  const read = listed === undefined ? undefined : listedEntries(listed);
+  if (listed === undefined || read === undefined || entriesOf(read).length === 0) return undefined;
   const landings: Landing[] = [];
   let unread = read.unread > 0;
-  for (const entry of read.entries) {
-    const member = entryValue(entry, listed.key);
+  for (const entry of entriesOf(read)) {
+    const member = listedValue(entry, listed, to);
     if (member === undefined) continue;
-    const spelled = spelledPaths(member, entry.bound);
+    // Over `[key, entry]` pairs, the key bound to the key the entry is kept under (P338).
+    const spelled = spelledPaths(member, listedBindings(entry, listed.parameter));
     if (spelled === undefined) unread = true;
     else for (const each of spelled) landings.push(pathLanding(pages, each.text, from, external, each.guessed === true, via));
   }
@@ -752,18 +753,18 @@ const handedTexts = (value: TsNode): { readonly texts: readonly string[]; readon
   if (text !== undefined && !Node.isTemplateExpression(read)) return { texts: [text], unread: 0 };
   // An entry's member read over a list: each entry's, before any one value the checker guesses for it.
   const listed = listedKey(read);
-  const entries = listed === undefined ? undefined : listEntries(listed.list);
-  if (listed === undefined || entries === undefined || entries.entries.length === 0) {
+  const entries = listed === undefined ? undefined : listedEntries(listed);
+  if (listed === undefined || entries === undefined || entriesOf(entries).length === 0) {
     const spelled = spelledPaths(read);
     return spelled === undefined ? { texts: [], unread: 1 } : { texts: spelled.map((each) => each.text), unread: 0 };
   }
   const texts: string[] = [];
   let unread = entries.unread;
-  for (const entry of entries.entries) {
-    const member = entryValue(entry, listed.key);
+  for (const entry of entriesOf(entries)) {
+    const member = listedValue(entry, listed, read);
     // An entry writing no such member renders no address.
     if (member === undefined) continue;
-    const each = spelledPaths(member, entry.bound);
+    const each = spelledPaths(member, listedBindings(entry, listed.parameter));
     if (each === undefined) unread += 1;
     else texts.push(...each.map((path) => path.text));
   }

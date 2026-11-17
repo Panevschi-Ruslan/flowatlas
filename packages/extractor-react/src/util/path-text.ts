@@ -1,7 +1,7 @@
 import { evaluateExpression } from '@flowatlas/core';
 import type { ObjectLiteralExpression, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
-import { boundRead, type Bindings } from './bound-entries.js';
+import { boundRead, namedDeclarations, type Bindings } from './bound-entries.js';
 
 /**
  * The addresses a front end's path expression spells (P288), read the way a
@@ -33,17 +33,39 @@ type Bound =
   | { readonly rest: ReadonlyArray<readonly SpelledPath[]> }
   | { readonly absent: true }
   /** An element of a list an entry is written over, the object it is (P297). */
-  | { readonly object: ObjectLiteralExpression };
+  | { readonly object: ObjectLiteralExpression }
+  /** A node a name taken out of a `[key, entry]` pair stands for: the key the entry is kept under, or an entry written otherwise (P338). */
+  | { readonly stands: TsNode };
 type Env = ReadonlyMap<TsNode, Bound>;
 
 const NO_ENV: Env = new Map();
 
-/** The elements bound in an environment, kept where a `const` or a default is read without the call's parameters (P297). */
+/** The elements bound in an environment, kept where a `const` or a default is read without the call's parameters (P297, P338). */
 const objectsOf = (env: Env): Env => {
   if (env.size === 0) return NO_ENV;
   const kept = new Map<TsNode, Bound>();
-  for (const [declaration, bound] of env) if ('object' in bound) kept.set(declaration, bound);
+  for (const [declaration, bound] of env) if ('object' in bound || 'stands' in bound) kept.set(declaration, bound);
   return kept.size === 0 ? NO_ENV : kept;
+};
+
+/**
+ * The text a key an entry is kept under spells (P338): a property's own name
+ * (`start` of `{ start: ... }`, `all.start = ...`), a literal, or the
+ * expression a computed key or an element write is written with, read with
+ * the elements bound.
+ */
+const keySpelled = (key: TsNode, env: Env, depth: number): SpelledPath[] | undefined => {
+  if (depth > DEPTH) return undefined;
+  if (Node.isComputedPropertyName(key)) return spell(key.getExpression(), objectsOf(env), depth + 1);
+  if (Node.isStringLiteral(key) || Node.isNoSubstitutionTemplateLiteral(key)) return [{ text: key.getLiteralValue() }];
+  if (Node.isNumericLiteral(key)) return [{ text: String(key.getLiteralValue()) }];
+  const parent = key.getParent();
+  const named =
+    parent !== undefined &&
+    (Node.isPropertyAssignment(parent) || Node.isShorthandPropertyAssignment(parent) || Node.isMethodDeclaration(parent) || Node.isPropertyAccessExpression(parent)) &&
+    parent.getNameNode() === key;
+  if (Node.isIdentifier(key) && named) return [{ text: key.getText() }];
+  return spell(key, objectsOf(env), depth + 1);
 };
 
 const bindingsOf = (env: Env): Bindings | undefined => {
@@ -89,7 +111,7 @@ const guessedAll = (paths: readonly SpelledPath[]): SpelledPath[] => paths.map((
 /** The parameter a name is, where it is one of a function being read. */
 const parameterOf = (node: TsNode, env: Env): Bound | undefined => {
   if (!Node.isIdentifier(node) || env.size === 0) return undefined;
-  for (const declaration of node.getSymbol()?.getDeclarations() ?? []) {
+  for (const declaration of namedDeclarations(node)) {
     const bound = env.get(declaration);
     if (bound !== undefined) return bound;
   }
@@ -114,7 +136,7 @@ const decided = (condition: TsNode, env: Env): boolean | undefined => {
   const length = restLength(value, env);
   if (length !== undefined) return length > 0;
   const bound = parameterOf(value, env);
-  if (bound !== undefined && !('object' in bound)) {
+  if (bound !== undefined && !('object' in bound) && !('stands' in bound)) {
     if ('absent' in bound) return false;
     if ('rest' in bound) return true;
     // A text written in place is there; one read at run time may be empty.
@@ -259,6 +281,8 @@ const spell = (node: TsNode, env: Env, depth: number): SpelledPath[] | undefined
     if (left !== undefined) return spell(value.getLeft(), env, depth);
   }
   const bound = parameterOf(value, env);
+  // A name taken out of a `[key, entry]` pair: the key it stands for (P338).
+  if (bound !== undefined && 'stands' in bound) return keySpelled(bound.stands, env, depth);
   if (bound !== undefined) return 'values' in bound ? [...bound.values] : undefined;
   if (Node.isCallExpression(value)) return spellCall(value, env, depth);
   if (Node.isIdentifier(value)) {
@@ -320,7 +344,10 @@ const spellCall = (call: TsNode, env: Env, depth: number): SpelledPath[] | undef
  * value read at run time on its own, an object, a call of a package).
  */
 export const spelledPaths = (node: TsNode, bindings?: Bindings): SpelledPath[] | undefined => {
-  const env: Env = bindings === undefined || bindings.size === 0 ? NO_ENV : new Map([...bindings].map(([declaration, object]) => [declaration, { object }] as const));
+  const env: Env =
+    bindings === undefined || bindings.size === 0
+      ? NO_ENV
+      : new Map<TsNode, Bound>([...bindings].map(([declaration, bound]) => [declaration, Node.isObjectLiteralExpression(bound) ? { object: bound } : { stands: bound }] as const));
   const read = spell(node, env, 0);
   // A hole and nothing else is a value read at run time, not an address.
   if (read === undefined || read.every((path) => /^\$\{[^}]*\}$/.test(path.text))) return undefined;

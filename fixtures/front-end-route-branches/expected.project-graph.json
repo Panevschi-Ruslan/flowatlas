@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T17:13:23.024Z",
+  "builtAt": "2026-11-17T21:21:50.809Z",
   "services": [
     {
       "name": "wiki",
@@ -1446,8 +1446,6 @@
       "hint": "Nothing to do: the middleware or the routing configuration that adds the locale is what places the page; the join is heuristic.",
       "symbol": "Footer navigates to /search",
       "meta": {
-        "navigates": "/search",
-        "route": "/:param/search",
         "causes": [
           {
             "cause": "navigation-locale-prefixed",
@@ -1456,17 +1454,29 @@
               {
                 "file": "src/components/Footer.tsx",
                 "line": 10,
-                "symbol": "Footer navigates to /search"
+                "symbol": "Footer navigates to /search",
+                "meta": {
+                  "navigates": "/search",
+                  "route": "/:param/search"
+                }
               },
               {
                 "file": "src/components/Footer.tsx",
                 "line": 11,
-                "symbol": "Footer navigates to /about-us"
+                "symbol": "Footer navigates to /about-us",
+                "meta": {
+                  "navigates": "/about-us",
+                  "route": "/:param/:param"
+                }
               },
               {
                 "file": "src/components/Nav.tsx",
                 "line": 11,
-                "symbol": "Nav navigates to /search"
+                "symbol": "Nav navigates to /search",
+                "meta": {
+                  "navigates": "/search",
+                  "route": "/:param/search"
+                }
               }
             ]
           }

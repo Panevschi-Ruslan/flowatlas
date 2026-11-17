@@ -106,6 +106,11 @@ describe('a caller view through flatMap, Array.from or reduce, an instance reach
       // `<AreaLink path>`, the wrapper rendering `<Link href={`/area${path}`}>`.
       "src/components/Return.tsx Return navigates to /area${search.get('next')}",
     ]);
-    expect(rows(site, 'navigation-unresolved')[0]?.meta).toMatchObject({ why: 'dynamic', prefix: expect.stringMatching(/^\/(area|console)$/) });
+    // The fold says what both say; each place keeps its own prefix in the fold's list (P338).
+    const [folded] = rows(site, 'navigation-unresolved');
+    expect(folded?.meta).toMatchObject({ why: 'dynamic' });
+    expect(folded?.meta).not.toHaveProperty('prefix');
+    const prefixes = (folded?.meta['causes'] as Array<{ readonly samples: Array<{ readonly meta?: Record<string, unknown> }> }>).flatMap((cause) => cause.samples.map((sample) => sample.meta?.['prefix']));
+    expect(prefixes.sort()).toEqual(['/area', '/console']);
   });
 });

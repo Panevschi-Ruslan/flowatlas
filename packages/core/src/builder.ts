@@ -96,13 +96,38 @@ const foldBelowAction = (rows: readonly Unresolved[]): Unresolved[] => {
     }
     first.sites = (first.sites ?? 1) + 1;
     tallies.get(first)?.add(row);
+    disagreeing(first, row);
   }
   for (const [stored, tally] of tallies) {
-    if (stored.sites === undefined || !tally.recorded) continue;
+    if (stored.sites === undefined) continue;
+    // A fold's own meta says only what every row folded into it says (P338): a key the rows write differently - two
+    // navigations' prefixes - is each row's, said by the place it is listed at (its sample's own meta), not the first row's
+    // said for all.
+    const differ = DISAGREE.get(stored);
+    if (differ !== undefined && stored.meta !== undefined) {
+      const agreed = Object.fromEntries(Object.entries(stored.meta).filter(([key]) => !differ.has(key)));
+      if (Object.keys(agreed).length > 0) stored.meta = agreed;
+      else delete stored.meta;
+    }
+    if (!tally.recorded) continue;
     const { [CAUSE_META]: _cause, [PACKAGE_META]: _package, ...rest } = stored.meta ?? {};
-    stored.meta = { ...rest, [CAUSES_META]: tally.parts() };
+    stored.meta = { ...rest, [CAUSES_META]: tally.parts(differ) };
   }
   return out;
+};
+
+/** The keys of a fold's meta some row folded into it writes otherwise than the first, the cause and its package aside (they are listed per cause). */
+const DISAGREE = new WeakMap<Unresolved, Set<string>>();
+
+const disagreeing = (first: Unresolved, row: Unresolved): void => {
+  const mine = first.meta ?? {};
+  const theirs = row.meta ?? {};
+  for (const key of Object.keys(mine)) {
+    if (key === CAUSE_META || key === PACKAGE_META || JSON.stringify(mine[key]) === JSON.stringify(theirs[key])) continue;
+    const differ = DISAGREE.get(first) ?? new Set<string>();
+    differ.add(key);
+    DISAGREE.set(first, differ);
+  }
 };
 
 /**

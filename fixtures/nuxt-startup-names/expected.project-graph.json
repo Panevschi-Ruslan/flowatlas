@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:53:39.370Z",
+  "builtAt": "2026-11-17T21:22:00.790Z",
   "services": [
     {
       "name": "shop",
@@ -820,7 +820,6 @@
       "symbol": "app/components/PromoBanner.vue middleware promo-seen",
       "meta": {
         "why": "scoped",
-        "middleware": "promo-seen",
         "causes": [
           {
             "cause": "route-middleware-unresolved",
@@ -829,17 +828,26 @@
               {
                 "file": "app/components/PromoBanner.vue",
                 "line": 3,
-                "symbol": "app/components/PromoBanner.vue middleware promo-seen"
+                "symbol": "app/components/PromoBanner.vue middleware promo-seen",
+                "meta": {
+                  "middleware": "promo-seen"
+                }
               },
               {
                 "file": "app/composables/useLateGuard.ts",
                 "line": 3,
-                "symbol": "app/composables/useLateGuard.ts middleware late"
+                "symbol": "app/composables/useLateGuard.ts middleware late",
+                "meta": {
+                  "middleware": "late"
+                }
               },
               {
                 "file": "app/pages/index.vue",
                 "line": 2,
-                "symbol": "pages/index middleware late"
+                "symbol": "pages/index middleware late",
+                "meta": {
+                  "middleware": "late"
+                }
               }
             ]
           }
