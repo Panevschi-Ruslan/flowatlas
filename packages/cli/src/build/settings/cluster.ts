@@ -1015,7 +1015,7 @@ const CONTAINER_LISTS = ['containers', 'initContainers', 'ephemeralContainers'];
  * name, an `Ingress`'s TLS secret; the service an `Ingress`, a stateful set,
  * an API service or a webhook names; the service account a pod runs as and a
  * binding's subjects; the claim a volume names; a role a binding names; and
- * the workload an autoscaler or a disruption budget's target names; and
+ * the workload a horizontal or vertical pod autoscaler targets; and
  * (P306) the storage class a volume, a claim or a stateful set's claim
  * templates name, the priority class a pod spec names, the ingress class an
  * `Ingress` names, and the volume a claim binds.

@@ -42,9 +42,9 @@ graph. `payments.example.test` is nobody's, and stays.
 
 `legacyApi` is the honest case. Its interceptor picks one of two bases by a
 branch, so one row says so at the line that writes it (`api-client-base-unread`,
-`shop/src/api/legacy.ts:11`), the request keeps the base the instance was made
-with (none), and the join stays what the route alone can say: two services
-answer it.
+`shop/src/api/legacy.ts:11`), and the request keeps a hole where the base goes
+(`${…}/items`, P280), so it joins nothing rather than guess between the two
+services the route alone would name.
 
 ## Expected
 
