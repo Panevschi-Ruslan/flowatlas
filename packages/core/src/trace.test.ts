@@ -1,4 +1,4 @@
-import { Project, SyntaxKind, type CallExpression, type SourceFile } from 'ts-morph';
+import { Project, SyntaxKind, type CallExpression, type SourceFile, type TemplateExpression } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 import { UNREAD_SPAN } from './ids.js';
 import { resolveStaticString, settingKeyIn } from './static-string.js';
@@ -22,6 +22,8 @@ import {
   returnedExpression,
   rootSettingAddress,
   valueAfterHost,
+  valueAtPort,
+  writtenSpan,
 } from './trace.js';
 
 const HEADER = `
@@ -931,5 +933,50 @@ describe('a value written straight after a host (P312)', () => {
     expect(after('declare const x: string; function go() { return http.get(`https://shop-${x}/orders`); }')).toBeUndefined();
     expect(after('declare const x: string; function go() { return http.get(`https://shop.example/${x}/orders`); }')).toBeUndefined();
     expect(after('declare const x: string; function go() { return http.get(`https://shop.example${x}`); }')).toBeUndefined();
+  });
+});
+
+describe('a host or a port the evaluator does not read, read as the address readers read it (P318)', () => {
+  it('locates a value after a host a method answers, and reads a port a class keeps as one', () => {
+    const behind = address(
+      parse(`
+        class Ports { static stock = ':4700'; }
+        class Probe {
+          origin() { return 'http://localhost'; }
+          check(port: string) { return http.get(\`\${this.origin()}\${port}/health\`); }
+        }
+        new Probe().check(':4600');
+        new Probe().check(Ports.stock);
+      `),
+    );
+    const value = valueAfterHost(behind);
+    expect(value?.getText()).toBe('port');
+    expect(continuesHost(value!)).toBe(true);
+    // A reader that reads nothing the evaluator does not: the host is not located.
+    expect(valueAfterHost(behind, () => null)).toBeUndefined();
+  });
+
+  it("finds the value in a host's port place, and nothing where the text before it is no host and a colon", () => {
+    const port = (source: string) => valueAtPort(address(parse(source)))?.getText();
+    expect(port('function go(port: number) { return http.get(`http://localhost:${port}/health`); }')).toBe('port');
+    expect(port("function go(port: number) { return http.get('http://localhost:' + port + '/health'); }")).toBe('port');
+    expect(port('function go(port: number) { return http.get(`http://localhost${port}/health`); }')).toBeUndefined();
+    expect(port('function go(id: number) { return http.get(`http://localhost:4600/orders/${id}`); }')).toBeUndefined();
+  });
+
+  it('reads a span a class writes down: a method answering one string, a field holding one, a host only at the opening', () => {
+    const file = parse(`
+      class Api {
+        static origin = 'https://shop.example';
+        static prefix = '/v1';
+        version() { return '/v2'; }
+        go() { return http.get(\`\${Api.origin}\${Api.prefix}\${this.version()}\`); }
+      }
+    `);
+    const [origin, prefix, version] = (address(file) as TemplateExpression).getTemplateSpans().map((span) => span.getExpression());
+    expect(writtenSpan(origin!, true)).toBe('https://shop.example');
+    expect(writtenSpan(origin!, false)).toBeNull();
+    expect(writtenSpan(prefix!, false)).toBe('/v1');
+    expect(writtenSpan(version!, false)).toBe('/v2');
   });
 });

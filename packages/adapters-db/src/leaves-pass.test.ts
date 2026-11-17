@@ -698,6 +698,25 @@ describe("TypeORM's raw SQL, read as a statement (P126)", () => {
   });
 });
 
+describe('callers held by a const, and ports they hand (P318)', () => {
+  it('follows a request out to callers written as an arrow or a function expression held by a const, each at its port or path', async () => {
+    const graph = await graphOf('ports-handed-by-callers/jobs');
+    const owners = new Map(graph.edges.filter((edge) => edge.type === 'calls').map((edge) => [edge.to, edge.from.replace(/^.*:/, '')]));
+    const requests = graph.nodes
+      .filter((node) => node.type === 'http_out')
+      .map((node) => `${owners.get(node.id) ?? '?'} ${String(node.meta?.['host'])} ${String(node.meta?.['path'])}`);
+    expect(requests.sort()).toEqual([
+      'catalogHealth localhost:4600 /health',
+      // A port a class keeps, handed straight after the host.
+      'pingStock localhost:4700 /health',
+      'productsV1 localhost:4600 /v1/products',
+      'stockHealth localhost:4700 /health',
+      'stockLevels localhost:4700 /levels',
+    ]);
+    expect(graph.unresolved.filter((row) => row.reason === 'dynamic-http-url')).toEqual([]);
+  });
+});
+
 describe("a server's own requests with no host (P263)", () => {
   it("reads Nitro's $fetch as a call its routes answer in process, and the platform fetch and ofetch as having no origin", async () => {
     const graph = await graphOf('own-origin-requests/shop');

@@ -244,7 +244,8 @@ describe('plain browser code (P284)', () => {
     });
     const found = requests(graph).map((node) => [node.meta?.['method'], node.meta?.['host'], node.meta?.['path'], node.meta?.['bodyKeys'], node.meta?.['through']]);
     expect(found.sort((a, b) => `${a[1]}${a[2]}`.localeCompare(`${b[1]}${b[2]}`))).toEqual([
-      ['GET', 'localhost${…}', '/health', undefined, undefined],
+      // Every caller hands a port: one request per caller, at its port (P318).
+      ['GET', 'localhost:8080', '/health', undefined, 'local'],
       ['POST', 'notes.example.test', '/notes', ['text'], undefined],
       ['GET', 'ratings.example.test', '/latest', undefined, 'latest'],
       ['GET', 'reviews.example.test', '/latest', undefined, 'latest'],
@@ -253,6 +254,59 @@ describe('plain browser code (P284)', () => {
       ['GET', 'shop.example.test', '/v2/products', undefined, 'versioned'],
     ]);
     expect(graph.unresolved.filter((row) => row.reason === 'api-path-dynamic').map((row) => row.line)).toEqual([13]);
+  });
+
+  it('reads a port each caller hands as one request per caller at its port, a host a method answers with a port a class keeps, and instances along an address followed out (P318)', () => {
+    const graph = read({
+      '/js/api.js': [
+        "import axios from 'axios';",
+        'function health(port) { return fetch(`http://localhost:${port}/health`); }',
+        'function one() { return health(4600); }',
+        "function two() { return health('4700'); }",
+        'function ping(port) { return fetch(`http://localhost${port}/ping`); }',
+        "function three() { return ping(':4800'); }",
+        'class Ports { static kept = \':4900\'; }',
+        "class Probe { origin() { return 'http://localhost'; } check(port) { return fetch(`${this.origin()}${port}/probe`); } }",
+        'function four() { return new Probe().check(Ports.kept); }',
+        'new Probe().check(Ports.kept);',
+        'function readWith(client, path) { return client.get(path); }',
+        "function five() { return readWith(axios.create({ baseURL: 'http://localhost:5000' }), '/latest'); }",
+        "function six() { return readWith(axios.create({ baseURL: 'http://localhost:5100' }), '/levels'); }",
+        "function seven(client) { return readWith(client, '/stock'); }",
+        "function eight() { return seven(axios.create({ baseURL: 'http://localhost:5200' })); }",
+      ].join('\n'),
+    });
+    const found = requests(graph).map((node) => [node.meta?.['host'], node.meta?.['path'], node.meta?.['through']]);
+    expect(found.sort((a, b) => `${a[0]}${a[1]}`.localeCompare(`${b[0]}${b[1]}`))).toEqual([
+      ['localhost:4600', '/health', 'health'],
+      ['localhost:4700', '/health', 'health'],
+      ['localhost:4800', '/ping', 'ping'],
+      ['localhost:4900', '/probe', 'Probe.check'],
+      ['localhost:5000', '/latest', 'readWith'],
+      ['localhost:5100', '/levels', 'readWith'],
+      ['localhost:5200', '/stock', 'readWith'],
+      // Checked outside any function: where it is written, the port unread and the path read.
+      ['localhost${…}', '/probe', undefined],
+    ]);
+    expect(graph.unresolved.filter((row) => row.reason === 'api-path-dynamic' || row.reason === 'api-client-base-unread')).toEqual([]);
+  });
+
+  it('keeps a port no caller reads where the request is written, and a number anywhere but the port place the path\'s (P318)', () => {
+    const graph = read({
+      '/js/api.js': [
+        'function health(port) { return fetch(`http://localhost:${port}/health`); }',
+        'function one() { return health(4600); }',
+        'function two(settings) { return health(settings.port); }',
+        'function order(id) { return fetch(`http://localhost:4600/orders/${id}`); }',
+        'function first() { return order(42); }',
+      ].join('\n'),
+    });
+    const found = requests(graph).map((node) => [node.meta?.['host'], node.meta?.['path']]);
+    expect(found.sort((a, b) => `${a[0]}${a[1]}`.localeCompare(`${b[0]}${b[1]}`))).toEqual([
+      ['localhost:${…}', '/health'],
+      ['localhost:4600', '/health'],
+      ['localhost:4600', '/orders/:param'],
+    ]);
   });
 
   it('keeps instances with different bases handed outside any function on the request, the path alone, and says so (P312)', () => {

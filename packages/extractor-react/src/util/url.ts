@@ -1,8 +1,8 @@
 import {
-  constantMethodResult,
   constantPropertyValue,
   continuesHost,
   endsAtHost,
+  evaluateExpression,
   normalizePath,
   resolveStaticString,
   returnedExpression,
@@ -11,7 +11,10 @@ import {
   takenMember,
   UNREAD_SPAN,
   valueAfterHost,
+  valueAtPort,
+  writtenSpan,
   type SettingBehind,
+  type SpanReader,
 } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
@@ -132,8 +135,10 @@ const boundTo = (
  * it, is the host's own - its port, the rest of its name (P312): read under
  * what the callers on the way out handed, where they handed it.
  */
-const hostWrittenAfterHost = (node: TsNode, bindings: Bindings | undefined): boolean => {
-  const value = valueAfterHost(node);
+const hostWrittenAfterHost = (node: TsNode, bindings: Bindings | undefined, read: SpanReader): boolean => {
+  // Located under the reading the address is read with: a host a method
+  // answers, `${this.origin()}${port}/health`, is the host here too (P318).
+  const value = valueAfterHost(node, read);
   if (value === undefined) return false;
   return continuesHost(boundTo(value, bindings)?.expr ?? value);
 };
@@ -218,8 +223,18 @@ export interface ReadAddressOptions {
  * A fixed segment kept beside the code that uses it, in a constant or in a
  * function that only ever answers with one string.
  */
-const readSpan = (node: TsNode): string | null =>
-  constantMethodResult(node) ?? constantPropertyValue(node);
+const readSpan = (node: TsNode): string | null => writtenSpan(node, false);
+
+/**
+ * The number a caller hands for a value, followed out through the callers
+ * that hand it on (P318): `health(4600)` into `` `http://localhost:${port}/health` ``.
+ */
+const numberHanded = (node: TsNode, bindings: Bindings | undefined): string | null => {
+  const settled = boundTo(node, bindings);
+  if (settled !== undefined) return numberHanded(settled.expr, settled.bindings);
+  const value = evaluateExpression(node);
+  return value.resolved && typeof value.value === 'number' ? String(value.value) : null;
+};
 
 /**
  * Works out what address a request reaches.
@@ -250,7 +265,7 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
   }
 
   /** A span of the template the caller settled, read as the string it is. */
-  const resolveSpan = (span: TsNode): string | null => {
+  const spanRead = (span: TsNode): string | null => {
     const settled = boundTo(span, bindings);
     if (settled === undefined) return readSpan(span);
     const inner = analyzeApiUrl(settled.expr, {
@@ -260,10 +275,21 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
     // Only the address as written is usable here. A span that turned out to be
     // rooted at a settings key of its own would put the key in the middle of
     // the path, which is not a path.
-    return inner.url !== null && inner.baseUrlEnv === null && inner.url.includes(UNREAD_SPAN) === false
-      ? inner.url
-      : null;
+    if (inner.url !== null) return inner.baseUrlEnv === null && !inner.url.includes(UNREAD_SPAN) ? inner.url : null;
+    // What the caller hands is a constant a class keeps, `Ports.stock`: read
+    // as a span written in place is (P318).
+    return readSpan(settled.expr);
   };
+
+  // The value in the host's port place, where a number a caller hands is the
+  // port (P318): `localhost:3000`. Anywhere else a number is the path's, a
+  // value a route parameter takes.
+  let port: { readonly at: TsNode | undefined } | undefined;
+  const atPort = (span: TsNode): boolean => {
+    port ??= { at: valueAtPort(node, spanRead) };
+    return port.at === span;
+  };
+  const resolveSpan = (span: TsNode): string | null => spanRead(span) ?? (atPort(span) ? numberHanded(span, bindings) : null);
 
   const settingBehind = (at: TsNode): SettingBehind | null => {
     const settled = boundTo(at, bindings);
@@ -358,7 +384,7 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
     // host's own only where everything it is followed to is a port or the
     // rest of its name; a path, or a value nothing reads, opens the path, and
     // the path is unread rather than the value folded into the host.
-    const hostOnly = before !== undefined && (rest === '' || !hostWrittenAfterHost(node, bindings)) ? before : undefined;
+    const hostOnly = before !== undefined && (rest === '' || !hostWrittenAfterHost(node, bindings, resolveSpan)) ? before : undefined;
     return {
       url: resolved.value,
       path: hostOnly === undefined ? routePathOf(rest) : rest === '' ? UNREAD_SPAN : routePathOf(`/${UNREAD_SPAN}${rest}`),

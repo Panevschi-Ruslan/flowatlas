@@ -1,4 +1,4 @@
-import { callSitesOf as callSitesOfFunction, evaluateExpression, startLineOf, wasRead, type NamedFunction } from '@flowatlas/core';
+import { callSitesOf as callSitesOfFunction, evaluateExpression, startLineOf, UNREAD_SPAN, wasRead, type NamedFunction } from '@flowatlas/core';
 import type { CallExpression, ClassDeclaration, Node as TsNode, ObjectLiteralExpression, ParameterDeclaration } from 'ts-morph';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
@@ -38,6 +38,16 @@ export interface ReadRequest {
 const FORWARD_DEPTH = 3;
 
 const isRead = (address: ApiUrl): boolean => address.path !== null && wasRead(address.path);
+
+/**
+ * Whether an address names a host part of which is a value nobody read
+ * where it is written: `localhost:${…}`, `localhost${…}` (P318). Such a
+ * value is a port or the rest of the name, which the callers may hand.
+ */
+const hostUnread = (address: ApiUrl): boolean => address.host !== null && address.host.includes(UNREAD_SPAN);
+
+/** Whether an address is read whole: its path, and the host it names (P318). */
+const isSettled = (address: ApiUrl): boolean => isRead(address) && !hostUnread(address);
 
 /**
  * The parameter a name was declared in: the parameter itself, or a member taken
@@ -310,8 +320,14 @@ export const requestsOf = (
       ...(depth === 0 ? {} : { through: owner.name }),
       calls: chain,
     };
-    if (isRead(here)) return [inPlace];
+    if (isSettled(here)) return [inPlace];
     if (depth >= FORWARD_DEPTH) return [inPlace];
+    // A request whose path is read here and whose host is not -
+    // `http://localhost:${port}/health` - is followed out for its host alone
+    // (P318): a caller is drawn on only where it settles the host, one per
+    // caller, `localhost:3000` and `localhost:4000`; one that does not leaves
+    // the request here, as one that does not read a path does.
+    const drawn = (address: ApiUrl): boolean => (isRead(here) ? isSettled(address) : isRead(address));
 
     // What is still missing is written in `at`, whether that is the argument
     // the request was given or the argument the last frame passed on.
@@ -339,7 +355,7 @@ export const requestsOf = (
         [...chain, call],
       );
       for (const request of found) {
-        if (isRead(request.address)) out.push(request);
+        if (drawn(request.address)) out.push(request);
         else unread += 1;
       }
     }

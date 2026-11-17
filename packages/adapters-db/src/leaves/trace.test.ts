@@ -244,6 +244,32 @@ describe('splitting an address at the part a caller supplies', () => {
     const portSplit = splitAtParameter(address(ports));
     const [portCaller] = forwardedFrom(portSplit!.parameter).calls;
     expect(composeAddress(analyzeUrl(portCaller!.argument), portSplit)).toMatchObject({ path: '/orders', host: 'localhost:3000' });
+    // A port's place each caller fills (P318): a number or digits are the port; anything else says nothing.
+    const placed = parse(`
+      declare const settings: { port: number };
+      export function go(port: number | string) { return fetch(\`http://localhost:\${port}/orders\`); }
+      export const one = () => go(3000);
+      export const two = () => go('4000');
+      export const three = () => go(settings.port);
+    `);
+    const placeSplit = splitAtParameter(address(placed));
+    expect(placeSplit).toMatchObject({ before: 'http://localhost:', after: '/orders' });
+    const composed = forwardedFrom(placeSplit!.parameter).calls.map((call) => composeAddress(analyzeUrl(call.argument), placeSplit, call.argument));
+    expect(composed.map(({ host, path }) => ({ host, path }))).toEqual([
+      { host: 'localhost:3000', path: '/orders' },
+      { host: 'localhost:4000', path: '/orders' },
+      { host: null, path: null },
+    ]);
+    // The last says less than the request where it is written, which keeps its own reading.
+    expect(surenessOf(composed[2]!)).toBeLessThan(surenessOf(analyzeUrl(address(placed))));
+    // The opening of the name a caller hands is the host's, not a path's.
+    const tenant = parse(`
+      export function go(tenant: string) { return fetch(\`https://\${tenant}.shop.example/orders\`); }
+      export const one = () => go('acme');
+    `);
+    const tenantSplit = splitAtParameter(address(tenant));
+    const [tenantCaller] = forwardedFrom(tenantSplit!.parameter).calls;
+    expect(composeAddress(analyzeUrl(tenantCaller!.argument), tenantSplit, tenantCaller!.argument)).toMatchObject({ host: 'acme.shop.example', path: '/orders' });
     // A number is a port; nothing known is no port, joined with + or written as a template.
     const number = parse(`export function go(port: number) { return fetch(\`http://localhost\${port}/orders\`); }`);
     expect(analyzeUrl(address(number))).toMatchObject({ path: '/orders', host: 'localhost${…}' });

@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-17T17:26:53.397Z",
+  "configHash": "4ad4936b9843",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "catalog",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 19,
+      "edges": 21,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "stock",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 30,
+      "edges": 30,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 0
+    }
+  ],
+  "httpOut": {
+    "total": 5,
+    "linked": 5,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 11,
+    "resolved": 10,
+    "unresolved": 1,
+    "byReason": {
+      "ambiguous-route-target": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 6,
+    "called": 5,
+    "uncalled": [
+      "entry:jobs:http:POST:/sync"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "js/probe.js",
+      "line": 8,
+      "reason": "ambiguous-route-target",
+      "message": "catalog and stock both answer GET /health",
+      "hint": "Set services[].apiTarget on the frontend to say which service its settings key names.",
+      "symbol": "ui_api_call:web#js/probe.js:8:12"
+    }
+  ],
+  "totals": {
+    "nodes": 57,
+    "edges": 56,
+    "types": 0,
+    "missed": 4,
+    "sites": 7,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 4
+  }
+}

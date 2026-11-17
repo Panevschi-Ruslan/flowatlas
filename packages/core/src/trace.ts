@@ -2222,18 +2222,59 @@ const HOST_TEXT = /^(:\d*|[.-][a-z0-9.-]*)$/i;
  * follows a `:` (a port's place), a `/` (a segment's), a `.` or a `-` (part
  * of the name), or where no such value is written.
  */
-export const valueAfterHost = (value: TsNode): TsNode | undefined => {
+export const valueAfterHost = (value: TsNode, read: SpanReader = writtenSpan): TsNode | undefined =>
+  valueWhere(value, read, (text, literal) => endsAtHost(text) && literal.startsWith('/'));
+
+/**
+ * The value written in a host's port place, `port` in
+ * `` `http://localhost:${port}/health` `` (P318): what a number handed in
+ * fills, as `localhost:3000`, where anywhere else in an address a number is a
+ * value of the path's.
+ */
+export const valueAtPort = (value: TsNode, read: SpanReader = writtenSpan): TsNode | undefined =>
+  valueWhere(value, read, (text) => PORT_PLACE.test(text));
+
+/** `scheme://host:`, and nothing after it: where a port is written next. */
+const PORT_PLACE = /^[a-z][a-z0-9+.-]*:\/\/[^/?#$]+:$/i;
+
+/**
+ * How a piece of an address the evaluator does not read is read as text:
+ * nothing, or the text. `atStart` says the piece opens the address, where a
+ * host may be what it holds.
+ */
+export type SpanReader = (piece: TsNode, atStart: boolean) => string | null;
+
+/**
+ * A piece of an address the evaluator does not read but a class writes down
+ * (P318): a method that always answers one string, `this.origin()`, or a field
+ * that always holds one, `this.prefix`, `Ports.catalog` - at the opening of
+ * the address with the host it may hold. What the browser reader and the
+ * server reader each read a span with, so a value after a host is located and
+ * told apart under the same reading the address itself is read with.
+ */
+export const writtenSpan: SpanReader = (piece, atStart) =>
+  constantMethodResult(piece) ?? constantPropertyValue(piece, { allowHost: atStart });
+
+/** The text a piece of an address is: what the evaluator reads, or `read` where it does not. */
+const spanText = (piece: TsNode, read: SpanReader, atStart: boolean): string | undefined => {
+  const value = evaluateExpression(piece);
+  if (value.resolved && (typeof value.value === 'string' || typeof value.value === 'number')) return String(value.value);
+  return read(piece, atStart) ?? undefined;
+};
+
+/** The first value nobody read in an address, where `at` says so of the text before it and the text after it. */
+const valueWhere = (value: TsNode, read: SpanReader, at: (text: string, literal: string) => boolean): TsNode | undefined => {
   const node = deref(value);
   const pieces = Node.isTemplateExpression(node) ? templatePieces(node) : concatenatedPieces(node, () => false);
   if (pieces === undefined) return undefined;
   let text = pieces.head;
   for (const span of pieces.spans) {
-    const read = evaluateExpression(span.expression);
-    if (read.resolved && (typeof read.value === 'string' || typeof read.value === 'number')) {
-      text += String(read.value) + span.literal;
+    const known = spanText(span.expression, read, text === '');
+    if (known !== undefined) {
+      text += known + span.literal;
       continue;
     }
-    if (endsAtHost(text) && span.literal.startsWith('/')) return span.expression;
+    if (at(text, span.literal)) return span.expression;
     text += UNREAD_SPAN + span.literal;
   }
   return undefined;
@@ -2274,6 +2315,9 @@ const afterHostOf = (value: TsNode, budget: number): AfterHost => {
   const read = evaluateExpression(node);
   if (read.resolved && typeof read.value === 'number') return 'host';
   if (read.resolved && typeof read.value === 'string') return afterHostText(read.value);
+  // A constant a class writes down, read as the address reads it (P318).
+  const written = writtenSpan(node, false);
+  if (written !== null) return afterHostText(written);
   const type = node.getType();
   if (type.isNumber() || type.isNumberLiteral()) return 'host';
   // `:${port}`, `/${path}`, `':' + port`: the text it opens with says.
@@ -2372,13 +2416,15 @@ export const splitAtParameter = (
       text = '';
       continue;
     }
+    // What the evaluator reads, or a constant a class writes down (P318).
     const value = evaluateExpression(span.expression);
+    const written = value.resolved && typeof value.value === 'string' ? value.value : writtenSpan(span.expression, split === undefined && text === '');
     // A value nobody read straight after the host, a path after it, is the
     // opening of the path unless it is the host's port or the rest of its
     // name (P312): the host is the text before it.
-    const opensPath = split === undefined && endsAtHost(text) && literal.startsWith('/') && !continuesHost(span.expression);
+    const opensPath = written === null && split === undefined && endsAtHost(text) && literal.startsWith('/') && !continuesHost(span.expression);
     const hole = opensPath ? `/${UNREAD_SPAN}` : holeIn(split === undefined ? text : split.after, literal, index === spans.length - 1);
-    const piece = value.resolved && typeof value.value === 'string' ? value.value : hole;
+    const piece = written ?? hole;
     if (split === undefined) text += piece + literal;
     else split.after += piece + literal;
   }

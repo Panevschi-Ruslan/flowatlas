@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-15T17:34:23.846Z",
+  "builtAt": "2026-11-17T17:27:10.348Z",
   "services": [
     {
       "name": "web",
@@ -261,15 +261,6 @@
       }
     },
     {
-      "id": "external_api:localhost${…}",
-      "type": "external_api",
-      "label": "localhost${…}",
-      "repo": "web",
-      "meta": {
-        "host": "localhost${…}"
-      }
-    },
-    {
       "id": "external_api:ratings.example.test",
       "type": "external_api",
       "label": "ratings.example.test",
@@ -314,20 +305,21 @@
       }
     },
     {
-      "id": "http_out:jobs#src/index.ts:17:21",
+      "id": "http_out:jobs#src/index.ts:22:10",
       "type": "http_out",
       "label": "GET /health",
       "repo": "jobs",
       "file": "src/index.ts",
-      "line": 17,
+      "line": 22,
       "meta": {
         "method": "GET",
-        "url": "http://localhost${…}/health",
+        "url": "http://localhost:4600/health",
         "path": "/health",
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
-        "host": "localhost${…}"
+        "host": "localhost:4600",
+        "targetService": "catalog"
       }
     },
     {
@@ -638,16 +630,16 @@
       }
     },
     {
-      "id": "ui_api_call:web#js/products.js:16:10",
+      "id": "ui_api_call:web#js/products.js:20:10@16:10",
       "type": "ui_api_call",
       "label": "GET /health",
       "repo": "web",
       "file": "js/products.js",
-      "line": 16,
+      "line": 20,
       "kind": "http",
       "meta": {
         "method": "GET",
-        "url": "http://localhost${…}/health",
+        "url": "http://localhost:4600/health",
         "path": "/health",
         "baseUrlEnv": null,
         "responseType": null,
@@ -655,7 +647,8 @@
         "package": null,
         "client": "fetch",
         "via": "literal",
-        "host": "localhost${…}",
+        "host": "localhost:4600",
+        "through": "local",
         "targetService": "catalog"
       }
     },
@@ -1125,12 +1118,17 @@
       "line": 12
     },
     {
-      "from": "http_out:jobs#src/index.ts:17:21",
-      "to": "external_api:localhost${…}",
-      "type": "calls",
-      "confidence": "static",
+      "from": "http_out:jobs#src/index.ts:22:10",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "http_calls",
+      "confidence": "heuristic",
       "file": "src/index.ts",
-      "line": 17
+      "line": 22,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:26"
+      }
     },
     {
       "from": "jobs#src/index.ts:POST /sync@25",
@@ -1151,6 +1149,14 @@
       "returns": "any",
       "file": "src/index.ts",
       "line": 26
+    },
+    {
+      "from": "jobs#src/index.ts:healthHere",
+      "to": "http_out:jobs#src/index.ts:22:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 22
     },
     {
       "from": "jobs#src/index.ts:healthHere",
@@ -1183,14 +1189,6 @@
       "returns": "any",
       "file": "src/index.ts",
       "line": 12
-    },
-    {
-      "from": "jobs#src/index.ts:readHealth",
-      "to": "http_out:jobs#src/index.ts:17:21",
-      "type": "calls",
-      "confidence": "static",
-      "file": "src/index.ts",
-      "line": 17
     },
     {
       "from": "ui_api_call:web#js/latest.js:11:10@3:10",
@@ -1275,24 +1273,17 @@
       "line": 11
     },
     {
-      "from": "ui_api_call:web#js/products.js:16:10",
+      "from": "ui_api_call:web#js/products.js:20:10@16:10",
       "to": "entry:catalog:http:GET:/health",
       "type": "hits",
       "confidence": "heuristic",
       "file": "js/products.js",
-      "line": 16,
+      "line": 20,
       "meta": {
-        "via": "unique-route",
-        "targetService": "catalog"
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:26"
       }
-    },
-    {
-      "from": "ui_api_call:web#js/products.js:16:10",
-      "to": "external_api:localhost${…}",
-      "type": "calls",
-      "confidence": "static",
-      "file": "js/products.js",
-      "line": 16
     },
     {
       "from": "ui_api_call:web#js/products.js:25:10",
@@ -1437,6 +1428,14 @@
     },
     {
       "from": "web#js/products.js:checkLocal",
+      "to": "ui_api_call:web#js/products.js:20:10@16:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/products.js",
+      "line": 20
+    },
+    {
+      "from": "web#js/products.js:checkLocal",
       "to": "web#js/products.js:local",
       "type": "calls",
       "confidence": "static",
@@ -1446,14 +1445,6 @@
       "returns": "Response",
       "file": "js/products.js",
       "line": 20
-    },
-    {
-      "from": "web#js/products.js:local",
-      "to": "ui_api_call:web#js/products.js:16:10",
-      "type": "calls",
-      "confidence": "static",
-      "file": "js/products.js",
-      "line": 16
     },
     {
       "from": "web#js/products.js:lost",

@@ -1,5 +1,6 @@
 import {
   applicationOfFile,
+  argumentAlong,
   builtQueryInAddress,
   builtQueryOf,
   forEachCall,
@@ -54,7 +55,7 @@ import { classMethods, enclosingIndexed, requestsOf, type ReadRequest, type Requ
 import { localClientOf, type LocalClientReading } from '../util/local-client.js';
 import { linterGlobals, pageLoadedPackages } from '../util/page-globals.js';
 import { basedBy, rewriteFor, unreadOpening } from '../util/request-rewrite.js';
-import { receiverValues } from '../util/receiver-values.js';
+import { parameterNamed, receiverValues } from '../util/receiver-values.js';
 import { sentThrough } from '../util/sent-later.js';
 import { analyzeApiUrl, analyzeClientBase, isSomewhere, underBase, type ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
@@ -884,9 +885,9 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    * under its base where those agree and the path alone where they do not,
    * which is said.
    */
-  const recordHeld = (found: FoundCall, request: ReadRequest, through: string): void => {
+  const recordHeld = (found: FoundCall, request: ReadRequest, through: string, held: FoundCall['held'] = found.held): void => {
     const groups = new Map<string, { owner: IndexedFunction | undefined; at: TsNode; instances: ClientInstance[] }>();
-    for (const { instance, at } of found.held ?? []) {
+    for (const { instance, at } of held ?? []) {
       const caller = enclosingIndexed(ctx, at, isClientClass);
       const owner = caller === undefined || caller.id === request.site.ownerId ? undefined : caller;
       const key = owner?.id ?? '';
@@ -894,29 +895,58 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       group.instances.push(instance);
       groups.set(key, group);
     }
-    for (const { owner, at, instances: held } of groups.values()) {
-      const agreed = agreedInstance(held);
+    for (const { owner, at, instances: group } of groups.values()) {
+      const agreed = agreedInstance(group);
       const { held: _held, ...rest } = found;
       const one: FoundCall = agreed === undefined ? rest : { ...rest, client: clientOf(agreed), instance: agreed };
       if (owner === undefined) {
-        if (agreed === undefined) reportBasesDisagree(found, held);
+        if (agreed === undefined) reportBasesDisagree(found, group);
         record(one, request);
         continue;
       }
       ensureOwner(ctx, owner.id);
       const handing = at.getFirstAncestor((node) => Node.isCallExpression(node) || Node.isNewExpression(node)) ?? at;
-      record(one, { ...request, site: { call: handing, ownerId: owner.id, file: owner.file }, depth: request.depth + 1, through, calls: [] });
+      record(one, { ...request, site: { call: handing, ownerId: owner.id, file: owner.file }, depth: request.depth + 1, through, calls: request.calls });
     }
   };
 
+  /**
+   * A request on a receiver handed instances made with different bases
+   * whose address is itself followed out to a caller (P318): the instances
+   * that caller hands - what the receiver is handed along the calls the
+   * address came out through - each under its own base, as at the request
+   * where it is written (see {@link recordHeld}); one a caller further out
+   * hands is that caller's. Where the receiver is no parameter handed along
+   * those calls, nothing tells which of the instances is this caller's: the
+   * path alone, which is said.
+   */
+  const recordHeldAlong = (found: FoundCall, request: ReadRequest): void => {
+    const callee = found.call.getExpression();
+    const parameter = Node.isPropertyAccessExpression(callee) ? parameterNamed(callee.getExpression()) : undefined;
+    const handed = parameter === undefined ? undefined : argumentAlong(parameter, request.calls);
+    const held = handed === undefined || handed === null
+      ? []
+      : heldBy(handed).flatMap((value) => {
+          const instance = holdsNothing(value) ? undefined : instances.of(value);
+          return instance === undefined ? [] : [{ instance, at: value }];
+        });
+    if (held.length > 0) {
+      recordHeld(found, request, request.through ?? '', held);
+      return;
+    }
+    const { held: all, ...rest } = found;
+    reportBasesDisagree(found, (all ?? []).map((each) => each.instance), 'along the callers its address is read at');
+    record(rest, request);
+  };
+
   /** Instances with different bases handed where no one caller can carry each, said once at the request. */
-  const reportBasesDisagree = (found: FoundCall, held: readonly ClientInstance[]): void => {
+  const reportBasesDisagree = (found: FoundCall, held: readonly ClientInstance[], where = 'outside any function that could carry each'): void => {
     const at = siteOf(found.call);
     ctx.report({
       file: ctx.fileOf(found.call),
       line: at.line,
       reason: 'api-client-base-unread',
-      hint: `The receiver is handed ${held.length} ${found.client.name} instances made with different bases outside any function that could carry each, so the request is recorded under the path it writes. Hand each instance from a function of its own, or write one base.`,
+      hint: `The receiver is handed ${held.length} ${found.client.name} instances made with different bases ${where}, so the request is recorded under the path it writes. Hand each instance from a function of its own, or write one base.`,
       symbol: found.call.getText().slice(0, 80),
     });
   };
@@ -1140,6 +1170,10 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         ensureOwner(ctx, request.site.ownerId);
         if (request.depth === 0 && call.held !== undefined) {
           recordHeld(call, request, indexed.name);
+          continue;
+        }
+        if (call.held !== undefined) {
+          recordHeldAlong(call, request);
           continue;
         }
         if (request.depth === 0 && call.described === undefined && perVerbCaller(call, request)) continue;

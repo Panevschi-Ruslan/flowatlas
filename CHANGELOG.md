@@ -81,6 +81,20 @@ only one of them moved.
   receiver are one request per caller with its own base; and in
   `https://host${x}/rest` the value is a port or a host's rest where it is
   followed to one, otherwise the opening of a path followed to the callers.
+- **Ports handed by each caller, bases along an address followed out, and
+  callers held by a `const` (P318).** `` fetch(`http://localhost:${port}/x`) ``
+  called as `health(3000)` and `health(4000)`, or with `':3000'` straight
+  after the host, is one request per caller at `localhost:3000` and
+  `localhost:4000`, each joined to the service listening there, in both the
+  browser and the server reader; a caller that hands no port it reads leaves
+  the request where it is written. A host a method answers and a port a
+  class keeps as a constant (`this.origin()`, `Ports.stock`) are read where a
+  value after the host is told apart, as the address itself reads them. A
+  receiver handed instances with different bases whose address is read at
+  a caller takes the base of what that caller hands. On the server a caller
+  written as an arrow or a function expression held by a `const`,
+  `export const productsV1 = () => readProducts('/v1')`, is a caller a
+  request is followed out to.
 - **Route registries reached across modules and read through views, and
   link props followed through what each use hands (P314).** A store a
   module exports and others add to is found by every reference; a reader

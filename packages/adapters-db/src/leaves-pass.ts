@@ -1785,7 +1785,9 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   let bodies: Map<TsNode, Holder> | undefined;
   const bodyHolding = (site: TsNode): Holder | undefined => {
     bodies ??= new Map([...scopesOf(ctx)].map((scope) => [scope.body, scope] as const));
-    for (let at = site.getParent(); at !== undefined && !Node.isSourceFile(at); at = at.getParent()) {
+    // From the site itself: the call an arrow answers with is its whole body,
+    // `export const productsV1 = () => readProducts('/v1')` (P318).
+    for (let at: TsNode | undefined = site; at !== undefined && !Node.isSourceFile(at); at = at.getParent()) {
       const holder = bodies.get(at);
       if (holder !== undefined) return holder;
     }
@@ -2210,9 +2212,11 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       const forwarding = forwardNoWorse(forwardedFrom(split.parameter, undefined, split.member), {
         here: { owner: holder, info: here },
         at: (hop) => {
-          const owner = ownerOf(hop.site, here.path === null || !wasRead(here.path));
+          // A function is a caller for a path not read here, and for a host
+          // not read here either, `http://localhost:${port}/health` (P318).
+          const owner = ownerOf(hop.site, here.path === null || !wasRead(here.path) || (here.host?.includes(UNREAD_SPAN) ?? false));
           if (owner === undefined || !Node.isCallExpression(hop.site)) return undefined;
-          return { owner, info: composeAddress(analyzeUrl(hop.argument), split) };
+          return { owner, info: composeAddress(analyzeUrl(hop.argument), split, hop.argument) };
         },
         sureness: ({ info }) => surenessOf(info),
       });

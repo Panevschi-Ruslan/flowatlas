@@ -1,4 +1,4 @@
-import { choosesASegment, constantPropertyValue, continuesHost, endsAtHost, holeIn, normalizePath, PARAM_PLACEHOLDER, UNREAD_SPAN } from '@flowatlas/core';
+import { choosesASegment, constantPropertyValue, continuesHost, endsAtHost, holeIn, normalizePath, PARAM_PLACEHOLDER, UNREAD_SPAN, writtenSpan } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { evaluateExpression } from '@flowatlas/extractor-nestjs';
@@ -260,6 +260,21 @@ const fromWrittenConcatenation = (argument: TsNode): UrlInfo => {
 /** `scheme://host` at the start of an address, and the host inside it. */
 const ORIGIN = /^([a-z][a-z0-9+.-]*:\/\/([^/?#]+))/i;
 
+/** `scheme://` and whatever of the host is written before a value, nothing after it. */
+const HOST_OPEN = /^([a-z][a-z0-9+.-]*:\/\/)([^/?#]*)$/i;
+
+/**
+ * The text a caller hands, as it fills a hole in a host (P318): a number it
+ * hands, text with no setting behind it, or a constant a class keeps,
+ * `Ports.stock`, read as a span written in place is.
+ */
+const handedText = (info: UrlInfo, argument: TsNode | undefined): string | null => {
+  const handed = argument === undefined ? undefined : evaluateExpression(argument);
+  if (handed?.resolved === true && typeof handed.value === 'number') return String(handed.value);
+  if (info.url !== null) return info.baseUrlEnv === null ? info.url : null;
+  return argument === undefined ? null : writtenSpan(argument, false);
+};
+
 /**
  * A caller's value as it fills the hole, which is the text it is and not a
  * path: reading `'desk-bot'` as a path starts it with a separator, and
@@ -287,18 +302,38 @@ const asWritten = (info: UrlInfo, path: string): string =>
  * request out to its caller says who made it, and must not cost the address the
  * request itself states (R175).
  */
-export const composeAddress = (info: UrlInfo, split?: SplitAddress): UrlInfo => {
+export const composeAddress = (info: UrlInfo, split?: SplitAddress, argument?: TsNode): UrlInfo => {
   if (split === undefined) return info;
   if (info.host !== null) return info;
+  // The caller fills part of the host (P318): a port's place,
+  // `http://localhost:${port}/health`, with a number or digits; the opening
+  // or the middle of the name, `https://${tenant}.shop.example/orders`; or,
+  // straight after a whole host, the host's port or the rest of its name,
+  // `:3000`, `.example` (P312) - a path there opens the path, below. One
+  // request per caller, at its host; a caller handing nothing that fits says
+  // nothing of the host, and the request stays where it is written.
+  const opening = HOST_OPEN.exec(split.before);
+  if (opening !== null) {
+    const [, scheme = '', written = ''] = opening;
+    const hostAfter = /^[^/?#]*/.exec(split.after)?.[0] ?? '';
+    const whole = written !== '' && !/[:.-]$/.test(written) && hostAfter === '';
+    const text = handedText(info, argument);
+    const fits =
+      text !== null &&
+      (whole ? /^(:\d+|[.-][a-z0-9.-]*)$/i.test(text) : written.endsWith(':') ? /^\d+$/.test(text) : /^[a-z0-9.-]+$/i.test(text));
+    if (fits) {
+      return {
+        url: `${scheme}${written}${text}${split.after}`,
+        path: routePathOf(split.after.slice(hostAfter.length)),
+        baseUrlEnv: null,
+        host: `${written}${text}${hostAfter}`.toLowerCase(),
+      };
+    }
+    if (!whole) return EMPTY;
+  }
   const origin = ORIGIN.exec(split.before);
   const stated = origin?.[1] ?? '';
   const before = split.before.slice(stated.length);
-  // A caller's `:3000` or `.example` straight after the host is the host's
-  // port or the rest of its name, not a segment of the path (P312).
-  if (origin !== null && before === '' && info.baseUrlEnv === null && info.url !== null && /^(:\d+|[.-][a-z0-9.-]*)$/i.test(info.url)) {
-    const path = routePathOf(split.after);
-    return { url: `${stated}${info.url}${split.after}`, path, baseUrlEnv: null, host: `${origin[2] ?? ''}${info.url}`.toLowerCase() };
-  }
   const unread = info.url === null && holeIn(before, split.after, true) === PARAM_PLACEHOLDER;
   const filled = info.path === null ? (unread ? PARAM_PLACEHOLDER : null) : asWritten(info, info.path);
   const path = filled === null ? null : routePathOf(before + filled + split.after);
