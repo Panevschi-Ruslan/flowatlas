@@ -2,7 +2,6 @@ import {
   applicationOfFile,
   builtQueryInAddress,
   builtQueryOf,
-  callSitesOf,
   forEachCall,
   makeExternalApiId,
   isPlatformProvided,
@@ -36,7 +35,7 @@ import {
 } from '@flowatlas/core';
 import { documentOf, fetchedQuery, GRAPHQL_META, handedThrough, operationMeta, operationsOf } from '@flowatlas/graphql';
 import type { CallExpression, ClassDeclaration, Node as TsNode, ObjectLiteralExpression } from 'ts-morph';
-import { Node, SyntaxKind } from 'ts-morph';
+import { Node } from 'ts-morph';
 import {
   AXIOS,
   BASE_FIELDS,
@@ -56,7 +55,7 @@ import { classMethods, enclosingIndexed, requestsOf, type ReadRequest, type Requ
 import { localClientOf, type LocalClientReading } from '../util/local-client.js';
 import { linterGlobals, pageLoadedPackages } from '../util/page-globals.js';
 import { basedBy, rewriteFor, unreadOpening } from '../util/request-rewrite.js';
-import { memberOfInstance, receiverValues, valuesAlong } from '../util/receiver-values.js';
+import { placedOut, receiverValues, valuesAlong } from '../util/receiver-values.js';
 import { sentThrough } from '../util/sent-later.js';
 import { analyzeApiUrl, analyzeClientBase, isSomewhere, underBase, type ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
@@ -650,6 +649,9 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         via: address.via,
         ...(found.described?.client.describedBy === undefined ? {} : { describedBy: found.described.client.describedBy }),
         ...(address.host === null ? {} : { host: address.host }),
+        // A number glued to the host, `localhost4600`: the linker joins no
+        // route by the path of a host that cannot be meant (P330).
+        ...(address.portWithoutColon === undefined ? {} : { portWithoutColon: { number: address.portWithoutColon.number, host: address.portWithoutColon.host } }),
         ...(address.guessed ? { guessed: true } : {}),
         ...(request.through === undefined ? {} : { through: request.through }),
         ...(operation === undefined ? {} : { [GRAPHQL_META]: operation }),
@@ -786,7 +788,16 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         const instance = instances.of(receiver);
         if (instance !== undefined && instance.factory.client === client) {
           found.push({ call: node, client: clientOf(instance), shape, instance });
-        } else found.push({ call: node, client, shape });
+          return;
+        }
+        // A field or a parameter its type names, `constructor(private api:
+        // AxiosInstance)`: the instances it is handed, where every value is
+        // one (P330), each the request's at the caller that hands it as an
+        // untyped one's are; the type alone, with no base, where not.
+        const handed = typedHeldAt(receiver, client);
+        const agreed = handed === undefined ? undefined : agreedInstance(handed.map((each) => each.instance));
+        if (agreed !== undefined) found.push({ call: node, client: clientOf(agreed), shape, instance: agreed });
+        else found.push({ call: node, client, shape, ...(handed === undefined ? {} : { held: handed }) });
         return;
       }
       // Known by how it was made, where its type is not known: the package's
@@ -828,6 +839,32 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     const origin = resolveTypeOrigin(value);
     return REQUEST_CLIENTS.some((client) => isClientValue(origin, client));
   });
+
+  /**
+   * What a receiver may hold, followed past values the compiler knows by
+   * their type to the instances they are (P330): `this.api` typed
+   * `AxiosInstance` is a value of that client, and what tells its base is the
+   * instance each `new` hands the constructor.
+   */
+  const instancesBy = receiverValues((value) => instances.of(value) !== undefined);
+
+  /**
+   * The instances a receiver its type names a client holds (P330), each said
+   * to be handed where it is given: where every value it may hold is an
+   * instance of that client, and at least one is. Nothing otherwise - a
+   * parameter nobody hands anything, a value read from somewhere this does
+   * not follow - and the type alone is what is read.
+   */
+  const typedHeldAt = (receiver: TsNode, client: RequestClient): NonNullable<FoundCall['held']> | undefined => {
+    const handed: { instance: ClientInstance; at: TsNode }[] = [];
+    for (const value of instancesBy(receiver)) {
+      if (holdsNothing(value)) continue;
+      const instance = instances.of(value);
+      if (instance === undefined || instance.factory.client !== client) return undefined;
+      handed.push({ instance, at: value });
+    }
+    return handed.length > 0 ? handed : undefined;
+  };
 
   /**
    * A request made on a receiver the compiler knows nothing of (P301): a
@@ -946,52 +983,38 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
 
   /** The client instances a value may hold, each said to be handed at `at`, or where it is made. */
   const instancesHeld = (value: TsNode, at?: TsNode): NonNullable<FoundCall['held']> =>
-    heldBy(value).flatMap((each) => {
+    instancesBy(value).flatMap((each) => {
       const instance = holdsNothing(each) ? undefined : instances.of(each);
       return instance === undefined ? [] : [{ instance, at: at ?? each }];
     });
 
   /**
-   * The instances a field of `this` holds, read at each caller of the method
-   * the request is written in or followed out to through calls on `this`
-   * (P324): `health() { return this.read('/health'); }` called as
+   * The instances a receiver holds, read out past the calls the address came
+   * out through to the outermost caller that gives each (P324, P330): a field
+   * of `this` at each caller of the method the request is written in or
+   * followed out to - `health() { return this.read('/health'); }` called as
    * `new Reader(stockApi).health()` holds `stockApi` in `this.api` there,
-   * whatever other instances are made. Each is said to be handed at that
-   * caller. Nothing where the receiver is no field of `this`, the method has
-   * no caller, or a caller calls it on an instance that is not followed.
+   * whatever other instances are made - and, where that caller calls it on
+   * an instance it was itself handed, a parameter or a field of its own
+   * `this`, on out to whoever hands that one, so `check(new Reader(stockApi))`
+   * carries the base of `stockApi`. Each is said to be handed at the
+   * outermost caller followed. Nothing where a step has no caller or reads a
+   * value it cannot follow (see {@link placedOut}).
    */
   const heldAtCallers = (found: FoundCall, request: ReadRequest): FoundCall['held'] | undefined => {
-    const onThis = (call: TsNode): boolean => {
-      const callee = Node.isCallExpression(call) ? call.getExpression() : undefined;
-      return callee !== undefined && Node.isPropertyAccessExpression(callee) && callee.getExpression().getKind() === SyntaxKind.ThisKeyword;
-    };
     const callee = found.call.getExpression();
-    const receiver = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : undefined;
-    if (receiver === undefined || !Node.isPropertyAccessExpression(receiver) || receiver.getExpression().getKind() !== SyntaxKind.ThisKeyword) return undefined;
-    if (!request.calls.every(onThis)) return undefined;
-    const method = request.site.call.getFirstAncestor((node) => Node.isMethodDeclaration(node));
-    if (method === undefined || !Node.isMethodDeclaration(method)) return undefined;
-    const sites = callSitesOf(method);
-    if (sites.length === 0) return undefined;
+    if (!Node.isPropertyAccessExpression(callee)) return undefined;
+    const placed = placedOut(callee.getExpression(), request.calls);
+    if (placed === undefined) return undefined;
     const held: NonNullable<FoundCall['held']>[number][] = [];
-    for (const site of sites) {
-      const called = site.getExpression();
-      if (!Node.isPropertyAccessExpression(called)) return undefined;
-      const instance = called.getExpression();
-      const values = memberOfInstance(instance, receiver.getName());
-      if (values === undefined) return undefined;
-      held.push(...values.flatMap((value) => instancesHeld(value, instance)));
+    for (const { value, at } of placed) {
+      if (holdsNothing(value)) continue;
+      const each = instancesHeld(value, at);
+      // A caller handing a value no instance is read from: which base is its is not told.
+      if (each.length === 0) return undefined;
+      held.push(...each);
     }
     return held.length > 0 ? held : undefined;
-  };
-
-  /** Whether instances handed where no caller of their own carries each disagree on their base, as {@link recordHeld} would leave them at the request. */
-  const disagreeInPlace = (held: NonNullable<FoundCall['held']>, request: ReadRequest): boolean => {
-    const unplaced = held.flatMap(({ instance, at }) => {
-      const caller = enclosingIndexed(ctx, at, isClientClass);
-      return caller === undefined || caller.id === request.site.ownerId ? [instance] : [];
-    });
-    return unplaced.length > 0 && agreedInstance(unplaced) === undefined;
   };
 
   /** Instances with different bases handed where no one caller can carry each, said once at the request. */
@@ -1261,11 +1284,11 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       for (const request of requestsOf(ctx, urlArg, indexed, site, isClientClass)) {
         ensureOwner(ctx, request.site.ownerId);
         if (request.depth === 0 && call.held !== undefined) {
-          // Instances that would disagree where the request is written,
-          // held by a field of `this`: each caller of the method, under
-          // the base of the instance it calls it on (P324).
-          const atCallers = disagreeInPlace(call.held, request) ? heldAtCallers(call, request) : undefined;
-          recordHeld(call, request, indexed.name, atCallers);
+          // Each caller of the method, under the base of the instance it
+          // calls it on (P324), followed out to whoever hands that one
+          // (P330): the request is the callers', not whoever else makes an
+          // instance. Where they are not all read, each maker's (P312).
+          recordHeld(call, request, indexed.name, heldAtCallers(call, request));
           continue;
         }
         if (call.held !== undefined) {

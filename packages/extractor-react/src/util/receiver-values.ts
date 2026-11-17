@@ -1,4 +1,4 @@
-import { argumentAlong, handedByEachCall } from '@flowatlas/core';
+import { argumentAlong, callSitesOf, handedByEachCall } from '@flowatlas/core';
 import type { CallExpression, ClassDeclaration, NewExpression, Node as TsNode, ParameterDeclaration } from 'ts-morph';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 
@@ -389,4 +389,102 @@ export const valuesAlong = (value: TsNode, hops: readonly CallExpression[], dept
   if (instance.getKind() === SyntaxKind.ThisKeyword) return valuesAlong(target, further, depth + 1);
   const objects = objectsAlong(instance, further, depth + 1);
   return objects === undefined ? undefined : membersOf(objects, member, depth);
+};
+
+/** A value followed out to where it is handed, and the node it is handed at there (P330). */
+export interface Placed {
+  readonly value: TsNode;
+  /** Where the value is handed: the outermost argument or instance it was followed out through. */
+  readonly at: TsNode;
+}
+
+/** How many steps out a receiver is followed past the calls its address came out through (P330). */
+const OUT = 8;
+
+/** How many steps one receiver is read through in all, however many callers each reaches (P330). */
+const STEPS = 256;
+
+/** The method of a class `this` is bound to where it is written: a method, or a field holding an arrow function. */
+const methodOfThis = (node: TsNode): TsNode | undefined => {
+  for (let at = node.getParent(); at !== undefined; at = at.getParent()) {
+    if (Node.isArrowFunction(at)) {
+      const holder = at.getParent();
+      if (holder !== undefined && Node.isPropertyDeclaration(holder) && holder.getInitializer() === at) return holder;
+      continue;
+    }
+    if (Node.isMethodDeclaration(at)) {
+      const owner = at.getParent();
+      return owner !== undefined && (Node.isClassDeclaration(owner) || Node.isClassExpression(owner)) ? at : undefined;
+    }
+    if (Node.isFunctionLikeDeclaration(at) || Node.isClassDeclaration(at) || Node.isClassExpression(at)) return undefined;
+  }
+  return undefined;
+};
+
+/** Each placed value of each of several, or nothing where any one is not followed. */
+const everyPlaced = <T>(items: readonly T[], each: (item: T) => Placed[] | undefined): Placed[] | undefined => {
+  const placed: Placed[] = [];
+  for (const item of items) {
+    const found = each(item);
+    if (found === undefined) return undefined;
+    placed.push(...found);
+  }
+  return placed;
+};
+
+/**
+ * What a request's receiver holds, followed out past the calls its address
+ * came out through to the outermost place each value is given (P330): a
+ * parameter by what the call along says, or else by what each caller hands
+ * it; `this` by the instance the call along, or each caller of the method,
+ * calls it on; a member of an object or of an instance - `this.api`,
+ * `options.client` - by what the object it is read on was given, that object
+ * followed out the same way. Each value is said at the argument or the
+ * instance the last caller followed hands it as, so the request is that
+ * caller's: `check(reader) { return reader.health(); }` called as
+ * `check(new Reader(stockApi))` places `stockApi` at that call. Nothing where
+ * a step finds no caller or a value it cannot follow.
+ */
+export const placedOut = (receiver: TsNode, calls: readonly CallExpression[] = []): Placed[] | undefined => {
+  // Every step taken, bounded, so a method many callers reach is not read out of hand.
+  let steps = 0;
+  const out = (value: TsNode, hops: readonly CallExpression[], at: TsNode, depth: number): Placed[] | undefined => {
+    steps += 1;
+    if (depth > OUT || steps > STEPS) return undefined;
+    const target = unwrap(value);
+    if (target.getKind() === SyntaxKind.ThisKeyword) {
+      const [hop, ...further] = hops;
+      const callee = hop?.getExpression();
+      if (callee !== undefined && Node.isPropertyAccessExpression(callee)) return out(callee.getExpression(), further, callee.getExpression(), depth + 1);
+      const method = methodOfThis(target);
+      if (method === undefined || !(Node.isMethodDeclaration(method) || Node.isPropertyDeclaration(method))) return undefined;
+      const sites = callSitesOf(method);
+      if (sites.length === 0) return undefined;
+      return everyPlaced(sites, (site) => {
+        const called = site.getExpression();
+        return Node.isPropertyAccessExpression(called) ? out(called.getExpression(), [], called.getExpression(), depth + 1) : undefined;
+      });
+    }
+    const declaration = declarationNamed(target);
+    if (declaration !== undefined && Node.isParameterDeclaration(declaration) && Node.isIdentifier(declaration.getNameNode())) {
+      // A constructor's parameter is what each `new` hands it, read where its field is.
+      if (Node.isConstructorDeclaration(declaration.getParent())) return [{ value: target, at }];
+      const along = argumentAlong(declaration, hops);
+      if (along === null) return undefined;
+      if (along !== undefined) return out(along, hopsAfter(along, hops), along, depth + 1);
+      const handed = handedAt(declaration);
+      if (handed.length === 0) return undefined;
+      return everyPlaced(handed, ({ argument }) => out(argument, [], argument, depth + 1));
+    }
+    if (Node.isPropertyAccessExpression(target)) {
+      const objects = out(target.getExpression(), hops, at, depth + 1);
+      if (objects === undefined) return undefined;
+      return everyPlaced(objects, (object) => {
+        const members = memberOfInstance(object.value, target.getName());
+        return members === undefined ? undefined : everyPlaced(members, (member) => out(member, [], object.at, depth + 1));
+      });
+    }
+    return [{ value: target, at }];
+  };
+  return out(receiver, calls, receiver, 0);
 };

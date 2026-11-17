@@ -1,4 +1,4 @@
-import { normalizePath, wasRead, type Confidence, type GraphNode } from '@flowatlas/core';
+import { gluedHostUnmeant, normalizePath, wasRead, type Confidence, type GraphNode } from '@flowatlas/core';
 import { chooseAmongSettings, claimantsOfSetting, howChosen, settingCandidates, settingsAfter, type BaseUrlAnswer, type FoundValue, type ChoiceOrder } from './base-url-value.js';
 import { localGraphqlEndpoint, sendsOperation, unservedFinding } from './graphql-value.js';
 import { MARKER_FINDINGS, pathOfValue, unreadRouteFinding, type Finding } from './http-link.js';
@@ -112,6 +112,12 @@ interface Details {
   proxyChain: { services: readonly string[]; loop: boolean };
   /** The address or the verb is only known at run time; the extractor said so. */
   dynamic: { reason: string };
+  /**
+   * The address writes a number straight after `localhost` or an address of
+   * numbers with no colon, `localhost4600` (P330): a host no service is
+   * reached at, joined by no path; the extractor said so.
+   */
+  hostUnmeant: { host: string };
   /** No route answers. `targetService` is null when nothing named one to ask. */
   noRoute: {
     targetService: string | null;
@@ -182,6 +188,7 @@ const missingRoute = ({ targetService, method, path, verbs }: Details['noRoute']
 const FINDINGS: { [K in UiOutcomeKind]: ((detail: Details[K]) => Finding) | null } = {
   linked: null,
   dynamic: null,
+  hostUnmeant: null,
   noRoute: (detail) => {
     if (detail.unserved !== undefined && detail.targetService !== null) return unservedFinding(detail.targetService, detail.method, detail.path, detail.unserved);
     if (detail.named === true && detail.targetService !== null) {
@@ -239,7 +246,7 @@ export const uiFindingFor = (outcome: UiOutcome): Finding | undefined => {
 
 /** The reason a request counts under, whether or not it produced a row. */
 export const uiReasonOf = (outcome: UiOutcome): string | undefined =>
-  outcome.kind === 'dynamic' ? outcome.reason : uiFindingFor(outcome)?.reason;
+  outcome.kind === 'dynamic' ? outcome.reason : outcome.kind === 'hostUnmeant' ? 'address-port-without-colon' : uiFindingFor(outcome)?.reason;
 
 /**
  * The same call, once per value a closed segment of its address can take.
@@ -536,6 +543,7 @@ const byIngress = (ask: Ask): UiOutcome | undefined => {
  * not serving an address is no reason to stop looking for one that does.
  */
 const bySameService = (ask: Ask): UiOutcome | undefined => {
+  if (hostUnmeant(ask.call) !== undefined) return undefined;
   const own = within(ask, ask.call.repo, 'same-service');
   return own.kind === 'noRoute' ? undefined : own;
 };
@@ -555,6 +563,18 @@ const answers = (result: RouteResult): boolean =>
   isMatch(result) || result.reason === 'ambiguous';
 
 /**
+ * The host a request's address names where it writes a number straight after
+ * `localhost` or an address of numbers with no colon (P324, P330): the
+ * address as spelled, `localhost4600`, which no service is reached at.
+ */
+const hostUnmeant = (call: GraphNode): string | undefined => {
+  const glued = call.meta?.['portWithoutColon'] as { number?: unknown; host?: unknown } | undefined;
+  const host = call.meta?.['host'];
+  if (typeof glued?.host !== 'string' || typeof glued.number !== 'string' || typeof host !== 'string') return undefined;
+  return gluedHostUnmeant(glued.host) ? host : undefined;
+};
+
+/**
  * Whoever happens to serve that route, when nothing said who should.
  *
  * A guess, and it comes back as one: the same address may be served by two
@@ -562,6 +582,10 @@ const answers = (result: RouteResult): boolean =>
  * and several is a question only the configuration can settle.
  */
 const byUniqueRoute = (ask: Ask): UiOutcome | undefined => {
+  // A host no service is reached at, `localhost4600` (P330): the server's
+  // reader joins it to nothing, and neither does a guess by its path.
+  const unmeant = hostUnmeant(ask.call);
+  if (unmeant !== undefined) return { kind: 'hostUnmeant', host: unmeant };
   // A setting whose value is a host no service is reached at, with a path
   // after it (`https://api.example.test/api`), puts that path in front of
   // every address written under it (P280): asked first, as the value is.

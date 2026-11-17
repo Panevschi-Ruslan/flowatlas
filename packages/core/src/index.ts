@@ -745,6 +745,7 @@ export {
   atPortPlace,
   numberAfterHost,
   portWithoutColonRow,
+  gluedHostUnmeant,
   writtenNumber,
   writtenSpan,
   type NumberAfterHost,

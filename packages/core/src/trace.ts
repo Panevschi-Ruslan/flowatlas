@@ -2314,6 +2314,14 @@ export interface NumberAfterHost {
 }
 
 /**
+ * Whether a host a number is written straight after, with no colon, cannot
+ * be the host the address means (P324, P330): `localhost` or an address of
+ * numbers, so `localhost4600` is a host no service is reached at. Any other
+ * name may be one ending in digits (`worker3`).
+ */
+export const gluedHostUnmeant = (host: string): boolean => /^(localhost|\d+(\.\d+){3})$/i.test(host);
+
+/**
  * The row said of a request whose address writes a number straight after its
  * host with no colon (P324), the same from the browser's reader and the
  * server's. Read as spelled, the address names another host; after
@@ -2322,7 +2330,7 @@ export interface NumberAfterHost {
  * digits (`worker3`), so it informs.
  */
 export const portWithoutColonRow = (glued: Pick<NumberAfterHost, 'number' | 'host'>, file: string, line: number, symbol: string): Unresolved => {
-  const meant = /^(localhost|\d+(\.\d+){3})$/i.test(glued.host);
+  const meant = gluedHostUnmeant(glued.host);
   return {
     file,
     line,

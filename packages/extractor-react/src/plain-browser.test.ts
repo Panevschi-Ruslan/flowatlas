@@ -360,6 +360,98 @@ describe('plain browser code (P284)', () => {
       [5, 'action', '127.0.0.1', '4800'],
       [7, 'info', 'worker', '3'],
     ]);
+    // The request carries what was glued, for the linker to join no path to it (P330).
+    expect(requests(graph).flatMap((node) => (node.meta?.['portWithoutColon'] === undefined ? [] : [node.meta['portWithoutColon']]))).toEqual(
+      expect.arrayContaining([{ number: '4600', host: 'localhost' }, { number: '4800', host: '127.0.0.1' }, { number: '3', host: 'worker' }]),
+    );
+  });
+
+  it('reads instances a field its type names a client is handed at each caller under its base, the type alone where they are not read (P330)', () => {
+    const graph = read({
+      // The client's own types, installed, so `AxiosInstance` is known for what it is.
+      '/node_modules/axios/package.json': '{ "name": "axios", "types": "index.d.ts" }',
+      '/node_modules/axios/index.d.ts': [
+        'export interface AxiosInstance { get(url: string, config?: unknown): Promise<unknown>; post(url: string, data?: unknown): Promise<unknown>; }',
+        'export interface AxiosStatic extends AxiosInstance { create(config?: { baseURL?: string }): AxiosInstance; }',
+        'declare const axios: AxiosStatic;',
+        'export default axios;',
+      ].join('\n'),
+      '/src/typed.ts': [
+        "import axios, { type AxiosInstance } from 'axios';",
+        "const ordersApi = axios.create({ baseURL: 'http://localhost:5000' });",
+        "const usersApi = axios.create({ baseURL: 'http://localhost:5100' });",
+        'class Service {',
+        '  constructor(private api: AxiosInstance) {}',
+        '  send(path: string) { return this.api.get(path); }',
+        "  all() { return this.api.get('/all'); }",
+        '}',
+        "export const orders = () => new Service(ordersApi).send('/orders');",
+        "export const users = () => new Service(usersApi).send('/users');",
+        'export const allOrders = () => new Service(ordersApi).all();',
+        'export const allUsers = () => new Service(usersApi).all();',
+        'class Single {',
+        '  private http: AxiosInstance;',
+        '  constructor(http: AxiosInstance) { this.http = http; }',
+        "  ping() { return this.http.get('/ping'); }",
+        '}',
+        'export const single = new Single(ordersApi);',
+        // Handed nothing anyone reads: the client by its type, the path alone.
+        "export const free = (api: AxiosInstance) => api.get('/free');",
+      ].join('\n'),
+    });
+    const found = requests(graph).map((node) => [node.meta?.['host'] ?? null, node.meta?.['path'], node.meta?.['client']]);
+    expect(found.sort((a, b) => `${a[0]}${a[1]}`.localeCompare(`${b[0]}${b[1]}`))).toEqual([
+      ['localhost:5000', '/all', 'axios'],
+      ['localhost:5000', '/orders', 'axios'],
+      ['localhost:5000', '/ping', 'axios'],
+      ['localhost:5100', '/all', 'axios'],
+      ['localhost:5100', '/users', 'axios'],
+      [null, '/free', 'axios'],
+    ]);
+    expect(graph.unresolved.filter((row) => row.reason === 'api-client-base-unread')).toEqual([]);
+  });
+
+  it('follows a caller that calls the method on an instance it was handed out to whoever makes it, each under its base (P330)', () => {
+    const graph = read({
+      '/src/api.ts': [
+        "import axios from 'axios';",
+        "const catalogApi = axios.create({ baseURL: 'http://localhost:4600' });",
+        "const stockApi = axios.create({ baseURL: 'http://localhost:4700' });",
+        'class Reader {',
+        '  constructor(private api) {}',
+        '  read(path: string) { return this.api.get(path); }',
+        "  health() { return this.read('/health'); }",
+        '}',
+        // A parameter the instance is handed in.
+        'function check(reader: Reader) { return reader.health(); }',
+        'export function one() { return check(new Reader(catalogApi)); }',
+        'export function two() { const reader = new Reader(stockApi); return check(reader); }',
+        "function levels(reader: Reader) { return reader.read('/levels'); }",
+        'export function three() { return levels(new Reader(stockApi)); }',
+        // A field of the caller's own `this`.
+        'class Board {',
+        '  private reader: Reader;',
+        '  constructor(reader: Reader) { this.reader = reader; }',
+        '  show() { return this.reader.health(); }',
+        '}',
+        'export function four() { return new Board(new Reader(catalogApi)).show(); }',
+        'export function five() { return new Board(new Reader(stockApi)).show(); }',
+        // A `new` handed the instance by its own caller.
+        'function relay(api) { return new Reader(api).health(); }',
+        'export function six() { return relay(catalogApi); }',
+      ].join('\n'),
+    });
+    const label = (id: string): string | undefined => graph.nodes.find((node) => node.id === id)?.label;
+    const found = requests(graph).map((node) => [label(graph.edges.find((edge) => edge.to === node.id && edge.type === 'calls')?.from ?? ''), node.meta?.['host'], node.meta?.['path']]);
+    expect(found.map((each) => each.join(' ')).sort()).toEqual([
+      'five localhost:4700 /health',
+      'four localhost:4600 /health',
+      'one localhost:4600 /health',
+      'six localhost:4600 /health',
+      'three localhost:4700 /levels',
+      'two localhost:4700 /health',
+    ]);
+    expect(graph.unresolved.filter((row) => row.reason === 'api-client-base-unread')).toEqual([]);
   });
 
   it('reads instances held in a field the constructor fills, or a member of an object handed in, at each caller under its base (P324)', () => {

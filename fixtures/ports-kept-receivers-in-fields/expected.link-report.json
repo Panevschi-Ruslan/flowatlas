@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T18:30:18.349Z",
+  "builtAt": "2026-11-17T19:07:05.226Z",
   "configHash": "4ad4936b9843",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1903,
+      "durationMs": 1555,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 20,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1939,
+      "durationMs": 1605,
       "packages": {
         "name": "jobs",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1796,
+      "durationMs": 1732,
       "packages": {
         "name": "stock",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 30,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2025
+      "durationMs": 1763
     }
   ],
   "httpOut": {
@@ -84,7 +84,7 @@
     "resolved": 10,
     "unresolved": 1,
     "byReason": {
-      "ambiguous-route-target": 1
+      "address-port-without-colon": 1
     }
   },
   "channels": {
@@ -105,25 +105,15 @@
     "total": 0,
     "sharedPackage": 0
   },
-  "unresolved": [
-    {
-      "service": "web",
-      "file": "js/malformed.js",
-      "line": 7,
-      "reason": "ambiguous-route-target",
-      "message": "catalog and stock both answer GET /health",
-      "hint": "Set services[].apiTarget on the frontend to say which service its settings key names.",
-      "symbol": "ui_api_call:web#js/malformed.js:7:10@3:10"
-    }
-  ],
+  "unresolved": [],
   "totals": {
     "nodes": 56,
     "edges": 55,
     "types": 0,
-    "missed": 4,
-    "sites": 7,
+    "missed": 3,
+    "sites": 6,
     "notes": 0,
     "findings": 2,
-    "unresolved": 4
+    "unresolved": 3
   }
 }

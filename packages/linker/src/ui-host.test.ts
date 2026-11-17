@@ -99,3 +99,41 @@ describe('a browser request whose address names the host of a configured service
     expect(hits(result)).toMatchObject([{ to: 'entry:orders:http:GET:/items', confidence: 'heuristic', meta: { via: 'host' } }]);
   });
 });
+
+describe('a browser request whose address glues a number to its host with no colon (P330)', () => {
+  /** `http://localhost${port}/items` handed 4600, as the reader records it: the host as spelled. */
+  const glued = (host: string, number: string): RepoGraph =>
+    graph(
+      'web',
+      [
+        {
+          id: CALL,
+          type: 'ui_api_call',
+          kind: 'http',
+          label: 'GET /items',
+          repo: 'web',
+          file: 'src/api.ts',
+          line: 3,
+          meta: { method: 'GET', url: `http://${host}${number}/items`, path: '/items', baseUrlEnv: null, host: `${host}${number}`, portWithoutColon: { number, host } },
+        },
+        { id: `external_api:${host}${number}`, type: 'external_api', label: `${host}${number}`, repo: 'web', meta: { host: `${host}${number}` } },
+      ],
+      [{ from: CALL, to: `external_api:${host}${number}`, type: 'calls', confidence: 'static' }],
+    );
+  const linkGlued = (host: string, number: string) =>
+    linkGraphs([graph('orders', [route('orders')]), graph('billing', [route('billing')]), glued(host, number)], config(), { builtAt: FIXED });
+
+  it("joins no route by its path where the host cannot be meant, and adds no row beside the reader's", () => {
+    const result = linkGlued('localhost', '4600');
+    expect(hits(result)).toEqual([]);
+    expect(result.report.ui).toMatchObject({ resolved: 0, unresolved: 1, byReason: { 'address-port-without-colon': 1 } });
+    expect(result.report.unresolved.filter((row) => row.symbol === CALL)).toEqual([]);
+    // The host as spelled stays where it is sent, as the server's reader leaves it.
+    expect(result.project.edges.some((edge) => edge.from === CALL && edge.to === 'external_api:localhost4600')).toBe(true);
+  });
+
+  it('is read as any other host where it may be a name ending in digits', () => {
+    const result = linkGlued('worker', '3');
+    expect(result.report.ui).toMatchObject({ byReason: { 'ambiguous-route-target': 1 } });
+  });
+});

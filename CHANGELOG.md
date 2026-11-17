@@ -228,6 +228,21 @@ only one of them moved.
   4600, is read as the code spells it, `localhost4600`, with a new finding
   `address-port-without-colon` saying it is no port (info after a name
   that may end in digits).
+- **Typed client fields, instances handed further out, and no path join for
+  a host with a glued port (P330).** A field or a parameter whose type names
+  the client, `constructor(private api: AxiosInstance)`, is read for the
+  instances it is handed before its type: one base where they agree, each
+  caller under its own where they differ, the type alone (no base) where a
+  value is not an instance that is read. A request in a method is placed at
+  the callers of that method rather than at whoever makes an instance, and
+  a caller that calls it on an instance it was itself handed - a parameter,
+  `check(reader: Reader) { return reader.health(); }`, or a field of its own
+  `this` - is followed out, a few callers at most, to the `new` that gives
+  it, each request there under that instance's base. A browser's request to
+  `localhost4600` or an address of numbers with digits glued to it is no
+  longer joined by its path alone: the server's reader joins it to nothing,
+  and the browser's now counts it under `address-port-without-colon`, the
+  reader's finding the one row.
 - **Route registries reached across modules and read through views, and
   link props followed through what each use hands (P314).** A store a
   module exports and others add to is found by every reference; a reader
