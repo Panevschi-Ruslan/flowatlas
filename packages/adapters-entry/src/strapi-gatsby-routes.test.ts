@@ -18,7 +18,7 @@ interface Read {
 }
 
 /** What an adapter reads of a repository: `code` read in memory, `files` written to disk for what it reads off it. */
-const extract = (adapter: EntryAdapter, code: Record<string, string>, files: Record<string, string> = {}): Read => {
+const extract = (adapter: EntryAdapter, code: Record<string, string>, files: Record<string, string> = {}, pkg: ExtractContext['pkg'] = {}): Read => {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'flowatlas-strapi-')));
   roots.push(root);
   for (const [path, text] of Object.entries(files)) {
@@ -32,7 +32,7 @@ const extract = (adapter: EntryAdapter, code: Record<string, string>, files: Rec
     repoDir: root,
     service: { name: 'cms', repo: root, type: 'strapi' },
     config: parseConfig({}),
-    pkg: {},
+    pkg,
     project,
     checker: project.getTypeChecker(),
     builder: new GraphBuilder({ repo: 'cms' }),
@@ -228,14 +228,145 @@ describe("Strapi's plugins, routers written otherwise, policies and middlewares 
         ].join('\n'),
       },
     );
+    // A key resolving a directory without enabled: true does not enable it, as getEnabledPlugins reads it (P335).
     expect(routes(read)).toEqual([
       'GET /api/reviews/summary -> src/plugins/reviews/server/controllers/review.js:2',
-      'GET /badges/list -> src/plugins/badges/strapi-server.ts:3',
       'POST /reviews/settings -> src/plugins/reviews/server/controllers/review.js:3',
     ]);
     expect(wrapped(read).filter((each) => each.startsWith('POST'))).toEqual(['POST /reviews/settings [guard plugin::reviews.can-edit src/plugins/reviews/server/routes/index.js:3]']);
     expect(read.unresolved.map((row) => `${row.reason} ${row.message}`)).toEqual([
-      "route-mount-unread src/extensions/users-permissions/strapi-server.ts adds GET /auth/session to the routes of the plugin users-permissions, whose router and the prefix it serves them under are the plugin's own code, not the repository's, so they are not read as ways in.",
+      'route-registry-unread The routes of the Strapi plugin seo are not read: config/plugins enables it, and no package of that name is installed in the repository.',
+      'route-mount-unread src/extensions/users-permissions/strapi-server.ts adds GET /auth/session to the routes of the plugin users-permissions, which is not installed in the repository nor one of its own, so its router and the prefix it serves them under are not read, nor are they as ways in.',
+      'plugin-not-enabled src/plugins/badges/strapi-server.ts is the server of a Strapi plugin no key of config/plugins enables - Strapi loads a plugin of the repository only where a key resolves its directory with enabled: true - so its routes are not served and not drawn.',
+    ]);
+  });
+});
+
+describe("Strapi's routes registered in code, installed plugins and extensions of plugins read (P335)", () => {
+  it("reads routes registered on Strapi's server in register and bootstrap, as server.routes mounts them", () => {
+    const read = extract(strapiServerAdapter, {
+      'src/index.ts': [
+        'export default {',
+        '  register({ strapi }) {',
+        "    strapi.server.routes({ type: 'content-api', prefix: '/v2', routes: [{ method: 'GET', path: '/health', handler: 'api::order.order.health' }] });",
+        "    strapi.server.routes([{ method: 'POST', path: '/hooks/build', handler: async (ctx) => { ctx.body = {}; } }]);",
+        "    strapi.server.api('admin').routes({ routes: [{ method: 'GET', path: '/reports', handler: 'api::order.order.report' }] });",
+        "    strapi.server.routes({ type: 'public', routes: [{ method: 'GET', path: '/x', handler: 'api::order.order.health' }] });",
+        '  },',
+        '  bootstrap({ strapi }) {',
+        "    strapi.server.router.get('/ping', async (ctx) => { ctx.body = 'pong'; });",
+        "    strapi.server.routes([{ method: 'GET', path: '/legacy', handler: 'order.health' }]);",
+        '  },',
+        '};',
+      ].join('\n'),
+      'src/api/order/controllers/order.ts': 'export default {\n  async health(ctx) { ctx.body = {}; },\n  async report(ctx) { ctx.body = []; },\n};\n',
+    });
+    expect(routes(read)).toEqual([
+      'GET /api/v2/health -> src/api/order/controllers/order.ts:2',
+      'GET /legacy -> (unread)',
+      'GET /ping -> src/index.ts:9',
+      'GET /reports -> src/api/order/controllers/order.ts:3',
+      'POST /hooks/build -> src/index.ts:4',
+    ]);
+    expect(read.entries.map((entry) => entry.meta?.['registration'])).toEqual(Array(5).fill('strapi/server-routes'));
+    expect(read.unresolved.map((row) => `${row.reason} ${row.line}`)).toEqual(['route-registry-unread 6', 'route-handler-unread 10']);
+  });
+
+  it("reads an installed plugin's routers from its package, the handlers an extension writes, and what an extension pushes into a plugin's router", () => {
+    const read = extract(
+      strapiServerAdapter,
+      {
+        'src/extensions/ratings/strapi-server.ts': [
+          'export default (plugin) => {',
+          "  plugin.routes['content-api'].routes.push({ method: 'GET', path: '/ratings/top', handler: 'rating.top' });",
+          '  plugin.controllers.rating.top = async (ctx) => { ctx.body = []; };',
+          '  plugin.controllers.rating.create = async (ctx) => { ctx.body = {}; };',
+          '  return plugin;',
+          '};',
+        ].join('\n'),
+        'src/plugins/reviews/strapi-server.js': "module.exports = {\n  routes: [{ method: 'GET', path: '/list', handler: 'review.list' }],\n  controllers: { review: { list: async (ctx) => { ctx.body = []; } } },\n};\n",
+        'src/extensions/reviews/strapi-server.js': [
+          'module.exports = (server) => {',
+          "  server.routes.push({ method: 'POST', path: '/import', handler: 'review.import' });",
+          '  server.controllers.review.import = async (ctx) => { ctx.body = {}; };',
+          "  server.routes = server.routes.filter((route) => route.path !== '/list');",
+          '  return server;',
+          '};',
+        ].join('\n'),
+      },
+      {
+        'config/plugins.js': "module.exports = {\n  reviews: { enabled: true, resolve: './src/plugins/reviews' },\n};\n",
+        'node_modules/strapi-plugin-ratings/package.json': JSON.stringify({ name: 'strapi-plugin-ratings', strapi: { kind: 'plugin', name: 'ratings' } }),
+        'node_modules/strapi-plugin-ratings/strapi-server.js': "'use strict';\nmodule.exports = require('./dist/server');\n",
+        'node_modules/strapi-plugin-ratings/dist/server/index.js': [
+          "'use strict';",
+          'const contentApi = {',
+          "  type: 'content-api',",
+          "  routes: [{ method: 'GET', path: '/ratings', handler: 'rating.find' }, { method: 'POST', path: '/ratings', handler: 'rating.create', config: { policies: ['plugin::ratings.is-author'] } }],",
+          '};',
+          "const routes = { 'content-api': contentApi };",
+          'const rating = { find: async (ctx) => {}, create: async (ctx) => {} };',
+          'var index = { routes, controllers: { rating } };',
+          'module.exports = index;',
+        ].join('\n'),
+        'node_modules/lodash/package.json': JSON.stringify({ name: 'lodash' }),
+      },
+      { dependencies: { 'strapi-plugin-ratings': '1.0.0', lodash: '4.17.21', 'not-installed': '1.0.0' } },
+    );
+    expect(routes(read)).toEqual([
+      'GET /api/ratings/ratings -> (package)',
+      'GET /api/ratings/ratings/top -> src/extensions/ratings/strapi-server.ts:3',
+      'GET /reviews/list -> src/plugins/reviews/strapi-server.js:3',
+      'POST /api/ratings/ratings -> src/extensions/ratings/strapi-server.ts:4',
+      'POST /reviews/import -> src/extensions/reviews/strapi-server.js:3',
+    ]);
+    const ratings = read.entries.find((entry) => entry.label === 'GET /api/ratings/ratings');
+    expect([ratings?.file, ratings?.meta?.['package'], ratings?.meta?.['declaredIn']]).toEqual(['package.json', 'strapi-plugin-ratings', 'node_modules/strapi-plugin-ratings/dist/server/index.js']);
+    expect(wrapped(read).filter((each) => each.startsWith('POST /api/ratings'))).toEqual(['POST /api/ratings/ratings [guard plugin::ratings.is-author package.json:1]']);
+    expect(read.unresolved.map((row) => `${row.reason} ${row.file} ${row.message}`)).toEqual([
+      "route-mount-unread src/extensions/reviews/strapi-server.js src/extensions/reviews/strapi-server.js changes the routes of the plugin reviews otherwise than by pushing a route written as a literal into one of its routers - its write of server.routes - so what that changes is not read.",
+    ]);
+  });
+
+  it("reads the source an installed plugin ships for its server, a content API routes factory and lists spread into it", () => {
+    const pkg = 'node_modules/@shop/strapi-plugin-accounts';
+    const read = extract(
+      strapiServerAdapter,
+      {},
+      {
+        [`${pkg}/package.json`]: JSON.stringify({
+          name: '@shop/strapi-plugin-accounts',
+          exports: { './strapi-server': { source: './server/index.js', require: './dist/server/index.js' } },
+          strapi: { kind: 'plugin', name: 'accounts' },
+        }),
+        [`${pkg}/dist/server/index.js`]: "'use strict';\nvar index = require('./index2.js').__require();\nmodule.exports = index;\n",
+        [`${pkg}/server/index.js`]: "'use strict';\nconst routes = require('./routes');\nmodule.exports = () => ({ routes });\n",
+        [`${pkg}/server/routes/index.js`]: "'use strict';\nmodule.exports = { admin: require('./admin'), 'content-api': require('./content-api') };\n",
+        [`${pkg}/server/routes/admin.js`]: "'use strict';\nconst settings = [{ method: 'GET', path: '/settings', handler: 'settings.get' }];\nmodule.exports = { type: 'admin', routes: [...settings] };\n",
+        [`${pkg}/server/routes/content-api.js`]: [
+          "'use strict';",
+          "const { createContentApiRoutesFactory } = require('@strapi/utils');",
+          'const sessionRoutes = (strapi) => {',
+          "  return [{ method: 'POST', path: '/session', handler: 'session.create', config: { prefix: '' } }];",
+          '};',
+          "module.exports = createContentApiRoutesFactory(() => [...sessionRoutes(strapi), { method: 'GET', path: '/me', handler: 'session.me' }]);",
+        ].join('\n'),
+      },
+      { dependencies: { '@shop/strapi-plugin-accounts': '2.0.0' } },
+    );
+    expect(routes(read)).toEqual(['GET /accounts/settings -> (package)', 'GET /api/accounts/me -> (package)', 'POST /api/session -> (package)']);
+    expect(read.unresolved).toEqual([]);
+  });
+
+  it("says a plugin's server it cannot read, and a key resolving a plugin from a value that is no path", () => {
+    const read = extract(
+      strapiServerAdapter,
+      { 'src/plugins/built/strapi-server.js': "module.exports = require('./dist/server');\n" },
+      { 'config/plugins.js': "module.exports = {\n  built: { enabled: true, resolve: './src/plugins/built' },\n  computed: { enabled: true, resolve: pluginPath('x') },\n};\n" },
+    );
+    expect(read.unresolved.map((row) => `${row.reason} ${row.message}`)).toEqual([
+      "route-registry-unread The routes of the Strapi plugin computed are not read: config/plugins resolves it from pluginPath('x') not written as a path.",
+      'route-registry-unread The routes of src/plugins/built/strapi-server.js are not read: its server entry does not export an object, nor a function returning one, that is read.',
     ]);
   });
 });
@@ -264,6 +395,49 @@ describe('Gatsby functions of local plugins, and under the path prefix (P329)', 
       'ALL /api/newsletter/:param/members -> plugins/newsletter-local/src/api/newsletter/[list]/members.ts:1',
       'ALL /api/newsletter/subscribe -> src/api/newsletter/subscribe.ts:1',
     ]);
+    // A plugin listed by a name installed nowhere here is said once (P335).
+    expect(read.unresolved.map((row) => `${row.level ?? 'action'} ${row.reason} ${row.symbol}`)).toEqual(['info route-registry-unread gatsby-plugin-image']);
+  });
+
+  it('reads plugins listed by a path and installed under node_modules (P335)', () => {
+    const read = extract(
+      gatsbyFunctionsAdapter,
+      {
+        'src/api/hello.ts': 'export default function hello(req, res) { res.send("site"); }',
+        'my-plugins/contact/src/api/contact/send.ts': 'export default function send(req, res) { res.end(); }',
+        'vendor/search/src/api/search/query.ts': 'export default function query(req, res) { res.end(); }',
+        'other/poll/src/api/poll/vote.ts': 'export default function vote(req, res) { res.end(); }',
+      },
+      {
+        'gatsby-config.js': [
+          "const path = require('path');",
+          'module.exports = {',
+          '  plugins: [',
+          "    { resolve: require.resolve('./my-plugins/contact') },",
+          "    { resolve: path.resolve(__dirname, 'vendor/search') },",
+          "    './other/poll',",
+          "    'gatsby-plugin-forms',",
+          '  ],',
+          '};',
+        ].join('\n'),
+        'my-plugins/contact/package.json': JSON.stringify({ name: 'contact', main: 'index.js' }),
+        'my-plugins/contact/index.js': '',
+        'vendor/search/package.json': JSON.stringify({ name: 'search' }),
+        'other/poll/package.json': JSON.stringify({ name: 'poll' }),
+        'node_modules/gatsby-plugin-forms/package.json': JSON.stringify({ name: 'gatsby-plugin-forms' }),
+        'node_modules/gatsby-plugin-forms/src/api/gatsby-plugin-forms/submit.js': 'module.exports = (req, res) => res.end();',
+        'node_modules/gatsby-plugin-forms/src/api/gatsby-plugin-forms/__tests__/submit.js': '',
+      },
+    );
+    expect(routes(read)).toEqual([
+      'ALL /api/contact/send -> my-plugins/contact/src/api/contact/send.ts:1',
+      'ALL /api/gatsby-plugin-forms/submit -> (package)',
+      'ALL /api/hello -> src/api/hello.ts:1',
+      'ALL /api/poll/vote -> other/poll/src/api/poll/vote.ts:1',
+      'ALL /api/search/query -> vendor/search/src/api/search/query.ts:1',
+    ]);
+    const forms = read.entries.find((entry) => entry.meta?.['package'] !== undefined);
+    expect([forms?.file, forms?.meta?.['declaredIn']]).toEqual(['gatsby-config.js', 'node_modules/gatsby-plugin-forms/src/api/gatsby-plugin-forms/submit.js']);
     expect(read.unresolved).toEqual([]);
   });
 
@@ -275,7 +449,7 @@ describe('Gatsby functions of local plugins, and under the path prefix (P329)', 
     });
     expect(routes(read)).toEqual(['ALL /api/hello -> src/api/hello.ts:1', 'ALL /blog/api/hello -> src/api/hello.ts:1']);
     expect(read.unresolved.map((row) => `${row.reason} ${row.message}`)).toEqual([
-      'route-registry-unread The plugins gatsby-config.js lists are not all written as names, so the functions of local under plugins/ are not read as ways in.',
+      'route-registry-unread The plugins gatsby-config.js lists are not all written as names or paths, so the functions of local under plugins/ are not read as ways in.',
     ]);
     const develop = extract(gatsbyFunctionsAdapter, code, {
       'package.json': JSON.stringify({ scripts: { develop: 'gatsby develop', serve: 'gatsby serve' } }),

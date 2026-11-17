@@ -757,6 +757,12 @@ const fieldsOfThis = (target: TsNode): readonly TsNode[] => {
 interface NamedLiteral {
   readonly literal: TsNode;
   readonly handed?: Handing;
+  /**
+   * Every call it was handed in by, the function the expression is in first
+   * and the call nearest the literal last (P335): `apply(target)` reached by
+   * `boot(config) { apply(config); }` is `apply(config)`, then `boot(...)`.
+   */
+  readonly chain?: readonly Handing[];
 }
 
 /** The object literal a value is, under its wrappers. */
@@ -800,7 +806,9 @@ const literalsNamed = (expression: TsNode, depth = 0, throughParameters = true):
     if (index < 0) return [];
     return callsOf(fn).flatMap((call) => {
       const argument = call.getArguments()[index];
-      return argument === undefined ? [] : literalsNamed(argument, depth + 1).map((each) => ({ literal: each.literal, handed: each.handed ?? { fn, call } }));
+      return argument === undefined
+        ? []
+        : literalsNamed(argument, depth + 1).map((each) => ({ literal: each.literal, handed: each.handed ?? { fn, call }, chain: [{ fn, call }, ...(each.chain ?? [])] }));
     });
   }
   if (Node.isPropertyAccessExpression(node)) {
@@ -1026,9 +1034,16 @@ const readable = (value: TsNode, read: Values, keys: readonly string[]): boolean
   return loadsModule(node) || ownFunction(node.getExpression()) !== undefined || /^(?:Number|parseInt|parseFloat|String)$/.test(node.getExpression().getText());
 };
 
+/** The statement an expression is the whole of, through `await`, `void` and parentheses: `await apply(config);` of `apply(config)` (P335). */
+const statementOf = (node: TsNode): TsNode | undefined => {
+  let parent = node.getParent();
+  while (parent !== undefined && (Node.isAwaitExpression(parent) || Node.isVoidExpression(parent) || Node.isParenthesizedExpression(parent))) parent = parent.getParent();
+  return parent;
+};
+
 /** Whether a write is a statement of a block the read is in, and so is made on every way to the read after it (P321). */
 const surelyBefore = (write: TsNode, at: TsNode): boolean => {
-  const statement = write.getParent();
+  const statement = statementOf(write);
   const block = statement?.getParent();
   return (
     statement !== undefined &&
@@ -1038,6 +1053,48 @@ const surelyBefore = (write: TsNode, at: TsNode): boolean => {
     block.getStart() <= at.getStart() &&
     at.getEnd() <= block.getEnd()
   );
+};
+
+/** Whether a node is a statement of a function's own body, made every time the function runs (P335). */
+const surelyMadeIn = (node: TsNode, fn: TsNode): boolean => {
+  const statement = statementOf(node);
+  const body = Node.isFunctionDeclaration(fn) || Node.isFunctionExpression(fn) || Node.isArrowFunction(fn) || Node.isMethodDeclaration(fn) || Node.isConstructorDeclaration(fn) ? fn.getBody() : undefined;
+  return statement !== undefined && Node.isExpressionStatement(statement) && body !== undefined && statement.getParent() === body;
+};
+
+/** Whether a write, or a call that makes one, is made in the read's own block before it (P327, P335). */
+const madeBeforeIn = (write: TsNode, at: TsNode): boolean =>
+  write.getSourceFile() === at.getSourceFile() && write.getEnd() <= at.getStart() && scopeOf(write) === scopeOf(at) && surelyBefore(write, at);
+
+/**
+ * Where a write of a key made through a parameter stands for a read (P335):
+ * `function apply(target) { target.port = 4000; }` and `apply(config);`
+ * before `app.listen(config.port)`. Where the write is a statement of its
+ * function's body, and each call handing the object in down to one made in
+ * the read's own block before it is one of its function's in turn, that call
+ * is where the write is made - the last write before the read, cutting the
+ * values before it as a write written there would - its function's parameters
+ * that call's arguments. Otherwise the write is a value the key may hold, as
+ * before.
+ */
+const placedWrites = (write: BinaryExpression, literal: TsNode, at: TsNode): Written[] => {
+  const left = write.getLeft();
+  const chains = Node.isPropertyAccessExpression(left)
+    ? literalsNamed(left.getExpression()).flatMap((named) => (named.literal === literal && named.chain !== undefined && named.chain.length > 0 ? [named.chain] : []))
+    : [];
+  const placed: Written[] = [];
+  for (const chain of chains) {
+    let made: TsNode = write;
+    for (const step of chain) {
+      if (!surelyMadeIn(made, step.fn)) break;
+      if (madeBeforeIn(step.call, at)) {
+        placed.push({ value: write.getRight(), write: step.call, bound: chain[0] as Handing });
+        break;
+      }
+      made = step.call;
+    }
+  }
+  return placed.length > 0 ? placed : [{ value: write.getRight(), write }];
 };
 
 /**
@@ -1210,22 +1267,47 @@ const handedInstance = (parameter: TsNode, walk: Walk, depth: number): TsNode | 
   return sameInstance(callsOf(fn).map(handedBy));
 };
 
+/** How many functions out a receiver handed through parameters is followed to the instances its callers hand (P335). */
+const TOLD_LEVELS = 8;
+
+/** How many calls, all levels together, that walk steps through before it gives up (P335). */
+const TOLD_STEPS = 256;
+
 /**
- * The ways a receiver is told an instance (P329): as it is, or - where it is
- * a parameter its callers hand different instances - once per caller, the
- * function stepped into by that caller. Nothing where it is not told.
+ * The ways a receiver is told an instance (P329, P335): as it is, or - where
+ * it is a parameter its callers hand different instances - once per caller,
+ * the function stepped into by that caller; and where a caller hands it a
+ * parameter of its own (`launch(server) { boot(server); }`), once per caller
+ * of that function in turn, out to eight functions and 256 calls. Nothing
+ * where any caller's instance is not told.
  */
-const toldWalks = (receiver: TsNode, walk: Walk): Walk[] | undefined => {
+const toldWalks = (receiver: TsNode, walk: Walk, level = 0, steps: { left: number } = { left: TOLD_STEPS }): Walk[] | undefined => {
   if (instanceOf(receiver, walk) !== undefined) return [walk];
+  if (level >= TOLD_LEVELS) return undefined;
   const node = unwrapped(receiver);
   const declaration = Node.isIdentifier(node) ? node.getSymbol()?.getDeclarations()[0] : undefined;
   if (declaration === undefined || !Node.isParameterDeclaration(declaration)) return undefined;
   const fn = declaration.getParent();
   if (walk.bound.has(fn)) return undefined;
+  const index = parametersOf(fn).indexOf(declaration);
   const calls = callsOf(fn);
-  if (calls.length === 0) return undefined;
-  const walks = calls.map((call): Walk => ({ ...walk, bound: new Map([...walk.bound, [fn, call]]) }));
-  return walks.every((each) => instanceOf(receiver, each) !== undefined) ? walks : undefined;
+  if (calls.length === 0 || index < 0) return undefined;
+  const walks: Walk[] = [];
+  for (const call of calls) {
+    steps.left -= 1;
+    if (steps.left < 0) return undefined;
+    const bound: Walk = { ...walk, bound: new Map([...walk.bound, [fn, call]]) };
+    if (instanceOf(receiver, bound) !== undefined) {
+      walks.push(bound);
+      continue;
+    }
+    // The caller hands a parameter of its own: told once per caller of its function.
+    const argument = call.getArguments()[index];
+    const outer = argument === undefined ? undefined : toldWalks(argument, bound, level + 1, steps);
+    if (outer === undefined) return undefined;
+    walks.push(...outer);
+  }
+  return walks;
 };
 
 /** The `new` an instance was made by. */
@@ -1338,7 +1420,7 @@ const writtenValuesAt = (
  */
 const keyValuesAt = (literal: TsNode, key: string, at: TsNode, keys: readonly string[], depth: number, walk: Walk): Values => {
   const written: Written[] = [
-    ...keyWritesOf(literal, key).map((write) => ({ value: write.getRight(), write })),
+    ...keyWritesOf(literal, key).flatMap((write) => placedWrites(write, literal, at)),
     ...assignsInto(literal.getSourceFile(), key, ownedBy(literal)).map((assigned) => ({
       value: assigned.value,
       write: assigned.call,
@@ -1413,7 +1495,9 @@ const holderValuesAt = (declaration: TsNode, at: TsNode, keys: readonly string[]
       setters.push({ scope, layers: [value], replaces: true });
       continue;
     }
-    written.push({ value, write });
+    // A key of a literal written through a parameter is made where the call handing it in is (P335).
+    if (Node.isPropertyAssignment(declaration)) written.push(...placedWrites(write, declaration.getParent(), at));
+    else written.push({ value, write });
   }
   for (const assigned of assignedOf(declaration)) {
     written.push({ value: assigned.value, write: assigned.call, under: assigned.under, ...(assigned.bound === undefined ? {} : { bound: assigned.bound }) });

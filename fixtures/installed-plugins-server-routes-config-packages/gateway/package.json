@@ -1,0 +1,12 @@
+{
+  "name": "gateway",
+  "private": true,
+  "scripts": {
+    "start": "PORT=4999 fastify start -c @shop/gateway-config dist/app.js"
+  },
+  "dependencies": {
+    "@shop/gateway-config": "^1.0.0",
+    "fastify": "^5.2.0",
+    "fastify-cli": "^8.0.0"
+  }
+}

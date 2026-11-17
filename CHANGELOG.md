@@ -97,6 +97,40 @@ only one of them moved.
   config.port = 4000`), is held. An instance a parameter, a field or a
   parameter property holds is resolved to its own `new`, a method called on
   a parameter read once per caller, so a field is read for that instance.
+- **Strapi routes registered in code, installed plugins and extensions;
+  Gatsby plugins by path and installed; `fastify start --config` packages
+  and ES modules; writes and instances through parameters (P335).** Routes
+  code registers on Strapi's server - `strapi.server.routes(...)`,
+  `strapi.server.api('<api>').routes(...)` and
+  `strapi.server.router.<verb>(path, fn)` - are read as `server.routes`
+  mounts them, their handlers by full uid. The plugins an application
+  enables are read as `getEnabledPlugins` takes them: a key of
+  `config/plugins` (and `config/env/<NODE_ENV>/plugins`) resolving a
+  directory enables it only with `enabled: true`, and a dependency whose
+  package says `strapi.kind: 'plugin'` is a plugin by its `strapi.name`; an
+  installed one is read from its package - the source its `exports` ships
+  for `strapi-server`, else the file `require` loads - its routes ways in
+  whose code is the package's (`handlerVia: 'package'`), and
+  `createContentApiRoutesFactory` and lists spread into a list of routes
+  are read. An extension's `plugin.routes['<router>'].routes.push(...)`
+  adds the route to that router of a local or installed plugin and its
+  `plugin.controllers.<controller>.<action> = fn` answers the action; what it
+  does otherwise, or to a plugin not read, is a `route-mount-unread` row, a
+  plugin a key enables that is not installed a `route-registry-unread`
+  row, and a plugin's server no key enables an info `plugin-not-enabled`
+  row. A Gatsby plugin listed by a path (`require.resolve('./x')`,
+  `path.resolve(__dirname, 'x')`, `'./x'`) or resolved as a workspace
+  package serves its functions as a local one does; one installed under
+  `node_modules` serves them as ways in of the package's code, and plugins
+  installed nowhere here are one info row. `fastify start --config` naming
+  a package reads the file its `exports` or `main` gives, and an ES module
+  or TypeScript file's `export const port` (or `export { port }`, or
+  CommonJS `exports.port`) is its port; a port only under `export default`
+  is a `listen-port-unread` row, as `require` hands it under `default`. A
+  key written through a parameter (`apply(config)` writing `target.port`) is
+  cut at the call before the read that makes it, through calls each made in
+  their function's body, and an instance is told per caller through any
+  number of parameter levels, out to eight functions and 256 calls.
 - **Jinja, kustomize, sceptre and CDK items (P306).** Namespaces are shared
   back out of macros, set and filter blocks and recursive loops, and
   `loop.changed` compares as Jinja does; kustomize name references for

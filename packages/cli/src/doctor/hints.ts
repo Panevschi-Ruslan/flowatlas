@@ -254,6 +254,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     "A page, a component or a route middleware navigates - `navigateTo(...)`, `router.push(...)`, `navigate(...)`, `goto(...)`, `redirect(...)`, `router.navigate([...])`, `<NuxtLink to>`, `<Link to>` - to an address no page of the application shows, to one two pages fit as well, or to one written as code, so the page it shows is not joined. Correct the address or the name, add the page, or write the address as a literal (a template of one, or `{ name: '...' }`).",
   'framework-feature-off': () =>
     "The repository writes code for a feature its framework builds only behind a flag - Nitro's tasks, before Nitro 3 - and the configuration leaves the flag off, so the build registers none of it. The code is drawn and marked `enabled: false`. Turn the flag on to have it built, or remove the code.",
+  'plugin-not-enabled': () =>
+    "The repository holds a plugin's server that its framework's configuration does not enable - a Strapi plugin no key of config/plugins resolves with enabled: true - so the framework does not load it, and its routes are not drawn. Enable it in the configuration to have it served, or remove it.",
   'framework-module-unread': () =>
     "A module the application is built with, or something it adds, could not be read: the module is written as code or in the configuration itself, names nothing, or hands the framework a path that is not built from its own file. Build the path from the module's file, with `createResolver(import.meta.url).resolve(...)`, or move the module to a file of `modules/`.",
   'implicit-import-overridden': () =>

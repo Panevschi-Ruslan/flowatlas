@@ -621,4 +621,47 @@ describe('a port held where P315 left it unread: callbacks, properties, locals a
       }),
     ).toEqual(['src/server.ts:4 5001 handed at src/a.ts:6', 'src/server.ts:4 5101 handed at src/b.ts:3', 'src/server.ts:4 5102 handed at src/b.ts:4']);
   });
+
+  it('cuts at a call before the read that writes a key through a parameter, where the order is read (P335)', () => {
+    expect(
+      read({
+        '/src/a.ts': 'export {};\nconst config = { port: 3300 };\nfunction apply(target: any) { target.port = 4300; }\napply(config);\napp.listen(config.port);',
+        '/src/b.ts': [
+          'export {};',
+          'const config = { port: 3301 };',
+          'function apply(target: any) { target.port = 4301; }',
+          'async function boot(settings: any) { await apply(settings); }',
+          'boot(config);',
+          'app.listen(config.port);',
+        ].join('\n'),
+        '/src/c.ts': 'export interface Config { port?: number }\nconst config: Config = {};\nfunction apply(target: Config, port: number) { target.port = port; }\napply(config, 4302);\napp.listen(config.port);',
+      }),
+    ).toEqual(['src/a.ts:5 4300 handed at src/a.ts:4', 'src/b.ts:6 4301 handed at src/b.ts:4', 'src/c.ts:5 4302 handed at src/c.ts:4']);
+    // A write made only under a condition, or a call after the read, leaves both values.
+    expect(
+      read({
+        '/src/a.ts': 'export {};\nconst config = { port: 3310 };\nfunction apply(target: any) { if (process.env.X) target.port = 4310; }\napply(config);\napp.listen(config.port);',
+        '/src/b.ts': 'export {};\nconst config = { port: 3311 };\nfunction apply(target: any) { target.port = 4311; }\napp.listen(config.port);\napply(config);',
+      }),
+    ).toEqual(['src/a.ts:5 3310', 'src/a.ts:5 4310', 'src/b.ts:4 3311', 'src/b.ts:4 4311']);
+  });
+
+  it('reads a field per instance a receiver is handed through more than one level of parameters (P335)', () => {
+    const server = ['export class Server {', '  private port: number;', '  constructor(port: number) { this.port = port; }', '  start() { app.listen(this.port); }', '}'].join('\n');
+    expect(
+      read({
+        '/src/server.ts': server,
+        '/src/a.ts': [
+          "import { Server } from './server';",
+          'function boot(server: Server) { server.start(); }',
+          'function launch(server: Server) { boot(server); }',
+          'function main(server: Server) { launch(server); }',
+          'main(new Server(5201));',
+          'launch(new Server(5202));',
+          'boot(new Server(5203));',
+          'const idle = new Server(5299);',
+        ].join('\n'),
+      }),
+    ).toEqual(['src/server.ts:4 5201 handed at src/a.ts:5', 'src/server.ts:4 5202 handed at src/a.ts:6', 'src/server.ts:4 5203 handed at src/a.ts:7']);
+  });
 });

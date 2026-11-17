@@ -520,7 +520,37 @@ describe('the configuration a command names and the environment a start script s
     ).toEqual(['package.json:3 4075']);
     expect(listening([fastifyRoutesAdapter], app, { 'package.json': pkg('PORT=4076 fastify start -c missing.json app.js') }, rows)).toEqual(['package.json:3 4076']);
     expect(rows).toEqual([
-      'listen-port-unread fastify start reads its port from missing.json, the --config file, before PORT; it is not a file of the repository, so the port is read from what comes after it.',
+      'listen-port-unread fastify start reads its port from missing.json, the --config file, before PORT; it is not a file of the repository, nor is missing.json a package installed in it or of its workspace, so the port is read from what comes after it.',
+    ]);
+  });
+
+  it('reads a --config naming a package, an ES module or TypeScript file exporting its port by name, and says a port under export default (P335)', () => {
+    const rows: string[] = [];
+    const config = (start: string, files: Record<string, string>): string[] => listening([fastifyRoutesAdapter], app, { 'package.json': pkg(start), ...files }, rows);
+    expect(
+      config('fastify start -c @shop/server-config app.js', {
+        'node_modules/@shop/server-config/package.json': JSON.stringify({ name: '@shop/server-config', exports: { '.': { require: './dist/index.cjs', import: './dist/index.mjs' } } }),
+        'node_modules/@shop/server-config/dist/index.cjs': "'use strict';\nexports.logLevel = 'info';\nexports.port = 4090;\n",
+      }),
+    ).toEqual(['node_modules/@shop/server-config/dist/index.cjs:3 4090']);
+    expect(
+      config('fastify start -c @shop/server-config/fastify.json app.js', {
+        'node_modules/@shop/server-config/package.json': JSON.stringify({ name: '@shop/server-config' }),
+        'node_modules/@shop/server-config/fastify.json': '{\n  "port": 4091\n}\n',
+      }),
+    ).toEqual(['node_modules/@shop/server-config/fastify.json:2 4091']);
+    expect(config('fastify start -c fastify.config.mjs app.js', { 'fastify.config.mjs': "export const logLevel = 'info';\nexport const port = 4092;\n" })).toEqual([
+      'fastify.config.mjs:2 4092',
+    ]);
+    expect(config('fastify start -c fastify.config.ts app.js', { 'fastify.config.ts': 'const port: number = 4093;\nconst logLevel = "info";\nexport { port, logLevel };\n' })).toEqual([
+      'fastify.config.ts:1 4093',
+    ]);
+    expect(rows).toEqual([]);
+    expect(config('PORT=4094 fastify start -c fastify.config.mjs app.js', { 'fastify.config.mjs': 'export default {\n  port: 4999,\n};\n' })).toEqual(['package.json:3 4094']);
+    expect(config('PORT=4095 fastify start -c @shop/absent app.js', {})).toEqual(['package.json:3 4095']);
+    expect(rows).toEqual([
+      "listen-port-unread fastify start reads its port from fastify.config.mjs, the --config file, before PORT; it writes its port under export default, which require hands fastify start as the module's default, not as its port, so the port is read from what comes after it.",
+      'listen-port-unread fastify start reads its port from @shop/absent, the --config file, before PORT; it is not a file of the repository, nor is @shop/absent a package installed in it or of its workspace, so the port is read from what comes after it.',
     ]);
   });
 

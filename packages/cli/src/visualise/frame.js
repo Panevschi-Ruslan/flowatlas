@@ -432,6 +432,7 @@ export const PAGE_WORDS = Object.freeze({
     'framework-module-unread': 'framework module not read',
     'framework-module-skipped': 'module call turned off by its options',
     'framework-feature-off': 'feature its build flag turns off',
+    'plugin-not-enabled': 'plugin its configuration does not enable',
     'navigation-external': 'navigation out of the application',
     'navigation-unresolved': 'navigation to no page',
     'navigation-locale-prefixed': 'page found under its locale prefix',

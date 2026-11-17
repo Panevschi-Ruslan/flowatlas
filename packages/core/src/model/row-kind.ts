@@ -66,6 +66,8 @@ const NOTES: readonly string[] = [
   'framework-module-skipped',
   // A feature the files use that the build's own flag turns off: Nitro's tasks (P262)
   'framework-feature-off',
+  // A plugin's server its framework's configuration does not enable: Strapi's (P335)
+  'plugin-not-enabled',
   // A navigation out of the application, to an address with a host (P265)
   'navigation-external',
   // A navigation joined to a page under the locale segment a middleware puts in front (P291)

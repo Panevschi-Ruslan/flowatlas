@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import {
   NotLiteral,
   configValueAt,
@@ -9,6 +9,7 @@ import {
   listenCallsIn,
   listensIn,
   normalizeFilePath,
+  parseSyntax,
   placedPort,
   portIn,
   portUnreadRow,
@@ -18,7 +19,8 @@ import {
   type ListenPort,
   type PortUnread,
 } from '@flowatlas/core';
-import { Node, SyntaxKind, type SourceFile } from 'ts-morph';
+import { Node, SyntaxKind, ts, type SourceFile } from 'ts-morph';
+import { isPackageSpecifier, packageDirOf, packageFileOf, packageOfSpecifier } from './installed-packages.js';
 import { settingsReading } from './listen-settings.js';
 import { NEXT_SERVER_EXECUTORS, targetPorts } from './workspace-targets.js';
 import { repoSources } from './shared.js';
@@ -636,9 +638,18 @@ export const FASTIFY_CLI_ENV: EnvLoading = { commands: /\bfastify\s+start\b/, fi
  * `FASTIFY_<OPTION>` for an option it does not give), so its `port` is read
  * after `-p` and `FASTIFY_PORT` and before `PORT`. Read where the file is
  * JSON or a module writing `module.exports = { port }` as a literal: a number,
- * or a string of one. A module exporting by `export default` hands `require`
- * its namespace, whose `port` is none, and gives nothing; a file not read
- * otherwise is said, and the order goes on to `PORT`.
+ * or a string of one. A file not read otherwise is said, and the order goes on
+ * to `PORT`.
+ *
+ * Named by a package rather than a file that is there (P335) - `requireModule`
+ * requires a name it finds no file at as a module - it is the file that
+ * package's `exports` (for `require`) or `main` gives, the package found in
+ * the workspace or installed in the repository; one installed nowhere here is
+ * said. An ES module or a TypeScript file is what Node's `require` makes of
+ * it - its namespace, type annotations stripped - so `export const port =
+ * 4000` (or `export { port }`) gives the port, and `exports.port = 4000` in
+ * CommonJS; a port written only under `export default` is the namespace's
+ * `default.port`, which fastify start does not read, and is said.
  */
 const fastifyConfigPort = (ctx: ExtractContext, each: ScriptCommand): ListenPort | undefined => {
   const named = /(?:^|\s)(?:-c|--config)(?:\s+|=)(\S+)/.exec(each.command)?.[1]?.replace(/^['"]|['"]$/g, '').replace(/^\.\//, '');
@@ -650,14 +661,25 @@ const fastifyConfigPort = (ctx: ExtractContext, each: ScriptCommand): ListenPort
       reason: 'listen-port-unread',
       symbol: named,
       message: `fastify start reads its port from ${named}, the --config file, before PORT; ${why}, so the port is read from what comes after it.`,
-      hint: 'Write the configuration as JSON, or as module.exports = { port: <number> }, in the repository.',
+      hint: 'Write the configuration as JSON, as module.exports = { port: <number> }, or as export const port = <number>, in the repository.',
       adapter: 'fastify-routes',
     });
     return undefined;
   };
+  let path: string;
+  if (existsSync(join(ctx.repoDir, named))) path = join(ctx.repoDir, named);
+  else if (isPackageSpecifier(named)) {
+    const { name, subpath } = packageOfSpecifier(named);
+    const pkg = packageDirOf(ctx.repoDir, name);
+    if (pkg === undefined) return unread(`it is not a file of the repository, nor is ${name} a package installed in it or of its workspace`);
+    const found = packageFileOf(pkg, subpath);
+    if (found === undefined) return unread(`the package ${name} has no file ${subpath === '' ? 'its main' : subpath} names`);
+    path = found;
+  } else return unread('it is not a file of the repository');
+  const file = normalizeFilePath(path, ctx.repoDir);
   let text: string;
   try {
-    text = readFileSync(join(ctx.repoDir, named), 'utf8');
+    text = readFileSync(path, 'utf8');
   } catch {
     return unread('it is not a file of the repository');
   }
@@ -665,23 +687,71 @@ const fastifyConfigPort = (ctx: ExtractContext, each: ScriptCommand): ListenPort
     const port = typeof value === 'number' ? value : typeof value === 'string' && /^\d{2,5}$/.test(value) ? Number(value) : undefined;
     return port !== undefined && Number.isInteger(port) && port > 0 && port < 65536 ? port : undefined;
   };
-  const at = /["']?\bport["']?\s*:/.exec(text);
+  const at = /["']?\bport["']?\s*[:=]/.exec(text);
   const line = at === null ? 1 : lineAt(text, at.index);
   let written: unknown;
-  if (named.endsWith('.json')) {
+  if (path.endsWith('.json')) {
     try {
       written = (JSON.parse(text) as { port?: unknown }).port;
     } catch {
       return unread('it is not JSON');
     }
   } else if (/\bmodule\.exports\s*=/.test(text)) {
-    written = configValueAt(readConfigLiteral(ctx.repoDir, [named])?.value, 'port');
+    written = configValueAt(readConfigLiteral(dirname(path), [basename(path)])?.value, 'port');
   } else {
-    return /\bexport\s+default\b/.test(text) ? undefined : unread('it exports no module.exports value');
+    const exported = exportedPort(text, path);
+    if (exported === 'none') {
+      if (/\bexport\s+default\b/.test(text) && configValueAt(readConfigLiteral(dirname(path), [basename(path)])?.value, 'port') !== undefined) {
+        return unread("it writes its port under export default, which require hands fastify start as the module's default, not as its port");
+      }
+      return /\bexport\s+default\b/.test(text) ? undefined : unread('it exports no module.exports value nor a port');
+    }
+    written = exported;
   }
   if (written === undefined) return undefined;
   const port = portOf(written);
-  return port === undefined ? unread('its port is not written as a number') : { port, file: named, line };
+  return port === undefined ? unread('its port is not written as a number') : { port, file, line };
+};
+
+/**
+ * The `port` a module exports by name, as `require` of it hands it (P335):
+ * `export const port = 4000`, `export { port }` or `export { value as port }`
+ * of a constant, and CommonJS `exports.port = 4000`. A literal number or a
+ * string of digits; `NotLiteral` for a value written as code; `'none'` where
+ * no `port` is exported.
+ */
+const exportedPort = (text: string, path: string): unknown => {
+  const file = parseSyntax(text, path);
+  const literal = (node: ts.Expression | undefined): unknown => {
+    if (node === undefined) return new NotLiteral('');
+    let value = node;
+    while (ts.isParenthesizedExpression(value) || ts.isAsExpression(value) || ts.isSatisfiesExpression(value)) value = value.expression;
+    if (ts.isNumericLiteral(value)) return Number(value.text);
+    if (ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value)) return value.text;
+    return new NotLiteral(value.getText(file));
+  };
+  const constants = new Map<string, ts.Expression | undefined>();
+  let found: unknown = 'none';
+  for (const statement of file.statements) {
+    if (ts.isVariableStatement(statement)) {
+      const exported = (ts.getModifiers(statement) ?? []).some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword);
+      for (const declaration of statement.declarationList.declarations) {
+        if (!ts.isIdentifier(declaration.name)) continue;
+        constants.set(declaration.name.text, declaration.initializer);
+        if (exported && declaration.name.text === 'port') found = literal(declaration.initializer);
+      }
+    } else if (ts.isExportDeclaration(statement) && statement.moduleSpecifier === undefined && statement.exportClause !== undefined && ts.isNamedExports(statement.exportClause)) {
+      for (const element of statement.exportClause.elements) {
+        if (element.name.text !== 'port') continue;
+        const local = (element.propertyName ?? element.name).text;
+        found = constants.has(local) ? literal(constants.get(local)) : new NotLiteral(local);
+      }
+    } else if (ts.isExpressionStatement(statement) && ts.isBinaryExpression(statement.expression) && statement.expression.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+      const left = statement.expression.left.getText(file);
+      if (left === 'exports.port' || left === 'module.exports.port') found = literal(statement.expression.right);
+    }
+  }
+  return found;
 };
 
 /**
@@ -721,7 +791,7 @@ const STRAPI_PRODUCTION = 'production';
  * start`), production where one sets none or one sets production, else the
  * first one's.
  */
-const strapiEnvironmentOf = (repoDir: string): string => {
+export const strapiEnvironmentOf = (repoDir: string): string => {
   const environments = scriptCommands(repoDir, /\bstrapi\s+start\b/).map((each) => /(?:^|\s)NODE_ENV=['"]?([\w-]+)/.exec(each.command)?.[1] ?? STRAPI_PRODUCTION);
   return environments.length === 0 || environments.includes(STRAPI_PRODUCTION) ? STRAPI_PRODUCTION : (environments[0] as string);
 };
