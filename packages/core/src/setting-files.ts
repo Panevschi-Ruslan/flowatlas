@@ -112,6 +112,12 @@ export interface ContainerRun {
   readonly environmentFrom?: string;
   /** The image the container runs, where its Dockerfile is not read (P331). */
   readonly imageUnread?: ImageUnread;
+  /**
+   * The settings a `Secret` gives the container (P337), by name only: a
+   * secret's value is never read, so where one gives the setting the code
+   * reads its port from, where it listens there is not known.
+   */
+  readonly environmentSecret?: readonly string[];
 }
 
 /**
@@ -178,6 +184,8 @@ export interface RoutedName {
   readonly environmentFiles?: Readonly<Record<string, string>>;
   /** The image the containers run, where its Dockerfile is not read (P331). */
   readonly imageUnread?: ImageUnread;
+  /** The settings a `Secret` gives the containers, by name only (P337). */
+  readonly environmentSecret?: readonly string[];
 }
 
 /** A port one of a service's own files gives a setting, on the machine a developer runs it on (P254). */
@@ -187,6 +195,14 @@ export interface PortValue {
   readonly environment?: string;
   /** The file is an example or a template, which offers the value rather than giving it (P309). */
   readonly example?: true;
+  /**
+   * The value is the environment a command of the project starts the server
+   * with (P337) - `export PORT=4000` earlier in the script that then runs
+   * `npm start`, or `PORT=4000 node dist/main.js` - so a run started that way
+   * listens there: firm, as a file the code loads is, and `file` is where the
+   * command is written.
+   */
+  readonly started?: true;
 }
 
 /** Everything a service's own files say about its settings. */

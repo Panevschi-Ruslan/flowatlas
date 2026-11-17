@@ -77,12 +77,42 @@ const argumentsOf = (words: readonly string[], program: string): string[] | unde
   return at < 0 ? undefined : words.slice(at + 1);
 };
 
+/**
+ * The variables a command's own shell gives it as text (P337): those written
+ * before it on its line (`PORT=4000 docker compose up`) and those an earlier
+ * line of the same script exports or sets (`export PORT=4000`), in order, as
+ * the command reader keeps them. A value the shell fills in is not known.
+ */
+export const shellVariables = (env: CommandAt['env']): Record<string, string> => {
+  const out: Record<string, string> = {};
+  for (const [name, value] of Object.entries(env ?? {})) if (typeof value === 'string') out[name] = value;
+  return out;
+};
+
+/**
+ * A word as the shell hands it on (P337): `$NAME`, `${NAME}` and
+ * `${NAME:-default}` replaced by what the command's own shell gives `NAME`.
+ * A variable it does not give is the shell's, as before, and left as written.
+ */
+export const expandWord = (word: string, variables: Readonly<Record<string, string>>): string =>
+  word.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)(?:(:?)-([^}]*))?\}|\$([A-Za-z_][A-Za-z0-9_]*)/g, (match, braced: string | undefined, colon: string | undefined, fallback: string | undefined, bare: string | undefined) => {
+    const given = variables[braced ?? bare ?? ''];
+    if (given !== undefined && (colon !== ':' || given !== '')) return given;
+    return match;
+  });
+
+/** A command's words with what its own shell gives filled in (P337). */
+const expanded = (command: CommandAt): string[] => {
+  const variables = shellVariables(command.env);
+  return Object.keys(variables).length === 0 ? [...command.words] : command.words.map((word) => expandWord(word, variables));
+};
+
 /** An option written `--flag=value`, split; any other word as it is. */
 const splitFlag = (word: string): [string, string | undefined] =>
   word.startsWith('--') && word.includes('=') ? [word.slice(0, word.indexOf('=')), word.slice(word.indexOf('=') + 1)] : [word, undefined];
 
 /** The `docker run` a command is, if it is one. */
-const runOf = (words: readonly string[], line: number): DockerRun | undefined => {
+const runOf = (words: readonly string[], line: number, shell: Readonly<Record<string, string>> = {}): DockerRun | undefined => {
   const run = words.findIndex((word, index) => word === 'run' && isProgram(words[index - 1], 'docker'));
   if (run < 0) return undefined;
   const mappings: Mapping[] = [];
@@ -103,6 +133,8 @@ const runOf = (words: readonly string[], line: number): DockerRun | undefined =>
     } else if (flag === '-e' || flag === '--env') {
       const equals = (value ?? '').indexOf('=');
       if (equals > 0) environment.push({ name: (value as string).slice(0, equals), raw: (value as string).slice(equals + 1) });
+      // `-e PORT` alone passes on what the command's own shell gives it (P337).
+      else if (value !== undefined && /^[A-Za-z_][A-Za-z0-9_]*$/.test(value) && shell[value] !== undefined) environment.push({ name: value, raw: shell[value] as string });
     } else if (flag === '--env-file') {
       if (value !== undefined && value !== '' && !value.includes('$')) envFiles.push(value);
     } else if (flag === '--name') name = value;
@@ -168,7 +200,7 @@ export const isPipeline = (file: string): boolean => file.startsWith('.github/')
 export const dockerRunsOf = (commands: readonly CommandAt[]): DockerRunAt[] =>
   commands.flatMap((command) => {
     if (isPipeline(command.file)) return [];
-    const run = runOf(command.words, command.line);
+    const run = runOf(expanded(command), command.line, shellVariables(command.env));
     return run === undefined ? [] : [{ ...run, file: command.file, ...(command.dirs === undefined ? {} : { dirs: command.dirs }) }];
   });
 
@@ -180,7 +212,7 @@ export const dockerRunsOf = (commands: readonly CommandAt[]): DockerRunAt[] =>
  */
 export const dockerBuildsOf = (commands: readonly CommandAt[]): DockerBuildAt[] =>
   commands.flatMap((command) => {
-    const build = buildOf(command.words);
+    const build = buildOf(expanded(command));
     return build === undefined ? [] : [{ ...build, file: command.file, ...(command.dirs === undefined ? {} : { dirs: command.dirs }) }];
   });
 
@@ -197,6 +229,12 @@ export interface ComposeRun {
   readonly projectDirectory?: string;
   /** A compose file or an environment file is named by what the shell fills (`--env-file $ENV_FILE`): its variables are not known. */
   readonly unsettled?: true;
+  /**
+   * What the command's own shell gives as text (P337): written before it,
+   * `PORT=4000 docker compose up`, or exported earlier in the same script.
+   * Compose interpolates with these over any environment file.
+   */
+  readonly shell?: Readonly<Record<string, string>>;
 }
 
 export type ComposeRunAt = ComposeRun & { readonly file: string; readonly line: number; readonly dirs?: readonly string[] };
@@ -204,8 +242,22 @@ export type ComposeRunAt = ComposeRun & { readonly file: string; readonly line: 
 /** Compose's own options before its command that take a value. */
 const COMPOSE_VALUED = /^(?:-[fp]|--(?:file|env-file|project-name|project-directory|profile|ansi|progress|parallel))$/;
 
+/**
+ * The files a variable of compose's own names, as its shell gives it (P337):
+ * `COMPOSE_ENV_FILES` (comma-separated) and `COMPOSE_FILE` (separated by
+ * `COMPOSE_PATH_SEPARATOR`, else `:`). `unsettled` where the shell fills it
+ * in when it runs; nothing where it is not given.
+ */
+export const composeVariableFiles = (env: CommandAt['env'], name: 'COMPOSE_ENV_FILES' | 'COMPOSE_FILE'): readonly string[] | 'unsettled' | undefined => {
+  const value = env?.[name];
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string' || value.includes('$')) return 'unsettled';
+  const separator = name === 'COMPOSE_ENV_FILES' ? ',' : (typeof env?.['COMPOSE_PATH_SEPARATOR'] === 'string' ? (env['COMPOSE_PATH_SEPARATOR'] as string) : ':') || ':';
+  return value.split(separator).map((each) => each.trim()).filter((each) => each !== '');
+};
+
 /** The `docker compose` a command is, if it is one, with every option before its command read. */
-const composeOf = (words: readonly string[]): ComposeRun | undefined => {
+const composeOf = (words: readonly string[], env: CommandAt['env'] = {}): ComposeRun | undefined => {
   const at = words.findIndex((word, index) => isProgram(word, 'docker-compose') || (word === 'compose' && isProgram(words[index - 1], 'docker')));
   if (at < 0) return undefined;
   const files: string[] = [];
@@ -228,7 +280,21 @@ const composeOf = (words: readonly string[]): ComposeRun | undefined => {
     else if (flag === '--env-file') envFiles.push(value);
     else if (flag === '--project-directory') projectDirectory = value;
   }
-  return { files, envFiles, ...(projectDirectory === undefined ? {} : { projectDirectory }), ...(unsettled ? { unsettled: true as const } : {}) };
+  // Where the command names no file, compose's own variables may (P337).
+  for (const [into, name] of [[envFiles, 'COMPOSE_ENV_FILES'], [files, 'COMPOSE_FILE']] as const) {
+    if (into.length > 0) continue;
+    const given = composeVariableFiles(env, name);
+    if (given === 'unsettled') unsettled = true;
+    else if (given !== undefined) into.push(...given);
+  }
+  const shell = shellVariables(env);
+  return {
+    files,
+    envFiles,
+    ...(projectDirectory === undefined ? {} : { projectDirectory }),
+    ...(unsettled ? { unsettled: true as const } : {}),
+    ...(Object.keys(shell).length === 0 ? {} : { shell }),
+  };
 };
 
 /**
@@ -241,8 +307,73 @@ const composeOf = (words: readonly string[]): ComposeRun | undefined => {
 export const composeRunsOf = (commands: readonly CommandAt[]): ComposeRunAt[] =>
   commands.flatMap((command) => {
     if (isPipeline(command.file)) return [];
-    const run = composeOf(command.words);
+    const run = composeOf(expanded(command), command.env);
     return run === undefined ? [] : [{ ...run, file: command.file, line: command.line, ...(command.dirs === undefined ? {} : { dirs: command.dirs }) }];
+  });
+
+/**
+ * A command that starts a server of the repository on this machine (P337):
+ * `node dist/main.js`, `npm start`, `next start`, with the environment its
+ * own shell gives it - the variables written before it on its line, and those
+ * an earlier line of the same script exports or sets, in order.
+ */
+export interface ServerStart {
+  readonly file: string;
+  readonly line: number;
+  readonly dirs?: readonly string[];
+  /** What the shell gives it as text, by name. */
+  readonly environment: Readonly<Record<string, string>>;
+}
+
+/** Runtimes that run a file of the repository's own as its server. */
+const RUNTIMES = new Set(['node', 'nodemon', 'ts-node', 'ts-node-dev', 'tsx', 'bun', 'deno']);
+
+/** What a runtime is asked to do that starts nothing. */
+const NOT_A_START = new Set(['install', 'add', 'remove', 'build', 'test', 'lint', 'i', 'ci', 'upgrade', 'x', 'fmt', 'check', 'compile']);
+
+/** Framework commands that start a server, by program, with the verbs that do. */
+const FRAMEWORK_STARTS: Readonly<Record<string, ReadonlySet<string> | 'any'>> = {
+  next: new Set(['start', 'dev']),
+  nuxt: new Set(['start', 'dev', 'preview']),
+  nuxi: new Set(['start', 'dev', 'preview']),
+  nest: new Set(['start']),
+  fastify: new Set(['start']),
+  strapi: new Set(['start', 'develop', 'dev']),
+  'remix-serve': 'any',
+  'react-router-serve': 'any',
+};
+
+/** The scripts a package manager runs that start the server. */
+const STARTING_SCRIPT = /^(?:start|dev|serve)(?::[\w-]+)?$/;
+
+/** Whether a command's words start a server of the repository. */
+const startsServer = (words: readonly string[]): boolean => {
+  let at = 0;
+  while (['exec', 'npx', 'pnpx', 'bunx', 'nohup', 'time'].includes(words[at] ?? '')) at += 1;
+  const program = (words[at] ?? '').split('/').pop() ?? '';
+  const verb = words[at + 1];
+  if (RUNTIMES.has(program)) return verb !== undefined && !NOT_A_START.has(verb);
+  if (program === 'npm' || program === 'pnpm' || program === 'yarn') {
+    const script = verb === 'run' || verb === 'run-script' ? words[at + 2] : verb;
+    return script !== undefined && STARTING_SCRIPT.test(script);
+  }
+  const verbs = FRAMEWORK_STARTS[program];
+  return verbs === 'any' || (verbs !== undefined && verb !== undefined && verbs.has(verb));
+};
+
+/**
+ * Every command of a repository that starts a server with a variable its own
+ * shell gives it (P337): `export PORT=4000` earlier in a script, then `npm
+ * start`; `PORT=4000 node dist/main.js`. Only within one script, and only
+ * after the export, as the command reader keeps the environment. A
+ * pipeline's is not read: it runs on the pipeline's machine.
+ */
+export const serverStartsOf = (commands: readonly CommandAt[]): ServerStart[] =>
+  commands.flatMap((command) => {
+    if (isPipeline(command.file) || !startsServer(command.words)) return [];
+    const environment = shellVariables(command.env);
+    if (Object.keys(environment).length === 0) return [];
+    return [{ file: command.file, line: command.line, ...(command.dirs === undefined ? {} : { dirs: command.dirs }), environment }];
   });
 
 /**

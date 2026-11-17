@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
-import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
 import {
   interpolationValue,
   keptValue,
@@ -21,7 +21,7 @@ import {
   type Unresolved,
   workspaceRootOf,
 } from '@flowatlas/core';
-import { readComposeFile, type ComposeService, type Mapping } from './compose.js';
+import { composeIncludes, readComposeFile, type ComposeLoader, type ComposeService, type Mapping } from './compose.js';
 import { readWorkerJson, readWorkerToml, readServerlessFile, type DeploymentSettings } from './deployed.js';
 import {
   readManifestsUnder,
@@ -36,7 +36,7 @@ import {
   type Manifests,
 } from './cluster.js';
 import { commandsAround, type Command } from '@flowatlas/serverless';
-import { composeRunsOf, dockerBuildsOf, dockerRunsOf, imageName, type ComposeRunAt, readHelmfileRuns, readHelmInstalls, readKustomizeApplies, readPortForwards, type PortForward } from './docker-run.js';
+import { composeRunsOf, dockerBuildsOf, dockerRunsOf, imageName, serverStartsOf, type ComposeRunAt, readHelmfileRuns, readHelmInstalls, readKustomizeApplies, readPortForwards, type PortForward } from './docker-run.js';
 import { dockerfileEnvironment } from './dockerfile.js';
 import { readSkaffoldFile } from './skaffold.js';
 import { helmfilesAt, helmfilesIn, readHelmfile } from './helmfile.js';
@@ -223,20 +223,37 @@ const readWorkspaceEnv = (into: Gathered, dir: string): void => {
  * that is not the file that starts the container.
  */
 const containerEnvironment = (): {
-  readonly layer: (ports: Readonly<Record<string, number>>, from?: string) => void;
-  readonly done: () => Pick<ContainerRun, 'environment' | 'environmentFiles'>;
+  readonly layer: (ports: Readonly<Record<string, number>>, from?: string | Readonly<Record<string, string>>) => void;
+  /** Settings a `Secret` gives, over every layer before: given, their values never read (P337). */
+  readonly secret: (names: readonly string[]) => void;
+  readonly done: () => Pick<ContainerRun, 'environment' | 'environmentFiles' | 'environmentSecret'>;
 } => {
   const environment: Record<string, number> = {};
   const environmentFiles: Record<string, string> = {};
+  const secret = new Set<string>();
   return {
     layer: (ports, from) => {
       for (const [name, port] of Object.entries(ports)) {
         environment[name] = port;
-        if (from === undefined) delete environmentFiles[name];
-        else environmentFiles[name] = from;
+        secret.delete(name);
+        // One file for the layer, or each setting's own (P337).
+        const file = typeof from === 'string' ? from : from?.[name];
+        if (file === undefined) delete environmentFiles[name];
+        else environmentFiles[name] = file;
       }
     },
-    done: () => ({ environment, ...(Object.keys(environmentFiles).length === 0 ? {} : { environmentFiles }) }),
+    secret: (names) => {
+      for (const name of names) {
+        delete environment[name];
+        delete environmentFiles[name];
+        secret.add(name);
+      }
+    },
+    done: () => ({
+      environment,
+      ...(Object.keys(environmentFiles).length === 0 ? {} : { environmentFiles }),
+      ...(secret.size === 0 ? {} : { environmentSecret: [...secret].sort() }),
+    }),
   };
 };
 
@@ -422,7 +439,73 @@ const variablesIn = (path: string): Record<string, string> | undefined => {
   return out;
 };
 
+/** What several environment files lend an interpolation, a later over an earlier, each within the directories this project reads. */
+const variablesOfFiles = (paths: readonly string[], within: readonly string[]): Record<string, string> => {
+  const merged: Record<string, string> = {};
+  for (const path of paths) {
+    // A file outside the directories this project reads is somebody else's.
+    if (!within.some((dir) => isWithin(dir, path))) continue;
+    Object.assign(merged, variablesIn(path) ?? {});
+  }
+  return merged;
+};
+
+/**
+ * What compose interpolates a file with where no command names environment
+ * files (P325, P337): the `.env` of its project directory, or, where that
+ * `.env` names `COMPOSE_ENV_FILES`, those files in its place - the one value
+ * of a names-only file read as written, since it names files, not a setting
+ * of the application.
+ */
+const dotEnvVariables = (dir: string, within: readonly string[]): Record<string, string> => {
+  const text = read(join(dir, '.env'));
+  const named = text === undefined ? undefined : readEnvFile(text).find((each) => each.name === 'COMPOSE_ENV_FILES')?.raw;
+  if (named === undefined || named.includes('$')) return variablesIn(join(dir, '.env')) ?? {};
+  return variablesOfFiles(named.split(',').map((each) => each.trim()).filter((each) => each !== '').map((each) => resolve(dir, each)), [dir, ...within]);
+};
+
+/** What a command's own shell lends an interpolation (P337): as an environment file lends it, a port, an address or a host's name under a name that is no secret's. */
+const shellLends = (shell: Readonly<Record<string, string>> | undefined): Record<string, string> => {
+  const out: Record<string, string> = {};
+  for (const [name, raw] of Object.entries(shell ?? {})) {
+    const value = interpolationValue(name, raw);
+    if (value !== undefined) out[name] = value;
+  }
+  return out;
+};
+
 /** The names compose looks for where a command names no file (`-f`), each with its override. */
+/** How deep compose files including others are followed (P337). */
+const COMPOSE_INCLUDE_DEPTH = 8;
+
+/**
+ * The ports the commands of a repository start a server with (P337): a
+ * command that starts a server in a service's directory - its own, or one
+ * the project's command `cd`s into - with a setting its own shell gives a
+ * port, `export PORT=4000` earlier in the same script or `PORT=4000` before
+ * it, gives that service's setting the port, firmly: a run started that way
+ * listens there. Labelled from the service's directory where the command is
+ * in it.
+ */
+const readStarts = (each: Commands, services: SettingsInput['services'], byService: ReadonlyMap<string, Gathered>, rootDir: string): void => {
+  for (const start of serverStartsOf(each.commands)) {
+    // A command after a `cd` nobody settles runs nowhere the files say.
+    if (start.dirs !== undefined && start.dirs.length === 0) continue;
+    const runs = (start.dirs ?? ['.']).map((dir) => realOf(resolve(each.base, dir)));
+    const service = runs.map((dir) => services.find((one) => realOf(one.dir) === dir)).find((found) => found !== undefined);
+    const into = service === undefined ? undefined : byService.get(service.name);
+    if (service === undefined || into === undefined) continue;
+    const file = labelOf(resolve(each.base, start.file), service.dir, rootDir);
+    for (const [name, raw] of Object.entries(start.environment)) {
+      const port = portSetting({ name, raw });
+      if (port === undefined) continue;
+      const list = into.ports.get(name) ?? [];
+      if (!list.some((seen) => seen.port === port && seen.file === file && seen.started === true)) list.push({ port, file, started: true });
+      into.ports.set(name, list);
+    }
+  }
+};
+
 const DEFAULT_COMPOSE = new Set(['compose.yaml', 'compose.yml', 'docker-compose.yaml', 'docker-compose.yml', 'compose.override.yaml', 'compose.override.yml', 'docker-compose.override.yaml', 'docker-compose.override.yml']);
 
 /** A `docker compose` a command of the project runs, and the directory its command is read under. */
@@ -438,37 +521,36 @@ interface ComposeCommand {
  * place of the `.env`. Where several commands run the file with different
  * variables, only what they all agree on is read; a command whose files the
  * shell names agrees on nothing.
+ *
+ * `COMPOSE_ENV_FILES` and `COMPOSE_FILE` given by the command's shell, or by
+ * the `.env`, name the files where the command does not (P337); and what the
+ * command's own shell gives - written before it, or exported earlier in its
+ * script - is written over every file, as compose prefers the shell's.
  */
 const composeVariables = (dir: string, name: string, commands: readonly ComposeCommand[], rootDir: string): Record<string, string> => {
   const path = realOf(join(dir, name));
   const readings: Array<Record<string, string> | undefined> = [];
   for (const { run, base } of commands) {
     if (run.dirs !== undefined && run.dirs.length === 0) continue;
-    const at = resolve(base, run.dirs?.[0] ?? '.');
-    const project = run.projectDirectory === undefined ? at : resolve(at, run.projectDirectory);
-    const here = realOf(project) === realOf(dir);
-    const names = run.files.length === 0 ? (here && DEFAULT_COMPOSE.has(name) ? [path] : []) : run.files.map((file) => realOf(resolve(at, file)));
-    // A command whose files the shell names may run any compose file of its directory.
-    const about = names.includes(path) || (run.unsettled === true && run.files.length === 0 && here);
-    if (!about) continue;
+    // The directory it runs in, of those it may (a script's own, then the
+    // repository's, P337), where it runs this file.
+    const runsHere = (at: string): boolean => {
+      const project = run.projectDirectory === undefined ? at : resolve(at, run.projectDirectory);
+      const here = realOf(project) === realOf(dir);
+      const names = run.files.length === 0 ? (here && DEFAULT_COMPOSE.has(name) ? [path] : []) : run.files.map((file) => realOf(resolve(at, file)));
+      // A command whose files the shell names may run any compose file of its directory.
+      return names.includes(path) || (run.unsettled === true && run.files.length === 0 && here);
+    };
+    const at = (run.dirs ?? ['.']).map((each) => resolve(base, each)).find(runsHere);
+    if (at === undefined) continue;
     if (run.unsettled === true) {
       readings.push(undefined);
       continue;
     }
-    if (run.envFiles.length === 0) {
-      readings.push(variablesIn(join(dir, '.env')) ?? {});
-      continue;
-    }
-    const merged: Record<string, string> = {};
-    for (const file of run.envFiles) {
-      const envPath = resolve(at, file);
-      // A file outside the directories this project reads is somebody else's.
-      if (![base, rootDir].some((within) => isWithin(within, envPath))) continue;
-      Object.assign(merged, variablesIn(envPath) ?? {});
-    }
-    readings.push(merged);
+    const files = run.envFiles.length === 0 ? dotEnvVariables(dir, [base, rootDir]) : variablesOfFiles(run.envFiles.map((file) => resolve(at, file)), [base, rootDir]);
+    readings.push({ ...files, ...shellLends(run.shell) });
   }
-  if (readings.length === 0) return variablesIn(join(dir, '.env')) ?? {};
+  if (readings.length === 0) return dotEnvVariables(dir, [rootDir]);
   if (readings.some((reading) => reading === undefined)) return {};
   const [first, ...rest] = readings as Array<Record<string, string>>;
   return Object.fromEntries(Object.entries(first ?? {}).filter(([key, value]) => rest.every((other) => other[key] === value)));
@@ -608,10 +690,29 @@ interface Running {
  * (P331): the Dockerfile of its image where the project builds it, under what
  * the manifest writes, or why the image's is not read.
  */
-type ContainerEnvironmentOf = (container: ManifestContainer | undefined, service: string) => Pick<RoutedName, 'environment' | 'environmentFiles' | 'imageUnread'>;
+type ContainerEnvironmentOf = (container: ManifestContainer | undefined, service: string) => Pick<RoutedName, 'environment' | 'environmentFiles' | 'imageUnread' | 'environmentSecret'>;
 
 /** The environment as the manifest alone writes it, where no image is read. */
-const manifestEnvironment: ContainerEnvironmentOf = (container) => ({ environment: environmentPorts(container?.environment ?? []) });
+const manifestEnvironment: ContainerEnvironmentOf = (container) => {
+  const environment = containerEnvironment();
+  layerManifest(environment, container);
+  return environment.done();
+};
+
+/**
+ * What a workload's manifest gives its containers, over the image's (P331,
+ * P337): each setting a config map or a value gives, said at its own file
+ * where that is not the one the environment is written in, and each a
+ * `Secret` gives, by name only - written in the pod spec's order already,
+ * `envFrom` under `env`, as the cluster gives a pod them.
+ */
+const layerManifest = (environment: ReturnType<typeof containerEnvironment>, container: ManifestContainer | undefined): void => {
+  environment.secret(container?.secretSettings ?? []);
+  environment.layer(environmentPorts(container?.environment ?? []), container?.environmentFiles ?? {});
+};
+
+/** Why the image of a workload's container whose name a template value leaves unsettled is not read (P337). */
+const UNSETTLED_IMAGE = 'its name is a template value the chart\'s values and the files do not settle, and an image is never fetched';
 
 /**
  * Each service object of the manifests, as the name it routes to one of the
@@ -831,10 +932,11 @@ const manifestRow = (row: ManifestRow, service: string, file: string): Unresolve
 });
 
 /** A routed name's containers' environment, as a container forwarded to them has it (P331). */
-const routedEnvironment = (routed: RoutedName): Pick<ContainerRun, 'environment' | 'environmentFiles' | 'imageUnread'> => ({
+const routedEnvironment = (routed: RoutedName): Pick<ContainerRun, 'environment' | 'environmentFiles' | 'imageUnread' | 'environmentSecret'> => ({
   environment: routed.environment,
   ...(routed.environmentFiles === undefined ? {} : { environmentFiles: routed.environmentFiles }),
   ...(routed.imageUnread === undefined ? {} : { imageUnread: routed.imageUnread }),
+  ...(routed.environmentSecret === undefined ? {} : { environmentSecret: routed.environmentSecret }),
 });
 
 /**
@@ -888,18 +990,51 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
   const names = new Map<string, string>();
   const composeFiles: ComposeFile[] = [];
   const manifests: Array<{ read: Manifests; owner?: string }> = [];
+  // A compose file another `extends:` a service from, read where it is the project's (P337).
+  const loaderAt = (dir: string, within: string): ComposeLoader => (path) => {
+    const file = resolve(dir, path);
+    return [within, input.rootDir].some((each) => isWithin(each, file)) ? read(file) : undefined;
+  };
+  /**
+   * A compose file, and each file it includes (P337), as compose reads them
+   * into one project: an included file is interpolated with its `env_file`,
+   * or the `.env` of its project directory, under what the including file is
+   * interpolated with, and its relative paths are its project directory's.
+   */
+  const composeRead = (file: { path: string; dir: string; label: string; within: string; owner?: string }, variables: Readonly<Record<string, string>>, seen: ReadonlySet<string>): void => {
+    const text = read(file.path);
+    if (text === undefined) return;
+    const environment = composeEnvironment(basename(file.path));
+    composeFiles.push({
+      dir: file.dir,
+      label: file.label,
+      services: readComposeFile(text, variables, loaderAt(dirname(file.path), file.within)),
+      ...(environment === undefined ? {} : { environment }),
+      ...(file.owner === undefined ? {} : { owner: file.owner }),
+    });
+    if (seen.size >= COMPOSE_INCLUDE_DEPTH) return;
+    const from = dirname(file.path);
+    for (const include of composeIncludes(text)) {
+      const project = include.projectDirectory === undefined ? undefined : resolve(from, include.projectDirectory);
+      const own = include.envFiles.length === 0 ? undefined : variablesOfFiles(include.envFiles.map((each) => resolve(from, each)), [file.within, input.rootDir]);
+      for (const written of include.paths) {
+        const path = resolve(from, written);
+        // A file outside the directories this project reads is somebody else's, and a file is included once.
+        if (![file.within, input.rootDir].some((each) => isWithin(each, path)) || seen.has(realOf(path))) continue;
+        const dir = project ?? dirname(path);
+        const label = posix.normalize(posix.join(posix.dirname(file.label), relative(from, path).split(sep).join('/')));
+        composeRead({ path, dir, label, within: file.within, ...(file.owner === undefined ? {} : { owner: file.owner }) }, { ...(own ?? dotEnvVariables(dir, [file.within, input.rootDir])), ...variables }, new Set([...seen, realOf(path)]));
+      }
+    }
+  };
   const composeAt = (dir: string, label: (name: string) => string, owner?: string): void => {
-    for (const name of filesAt(dir).filter(isComposeFile)) {
-      const text = read(join(dir, name));
-      if (text === undefined) continue;
-      const environment = composeEnvironment(name);
-      composeFiles.push({
-        dir,
-        label: label(name),
-        services: readComposeFile(text, composeVariables(dir, name, composeCommands, input.rootDir)),
-        ...(environment === undefined ? {} : { environment }),
-        ...(owner === undefined ? {} : { owner }),
-      });
+    const names = filesAt(dir).filter(isComposeFile);
+    // A file another of the directory includes is read as part of that one (P337).
+    const included = new Set(names.flatMap((name) => composeIncludes(read(join(dir, name)) ?? '').flatMap((each) => each.paths.map((path) => realOf(resolve(dir, path))))));
+    for (const name of names) {
+      const path = join(dir, name);
+      if (included.has(realOf(path))) continue;
+      composeRead({ path, dir, label: label(name), within: dir, ...(owner === undefined ? {} : { owner }) }, composeVariables(dir, name, composeCommands, input.rootDir), new Set([realOf(path)]));
     }
   };
 
@@ -968,14 +1103,20 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
   for (const service of input.services) {
     readRuns(byService.get(service.name) as Gathered, scripts.find((each) => each.owner === service.name)?.commands ?? [], service.dir, input.rootDir, allImages);
   }
+  for (const each of scripts) readStarts(each, input.services, byService, input.rootDir);
   const dirOf = new Map(input.services.map((service) => [service.name, service.dir]));
   // A workload's containers' environment (P331): the Dockerfile of the image
   // they run, where the project builds it, under what the manifest writes.
   const environmentOf: ContainerEnvironmentOf = (container, service) => {
     const environment = containerEnvironment();
-    const image = container?.image === undefined ? undefined : imageReading(container.image, allImages);
+    const image: ImageReading | undefined =
+      container?.image !== undefined
+        ? imageReading(container.image, allImages)
+        : container?.imageUnsettled !== undefined
+          ? { unread: { image: container.imageUnsettled, why: UNSETTLED_IMAGE } }
+          : undefined;
     if (image !== undefined && 'ports' in image) environment.layer(image.ports, image.path === undefined ? undefined : labelOf(image.path, dirOf.get(service) ?? input.rootDir, input.rootDir));
-    environment.layer(environmentPorts(container?.environment ?? []));
+    layerManifest(environment, container);
     return { ...environment.done(), ...(image !== undefined && 'unread' in image ? { imageUnread: image.unread } : {}) };
   };
   const { routed, workloads } = routedNames(manifests, names, environmentOf);
@@ -985,17 +1126,15 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
     // The port each node opens for the object is this machine's where the cluster runs on it (P260).
     const opened = each.ports.flatMap(({ port, target }) => (port.nodePort === undefined ? [] : [{ published: port.nodePort, container: target, file: port.file, line: port.line }]));
     if (opened.length > 0) {
-      const { environment, environmentFrom: from, environmentFiles, imageUnread } = each.routed;
+      const { environmentFrom: from } = each.routed;
       addContainer(into, {
         name: each.routed.name,
         names: [],
         file: each.routed.file,
         ports: opened,
-        environment,
+        ...routedEnvironment(each.routed),
         via: 'node-port',
         ...(from === undefined ? {} : { environmentFrom: from }),
-        ...(environmentFiles === undefined ? {} : { environmentFiles }),
-        ...(imageUnread === undefined ? {} : { imageUnread }),
       });
     }
   }

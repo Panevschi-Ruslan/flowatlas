@@ -50,6 +50,16 @@ export interface ManifestContainer {
   readonly environment: readonly Written[];
   /** Where its environment is written: the workload's file, or a patch's (P260). */
   readonly environmentFile?: string;
+  /** The file each setting of `environment` is written in, where that is not `environmentFile`: a config map's own (P337). */
+  readonly environmentFiles?: Readonly<Record<string, string>>;
+  /** The settings a `Secret` gives it, by name only: a secret's value is never read (P337). */
+  readonly secretSettings?: readonly string[];
+  /**
+   * The image as written, where its name is a template value the chart's
+   * values or the files do not settle (P337): `{{ … }}:1.2`, with each
+   * unsettled part shown so.
+   */
+  readonly imageUnsettled?: string;
 }
 
 /** A `Deployment`, `StatefulSet` or `DaemonSet`. */
@@ -321,20 +331,28 @@ const configsOf = (resources: readonly Resource[]): Configs => {
  * `prefix`), as the cluster gives a pod them (P263). Each said at the file
  * that writes it.
  */
-const environmentOf = (container: Record<string, unknown>, namespace: string | undefined, configs: Configs): Array<Written & { file: string }> => {
-  const out = new Map<string, Written & { file: string }>();
+const environmentOf = (container: Record<string, unknown>, namespace: string | undefined, configs: Configs): Array<Written & { file: string; secret?: true }> => {
+  const out = new Map<string, Written & { file: string; secret?: true }>();
   for (const source of (Array.isArray(container['envFrom']) ? container['envFrom'] : []).filter(isRecord)) {
     const ref = isRecord(source['configMapRef']) ? (['ConfigMap', source['configMapRef']] as const) : isRecord(source['secretRef']) ? (['Secret', source['secretRef']] as const) : undefined;
     const name = ref === undefined ? undefined : text(ref[1]['name']);
     if (ref === undefined || name === undefined) continue;
     const prefix = text(source['prefix']) ?? '';
-    for (const [key, { raw, file }] of configs(ref[0], name, namespace)?.values ?? []) out.set(`${prefix}${key}`, { name: `${prefix}${key}`, raw, file });
+    // A secret gives its keys by name only: its values are never read (P337).
+    for (const [key, { raw, file }] of configs(ref[0], name, namespace)?.values ?? []) {
+      out.set(`${prefix}${key}`, ref[0] === 'Secret' ? { name: `${prefix}${key}`, raw: '', file, secret: true } : { name: `${prefix}${key}`, raw, file });
+    }
   }
   for (const each of (Array.isArray(container['env']) ? container['env'] : []).filter(isRecord)) {
     const key = text(each['name']);
     if (key === undefined) continue;
     const from = isRecord(each['valueFrom']) ? each['valueFrom'] : undefined;
     const ref = from === undefined ? undefined : isRecord(from['configMapKeyRef']) ? (['ConfigMap', from['configMapKeyRef']] as const) : isRecord(from['secretKeyRef']) ? (['Secret', from['secretKeyRef']] as const) : undefined;
+    if (ref?.[0] === 'Secret') {
+      // The setting is the secret's, whatever it holds, and that is never read (P337).
+      out.set(key, { name: key, raw: '', file: whereOf(each)?.file ?? '', secret: true });
+      continue;
+    }
     if (ref !== undefined) {
       const name = text(ref[1]['name']);
       const wanted = text(ref[1]['key']);
@@ -358,23 +376,37 @@ const containersOf = (spec: unknown, namespace?: string, configs: Configs = () =
   const containers = isRecord(spec) ? spec['containers'] : undefined;
   if (!Array.isArray(containers)) return [];
   return containers.filter(isRecord).map((container) => {
-    const image = text(container['image'])?.split('/').pop()?.split(/[:@]/)[0];
+    // The image's own name, without registry, path or tag: read where that
+    // much is settled, though the registry or the tag be a template value (P337).
+    const written = typeof container['image'] === 'string' ? container['image'] : undefined;
+    const own = written?.split('/').pop()?.split(/[:@]/)[0];
+    const image = own === undefined || own.includes(TEMPLATED) ? undefined : own;
+    // A chart's value the values do not give prints as nothing, `:` for `{{ .Values.repository }}:{{ .Values.tag }}`.
+    const shown = written?.split(TEMPLATED).join('{{ … }}');
+    const imageUnsettled = shown === undefined || (image !== undefined && image !== '') ? undefined : own === '' ? `{{ … }}${shown}` : shown;
     const name = text(container['name']);
     const ports = (Array.isArray(container['ports']) ? container['ports'] : []).filter(isRecord).flatMap((each) => {
       const port = portNumber(each['containerPort']);
       const named = text(each['name']);
       return port === undefined ? [] : [{ port, ...(named === undefined ? {} : { name: named }) }];
     });
-    const written = environmentOf(container, namespace, configs);
-    const environment = written.map(({ name: key, raw }): Written => ({ name: key, raw }));
+    const all = environmentOf(container, namespace, configs);
+    const given = all.filter((each) => each.secret !== true);
+    const environment = given.map(({ name: key, raw }): Written => ({ name: key, raw }));
+    const secretSettings = all.filter((each) => each.secret === true).map((each) => each.name);
     // Where the environment is said to be written: where its first port is, else where its first value is.
-    const environmentFile = (written.find((each) => /^\d+$/.test(each.raw) && each.file !== '') ?? written.find((each) => each.file !== ''))?.file;
+    const environmentFile = (given.find((each) => /^\d+$/.test(each.raw) && each.file !== '') ?? given.find((each) => each.file !== ''))?.file;
+    // A setting written in another file than that one, a config map's own, is said there (P337).
+    const environmentFiles = Object.fromEntries(given.filter((each) => each.file !== '' && each.file !== environmentFile).map((each) => [each.name, each.file]));
     return {
       ...(name === undefined ? {} : { name }),
       ...(image === undefined || image === '' ? {} : { image }),
+      ...(imageUnsettled === undefined ? {} : { imageUnsettled }),
       ports,
       environment,
       ...(environmentFile === undefined ? {} : { environmentFile }),
+      ...(Object.keys(environmentFiles).length === 0 ? {} : { environmentFiles }),
+      ...(secretSettings.length === 0 ? {} : { secretSettings }),
     };
   });
 };

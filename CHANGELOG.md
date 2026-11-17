@@ -2020,6 +2020,39 @@ only one of them moved.
   loader). A service the code places at the port firmly is then its
   service outright, where the two used to be a `local-port-shared` row. A
   names-only file such as `.env` still gives no port on the machine.
+- **Compose's own variables, `include:` and `extends:`, a script's exported
+  variables, and a workload's config maps and secrets (P337).** A compose
+  file is interpolated from the files `COMPOSE_ENV_FILES` names - written
+  before the command, exported earlier in its script, or set in the `.env`
+  beside the file - where the command passes no `--env-file`, and
+  `COMPOSE_FILE` names the files a command runs where it passes no `-f`; what
+  the command's own shell gives (`export BILLING_PORT=8102` then `docker
+  compose up`, in that order, in that script) is written over every file, a
+  port, an address or a host name under a name that is no secret's. A
+  script's variable also fills `$NAME` in the `docker compose`, `docker
+  run` and `docker build` it runs, and `docker run -e PORT` passes it on. A
+  file `include:`d by another is read as part of it, interpolated from its
+  `env_file` or the `.env` of its project directory under the including
+  file's variables, its relative paths its own; a service that `extends:`
+  another, in the same file or another of the project, is read with the
+  other's environment, ports and environment files under its own, their
+  paths rebased. A command that starts a server - `node`, `tsx`, `npm
+  start`, `next start` and the like - in a service's directory with a port
+  its shell gives a setting (`cd stock; export PORT=4600; npm start`, or
+  `PORT=4600 node dist/app.js` in a script) places the setting the code
+  reads at that port, firmly, `listensAt` naming the script. A cluster
+  workload's config-map settings are each said at their own file, over the
+  image's `ENV`; a setting a `Secret` gives (`envFrom.secretRef`,
+  `secretKeyRef`) is now read by name only, its value never, so where the
+  code reads its port from it nothing is taken from the code's fallback and
+  `published-port-unheard` says why; and a workload whose image name a
+  template value the chart's values do not settle is a
+  `container-image-unread` row, as a pulled image is. A request to a port
+  one service writes as a number joined `heuristic` in a fixture whose
+  framework was not installed: the route itself was read from what the
+  source states (R142), and the edge is no surer than its route; the port
+  was firm all along (`unloaded-env-image-environment` now ships the
+  framework's stub, as other port fixtures do, and joins `static`).
 - **Fields written through an alias or in a subclass, domains a workspace
   names, and grants of a bus, table or stream by the CDK's version (P322).**
   A static field written through the class under `any` - `const R: any =

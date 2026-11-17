@@ -16,7 +16,7 @@ sets `PORT=4100` and its server is started nowhere the reader follows.
 |---|---|
 | `GET http://localhost:4050/items` | api `GET /items`, `heuristic`, `listensAt: src/app.ts:9 (PORT from .env.development) (a file nothing is read loading)`: offered, as an example's value is (before P331: the same service, placed firmly) |
 | `GET http://localhost:4050/nowhere` | nothing: api is still the only service offered there, a `target-route-not-found` row against it |
-| `GET http://localhost:4100/audit/log` | audit `GET /audit/log`, `listensAt: src/app.ts:9`: its written port is the port's outright, bare's file only offers it (before P331: `local-port-shared` naming both) |
+| `GET http://localhost:4100/audit/log` | audit `GET /audit/log`, `static`, `listensAt: src/app.ts:9`: its written port is the port's outright, bare's file only offers it (before P331: `local-port-shared` naming both; before P337 `heuristic`, the routes read without `express` installed and so no surer than what the source states, R142 - each service now ships the stub other port fixtures do) |
 | `GET http://localhost:4100/things` | nothing: audit is at 4100 firmly, so the request is audit's, a `target-route-not-found` row; bare's offer yields to it |
 | `GET http://localhost:4200/stuff` | loaded `GET /stuff`, `listensAt: src/app.ts:12 (PORT from .env.development)`: the file the code loads places it firmly |
 

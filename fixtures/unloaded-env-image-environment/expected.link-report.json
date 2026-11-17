@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T19:15:06.423Z",
+  "builtAt": "2026-11-17T21:03:49.207Z",
   "configHash": "0a8241ab0356",
   "services": [
     {
@@ -10,9 +10,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 3,
       "edges": 1,
-      "types": 0,
-      "unresolved": 1,
-      "durationMs": 1644,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2570,
       "packages": {
         "name": "unloaded-env-image-environment-api",
         "runtime": [
@@ -28,9 +28,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 3,
       "edges": 1,
-      "types": 0,
-      "unresolved": 1,
-      "durationMs": 1545,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2461,
       "packages": {
         "name": "unloaded-env-image-environment-audit",
         "runtime": [
@@ -46,9 +46,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 3,
       "edges": 1,
-      "types": 0,
-      "unresolved": 1,
-      "durationMs": 1496,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2462,
       "packages": {
         "name": "unloaded-env-image-environment-bare",
         "runtime": [
@@ -64,9 +64,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 5,
       "edges": 3,
-      "types": 0,
-      "unresolved": 1,
-      "durationMs": 1635,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2461,
       "packages": {
         "name": "unloaded-env-image-environment-billing",
         "runtime": [
@@ -82,9 +82,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 3,
       "edges": 1,
-      "types": 0,
-      "unresolved": 1,
-      "durationMs": 1637,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2472,
       "packages": {
         "name": "unloaded-env-image-environment-catalog",
         "runtime": [
@@ -100,9 +100,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 3,
       "edges": 1,
-      "types": 0,
-      "unresolved": 1,
-      "durationMs": 1631,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2478,
       "packages": {
         "name": "unloaded-env-image-environment-inventory",
         "runtime": [
@@ -118,9 +118,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 3,
       "edges": 1,
-      "types": 0,
-      "unresolved": 1,
-      "durationMs": 1733,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2447,
       "packages": {
         "name": "unloaded-env-image-environment-ledger",
         "runtime": [
@@ -136,9 +136,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 3,
       "edges": 1,
-      "types": 0,
-      "unresolved": 1,
-      "durationMs": 1691,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2455,
       "packages": {
         "name": "unloaded-env-image-environment-loaded",
         "runtime": [
@@ -155,9 +155,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 3,
       "edges": 1,
-      "types": 0,
-      "unresolved": 1,
-      "durationMs": 1626,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2554,
       "packages": {
         "name": "unloaded-env-image-environment-orders",
         "runtime": [
@@ -173,9 +173,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 3,
       "edges": 1,
-      "types": 0,
-      "unresolved": 1,
-      "durationMs": 1665,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2518,
       "packages": {
         "name": "unloaded-env-image-environment-stock",
         "runtime": [
@@ -193,7 +193,7 @@
       "edges": 20,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1678,
+      "durationMs": 2628,
       "packages": {
         "name": "unloaded-env-image-environment-web",
         "runtime": [],
@@ -232,7 +232,7 @@
     "duplicated": []
   },
   "types": {
-    "total": 0,
+    "total": 2,
     "sharedPackage": 0
   },
   "unresolved": [
@@ -339,11 +339,11 @@
   "totals": {
     "nodes": 55,
     "edges": 33,
-    "types": 0,
-    "missed": 12,
-    "sites": 12,
+    "types": 2,
+    "missed": 2,
+    "sites": 2,
     "notes": 5,
     "findings": 0,
-    "unresolved": 12
+    "unresolved": 2
   }
 }

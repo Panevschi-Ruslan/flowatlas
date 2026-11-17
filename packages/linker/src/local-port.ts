@@ -225,6 +225,15 @@ const fallbackValues = (port: ListenPort, own: RepoSettings | undefined): readon
     : (own?.ports?.[port.setting] ?? []);
 
 /**
+ * How a value a service's own files give a setting is heard (P309, P331,
+ * P337): an example's is offered; one a command of the project starts the
+ * server with is firm, the run it starts listens there; any other file's,
+ * which nothing is read loading, is offered too.
+ */
+const offerOf = (value: PortValue): Pick<Listening, 'example' | 'unloaded'> =>
+  value.started === true ? {} : value.example === true ? { example: true as const } : { unloaded: true as const };
+
+/**
  * Every port the servers of the project listen on, as their code writes it:
  * each service's repository node (P250), and a GraphQL endpoint's own, which
  * P245 carried first. A service is listed once per port.
@@ -245,8 +254,9 @@ export const listeningAt = (nodes: ReadonlyMap<string, GraphNode>, settings: Rea
       const listening = listeningOf(service, port);
       addListening(found, port.port, listening);
       for (const value of fallbackValues(port, settings[service])) {
-        if (value.port === port.port) continue;
-        addListening(found, value.port, { ...listening, valueFrom: value.file, ...(value.example === true ? { example: true as const } : { unloaded: true as const }) });
+        // A run started with the fallback's own value listens there firmly (P337).
+        if (value.port === port.port && value.started !== true) continue;
+        addListening(found, value.port, { ...listening, valueFrom: value.file, ...offerOf(value) });
       }
     }
   }
@@ -278,10 +288,13 @@ export interface PortListening {
 const insideContainer = (
   service: string,
   ports: readonly ListenPort[],
-  container: Pick<ContainerRun, 'name' | 'file' | 'environment' | 'environmentFrom' | 'environmentFiles'>,
+  container: Pick<ContainerRun, 'name' | 'file' | 'environment' | 'environmentFrom' | 'environmentFiles' | 'environmentSecret'>,
 ): Map<number, Listening> => {
   const inside = new Map<number, Listening>();
   for (const port of ports) {
+    // A setting a secret gives holds a value never read: the code's own
+    // fallback is not where it listens there, and nothing else is known (P337).
+    if (port.setting !== undefined && container.environmentSecret?.includes(port.setting) === true) continue;
     const given = port.setting === undefined ? undefined : container.environment[port.setting];
     const at = given ?? port.port;
     if (at === undefined) continue;
@@ -294,23 +307,27 @@ const insideContainer = (
 };
 
 /** Where a service's code says it listens, for the row about a mapping that misses it. */
-const portsSaid = (service: string, ports: readonly ListenPort[], environment: Readonly<Record<string, number>> = {}): string => {
+const portsSaid = (service: string, ports: readonly ListenPort[], environment: Readonly<Record<string, number>> = {}, secret: readonly string[] = []): string => {
   // A port the container's environment gives the setting the code reads is
   // the one it listens on there, whatever the code's own fallback (P283).
   const givenOf = (port: ListenPort): number | undefined => (port.setting === undefined ? undefined : environment[port.setting]);
   const numbered = [
     ...new Set(
       ports.flatMap((port) => {
+        if (port.setting !== undefined && secret.includes(port.setting)) return [];
         const given = givenOf(port);
         if (given !== undefined) return [`${given} (${port.setting} as the container's environment gives it, ${port.file}:${port.line})`];
         return port.port === undefined ? [] : [`${port.port} (${port.file}:${port.line})`];
       }),
     ),
   ];
-  const alone = [...new Set(ports.flatMap((port) => (port.port === undefined && port.setting !== undefined && givenOf(port) === undefined ? [`${port.setting} (${port.file}:${port.line})`] : [])))];
+  const isSecret = (port: ListenPort): boolean => port.setting !== undefined && secret.includes(port.setting);
+  const alone = [...new Set(ports.flatMap((port) => (port.port === undefined && port.setting !== undefined && givenOf(port) === undefined && !isSecret(port) ? [`${port.setting} (${port.file}:${port.line})`] : [])))];
+  const hidden = [...new Set(ports.flatMap((port) => (isSecret(port) ? [`${port.setting} (${port.file}:${port.line})`] : [])))];
   const said = [
     ...(numbered.length === 0 ? [] : [`listens on ${numbered.join(', ')}`]),
     ...(alone.length === 0 ? [] : [`reads its port from ${alone.join(', ')}, which the container's environment does not give`]),
+    ...(hidden.length === 0 ? [] : [`reads its port from ${hidden.join(', ')}, which a Secret gives, and a secret's value is never read`]),
   ];
   return said.length === 0 ? `nothing in ${service}'s code is read listening on a port` : `${service}'s code ${said.join(' and ')}`;
 };
@@ -322,7 +339,7 @@ const unroutedRow = (service: string, routed: RoutedName, port: RoutedName['port
   line: port.line,
   reason: 'published-port-unheard',
   level: 'info',
-  message: `${port.file} routes ${routed.name}:${port.port} to port ${port.target} of ${service}'s containers, but ${portsSaid(service, ports)}`,
+  message: `${port.file} routes ${routed.name}:${port.port} to port ${port.target} of ${service}'s containers, but ${portsSaid(service, ports, routed.environment, routed.environmentSecret)}`,
   hint: `Route the name to the port the server listens on (targetPort), or check that the containers' environment gives the server ${port.target}. A request to ${routed.name}:${port.port} is still joined to ${service} by the file.`,
   symbol: `${routed.name}:${port.port}:${port.target}`,
   meta: { routed: port.port, container: port.target, listens: [...new Set(ports.flatMap((each) => (each.port === undefined ? [] : [each.port])))].sort((a, b) => a - b) },
@@ -338,12 +355,13 @@ const unroutedRow = (service: string, routed: RoutedName, port: RoutedName['port
  */
 const imageUnreadRow = (
   service: string,
-  container: Pick<ContainerRun, 'name' | 'file' | 'environment' | 'imageUnread'> & { readonly line: number },
+  container: Pick<ContainerRun, 'name' | 'file' | 'environment' | 'imageUnread' | 'environmentSecret'> & { readonly line: number },
   ports: readonly ListenPort[],
 ): Unresolved | undefined => {
   const unread = container.imageUnread;
   if (unread === undefined) return undefined;
-  const hanging = ports.filter((port) => port.setting !== undefined && container.environment[port.setting] === undefined);
+  // A setting a secret gives is given, whatever the image sets (P337).
+  const hanging = ports.filter((port) => port.setting !== undefined && container.environment[port.setting] === undefined && container.environmentSecret?.includes(port.setting) !== true);
   if (hanging.length === 0) return undefined;
   const settings = [...new Set(hanging.map((port) => `${port.setting} (${port.file}:${port.line})`))];
   const fallbacks = [...new Set(hanging.flatMap((port) => (port.port === undefined ? [] : [port.port])))].sort((a, b) => a - b);
@@ -378,7 +396,7 @@ const unheardRow = (service: string, container: ContainerRun, mapping: Container
     line: mapping.line,
     reason: 'published-port-unheard',
     level: 'info',
-    message: `${publishing(container, mapping, service)}, but ${portsSaid(service, ports, container.environment)}`,
+    message: `${publishing(container, mapping, service)}, but ${portsSaid(service, ports, container.environment, container.environmentSecret)}`,
     hint: `Map the published port to the port the server listens on (${mapping.published}:<that port>), or check that the container's environment gives the server ${mapping.container}. A request to localhost:${mapping.published} is still joined to ${service} by the file.`,
     symbol: `${container.name}:${mapping.published}:${mapping.container}`,
     meta: { published: mapping.published, container: mapping.container, listens: [...new Set(ports.flatMap((port) => (port.port === undefined ? [] : [port.port])))].sort((a, b) => a - b) },
@@ -424,10 +442,12 @@ export const portsListening = (nodes: ReadonlyMap<string, GraphNode>, settings: 
       // default. A setting read alone is offered each file's value, an
       // example's and a file's nothing is read loading alike (P331): a file
       // the code loads has filled the port already (`valueFrom`), firm.
+      // A command that starts the server with the setting places it there
+      // firmly, whatever the code falls back to (P337).
       const withFallback = port.port !== undefined;
       for (const value of settings[service]?.ports?.[port.setting] ?? []) {
-        if (withFallback && (value.example !== true || value.port === port.port)) continue;
-        addListening(byPort, value.port, { ...listeningOf(service, port), valueFrom: value.file, ...(value.example === true ? { example: true as const } : { unloaded: true as const }) });
+        if (withFallback && value.started !== true && (value.example !== true || value.port === port.port)) continue;
+        addListening(byPort, value.port, { ...listeningOf(service, port), valueFrom: value.file, ...offerOf(value) });
       }
     }
   }

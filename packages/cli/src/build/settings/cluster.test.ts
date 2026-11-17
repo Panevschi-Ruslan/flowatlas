@@ -523,7 +523,7 @@ describe('every way a cluster is installed (P263)', () => {
     expect(read.rows?.map((row) => `${row.reason} ${row.file}:${row.line}`)).toEqual(['manifest-unread k8s/kustomization.yaml:9', 'manifest-unread k8s/kustomization.yaml:16', 'manifest-unread k8s/kustomization.yaml:31']);
   });
 
-  it('reads a value a pod takes from a config map or a secret by key', () => {
+  it('reads a value a pod takes from a config map by key, and a secret\'s by name only', () => {
     const dir = project({
       'k8s/orders.yaml': lines(
         DEPLOYMENT('orders', 3000, ['          env:', '            - name: PORT', '              valueFrom:', '                configMapKeyRef:', '                  name: orders', '                  key: port', '            - name: ADMIN_PORT', '              valueFrom:', '                secretKeyRef:', '                  name: orders', '                  key: admin']),
@@ -543,10 +543,10 @@ describe('every way a cluster is installed (P263)', () => {
         `  admin: ${Buffer.from('3001').toString('base64')}`,
       ),
     });
-    expect(readManifestsUnder(dir).workloads[0]?.containers[0]?.environment).toEqual([
-      { name: 'PORT', raw: '3000' },
-      { name: 'ADMIN_PORT', raw: '3001' },
-    ]);
+    const [container] = readManifestsUnder(dir).workloads[0]?.containers ?? [];
+    expect(container?.environment).toEqual([{ name: 'PORT', raw: '3000' }]);
+    // A secret's value is never read: the setting is given, by name only (P337).
+    expect(container?.secretSettings).toEqual(['ADMIN_PORT']);
   });
 
   it('reads a rule with no host as a way in at any host, each path at its own rule\'s host', () => {

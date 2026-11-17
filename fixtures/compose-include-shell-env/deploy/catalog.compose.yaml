@@ -1,0 +1,7 @@
+services:
+  catalog:
+    build: ../catalog
+    ports:
+      - "${CATALOG_PORT:-8099}:4000"
+    environment:
+      PORT: 4000

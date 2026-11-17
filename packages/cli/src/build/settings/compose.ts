@@ -1,3 +1,4 @@
+import { posix } from 'node:path';
 import { parse } from 'yaml';
 import type { Written } from './dotenv.js';
 
@@ -179,25 +180,148 @@ const imageOf = (build: unknown, variables: Readonly<Record<string, string>>): C
   };
 };
 
+const documentOf = (text: string): unknown => {
+  try {
+    return parse(text, { logLevel: 'silent', merge: true });
+  } catch {
+    return undefined;
+  }
+};
+
+/** One entry of a compose file's `include:` (P337), each path as written, relative to the file's directory. */
+export interface ComposeInclude {
+  readonly paths: readonly string[];
+  /** The environment files its placeholders are filled from, in place of the `.env` of its project directory. */
+  readonly envFiles: readonly string[];
+  /** The directory its relative paths are resolved against; the included file's own where none is written. */
+  readonly projectDirectory?: string;
+}
+
+/**
+ * The files a compose file includes (P337): `include: [infra.yaml]`, or
+ * `include: [{ path: [a.yaml, b.yaml], env_file: infra.env,
+ * project_directory: infra }]`. A path the shell fills is not read.
+ */
+export const composeIncludes = (text: string): ComposeInclude[] => {
+  const document = documentOf(text);
+  const include = isRecord(document) ? document['include'] : undefined;
+  if (!Array.isArray(include)) return [];
+  const settled = (each: string): boolean => each !== '' && !each.includes('$');
+  return include.flatMap((item): ComposeInclude[] => {
+    if (typeof item === 'string') return settled(item) ? [{ paths: [item], envFiles: [] }] : [];
+    if (!isRecord(item)) return [];
+    const paths = listOf(item['path']).filter(settled);
+    const projectDirectory = scalar(item['project_directory']);
+    if (paths.length === 0) return [];
+    return [{ paths, envFiles: listOf(item['env_file']).filter(settled), ...(projectDirectory === undefined || !settled(projectDirectory) ? {} : { projectDirectory }) }];
+  });
+};
+
+/** How deep `extends:` is followed, a base's base and on. */
+const EXTENDS_DEPTH = 8;
+
+/** Sequences compose joins rather than replaces when a service extends another. */
+const JOINED = new Set(['ports', 'expose', 'env_file', 'dns', 'dns_search', 'tmpfs', 'external_links']);
+
+/** `environment:` and `build.args` as a mapping, a list's `KEY=value` items read as one. */
+const asMapping = (value: unknown): Record<string, unknown> => {
+  if (isRecord(value)) return { ...value };
+  const out: Record<string, unknown> = {};
+  if (!Array.isArray(value)) return out;
+  for (const item of value) {
+    const text = scalar(item);
+    if (text === undefined) continue;
+    const equals = text.indexOf('=');
+    if (equals > 0) out[text.slice(0, equals).trim()] = text.slice(equals + 1);
+    else out[text.trim()] = null;
+  }
+  return out;
+};
+
+/** A relative path a base written in another file holds, as the extending file reaches it. */
+const rebased = (path: string, from: string): string =>
+  from === '.' || path.startsWith('/') || /^[a-z]+:\/\//i.test(path) || path.endsWith('.git') ? path : posix.normalize(posix.join(from, path));
+
+/** A service's paths - its build context and environment files - rebased onto the extending file (P337). */
+const rebaseService = (service: Record<string, unknown>, from: string): Record<string, unknown> => {
+  if (from === '.') return service;
+  const out = { ...service };
+  const build = out['build'];
+  if (typeof build === 'string') out['build'] = rebased(build, from);
+  else if (isRecord(build)) out['build'] = { ...build, context: rebased(scalar(build['context']) ?? '.', from) };
+  if (out['env_file'] !== undefined) out['env_file'] = listOf(out['env_file']).map((path) => rebased(path, from));
+  return out;
+};
+
+/**
+ * A service written over the one it extends, as compose merges them (P337):
+ * a mapping key by key, `environment:` and `build.args` by setting, the
+ * sequences compose joins (`ports`, `env_file`) joined, anything else the
+ * extending service's where it writes it.
+ */
+const mergeService = (base: Record<string, unknown>, own: Record<string, unknown>): Record<string, unknown> => {
+  const out: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(own)) {
+    const under = out[key];
+    if (key === 'environment') out[key] = { ...asMapping(under), ...asMapping(value) };
+    else if (key === 'build' && isRecord(under) && isRecord(value)) out[key] = { ...under, ...value, args: { ...asMapping(under['args']), ...asMapping(value['args']) } };
+    else if (JOINED.has(key) && under !== undefined) out[key] = [...new Set([...(key === 'env_file' ? listOf(under) : Array.isArray(under) ? under : [under]), ...(key === 'env_file' ? listOf(value) : Array.isArray(value) ? value : [value])])];
+    else if (isRecord(under) && isRecord(value)) out[key] = { ...under, ...value };
+    else out[key] = value;
+  }
+  return out;
+};
+
+/** Reads another compose file a service extends from, by its path relative to the file being read; nothing where it is not the project's. */
+export type ComposeLoader = (path: string) => string | undefined;
+
+/**
+ * A service with what it extends written under it (P337): `extends: base`
+ * or `extends: { service: base }` in the same file, `extends: { file:
+ * common.yml, service: node }` in another, read as far as the loader reads
+ * it, a base's own base and on, its paths rebased onto this file. A base not
+ * found leaves the service as written.
+ */
+const extended = (services: Record<string, unknown>, value: Record<string, unknown>, load: ComposeLoader | undefined, from: string, depth: number): Record<string, unknown> => {
+  const written = value['extends'];
+  const { extends: _, ...own } = value;
+  if (written === undefined || depth >= EXTENDS_DEPTH) return own;
+  const target = typeof written === 'string' ? { service: written } : isRecord(written) ? { service: scalar(written['service']), file: scalar(written['file']) } : {};
+  if (target.service === undefined) return own;
+  let pool = services;
+  let at = from;
+  if (target.file !== undefined) {
+    if (target.file.includes('$') || load === undefined) return own;
+    const path = posix.normalize(posix.join(from, target.file));
+    const text = load(path);
+    const document = text === undefined ? undefined : documentOf(text);
+    const found = isRecord(document) ? document['services'] : undefined;
+    if (!isRecord(found)) return own;
+    pool = found;
+    at = posix.dirname(path);
+  }
+  const base = pool[target.service];
+  if (!isRecord(base)) return own;
+  return mergeService(rebaseService(extended(pool, base, load, at, depth + 1), posix.relative(from, at) || '.'), own);
+};
+
 /**
  * The containers a compose file starts. Nothing for a file that is not one.
  * `variables` are what compose interpolates the file with: the `.env` beside
  * it, or the environment files a command of the project runs it with
- * (`--env-file`), where those are read (P325, P331). A name, a port, an
- * environment file or an image written with a placeholder is what they fill
- * it with, or its default; one nothing settles is not read.
+ * (`--env-file`), where those are read (P325, P331), and its shell (P337). A
+ * name, a port, an environment file or an image written with a placeholder
+ * is what they fill it with, or its default; one nothing settles is not
+ * read. A service that `extends:` another is read with the other under it,
+ * from another file where `load` reads it (P337).
  */
-export const readComposeFile = (text: string, variables: Readonly<Record<string, string>> = {}): ComposeService[] => {
-  let document: unknown;
-  try {
-    document = parse(text, { logLevel: 'silent', merge: true });
-  } catch {
-    return [];
-  }
+export const readComposeFile = (text: string, variables: Readonly<Record<string, string>> = {}, load?: ComposeLoader): ComposeService[] => {
+  const document = documentOf(text);
   const services = isRecord(document) ? document['services'] : undefined;
   if (!isRecord(services)) return [];
-  return Object.entries(services).flatMap(([name, value]) => {
-    if (!isRecord(value)) return [];
+  return Object.entries(services).flatMap(([name, entry]) => {
+    if (!isRecord(entry)) return [];
+    const value = entry['extends'] === undefined ? entry : extended(services, entry, load, '.', 0);
     const build = value['build'];
     const contextWritten = typeof build === 'string' ? build : isRecord(build) ? scalar(build['context']) : undefined;
     const context = contextWritten === undefined ? undefined : (interpolated(contextWritten, variables) ?? contextWritten);
