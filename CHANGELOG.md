@@ -142,6 +142,27 @@ only one of them moved.
   of a directory is its configuration, and an `overrides` entry's or a flat
   configuration object's `globals` count only for the files its `files`
   (less `excludedFiles` or `ignores`) name.
+- **Plain scripts' wrappers, load events, superagent's sent query, shared
+  linter configurations and undeclared client globals (P323).** A wrapper
+  run at once is a function of its own (its own name, the name it is kept
+  under, else `wrapper`), so a request or a call written at its top, outside
+  any function in it, is drawn from it as from a ready handler. `pageshow`
+  and `readystatechange` listened for, `window.onpageshow = fn`,
+  `document.onreadystatechange = fn` and jQuery 1's `$(window).load(fn)` and
+  `.bind('load', fn)` are handlers the page runs once it has loaded
+  (`onpageshow`, `onreadystatechange`, `onload`). What superagent's `.send`
+  hands a `GET` or a `HEAD` is its query, beside `.query`'s. ESLint's
+  `extends` is followed to the globals it declares - a file by its path, or
+  a shareable configuration installed under `node_modules` by its short
+  name (`shop` is `eslint-config-shop`) - and so is a module a flat
+  configuration takes in by a name it imports or requires (`...shared`,
+  `[base, { … }]`, `tseslint.config(base, …)`), each under the `files` it
+  is named in; a flat object writing `ignores` alone leaves the files it
+  names unlinted, declaring nothing, and one writing `ignores` beside
+  `globals` declares them for every file but those. A client's browser
+  global called with nothing declaring it (`ky.post(url)`, `axios.get(url)`
+  with no import, script tag, `/* global */` comment or linter global) is a new
+  `api-client-global-undeclared` row rather than silence.
 - **Receivers handed on, bases per caller and values after a host (P312).**
   A request object handed through functions is followed one call at a time
   to where each sends it; instances with different bases handed to one

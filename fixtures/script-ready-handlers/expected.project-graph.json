@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T17:25:28.383Z",
+  "builtAt": "2026-11-17T18:45:43.119Z",
   "services": [
     {
       "name": "web",
@@ -1169,6 +1169,20 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "js/widgets/banner.js",
+      "line": 4,
+      "reason": "api-client-global-undeclared",
+      "message": "ky.get(…) calls ky, the global ky's browser build leaves, and nothing says the page has it, so it is not read as a request",
+      "hint": "Nothing imports ky, loads ky by a script tag of a page, or declares the global - a /* global ky */ comment, or the globals of the linter configuration the script is under. Load the client by a script tag, import it, or declare the global, and the call is read as its request.",
+      "symbol": "ky.get(SHOP + '/banner')",
+      "meta": {
+        "cause": "api-client-global-undeclared",
+        "client": "ky",
+        "global": "ky"
+      },
       "service": "web"
     }
   ]

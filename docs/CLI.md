@@ -230,11 +230,18 @@ named by its property (`api.items`) and a setter by its property and `=`
 written. A function the page runs once it has loaded -
 `document.addEventListener('DOMContentLoaded', function () { … })`,
 `window.addEventListener('load', …)`, `window.onload = …`, jQuery's `$(function
-() { … })`, `$(document).ready(…)` and `$(window).on('load', …)` - is a scope
-as a wrapper run at once is, and a function of its own besides
-(`onDOMContentLoaded`, `onload`, `onready`), the one its requests are drawn from
-(`fixtures/script-members`, `fixtures/script-wrappers`,
-`fixtures/script-ready-handlers`).
+() { … })`, `$(document).ready(…)` and `$(window).on('load', …)`, and the
+page's other load events, `pageshow` and `readystatechange` listened for,
+`window.onpageshow = …`, `document.onreadystatechange = …` and jQuery 1's
+`$(window).load(…)` and `.bind('load', …)` - is a scope as a wrapper run at
+once is, and a function of its own besides (`onDOMContentLoaded`, `onload`,
+`onready`, `onpageshow`, `onreadystatechange`), the one its requests are drawn
+from. A wrapper run at once is a function of its own too - named by its own
+name, the name it is kept under (`shop` for `var shop = (function () { …
+})()`), else `wrapper` - so a request, a call or a click handler written at its
+top, outside any function it keeps, is drawn from it (`fixtures/script-members`,
+`fixtures/script-wrappers`, `fixtures/script-ready-handlers`,
+`fixtures/script-load-events`).
 
 A client with a browser build needs no import or install where a page of the
 repository loads it by a script tag - a folder of the package's name or a file
@@ -249,7 +256,17 @@ cascade; of a directory's cascading files the first the linter takes is its
 configuration; and an `overrides` entry's globals, or a flat configuration
 object's, count only for the scripts its `files` name, less its `excludedFiles`
 or `ignores` (an override's pattern without a slash names a file anywhere
-below). A CommonJS script's `const axios = require('axios')` is the client's
+below). What a configuration names is read with it, under the `files` it is
+named in: a cascading `extends` - a file by its path, or a shareable
+configuration installed under `node_modules` by its short name (`shop` is
+`eslint-config-shop`, `@acme/web` is `@acme/eslint-config-web`), the linter's
+own and a plugin's not read - and a module a flat configuration takes in by a
+name it imports or requires and reads as a value (`...shared`, `[base, { …
+}]`, `tseslint.config(base, …)`, a named import reading the whole module), a
+file or an installed package's entry, four deep at most. A flat object writing
+`ignores` and nothing else beside a `name` ignores those files for every
+object, so they declare nothing; one writing `ignores` beside `globals` is for
+every file but those. A CommonJS script's `const axios = require('axios')` is the client's
 import. The global is then the installed client: axios, whose
 `axios.create(...)` makes an instance as an import's does; jQuery's and Zepto's
 `$.ajax` (its address or settings, the verb under `method` or `type`, `data`
@@ -257,10 +274,15 @@ the body - the query of a `GET` or a `HEAD`), `$.get`, `$.post` and
 `$.getJSON` (whose data is the query, a callback in its place neither);
 superagent's verb methods and superagent called as a function (`request('POST',
 url)`, `request(url)` a `GET`), with the body handed to `.send` and the query to
-`.query` along the chain; ky; and the `unfetch` ponyfill, read as `fetch`. A
+`.query` along the chain - what `.send` hands a `GET` or a `HEAD` being its
+query too, as superagent writes it into the address; ky; and the `unfetch` ponyfill, read as `fetch`. A
 name the repository declares is its own, whatever it is called, and a wrapper's
 parameter is what the wrapper is run with: `$` in `(function ($) { … })(jQuery)`
-and in `jQuery(function ($) { … })`.
+and in `jQuery(function ($) { … })`. A client's global called by a request's
+spelling (`axios.get(url)`, `ky.post(url)`, `$.ajax(…)`) with nothing saying the
+page has it - no import, no script tag, no comment, no linter global, and
+nothing in the repository declaring the name - is not read as a request, and
+an `api-client-global-undeclared` row says so at the call.
 
 **A repository that is a server and a browser in one directory declares the
 server.** Set `type` to `nestjs`, `express`, `fastify`, `koa` or `nextjs` — not to
@@ -4024,7 +4046,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch`, `procedure-link-dynamic`, `procedure-link-socket` (info), `procedure-link-unserved`, `procedure-prefix-unread`, `procedure-contract-unread`, `procedure-unmounted` (info, P270) |
 | gRPC services and calls (P274) | `grpc-service-unread` (a service registered, or a client made, that cannot be named), `grpc-contract-unread` (info: a service no `.proto` file of the repository declares, its methods named as written), `grpc-method-unserved` (a method a contract declares that nothing configured implements), `grpc-package-service` (info: a service a package implements whose contract is not known, its methods not drawn), `grpc-method-unimplemented` (info finding: a method the contract declares that the server registering the service does not implement), `grpc-method-undeclared` (info finding: a member a server implements for a service that its contract does not declare), `grpc-field-undeclared` (info finding: a field a handler reads off its request that the message does not declare under the loader's names, P297) |
-| Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `service-binding-unknown`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread`, `api-client-base-unread` |
+| Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `service-binding-unknown`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread`, `api-client-base-unread`, `api-client-global-undeclared` (a client's browser global called with nothing declaring it, P323) |
 | Ports, proxies and the network a request goes over | `local-port-shared` (two services or more heard at the port a request on this machine names, none of them chosen), `listen-port-unread` (info: a server's port read from defaults a module loads by a path decided at run time, P315), `listen-port-guessed` (info: a port kept only as a guess - the value from before a write not read, or a framework default an environment file it does not load would move, P321), `published-port-unheard` (info), `network-port-unreachable`, `proxy-rule-unread`, `proxy-chain-unfollowed`, `proxied-to-third-party` (info), `server-request-without-origin`, `address-port-without-colon` (a number written straight after a host with no colon, read as spelled - `localhost4600` - and no port; info after a name that may end in digits, P324) |
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-public-declared` (info), `marker-reason-missing` (info), `route-shadowed` |
 | What a framework's build would have written (P240) | `aliases-from-convention` (info), `aliases-from-config` (info), `implicit-imports-from-convention` (info), `implicit-import-ambiguous`, `framework-layer-unread`, `framework-setting-dynamic` |

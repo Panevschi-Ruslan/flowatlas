@@ -137,7 +137,8 @@ export interface CallShape {
   /**
    * The verbs under which what the shape reads as the body is sent as the
    * query instead (P317): jQuery writes `data` into the address of a `GET`
-   * or a `HEAD` - `$.get(url, data)`, `$.ajax({ type: 'GET', data })`.
+   * or a `HEAD` - `$.get(url, data)`, `$.ajax({ type: 'GET', data })` - and
+   * superagent what `.send` hands one (P323), beside its `.query`.
    */
   readonly queryVerbs?: readonly string[];
   /**
@@ -384,12 +385,16 @@ export const JQUERY: RequestClient = {
 /**
  * superagent (P311): the verb in the name, `request.get(url)`, `request.del(url)`,
  * and the body handed to `.send(body)` on what the call answers, further along
- * the chain; the query handed to `.query(params)` the same way (P317).
+ * the chain; the query handed to `.query(params)` the same way (P317). What a
+ * `GET` or a `HEAD` is handed by `.send` is written into its query string, as
+ * jQuery's data is (P323).
  */
+const SUPERAGENT_READS = ['GET', 'HEAD'];
+
 const SUPERAGENT_VERBS: Readonly<Record<string, CallShape>> = Object.fromEntries(
   [['get', 'GET'], ['head', 'HEAD'], ['options', 'OPTIONS'], ['delete', 'DELETE'], ['del', 'DELETE'], ['post', 'POST'], ['put', 'PUT'], ['patch', 'PATCH']].map(([verb, method]) => [
     verb,
-    { method, urlAt: 0, chainedQuery: 'query', ...(['POST', 'PUT', 'PATCH', 'DELETE'].includes(method as string) ? { chainedBody: 'send' } : {}) } as CallShape,
+    { method, urlAt: 0, chainedQuery: 'query', chainedBody: 'send', queryVerbs: SUPERAGENT_READS } as CallShape,
   ]),
 );
 
@@ -403,7 +408,8 @@ const SUPERAGENT_CALLED: CallShape = {
   urlAt: 1,
   chainedBody: 'send',
   chainedQuery: 'query',
-  alone: { method: 'GET', urlAt: 0, chainedQuery: 'query' },
+  queryVerbs: SUPERAGENT_READS,
+  alone: { method: 'GET', urlAt: 0, chainedQuery: 'query', chainedBody: 'send', queryVerbs: SUPERAGENT_READS },
 };
 
 export const SUPERAGENT: RequestClient = {

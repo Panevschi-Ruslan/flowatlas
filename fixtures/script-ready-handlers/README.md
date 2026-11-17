@@ -27,7 +27,8 @@ their functions by name. What P317 reads:
    the function, in the browser's reading and in the server's.
 5. **The linter's override.** `web/.eslintrc.json` declares `ky` only in an
    `overrides` entry for `js/widgets/*.js` less `banner.js`: `stock.js` reads
-   ky as the client, `banner.js` reads nothing.
+   ky as the client, `banner.js` reads no request, and says so in an
+   `api-client-global-undeclared` row (P323).
 
 Every request of the page goes to `http://localhost:4720`, where `shop`
 listens, and joins its route there.

@@ -1,5 +1,5 @@
 import { namedFunction, startLineOf, type NamedFunction } from '@flowatlas/core';
-import type { ArrowFunction, Block, FunctionExpression, Node as TsNode, ObjectLiteralExpression, SourceFile, Statement } from 'ts-morph';
+import type { ArrowFunction, FunctionExpression, Node as TsNode, ObjectLiteralExpression, SourceFile, Statement } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 
 /**
@@ -35,8 +35,10 @@ import { Node, SyntaxKind } from 'ts-morph';
  * same for a wrapper the page runs once it has loaded (P317):
  * `document.addEventListener('DOMContentLoaded', function () { … })`,
  * `$(function () { … })`, which is also a function of its own, the way in its
- * requests are made from. A member of an object built inside any other
- * function is reachable only through that function.
+ * requests are made from - and so is a wrapper run at once (P323), whose top
+ * writes requests and calls outside any function it keeps. A member of an
+ * object built inside any other function is reachable only through that
+ * function.
  */
 
 /** One member function, with what else the checker may hand back for it and whose instances have it. */
@@ -193,12 +195,12 @@ export const keptAt = (node: TsNode): { names: readonly string[]; page: boolean 
 };
 
 /**
- * The body of a function a statement runs at once, where it is one (P311):
- * `(function () { … })()`, `(function () { … }())`, `!function () { … }()`,
- * `void function () { … }()`, `(() => { … })()`, `(function ($) { … })(jQuery)`
- * and `(function () { … }).call(this)`.
+ * The function a statement runs at once, where it is one whose body is a
+ * block (P311): `(function () { … })()`, `(function () { … }())`, `!function
+ * () { … }()`, `void function () { … }()`, `(() => { … })()`, `(function ($)
+ * { … })(jQuery)` and `(function () { … }).call(this)`.
  */
-export const wrapperBody = (expression: TsNode): Block | undefined => {
+const wrapperRun = (expression: TsNode): ArrowFunction | FunctionExpression | undefined => {
   let at = unwrap(expression);
   if (Node.isPrefixUnaryExpression(at)) at = unwrap(at.getOperand());
   else if (Node.isVoidExpression(at)) at = unwrap(at.getExpression());
@@ -206,15 +208,40 @@ export const wrapperBody = (expression: TsNode): Block | undefined => {
   let callee = unwrap(at.getExpression());
   if (Node.isPropertyAccessExpression(callee) && (callee.getName() === 'call' || callee.getName() === 'apply')) callee = unwrap(callee.getExpression());
   if (!Node.isFunctionExpression(callee) && !Node.isArrowFunction(callee)) return undefined;
-  const body = callee.getBody();
-  return Node.isBlock(body) ? body : undefined;
+  return Node.isBlock(callee.getBody()) ? callee : undefined;
+};
+
+/**
+ * A wrapper run at once as a function of its own (P323): what its top writes
+ * outside any function it keeps - a request, a call, a click handler - is
+ * made from it, as from a handler the page runs once it has loaded. Named by
+ * its own name (`(function boot() { … })()`), else by the name it is kept
+ * under (`var shop = (function () { … })()`), else `wrapper`; a second of one
+ * script is told apart by its line.
+ */
+const wrapperMember = (fn: ArrowFunction | FunctionExpression, keptAs: string | undefined): ScriptMember => {
+  const own = Node.isFunctionExpression(fn) ? fn.getName() : undefined;
+  return member({ name: own ?? keptAs ?? 'wrapper', declaration: fn, body: fn.getBody(), line: startLineOf(fn) });
+};
+
+/** The statements of a wrapper's body. */
+const statementsOf = (fn: ArrowFunction | FunctionExpression): Statement[] => {
+  const body = fn.getBody();
+  return Node.isBlock(body) ? body.getStatements() : [];
 };
 
 /** The events a page runs a handler on once it has loaded (P317). */
-const LOAD_EVENTS = new Set(['DOMContentLoaded', 'load']);
+const LOAD_EVENTS = new Set(['DOMContentLoaded', 'load', 'pageshow', 'readystatechange']);
 
-/** The objects a load event is listened for on. */
-const EVENT_TARGETS = new Set([...PAGE_ROOTS, 'document']);
+/**
+ * The properties a page runs the function assigned to once it has loaded
+ * (P317, P323), by the object they are on: `window.onload`, `onpageshow`
+ * (bare or on the page's object) and `document.onreadystatechange`.
+ */
+const LOAD_PROPERTIES: Readonly<Record<string, ReadonlySet<string>>> = {
+  page: new Set(['onload', 'onpageshow']),
+  document: new Set(['onreadystatechange']),
+};
 
 /**
  * The names jQuery and the libraries written like it are loaded as, whose
@@ -251,6 +278,36 @@ const isPageHeld = (name: TsNode): boolean =>
       Node.isIdentifier(declaration),
   );
 
+/**
+ * The load property an assignment writes, where it writes one (P317, P323):
+ * `onload` and `onpageshow` bare or on the page's object, `onreadystatechange`
+ * on its document (`document.…`, `window.document.…`).
+ */
+const loadProperty = (left: TsNode): string | undefined => {
+  if (Node.isIdentifier(left)) return LOAD_PROPERTIES['page']?.has(left.getText()) === true && isPageHeld(left) ? left.getText() : undefined;
+  if (!Node.isPropertyAccessExpression(left)) return undefined;
+  const name = left.getName();
+  const owner = unwrap(left.getExpression());
+  const on = isPageObject(owner) ? 'page' : isPageDocument(owner) ? 'document' : undefined;
+  return on !== undefined && LOAD_PROPERTIES[on]?.has(name) === true ? name : undefined;
+};
+
+/** The page's own object, by a name nothing in the repository declares: `window`, `self`, `globalThis`. */
+const isPageObject = (node: TsNode): boolean => Node.isIdentifier(node) && PAGE_ROOTS.has(node.getText()) && isPageHeld(node);
+
+/** The page's document: `document`, `window.document`. */
+const isPageDocument = (node: TsNode): boolean => {
+  if (Node.isIdentifier(node)) return node.getText() === 'document' && isPageHeld(node);
+  return Node.isPropertyAccessExpression(node) && node.getName() === 'document' && isPageObject(unwrap(node.getExpression()));
+};
+
+/** What jQuery selects being the page's own object: `$(window)`. */
+const selectsPage = (node: TsNode): boolean => {
+  const at = unwrap(node);
+  const [selected] = Node.isCallExpression(at) ? at.getArguments() : [];
+  return selected !== undefined && isPageObject(unwrap(selected));
+};
+
 /** jQuery itself, or what a call of it selects: `$`, `jQuery(document)`, `$(window)`. */
 const isReadyRoot = (node: TsNode): boolean => {
   const at = unwrap(node);
@@ -265,16 +322,19 @@ const isReadyRoot = (node: TsNode): boolean => {
  * …)` (`onDOMContentLoaded`, `onload`), `window.onload = function () { … }`
  * (`onload`), and jQuery's `$(function () { … })`, `jQuery(function ($) { …
  * })`, `$(document).ready(…)` and `$(window).on('load', …)` (`onready`,
- * `onload`). Its body is the top of a script as a wrapper run at once is, and
- * it is a function of its own, the way in its requests are made from.
+ * `onload`). The page's other load events as well (P323): `pageshow` and
+ * `readystatechange` listened for (`onpageshow`, `onreadystatechange`),
+ * `window.onpageshow = …` and `document.onreadystatechange = …`, and jQuery
+ * 1's `$(window).load(function () { … })` and `.bind('load', …)`. Its body is
+ * the top of a script as a wrapper run at once is, and it is a function of
+ * its own, the way in its requests are made from.
  */
 export const laterWrapper = (expression: TsNode): { fn: ArrowFunction | FunctionExpression; name: string } | undefined => {
   const at = unwrap(expression);
   if (Node.isBinaryExpression(at) && at.getOperatorToken().getKind() === SyntaxKind.EqualsToken) {
-    const left = unwrap(at.getLeft());
-    const kept = Node.isIdentifier(left) ? (isPageHeld(left) ? { names: [left.getText()], page: true } : undefined) : keptAt(left);
     const fn = inPlace(at.getRight());
-    return fn !== undefined && kept?.page === true && kept.names.length === 1 && kept.names[0] === 'onload' ? { fn, name: 'onload' } : undefined;
+    const property = loadProperty(unwrap(at.getLeft()));
+    return fn === undefined || property === undefined ? undefined : { fn, name: property };
   }
   if (!Node.isCallExpression(at)) return undefined;
   const callee = unwrap(at.getExpression());
@@ -294,7 +354,7 @@ export const laterWrapper = (expression: TsNode): { fn: ArrowFunction | Function
   if (method === 'addEventListener') {
     const event = textOf(first);
     const fn = inPlace(second);
-    const target = receiver === undefined || (Node.isIdentifier(receiver) && EVENT_TARGETS.has(receiver.getText()) && isPageHeld(receiver));
+    const target = receiver === undefined || isPageObject(receiver) || isPageDocument(receiver);
     return fn !== undefined && target && event !== undefined && LOAD_EVENTS.has(event) ? { fn, name: `on${event}` } : undefined;
   }
   if (receiver === undefined || !isReadyRoot(receiver)) return undefined;
@@ -303,8 +363,13 @@ export const laterWrapper = (expression: TsNode): { fn: ArrowFunction | Function
     const fn = inPlace(first);
     return fn === undefined ? undefined : { fn, name: 'onready' };
   }
-  // `$(window).on('load', function () { … })`.
-  if (method === 'on' || method === 'one') {
+  // jQuery 1's `$(window).load(function () { … })`; on anything else `.load(url)` is a request.
+  if (method === 'load') {
+    const fn = inPlace(first);
+    return fn !== undefined && at.getArguments().length === 1 && selectsPage(receiver) ? { fn, name: 'onload' } : undefined;
+  }
+  // `$(window).on('load', function () { … })`, jQuery 1's `.bind('load', …)`.
+  if (method === 'on' || method === 'one' || method === 'bind') {
     const event = textOf(first);
     const fn = inPlace(second);
     if (fn === undefined || event === undefined) return undefined;
@@ -352,8 +417,8 @@ const scopeMembers = (statements: readonly Statement[], inner: boolean, returned
           continue;
         }
         // `var shop = (function () { …; return { load: load }; })()`.
-        const wrapped = depth < WRAPPER_DEPTH ? wrapperBody(value) : undefined;
-        if (wrapped !== undefined) found.push(...scopeMembers(wrapped.getStatements(), true, name.getText(), constructors, depth + 1));
+        const run = depth < WRAPPER_DEPTH ? wrapperRun(value) : undefined;
+        if (run !== undefined) found.push(wrapperMember(run, name.getText()), ...scopeMembers(statementsOf(run), true, name.getText(), constructors, depth + 1));
       }
       continue;
     }
@@ -370,9 +435,9 @@ const scopeMembers = (statements: readonly Statement[], inner: boolean, returned
       continue;
     }
     if (!Node.isExpressionStatement(statement)) continue;
-    const wrapped = depth < WRAPPER_DEPTH ? wrapperBody(statement.getExpression()) : undefined;
-    if (wrapped !== undefined) {
-      found.push(...scopeMembers(wrapped.getStatements(), true, undefined, constructors, depth + 1));
+    const run = depth < WRAPPER_DEPTH ? wrapperRun(statement.getExpression()) : undefined;
+    if (run !== undefined) {
+      found.push(wrapperMember(run, undefined), ...scopeMembers(statementsOf(run), true, undefined, constructors, depth + 1));
       continue;
     }
     // A wrapper the page runs later is a function of its own, and the top of a script too (P317).

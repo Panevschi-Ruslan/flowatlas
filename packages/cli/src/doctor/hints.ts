@@ -549,6 +549,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Add the settings key to services[].apiBaseEnv, and services[].apiTarget to say which service answers it.',
   'api-client-unread': () =>
     'A class of this repository is called by an HTTP verb and nothing could follow that verb to a request. Add the class to adapters.frontend.localClientClasses in flowatlas.config.json if it is a client of your own.',
+  'api-client-global-undeclared': () =>
+    "A script calls the global a client's browser build leaves on the page (`axios.get(url)`, `ky.post(url)`, `$.ajax(...)`) and nothing says the page has it: no import, no page loading the client by a script tag, no `/* global */` comment and no linter configuration declaring the global. The name may be anything the page is given, so the call is not read as a request. Load the client by a script tag, import it, or declare the global, and the call is read.",
   'handler-not-found': (row) =>
     `${named(row)} is bound in a template and declared nowhere on the component. Rename the binding, or declare the method.`,
   'handler-not-a-method': () =>

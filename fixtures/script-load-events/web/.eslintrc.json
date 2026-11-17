@@ -1,0 +1,4 @@
+{
+  "root": true,
+  "extends": ["eslint:recommended", "./config/eslint-base.json", "shop"]
+}

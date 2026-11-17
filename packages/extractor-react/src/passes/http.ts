@@ -51,7 +51,7 @@ import {
 } from '../clients.js';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
-import { clientInstances, type ClientInstance } from '../util/client-instance.js';
+import { clientInstances, undeclaredPageGlobal, type ClientInstance } from '../util/client-instance.js';
 import { classMethods, enclosingIndexed, requestsOf, type ReadRequest, type RequestSite } from '../util/forward.js';
 import { localClientOf, type LocalClientReading } from '../util/local-client.js';
 import { linterGlobals, pageLoadedPackages } from '../util/page-globals.js';
@@ -426,15 +426,17 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    */
   const repoDir = toPosixPath(ctx.repoDir).replace(/[/]+$/, '');
   let loaded: ReadonlySet<string> | undefined;
+  // A client a page loads by a script tag is the global it leaves (P310).
+  const pageLoaded = (): ReadonlySet<string> => {
+    loaded ??= pageLoadedPackages(ctx.project.getFileSystem(), ctx.repoDir, CLIENT_FACTORIES.flatMap((factory) => (factory.pageGlobals === undefined ? [] : factory.modules)));
+    return loaded;
+  };
+  // A global the linter's configuration declares, as the script's own comment does (P311).
+  const declared = linterGlobals(ctx.project.getFileSystem(), ctx.repoDir);
   const instances = clientInstances({
     sharedPackages: ctx.config.sharedPackages,
-    // A client a page loads by a script tag is the global it leaves (P310).
-    pageLoaded: () => {
-      loaded ??= pageLoadedPackages(ctx.project.getFileSystem(), ctx.repoDir, CLIENT_FACTORIES.flatMap((factory) => (factory.pageGlobals === undefined ? [] : factory.modules)));
-      return loaded;
-    },
-    // A global the linter's configuration declares, as the script's own comment does (P311).
-    declared: linterGlobals(ctx.project.getFileSystem(), ctx.repoDir),
+    pageLoaded,
+    declared,
     files: () =>
       ctx.project.getSourceFiles().filter((file) => {
         const path = toPosixPath(file.getFilePath());
@@ -581,7 +583,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     const asQuery = found.described === undefined && verb !== null && shape.queryVerbs?.includes(verb) === true && sent.type !== null;
     const body: { type: string | null; keys?: readonly string[] } = asQuery ? { type: null } : sent;
     const query: { type?: string; keys?: readonly string[]; unread?: true; inAddress?: true } = asQuery
-      ? { type: sent.type as string, ...(sent.keys === undefined ? {} : { keys: sent.keys }) }
+      ? withSentQuery(queryOf(network, shape), sent)
       : found.described === undefined
         ? queryOf(network, shape)
         : {};
@@ -1162,6 +1164,43 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     };
   };
 
+  /**
+   * A call of a client's browser global nothing says the page has (P323):
+   * `axios.get(url)`, `ky.post(url)` or `unfetch(url)` with no import, no script tag, no `/*
+   * global *\/` comment and no linter global. It is no request this reader
+   * can stand behind - the name may be anything the page is given - so it is
+   * not read as one, and a row says why rather than nothing.
+   */
+  const saidUndeclared = new Set<TsNode>();
+  const sayUndeclaredGlobal = (node: CallExpression): void => {
+    if (saidUndeclared.has(node)) return;
+    const callee = node.getExpression();
+    const holder = Node.isIdentifier(callee) ? callee : Node.isPropertyAccessExpression(callee) ? callee.getExpression() : undefined;
+    if (holder === undefined || !Node.isIdentifier(holder)) return;
+    // A request's spelling on a client's global by its name, or on a wrapper's parameter it may be handed as.
+    if (Node.isPropertyAccessExpression(callee) ? !PAGE_GLOBAL_VERBS.has(callee.getName().toLowerCase()) : !PAGE_GLOBAL_NAMES.has(holder.getText())) return;
+    if (!PAGE_GLOBAL_NAMES.has(holder.getText()) && !(holder.getSymbol()?.getDeclarations() ?? []).some((each) => Node.isParameterDeclaration(each))) return;
+    const undeclared = undeclaredPageGlobal(holder, pageLoaded, declared);
+    if (undeclared === undefined) return;
+    const { factory, name } = undeclared;
+    const requested = Node.isPropertyAccessExpression(callee)
+      ? Object.hasOwn(factory.verbs, callee.getName().toLowerCase())
+      : factory.called !== undefined && node.getArguments().length > 0;
+    if (!requested) return;
+    saidUndeclared.add(node);
+    ctx.report({
+      file: ctx.fileOf(node),
+      line: siteOf(node).line,
+      reason: 'api-client-global-undeclared',
+      message: `${callee.getText().slice(0, 60)}(…) calls ${name}, the global ${factory.client.name}'s browser build leaves, and nothing says the page has it, so it is not read as a request`,
+      hint:
+        `Nothing imports ${name}, loads ${factory.modules.join(' or ')} by a script tag of a page, or declares the global - a /* global ${name} */ comment, ` +
+        'or the globals of the linter configuration the script is under. Load the client by a script tag, import it, or declare the global, and the call is read as its request.',
+      symbol: node.getText().slice(0, 80),
+      meta: { cause: 'api-client-global-undeclared', client: factory.client.name, global: name },
+    });
+  };
+
   /** Every request spelling this reader knows, found in one body. */
   const callsIn = (body: TsNode, leaveOut?: ReadonlySet<TsNode>): FoundCall[] => {
     const found = describedCallsIn(body, leaveOut);
@@ -1175,9 +1214,9 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         return;
       }
       const callee = node.getExpression();
-      if (!Node.isPropertyAccessExpression(callee)) return;
-      const local = localCallAt(node, callee.getExpression(), callee.getName().toLowerCase());
+      const local = Node.isPropertyAccessExpression(callee) ? localCallAt(node, callee.getExpression(), callee.getName().toLowerCase()) : undefined;
       if (local !== undefined) found.push(local);
+      else sayUndeclaredGlobal(node);
     }, leaveOut);
     return found;
   };
@@ -1239,6 +1278,31 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     }
   }
 });
+
+/** The names the clients' browser builds leave on the page (P310, P311). */
+const PAGE_GLOBAL_NAMES: ReadonlySet<string> = new Set(CLIENT_FACTORIES.flatMap((factory) => factory.pageGlobals ?? []));
+
+/** The verbs those clients are called by on their global (P323). */
+const PAGE_GLOBAL_VERBS: ReadonlySet<string> = new Set(CLIENT_FACTORIES.flatMap((factory) => (factory.pageGlobals === undefined ? [] : Object.keys(factory.verbs))));
+
+/**
+ * The query of a request whose data a client writes into the address (P317),
+ * beside the query it is handed otherwise (P323): superagent's `.query(q)`
+ * and `.send(data)` on one `GET` are both its query string, as is a query
+ * written into the address. Keys are known only where each side's are; a
+ * side not read leaves the whole unread.
+ */
+const withSentQuery = (
+  among: { type?: string; keys?: readonly string[]; unread?: true; inAddress?: true },
+  sent: { type: string | null; keys?: readonly string[] },
+): { type?: string; keys?: readonly string[]; unread?: true; inAddress?: true } => {
+  const sentType = sent.type as string;
+  if (among.type === undefined && among.keys === undefined && among.unread !== true) return { type: sentType, ...(sent.keys === undefined ? {} : { keys: sent.keys }) };
+  const type = among.type === undefined ? sentType : `${among.type} & ${sentType}`;
+  if (among.unread === true) return { type, unread: true };
+  if (among.keys === undefined || sent.keys === undefined) return { type };
+  return { type, keys: [...new Set([...among.keys, ...sent.keys])].sort(), ...(among.inAddress === true ? { inAddress: true as const } : {}) };
+};
 
 /**
  * Creates the node a request is attributed to, wherever it turned out to be.

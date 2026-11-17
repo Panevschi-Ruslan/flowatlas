@@ -1,0 +1,6 @@
+{
+  "name": "shop",
+  "private": true,
+  "main": "index.js",
+  "dependencies": { "express": "^4.21.2" }
+}

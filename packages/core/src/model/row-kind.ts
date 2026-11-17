@@ -340,6 +340,8 @@ const GAPS: readonly string[] = [
   'api-client-base-unread',
   'api-base-unknown',
   'api-client-unread',
+  // A call of a client's browser global nothing says the page has (P323)
+  'api-client-global-undeclared',
   'handler-not-found',
   'template-handler-not-found',
   // A child component, a layout or a route middleware a component names by a

@@ -301,6 +301,7 @@ export const PAGE_WORDS = Object.freeze({
     'api-body-unread': 'API description not read',
     'api-client-base-unread': 'client base address not read',
     'api-client-unread': 'client class not followed',
+    'api-client-global-undeclared': 'client global not declared',
     'api-method-dynamic': 'verb chosen at run time',
     'api-path-dynamic': 'address built at run time',
     'application-root-unread': 'application root not named',

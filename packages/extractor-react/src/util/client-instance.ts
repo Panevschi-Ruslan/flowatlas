@@ -156,6 +156,34 @@ export const moduleFactory = (
   return CLIENT_FACTORIES.find((factory) => (factory.globals?.includes(name) === true || loaded(factory)) && isPlatformProvided(target));
 };
 
+/**
+ * The client whose browser build leaves a name on the page, where a script
+ * calls the name with nothing saying the page has it (P323): no import, no
+ * script tag of a page loading the client, no `/* global *\/` comment and no
+ * linter configuration declaring it, and nothing in the repository declaring
+ * the name. `moduleFactory` reads no such call; it is said rather than left
+ * silent. A wrapper's parameter is read as what the wrapper is handed.
+ */
+export const undeclaredPageGlobal = (
+  node: TsNode,
+  pageLoaded: () => ReadonlySet<string> = () => NOTHING_LOADED,
+  declared: (file: SourceFile) => ReadonlySet<string> = declaredGlobals,
+  depth = 0,
+): { factory: ClientFactory; name: string } | undefined => {
+  const target = unwrap(node);
+  if (!Node.isIdentifier(target) || importedFrom(target) !== undefined) return undefined;
+  const handed = depth < 2 ? wrapperArgument(target) : undefined;
+  if (handed !== undefined) return undeclaredPageGlobal(handed, pageLoaded, declared, depth + 1);
+  const name = target.getText();
+  const factory = CLIENT_FACTORIES.find((each) => each.pageGlobals?.includes(name) === true);
+  if (factory === undefined || !declaredNowhere(target)) return undefined;
+  return moduleFactory(target, pageLoaded, declared) === undefined ? { factory, name } : undefined;
+};
+
+/** Whether nothing of the repository declares a name: no declaration, or only an installed package's typings. */
+const declaredNowhere = (name: TsNode): boolean =>
+  (name.getSymbol()?.getDeclarations() ?? []).every((declaration) => declaration.getSourceFile().isDeclarationFile() || declaration.getSourceFile().isInNodeModules());
+
 /** What a parameter of a function run at once is handed, where the name is one (P311). */
 const wrapperArgument = (name: TsNode): TsNode | undefined => {
   const declarations = name.getSymbol()?.getDeclarations() ?? [];

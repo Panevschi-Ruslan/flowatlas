@@ -1,0 +1,4 @@
+{
+  "env": { "browser": true, "jquery": true },
+  "globals": { "SHOP": "readonly", "superagent": "readonly" }
+}

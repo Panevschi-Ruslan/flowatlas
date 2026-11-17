@@ -785,6 +785,132 @@ describe('plain browser code (P284)', () => {
     expect(urls({ '/js/shop.js': script }, { '/.eslintrc.js': 'module.exports = {};\n', '/.eslintrc.json': declares })).toEqual([]);
   });
 
+  it('reads a wrapper run at once as a function of its own, a request at its top drawn from it, and the functions it keeps left to themselves (P323)', () => {
+    const graph = read({
+      '/js/shop.js': [
+        '(function () {',
+        "  fetch('https://api.example.test/boot');",
+        "  function init() { return fetch('https://api.example.test/init'); }",
+        '  init();',
+        "  document.getElementById('buy').addEventListener('click', function () { fetch('https://api.example.test/buy', { method: 'POST' }); });",
+        "  document.addEventListener('DOMContentLoaded', function () { fetch('https://api.example.test/ready'); });",
+        '})();',
+        "var shop = (function () { fetch('https://api.example.test/kept'); return {}; })();",
+        "(function boot() { fetch('https://api.example.test/named'); })();",
+        "!function () { fetch('https://api.example.test/other'); }();",
+      ].join('\n'),
+    });
+    const { found, calls } = drawn(graph);
+    expect(found).toEqual([
+      'boot GET /named',
+      'init GET /init',
+      'onDOMContentLoaded GET /ready',
+      'shop GET /kept',
+      'wrapper GET /boot',
+      'wrapper POST /buy',
+      'wrapper@10 GET /other',
+    ]);
+    expect(calls).toEqual(['wrapper -> init']);
+  });
+
+  it("reads the page's other load events as handlers it runs once it has loaded (P323)", () => {
+    const graph = read({
+      '/js/page.js': [
+        '/* global $ */',
+        "window.addEventListener('pageshow', function () { fetch('https://api.example.test/shown'); });",
+        "document.addEventListener('readystatechange', () => { fetch('https://api.example.test/state'); });",
+        "document.onreadystatechange = function () { fetch('https://api.example.test/assigned'); };",
+        "window.onpageshow = function () { fetch('https://api.example.test/back'); };",
+        "$(window).load(function () { fetch('https://api.example.test/old'); });",
+        "$(window).bind('load', function () { fetch('https://api.example.test/bound'); });",
+        // jQuery's `.load(url)` on an element is a request of its own, no handler.
+        "$('#box').load(function () { fetch('https://api.example.test/box'); });",
+        "window.addEventListener('resize', function () { fetch('https://api.example.test/resize'); });",
+      ].join('\n'),
+    });
+    expect(drawn(graph).found).toEqual([
+      'onload GET /old',
+      'onload@7 GET /bound',
+      'onpageshow GET /shown',
+      'onpageshow@5 GET /back',
+      'onreadystatechange GET /state',
+      'onreadystatechange@4 GET /assigned',
+    ]);
+  });
+
+  it("reads what superagent's .send hands a GET or a HEAD as its query, beside .query's (P323)", () => {
+    const found = requests(
+      read({
+        '/js/api.js': [
+          '/* global superagent */',
+          "function a() { return superagent.get('https://api.example.test/a').send({ page: 1 }); }",
+          "function b() { return superagent.get('https://api.example.test/b').query({ q: 'x' }).send({ page: 1 }); }",
+          "function c() { return superagent('HEAD', 'https://api.example.test/c').send({ page: 1 }); }",
+          "function d() { return superagent('https://api.example.test/d').send({ page: 1 }); }",
+          "function e() { return superagent.post('https://api.example.test/e').send({ item: 1 }); }",
+        ].join('\n'),
+      }),
+    );
+    const row = (node: GraphNode): unknown[] => [node.meta?.['method'], node.meta?.['path'], node.meta?.['bodyKeys'], node.meta?.['queryKeys']];
+    expect(found.map(row).sort((x, y) => String(x[1]).localeCompare(String(y[1])))).toEqual([
+      ['GET', '/a', undefined, ['page']],
+      ['GET', '/b', undefined, ['page', 'q']],
+      ['HEAD', '/c', undefined, ['page']],
+      ['GET', '/d', undefined, ['page']],
+      ['POST', '/e', ['item'], undefined],
+    ]);
+  });
+
+  it("counts the globals a configuration's extends and a flat configuration's modules declare, and none for a file a flat configuration ignores (P323)", () => {
+    const script = "function items() { return axios.get('https://api.example.test/items'); }\n";
+    const urls = (pages: Record<string, string>, files: Record<string, string> = { '/js/shop.js': script }): unknown[] => requests(read(files, pages)).map((node) => node.meta?.['url']);
+    const items = ['https://api.example.test/items'];
+    const declares = '{ "globals": { "axios": "readonly" } }';
+    // A cascading `extends`: a file by its path, a shareable configuration by its short name, scoped or not, and one extending another.
+    expect(urls({ '/.eslintrc.json': '{ "extends": "./config/base.json" }', '/config/base.json': declares })).toEqual(items);
+    expect(urls({ '/.eslintrc.json': '{ "extends": ["eslint:recommended", "shop"] }', '/node_modules/eslint-config-shop/package.json': '{ "main": "lib/index.js" }', '/node_modules/eslint-config-shop/lib/index.js': 'module.exports = { globals: { axios: "readonly" } };\n' })).toEqual(items);
+    expect(urls({ '/.eslintrc.yml': 'extends:\n  - "@acme/web"\n', '/node_modules/@acme/eslint-config-web/index.js': 'module.exports = { extends: ["./browser"] };\n', '/node_modules/@acme/eslint-config-web/browser.js': `module.exports = ${declares};\n` })).toEqual(items);
+    expect(urls({ '/.eslintrc.json': '{ "overrides": [{ "files": ["test/**"], "extends": "./config/base.json" }] }', '/config/base.json': declares })).toEqual([]);
+    expect(urls({ '/.eslintrc.json': '{ "extends": ["plugin:shop/recommended", "missing"] }' })).toEqual([]);
+    // A flat configuration's modules: spread, an element, a helper's argument, required; under the `files` they are named in.
+    const base = "export default [{ languageOptions: { globals: { axios: 'readonly' } } }];\n";
+    expect(urls({ '/eslint.config.js': "import base from './config/base.js';\nexport default [...base, { rules: {} }];\n", '/config/base.js': base })).toEqual(items);
+    expect(urls({ '/eslint.config.mjs': "import shared from 'shop-lint';\nexport default [shared];\n", '/node_modules/shop-lint/package.json': '{ "exports": { ".": { "import": "./flat.mjs" } } }', '/node_modules/shop-lint/flat.mjs': base })).toEqual(items);
+    expect(urls({ '/eslint.config.js': "import tseslint from 'typescript-eslint';\nimport base from './config/base';\nexport default tseslint.config(base);\n", '/config/base.js': base })).toEqual(items);
+    expect(urls({ '/eslint.config.cjs': "const base = require('./config/base.js');\nmodule.exports = [{ files: ['js/**'], ...base }];\n", '/config/base.js': "module.exports = { languageOptions: { globals: { axios: 'readonly' } } };\n" })).toEqual(items);
+    expect(urls({ '/eslint.config.cjs': "module.exports = [{ files: ['test/**'], ...require('./config/base.js') }];\n", '/config/base.js': "module.exports = { languageOptions: { globals: { axios: 'readonly' } } };\n" })).toEqual([]);
+    // An object writing `ignores` alone ignores those files for every object; beside other keys, only for its own.
+    const flat = (ignored: string): string => `export default [{ ignores: ${ignored} }, { languageOptions: { globals: { axios: 'readonly' } } }];\n`;
+    expect(urls({ '/eslint.config.js': flat("['vendor/**']") })).toEqual(items);
+    expect(urls({ '/eslint.config.js': flat("['js/']") })).toEqual([]);
+    expect(urls({ '/eslint.config.js': flat("['js/shop.js']") })).toEqual([]);
+    expect(urls({ '/eslint.config.js': "export default [{ name: 'ignored', ignores: ['js/**'] }, { languageOptions: { globals: { axios: 'readonly' } } }];\n" })).toEqual([]);
+    expect(urls({ '/eslint.config.js': "export default [{ ignores: ['vendor/**'], languageOptions: { globals: { axios: 'readonly' } } }];\n" })).toEqual(items);
+    expect(urls({ '/eslint.config.js': "export default [{ ignores: ['js/**'], languageOptions: { globals: { axios: 'readonly' } } }];\n" })).toEqual([]);
+  });
+
+  it("says a client's global called with nothing declaring it, rather than nothing (P323)", () => {
+    const graph = read({
+      '/js/api.js': [
+        "function a() { return ky.post('https://api.example.test/a'); }",
+        "function b() { return axios.get('https://api.example.test/b'); }",
+        "(function ($) { $.ajax({ url: 'https://api.example.test/c' }); })(jQuery);",
+        // Not a request's spelling, a name the repository declares, or a parameter handed nothing.
+        "function d() { return $('#box'); }",
+        'function e(superagent) { return superagent.get("https://api.example.test/e"); }',
+      ].join('\n'),
+      '/js/own.js': "export const axios = { get: function () {} };\nexport function f() { return axios.get('https://api.example.test/f'); }\n",
+    });
+    expect(requests(graph)).toEqual([]);
+    const rows = graph.unresolved.filter((row) => row.reason === 'api-client-global-undeclared');
+    expect(rows.map((row) => [row.line, row.meta?.['client'], row.meta?.['global']])).toEqual([
+      [1, 'ky', 'ky'],
+      [2, 'axios', 'axios'],
+      [3, 'jquery', 'jQuery'],
+    ]);
+    expect(rows[0]?.hint).toContain('/* global ky */');
+  });
+
   it('leaves a verb it cannot read as unread', () => {
     const graph = read({ '/js/any.js': "function send(verb) {\n  const request = new XMLHttpRequest();\n  request.open(verb, 'https://api.example.test/orders');\n}\n" });
     expect(requests(graph).map((node) => node.meta?.['method'])).toEqual([null]);
