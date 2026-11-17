@@ -60,11 +60,17 @@ code itself). The reasons added most recently:
 | `listen-port-guessed` | note | `info` | a server's port is read only as a guess: the value from before a write whose own value is not read (`port = await getPort({ port })`, the port's `rewritten`), or a framework's default kept where an environment file the framework does not load before choosing its port sets it (Gatsby's `.env.development`) (P321) |
 | `api-client-global-undeclared` | gap | `action` | a script calls the global a client's browser build leaves (`axios.get(url)`, `ky.post(url)`, `$.ajax(...)`) with no import, no script tag of a page loading the client, no `/* global */` comment and no linter global declaring it, so the call is not read as a request; `meta.client` and `meta.global` name the client and the name (P323) |
 | `route-entries-unread` | gap | `info` | a `<Route>` is written over a list some of whose entries are not read - an item not written as an object, a view or a `map` made otherwise, an entry whose path or screen is not read - so the screens they place are not placed; `meta.unread`, `meta.read` and `meta.why` say how many and why. Also where a list read off a registry instance made where it is read (`makeShelf().routes()`) places nothing, `meta.notes` saying so (P338) |
+| `address-port-without-colon` | finding | `action`, or `info` | a number written straight after a host with no colon, `` `http://localhost${port}` `` handed 4600, read as the code spells it (`localhost4600`): a host of its own, not a port. `action` after `localhost` or an address of numbers, where such a request is joined by no path; `info` after any other name, which may end in digits (P324, P330) |
+| `container-image-unread` | note | `info` | a container's image whose Dockerfile is not read - pulled as it is, built by nothing the project holds, from a Dockerfile not found, or named by a chart value nothing settles - where the setting the code reads its port from hangs on it; said once per service and image, and nothing is fetched (P331, P337) |
+| `plugin-not-enabled` | note | `info` | the server of a Strapi plugin of the repository that no key of `config/plugins` enables, so Strapi does not load it and its routes are not drawn (P335) |
 
 Some older reasons now say more. `ambiguous-route-target` also names the
 services a request's base may be - a condition's branches nobody settles, or a
-chain of `||` and `??` over settings - where more than one serves the request,
-and the APIs served where an address naming its API by an id is written.
+chain of `||` and `??` over settings, a condition later in a chain choosing
+among the later settings, or one setting several services claim - where more
+than one serves the request, and the APIs served where an address naming its
+API by an id is written; `unknown-base-url-env` names each service claiming a
+setting where none of them serves the request.
 `base-url-from-files` (a note) says when a request was taken as an API's by
 where the API is served. `local-port-shared` is said where a port places more
 than one service firmly; where every service heard at the port only guesses at
@@ -73,7 +79,13 @@ written fallback - it is said only where several of them serve the request, or,
 where none does, where several written fallbacks or several guesses firmer than
 a default are left, and a port only defaults place joins nobody.
 `api-client-base-unread` is said where client instances made with different
-bases are handed to one receiver outside any function. A `channel-dynamic` row
+bases are handed to one receiver outside any function, or where a framework
+calls the method making the request on an instance no code read hands it.
+`route-registry-unread` is also said for a Strapi plugin a key of
+`config/plugins` enables that is installed nowhere in the repository, or whose
+package ships only a bundled build, and for Gatsby plugins listed by a name
+installed nowhere (`info`); `route-mount-unread` for what an extension does to
+a Strapi plugin's routes beyond adding a route. A `channel-dynamic` row
 about a job's name read off what a `catch` is handed names in its hint the
 package whose error may be the one caught.
 
@@ -99,6 +111,7 @@ in a browser), beside `url`, `path` and `host`:
 | `sameCall` | the id of the other half of one call both halves of a full-stack application read, reached from both sides or from neither; the linker joins the two to one target and a reader counts them once |
 | `through` | on a `ui_api_call`, the function of the repository the request was read through, its node standing at the caller: a wrapper, or a function a client is handed to |
 | `protoFieldNames` | `proto` on a gRPC call whose client loads its contract keeping the contract's field names (`keepCase`) |
+| `portWithoutColon` | `{ number, host }` where a number is written straight after the host with no colon (`localhost4600` is `{ "number": "4600", "host": "localhost" }`): the `host` is kept as spelled, and the row `address-port-without-colon` says so |
 
 ### Publishes
 
@@ -118,6 +131,7 @@ On an `entry`:
 | `stages` | the stages a Terraform API is deployed to; a stage the workspace names lists each workspace's |
 | `implementedBy` | the package whose code answers the way in: a gRPC health or reflection service handed to the server |
 | `protoFieldNames` | as on a request, for the service's contract |
+| `handlerVia` | how the code behind the way in was found (`function`, `method`, `inline`, `named`, ...). Two say it is not the repository's: `framework`, a route the framework's own code answers (a Strapi core route whose controller writes no action), and `package`, one an installed package declares and answers (a Strapi or Gatsby plugin under `node_modules`), drawn at the file that enables it with `package` and `declaredIn` naming the package and its file |
 
 A type the tool read from a `.proto` contract carries `declaredBy: protobuf`
 with `protoMessage` or `protoEnum`, and each field `protoName` where its name
@@ -131,11 +145,14 @@ A repository node's `listen`, and a GraphQL endpoint's `graphql.listen`, list
 where its server listens: `port`, `file`, `line`, the `setting` that moves it,
 `default` for the library's own port, `handed` where the port is handed to the
 function that starts the server, and `devServer` for a front end's development
-or preview server. Two keys are new: `merged`, the call of a merge helper of
-the repository the port is read through (`file:line`), which makes a join on it
-a guess; and `valueFrom`, the environment file that gives the setting its
-value - one the framework loads before it listens, or an example of it, read
-only as a candidate.
+or preview server. `merged` is the call of a merge helper of the repository
+the port is read through (`file:line`), which makes a join on it a guess;
+`rewritten` is where the value the port is read from is written again by
+something not read (`config = await applyPlugins(config)`), the port being
+the one from before it, a guess (P321); and `valueFrom` is the environment
+file that gives the setting its value - one the code or the framework is read
+loading before it listens, firm, or an example of it, read only as a
+candidate.
 
 ### Edges
 
@@ -156,16 +173,21 @@ settings a service was chosen among by serving the request, as
 `ORDERS_URL (orders)`, and makes the join `heuristic`. `listensAt` says where
 the service a request reached by a port listens - on this machine, or on a
 container's or a cluster's network - with the setting and the file its value
-is from, `(its default)`, the merge it is read through, the call the port is
-handed at, and the mapping or the cluster's service it is reached through.
+is from, `(its default)`, `(a file nothing is read loading)` where that file
+only offers the value, the merge it is read through, the write not read it is
+from before, the call the port is handed at, and the mapping or the cluster's
+service it is reached through.
 
 A front end's navigations and route guards are `calls` edges. A navigation's
 `meta` gains `alsoNavigates` (the other addresses written to the same page from
 the same function), `branch` (a route placed under a condition nothing written
 decides), `localePrefix` (the segment a middleware puts in front, `[locale]`),
 `handler` (the markup event it is written in, `@click`) and `byUrl` (an
-address Angular's router is handed whole, `navigateByUrl`); a `branch` or a
-`localePrefix` makes it `heuristic`. A guard or a resolver the router runs
+address Angular's router is handed whole, `navigateByUrl`) and `query`
+(`guess` where a link of the application's own glues a value no use hands as
+text to a segment written out whole, and the navigation is taken as one to
+that segment's page with a query); a `branch`, a `localePrefix` or a guessed
+`query` makes it `heuristic`. A guard or a resolver the router runs
 before a screen has `guard` (its kind), `order`, `factory` where a call of a
 factory hands the guard back (`roleGuard('admin')`), and `leaving` for what
 runs as the screen is left (`canDeactivate`). A screen placed by a route

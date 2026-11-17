@@ -905,10 +905,22 @@ base + route.path }))`, `Array.from(store, fn)`), or to objects written over it
 condition, and a `reduce` from an empty list gathering them, `[...all, { ...
 }]`, `all.concat({ ... })` or `all.push({ ... })`; the entry itself handed on,
 `page.hidden ? [] : [page]`, is the entry as it is), its path spelled from the
-entry's and the rest read through the spread; the entries of a view made any
-other way (a function of its own handed to `map`, `flatMap` or `reduce`,
-`Object.entries`, a `reduce` from anything but an empty list, two maps) are
-not read and count toward `unplaced`.
+entry's and the rest read through the spread. Steps compose (P333): a step
+over a view mapped already (`map(f).flatMap(g)`, `map(f).map(g)`) is read
+step after step; an object a `reduce` from `{}` gathers - by a spread, an
+element or a member write, or `Object.assign` - or one written in place is
+an object of entries, read through `Object.values`, and through
+`Object.entries` where a step takes each `[key, entry]` pair apart. The key
+of such a pair is the key its entry is kept under (P338) - a property's
+name, a literal, a computed key or the expression a keyed `reduce` writes it
+under (`[team.slug]`, `all[task.path] = ...`) - so `` ([slug, page]) => ({
+...page, path: `/pages/${slug}` }) `` spells each page's path. A route or a
+link written straight over `Object.entries(...)` reads the pairs the same
+way: `path={path}` with the key bound, `<Screen />` the entry, and
+`([path, { Screen }])` a key of the entry. The entries of a view made any
+other way (a function of its own handed to `map`, `flatMap` or `reduce`, a
+`reduce` from anything else, pairs taken apart otherwise) are not read and
+count toward `unplaced`.
 
 A class's field is followed the same way (P320): a static one wherever any
 module names it (`Registry.items.push({ path: '/x', ... })` outside the class,
@@ -926,7 +938,25 @@ PanelBook(panels)`, a parameter property or a field its constructor writes,
 then `this.registry.items.push(...)`, through `this.keep(...)` too); a call
 adds to it only where what it is handed, or the instance it is made on, holds
 that instance, so the same function or class over another instance adds
-nothing to it. A view the caller makes of what a reader hands back is read as
+nothing to it. A receiver is followed through a destructured parameter, a
+component's props (`<Routes registry={panels} />` read as `props.registry`
+or `({ registry })`) and a key of a parameter (`install({ registry: panels },
+...)`), each what every call or every use hands under that name (P333); an
+adding function handed its entry in the object it is handed the store in,
+`install({ registry, widget })`, adds that entry (P338). A factory
+function's call - a function, a `const` arrow or a static method - handing
+back a `new` of one class or an object written in place is a fresh instance
+each time, the `const` holding the call being that instance, and an object a
+factory hands back keeping its store in a field or a variable of its own is a
+registry read per instance (P333). A receiver that may hold several
+instances of one class, or of one factory's object - a prop handed `widgets`
+at one use and `gadgets` at another - is read as each in turn, the entries of
+each counted. An instance made where it is read (`makeShelf().routes()`)
+holds only what its class or factory writes, a field's array written in
+place and a constructor's writes included, and where that is nothing the
+`route-entries-unread` row says so in `meta.notes`; a singleton a function
+makes on first use (`dock ??= new DockRegistry()`, a static field written
+alike) is the one instance every call hands back (P338). A view the caller makes of what a reader hands back is read as
 the reader's own view is: `const pages = listPages().filter(...).map((page) =>
 ({ ...page, path: `/app${page.path}` }))` and then `pages.map((page) => <Route
 path={page.path} />)` places each page at `/app` and its path, as do a
@@ -937,7 +967,8 @@ a view or a `map` made otherwise, an entry whose path or screen is not read -
 an info `route-entries-unread` row at the route says how many and why
 (`meta.unread`, `meta.read`, `meta.why`), beside what the count makes a
 navigation landing nowhere say (`fixtures/registry-fields-caller-views`,
-`fixtures/caller-steps-handed-instances`).
+`fixtures/caller-steps-handed-instances`, `fixtures/composed-steps-props-factories`,
+`fixtures/pair-keys-instances`).
 
 A link component's address prop may be named apart from the link's attribute
 (P303, P314): `<DocLink page="/intro">` rendering `` <Link
@@ -955,7 +986,15 @@ wrapper's own body, `` const address = `/console${props.target}` `` handed as
 `href={address}`, P326) - and each use then carries a
 `navigation-unresolved` `dynamic` row where the value is handed, the text in
 front written into the address it names and said in `meta.prefix`, never the
-component's own navigation. Text before the prop that ends a segment, or uses
+component's own navigation. What a value glued to a segment written out whole
+with no `/` after it is (`` `/search${query}` ``) is told from what the uses
+hand, never from the prop's name (P333): a use handing a query or a hash
+(`query="?q=shoes"`, `#top`) makes it a query, so every use, one not read
+too, lands at that segment's page, firmly; where no use's value is read, a
+navigation to that page as a guess (`meta.query: "guess"`, `heuristic`)
+stands beside the `dynamic` row naming the address under it; and where a use
+hands an address, or the value comes after a `/`
+(`` `/portal/${href}` ``), the row alone. Text before the prop that ends a segment, or uses
 that hand something else (`` `/orders/${id}` ``, `` `/tags/t-${name}` `` with
 `name="news"`), leave it the component's own navigation. A link's address read
 off a list's entry - `items.map((item) => <Link to={item.path} />)`, the
@@ -1534,6 +1573,20 @@ Writes three files to the output directory, `.flowatlas` by default:
 `project-graph.json` is the whole graph and the canonical artefact,
 `link-report.json` says what joined and what did not, `graph.db` is the same
 graph as SQLite and is what every query reads.
+
+How far it looks above a repository is bounded (P334). Where a reader looks up
+the directories for a file - a linter's shareable configuration or plugin, a
+Nuxt layer or module under `node_modules` - it stops at the repository the
+service was given, widened to the outermost workspace above it that declares
+it a member, so a package still finds what its workspace installs; a walk
+given no repository - the workspace roots above a package, the package a file
+is in, a tsconfig's relative `extends`, a workspace application's manifest, a
+Prisma schema, a gRPC contract's search top, the checkout a build is stamped
+with - stops at the top of the checkout it starts in, the nearest `.git`; and
+none reads in the home directory or at the file system's root. A linter
+configuration's `extends` by a path climbing out of the repository is not
+followed. The TypeScript checker's own module resolution still looks for
+`node_modules` and `@types` above a repository, as the compiler does.
 
 Everything else it keeps is in the same directory, and nothing is written into
 the repositories it reads:
@@ -4059,11 +4112,11 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch`, `procedure-link-dynamic`, `procedure-link-socket` (info), `procedure-link-unserved`, `procedure-prefix-unread`, `procedure-contract-unread`, `procedure-unmounted` (info, P270) |
 | gRPC services and calls (P274) | `grpc-service-unread` (a service registered, or a client made, that cannot be named), `grpc-contract-unread` (info: a service no `.proto` file of the repository declares, its methods named as written), `grpc-method-unserved` (a method a contract declares that nothing configured implements), `grpc-package-service` (info: a service a package implements whose contract is not known, its methods not drawn), `grpc-method-unimplemented` (info finding: a method the contract declares that the server registering the service does not implement), `grpc-method-undeclared` (info finding: a member a server implements for a service that its contract does not declare), `grpc-field-undeclared` (info finding: a field a handler reads off its request that the message does not declare under the loader's names, P297) |
 | Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `service-binding-unknown`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread`, `api-client-base-unread`, `api-client-global-undeclared` (a client's browser global called with nothing declaring it, P323) |
-| Ports, proxies and the network a request goes over | `local-port-shared` (two services or more heard at the port a request on this machine names, none of them chosen), `listen-port-unread` (info: a server's port read from defaults a module loads by a path decided at run time, P315), `listen-port-guessed` (info: a port kept only as a guess - the value from before a write not read, or a framework default an environment file it does not load would move, P321), `published-port-unheard` (info), `container-image-unread` (info: a container's image whose Dockerfile is not read - pulled, built by nothing the project holds, or from a Dockerfile not found - where the setting the code reads its port from hangs on it, P331), `network-port-unreachable`, `proxy-rule-unread`, `proxy-chain-unfollowed`, `proxied-to-third-party` (info), `server-request-without-origin`, `address-port-without-colon` (a number written straight after a host with no colon, read as spelled - `localhost4600` - and no port; info after a name that may end in digits, P324) |
+| Ports, proxies and the network a request goes over | `local-port-shared` (two services or more heard at the port a request on this machine names, none of them chosen), `listen-port-unread` (info: a server's port read from defaults a module loads by a path decided at run time, P315), `listen-port-guessed` (info: a port kept only as a guess - the value from before a write not read, or a framework default an environment file it does not load would move, P321), `published-port-unheard` (info), `container-image-unread` (info: a container's image whose Dockerfile is not read - pulled, built by nothing the project holds, from a Dockerfile not found, or named by a template value a chart's values do not settle - where the setting the code reads its port from hangs on it, P331, P337), `network-port-unreachable`, `proxy-rule-unread`, `proxy-chain-unfollowed`, `proxied-to-third-party` (info), `server-request-without-origin`, `address-port-without-colon` (a number written straight after a host with no colon, read as spelled - `localhost4600` - and no port; info after a name that may end in digits, P324) |
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-public-declared` (info), `marker-reason-missing` (info), `route-shadowed` |
 | What a framework's build would have written (P240) | `aliases-from-convention` (info), `aliases-from-config` (info), `implicit-imports-from-convention` (info), `implicit-import-ambiguous`, `framework-layer-unread`, `framework-setting-dynamic` |
 | The layers a framework builds an application from (P243) | `framework-layer-read` (info), `framework-layer-overridden` (info), `implicit-import-overridden` (info), `framework-layer-alias` |
-| What a framework still decides when it builds (P251) | `framework-module-skipped` (info, P255), `framework-module-read` (info), `framework-module-installed` (info), `framework-environment-differs` (info), `framework-module-unread` |
+| What a framework still decides when it builds (P251) | `framework-module-skipped` (info, P255), `framework-module-read` (info), `framework-module-installed` (info), `framework-environment-differs` (info), `framework-module-unread`, `plugin-not-enabled` (info: a Strapi plugin's server no key of `config/plugins` enables, P335) |
 | Components, layouts and route middleware by name (P255) | `component-unresolved` (info), `layout-unresolved`, `route-middleware-unresolved` |
 | Screens and templates | `route-config-unread`, `route-entries-unread` (info: entries of a list a route is written over that are not read, P320), `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed`, `navigation-unresolved`, `navigation-external` (info), `navigation-locale-prefixed` (info, P291) |
 | The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key`, `query-in-loop` (a query, request or publish run once per item of a loop) |
@@ -5207,11 +5260,19 @@ naming each: one serving the request is the join, a guess with
 the first branch's claimant. A condition later in a chain, `A || (isProd ? B
 : C)`, is one tier of its branches after `A`, written `baseUrlAlsoTiers`:
 both branches' claimants are asked alike, and both serving the request is
-the row (P325, `fixtures/chain-condition-tier-container-env`). A key alone
-that two services claim still resolves to neither
-(`fixtures/settings-chains-paired-calls`,
+the row (P325, `fixtures/chain-condition-tier-container-env`), where the
+branch written first used to win. A chain after a condition, `(isProd ? A :
+B) || C`, reads `C` as the tier after the condition's, as a plain chain
+does. A setting several services claim, alone or first in a chain, is a
+tier like any other (P319): each claimant is asked whether it serves the
+request, one serving it the join, a guess with `meta.chosenAmong` naming
+each claim; several an `ambiguous-route-target` row saying the setting is
+one several services claim; none the `unknown-base-url-env` row naming
+them, as before. Only a first setting one service claims keeps the plain
+join (`fixtures/settings-chains-paired-calls`,
 `fixtures/settings-branches-helpers`, `fixtures/branch-settings-offered-ports`,
-`fixtures/chain-candidates-written-fallback`).
+`fixtures/chain-candidates-written-fallback`,
+`fixtures/claimants-nested-chain-env-port`).
 
 **A value that is a whole address is where the request goes.** A request made
 to exactly what a setting holds — `fetch(process.env.REINDEX_URL, { method:
@@ -6083,6 +6144,56 @@ Next.js client code, Vue, Nuxt and Svelte alike:
   it is kept in, the function it is handed to (after the call that hands it
   on, a level at a time), the caller it is returned to, the module holding it
   (P296, P301, P312, `fixtures/handed-receivers`, `fixtures/receivers-handed-on`).
+- **Instances with different bases, followed out to the caller** (P318, P324,
+  P330). Where a request's address is read at a caller, a receiver handed
+  instances with different bases takes what it is handed along the calls the
+  address came out through, whatever it is: a parameter, a field of `this`
+  the constructor fills (`this.api = api`, a parameter property), followed to
+  each `new` and the argument it hands, or a member of an object handed in
+  (`readOn({ client: stockApi }, '/levels')`, a shorthand too) - each request
+  at its caller under its own base, where an `api-client-base-unread` row
+  stood. A request written in a method of the receiver's own class is placed
+  at the callers of that method rather than at whoever makes an instance,
+  each under the base of the instance it calls the method on; a caller that
+  calls it on an instance it was itself handed - a parameter
+  (`check(reader: Reader)`), a field of its own `this`, a `new` handed a
+  parameter - is followed further out, eight steps and 256 reads at most, to
+  the `new` that gives the instance. Where any step is not read, the requests
+  stay with each function that makes an instance (P312). A field or a
+  parameter whose type names the client (`constructor(private api:
+  AxiosInstance)`) is read for the instances it is handed before its type:
+  one base where they agree, each caller's under its own where they differ,
+  the type alone with no base where a value is not an instance that is read.
+  `options.client.get(path)`, a member of an object, is a request as well
+  (`fixtures/ports-handed-by-callers`, `fixtures/ports-kept-receivers-in-fields`,
+  `fixtures/typed-held-clients-callers-out`).
+- **A receiver typed as nothing** (P336). In plain JavaScript, a method
+  called on a receiver the checker types as nothing, `function check(reader)
+  { return reader.health(); }`, is a call of that method wherever what the
+  receiver may hold - followed through names, what each caller hands a
+  parameter (each `new` of the class for a constructor's) and what a class
+  writes into a field of `this`, 24 values and 256 calls per method at most -
+  is an instance of its class (or of one extending it that does not declare
+  the method again) or the object it is written in: run where every value is
+  one, undecided where some are, and nowhere where none is. The address and
+  the instance are then followed out through it as through a typed receiver.
+  A member of an object (`options.reader.health()`), a value a function
+  answers and an element of a list are not followed this way.
+- **A method a framework calls** (P336). A request on instances with
+  different bases in a method no code read calls, but a framework does - one
+  a package's decorator marks, a lifecycle method of a class whose base or
+  class decorator is React's, Preact's, Lit's, Angular's or NestJS's, a custom
+  element's `connectedCallback` on a class extending `HTMLElement` - is
+  placed at each `new` of the class handed to what registers it
+  (`document.body.appendChild(feed)`, `app.register(new Poller(api))`): an
+  argument of a call to what the program does not declare, or of a
+  decorator, in a list, a record, a function answering it or a `const`
+  holding it. Where none is read, each function making an instance keeps it,
+  with an `api-client-base-unread` row naming the framework that calls the
+  method on an instance no code read hands it. An instance the framework's
+  own injector or renderer makes (a component rendered from JSX, a provider
+  a module lists by its class) is not read as one
+  (`fixtures/untyped-callers-framework-held-outside-writes`).
 
 An Angular interceptor that puts a base in front of every request,
 `req.clone({ url: environment.apiUrl + req.url })` or the same as a template, is
@@ -6256,6 +6367,32 @@ is placed by it too, the ports the code listens on included, except a front
 end's dev server, which forwards what it does not serve (P292).
 `fixtures/listen-port-joins` shows each case.
 
+**A port or a host a caller hands (P318, P324, P330).** A request whose path
+is read and whose host holds a value a caller hands - `` fetch(`http://localhost:${port}/health`) ``
+called as `health(3000)` and `health(4000)`, or `':3000'` handed to be
+written straight after the host - is one request per caller, at
+`localhost:3000` and at `localhost:4000`, each joined to the service
+listening there, in a browser and on a server alike; a caller handing nothing
+read leaves the request where it is written. A number is the port only in a
+port's place, after `host:`, and the path's anywhere else
+(`/latest/${Paging.size}` is `/latest/:param`); on a server a caller's value
+fills the host wherever the hole is - a port's place, the name's opening or
+its rest (`` `https://${tenant}.shop.example` ``). The number may be kept
+where a module or a class keeps it: `const PORT = 4700`, `static port =
+4700`, a getter or `this.port()` answering one, a field the constructor
+writes. On a server, a caller written as an arrow whose whole body is the
+call (`export const productsV1 = () => readProducts('/v1')`) or a function
+expression a `const` holds is a caller a request is followed out to. A number
+written straight after a host with no colon - `` `http://localhost${port}/health` ``
+handed 4600 - is read as the code spells it, `localhost4600`, the request
+carrying `portWithoutColon`, with an `address-port-without-colon` finding
+saying it names another host and no port: `action` after `localhost` or an
+address of numbers, `info` after any other name, which may end in digits
+(`worker3`). Such a request to `localhost` or an address of numbers is joined
+by no path, from a browser as from a server
+(`fixtures/ports-handed-by-callers`, `fixtures/ports-kept-receivers-in-fields`,
+`fixtures/typed-held-clients-callers-out`).
+
 **Every way a port is decided (P254).** The port is read wherever the
 repository decides it, not only on the line that starts the server:
 
@@ -6263,12 +6400,12 @@ repository decides it, not only on the line that starts the server:
 |---|---|
 | A front end's dev and preview server | `server.port` and `preview.port` in `vite.config.*` (SvelteKit, Remix, React Router, Vue, React and any other Vite front end), `--port` on a `vite`, `vite dev`, `vite preview`, `svelte-kit dev`, `remix vite:dev`, `react-router dev` script; Astro's `server.port` and `astro dev --port`; Angular's `serve` target `port` in `angular.json` and `ng serve --port`; each marked `devServer`. Vite's own 5173 / 4173 where `strictPort` keeps it there (`default`, a guess); 5173 where neither the configuration nor the script writes a port for a Vite dev server that serves a full-stack application's own routes - Remix's `remix vite:dev`, React Router's `react-router dev`, SvelteKit's `vite dev` (P303); Astro's own 4321 for `astro dev` and `astro preview` (P310), and where `server` is written as a function of the command (`({ command }) => ({ port: command === 'dev' ? 4400 : 4401 })`) each command's own port (P315). Create React App's `react-scripts start` (or `craco start`) listens on the `PORT` its script gives or that the `.env.development.local`, `.env.local`, `.env.development` or `.env` it loads sets, and on no default, since it moves to the next free port when 3000 is taken (P315). No other default |
 | A port handed through code | `start(3001)` where `start = (port) => app.listen(port)`, `bootstrap({ port: 3002 })`, `(options) => app.listen(options.port)`, through up to three functions, each call its own port with `handed` naming it; a parameter's default (`start(port = 3001)`, `startAdmin({ port = 3201 } = {})`) for each caller that hands none, or where nobody calls the function (P315) |
-| A settings object | `app.listen(config.port)` where a literal object in any file of the repository writes `port` (a fallback read with its setting); NestJS's `config.get('app.port')` through `registerAs('app', …)` or a `ConfigModule.forRoot({ load })` factory; convict's `config.get('port')` through the schema's `default` and `env`; a configuration a merge helper of the repository's own lays over defaults another module keeps (`const { port } = mergeConfig(given).apiOptions`) is the last of the objects it lays over each other that writes the key at its whole path - the object literals its body names, then the call's arguments - and one a setter merges into a module variable that a getter returns (`setConfig(given)` before `getConfig().apiOptions.port`) is what each call of the setter made before the read hands, laid over the variable's first value, either way with `merged` naming the merge, a guess (P305, P315); a function of the repository's own is what its `return`s answer, its parameters the call's arguments (P315). Defaults loaded by an import of a path decided at run time (`import(path.join(__dirname, 'defaults'))`) leave the port unread, with an info `listen-port-unread` row at the line that starts the server naming the load. A configuration changed in place is read where it is changed (P327): `Object.assign(config, { port })`, `Object.assign(config.server, overrides)`, `config.port = 4000`, `config.server.port = 4000` and `Object.assign(this, options)` in a constructor; of the writes made in the read's own block before it, the last one is what it holds; a source not read (`Object.assign(config, loadOverrides())`) keeps the value from before it as a guess, with an info `listen-port-guessed` row. A class's field is read per instance: `one.load(...)` is laid over what `one` reads and not what `two` does, a constructor's write is read for the instance's own `new`, and a field read through `this` in a method is read once per call of the method (`panel.start()` reads `panel`'s port, and an instance never started is not a port). An instance a parameter is handed, a field or a parameter property holds (`constructor(private server: Server)`, `this.server.start()`) is resolved to its own `new`, and a method called on a parameter is read once per caller (P329). `Object.assign` into a configuration a getter returns or a parameter is handed (`apply(config, overrides)`) is followed to the object, and a key the literal does not declare, or declares under a type its name resolves to (`const config: Config = {}; config.port = 4000`), is held where it is written (P329). A key written through a parameter (`function apply(target) { target.port = 4000; }`) is cut at the call before the read that hands the object in (`apply(config);`), where the write is a statement of its function's body and each call down to one in the read's own block is too; and a receiver handed through more than one level of parameters is told per caller at each level, out to eight functions and 256 calls (P335) |
-| A setting alone | `app.listen(process.env.AUDIT_PORT)` is kept as `{ setting, file, line }`, and the service's own example environment file fills it (`AUDIT_PORT=3006`), whatever the setting is called; a value only an example or template file gives is offered rather than given, a guess (P309), and so is one a committed environment file nothing is read loading gives, "a file nothing is read loading" (P331); a file the code is read loading fills the port itself, firm |
+| A settings object | `app.listen(config.port)` where a literal object in any file of the repository writes `port` (a fallback read with its setting); NestJS's `config.get('app.port')` through `registerAs('app', …)` or a `ConfigModule.forRoot({ load })` factory; convict's `config.get('port')` through the schema's `default` and `env`; a configuration a merge helper of the repository's own lays over defaults another module keeps (`const { port } = mergeConfig(given).apiOptions`) is the last of the objects it lays over each other that writes the key at its whole path - the object literals its body names, then the call's arguments - and one a setter merges into a module variable that a getter returns (`setConfig(given)` before `getConfig().apiOptions.port`) is what each call of the setter made before the read hands, laid over the variable's first value, either way with `merged` naming the merge, a guess (P305, P315); a function of the repository's own is what its `return`s answer, its parameters the call's arguments (P315). Defaults a module loads by a path written relative to its file, or built from its own directory (`require(path.join(__dirname, 'defaults'))`, `import(path.resolve(__dirname, '../config'))`, a template on `__dirname`, through a constant), are the repository's file at that path, `require` answering its `module.exports` or its named exports and `import()` its named exports and `default` (P321); defaults loaded by a path decided at run time, or naming no file of the repository, leave the port unread, with an info `listen-port-unread` row at the line that starts the server naming the load. A holder is also a class's field that is not `readonly`, or a key of an object a variable is given, written as `this.config = ...` or `holder.config = ...`: a setter's merge over itself (`{ ...this.config, ...given }`) is laid per call as a module variable's, a write inside a callback is the named function's it is in, and a constructor's write is read at each `new`; a function's variable or parameter written again holds the write before the read, and a write whose value is not read (`config = await applyPlugins(config)`) leaves the port from before it, `rewritten`, a guess with an info `listen-port-guessed` row (P321). A configuration changed in place is read where it is changed (P327): `Object.assign(config, { port })`, `Object.assign(config.server, overrides)`, `config.port = 4000`, `config.server.port = 4000` and `Object.assign(this, options)` in a constructor; of the writes made in the read's own block before it, the last one is what it holds; a source not read (`Object.assign(config, loadOverrides())`) keeps the value from before it as a guess, with an info `listen-port-guessed` row. A class's field is read per instance: `one.load(...)` is laid over what `one` reads and not what `two` does, a constructor's write is read for the instance's own `new`, and a field read through `this` in a method is read once per call of the method (`panel.start()` reads `panel`'s port, and an instance never started is not a port). An instance a parameter is handed, a field or a parameter property holds (`constructor(private server: Server)`, `this.server.start()`) is resolved to its own `new`, and a method called on a parameter is read once per caller (P329). `Object.assign` into a configuration a getter returns or a parameter is handed (`apply(config, overrides)`) is followed to the object, and a key the literal does not declare, or declares under a type its name resolves to (`const config: Config = {}; config.port = 4000`), is held where it is written (P329). A key written through a parameter (`function apply(target) { target.port = 4000; }`) is cut at the call before the read that hands the object in (`apply(config);`), where the write is a statement of its function's body and each call down to one in the read's own block is too; and a receiver handed through more than one level of parameters is told per caller at each level, out to eight functions and 256 calls (P335) |
+| A setting alone | `app.listen(process.env.AUDIT_PORT)` is kept as `{ setting, file, line }`, and the service's own example environment file fills it (`AUDIT_PORT=3006`), whatever the setting is called; a value only an example or template file gives is offered rather than given, a guess (P309), and so is one a committed environment file that nothing is read loading gives (`.env.development` beside code that loads no file), whether the code reads the setting alone or the server is not read listening at all, `listensAt` saying `(a file nothing is read loading)` (P331); a file the code is read loading fills the port itself, firm |
 | A container | a compose service's `ports` (`"3001:3000"`, `"127.0.0.1:3001:3000/tcp"`, `{ published, target }`), `environment` and `env_file`; `docker run -p 3009:3000 --name n -e PORT=3000` in a `package.json` script of the service. The container's environment is its image's Dockerfile (`ENV` of the stage built, compose's `build.target` else the last, with what the stages it is built from set, `ARG` defaults and `build.args` or `--build-arg` put in; a `docker run`'s image where a command of the project builds it with `docker build -t`), under each `env_file:` or `--env-file` in order, a later over an earlier, under `environment:` or `-e`; a port a setting whose name is no secret's is given in an env file the container is started with is read whatever the file is called, nothing else of a `.env` being read. A `${PORT}` the compose file writes is filled from the `.env` beside it (P325), or from the files a `docker compose --env-file` in a script, Makefile or shell script of the project hands it, in order, a later over an earlier, where several commands run one file only what they all agree on; what fills a placeholder is a port, an address or a host's name under a name that is no secret's, nothing else of the file, and it fills a port mapping, a container's name, an `env_file:`, a build's context, its arguments, its image and the `environment:` values the graph keeps (P331). A compose service's `image:` with no `build:` is read with the Dockerfile a build of the project tags it from - a `docker build -t`, another compose service's `build:` under that `image:`, a Skaffold artifact - and a `docker run`'s image likewise; an image nothing of the project builds is pulled as it is and never fetched, the info row `container-image-unread` saying so where the setting the code reads its port from hangs on it (P331). `COMPOSE_ENV_FILES` (written before the command, exported earlier in its script, or set in the `.env` beside the file) names the files where the command passes no `--env-file`, and `COMPOSE_FILE` the compose files where it passes no `-f`; what the command's own shell gives is written over every file; a file `include:`d by another is read with it, interpolated from its `env_file` or its project directory's `.env` under the including file's variables; a service that `extends:` another, in the file or another of the project, is read with the other under it, its paths rebased (P337) |
 | A script that starts the server | a command that starts a server (`node`, `tsx`, `nodemon`, `npm start`, `npm run dev`, `next start` and the like) in the service's directory, with a port the shell gives a setting - written before it, or exported earlier in the same script (`cd stock`, `export PORT=4600`, `npm start`) - gives the setting the code reads that port, firmly, `listensAt` naming the script (P337) |
-| An environment file the server loads | a port read from a setting (`app.listen(process.env.PORT ?? 3000)`) where the code loads a file before it listens - dotenv (`import 'dotenv/config'`, `dotenv.config({ path })`), NestJS's `ConfigModule.forRoot({ envFilePath })` (`.env` unless `ignoreEnvFile`), `process.loadEnvFile(path)` - or its script runs it with `--env-file`, `dotenv -e`, `env-cmd -f` or `bun`: the first committed loaded file that sets the setting gives the port, `valueFrom` naming it, the code's fallback giving way (P315). A path not written as a literal names no file, and a server whose code loads nothing keeps its fallback, a guess, with the value a committed environment file of its own gives the setting offered beside it as another guess (P325). `process.loadEnvFile(a)` called again with `b` (or `loadEnvFile` imported from `node:process`) keeps `a`'s value: as Node documents it, each call sets only what the environment does not hold yet (P327) |
-| A framework that starts the server itself | `fastify start`: `-p`, then `FASTIFY_PORT`, then `PORT`, each from the command's own environment or the `.env` fastify-cli loads from the directory it runs in (with dotenv up to fastify-cli 7, with `process.loadEnvFile()` from 8, neither over a set variable), else 3000 as a default; a `FASTIFY_PORT` the `.env` gives wins over a `PORT` the command gives (P321, P327); the `port` of the file `--config` (`-c`) names, JSON or `module.exports = { port }`, comes after `FASTIFY_PORT` and before `PORT`, fastify-cli laying its command line over that file, and a file it cannot read is a `listen-port-unread` row (P329); a `--config` naming a package rather than a file that is there is the file its `exports` (for `require`) or `main` gives, the package of the workspace or installed in the repository, and an ES module or TypeScript file gives the port it exports by name (`export const port = 4000`, `export { port }`, or `exports.port`), a port only under `export default` being a `listen-port-unread` row, as `require` hands it under `default` (P335). Strapi: the `port` of `config/server.*` under `config/env/production/server.*` where that file writes one (production being the build read, or the `NODE_ENV` the script running `strapi start` sets, P329), `env.int('PORT', 1337)` moved by the `.env` or `ENV_PATH` Strapi loads, 1337 where no file writes one; another environment's override that moves the port is an info `framework-environment-differs` row (P321, P327). Gatsby's `gatsby develop` and `gatsby serve` (P321) |
+| An environment file the server loads | a port read from a setting (`app.listen(process.env.PORT ?? 3000)`) where the code loads a file before it listens - dotenv (`import 'dotenv/config'`, `dotenv.config({ path })`), NestJS's `ConfigModule.forRoot({ envFilePath })` (`.env` unless `ignoreEnvFile`), `process.loadEnvFile(path)` - or its script runs it with `--env-file`, `dotenv -e`, `env-cmd -f` or `bun`: a committed loaded file that sets the setting gives the port, `valueFrom` naming it, the code's fallback giving way (P315). Where several are loaded, each loader's own order decides which (P321): a file dotenv loads with `override: true` first (the last of them), then the files loaded before the code runs - a script's command, the runtime - over the code's own; Node's and Deno's repeated `--env-file` the last of them; `dotenv -e a -e b` the first, and `dotenv -c [mode]` the cascade `.env.<mode>.local`, `.env.local`, `.env.<mode>`, `.env`; Bun's `.env.local` over `.env.<NODE_ENV>` (`development` unless the command sets one) over `.env`, or only the files its `--env-file` names; dotenv's `path` list and NestJS's `envFilePath` the first that sets it. A path not written as a literal names no file, and a server whose code loads nothing keeps its fallback, a guess, with the value a committed environment file of its own gives the setting offered beside it as another guess (P325). `process.loadEnvFile(a)` called again with `b` (or `loadEnvFile` imported from `node:process`) keeps `a`'s value: as Node documents it, each call sets only what the environment does not hold yet (P327) |
+| A framework that starts the server itself | `fastify start`: `-p`, then `FASTIFY_PORT`, then `PORT`, each from the command's own environment or the `.env` fastify-cli loads from the directory it runs in (with dotenv up to fastify-cli 7, with `process.loadEnvFile()` from 8, neither over a set variable), else 3000 as a default; a `FASTIFY_PORT` the `.env` gives wins over a `PORT` the command gives (P321, P327); the `port` of the file `--config` (`-c`) names, JSON or `module.exports = { port }`, comes after `FASTIFY_PORT` and before `PORT`, fastify-cli laying its command line over that file, and a file it cannot read is a `listen-port-unread` row (P329); a `--config` naming a package rather than a file that is there is the file its `exports` (for `require`) or `main` gives, the package of the workspace or installed in the repository, and an ES module or TypeScript file gives the port it exports by name (`export const port = 4000`, `export { port }`, or `exports.port`), a port only under `export default` being a `listen-port-unread` row, as `require` hands it under `default` (P335). Strapi: the `port` of `config/server.*` under `config/env/production/server.*` where that file writes one (production being the build read, or the `NODE_ENV` the script running `strapi start` sets, P329), `env.int('PORT', 1337)` moved by the `.env` or `ENV_PATH` Strapi loads, 1337 where no file writes one; another environment's override that moves the port is an info `framework-environment-differs` row (P321, P327). Gatsby's `gatsby develop` and `gatsby serve`, each a dev server: `-p` or `--port`, a `PORT=` its script gives `develop`, else 8000 for `develop` and 9000 for `serve` as defaults; a `PORT` the site's `.env.development` sets is not taken, since Gatsby loads that file after it chooses its port, and leaves the default with an info `listen-port-guessed` row (P321) |
 
 A container mapping is reconciled with the code: the port the service listens
 on inside the container - the value its environment gives the setting the code
@@ -6294,21 +6431,26 @@ way. `fixtures/port-sources-joins` shows each case.
 **A port that is only a guess.** Not every port says where a service runs. A
 port the code writes as a number, the value an environment file the server or
 its framework loads gives the setting it reads, a setting file's host where
-the code is read loading the file, and a container's published port are firm.
-A `PORT=` in a development environment file nothing is read loading
-(`.env.development` beside code that loads no file) is offered, as an
-example's is, whether the code reads the setting alone or not at all (P331). Four are guesses: a framework's or a library's own default (P296),
-the value only an example or template environment file offers - `PORT=` in
-`.env.example`, or what it gives a setting the code reads alone (P309) - a
-port read through a merge helper or a held configuration (`merged`, P305), and
-the fallback the code writes for a setting nothing on this machine gives,
-`process.env.PORT ?? 3000`, which is what the code assumes rather than where a
-run is placed (P313), with each value a committed environment file nothing is
-read loading gives that setting offered beside it, "a file nothing is read
-loading", as an example's is (P325). One service heard twice at a port keeps its firmest
+the code is read loading the file, the port a command of the project starts
+the server with gives the setting (P337), and a container's published port
+are firm. Four are guesses: a framework's or a library's own default (P296);
+the value an environment file only offers - an example or template file's,
+`PORT=` in `.env.example` or what it gives a setting the code reads alone
+(P309), or a committed file's that nothing is read loading, `PORT=` in a
+`.env.development` beside code that loads no file, whether the code reads
+the setting alone or is not read listening at all (P331), `listensAt` saying
+`(a file nothing is read loading)`; a port read through a merge helper or a
+held configuration (`merged`, P305), or from before a write not read
+(`rewritten`, P321); and the fallback the code writes for a setting nothing
+on this machine gives, `process.env.PORT ?? 3000`, which is what the code
+assumes rather than where a run is placed (P313), with each value an example
+or a committed file nothing is read loading gives that setting offered beside
+it (P325). One service heard twice at a port keeps its firmest
 word, so a published port is not lost behind the fallback it publishes. Where
-anyone is placed at the port firmly, a default yields to it, and the other
-guesses still stand beside it, two services being `local-port-shared`. Where
+anyone is placed at the port firmly, every guess at it is dropped - a
+default, a merge, an offer, a written fallback - so a guess never makes a
+port two services' at once, and only two firm services are
+`local-port-shared` (P319). Where
 everyone heard there is there by a guess, the port is no evidence which
 service a request means (P300, P307), and each is asked whether it serves the
 request: a route for its verb and path (under a prefix the service puts in
@@ -6704,6 +6846,38 @@ reader that follows a receiver to its construction - the
 `receiver-constructed-path` locator, a queue's `add`, bull's `process` - reads
 the field this way (`fixtures/declared-queues-and-handed-paths`,
 `fixtures/shared-queues-and-resource-grants`).
+
+A static field's writes and reads are also every access made through what
+stands for its class where the checker does not link it (P322, P328): the
+class under an assertion (`(Registry as any).queue`), a variable given the
+class (`const R: any = Registry`) and an alias of it, a parameter each caller
+hands any of these, and an access by a key that is text or a `const` holding
+it (`R['queue']`, `Registry[KEY]`, `this['queue']`). A read through such a
+name is the field where every class it may be has that one field, with every
+write to it counted, and a call on it is the library's by the field's
+declared class where the library is not installed. A write by a key not read
+(`this[key] = value`) may be to any field, so a field a class writes so is
+not read as its declared value. A field read in a class is also what each
+class extending it sets, however far down (`this.queue = ...`, the field
+declared again with a value), unless that class or one between declares the
+reading member again and never calls `super` (P322). `Object.assign` writes
+fields as well (P328, P332, P336): over `this`, the class or what stands for
+it - `Object.assign(this, options)`, `Object.assign(this, { queue })`,
+`Object.assign(Registry, { ... })` - and, outside the class, over a value
+whose type is the class or one extending it (`Object.assign(worker, { queue
+})`, as `worker.queue = ...` there is), each field takes what the sources give
+its key: a record written out its keys, the last source that surely writes it
+hiding those before; a parameter what each caller hands it, and a
+constructor's what each `new` hands, followed down each `super(options)` of
+a class others extend to what that class's own `new` hands; a source not read
+(`JSON.parse(raw)`, a spread) a possible write of every field. A read through
+a name that may stand for two classes, each declaring its own static field of
+that name, is either field, each value a candidate, and the producer's
+`heldIn` names the field each channel came from (P332;
+`fixtures/aliased-fields-workspace-domains-table-grants`,
+`fixtures/alias-reads-keyed-fields-dotted-workspaces`,
+`fixtures/assigned-fields-either-class-unset-context`,
+`fixtures/untyped-callers-framework-held-outside-writes`).
 
 A worker a base class makes from the topic each class extending it hands
 `super(...)` runs, for that topic, the processor handed to it on instances of
@@ -7444,10 +7618,10 @@ it - an installed plugin's among them. What it does to the routes otherwise
 row naming it.
 
 Routes the code registers on Strapi's server (P335), in a `register` or a
-`bootstrap`: `strapi.server.routes(x)` is served as `server.routes` mounts it
-- an object with a `type` on that API (`content-api` under `/api`, `admin` at
-the root) under its `prefix`, an object without one or a list at the root -
-`strapi.server.api('<api>').routes(x)` on that API, and
+`bootstrap`: `strapi.server.routes(x)` is served as `server.routes` mounts
+it - an object with a `type` on that API (`content-api` under `/api`,
+`admin` at the root) under its `prefix`, an object without one or a list at
+the root - `strapi.server.api('<api>').routes(x)` on that API, and
 `strapi.server.router.<verb>(path, ...fns)` at its path, the functions before
 the last as middleware. Strapi looks such a route's handler up by its full uid
 (`api::<api>.<controller>.<action>`); a name it cannot find is a
@@ -7879,6 +8053,20 @@ asks the route drawn at `/orders/submit`. Of an API mapped at several base
 paths, the routes of the first carry its own address
 (`fixtures/gateway-served-at-deploy-choices`).
 
+A mapping's domain the workspace names (P322, P328), in the mapping or in
+the domain resource's own `domain_name`, is read per workspace: each name it
+takes in the `default` workspace and in each workspace a map it is looked up
+in is keyed by (another workspace's carrying `chosenIn`), a lookup's
+fallback as any other workspace's; and where the workspace's own name is
+written into it (`` "${terraform.workspace}.orders.example.com" ``), the
+pattern every workspace's is, `**.orders.example.com`, with `chosenHost` the
+default workspace's and `hostChosenBy: "the workspace"`. `**` is one label or
+several, since Terraform takes a workspace's name with dots in it, so
+`eu.prod.orders.example.com` matches it; the linker takes such a domain only
+for a request with a route there, saying "at whatever host the workspace
+names" (`fixtures/aliased-fields-workspace-domains-table-grants`,
+`fixtures/alias-reads-keyed-fields-dotted-workspaces`).
+
 **A shared API is joined across repositories.** A route that hangs from a
 point of an API another repository owns — looked up through a parameter
 (`data.aws_ssm_parameter.x.value`) or another state's output
@@ -8257,7 +8445,18 @@ stack, or the record written; handed to a function or a class of the app as an
 argument, defaulted by a parameter, kept in a field or destructured out of a
 record, P304) is any one `cdk deploy -c` names, the one it
 reads where nothing does kept as its default (`chosenDefault`, `chosenHost`);
-a key `services[].infra.options` sets is that one (P298).
+a key `services[].infra.options` sets is that one (P298). A context value no
+file sets, handed to what is not the app's own - a library's call or
+construct, Node's `path` - or written in a function's `environment`, is a
+value chosen when the app is synthesized rather than nothing: unread with
+the reason `context`, saying `-c <key>=...` gives it or it is left out
+(P332). So is one written at any depth in a record handed to a library
+construct, a queue's `queueName` (P336), while a stage's name and a stack's
+region keep the reading above; a bus's `grantPutEventsTo` handed such a
+value as its statement id is an unread grant saying it is written where `-c`
+gives an id and dropped where none is
+(`fixtures/assigned-fields-either-class-unset-context`,
+`fixtures/untyped-callers-framework-held-outside-writes`).
 
 **A construct with no name of its own** - a queue with no `queueName`, a
 function with no `functionName` - is named by its path,
@@ -8299,6 +8498,27 @@ stack is not in (`by` saying `grantSendMessages, on the queue's own policy`) -
 and not where the stack is in the role's account or its account is read only
 when the app runs (P316; `fixtures/cdk-imported-role-grants`,
 `fixtures/shared-queues-and-resource-grants`).
+
+Which grants go into a resource's own policy depends on the CDK's version,
+and is read as of its source (P322). A grant of a stream, a table or a bus to
+a role that takes nothing is written on the resource where the `aws-cdk-lib`
+the repository uses does so: a stream's from 2.180.0; a table's from 2.144.0
+where the table is made with a `resourcePolicy`, and from 2.222.0 for any
+table; a bus's `grantPutEventsTo` from 2.186.0, with a statement id, under
+the `@aws-cdk/aws-events:requireEventBusPolicySid` flag. The version is the
+installed `aws-cdk-lib`, else the nearest lockfile's (npm, pnpm or yarn),
+else the `package.json` range where every version in it agrees
+(`@aws-cdk/core` for version 1); where it is left open, the grant is unread,
+saying why. A role imported `mutable: false` with `addGrantsToResources:
+true` asks for its grants on resources, so a grant to it of a queue, a topic,
+a bucket or a function goes on the resource's policy in its own account too;
+a role imported by an ARN naming another account than its stack's takes
+nothing itself, its grants going on the resources. The statement id a bus's
+grant is handed decides it as the CDK does (P328): `undefined` or `null` drops
+the grant, an import or a token is an id, and a value the files do not read
+is an unread grant saying the bus's policy takes the grant only with an id
+(`fixtures/aliased-fields-workspace-domains-table-grants`,
+`fixtures/alias-reads-keyed-fields-dotted-workspaces`).
 
 ### Functions declared in an AWS SAM template
 

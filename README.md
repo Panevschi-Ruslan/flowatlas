@@ -12,7 +12,7 @@ compiler's own checker, without running them, and joins them into one graph you
 can query — from a terminal or from a coding agent over the Model Context
 Protocol.** It knows NestJS and Angular, React and Next.js, Vue and Nuxt, Svelte and SvelteKit, Remix,
 plain pages and the scripts they load, GraphQL, gRPC,
-Express, Fastify, Koa and Hono, Medusa, tRPC, oRPC and Telegraf; TypeORM, Prisma, Drizzle, Mongoose,
+Express, Fastify, Koa and Hono, Medusa, Strapi, Gatsby, tRPC, oRPC and Telegraf; TypeORM, Prisma, Drizzle, Mongoose,
 Sequelize, Kysely, Knex, MongoDB and node-postgres; Redis, Kafka, RabbitMQ,
 BullMQ and socket.io; AWS functions, APIs, queues and workflows as Terraform,
 the Serverless Framework, the CDK, SAM and CloudFormation deploy them, and the
@@ -669,6 +669,9 @@ resolves nothing outside it, but the source still says what it means: an import
 names the package, `express()` makes an application, an annotation names a
 client's type and a model class names its table. What is read that way is marked
 `heuristic`, and the run says once, plainly, that the read was partial.
+Looking up the directories above a file for a configuration or a package
+stops at the repository, widened to the workspace that declares it a member,
+or at the top of its checkout, and never reads in the home directory.
 
 **2. Find the leaves.** A chain of calls ends somewhere: a database, a cache, an
 outgoing request, a settings key, a message published. Which one it is comes from
@@ -741,13 +744,16 @@ the word can be avoided. What cannot be inferred either is recorded as
 unresolved with a file, a line and a reason.
 
 A guess also never outranks what is written. A port a framework only assumes,
-one an example environment file offers or one the code writes as a fallback
-places a request only at a service that serves it. A base that is one of
-several settings is asked of the services that may be behind it: each side of
-a condition nobody settles is asked alike, and the one service that serves the
-request is the join, named as chosen among the others; an `A || B` chain keeps
-the join its first setting gives where that service serves the request, and
-asks the later settings' services in order where it does not. Where two of
+one an example environment file or a file nothing is read loading offers, or
+one the code writes as a fallback places a request only at a service that
+serves it, and where a service is at that port firmly, every guess at it is
+dropped. A base that is one of several settings is asked of the services that
+may be behind it: each side of a condition nobody settles is asked alike, and
+the one service that serves the request is the join, named as chosen among the
+others; an `A || B` chain keeps the join its first setting gives where that
+service serves the request, and asks the later settings' services in order
+where it does not, a condition later in the chain being one tier of its
+branches; and a setting several services claim asks each of them. Where two of
 them serve it, the row names both and neither is chosen.
 
 ### When reading is not enough
@@ -821,6 +827,18 @@ prove, and the path is given so you can run it.
   of one reading (`fixtures/react-next`, `fixtures/medusa-fs-router`,
   `fixtures/sveltekit-server-routes`, `fixtures/nuxt-full-stack`,
   `fixtures/remix-flat-routes`, `fixtures/react-router-config`).
+- **Strapi and Gatsby.** A Strapi application's ways in are its APIs' routes
+  files - a core router as the routes Strapi builds for its content type's
+  schema, custom routes with the controller action each names, their policies
+  drawn as guards and their middlewares in front - the routers of the plugins
+  Strapi enables, local or installed, as it mounts them, the routes an
+  extension adds to a plugin, and the routes code registers on Strapi's
+  server; its port is `config/server`'s under the environment's override. A
+  Gatsby site's functions under `src/api` are ways in at `/api/...`, a local
+  or an installed plugin's too, and under the path prefix where `gatsby serve
+  --prefix-paths` serves them (`fixtures/framework-routes-in-place-writes`,
+  `fixtures/plugin-routes-instances-config-ports`,
+  `fixtures/installed-plugins-server-routes-config-packages`).
 - **GraphQL, both halves.** A field a resolver answers is a way in, read from
   NestJS and type-graphql resolvers, resolver maps and the schema; a client's
   operation (Apollo Client, urql, graphql-request, apollo-angular) joins the
@@ -912,17 +930,30 @@ prove, and the path is given so you can run it.
   back is read with the call's arguments, a screen through any lazy loader,
   and a condition nothing settles is one page per branch, each a guess
   (`fixtures/front-end-route-helpers`). A route table written over a list, or
-  read off a registry of the repository's own - kept in a class's field, a
-  module's `Map` or list, or a store handed in, and handed back whole, filtered
-  or mapped - places one page per entry it reads, and an entry added in a way
-  not read is counted as not placed; Angular's guards and resolvers are drawn
-  from the screen in the order the router runs them; and an address written
-  without the locale prefix a middleware or next-intl puts in front lands on
-  the page under it, said as a note (`fixtures/front-end-route-branches`,
+  read off a registry of the repository's own - kept in a module's `Map` or
+  list, a class's static or instance field wherever a module adds to it, a
+  store handed in, or the object a factory makes, read per instance, and
+  reached through an import, a parameter, a component's props or another
+  class's field - places one page per entry it reads, whether the entries are
+  handed back whole, filtered, mapped, flat-mapped, reduced or as
+  `Object.entries` pairs whose key spells the path, step after step and in
+  the caller's own view of them. A receiver that may hold several instances
+  is read as each, and the entries not read are counted at the route in a
+  `route-entries-unread` row saying why; Angular's guards and resolvers are
+  drawn from the screen in the order the router runs them; and an address
+  written without the locale prefix a middleware or next-intl puts in front
+  lands on the page under it, said as a note (`fixtures/front-end-route-branches`,
   `fixtures/registry-stores-address-props-vite`,
-  `fixtures/registry-reach-views-handed-links`). A link component of the
-  application's own is read through to the link it renders, the address each
-  use hands it included (`fixtures/locale-links-registries-sdk-grpc`).
+  `fixtures/registry-reach-views-handed-links`,
+  `fixtures/registry-fields-caller-views`,
+  `fixtures/caller-steps-handed-instances`,
+  `fixtures/composed-steps-props-factories`, `fixtures/pair-keys-instances`).
+  A link component of the application's own is read through to the link it
+  renders, the address each use hands it included, and a prop of any name it
+  puts after a segment written out whole is an address under that segment,
+  or a query to that segment's page where a use hands one
+  (`fixtures/locale-links-registries-sdk-grpc`,
+  `fixtures/composed-steps-props-factories`).
 - **Procedures.** A tRPC tree is read on the server as one way in per procedure,
   addressed by the dotted path its callers write, with the guards inherited
   through the procedure it was built from (`fixtures/trpc-router`); a tree or a
@@ -1043,7 +1074,16 @@ prove, and the path is given so you can run it.
   `fixtures/job-batches-planned-by-a-layer`,
   `fixtures/declared-queues-and-handed-paths`,
   `fixtures/choices-carried-and-errors-caught`,
-  `fixtures/shared-queues-and-resource-grants`). socket.io is read
+  `fixtures/shared-queues-and-resource-grants`). A queue kept in a field is
+  followed however the field is reached and written: through what stands for
+  its class under `any` or an alias, by a key (`this['queue']`), by
+  `Object.assign` inside or outside the class, by each class extending it and
+  each `super(...)` its options are handed down, and through a name that may
+  stand for either of two classes, each field's channels named
+  (`fixtures/aliased-fields-workspace-domains-table-grants`,
+  `fixtures/alias-reads-keyed-fields-dotted-workspaces`,
+  `fixtures/assigned-fields-either-class-unset-context`,
+  `fixtures/untyped-callers-framework-held-outside-writes`). socket.io is read
   from both ends under the namespace each end is on, whether a gateway declares
   it or the server opens it with `io.of('/live')` (`fixtures/socket-channels`,
   `fixtures/socket-namespaces`). An in-house bus is described in configuration,
@@ -1076,36 +1116,79 @@ prove, and the path is given so you can run it.
   `fetch` is and sent wherever its receiver goes, and a request on a receiver
   the compiler knows nothing of is read by what each caller hands it, each
   caller's base its own (`fixtures/handed-receivers`,
-  `fixtures/receivers-handed-on`). A call both halves of a full-stack
+  `fixtures/receivers-handed-on`). Instances with different bases are followed
+  out along the calls the address came out through - held in a parameter, a
+  field the constructor fills, a member of an object handed in, or a field
+  whose type names the client - to each caller that hands one, a request in a
+  method of the receiver's own class placed at the callers of that method;
+  in plain JavaScript a method called on a receiver typed as nothing is found
+  by what the receiver may hold; and a request in a method only a framework
+  calls - a component's lifecycle method, a custom element's
+  `connectedCallback` - is placed where each instance is handed to what
+  registers it (`fixtures/ports-kept-receivers-in-fields`,
+  `fixtures/typed-held-clients-callers-out`,
+  `fixtures/untyped-callers-framework-held-outside-writes`). A call both halves of a full-stack
   application read is drawn on the side it runs on, by its file's name or
   directive or by what reaches it, and on both, paired, where both do
   (`fixtures/workspace-env-greedy-sides`, `fixtures/settings-chains-paired-calls`).
-  A base read through a chain of settings or a condition nobody settles is
-  asked of each service its settings may name (`fixtures/settings-branches-helpers`,
+  A base read through a chain of settings, a condition nobody settles - one
+  later in a chain read as one tier of its branches - or a setting several
+  services claim is asked of each service its settings may name, the one
+  serving the request the join (`fixtures/settings-branches-helpers`,
   `fixtures/branch-settings-offered-ports`,
-  `fixtures/chain-candidates-written-fallback`). A request
-  to `localhost:<port>` joins the service whose server listens there, as its
-  code (`app.listen(3001)`, Hono's `serve({ port })`, NestJS's bootstrap) or
-  its framework's configuration (`devServer.port`, `next dev -p`) says, and a
-  hook written on one call (`useFetch(url, { onRequest })`) is that call's
-  (`fixtures/listen-port-joins`). The port is read wherever it is decided: a
-  Vite, SvelteKit, Astro or Angular dev server's configuration and scripts, a
-  port handed to the function that starts the server (`start(3001)`), a
-  settings object, `registerAs` or convict default, a setting the service's
-  example environment file fills, and a compose or `docker run` mapping,
-  reconciled with the code so `localhost:3001` and `orders:3000` are one
-  service, each edge saying its side (`fixtures/port-sources-joins`). A
-  full-stack framework's own server listens on its documented port where
-  nothing writes one - Next, Nuxt, Nitro, Remix and React Router on 3000, the
-  ones run through Vite's dev server on 5173, Astro on 4321 - and where the
-  environment file its command, `dotenv`, NestJS's `ConfigModule`,
-  `--env-file` or Bun loads sets the port, there; a port kept in a
-  configuration a setter merges, handed in by each caller or written as
-  `PORT ?? 3000` is read too. A port only assumed, offered by an example file
-  or written as a fallback is a guess, and places a request only at a service
-  that serves it (`fixtures/framework-ports-chains`,
+  `fixtures/chain-candidates-written-fallback`,
+  `fixtures/claimants-nested-chain-env-port`,
+  `fixtures/chain-condition-tier-container-env`). A browser holding a stream
+  open is a request like any other (`fixtures/sse-stream`).
+- **Where a server listens.** A request to `localhost:<port>` joins the
+  service whose server listens there, as its code (`app.listen(3001)`, Hono's
+  `serve({ port })`, NestJS's bootstrap) or its framework's configuration
+  (`devServer.port`, `next dev -p`) says, and a hook written on one call
+  (`useFetch(url, { onRequest })`) is that call's (`fixtures/listen-port-joins`).
+  A port or a host a caller hands (`health(3000)`, `health(4000)`) is one
+  request per caller, each joined where it lands, and a number a module or a
+  class keeps (`static port = 4700`) is read in a port's place; a number glued
+  to a host with no colon (`localhost4600`) is read as spelled and said to be
+  no port (`fixtures/ports-handed-by-callers`,
+  `fixtures/ports-kept-receivers-in-fields`). The port is read wherever it is
+  decided: a Vite, SvelteKit, Astro or Angular dev server's configuration and
+  scripts, a port handed to the function that starts the server
+  (`start(3001)`), a settings object, `registerAs` or convict default, a
+  setting the service's example environment file fills, and a compose or
+  `docker run` mapping, reconciled with the code so `localhost:3001` and
+  `orders:3000` are one service, each edge saying its side
+  (`fixtures/port-sources-joins`). A full-stack framework's own server listens
+  on its documented port where nothing writes one - Next, Nuxt, Nitro, Remix
+  and React Router on 3000, the ones run through Vite's dev server on 5173,
+  Astro on 4321, Gatsby's `develop` and `serve` on 8000 and 9000, Strapi on
+  1337 and `fastify start` on 3000 - and where its command, its `-p`,
+  `FASTIFY_PORT` or `--config` file, Strapi's `config/server`, or the
+  environment file `dotenv`, NestJS's `ConfigModule`, `--env-file` or Bun
+  loads sets the port, there, several loaded files taken in each loader's own
+  order; a port kept in a configuration a setter merges, changed in place
+  (`Object.assign(config, ...)`, `config.server.port = 4000`), read per
+  instance, handed in by each caller or written as `PORT ?? 3000` is read too.
+  A port only assumed, offered by an example file or by a committed file
+  nothing is read loading, or written as a fallback is a guess: it places a
+  request only at a service that serves it, and is dropped where a service is
+  at that port firmly (`fixtures/framework-ports-chains`,
   `fixtures/assumed-port-requests`, `fixtures/env-file-ports`,
-  `fixtures/held-config-ports`, `fixtures/registry-stores-address-props-vite`). A
+  `fixtures/held-config-ports`, `fixtures/registry-stores-address-props-vite`,
+  `fixtures/claimants-nested-chain-env-port`,
+  `fixtures/env-order-framework-ports`,
+  `fixtures/framework-routes-in-place-writes`,
+  `fixtures/unloaded-env-image-environment`). A container's environment is
+  its image's Dockerfile - where a `docker build -t`, a compose `build:` or a
+  Skaffold artifact builds it - under its `env_file`s and its `environment`; a
+  compose file is filled from the `.env` beside it, the files `--env-file` or
+  `COMPOSE_ENV_FILES` name and what the shell running the command exports,
+  with the files it `include:`s and the services it `extends:` read with it; a
+  script that exports a port before it starts a server places the server
+  there; and a cluster workload's pods take the config maps it names over its
+  image, a `Secret` by its names only, its values never read. An image nothing
+  of the project builds is a row rather than a fetch
+  (`fixtures/chain-condition-tier-container-env`,
+  `fixtures/unloaded-env-image-environment`, `fixtures/compose-include-shell-env`). A
   request a server's proxy forwards joins where it is forwarded: Vite's
   `server.proxy`, an Angular dev server's proxy configuration, Nuxt's
   `devProxy` and route rules, Next's `rewrites()` and Create React App's
@@ -1133,25 +1216,29 @@ prove, and the path is given so you can run it.
   release templates and `--include-needs`, and a chart's packed dependencies
   and `import-values` are read as the tools that install them read them, and
   what those tools fetch or run when they do is a row saying so
-  (`fixtures/cluster-transformer-joins`, `fixtures/cluster-templating-needs`). A
-  browser holding a stream open is a request like any other
-  (`fixtures/sse-stream`).
+  (`fixtures/cluster-transformer-joins`, `fixtures/cluster-templating-needs`).
 - **Plain pages.** A directory with no manifest that holds a page and the
   scripts it loads, and nothing that builds them, is a front end of the type
   `browser`, which `init` and `link` offer. Its classic scripts share their
   globals; an object's methods, a prototype's members, a getter or a setter,
   what a wrapper run at once hands to `window` or `module.exports`, the
-  wrapper itself, and a handler the page runs once it has loaded
+  wrapper itself, the top of a script that writes a call outside all of them
+  (`boot.js:top`), and a handler the page runs once it has loaded
   (`DOMContentLoaded`, `load`, `pageshow`, `readystatechange`, jQuery's
-  `$(fn)`) are functions of their own, joined where the page calls them; and
-  jQuery's `$.ajax` and its kin, superagent, ky, unfetch and axios are the
-  installed client where a script tag loads them, a CommonJS script requires
-  them, a comment declares them or the ESLint configuration lists them as
-  globals for that script, through its `extends` and the modules a flat
-  configuration takes in; called with none of these, a row says so
+  `$(fn)` and jQuery 1's `$(window).load(fn)`) are functions of their own,
+  the requests written in them drawn from them and joined where the page
+  calls them. jQuery's `$.ajax` and its kin, superagent, ky, unfetch and axios
+  are the installed client where a script tag loads them, a CommonJS script
+  requires them, a comment declares them or the ESLint configuration lists
+  them as globals for that script - through its `extends`, a shareable
+  configuration or a plugin's configuration installed in the repository, and
+  the modules a flat configuration takes in, each under the files it is named
+  for; called with none of these, directly or through a wrapper's parameter,
+  an `api-client-global-undeclared` row says so. What jQuery's `data` and
+  superagent's `.send` hand a `GET` is its query
   (`fixtures/browser-gateway-address`, `fixtures/script-members`,
   `fixtures/script-wrappers`, `fixtures/script-ready-handlers`,
-  `fixtures/script-load-events`).
+  `fixtures/script-load-events`, `fixtures/script-tops-plugin-configs`).
 - **Bots.** Telegraf, both the decorator style and the imperative one, and a
   table of handlers the project keeps itself (`fixtures/nest-telegraf`,
   `fixtures/bot-registry`).
@@ -1192,7 +1279,9 @@ prove, and the path is given so you can run it.
   (`fixtures/cloudformation-shapes`). The framework's variables are
   resolved where the files settle them; the CDK app is followed from the entry
   `cdk.json` names, through its constructs, helpers, loops and conditions,
-  without being run or installed; a SAM template is read with its parameters
+  without being run or installed, a context value no file sets read as one
+  `cdk deploy -c` may give rather than as nothing
+  (`fixtures/assigned-fields-either-class-unset-context`); a SAM template is read with its parameters
   from `samconfig.toml`, its conditions, `Globals`, loops and nested
   applications. A queue or a function the platform names when it is deployed
   is named by its declaration, so everything in the deployment that points at
@@ -1227,22 +1316,29 @@ prove, and the path is given so you can run it.
   nothing decides goes (`fixtures/multi-repo-failure-values`).
   Every reader records where API Gateway serves an API's routes - its region's
   gateway host, under each stage a parameter, a workspace or the command may
-  choose, and the custom domain a mapping puts it under - so a request written
+  choose, and the custom domain a mapping puts it under, one a Terraform
+  workspace names read for every workspace (`**.api.example.com`, a name with
+  dots in it included) - so a request written
   out as `https://<id>.execute-api.<region>.amazonaws.com/<stage>/<path>`
   joins the one API served there (`fixtures/browser-gateway-address`,
   `fixtures/gateway-served-everywhere`,
   `fixtures/gateway-served-at-deploy-choices`,
-  `fixtures/declared-queues-and-handed-paths`); a greedy `{proxy+}` is a
+  `fixtures/declared-queues-and-handed-paths`,
+  `fixtures/alias-reads-keyed-fields-dotted-workspaces`); a greedy `{proxy+}` is a
   catch-all (`fixtures/workspace-env-greedy-sides`). A send whose address only the
   running code decides is drawn, as a guess, to each queue, topic, bus, table,
   stream or bucket its function is granted by name - a SAM policy template,
   an IAM role or policy, a service file's role statements, a Terraform role's
   policies, a CDK grant, a role handed to a function, and the grant the CDK
-  writes into a resource's own policy for a role of another account - while a
-  grant on `*` draws nothing and says so (`fixtures/sam-policy-grants`,
+  writes into a resource's own policy for a role of another account, or for a
+  table, a stream or a bus as the `aws-cdk-lib` version the repository pins
+  decides - while a grant on `*` draws nothing and says so, and a version left
+  open or a statement id not read leaves the grant unread, saying why
+  (`fixtures/sam-policy-grants`,
   `fixtures/serverless-iam-grants`, `fixtures/terraform-role-grants`,
   `fixtures/cdk-grants`, `fixtures/cdk-imported-role-grants`,
-  `fixtures/shared-queues-and-resource-grants`). A table written through a
+  `fixtures/shared-queues-and-resource-grants`,
+  `fixtures/aliased-fields-workspace-domains-table-grants`). A table written through a
   repository base class is the one each class extending it names
   (`fixtures/sam-repository-tables`).
 - **Guards.** Everything in front of a way in is a node and an ordered
@@ -1392,6 +1488,31 @@ Known gaps in what it can read:
   deliberately not followed, because reading the wrong branch would invent an
   edge.
 - A channel whose name only exists as run-time data on both sides.
+- A receiver typed as nothing is followed through names, parameters and
+  fields of `this`, not through a member of an object, a function's answer
+  or an element of a list; an instance a framework's injector or renderer
+  makes (a component rendered from JSX, a provider a module lists) is not
+  read as the instance a method is called on, so such a request stays with
+  whoever makes one, with a row; and in plain JavaScript a field written
+  through an untyped parameter (`Object.assign(m, ...)`) is not followed to
+  its callers.
+- A Strapi plugin whose package ships only a bundled build is a row; one not
+  installed in a fresh clone is not known to be a plugin unless
+  `config/plugins` or an extension names it; and an extension that replaces
+  a plugin's controller whole is not read as the actions it answers.
+- A registry's keyed store written by an adding function (`routes[key] =
+  {...}`, read through `Object.entries`) is not bound to its keys, nor an
+  index key of `Object.entries` over a list, and a view step taking a pair's
+  entry apart with an object pattern is counted as not read.
+- In compose, `environment: [NAME]` with no value and a Makefile's own
+  `export` lines are not read; a port only a cluster `Secret` gives is not
+  known, by policy, so the request gets a row rather than a join; and a
+  server started by a program the list of start commands does not know takes
+  no port from the script's exports.
+- A linter plugin's `configs` built by a call or a spread are not read, and
+  the top of a plain script is a function of its own only where it writes a
+  call. The TypeScript checker's own module resolution still looks above a
+  repository for `node_modules` and `@types`, as the compiler does.
 
 What it does on the demo project is
 [measured at the top of this file](#measured-on-the-demo-project). Every figure

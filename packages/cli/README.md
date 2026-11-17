@@ -4,7 +4,7 @@
 them, joins them into one graph, and answers questions about it.** It knows
 NestJS and Angular, React and Next.js, Vue and Nuxt, Svelte and SvelteKit,
 Remix, plain pages and the scripts they load, GraphQL, gRPC, Express, Fastify,
-Koa and Hono, Medusa, tRPC, oRPC and Telegraf; AWS Lambda, API Gateway, Step
+Koa and Hono, Medusa, Strapi, Gatsby, tRPC, oRPC and Telegraf; AWS Lambda, API Gateway, Step
 Functions, EventBridge, SQS and SNS as Terraform, the Serverless Framework, the
 CDK, SAM and CloudFormation deploy them; TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Kysely, Knex,
 MongoDB and node-postgres; Redis, Kafka, RabbitMQ, BullMQ and socket.io; and
@@ -52,6 +52,8 @@ steps with a recording of each.
 - Express, Fastify, Koa and Hono, where a route is registered by a call
 - Next.js, Medusa, SvelteKit and Remix / React Router, where a route is the path
   of a file - a SvelteKit page's `load` and form actions included
+- Strapi's routes files, with their policies and middlewares, and the routes
+  of the plugins it enables; Gatsby's functions, a plugin's included
 - tRPC and oRPC procedures - an oRPC one under an OpenAPI handler as its REST
   route too - gRPC methods named by the repository's `.proto` files, and
   Telegraf bot commands, callbacks and events
@@ -108,6 +110,8 @@ steps with a recording of each.
   env, compose and deployment files, keeping only the address
 - the port each server listens on, its framework's default a guess that
   places a request only where that server serves it
+- a container's environment from its image's Dockerfile, its env files and
+  the compose files that start it, and a cluster workload's config maps
 - where a cluster, a chart, a kustomization or a helmfile routes a request
 - a service you have no source for, from its OpenAPI or AsyncAPI document
 - every contract compared where one repository meets another
@@ -120,7 +124,7 @@ steps with a recording of each.
 - test code left out, and every test directory named so you can see it
 
 Every shape above is held by a fixture: a small repository written to prove it,
-compared on every push. There are 285 of them, and
+compared on every push. There are 307 of them, and
 [the fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
 lists them all, generated from their READMEs.
 

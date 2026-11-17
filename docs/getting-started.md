@@ -93,8 +93,9 @@ opens a repository, and it is read from the manifest: a server type wins over a
 browser type when a repository declares both, because the server reader reads
 the browser half too. A framework nothing here reads — Astro, Solid — is
 named rather than silently skipped; SvelteKit, Nuxt and Remix are read for
-their file routes, loads and actions, Vue and Svelte for their components, and
-a plain page for the requests its scripts make.
+their file routes, loads and actions, Strapi for its routes files and plugins,
+Gatsby for its functions, Vue and Svelte for their components, and a plain
+page for the requests its scripts make.
 
 **A monorepo is proposed as its applications.** A repository that declares a
 workspace, in `workspaces` or a `pnpm-workspace.yaml`, becomes one service per
@@ -413,6 +414,11 @@ to look for.
 | [`assumed-port-requests`](../fixtures/assumed-port-requests) | two servers heard on one port only by guesses - a framework's default and a port read through a merge - each request placed at the one that serves it |
 | [`gateway-served-everywhere`](../fixtures/gateway-served-everywhere) | APIs deployed four ways, called by the address API Gateway serves each at |
 | [`job-queue-layers`](../fixtures/job-queue-layers) | BullMQ queues behind layers of the repository's own, read where each caller names them |
+| [`framework-routes-in-place-writes`](../fixtures/framework-routes-in-place-writes) | a Strapi application's routes files and a Gatsby site's functions as ways in, and servers whose port is changed in place or read per instance |
+| [`installed-plugins-server-routes-config-packages`](../fixtures/installed-plugins-server-routes-config-packages) | routes a Strapi application registers in code, plugins installed under `node_modules` and the extensions that add to them, and a `fastify start --config` naming a package |
+| [`compose-include-shell-env`](../fixtures/compose-include-shell-env) | a compose file filled from `COMPOSE_ENV_FILES`, its `include:` and `extends:`, a script's exported port, and a cluster workload's config map and secret |
+| [`untyped-callers-framework-held-outside-writes`](../fixtures/untyped-callers-framework-held-outside-writes) | requests through instances handed around with no types, elements the browser connects, and queues written onto instances from outside their classes |
+| [`pair-keys-instances`](../fixtures/pair-keys-instances) | routes spelled from the keys of `[key, entry]` pairs, and registries read per instance |
 
 A fixture with a `flowatlas.config.json` is a project:
 
