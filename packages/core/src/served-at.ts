@@ -20,7 +20,7 @@ export interface ServedAt {
   /**
    * The host, `*` standing for one label the platform assigns:
    * `*.gateway.region-1.example.test`; `**` for a part that may be one label
-   * or several, as a name that may hold dots - a Terraform workspace's -
+   * or several, as a name that may hold dots - a deployment workspace's -
    * written into a domain is (P328): `**.orders.example.test`.
    */
   readonly host: string;
