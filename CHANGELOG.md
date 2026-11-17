@@ -140,6 +140,24 @@ only one of them moved.
   written as an arrow or a function expression held by a `const`,
   `export const productsV1 = () => readProducts('/v1')`, is a caller a
   request is followed out to.
+- **Ports a class keeps as numbers, bases held in fields and objects, and a
+  port written with no colon (P324).** A number in a host's port place is
+  read where a module or a class keeps it - `const PORT = 4700`,
+  `static port = 4700`, a getter or a method answering one, a field the
+  constructor writes - handed by a caller or written in place, in both the
+  browser and the server reader; a number in the path's place stays a
+  value of the path's. Instances with different bases held in a field the
+  constructor fills (`this.api = api`) or in a member of an object handed in
+  (`readOn({ client: stockApi }, '/levels')`) are read along the calls the
+  address came out through, from each `new` and each object to the instance
+  it was given, and a request in a method of the receiver's class is
+  followed to each caller of the method under the base of the instance it
+  calls it on; each request at its caller under its own base, where an
+  `api-client-base-unread` row stood before. A number written straight
+  after a host with no colon, `` `http://localhost${port}/health` `` handed
+  4600, is read as the code spells it, `localhost4600`, with a new finding
+  `address-port-without-colon` saying it is no port (info after a name
+  that may end in digits).
 - **Route registries reached across modules and read through views, and
   link props followed through what each use hands (P314).** A store a
   module exports and others add to is found by every reference; a reader

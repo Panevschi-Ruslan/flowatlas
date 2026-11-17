@@ -286,6 +286,38 @@ describe('splitting an address at the part a caller supplies', () => {
     const ahead = parse(`declare const x: string; export function go(id: string) { return fetch(\`https://shop.example\${x}/orders/\${id}\`); }`);
     expect(splitAtParameter(address(ahead))).toMatchObject({ before: 'https://shop.example/${…}/orders/' });
   });
+
+  it('fills a port place with a number a class keeps, reads a number straight after a host as spelled and says so (P324)', () => {
+    const kept = parse(`
+      class Ports { static stock = 4700; static get catalog() { return 4600; } }
+      export function go(port: number) { return fetch(\`http://localhost:\${port}/orders\`); }
+      export const one = () => go(Ports.stock);
+      export const two = () => go(Ports.catalog);
+    `);
+    const keptSplit = splitAtParameter(address(kept));
+    const composed = forwardedFrom(keptSplit!.parameter).calls.map((call) => composeAddress(analyzeUrl(call.argument), keptSplit, call.argument));
+    expect(composed.map(({ host, path }) => ({ host, path }))).toEqual([
+      { host: 'localhost:4700', path: '/orders' },
+      { host: 'localhost:4600', path: '/orders' },
+    ]);
+    // Written in place, in the port place; one in the path's place stays a hole.
+    const inPlace = parse(`class Ports { static stock = 4700; static page = 20; } export function go() { return fetch(\`http://localhost:\${Ports.stock}/orders/\${Ports.page}\`); }`);
+    expect(analyzeUrl(address(inPlace))).toMatchObject({ host: 'localhost:4700', path: '/orders/:param' });
+    // Glued: handed by a caller, or written in place.
+    const glued = parse(`
+      export function go(port: number) { return fetch(\`http://localhost\${port}/orders\`); }
+      export const one = () => go(4600);
+    `);
+    const gluedSplit = splitAtParameter(address(glued));
+    const [gluedCaller] = forwardedFrom(gluedSplit!.parameter).calls;
+    expect(composeAddress(analyzeUrl(gluedCaller!.argument), gluedSplit, gluedCaller!.argument)).toMatchObject({
+      host: 'localhost4600',
+      path: '/orders',
+      portWithoutColon: { number: '4600', host: 'localhost' },
+    });
+    const gluedInPlace = parse(`const PORT = 4600; export function go() { return fetch(\`http://localhost\${PORT}/orders\`); }`);
+    expect(analyzeUrl(address(gluedInPlace))).toMatchObject({ host: 'localhost4600', path: '/orders', portWithoutColon: { number: '4600', host: 'localhost' } });
+  });
 });
 
 /**

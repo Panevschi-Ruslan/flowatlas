@@ -1,8 +1,8 @@
 import {
   applicationOfFile,
-  argumentAlong,
   builtQueryInAddress,
   builtQueryOf,
+  callSitesOf,
   forEachCall,
   makeExternalApiId,
   isPlatformProvided,
@@ -10,6 +10,7 @@ import {
   normalizeFilePath,
   optionVerbAlong,
   optionVerbOf,
+  portWithoutColonRow,
   requestBodyOf,
   requestVerbOf,
   resolveTypeOrigin,
@@ -35,7 +36,7 @@ import {
 } from '@flowatlas/core';
 import { documentOf, fetchedQuery, GRAPHQL_META, handedThrough, operationMeta, operationsOf } from '@flowatlas/graphql';
 import type { CallExpression, ClassDeclaration, Node as TsNode, ObjectLiteralExpression } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { Node, SyntaxKind } from 'ts-morph';
 import {
   AXIOS,
   BASE_FIELDS,
@@ -55,7 +56,7 @@ import { classMethods, enclosingIndexed, requestsOf, type ReadRequest, type Requ
 import { localClientOf, type LocalClientReading } from '../util/local-client.js';
 import { linterGlobals, pageLoadedPackages } from '../util/page-globals.js';
 import { basedBy, rewriteFor, unreadOpening } from '../util/request-rewrite.js';
-import { parameterNamed, receiverValues } from '../util/receiver-values.js';
+import { memberOfInstance, receiverValues, valuesAlong } from '../util/receiver-values.js';
 import { sentThrough } from '../util/sent-later.js';
 import { analyzeApiUrl, analyzeClientBase, isSomewhere, underBase, type ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
@@ -701,6 +702,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         symbol: network.getText().slice(0, 80),
       });
     }
+    if (address.portWithoutColon !== undefined) ctx.report(portWithoutColonRow(address.portWithoutColon, site.file, at.line, network.getText()));
     if (written?.kind === 'unread') {
       ctx.report({
         file: site.file,
@@ -916,20 +918,20 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    * that caller hands - what the receiver is handed along the calls the
    * address came out through - each under its own base, as at the request
    * where it is written (see {@link recordHeld}); one a caller further out
-   * hands is that caller's. Where the receiver is no parameter handed along
-   * those calls, nothing tells which of the instances is this caller's: the
-   * path alone, which is said.
+   * hands is that caller's. The receiver may be a parameter, a field of the
+   * instance the call is made on or a member of an object handed in, each
+   * followed to what gave it (P324); one in a method of its own class whose
+   * address is followed out through calls on `this` is read at each caller
+   * of that method. Where none of these says, nothing tells which of the
+   * instances is this caller's: the path alone, which is said.
    */
   const recordHeldAlong = (found: FoundCall, request: ReadRequest): void => {
     const callee = found.call.getExpression();
-    const parameter = Node.isPropertyAccessExpression(callee) ? parameterNamed(callee.getExpression()) : undefined;
-    const handed = parameter === undefined ? undefined : argumentAlong(parameter, request.calls);
-    const held = handed === undefined || handed === null
-      ? []
-      : heldBy(handed).flatMap((value) => {
-          const instance = holdsNothing(value) ? undefined : instances.of(value);
-          return instance === undefined ? [] : [{ instance, at: value }];
-        });
+    // A parameter, a field of the instance the call is made on, a member of
+    // an object handed in: what each is handed along these calls (P324).
+    const handed = Node.isPropertyAccessExpression(callee) ? valuesAlong(callee.getExpression(), request.calls) : undefined;
+    const along = (handed ?? []).flatMap((each) => instancesHeld(each));
+    const held = along.length > 0 ? along : (heldAtCallers(found, request) ?? []);
     if (held.length > 0) {
       recordHeld(found, request, request.through ?? '', held);
       return;
@@ -937,6 +939,56 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     const { held: all, ...rest } = found;
     reportBasesDisagree(found, (all ?? []).map((each) => each.instance), 'along the callers its address is read at');
     record(rest, request);
+  };
+
+  /** The client instances a value may hold, each said to be handed at `at`, or where it is made. */
+  const instancesHeld = (value: TsNode, at?: TsNode): NonNullable<FoundCall['held']> =>
+    heldBy(value).flatMap((each) => {
+      const instance = holdsNothing(each) ? undefined : instances.of(each);
+      return instance === undefined ? [] : [{ instance, at: at ?? each }];
+    });
+
+  /**
+   * The instances a field of `this` holds, read at each caller of the method
+   * the request is written in or followed out to through calls on `this`
+   * (P324): `health() { return this.read('/health'); }` called as
+   * `new Reader(stockApi).health()` holds `stockApi` in `this.api` there,
+   * whatever other instances are made. Each is said to be handed at that
+   * caller. Nothing where the receiver is no field of `this`, the method has
+   * no caller, or a caller calls it on an instance that is not followed.
+   */
+  const heldAtCallers = (found: FoundCall, request: ReadRequest): FoundCall['held'] | undefined => {
+    const onThis = (call: TsNode): boolean => {
+      const callee = Node.isCallExpression(call) ? call.getExpression() : undefined;
+      return callee !== undefined && Node.isPropertyAccessExpression(callee) && callee.getExpression().getKind() === SyntaxKind.ThisKeyword;
+    };
+    const callee = found.call.getExpression();
+    const receiver = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : undefined;
+    if (receiver === undefined || !Node.isPropertyAccessExpression(receiver) || receiver.getExpression().getKind() !== SyntaxKind.ThisKeyword) return undefined;
+    if (!request.calls.every(onThis)) return undefined;
+    const method = request.site.call.getFirstAncestor((node) => Node.isMethodDeclaration(node));
+    if (method === undefined || !Node.isMethodDeclaration(method)) return undefined;
+    const sites = callSitesOf(method);
+    if (sites.length === 0) return undefined;
+    const held: NonNullable<FoundCall['held']>[number][] = [];
+    for (const site of sites) {
+      const called = site.getExpression();
+      if (!Node.isPropertyAccessExpression(called)) return undefined;
+      const instance = called.getExpression();
+      const values = memberOfInstance(instance, receiver.getName());
+      if (values === undefined) return undefined;
+      held.push(...values.flatMap((value) => instancesHeld(value, instance)));
+    }
+    return held.length > 0 ? held : undefined;
+  };
+
+  /** Whether instances handed where no caller of their own carries each disagree on their base, as {@link recordHeld} would leave them at the request. */
+  const disagreeInPlace = (held: NonNullable<FoundCall['held']>, request: ReadRequest): boolean => {
+    const unplaced = held.flatMap(({ instance, at }) => {
+      const caller = enclosingIndexed(ctx, at, isClientClass);
+      return caller === undefined || caller.id === request.site.ownerId ? [instance] : [];
+    });
+    return unplaced.length > 0 && agreedInstance(unplaced) === undefined;
   };
 
   /** Instances with different bases handed where no one caller can carry each, said once at the request. */
@@ -1169,7 +1221,11 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       for (const request of requestsOf(ctx, urlArg, indexed, site, isClientClass)) {
         ensureOwner(ctx, request.site.ownerId);
         if (request.depth === 0 && call.held !== undefined) {
-          recordHeld(call, request, indexed.name);
+          // Instances that would disagree where the request is written,
+          // held by a field of `this`: each caller of the method, under
+          // the base of the instance it calls it on (P324).
+          const atCallers = disagreeInPlace(call.held, request) ? heldAtCallers(call, request) : undefined;
+          recordHeld(call, request, indexed.name, atCallers);
           continue;
         }
         if (call.held !== undefined) {

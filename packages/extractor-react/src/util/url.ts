@@ -2,8 +2,8 @@ import {
   constantPropertyValue,
   continuesHost,
   endsAtHost,
-  evaluateExpression,
   normalizePath,
+  numberAfterHost,
   resolveStaticString,
   returnedExpression,
   rootSettingAddress,
@@ -12,7 +12,9 @@ import {
   UNREAD_SPAN,
   valueAfterHost,
   valueAtPort,
+  writtenNumber,
   writtenSpan,
+  type NumberAfterHost,
   type SettingBehind,
   type SpanReader,
 } from '@flowatlas/core';
@@ -164,6 +166,11 @@ export interface ApiUrl {
   via: 'literal' | 'template-env' | 'const' | null;
   /** Whether part of the path came from a branch nobody settled. */
   guessed: boolean;
+  /**
+   * A number written straight after the host with no colon before it, read
+   * as the address spells it - `localhost4600`, no port (P324).
+   */
+  portWithoutColon?: Pick<NumberAfterHost, 'number' | 'host'>;
 }
 
 /** What a setting found behind an address says beyond its key, as an address carries it (P292, P296). */
@@ -227,13 +234,14 @@ const readSpan = (node: TsNode): string | null => writtenSpan(node, false);
 
 /**
  * The number a caller hands for a value, followed out through the callers
- * that hand it on (P318): `health(4600)` into `` `http://localhost:${port}/health` ``.
+ * that hand it on (P318): `health(4600)` into `` `http://localhost:${port}/health` ``,
+ * and a number a class keeps, handed or written in place (P324):
+ * `health(Ports.stock)` where `static stock = 4700`.
  */
 const numberHanded = (node: TsNode, bindings: Bindings | undefined): string | null => {
   const settled = boundTo(node, bindings);
   if (settled !== undefined) return numberHanded(settled.expr, settled.bindings);
-  const value = evaluateExpression(node);
-  return value.resolved && typeof value.value === 'number' ? String(value.value) : null;
+  return writtenNumber(node);
 };
 
 /**
@@ -289,7 +297,15 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
     port ??= { at: valueAtPort(node, spanRead) };
     return port.at === span;
   };
-  const resolveSpan = (span: TsNode): string | null => spanRead(span) ?? (atPort(span) ? numberHanded(span, bindings) : null);
+  // A number straight after the whole host, no colon before it (P324): read
+  // as the address spells it, `localhost4600`, and said, since it is no port.
+  let glued: { readonly at: NumberAfterHost | undefined } | undefined;
+  const gluedAt = (): NumberAfterHost | undefined => {
+    glued ??= { at: numberAfterHost(node, (piece) => numberHanded(piece, bindings), spanRead) };
+    return glued.at;
+  };
+  const resolveSpan = (span: TsNode): string | null =>
+    spanRead(span) ?? (atPort(span) || gluedAt()?.piece === span ? numberHanded(span, bindings) : null);
 
   const settingBehind = (at: TsNode): SettingBehind | null => {
     const settled = boundTo(at, bindings);
@@ -385,6 +401,7 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
     // rest of its name; a path, or a value nothing reads, opens the path, and
     // the path is unread rather than the value folded into the host.
     const hostOnly = before !== undefined && (rest === '' || !hostWrittenAfterHost(node, bindings, resolveSpan)) ? before : undefined;
+    const noColon = gluedAt();
     return {
       url: resolved.value,
       path: hostOnly === undefined ? routePathOf(rest) : rest === '' ? UNREAD_SPAN : routePathOf(`/${UNREAD_SPAN}${rest}`),
@@ -392,6 +409,7 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
       host: (hostOnly ?? authority).toLowerCase(),
       via,
       guessed,
+      ...(noColon === undefined ? {} : { portWithoutColon: { number: noColon.number, host: noColon.host } }),
     };
   }
 

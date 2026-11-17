@@ -186,6 +186,8 @@ const FINDINGS: readonly string[] = [
   'network-port-unreachable',
   // A server's own request with no host, made by a client with no origin to resolve it against (P263)
   'server-request-without-origin',
+  // A number written straight after a host with no colon, which names another host and no port (P324)
+  'address-port-without-colon',
   // A helmfile release that needs one the helmfile does not declare, which helmfile refuses to apply (P273)
   'release-need-undefined',
   'workflow-definition-invalid',
@@ -562,6 +564,7 @@ const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
       'procedure-unmounted',
       'network-port-unreachable',
       'server-request-without-origin',
+      'address-port-without-colon',
       'release-need-undefined',
       'workflow-definition-invalid',
       's3-write-matches-nothing',

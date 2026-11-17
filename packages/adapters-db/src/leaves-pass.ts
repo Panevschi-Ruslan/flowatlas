@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import {
   addressOnly,
+  portWithoutColonRow,
   IN_PROCESS_META,
   ORIGINLESS_META,
   builtQueryInAddress,
@@ -2159,6 +2160,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         symbol: site.getText().slice(0, 80),
       });
     }
+    if (info.portWithoutColon !== undefined) ctx.report(portWithoutColonRow(info.portWithoutColon, owner.file, place.line, site.getText()));
   };
 
   /** Whether a body carries `@CallsService` or `@flowatlas-calls`, which say where its requests go. */

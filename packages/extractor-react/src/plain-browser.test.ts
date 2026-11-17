@@ -309,6 +309,107 @@ describe('plain browser code (P284)', () => {
     ]);
   });
 
+  it('reads a number a class or a module keeps in a port place, handed or written there, and never one in the path\'s place (P324)', () => {
+    const graph = read({
+      '/js/api.js': [
+        'class Ports { static stock = 4700; static get catalog() { return 4600; } }',
+        'class Local { constructor() { this.port = 4800; } url() { return fetch(`http://localhost:${this.port}/local`); } }',
+        'class Paging { static size = 20; }',
+        'const KEPT = 4900;',
+        'function health(port) { return fetch(`http://localhost:${port}/health`); }',
+        'function one() { return health(Ports.stock); }',
+        'function two() { return health(Ports.catalog); }',
+        'function three() { return health(KEPT); }',
+        'function levels() { return fetch(`http://localhost:${Ports.stock}/levels`); }',
+        'function page() { return fetch(`http://localhost:4600/latest/${Paging.size}`); }',
+      ].join('\n'),
+    });
+    const found = requests(graph).map((node) => [node.meta?.['host'], node.meta?.['path']]);
+    expect(found.sort((a, b) => `${a[0]}${a[1]}`.localeCompare(`${b[0]}${b[1]}`))).toEqual([
+      ['localhost:4600', '/health'],
+      ['localhost:4600', '/latest/:param'],
+      ['localhost:4700', '/health'],
+      ['localhost:4700', '/levels'],
+      ['localhost:4800', '/local'],
+      ['localhost:4900', '/health'],
+    ]);
+  });
+
+  it('reads a number straight after a host with no colon as the code spells it and says so, and a port handed with its colon as the port (P324)', () => {
+    const graph = read({
+      '/js/api.js': [
+        'function probe(port) { return fetch(`http://localhost${port}/health`); }',
+        'function one() { return probe(4600); }',
+        "function two() { return probe(':4700'); }",
+        'const PORT = 4800;',
+        "function three() { return fetch('http://127.0.0.1' + PORT + '/ping'); }",
+        'function four(n) { return fetch(`http://worker${n}/jobs`); }',
+        'function five() { return four(3); }',
+      ].join('\n'),
+    });
+    const found = requests(graph).map((node) => [node.meta?.['host'], node.meta?.['path']]);
+    expect(found.sort((a, b) => `${a[0]}${a[1]}`.localeCompare(`${b[0]}${b[1]}`))).toEqual([
+      ['127.0.0.14800', '/ping'],
+      ['localhost:4700', '/health'],
+      ['localhost4600', '/health'],
+      ['worker3', '/jobs'],
+    ]);
+    const rows = graph.unresolved.filter((row) => row.reason === 'address-port-without-colon');
+    expect(rows.map((row) => [row.line, row.level ?? 'action', row.meta?.['host'], row.meta?.['number']]).sort()).toEqual([
+      [2, 'action', 'localhost', '4600'],
+      [5, 'action', '127.0.0.1', '4800'],
+      [7, 'info', 'worker', '3'],
+    ]);
+  });
+
+  it('reads instances held in a field the constructor fills, or a member of an object handed in, at each caller under its base (P324)', () => {
+    const graph = read({
+      '/js/api.js': [
+        "import axios from 'axios';",
+        "const catalogApi = axios.create({ baseURL: 'http://localhost:4600' });",
+        "const stockApi = axios.create({ baseURL: 'http://localhost:4700' });",
+        'class Reader {',
+        '  constructor(api) { this.api = api; }',
+        '  read(path) { return this.api.get(path); }',
+        "  health() { return this.read('/health'); }",
+        '}',
+        "function one() { return new Reader(catalogApi).read('/latest'); }",
+        "function two() { const reader = new Reader(stockApi); return reader.read('/levels'); }",
+        'function three() { return new Reader(stockApi).health(); }',
+        'function readOn(options, path) { return options.client.get(path); }',
+        "function four() { return readOn({ client: catalogApi }, '/latest'); }",
+        "function five() { const client = stockApi; return readOn({ client }, '/levels'); }",
+        "class Catalog { constructor(client) { this.client = client; } list() { return this.client.get('/products'); } }",
+        'function six() { return new Catalog(catalogApi).list(); }',
+        'function seven() { const catalog = new Catalog(stockApi); return catalog.list(); }',
+      ].join('\n'),
+      // A parameter property fills the field as `this.api = api` does.
+      '/js/typed.ts': [
+        "import axios from 'axios';",
+        "const ordersApi = axios.create({ baseURL: 'http://localhost:5000' });",
+        "const usersApi = axios.create({ baseURL: 'http://localhost:5100' });",
+        'class Service { constructor(private api) {} send(path: string) { return this.api.get(path); } }',
+        "export const orders = () => new Service(ordersApi).send('/orders');",
+        "export const users = () => new Service(usersApi).send('/users');",
+      ].join('\n'),
+    });
+    const found = requests(graph).map((node) => [node.meta?.['host'], node.meta?.['path'], node.meta?.['through']]);
+    expect(found.sort((a, b) => `${a[0]}${a[1]}${a[2]}`.localeCompare(`${b[0]}${b[1]}${b[2]}`))).toEqual([
+      ['localhost:4600', '/latest', 'Reader.read'],
+      ['localhost:4600', '/latest', 'readOn'],
+      // Written in place in `list`: at each caller, the instance it calls `list` on.
+      ['localhost:4600', '/products', 'Catalog.list'],
+      // Followed out of `health` through `this.read`, to the instance `three` calls it on.
+      ['localhost:4700', '/health', 'Reader.read'],
+      ['localhost:4700', '/levels', 'Reader.read'],
+      ['localhost:4700', '/levels', 'readOn'],
+      ['localhost:4700', '/products', 'Catalog.list'],
+      ['localhost:5000', '/orders', 'Service.send'],
+      ['localhost:5100', '/users', 'Service.send'],
+    ]);
+    expect(graph.unresolved.filter((row) => row.reason === 'api-client-base-unread')).toEqual([]);
+  });
+
   it('keeps instances with different bases handed outside any function on the request, the path alone, and says so (P312)', () => {
     const graph = read({
       '/js/catalog.js': [

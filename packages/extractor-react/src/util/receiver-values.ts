@@ -1,5 +1,5 @@
-import { handedByEachCall } from '@flowatlas/core';
-import type { CallExpression, NewExpression, Node as TsNode, ParameterDeclaration } from 'ts-morph';
+import { argumentAlong, handedByEachCall } from '@flowatlas/core';
+import type { CallExpression, ClassDeclaration, NewExpression, Node as TsNode, ParameterDeclaration } from 'ts-morph';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 
 /**
@@ -156,6 +156,14 @@ export const receiverValues = (isLeaf: (value: TsNode) => boolean) => {
       if (operator === SyntaxKind.AmpersandAmpersandToken) return valuesOf(target.getRight(), depth, seen);
       return [target];
     }
+    // `options.client`: the member of every object the name may hold - an
+    // object written in place, or an instance a `new` makes (P324).
+    if (Node.isPropertyAccessExpression(target) && target.getExpression().getKind() !== SyntaxKind.ThisKeyword) {
+      const objects = valuesOf(target.getExpression(), depth + 1, seen);
+      const members = objects.map((object) => memberWritten(object, target.getName()));
+      if (objects.length === 0 || members.some((member) => member === undefined)) return [target];
+      return members.flatMap((member) => (member ?? []).flatMap((value) => valuesOf(value, depth + 1, seen)));
+    }
     const key = keyOf(target);
     if (key === undefined) return [target];
     if (seen.has(key)) return [];
@@ -168,6 +176,37 @@ export const receiverValues = (isLeaf: (value: TsNode) => boolean) => {
   };
 
   return (receiver: TsNode): TsNode[] => valuesOf(receiver, 0, new Set());
+};
+
+/**
+ * What a member of one object is given where the object says (P324): a
+ * property an object written in place holds, a shorthand's name, or each
+ * value a class gives the field of an instance a `new` makes. Nothing where
+ * the object is no such thing or does not name the member.
+ */
+const memberWritten = (object: TsNode, member: string): TsNode[] | undefined => {
+  if (Node.isObjectLiteralExpression(object)) {
+    const property = object.getProperty(member);
+    if (property !== undefined && Node.isPropertyAssignment(property)) {
+      const written = property.getInitializer();
+      return written === undefined ? undefined : [written];
+    }
+    if (property === undefined || !Node.isShorthandPropertyAssignment(property)) return undefined;
+    const declaration = declarationNamed(property.getNameNode());
+    return declaration !== undefined && (Node.isVariableDeclaration(declaration) || Node.isParameterDeclaration(declaration)) ? [declaration.getNameNode()] : undefined;
+  }
+  const owner = classMade(object);
+  const given = owner === undefined ? [] : fieldValues(owner, member);
+  return given.length === 0 ? undefined : given;
+};
+
+/** The class of this repository a `new` makes an instance of. */
+const classMade = (object: TsNode): ClassDeclaration | undefined => {
+  if (!Node.isNewExpression(object)) return undefined;
+  const made = unwrap(object.getExpression());
+  const symbol = Node.isIdentifier(made) ? made.getSymbol() : undefined;
+  const owner = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
+  return owner !== undefined && Node.isClassDeclaration(owner) ? owner : undefined;
 };
 
 /** What a name is told apart by: its declaration, or a class's or an object's field. */
@@ -207,4 +246,147 @@ const givenTo = (target: TsNode): TsNode[] | undefined => {
     return written === undefined ? [] : [written];
   }
   return undefined;
+};
+
+/** A value read along calls, with the calls still further out than where it is written. */
+interface Along {
+  readonly value: TsNode;
+  readonly hops: readonly CallExpression[];
+}
+
+/** The calls further out than the one an argument is written in. */
+const hopsAfter = (argument: TsNode, hops: readonly CallExpression[]): readonly CallExpression[] => {
+  const at = hops.findIndex((hop) => hop.getArguments().some((each) => each === argument || (each.getPos() <= argument.getPos() && argument.getEnd() <= each.getEnd())));
+  return at < 0 ? hops : hops.slice(at + 1);
+};
+
+/** What a parameter is handed along the calls, and the calls further out than it. */
+const handedAlongHops = (parameter: ParameterDeclaration, hops: readonly CallExpression[]): Along | undefined => {
+  // A constructor's parameter is handed by each `new`, which no call says.
+  if (Node.isConstructorDeclaration(parameter.getParent())) return undefined;
+  const handed = argumentAlong(parameter, hops);
+  return handed === undefined || handed === null ? undefined : { value: handed, hops: hopsAfter(handed, hops) };
+};
+
+/**
+ * The declaration a name stands for: a shorthand member, `{ client }`, is
+ * the name it takes its value from.
+ */
+const declarationNamed = (name: TsNode): TsNode | undefined => {
+  if (!Node.isIdentifier(name)) return undefined;
+  const parent = name.getParent();
+  const symbol = parent !== undefined && Node.isShorthandPropertyAssignment(parent) && parent.getNameNode() === name ? parent.getValueSymbol() : name.getSymbol();
+  return symbol?.getDeclarations()[0];
+};
+
+/**
+ * The objects an expression holds along the calls a request's address came
+ * out through (P324): an object written in place, an instance a `new` makes,
+ * followed through what each call hands a parameter and through a name's
+ * value. Nothing where neither says.
+ */
+const objectsAlong = (value: TsNode, hops: readonly CallExpression[], depth: number): Along[] | undefined => {
+  if (depth > DEPTH) return undefined;
+  const target = unwrap(value);
+  if (Node.isObjectLiteralExpression(target) || Node.isNewExpression(target)) return [{ value: target, hops }];
+  const declaration = declarationNamed(target);
+  if (declaration !== undefined && Node.isParameterDeclaration(declaration)) {
+    const handed = handedAlongHops(declaration, hops);
+    return handed === undefined ? undefined : objectsAlong(handed.value, handed.hops, depth + 1);
+  }
+  if (declaration !== undefined && Node.isVariableDeclaration(declaration)) {
+    const name = declaration.getNameNode();
+    const written = declaration.getInitializer();
+    // A name given another value later holds one this does not tell.
+    if (written === undefined || !Node.isIdentifier(name) || assignedTo(declaration, name).length > 0) return undefined;
+    return objectsAlong(written, hops, depth + 1);
+  }
+  return undefined;
+};
+
+/** The parameter of a class's constructor a field's value names, and where it stands. */
+const constructorParameterOf = (value: TsNode, owner: TsNode): { index: number; parameter: ParameterDeclaration } | undefined => {
+  const parent = value.getParent();
+  const parameter = parent !== undefined && Node.isParameterDeclaration(parent) && parent.getNameNode() === value ? parent : parameterNamed(value);
+  const constructor = parameter?.getParent();
+  if (parameter === undefined || constructor === undefined || !Node.isConstructorDeclaration(constructor) || constructor.getParent() !== owner) return undefined;
+  return { index: constructor.getParameters().indexOf(parameter), parameter };
+};
+
+/**
+ * What a member of each object holds: a property written in the object, or
+ * a field of the instance a `new` makes - what that `new` hands the
+ * constructor's parameter the field is filled from, or what the class
+ * writes into it itself. Nothing where an object does not say.
+ */
+const membersOf = (objects: readonly Along[], member: string, depth: number): TsNode[] | undefined => {
+  const values: TsNode[] = [];
+  for (const { value: object, hops } of objects) {
+    if (Node.isObjectLiteralExpression(object)) {
+      const [written] = memberWritten(object, member) ?? [];
+      if (written === undefined) return undefined;
+      values.push(...(valuesAlong(written, hops, depth + 1) ?? [written]));
+      continue;
+    }
+    const owner = classMade(object);
+    if (owner === undefined || !Node.isNewExpression(object)) return undefined;
+    const given = fieldValues(owner, member);
+    if (given.length === 0) return undefined;
+    for (const value of given) {
+      const handed = constructorParameterOf(value, owner);
+      if (handed === undefined) {
+        values.push(value);
+        continue;
+      }
+      const argument = object.getArguments()[handed.index] ?? handed.parameter.getInitializer();
+      if (argument !== undefined) values.push(...(valuesAlong(argument, hops, depth + 1) ?? [argument]));
+    }
+  }
+  return values;
+};
+
+/**
+ * What a member of the instance one call is made on holds (P324): `reader`
+ * in `reader.health()`, `new Reader(stockApi)` in `new Reader(stockApi).health()`,
+ * read as a field of `this` in `health` is read along calls. Nothing where
+ * the instance is not followed - `this`, a parameter no call along says.
+ */
+export const memberOfInstance = (instance: TsNode, member: string): TsNode[] | undefined => {
+  const objects = objectsAlong(instance, [], 0);
+  return objects === undefined ? undefined : membersOf(objects, member, 0);
+};
+
+/**
+ * What a request's receiver is handed along the calls its address came out
+ * through (P318, P324): a parameter, by what the caller along those calls
+ * hands it; a field of `this`, by what the instance the call is made on was
+ * given - `new Reader(catalogApi).read('/latest')` hands `catalogApi` to the
+ * constructor that fills `this.api`; a member of an object, by that object's
+ * member as it is handed along - `readOn({ client: stockApi }, '/levels')`
+ * for `options.client`. The values are what is handed, to be followed for
+ * what each is; nothing where the calls do not say.
+ */
+export const valuesAlong = (value: TsNode, hops: readonly CallExpression[], depth = 0): TsNode[] | undefined => {
+  if (depth > DEPTH) return undefined;
+  const target = unwrap(value);
+  const declaration = declarationNamed(target);
+  if (declaration !== undefined && Node.isParameterDeclaration(declaration)) {
+    const handed = handedAlongHops(declaration, hops);
+    return handed === undefined ? undefined : (valuesAlong(handed.value, handed.hops, depth + 1) ?? [handed.value]);
+  }
+  if (!Node.isPropertyAccessExpression(target)) return undefined;
+  const member = target.getName();
+  if (target.getExpression().getKind() !== SyntaxKind.ThisKeyword) {
+    const objects = objectsAlong(target.getExpression(), hops, depth + 1);
+    return objects === undefined ? undefined : membersOf(objects, member, depth);
+  }
+  // `this.api`: the instance the innermost call is made on. A method of the
+  // same instance calling this one leaves the field the same, one call out.
+  const [hop, ...further] = hops;
+  const callee = hop?.getExpression();
+  if (callee === undefined || !Node.isPropertyAccessExpression(callee)) return undefined;
+  const instance = unwrap(callee.getExpression());
+  if (instance.getKind() === SyntaxKind.ThisKeyword) return valuesAlong(target, further, depth + 1);
+  const objects = objectsAlong(instance, further, depth + 1);
+  return objects === undefined ? undefined : membersOf(objects, member, depth);
 };

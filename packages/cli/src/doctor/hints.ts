@@ -372,6 +372,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'A helmfile release lists under `needs` a release the helmfile (with the bases it layers) does not declare, by that name or in that namespace: helmfile refuses to apply the helmfile, so nothing in it is installed as written. The releases are still read. Name a release the helmfile declares, written namespace/name where its namespace is not the one assumed, or remove the need.',
   'server-request-without-origin': () =>
     'A server\'s own code makes a request with no host through the platform `fetch` (a Next route handler or server component, a Nitro route): on the server there is no page whose address it could be resolved against, so the request throws as written. It is drawn to the route the path names, as the author meant. Build the address from a setting that gives the server\'s own address, call the code behind the route directly, or use a client that answers it in process (Nitro\'s `$fetch`).',
+  'address-port-without-colon': () =>
+    'An address writes a number straight after its host with no colon before it - `http://localhost${port}/health` where port holds 4600, written in place, kept by a class or handed by a caller. It is read as the code spells it, the host `localhost4600`, which is no port: after `localhost` or an address of numbers that host cannot be meant (action), after any other name it may be a name ending in digits (info). Write a colon before the port, or hand the port with its colon (`:4600`).',
   'proxied-to-third-party': () =>
     'A request is forwarded by its server\'s proxy to a host no service of the project is reached at, so it leaves the project there: it is drawn to that host as a third party. If the host is one of the project\'s services, name it under services[].hosts of that service.',
   'network-port-unreachable': () =>
@@ -942,6 +944,7 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'procedure-unmounted': ['procedure declared where nothing serves it', 'procedures declared where nothing serves them'],
   'network-port-unreachable': ['request to a port the network does not reach', 'requests to a port the network does not reach'],
   'server-request-without-origin': ['server request with no host', 'server requests with no host'],
+  'address-port-without-colon': ['address with a port and no colon', 'addresses with a port and no colon'],
   'release-need-undefined': ['release needing one nothing declares', 'releases needing one nothing declares'],
   's3-write-matches-nothing': ['bucket write no notification takes', 'bucket writes no notification takes'],
   'job-no-handler': ['job no handler of its queue takes', 'jobs no handler of their queue takes'],

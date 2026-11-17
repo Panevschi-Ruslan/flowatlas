@@ -23,6 +23,10 @@ import {
   rootSettingAddress,
   valueAfterHost,
   valueAtPort,
+  atPortPlace,
+  numberAfterHost,
+  portWithoutColonRow,
+  writtenNumber,
   writtenSpan,
 } from './trace.js';
 
@@ -978,5 +982,58 @@ describe('a host or a port the evaluator does not read, read as the address read
     expect(writtenSpan(origin!, false)).toBeNull();
     expect(writtenSpan(prefix!, false)).toBe('/v1');
     expect(writtenSpan(version!, false)).toBe('/v2');
+  });
+});
+
+describe('a number a port place holds, and one written straight after a host (P324)', () => {
+  it('reads a number a class or a module keeps: a field, a getter, a field the constructor writes, a method answering one', () => {
+    const file = parse(`
+      const KEPT = 4900;
+      class Ports {
+        static stock = 4700;
+        static get catalog() { return 4600; }
+        static label = ':4700';
+      }
+      class Local {
+        port: number;
+        constructor() { this.port = 4800; }
+        other() { return 5000; }
+        go() { return http.get(\`\${Ports.stock}\${Ports.catalog}\${KEPT}\${this.port}\${this.other()}\${Ports.label}\`); }
+      }
+    `);
+    const spans = (address(file) as TemplateExpression).getTemplateSpans().map((span) => writtenNumber(span.getExpression()));
+    expect(spans).toEqual(['4700', '4600', '4900', '4800', '5000', null]);
+  });
+
+  it('finds a number glued to a whole host, through a template or a + chain, and nothing after a colon, a dot or before more of the name', () => {
+    const glued = (source: string) => {
+      const found = numberAfterHost(address(parse(source)));
+      return found === undefined ? undefined : [found.host, found.number];
+    };
+    expect(glued('const PORT = 4600; http.get(`http://localhost${PORT}/health`);')).toEqual(['localhost', '4600']);
+    expect(glued("class P { static port = 4700; } http.get('http://127.0.0.1' + P.port + '/health');")).toEqual(['127.0.0.1', '4700']);
+    expect(glued('const PORT = 4600; http.get(`http://localhost:${PORT}/health`);')).toBeUndefined();
+    expect(glued("const PORT = ':4600'; http.get(`http://localhost${PORT}/health`);")).toBeUndefined();
+    expect(glued('const N = 3; http.get(`http://node${N}.cluster.example/jobs`);')).toBeUndefined();
+    expect(glued('const N = 3; http.get(`http://shop.example/items/${N}`);')).toBeUndefined();
+  });
+
+  it('says a port place, and reads a number there when an address is split at a parameter, never one in the path', () => {
+    expect(atPortPlace('http://localhost:')).toBe(true);
+    expect(atPortPlace('http://localhost')).toBe(false);
+    expect(atPortPlace('http://localhost:4600/items:')).toBe(false);
+    const file = parse(`
+      class Ports { static stock = 4700; static page = 20; }
+      function go(path: string) { return http.get(\`http://localhost:\${Ports.stock}/\${Ports.page}\${path}\`); }
+    `);
+    const split = splitAtParameter(address(file), { readSetting: () => null })!;
+    // The page size is the path's: a hole, never read as the number it holds.
+    expect(split.before).toBe(`http://localhost:4700/${UNREAD_SPAN}`);
+  });
+
+  it('builds the row said of a number with no colon: action after localhost or numbers, info after a name', () => {
+    const local = portWithoutColonRow({ number: '4600', host: 'localhost' }, 'a.ts', 3, 'fetch(x)');
+    expect([local.reason, local.level, local.meta]).toEqual(['address-port-without-colon', undefined, { number: '4600', host: 'localhost' }]);
+    expect(portWithoutColonRow({ number: '3', host: 'worker' }, 'a.ts', 3, 'fetch(x)').level).toBe('info');
   });
 });

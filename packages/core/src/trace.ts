@@ -27,6 +27,7 @@ import {
   type ClassMethod,
 } from './di/member-call.js';
 import { HTTP_METHODS, holeIn, UNREAD_SPAN } from './ids.js';
+import type { Unresolved } from './model/graph.js';
 import { writtenObjectLiteral } from './origin.js';
 import {
   declarationOf,
@@ -617,20 +618,30 @@ export const constantPropertyValue = (
   node: TsNode,
   options: { allowHost?: boolean } = {},
 ): string | null => {
+  const value = constantPropertyOf(node, 'string');
+  // A caller reading the opening of an address may ask for the host too:
+  // where there is no setting behind it, the host written down is the answer.
+  return typeof value === 'string' && (options.allowHost === true || !ABSOLUTE.test(value)) ? value : null;
+};
+
+/**
+ * The one value of a kind a property always holds - its initializer, a
+ * getter's one return, each `this.<name> =` a constructor writes - where
+ * every one of them is that value: the string a field keeps, or the number
+ * (P324).
+ */
+const constantPropertyOf = (node: TsNode, kind: 'string' | 'number'): string | number | null => {
   const access = unwrap(node);
   if (!Node.isPropertyAccessExpression(access)) return null;
   const owner = fieldOwnerOf(access);
   if (owner === undefined) return null;
-  const values = new Set<string>();
+  const values = new Set<string | number>();
   for (const assigned of assignmentsTo(access.getName(), owner)) {
     const value = defaulted(assigned);
-    if (!value.resolved || typeof value.value !== 'string') return null;
-    // A caller reading the opening of an address may ask for the host too:
-    // where there is no setting behind it, the host written down is the answer.
-    if (options.allowHost !== true && ABSOLUTE.test(value.value)) return null;
-    values.add(value.value);
+    if (!value.resolved || typeof value.value !== kind) return null;
+    values.add(value.value as string | number);
   }
-  return values.size === 1 ? (([...values][0] as string) ?? null) : null;
+  return values.size === 1 ? ([...values][0] ?? null) : null;
 };
 
 /**
@@ -2237,6 +2248,79 @@ export const valueAtPort = (value: TsNode, read: SpanReader = writtenSpan): TsNo
 /** `scheme://host:`, and nothing after it: where a port is written next. */
 const PORT_PLACE = /^[a-z][a-z0-9+.-]*:\/\/[^/?#$]+:$/i;
 
+/** Whether text is an address up to its host's port place, `http://localhost:` (P324). */
+export const atPortPlace = (text: string): boolean => PORT_PLACE.test(text);
+
+/** A number written straight after a whole host with no colon before it, and what it is read as (P324). */
+export interface NumberAfterHost {
+  /** The piece of the address that holds it. */
+  readonly piece: TsNode;
+  /** The number, as the address spells it. */
+  readonly number: string;
+  /** The host it is glued to: `localhost` in `localhost4600`. */
+  readonly host: string;
+}
+
+/**
+ * The row said of a request whose address writes a number straight after its
+ * host with no colon (P324), the same from the browser's reader and the
+ * server's. Read as spelled, the address names another host; after
+ * `localhost` or an address of numbers that host cannot be meant, so the row
+ * asks for action, and after any other name it may be a name ending in
+ * digits (`worker3`), so it informs.
+ */
+export const portWithoutColonRow = (glued: Pick<NumberAfterHost, 'number' | 'host'>, file: string, line: number, symbol: string): Unresolved => {
+  const meant = /^(localhost|\d+(\.\d+){3})$/i.test(glued.host);
+  return {
+    file,
+    line,
+    reason: 'address-port-without-colon',
+    ...(meant ? {} : { level: 'info' as const }),
+    message: `The address writes ${glued.number} straight after the host ${glued.host} with no colon before it: it is read as spelled, the host ${glued.host}${glued.number}, which is no port.`,
+    hint: `Write a colon before the port, ${glued.host}:${glued.number}, or hand the port with its colon (':${glued.number}'). If ${glued.host}${glued.number} is the host's name, nothing is wrong.`,
+    symbol: symbol.slice(0, 80),
+    meta: { number: glued.number, host: glued.host },
+  };
+};
+
+/**
+ * A number written straight after a whole host with no colon before it
+ * (P324): `port` in `` `http://localhost${port}/health` `` holding 4600, or
+ * `Ports.catalog` there holding one. The address spells `localhost4600`, a
+ * host of another name, and no port: what is read is what the code spells,
+ * and this says so. `numberOf` reads what a piece holds where it holds a
+ * number - what the callers hand, for a reader that follows them; `read`
+ * reads every other piece as the address itself is read. Nothing where the
+ * value is text (`':4600'`, P312), follows a `:`, a `.` or a `-`, or is
+ * followed by more of the host's name.
+ */
+export const numberAfterHost = (
+  value: TsNode,
+  numberOf: (piece: TsNode) => string | null = writtenNumber,
+  read: SpanReader = writtenSpan,
+): NumberAfterHost | undefined => {
+  const node = deref(value);
+  // Every operand of a `+` chain is a piece of its own here, a number the
+  // evaluator reads too: `'http://localhost' + PORT + '/health'`.
+  const operands = Node.isTemplateExpression(node) ? [] : joinedPieces(node);
+  const items: readonly (string | TsNode)[] = Node.isTemplateExpression(node)
+    ? [node.getHead().getLiteralText(), ...node.getTemplateSpans().flatMap((span) => [span.getExpression(), span.getLiteral().getLiteralText()])]
+    : operands.length < 2 ? [] : operands;
+  const textOf = (item: string | TsNode, before: string): string | undefined =>
+    typeof item === 'string' ? item : spanText(item, read, before === '');
+  let text = '';
+  for (const [index, item] of items.entries()) {
+    if (typeof item !== 'string' && endsAtHost(text)) {
+      const next = items[index + 1];
+      const after = next === undefined ? '' : (textOf(next, text) ?? UNREAD_SPAN);
+      const number = /^($|[/?#])/.test(after) ? numberOf(item) : null;
+      if (number !== null) return { piece: item, number, host: text.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '') };
+    }
+    text += textOf(item, text) ?? UNREAD_SPAN;
+  }
+  return undefined;
+};
+
 /**
  * How a piece of an address the evaluator does not read is read as text:
  * nothing, or the text. `atStart` says the piece opens the address, where a
@@ -2418,7 +2502,13 @@ export const splitAtParameter = (
     }
     // What the evaluator reads, or a constant a class writes down (P318).
     const value = evaluateExpression(span.expression);
-    const written = value.resolved && typeof value.value === 'string' ? value.value : writtenSpan(span.expression, split === undefined && text === '');
+    // A number in the host's port place, or straight after the host, is read
+    // as the address spells it there (P324): never one in the path's place.
+    const written =
+      value.resolved && typeof value.value === 'string'
+        ? value.value
+        : (writtenSpan(span.expression, split === undefined && text === '') ??
+          (split === undefined && (atPortPlace(text) || endsAtHost(text)) ? writtenNumber(span.expression) : null));
     // A value nobody read straight after the host, a path after it, is the
     // opening of the path unless it is the host's port or the rest of its
     // name (P312): the host is the text before it.
@@ -2917,6 +3007,12 @@ export const isReadable = (value: TsNode): boolean => {
  * at run time is a hole, and saying otherwise would invent a route.
  */
 export const constantMethodResult = (node: TsNode): string | null => {
+  const value = constantMethodOf(node, 'string');
+  return typeof value === 'string' ? value : null;
+};
+
+/** The one value of a kind `this.<method>()` always answers with: a string, or a number (P324). */
+const constantMethodOf = (node: TsNode, kind: 'string' | 'number'): string | number | null => {
   const call = unwrap(node);
   if (!Node.isCallExpression(call) || call.getArguments().length > 0) return null;
   const callee = call.getExpression();
@@ -2929,15 +3025,31 @@ export const constantMethodResult = (node: TsNode): string | null => {
     const answers = answersOf(method, true);
     if (answers.length === 0) continue;
 
-    const values = new Set<string>();
+    const values = new Set<string | number>();
     for (const expression of answers) {
       const value = evaluateExpression(expression);
-      if (!value.resolved || typeof value.value !== 'string') return null;
-      values.add(value.value);
+      if (!value.resolved || typeof value.value !== kind) return null;
+      values.add(value.value as string | number);
     }
     return values.size === 1 ? [...values][0]! : null;
   }
   return null;
+};
+
+/**
+ * A number a piece of an address is (P324): what the evaluator reads -
+ * `4600`, `const PORT = 4600` - or a number a class writes down: a field
+ * that always holds one (`static port = 4700`, `this.port = 4700`), a getter
+ * that always answers one, `this.port()` that always answers one. Read only
+ * where a number has a place of its own in an address - the host's port
+ * place, or straight after a whole host - never as a value of the path's,
+ * which a route parameter takes.
+ */
+export const writtenNumber = (piece: TsNode): string | null => {
+  const value = evaluateExpression(piece);
+  if (value.resolved) return typeof value.value === 'number' ? String(value.value) : null;
+  const kept = constantMethodOf(piece, 'number') ?? constantPropertyOf(piece, 'number');
+  return typeof kept === 'number' ? String(kept) : null;
 };
 
 /**

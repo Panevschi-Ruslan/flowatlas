@@ -717,6 +717,26 @@ describe('callers held by a const, and ports they hand (P318)', () => {
   });
 });
 
+describe('ports a class keeps, and a number with no colon (P324)', () => {
+  it('reads a number a class or a module keeps in a port place, handed or written there, and a number glued to the host as spelled, with a row', async () => {
+    const graph = await graphOf('ports-kept-receivers-in-fields/jobs');
+    const owners = new Map(graph.edges.filter((edge) => edge.type === 'calls').map((edge) => [edge.to, edge.from.replace(/^.*:/, '')]));
+    const requests = graph.nodes
+      .filter((node) => node.type === 'http_out')
+      .map((node) => `${owners.get(node.id) ?? '?'} ${String(node.meta?.['host'])} ${String(node.meta?.['path'])}`);
+    expect(requests.sort()).toEqual([
+      'catalogHealth localhost:4600 /health',
+      'catalogHealthAgain localhost:4600 /health',
+      'probeCatalog localhost4600 /health',
+      'stockHealth localhost:4700 /health',
+      'stockLevels localhost:4700 /levels',
+    ]);
+    const rows = graph.unresolved.filter((row) => row.reason === 'address-port-without-colon');
+    expect(rows.map((row) => [row.line, row.meta?.['host'], row.meta?.['number']])).toEqual([[40, 'localhost', '4600']]);
+    expect(graph.unresolved.filter((row) => row.reason === 'dynamic-http-url')).toEqual([]);
+  });
+});
+
 describe("a server's own requests with no host (P263)", () => {
   it("reads Nitro's $fetch as a call its routes answer in process, and the platform fetch and ofetch as having no origin", async () => {
     const graph = await graphOf('own-origin-requests/shop');

@@ -1,4 +1,18 @@
-import { choosesASegment, constantPropertyValue, continuesHost, endsAtHost, holeIn, normalizePath, PARAM_PLACEHOLDER, UNREAD_SPAN, writtenSpan } from '@flowatlas/core';
+import {
+  atPortPlace,
+  choosesASegment,
+  constantPropertyValue,
+  continuesHost,
+  endsAtHost,
+  holeIn,
+  normalizePath,
+  numberAfterHost,
+  PARAM_PLACEHOLDER,
+  UNREAD_SPAN,
+  writtenNumber,
+  writtenSpan,
+  type NumberAfterHost,
+} from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { evaluateExpression } from '@flowatlas/extractor-nestjs';
@@ -26,6 +40,11 @@ export interface UrlInfo {
   baseUrlEither?: readonly string[];
   /** Host, when the address names one outright. */
   host: string | null;
+  /**
+   * A number written straight after the host with no colon before it, read
+   * as the address spells it - `localhost4600`, no port (P324).
+   */
+  portWithoutColon?: Pick<NumberAfterHost, 'number' | 'host'>;
 }
 
 /** The setting an address is rooted at, with what the code falls back to and the settings read after it. */
@@ -89,6 +108,14 @@ const holeAfterHost = (before: string, after: string, expression: TsNode): strin
  * computed address is reported rather than guessed at.
  */
 export const analyzeUrl = (node: TsNode, options: { readonly whole?: boolean } = {}): UrlInfo => {
+  const info = readUrl(node, options);
+  // A number written straight after the host with no colon (P324): the
+  // address as it spells it, which is said.
+  const glued = info.host === null ? undefined : numberAfterHost(node);
+  return glued === undefined ? info : { ...info, portWithoutColon: { number: glued.number, host: glued.host } };
+};
+
+const readUrl = (node: TsNode, options: { readonly whole?: boolean }): UrlInfo => {
   // An address is often given a name before it is used; the name is not the
   // address, so follow it to what it was given.
   const argument = deref(node);
@@ -155,10 +182,14 @@ export const analyzeUrl = (node: TsNode, options: { readonly whole?: boolean } =
     if (span === undefined) continue;
     const value = evaluateExpression(span.getExpression());
     const text = span.getLiteral().getLiteralText();
+    // A number in the host's port place, or straight after the whole host,
+    // is read as the address spells it (P324); in the path's place it is a
+    // value a route parameter takes.
     const read =
       value.resolved && typeof value.value === 'string'
         ? value.value
-        : constantPropertyValue(span.getExpression(), { allowHost: index === 0 && rest === '' });
+        : (constantPropertyValue(span.getExpression(), { allowHost: index === 0 && rest === '' }) ??
+          (atPortPlace(rest) || endsAtHost(rest) ? writtenNumber(span.getExpression()) : null));
     // A hole that fills a segment is a route parameter; one that could run over
     // a separator is a hole in what was read, and the address it sits in matches
     // no route at all. Both used to become `:param`, which is how an address
@@ -269,8 +300,9 @@ const HOST_OPEN = /^([a-z][a-z0-9+.-]*:\/\/)([^/?#]*)$/i;
  * `Ports.stock`, read as a span written in place is.
  */
 const handedText = (info: UrlInfo, argument: TsNode | undefined): string | null => {
-  const handed = argument === undefined ? undefined : evaluateExpression(argument);
-  if (handed?.resolved === true && typeof handed.value === 'number') return String(handed.value);
+  // A number, written or kept by a class, `Ports.stock` (P324).
+  const number = argument === undefined ? null : writtenNumber(argument);
+  if (number !== null) return number;
   if (info.url !== null) return info.baseUrlEnv === null ? info.url : null;
   return argument === undefined ? null : writtenSpan(argument, false);
 };
@@ -318,15 +350,19 @@ export const composeAddress = (info: UrlInfo, split?: SplitAddress, argument?: T
     const hostAfter = /^[^/?#]*/.exec(split.after)?.[0] ?? '';
     const whole = written !== '' && !/[:.-]$/.test(written) && hostAfter === '';
     const text = handedText(info, argument);
+    // Digits straight after the whole host, no colon (P324): the address as
+    // it spells it, `localhost4600`, which is no port and is said.
+    const glued = whole && text !== null && /^\d+$/.test(text);
     const fits =
       text !== null &&
-      (whole ? /^(:\d+|[.-][a-z0-9.-]*)$/i.test(text) : written.endsWith(':') ? /^\d+$/.test(text) : /^[a-z0-9.-]+$/i.test(text));
+      (glued || (whole ? /^(:\d+|[.-][a-z0-9.-]*)$/i.test(text) : written.endsWith(':') ? /^\d+$/.test(text) : /^[a-z0-9.-]+$/i.test(text)));
     if (fits) {
       return {
         url: `${scheme}${written}${text}${split.after}`,
         path: routePathOf(split.after.slice(hostAfter.length)),
         baseUrlEnv: null,
         host: `${written}${text}${hostAfter}`.toLowerCase(),
+        ...(glued ? { portWithoutColon: { number: text, host: written.toLowerCase() } } : {}),
       };
     }
     if (!whole) return EMPTY;
