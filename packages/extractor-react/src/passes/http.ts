@@ -978,13 +978,15 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     // an object handed in: what each is handed along these calls (P324).
     const handed = Node.isPropertyAccessExpression(callee) ? valuesAlong(callee.getExpression(), request.calls) : undefined;
     const along = (handed ?? []).flatMap((each) => instancesHeld(each));
-    const held = along.length > 0 ? along : (heldAtCallers(found, request) ?? []);
+    const said: { framework?: string } = {};
+    const held = along.length > 0 ? along : (heldAtCallers(found, request, said) ?? []);
     if (held.length > 0) {
       recordHeld(found, request, request.through ?? '', held);
       return;
     }
     const { held: all, ...rest } = found;
-    reportBasesDisagree(found, (all ?? []).map((each) => each.instance), 'along the callers its address is read at');
+    const where = said.framework === undefined ? 'along the callers its address is read at' : `in a method ${said.framework} calls, on an instance no code read hands it`;
+    reportBasesDisagree(found, (all ?? []).map((each) => each.instance), where);
     record(rest, request);
   };
 
@@ -1008,11 +1010,16 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    * outermost caller followed. Nothing where a step has no caller or reads a
    * value it cannot follow (see {@link placedOut}).
    */
-  const heldAtCallers = (found: FoundCall, request: ReadRequest): FoundCall['held'] | undefined => {
+  const heldAtCallers = (found: FoundCall, request: ReadRequest, said?: { framework?: string }): FoundCall['held'] | undefined => {
     const callee = found.call.getExpression();
     if (!Node.isPropertyAccessExpression(callee)) return undefined;
-    const placed = placedOut(callee.getExpression(), request.calls);
-    if (placed === undefined) return undefined;
+    // A method no code read calls, that a framework does on an instance no code read hands it, is said (P336).
+    const stopped: { framework?: string } = {};
+    const placed = placedOut(callee.getExpression(), request.calls, stopped);
+    if (placed === undefined) {
+      if (said !== undefined && stopped.framework !== undefined) said.framework = stopped.framework;
+      return undefined;
+    }
     const held: NonNullable<FoundCall['held']>[number][] = [];
     for (const { value, at } of placed) {
       if (holdsNothing(value)) continue;
@@ -1022,6 +1029,24 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       held.push(...each);
     }
     return held.length > 0 ? held : undefined;
+  };
+
+  /**
+   * A request on instances with different bases in a method a framework
+   * calls (P336), on an instance it holds that no code read hands it - one it
+   * makes itself, through its injector or its renderer: which base is the
+   * request's is not told, so it is placed at each function that makes an
+   * instance (P312), which is said once at the request.
+   */
+  const reportFrameworkHeld = (found: FoundCall, framework: string): void => {
+    const at = siteOf(found.call);
+    ctx.report({
+      file: ctx.fileOf(found.call),
+      line: at.line,
+      reason: 'api-client-base-unread',
+      hint: `The receiver is handed ${found.client.name} instances made with different bases, and the method the request is made in is called by ${framework}, on an instance no code read hands it, so the request is placed at each function that makes an instance. Register the instance where the code makes it, or write one base.`,
+      symbol: found.call.getText().slice(0, 80),
+    });
   };
 
   /** Instances with different bases handed where no one caller can carry each, said once at the request. */
@@ -1296,7 +1321,12 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
           // calls it on (P324), followed out to whoever hands that one
           // (P330): the request is the callers', not whoever else makes an
           // instance. Where they are not all read, each maker's (P312).
-          recordHeld(call, request, indexed.name, heldAtCallers(call, request));
+          // A method a framework calls is placed at the instance it holds,
+          // where one is registered with it, and is said where none is (P336).
+          const said: { framework?: string } = {};
+          const held = heldAtCallers(call, request, said);
+          if (held === undefined && said.framework !== undefined) reportFrameworkHeld(call, said.framework);
+          recordHeld(call, request, indexed.name, held);
           continue;
         }
         if (call.held !== undefined) {

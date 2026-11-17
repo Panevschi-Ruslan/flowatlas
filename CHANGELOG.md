@@ -327,6 +327,33 @@ only one of them moved.
   read it lands there as a guess (`query: 'guess'`, heuristic) beside the
   row naming the address under it; after a `/` (`` `/portal/${href}` ``)
   it is the row alone.
+- **Methods called on untyped receivers, requests in methods a framework
+  calls, fields written from outside the class or through super, and
+  resource names from unset context (P336).** In plain JavaScript a method
+  called on a receiver the checker types as nothing (`function
+  check(reader) { return reader.health(); }`) is now a call of the method
+  wherever what the receiver may hold - followed through names, what each
+  caller hands a parameter and what a class writes into a field of `this`,
+  a bounded walk - is an instance of its class or the object it is written
+  in; it runs the method where every value is one, so the address and the
+  instance are followed out through it as the TypeScript shape is. A
+  request on instances with different bases in a method no code read calls
+  but a framework does - a method a package's decorator marks, a lifecycle
+  method of a React, Preact, Lit, Angular or NestJS class, a custom
+  element's `connectedCallback` - is placed at the instance handed to what
+  registers it (`document.body.appendChild(feed)`, `app.register(new
+  Poller(api))`, a provider's `useValue`), not at every function that makes
+  one; where none is read, each maker keeps it, with an
+  `api-client-base-unread` row saying the framework calls the method.
+  `mailer.queue = ...` and `Object.assign(mailer, { queue })` on an
+  instance outside its class now count as values the field may hold, and a
+  constructor's `Object.assign(this, options)` in a class others extend is
+  followed down each `super(options)` to what that class's own `new` hands
+  it. A `tryGetContext` value no file sets written in a record handed to a
+  library construct (`new sqs.Queue(this, 'Q', { queueName: ctx })`) is a
+  name chosen when the app is synthesized, unread with the reason
+  `context`, rather than a generated name; a stage name and a stack's
+  region keep P298's reading.
 - **Settings chosen by a branch, and read inside a function handed nothing
   (P302).** A condition nobody settles whose branches read different
   settings, `isProd ? process.env.API_URL : process.env.DEV_API_URL`, written

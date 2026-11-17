@@ -1,5 +1,5 @@
-import { argumentAlong, callSitesOf, handedByEachCall } from '@flowatlas/core';
-import type { CallExpression, ClassDeclaration, NewExpression, Node as TsNode, ParameterDeclaration } from 'ts-morph';
+import { argumentAlong, callSitesOf, decoratorModule, handedByEachCall } from '@flowatlas/core';
+import type { CallExpression, ClassDeclaration, MethodDeclaration, NewExpression, Node as TsNode, ParameterDeclaration, PropertyDeclaration } from 'ts-morph';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 
 /**
@@ -421,6 +421,144 @@ const methodOfThis = (node: TsNode): TsNode | undefined => {
   return undefined;
 };
 
+/**
+ * The methods a framework calls on an instance it holds, by the module the
+ * class's base or a decorator of the class is taken from (P336): React's and
+ * Preact's class components, Lit's elements, Angular's and NestJS's
+ * lifecycle hooks.
+ */
+const LIFECYCLES: readonly { readonly module: RegExp; readonly methods: ReadonlySet<string> }[] = [
+  {
+    module: /^(react|preact|preact\/compat)$/,
+    methods: new Set(['componentDidMount', 'componentDidUpdate', 'componentWillUnmount', 'shouldComponentUpdate', 'getSnapshotBeforeUpdate', 'componentDidCatch', 'render', 'UNSAFE_componentWillMount', 'UNSAFE_componentWillReceiveProps', 'UNSAFE_componentWillUpdate', 'componentWillMount', 'componentWillReceiveProps', 'componentWillUpdate']),
+  },
+  { module: /^(lit|lit-element)(\/|$)/, methods: new Set(['connectedCallback', 'disconnectedCallback', 'attributeChangedCallback', 'adoptedCallback', 'firstUpdated', 'updated', 'willUpdate', 'render']) },
+  { module: /^@angular\/core$/, methods: new Set(['ngOnInit', 'ngOnChanges', 'ngDoCheck', 'ngAfterContentInit', 'ngAfterContentChecked', 'ngAfterViewInit', 'ngAfterViewChecked', 'ngOnDestroy']) },
+  { module: /^@nestjs\/common$/, methods: new Set(['onModuleInit', 'onApplicationBootstrap', 'onModuleDestroy', 'beforeApplicationShutdown', 'onApplicationShutdown']) },
+];
+
+/** What the browser calls on a custom element it holds, a class extending `HTMLElement` (P336). */
+const ELEMENT_CALLBACKS: ReadonlySet<string> = new Set(['connectedCallback', 'disconnectedCallback', 'attributeChangedCallback', 'adoptedCallback']);
+
+/** Whether a module is a package's rather than a file of this repository's. */
+const isPackage = (module: string | undefined): module is string => module !== undefined && !module.startsWith('.') && !module.startsWith('/');
+
+/** The module a name is imported from, by `import` or by `require` (P336). */
+const importedFrom = (name: TsNode): string | undefined => {
+  const root = Node.isPropertyAccessExpression(name) ? unwrap(name.getExpression()) : name;
+  const declaration = Node.isIdentifier(root) ? root.getSymbol()?.getDeclarations()[0] : undefined;
+  if (declaration === undefined) return undefined;
+  if (Node.isImportSpecifier(declaration)) return declaration.getImportDeclaration().getModuleSpecifierValue();
+  if (Node.isImportClause(declaration) || Node.isNamespaceImport(declaration)) return declaration.getFirstAncestorByKind(SyntaxKind.ImportDeclaration)?.getModuleSpecifierValue();
+  const variable = Node.isBindingElement(declaration) ? declaration.getFirstAncestorByKind(SyntaxKind.VariableDeclaration) : declaration;
+  const written = variable !== undefined && Node.isVariableDeclaration(variable) ? variable.getInitializer() : undefined;
+  if (written === undefined || !Node.isCallExpression(written) || written.getExpression().getText() !== 'require') return undefined;
+  const [module] = written.getArguments();
+  return module !== undefined && Node.isStringLiteral(module) ? module.getLiteralText() : undefined;
+};
+
+/** The class a method is a member of, and each class it extends, as far as this program declares them. */
+const lineageOf = (method: MethodDeclaration | PropertyDeclaration): (ClassDeclaration | TsNode)[] => {
+  const out: TsNode[] = [];
+  let current: TsNode | undefined = method.getParent();
+  for (let depth = 0; depth < DEPTH && current !== undefined && (Node.isClassDeclaration(current) || Node.isClassExpression(current)); depth += 1) {
+    out.push(current);
+    current = current.getBaseClass();
+  }
+  return out;
+};
+
+/**
+ * Whether a framework calls a method no code read calls (P336), and which:
+ * a method a decorator of a package marks (a handler the framework registers
+ * by it), a lifecycle method of a class whose base or class decorator is
+ * taken from a framework that calls it (see {@link LIFECYCLES}), or a custom
+ * element's callback on a class extending `HTMLElement`. What is said of it,
+ * for a person; `undefined` where none of these is.
+ */
+export const frameworkCaller = (method: MethodDeclaration | PropertyDeclaration): string | undefined => {
+  const name = method.getName();
+  for (const decorator of method.getDecorators()) {
+    const module = decoratorModule(decorator);
+    if (isPackage(module)) return `${module}, by its @${decorator.getName()}`;
+  }
+  for (const cls of lineageOf(method)) {
+    if (!Node.isClassDeclaration(cls) && !Node.isClassExpression(cls)) continue;
+    const base = cls.getExtends()?.getExpression();
+    const modules = [...(base === undefined ? [] : [importedFrom(base)]), ...cls.getDecorators().map((each) => decoratorModule(each))];
+    for (const module of modules) {
+      if (!isPackage(module)) continue;
+      if (LIFECYCLES.some((each) => each.module.test(module) && each.methods.has(name))) return `${module}, as ${name}`;
+    }
+    if (base !== undefined && base.getText() === 'HTMLElement' && ELEMENT_CALLBACKS.has(name)) return `the browser, as ${name} of a custom element`;
+  }
+  return undefined;
+};
+
+/** How many names a `new` is followed through to where it is handed on (P336). */
+const MOST_HANDED_STEPS = 6;
+
+/**
+ * Whether an instance is handed to what holds it for the framework (P336):
+ * written - in a list, a record, a function answering it, a `const` - into
+ * an argument of a call to what this program does not declare (a module's
+ * `register(new Poller(api))`, a provider's `useValue`, `useFactory`) or of
+ * a decorator.
+ */
+const handedToFramework = (made: TsNode): boolean => {
+  const queue: TsNode[] = [made];
+  for (let steps = 0; queue.length > 0 && steps < MOST_HANDED_STEPS; steps += 1) {
+    let node = queue.shift() as TsNode;
+    for (let up = 0; up < MOST_HANDED_STEPS; up += 1) {
+      const parent = node.getParent();
+      if (parent === undefined) break;
+      if (Node.isParenthesizedExpression(parent) || Node.isAsExpression(parent) || Node.isArrayLiteralExpression(parent) || Node.isSatisfiesExpression(parent)) {
+        node = parent;
+        continue;
+      }
+      if (Node.isPropertyAssignment(parent) && parent.getInitializer() === node) {
+        node = parent.getParentOrThrow();
+        continue;
+      }
+      if (Node.isArrowFunction(parent) && parent.getBody() === node) {
+        node = parent;
+        continue;
+      }
+      if (Node.isReturnStatement(parent)) {
+        const fn = parent.getFirstAncestor((each) => Node.isArrowFunction(each) || Node.isFunctionExpression(each));
+        if (fn === undefined) break;
+        node = fn;
+        continue;
+      }
+      if (Node.isDecorator(parent)) return true;
+      if (Node.isCallExpression(parent) && parent.getArguments().includes(node)) {
+        if (Node.isDecorator(parent.getParent())) return true;
+        const callee = unwrap(parent.getExpression());
+        const named = Node.isPropertyAccessExpression(callee) ? callee.getNameNode() : callee;
+        const declarations = named.getSymbol()?.getDeclarations() ?? [];
+        return declarations.every((each) => each.getSourceFile().isInNodeModules() || each.getSourceFile().isDeclarationFile());
+      }
+      if (Node.isVariableDeclaration(parent) && parent.getInitializer() === node) {
+        const variable = parent.getNameNode();
+        if (Node.isIdentifier(variable)) for (const reference of variable.findReferencesAsNodes()) if (reference !== variable) queue.push(reference);
+      }
+      break;
+    }
+  }
+  return false;
+};
+
+/**
+ * The instances of a method's class a framework holds (P336): each `new` of
+ * the class, or of one extending it, that is handed to what registers it
+ * for the framework (see {@link handedToFramework}).
+ */
+export const frameworkInstances = (method: MethodDeclaration | PropertyDeclaration): NewExpression[] => {
+  const owner = method.getParent();
+  if (owner === undefined || !Node.isClassDeclaration(owner)) return [];
+  return [owner, ...owner.getDerivedClasses()].flatMap((cls) => constructions(cls)).filter(handedToFramework);
+};
+
 /** Each placed value of each of several, or nothing where any one is not followed. */
 const everyPlaced = <T>(items: readonly T[], each: (item: T) => Placed[] | undefined): Placed[] | undefined => {
   const placed: Placed[] = [];
@@ -445,7 +583,7 @@ const everyPlaced = <T>(items: readonly T[], each: (item: T) => Placed[] | undef
  * `check(new Reader(stockApi))` places `stockApi` at that call. Nothing where
  * a step finds no caller or a value it cannot follow.
  */
-export const placedOut = (receiver: TsNode, calls: readonly CallExpression[] = []): Placed[] | undefined => {
+export const placedOut = (receiver: TsNode, calls: readonly CallExpression[] = [], stopped?: { framework?: string }): Placed[] | undefined => {
   // Every step taken, bounded, so a method many callers reach is not read out of hand.
   let steps = 0;
   const out = (value: TsNode, hops: readonly CallExpression[], at: TsNode, depth: number): Placed[] | undefined => {
@@ -459,7 +597,17 @@ export const placedOut = (receiver: TsNode, calls: readonly CallExpression[] = [
       const method = methodOfThis(target);
       if (method === undefined || !(Node.isMethodDeclaration(method) || Node.isPropertyDeclaration(method))) return undefined;
       const sites = callSitesOf(method);
-      if (sites.length === 0) return undefined;
+      if (sites.length === 0) {
+        // No code read calls it: the framework that does, on the instance it holds (P336).
+        const framework = frameworkCaller(method);
+        if (framework === undefined) return undefined;
+        const held = frameworkInstances(method);
+        if (held.length === 0) {
+          if (stopped !== undefined) stopped.framework = framework;
+          return undefined;
+        }
+        return everyPlaced(held, (made) => out(made, [], made, depth + 1));
+      }
       return everyPlaced(sites, (site) => {
         const called = site.getExpression();
         return Node.isPropertyAccessExpression(called) ? out(called.getExpression(), [], called.getExpression(), depth + 1) : undefined;

@@ -357,6 +357,22 @@ describe("a grant of a bus, a table or a stream to a role that takes nothing, by
     expect(environment['REGION']).toMatchObject({ text: 'eu-west-1' });
   });
 
+  it('reads a resource name a context value no file sets gives as chosen when the app is run, at any depth of the record, and keeps a stage chosen as before (P336)', () => {
+    const deployment = stack(`${FN}
+    const restock = new sqs.Queue(this, 'Restock', { queueName: this.node.tryGetContext('restockQueue') });
+    const props = { topicName: this.node.tryGetContext('notices') };
+    const notices = new sns.Topic(this, 'Notices', props);
+    restock.grantSendMessages(move);
+    notices.grantPublish(move);`);
+    expect(grantsOf(deployment)).toEqual([
+      'queue open: the context value restockQueue, which no file sets: the deployment gives it when the app is synthesized (-c restockQueue=...) or leaves it out grantSendMessages',
+      'topic open: the context value notices, which no file sets: the deployment gives it when the app is synthesized (-c notices=...) or leaves it out grantPublish',
+    ]);
+    const set = stack(`${FN}
+    new sqs.Queue(this, 'Restock', { queueName: this.node.tryGetContext('restockQueue') }).grantSendMessages(move);`, { 'cdk.json': JSON.stringify({ app: 'npx ts-node bin/app.ts', context: { restockQueue: 'stock-restock' } }) });
+    expect(grantsOf(set)).toEqual(['queue stock-restock grantSendMessages']);
+  });
+
   it("puts a grant on the resource for a role asking for it in the stack's own account, and takes a role of another account than its stack's as one that takes nothing", () => {
     const same = stack(`const here = new cdk.Stack(scope, 'Here', { env: { account: '111122223333' } });
     const role = iam.Role.fromRoleArn(here, 'MoveRole', 'arn:aws:iam::111122223333:role/stock-mover', { mutable: false, addGrantsToResources: true });

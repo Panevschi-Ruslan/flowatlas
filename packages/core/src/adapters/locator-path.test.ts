@@ -430,6 +430,39 @@ class Mailer extends Base { open() { this.queue = new Queue('other'); } send(job
     expect(read("class Queues { static mail = new Queue('mail'); }\nObject.assign(Queues.mail, { mail: 1 });\nexport const welcome = () => Queues.mail.add('welcome');")).toEqual(["'mail'"]);
   });
 
+  it('follows a constructor\'s Object.assign source of a class others extend down each super call to what its own new hands (P336)', () => {
+    const MADE: NameLocator = { kind: 'receiver-constructed-path', class: 'Queue', path: [] };
+    const base = "class Mailer { queue!: Queue; constructor(options: { queue: Queue }) { Object.assign(this, options); } send(job: string) { return this.queue.add(job); } }";
+    const read = (rest: string): (string | undefined)[] => slots(callTo(parse(`${base}\n${rest}`), 'add'), MADE);
+    // A subclass handing on what its own new hands it.
+    expect(read("class Urgent extends Mailer { constructor(options: { queue: Queue }) { super(options); } }\nnew Urgent({ queue: new Queue('urgent') });")).toEqual(["'urgent'"]);
+    // A subclass handing a record of its own.
+    expect(read("class Urgent extends Mailer { constructor() { super({ queue: new Queue('urgent') }); } }\nnew Urgent();")).toEqual(["'urgent'"]);
+    // A subclass with no constructor is built with its base's: its new hands it.
+    expect(read("class Urgent extends Mailer {}\nnew Urgent({ queue: new Queue('urgent') });")).toEqual(["'urgent'"]);
+    // The base's own new and a subclass's super hand two values: either.
+    expect(read("class Urgent extends Mailer { constructor() { super({ queue: new Queue('urgent') }); } }\nnew Urgent();\nnew Mailer({ queue: new Queue('plain') });")).toEqual(['stopped at this.queue']);
+    // A super call handed what is not read is a write not read.
+    expect(read('class Urgent extends Mailer { constructor(...rest: any[]) { super(...(rest as [any])); } }\nnew Urgent();')).toEqual(['stopped at this.queue']);
+  });
+
+  it('counts a write of an instance\'s field from outside its class, plain or by Object.assign, as one the field may be given (P336)', () => {
+    const MADE: NameLocator = { kind: 'receiver-constructed-path', class: 'Queue', path: [] };
+    const base = 'class Mailer { queue?: Queue; send(job: string) { return this.queue.add(job); } }';
+    const read = (rest: string): (string | undefined)[] => slots(callTo(parse(`${base}\n${rest}`), 'add'), MADE);
+    expect(read("const mailer = new Mailer();\nmailer.queue = new Queue('outside');")).toEqual(["'outside'"]);
+    expect(read("const mailer = new Mailer();\nObject.assign(mailer, { queue: new Queue('assigned') });")).toEqual(["'assigned'"]);
+    expect(read("export const setup = (mailer: Mailer) => Object.assign(mailer, { queue: new Queue('assigned') });")).toEqual(["'assigned'"]);
+    // Another key, and a record not read.
+    const based = (rest: string): (string | undefined)[] => slots(callTo(parse(`class Mailer { queue = new Queue('base'); send(job: string) { return this.queue.add(job); } }\n${rest}`), 'add'), MADE);
+    expect(based("const mailer = new Mailer();\nObject.assign(mailer, { other: 1 });")).toEqual(["'base'"]);
+    expect(read('const mailer = new Mailer();\nObject.assign(mailer, JSON.parse(text));')).toEqual(['stopped at this.queue']);
+    // Beside a value the class gives it: either.
+    expect(slots(callTo(parse("class Mailer { queue = new Queue('base'); send(job: string) { return this.queue.add(job); } }\nconst mailer = new Mailer();\nObject.assign(mailer, { queue: new Queue('assigned') });"), 'add'), MADE)).toEqual(['stopped at this.queue']);
+    // An instance of another class is not this one.
+    expect(based("class Other { queue?: Queue; }\nconst other = new Other();\nObject.assign(other, { queue: new Queue('other') });\nother.queue = new Queue('other');")).toEqual(["'base'"]);
+  });
+
   it('reads a read through a name that may stand for two classes as either class\'s own field, saying which (P332)', () => {
     const MADE: NameLocator = { kind: 'receiver-constructed-path', class: 'Queue', path: [] };
     const read = (extra: string): { text?: string; heldIn?: string }[] => {

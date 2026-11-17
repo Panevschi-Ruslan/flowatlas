@@ -4,6 +4,7 @@ import { UNREAD_SPAN } from './ids.js';
 import { resolveStaticString, settingKeyIn } from './static-string.js';
 import {
   callSitesOf,
+  dispatchOf,
   constantMethodResult,
   constantPropertyValue,
   forwardedFrom,
@@ -810,6 +811,48 @@ describe('a member a wrapper takes out of the object it is handed', () => {
   it('is a member only of a parameter, not of a value destructured anywhere else', () => {
     const file = parse(`const { url } = { url: '/x' }; export const u = url;`);
     expect(memberBehind(file.getDescendantsOfKind(SyntaxKind.Identifier).at(-1)!)).toBeUndefined();
+  });
+});
+
+describe('a method called through a receiver the checker types as nothing (P336)', () => {
+  /** The calls `callSitesOf` finds of `health` of the class or object named, as the text of each, with how each dispatches. */
+  const sitesOf = (source: string, owner: string): string[] => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true, checkJs: false } });
+    const file = project.createSourceFile('a.js', source);
+    const holder = file.getClass(owner) ?? file.getVariableDeclarationOrThrow(owner).getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+    const method = holder.getDescendantsOfKind(SyntaxKind.MethodDeclaration).find((each) => each.getName() === 'health');
+    if (method === undefined) throw new Error('no health');
+    return callSitesOf(method)
+      .map((call) => `${call.getText()} ${dispatchOf(call, method)}`)
+      .sort();
+  };
+
+  const SOURCE = [
+    'class Reader { health() { return 1; } }',
+    'class Fast extends Reader {}',
+    'class Other { health() { return 2; } }',
+    'function check(reader) { return reader.health(); }',
+    'function either(probe) { return probe.health(); }',
+    'function none(thing) { return thing.health(); }',
+    'check(new Reader());',
+    'check(new Fast());',
+    'either(new Reader());',
+    'either(new Other());',
+    'none(new Other());',
+    'class Board { constructor(reader) { this.reader = reader; } show() { return this.reader.health(); } }',
+    'new Board(new Reader());',
+    'const loose = { health() { return 3; } };',
+    'function poll(target) { return target.health(); }',
+    'poll(loose);',
+  ].join('\n');
+
+  it('finds the calls whose receiver is handed an instance of the class, running it where every value is one', () => {
+    expect(sitesOf(SOURCE, 'Reader')).toEqual(['probe.health() undecided', 'reader.health() runs', 'this.reader.health() runs']);
+  });
+
+  it('leaves out a call handed only instances of another class, and finds a call on an object written in place', () => {
+    expect(sitesOf(SOURCE, 'Other')).toEqual(['probe.health() undecided', 'thing.health() runs']);
+    expect(sitesOf(SOURCE, 'loose')).toEqual(['target.health() runs']);
   });
 });
 

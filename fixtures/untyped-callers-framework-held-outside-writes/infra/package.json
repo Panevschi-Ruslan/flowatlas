@@ -1,0 +1,11 @@
+{
+  "name": "infra",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A restock queue named by a context value the deployment gives when the app is synthesized, and a function granted to send to it.",
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.700.0",
+    "aws-cdk-lib": "^2.150.0",
+    "constructs": "^10.4.0"
+  }
+}

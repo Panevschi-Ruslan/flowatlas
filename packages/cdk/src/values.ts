@@ -65,7 +65,46 @@ export const unsetContext = (key: string): Unread =>
  * plain value, and one no file sets a value not read rather than nothing,
  * so what it is handed to reads as chosen when the app is run.
  */
-export const handedOn = (value: Value): Value => (value instanceof Chosen && value.value === undefined ? unsetContext(value.key) : settle(value));
+export const handedOn = (value: Value): Value => (value instanceof Chosen && value.value === undefined ? unsetContext(value.key) : value instanceof ObjectValue ? handedRecord(value) : settle(value));
+
+/**
+ * The keys of a record whose context value P298 keeps as chosen when no file
+ * sets it - the stage an API is deployed to and the region of a stack's
+ * `env` - read where the record is used as the default with the key
+ * remembered, so they are left as they are (P336).
+ */
+const CHOSEN_KEYS: ReadonlySet<string> = new Set(['stageName', 'region']);
+
+/** How many records within records are followed for an unset context value. */
+const MOST_NESTED_RECORDS = 8;
+
+/**
+ * A record as it is handed to what is not the app's own (P336): each entry
+ * a context value no file sets gave, at any depth, a value not read with the
+ * reason `context` - `new sqs.Queue(this, 'Q', { queueName: ctx })` names a
+ * queue the run chooses, not one generated - but a stage and a region,
+ * which keep P298's memory. The record itself where it holds none.
+ */
+const handedRecord = (record: ObjectValue, depth = 0): ObjectValue => {
+  if (depth > MOST_NESTED_RECORDS) return record;
+  let copy: ObjectValue | undefined;
+  for (const [name, value] of record.entries) {
+    const key = record.chosen.get(name);
+    const handed = key !== undefined && value === undefined && !CHOSEN_KEYS.has(name) ? unsetContext(key) : value instanceof ObjectValue ? handedRecord(value, depth + 1) : value;
+    if (handed === value) continue;
+    copy ??= copyOf(record);
+    copy.entries.set(name, handed);
+    copy.chosen.delete(name);
+  }
+  return copy ?? record;
+};
+
+/** A record with the same entries and the same context keys remembered. */
+const copyOf = (record: ObjectValue): ObjectValue => {
+  const copy = new ObjectValue(record.entries);
+  for (const [name, key] of record.chosen) copy.chosen.set(name, key);
+  return copy;
+};
 
 /** A value the files do not settle, and why, in one sentence. */
 export class Unread {

@@ -454,6 +454,79 @@ describe('plain browser code (P284)', () => {
     expect(graph.unresolved.filter((row) => row.reason === 'api-client-base-unread')).toEqual([]);
   });
 
+  it('finds a method called on an untyped parameter or field in plain JavaScript by what its callers hand it, and follows the instance out through it (P336)', () => {
+    const graph = read({
+      '/js/api.js': [
+        "import axios from 'axios';",
+        "const catalogApi = axios.create({ baseURL: 'http://localhost:4600' });",
+        "const stockApi = axios.create({ baseURL: 'http://localhost:4700' });",
+        'class Reader {',
+        '  constructor(api) { this.api = api; }',
+        '  read(path) { return this.api.get(path); }',
+        "  health() { return this.read('/health'); }",
+        '}',
+        // A parameter the instance is handed in, with no type.
+        'function check(reader) { return reader.health(); }',
+        'function one() { return check(new Reader(catalogApi)); }',
+        'function two() { const reader = new Reader(stockApi); return check(reader); }',
+        // The address handed through the untyped call as well.
+        "function levels(reader) { return reader.read('/levels'); }",
+        'function three() { return levels(new Reader(stockApi)); }',
+        // A field of the caller's own `this`, with no type.
+        'class Board {',
+        '  constructor(reader) { this.reader = reader; }',
+        '  show() { return this.reader.health(); }',
+        '}',
+        'function four() { return new Board(new Reader(catalogApi)).show(); }',
+        'function five() { return new Board(new Reader(stockApi)).show(); }',
+        // A method of the same name on another class is not called through it.
+        "class Other { health() { return fetch('/other'); } }",
+      ].join('\n'),
+    });
+    const label = (id: string): string | undefined => graph.nodes.find((node) => node.id === id)?.label;
+    const found = requests(graph).map((node) => [label(graph.edges.find((edge) => edge.to === node.id && edge.type === 'calls')?.from ?? ''), node.meta?.['host'], node.meta?.['path']]);
+    expect(found.map((each) => each.join(' ')).filter((each) => !each.endsWith('/other')).sort()).toEqual([
+      'five localhost:4700 /health',
+      'four localhost:4600 /health',
+      'one localhost:4600 /health',
+      'three localhost:4700 /levels',
+      'two localhost:4700 /health',
+    ]);
+    expect(graph.unresolved.filter((row) => row.reason === 'api-client-base-unread')).toEqual([]);
+  });
+
+  it('places a request in a method a framework calls at the instance registered with it, and says so where no registered instance is read (P336)', () => {
+    const graph = read({
+      '/src/poller.ts': [
+        "import axios from 'axios';",
+        "import { Interval } from '@nestjs/schedule';",
+        "import { Component } from 'react';",
+        "const catalogApi = axios.create({ baseURL: 'http://localhost:4600' });",
+        "const stockApi = axios.create({ baseURL: 'http://localhost:4700' });",
+        // A handler a package's decorator registers: the instance handed to the framework is the one it calls.
+        'class Poller {',
+        '  constructor(private api) {}',
+        "  @Interval(1000) poll() { return this.api.get('/health'); }",
+        '}',
+        'export function bootstrap(app) { app.register([new Poller(catalogApi)]); }',
+        'export function probe() { return new Poller(stockApi); }',
+        // A lifecycle method of a class component: React makes the instance, no code read registers one.
+        'class Lister extends Component {',
+        '  constructor(props, private api) { super(props); }',
+        "  componentDidMount() { return this.api.get('/list'); }",
+        '}',
+        'export const one = () => new Lister({}, catalogApi);',
+        'export const two = () => new Lister({}, stockApi);',
+      ].join('\n'),
+    });
+    const label = (id: string): string | undefined => graph.nodes.find((node) => node.id === id)?.label;
+    const found = requests(graph).map((node) => [label(graph.edges.find((edge) => edge.to === node.id && edge.type === 'calls')?.from ?? ''), node.meta?.['host'], node.meta?.['path']]);
+    expect(found.map((each) => each.join(' ')).sort()).toEqual(['bootstrap localhost:4600 /health', 'one localhost:4600 /list', 'two localhost:4700 /list']);
+    const rows = graph.unresolved.filter((row) => row.reason === 'api-client-base-unread');
+    expect(rows.map((row) => row.line)).toEqual([14]);
+    expect(rows[0]?.hint).toContain('called by react, as componentDidMount, on an instance no code read hands it');
+  });
+
   it('reads instances held in a field the constructor fills, or a member of an object handed in, at each caller under its base (P324)', () => {
     const graph = read({
       '/js/api.js': [

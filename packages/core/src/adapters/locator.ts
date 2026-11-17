@@ -10,7 +10,9 @@ import {
   type Node as TsNode,
   type ObjectLiteralExpression,
   type ParameterDeclaration,
+  type PropertyAccessExpression,
   type PropertyDeclaration,
+  type SourceFile,
   type VariableDeclaration,
 } from 'ts-morph';
 import { classMembersOf } from '../di/class-members.js';
@@ -1140,6 +1142,10 @@ const instanceWrites = (name: string, owner: TsNode, initializer: TsNode | undef
     if (current === owner) break;
     current = current.getBaseClass();
   }
+  // What is written on an instance from outside the classes (P336).
+  const outside = outsideWrites(owner, name);
+  values.push(...outside.values);
+  changed ||= outside.changed;
   for (const below of runningBelow(reader, memberAround(read))) {
     writesIn(below);
     for (const member of below.getMembers()) {
@@ -1152,6 +1158,83 @@ const instanceWrites = (name: string, owner: TsNode, initializer: TsNode | undef
     }
   }
   return { values, changed };
+};
+
+/** What each instance field met is given from outside its classes, worked out once: finding it asks for every reference to the field. */
+const OUTSIDE_WRITES = new WeakMap<TsNode, FieldValues>();
+
+/** The `Object.assign(target, ...)` calls of each file met whose target is not `this`, found once per file (P336). */
+const ASSIGNS = new WeakMap<SourceFile, CallExpression[]>();
+
+/** Every `Object.assign` over something other than `this` in the program's own files. */
+const assignsOverValues = (from: TsNode): CallExpression[] =>
+  from
+    .getProject()
+    .getSourceFiles()
+    .flatMap((file) => {
+      if (file.isDeclarationFile() || file.isInNodeModules()) return [];
+      const known = ASSIGNS.get(file);
+      if (known !== undefined) return known;
+      const found = file.getFullText().includes('assign')
+        ? file.getDescendantsOfKind(SyntaxKind.CallExpression).filter((call) => {
+            const target = assignedSources(call)?.[0];
+            return target !== undefined && !Node.isSpreadElement(target) && !Node.isThisExpression(peeled(target));
+          })
+        : [];
+      ASSIGNS.set(file, found);
+      return found;
+    });
+
+/** Whether a value is known by its type to be an instance of `owner` or of a class extending it (P336). */
+const instanceOf = (value: TsNode, owner: TsNode): boolean => {
+  const type = peeled(value).getType();
+  const declarations = [type, ...(type.isUnion() ? type.getUnionTypes() : [])].flatMap((each) => each.getSymbol()?.getDeclarations() ?? []);
+  return declarations.some((declaration) => (Node.isClassDeclaration(declaration) || Node.isClassExpression(declaration)) && derivesFrom(declaration, owner));
+};
+
+/**
+ * Every value an instance field is given from outside the members of its
+ * class and of the classes extending it (P336): `mailer.queue = ...` and
+ * `mailer['queue'] = ...` on an instance, which the checker links to the
+ * field, and `Object.assign(mailer, { queue })` over a value whose type is
+ * the class or one extending it, each key its sources write - a source not
+ * read one that may write any key. The instance written may not be the one
+ * read, so each is a value the field may hold beside the rest.
+ */
+const outsideWrites = (owner: TsNode, name: string): FieldValues => {
+  const field = memberUp(owner, name, false);
+  if (field === undefined || !(Node.isPropertyDeclaration(field) || Node.isParameterDeclaration(field))) return { values: [], changed: false };
+  const known = OUTSIDE_WRITES.get(field);
+  if (known !== undefined) return known;
+  // A source read on the way that reads this field again finds nothing more.
+  OUTSIDE_WRITES.set(field, { values: [], changed: false });
+  const holder = Node.isParameterDeclaration(field) ? field.getParent()?.getParent() : field.getParent();
+  const values: TsNode[] = [];
+  let changed = false;
+  const nameNode = field.getNameNode();
+  for (const reference of Node.isIdentifier(nameNode) ? nameNode.findReferencesAsNodes() : []) {
+    if (reference === nameNode) continue;
+    const access = reference.getParent();
+    if (access === undefined) continue;
+    const isAccess = (Node.isPropertyAccessExpression(access) && access.getNameNode() === reference) || (Node.isElementAccessExpression(access) && access.getArgumentExpression() === reference);
+    // A write through `this` is a member's own, read where its class is.
+    if (!isAccess || Node.isThisExpression(peeled((access as PropertyAccessExpression).getExpression()))) continue;
+    const write = writeAt(access);
+    if (write === 'changed') changed = true;
+    else if (write !== undefined) values.push(write.value);
+  }
+  if (holder !== undefined) {
+    for (const call of assignsOverValues(holder)) {
+      const [target, ...sources] = call.getArguments();
+      if (target === undefined || !instanceOf(target, holder)) continue;
+      const given = laidOver(sources, name, NO_BINDINGS, 0);
+      values.push(...given.values);
+      changed ||= given.changed;
+    }
+  }
+  const found = { values, changed };
+  OUTSIDE_WRITES.set(field, found);
+  return found;
 };
 
 /** The name a class member is called by, where it is a method, an accessor or a field: what a class extending it overrides. */
@@ -2472,20 +2555,38 @@ const handedGives = (parameter: ParameterDeclaration, key: string, depth: number
 };
 
 /**
- * Every `new` of a class this program declares, by its name (P332):
- * `undefined` for a class with no name, or one a class extends - whose
- * constructor is also run by each `super(...)` - which is not followed.
+ * Every call that runs a class's constructor with arguments it writes
+ * (P332, P336): each `new` of it by its name, and for each class extending
+ * it, the `super(...)` its constructor makes - which a reader of the
+ * arguments follows to what that class's own `new`s hand it - or, for one
+ * with no constructor of its own, built with its base's, each `new` of that
+ * class, and so on down. `undefined` for a class with no name, or where a
+ * class extending it has a constructor that makes no `super(...)` this
+ * finds.
  */
-const constructionsOf = (cls: TsNode | undefined): NewExpression[] | undefined => {
-  if (cls === undefined || !Node.isClassDeclaration(cls) || derivedOf(cls).length > 0) return undefined;
+const constructionsOf = (cls: TsNode | undefined, depth = 0): (NewExpression | CallExpression)[] | undefined => {
+  if (cls === undefined || !Node.isClassDeclaration(cls) || depth >= MOST_BASES) return undefined;
   const name = cls.getNameNode();
   if (name === undefined) return undefined;
-  const out: NewExpression[] = [];
+  const out: (NewExpression | CallExpression)[] = [];
   for (const reference of name.findReferencesAsNodes()) {
     if (reference === name) continue;
     const at = wrapped(reference);
     const parent = at.getParent();
     if (parent !== undefined && Node.isNewExpression(parent) && parent.getExpression() === at) out.push(parent);
+  }
+  for (const child of derivedOf(cls)) {
+    if (child.getBaseClass() !== cls) continue;
+    const [constructor] = child.getConstructors();
+    if (constructor === undefined) {
+      const below = constructionsOf(child, depth + 1);
+      if (below === undefined) return undefined;
+      out.push(...below);
+      continue;
+    }
+    const call = superCallIn(constructor);
+    if (call === undefined) return undefined;
+    out.push(call);
   }
   return out;
 };

@@ -1711,7 +1711,11 @@ export const dispatchOf = (call: CallExpression, method: ClassMethod): Dispatch 
   // A method named bare, not through a receiver, is the method it names.
   if (!Node.isPropertyAccessExpression(callee)) return 'runs';
   const declarations = callee.getNameNode().getSymbol()?.getDeclarations() ?? [];
-  if (declarations.length === 0) return 'undecided';
+  // A receiver the checker types as nothing: what the program hands it says (P336).
+  if (declarations.length === 0) {
+    const holder = method.getParent();
+    return holder === undefined || !(Node.isClassDeclaration(holder) || Node.isObjectLiteralExpression(holder)) ? 'undecided' : untypedDispatch(call, holder, method.getName());
+  }
 
   const owner = method.getParent();
   const name = method.getName();
@@ -1906,6 +1910,214 @@ const composedInto = (reference: TsNode): Composed | undefined => {
   return undefined;
 };
 
+/** How many values a receiver the checker types as nothing is followed through to what it holds (P336). */
+const MOST_UNTYPED_STEPS = 24;
+
+/** How many calls through such a receiver one method's search looks at (P336). */
+const MOST_UNTYPED_CALLS = 256;
+
+/** The calls made through a member of a receiver in each file met, by the member's name, found once per file (P336). */
+const MEMBER_CALLS = new WeakMap<SourceFile, Map<string, CallExpression[]>>();
+
+/** Each call `x.name(...)` in a file, where `x` is neither `this` nor `super`, by the name. */
+const memberCallsIn = (file: SourceFile): Map<string, CallExpression[]> => {
+  const known = MEMBER_CALLS.get(file);
+  if (known !== undefined) return known;
+  const byName = new Map<string, CallExpression[]>();
+  for (const call of file.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+    const callee = unwrap(call.getExpression());
+    if (!Node.isPropertyAccessExpression(callee)) continue;
+    const kind = unwrap(callee.getExpression()).getKind();
+    if (kind === SyntaxKind.ThisKeyword || kind === SyntaxKind.SuperKeyword) continue;
+    const name = callee.getName();
+    const list = byName.get(name) ?? [];
+    list.push(call);
+    byName.set(name, list);
+  }
+  MEMBER_CALLS.set(file, byName);
+  return byName;
+};
+
+/** The class or the object written in place a method is a member of, and its name. */
+const untypedOwner = (holder: Forwarder | PropertyAssignment): { owner: TsNode; name: string } | undefined => {
+  if (!Node.isMethodDeclaration(holder) && !Node.isPropertyDeclaration(holder)) return undefined;
+  const owner = holder.getParent();
+  if (owner === undefined || !(Node.isClassDeclaration(owner) || Node.isObjectLiteralExpression(owner))) return undefined;
+  if (Node.isPropertyDeclaration(holder) && holder.isStatic()) return undefined;
+  if (Node.isMethodDeclaration(holder) && Node.isClassDeclaration(owner) && holder.isStatic()) return undefined;
+  const nameNode = holder.getNameNode();
+  return Node.isIdentifier(nameNode) || Node.isPrivateIdentifier(nameNode) ? { owner, name: holder.getName() } : undefined;
+};
+
+/**
+ * What a receiver the checker types as nothing may hold, as far as the
+ * program says (P336): a `new` of a class or an object written in place,
+ * followed through a name's initializer, what each caller hands a parameter
+ * - each `new` of its class for a constructor's - and what a class gives a
+ * field of `this` (its initializer, each `this.<field> = ...`, a parameter
+ * property). `undefined` stands for a value nothing here follows; the walk
+ * is bounded, and a value past the bound is one of those.
+ */
+const untypedValues = (receiver: TsNode): (TsNode | undefined)[] => {
+  // The same call is asked of by each class declaring a method of its name.
+  const known = UNTYPED_VALUES.get(receiver);
+  if (known !== undefined) return known;
+  const out: (TsNode | undefined)[] = [];
+  UNTYPED_VALUES.set(receiver, out);
+  const seen = new Set<TsNode>();
+  const queue: TsNode[] = [receiver];
+  let steps = 0;
+  while (queue.length > 0) {
+    const value = unwrap(queue.shift() as TsNode);
+    if (seen.has(value)) continue;
+    seen.add(value);
+    steps += 1;
+    if (steps > MOST_UNTYPED_STEPS) {
+      out.push(undefined);
+      break;
+    }
+    if (Node.isNewExpression(value) || Node.isObjectLiteralExpression(value)) {
+      out.push(value);
+      continue;
+    }
+    if (Node.isConditionalExpression(value)) {
+      queue.push(value.getWhenTrue(), value.getWhenFalse());
+      continue;
+    }
+    if (Node.isPropertyAccessExpression(value) && value.getExpression().getKind() === SyntaxKind.ThisKeyword) {
+      const cls = enclosingClass(value);
+      const field = value.getName();
+      if (cls === undefined) {
+        out.push(undefined);
+        continue;
+      }
+      const declared = cls.getProperty(field)?.getInitializer();
+      if (declared !== undefined) queue.push(declared);
+      for (const parameter of cls.getConstructors().flatMap((each) => each.getParameters())) {
+        if (parameter.isParameterProperty() && parameter.getName() === field) queue.push(parameter.getNameNode());
+      }
+      for (const binary of cls.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
+        if (binary.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) continue;
+        const left = unwrap(binary.getLeft());
+        if (Node.isPropertyAccessExpression(left) && left.getExpression().getKind() === SyntaxKind.ThisKeyword && left.getName() === field && enclosingClass(left) === cls) queue.push(binary.getRight());
+      }
+      continue;
+    }
+    if (!Node.isIdentifier(value)) {
+      out.push(undefined);
+      continue;
+    }
+    const declaration = value.getSymbol()?.getDeclarations()[0];
+    if (declaration !== undefined && Node.isVariableDeclaration(declaration)) {
+      const written = declaration.getInitializer();
+      if (written === undefined) out.push(undefined);
+      else queue.push(written);
+      continue;
+    }
+    if (declaration === undefined || !Node.isParameterDeclaration(declaration) || declaration.isRestParameter()) {
+      out.push(undefined);
+      continue;
+    }
+    const owner = declaration.getParent();
+    const index = positionOf(declaration);
+    if (Node.isConstructorDeclaration(owner)) {
+      const cls = owner.getParent();
+      const name = Node.isClassDeclaration(cls) ? cls.getNameNode() : undefined;
+      const made = (name?.findReferencesAsNodes() ?? []).flatMap((reference) => {
+        const parent = reference.getParent();
+        return parent !== undefined && Node.isNewExpression(parent) && parent.getExpression() === reference ? [parent] : [];
+      });
+      if (made.length === 0) out.push(undefined);
+      for (const each of made) {
+        const argument = each.getArguments()[index] ?? declaration.getInitializer();
+        if (argument === undefined) out.push(undefined);
+        else queue.push(argument);
+      }
+      continue;
+    }
+    const handed = handedByEachCall(declaration);
+    if (handed.length === 0) out.push(undefined);
+    for (const { argument } of handed) queue.push(argument);
+  }
+  return out;
+};
+
+/** What each untyped receiver met may hold, found once. */
+const UNTYPED_VALUES = new WeakMap<TsNode, (TsNode | undefined)[]>();
+
+/** Whether a value is an instance of a method's class, or of one extending it that does not declare the method again, or the object it is written in (P336). */
+const holdsMethodOf = (value: TsNode, owner: TsNode, name: string): boolean => {
+  if (Node.isObjectLiteralExpression(owner)) return value === owner;
+  if (!Node.isNewExpression(value)) return false;
+  const made = unwrap(value.getExpression());
+  const symbol = Node.isIdentifier(made) ? made.getSymbol() : undefined;
+  const declared = (symbol?.isAlias() === true ? symbol.getAliasedSymbol() : symbol)?.getDeclarations()[0];
+  if (declared === undefined || !Node.isClassDeclaration(declared)) return false;
+  for (const cls of classChain(declared, BUDGET)) {
+    if (cls === owner) return true;
+    if (cls.getMembers().some((member) => (Node.isMethodDeclaration(member) || Node.isPropertyDeclaration(member)) && member.getName() === name)) return false;
+  }
+  return false;
+};
+
+/**
+ * How a call through a receiver the checker types as nothing reaches a
+ * method (P336): it runs the method where every value the receiver may hold
+ * is an instance of its class (or the object it is written in), is
+ * undecided where some are, and calls it nowhere where none is.
+ */
+const untypedDispatch = (call: CallExpression, owner: TsNode, name: string): Dispatch => {
+  const callee = unwrap(call.getExpression());
+  if (!Node.isPropertyAccessExpression(callee)) return 'undecided';
+  const values = untypedValues(callee.getExpression());
+  const holding = values.filter((value) => value !== undefined && holdsMethodOf(value, owner, name)).length;
+  if (holding === 0) return 'elsewhere';
+  return holding === values.length ? 'runs' : 'undecided';
+};
+
+/** The methods whose calls through untyped receivers are being looked for, so a parameter followed on the way is not searched again. */
+const UNTYPED_SEARCHING = new Set<TsNode>();
+
+/** What each method met is called by through untyped receivers, found once. */
+const UNTYPED_SITES = new WeakMap<TsNode, CallExpression[]>();
+
+/**
+ * The calls of a method made through a receiver the checker types as
+ * nothing (P336): in plain JavaScript `function check(reader) {
+ * reader.health(); }` names no symbol, so no reference search finds it. A
+ * call `x.<name>(...)` whose member the checker does not resolve is taken
+ * where something the receiver may hold - followed back through names,
+ * callers' arguments and fields (see {@link untypedValues}) - is an instance
+ * of the method's class or the object it is written in. Bounded in the calls
+ * looked at and the values followed.
+ */
+const untypedCallSites = (holder: Forwarder | PropertyAssignment): CallExpression[] => {
+  const member = untypedOwner(holder);
+  if (member === undefined || UNTYPED_SEARCHING.has(holder)) return [];
+  const known = UNTYPED_SITES.get(holder);
+  if (known !== undefined) return known;
+  UNTYPED_SEARCHING.add(holder);
+  const found: CallExpression[] = [];
+  try {
+    let looked = 0;
+    for (const file of holder.getProject().getSourceFiles()) {
+      if (file.isDeclarationFile() || file.isInNodeModules()) continue;
+      for (const call of memberCallsIn(file).get(member.name) ?? []) {
+        const callee = unwrap(call.getExpression()) as PropertyAccessExpression;
+        if (callee.getNameNode().getSymbol() !== undefined) continue;
+        looked += 1;
+        if (looked > MOST_UNTYPED_CALLS) break;
+        if (untypedDispatch(call, member.owner, member.name) !== 'elsewhere') found.push(call);
+      }
+      if (looked > MOST_UNTYPED_CALLS) break;
+    }
+  } finally {
+    UNTYPED_SEARCHING.delete(holder);
+  }
+  UNTYPED_SITES.set(holder, found);
+  return found;
+};
+
 const callSitesThrough = (holder: Forwarder | PropertyAssignment, composed: Set<TsNode>): CallExpression[] => {
   const sites: CallExpression[] = [];
   const seen = new Set<string>();
@@ -1935,6 +2147,8 @@ const callSitesThrough = (holder: Forwarder | PropertyAssignment, composed: Set<
     if (!Node.isPropertyAssignment(holder) && dispatchAt(call, holder) === 'elsewhere') continue;
     add(call);
   }
+  // A call through a receiver the checker types as nothing, which no reference names (P336).
+  for (const call of untypedCallSites(holder)) add(call);
   return sites;
 };
 
