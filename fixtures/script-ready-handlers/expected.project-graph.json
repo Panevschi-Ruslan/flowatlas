@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T18:45:43.119Z",
+  "builtAt": "2026-11-17T20:35:37.776Z",
   "services": [
     {
       "name": "web",
@@ -186,7 +186,7 @@
           "files": 7,
           "filesRead": 7,
           "filesUnreadable": 0,
-          "functions": 9,
+          "functions": 10,
           "components": 0,
           "hooks": 0,
           "skippedExternalCalls": {}

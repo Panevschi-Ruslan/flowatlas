@@ -12,6 +12,7 @@ import { mergeFieldMeta, type FieldDeclaration, type FieldMetaReader } from './f
 import { DEFAULT_HASH_DEPTH, structuralHash } from './structural-hash.js';
 import { formatFieldKey, formatTypeRef, parseTypeRef, type TypeRef } from './type-ref.js';
 import { startLineOf } from '../line-numbers.js';
+import { mayClimbTo, upwardCeilingOf } from '../upward-walk.js';
 
 export interface TypeCollectorOptions {
   builder: GraphBuilder;
@@ -378,7 +379,10 @@ export class TypeCollector {
    */
   #packageOf(filePath: string): { dir: string; name: string } | undefined {
     let dir = dirname(filePath);
+    const ceiling = upwardCeilingOf(dir);
     for (let up = 0; up < 12; up += 1) {
+      // Never a manifest outside the checkout the file is in (P334).
+      if (!mayClimbTo(dir, ceiling)) return undefined;
       const cached = this.#packages.get(dir);
       if (cached !== undefined) return cached ?? undefined;
       const manifest = join(dir, 'package.json');

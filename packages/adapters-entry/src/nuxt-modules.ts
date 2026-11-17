@@ -5,7 +5,9 @@ import {
   NotLiteral,
   configValueAt,
   isWithinDir,
+  mayClimbTo,
   normalizePath,
+  scanCeilingOf,
   toPosixPath,
   workspaceGlobs,
   workspacePackages,
@@ -92,7 +94,10 @@ export const nuxtPackageDir = (root: string, from: string, specifier: string): {
     const member = workspacePackages(workspace).find((pkg) => pkg.name === name);
     if (member !== undefined) return { dir: join(member.dir, subpath) };
   }
+  // Up to the repository's root and no further (P334), where Node would not stop.
+  const ceiling = scanCeilingOf(root);
   for (let at = from; ; at = dirname(at)) {
+    if (!mayClimbTo(at, ceiling)) return { why: 'not-installed' };
     const linked = join(at, 'node_modules', name);
     if (existsSync(linked)) {
       const real = toPosixPath(realOf(linked));

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-15T16:04:17.197Z",
+  "builtAt": "2026-11-17T20:32:52.892Z",
   "services": [
     {
       "name": "web",
@@ -554,7 +554,7 @@
           "files": 4,
           "filesRead": 4,
           "filesUnreadable": 0,
-          "functions": 6,
+          "functions": 7,
           "components": 0,
           "hooks": 0,
           "skippedExternalCalls": {}
@@ -747,6 +747,33 @@
       "meta": {
         "signature": {
           "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#js/requests.js:requests.js:top",
+      "type": "function",
+      "label": "requests.js:top",
+      "repo": "web",
+      "file": "js/requests.js",
+      "line": 29
+    },
+    {
+      "id": "web#js/requests.js:show",
+      "type": "function",
+      "label": "show",
+      "repo": "web",
+      "file": "js/requests.js",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "target",
+              "type": "any"
+            }
+          ],
           "returns": "void"
         }
       }
@@ -1186,6 +1213,18 @@
       "returns": "void",
       "file": "js/requests.js",
       "line": 19
+    },
+    {
+      "from": "web#js/requests.js:requests.js:top",
+      "to": "web#js/requests.js:show",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "void",
+      "file": "js/requests.js",
+      "line": 29
     },
     {
       "from": "web#js/requests.js:start",

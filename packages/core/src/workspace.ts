@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { isBelowDir, isWithinDir, toPosixPath } from './ids.js';
 import { readPackageJson, type PackageJson } from './package-json.js';
+import { mayClimbTo, upwardCeilingOf } from './upward-walk.js';
 import { applicationLibraryDirs, forgetWorkspaceApplications } from './workspace-application.js';
 
 /**
@@ -307,15 +308,17 @@ export const workspacePackages = (root: string): readonly WorkspacePackage[] => 
  *
  * All of them, because a workspace nested inside another means two roots have
  * something to say about the same files and both are saying it. Up to the top of
- * the file system: a checkout can sit at any depth, and an ancestor only counts
- * when it names this directory, which an unrelated one has no way to do by
- * accident.
+ * the checkout the directory is in, and never in the home directory or at the
+ * root of the file system (P334): an ancestor only counts when it names this
+ * directory, but one outside the repository is not read at all.
  */
 export const workspaceRootsAbove = (dir: string): readonly string[] => {
   const member = resolve(dir);
   const found: string[] = [];
+  const ceiling = upwardCeilingOf(member);
   let at = dirname(member);
   for (;;) {
+    if (at === member || !mayClimbTo(at, ceiling)) return found;
     const patterns = declaredMembers(at);
     if (patterns !== undefined && declares(patterns, relative(at, member).replace(/\\/g, '/'))) {
       found.push(at);
@@ -325,6 +328,13 @@ export const workspaceRootsAbove = (dir: string): readonly string[] => {
     at = parent;
   }
 };
+
+/**
+ * The highest directory a reading given `root` may walk up to (P334): the
+ * outermost workspace above it that declares it as a member - a package of a
+ * monorepo finds what the workspace installs - else `root` itself.
+ */
+export const scanCeilingOf = (root: string): string => workspaceRootsAbove(root).at(-1) ?? resolve(root);
 
 /**
  * The workspace `dir` is a package of, when it is a package of one.

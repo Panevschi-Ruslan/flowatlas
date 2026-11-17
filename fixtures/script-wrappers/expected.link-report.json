@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-15T17:31:18.116Z",
+  "builtAt": "2026-11-17T20:35:40.334Z",
   "configHash": "5cbd5499f486",
   "services": [
     {
@@ -26,11 +26,11 @@
       "repo": "./web",
       "type": "browser",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 17,
-      "edges": 21,
+      "nodes": 18,
+      "edges": 22,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 1143
+      "durationMs": 0
     }
   ],
   "httpOut": {
@@ -67,8 +67,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 32,
-    "edges": 35,
+    "nodes": 33,
+    "edges": 36,
     "types": 0,
     "missed": 5,
     "sites": 13,

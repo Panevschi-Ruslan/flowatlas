@@ -239,9 +239,13 @@ once is, and a function of its own besides (`onDOMContentLoaded`, `onload`,
 from. A wrapper run at once is a function of its own too - named by its own
 name, the name it is kept under (`shop` for `var shop = (function () { …
 })()`), else `wrapper` - so a request, a call or a click handler written at its
-top, outside any function it keeps, is drawn from it (`fixtures/script-members`,
-`fixtures/script-wrappers`, `fixtures/script-ready-handlers`,
-`fixtures/script-load-events`).
+top, outside any function it keeps, is drawn from it. So is the top of a
+script itself where it writes a call outside every function, wrapper and
+load handler: a function of its own named after its file (`boot.js:top`), a
+request or a handler written there drawn from it and a call there joined
+(`fixtures/script-members`, `fixtures/script-wrappers`,
+`fixtures/script-ready-handlers`, `fixtures/script-load-events`,
+`fixtures/script-tops-plugin-configs`).
 
 A client with a browser build needs no import or install where a page of the
 repository loads it by a script tag - a folder of the package's name or a file
@@ -259,11 +263,18 @@ or `ignores` (an override's pattern without a slash names a file anywhere
 below). What a configuration names is read with it, under the `files` it is
 named in: a cascading `extends` - a file by its path, or a shareable
 configuration installed under `node_modules` by its short name (`shop` is
-`eslint-config-shop`, `@acme/web` is `@acme/eslint-config-web`), the linter's
-own and a plugin's not read - and a module a flat configuration takes in by a
-name it imports or requires and reads as a value (`...shared`, `[base, { …
-}]`, `tseslint.config(base, …)`, a named import reading the whole module), a
-file or an installed package's entry, four deep at most. A flat object writing
+`eslint-config-shop`, `@acme/web` is `@acme/eslint-config-web`), or a plugin's
+configuration (`plugin:shop/browser` is `configs.browser` of
+`eslint-plugin-shop`), the linter's own not read - and a module a flat
+configuration takes in by a name it imports or requires and reads as a value
+(`...shared`, `[base, { … }]`, `tseslint.config(base, …)`; a named import,
+`import { base } from …`, reading that export alone), and a plugin's
+configuration a flat object's `extends` names by text (`'shop/browser'`, the
+plugin its `plugins` hands under `shop`); a plugin, a parser or a processor
+merely handed over is no configuration. Each is a file or an installed
+package's entry inside the repository - `node_modules` is looked for up to
+the repository's root, or the workspace declaring it, and no further - four
+deep at most. A flat object writing
 `ignores` and nothing else beside a `name` ignores those files for every
 object, so they declare nothing; one writing `ignores` beside `globals` is for
 every file but those. A CommonJS script's `const axios = require('axios')` is the client's
@@ -279,8 +290,9 @@ query too, as superagent writes it into the address; ky; and the `unfetch` ponyf
 name the repository declares is its own, whatever it is called, and a wrapper's
 parameter is what the wrapper is run with: `$` in `(function ($) { … })(jQuery)`
 and in `jQuery(function ($) { … })`. A client's global called by a request's
-spelling (`axios.get(url)`, `ky.post(url)`, `$.ajax(…)`) with nothing saying the
-page has it - no import, no script tag, no comment, no linter global, and
+spelling (`axios.get(url)`, `ky.post(url)`, `$.ajax(…)`, `ky(url)`, or a
+wrapper's parameter handed it and called, `(function (load) { load(url);
+})(unfetch)`) with nothing saying the page has it - no import, no script tag, no comment, no linter global, and
 nothing in the repository declaring the name - is not read as a request, and
 an `api-client-global-undeclared` row says so at the call.
 

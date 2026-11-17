@@ -5,7 +5,7 @@ import { plainBrowserAdapter, registerFrontendAdapters } from './adapter.js';
 import { forcedFor, PLAIN_BROWSER_ADAPTER, PLAIN_BROWSER_TYPE } from './framework.js';
 
 /** Pages' scripts written in memory, read by the plain adapter as the build would hand them over (P284). */
-const read = (files: Record<string, string>, pages: Record<string, string> = {}): RepoGraph => {
+const read = (files: Record<string, string>, pages: Record<string, string> = {}, repoDir = '/'): RepoGraph => {
   const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true, checkJs: false, strict: false } });
   for (const [path, source] of Object.entries(files)) project.createSourceFile(path, source);
   // The pages that load them, beside them on the project's file system (P310).
@@ -13,8 +13,8 @@ const read = (files: Record<string, string>, pages: Record<string, string> = {})
   const builder = new GraphBuilder({ repo: 'web' });
   const ctx: ExtractContext = {
     repo: 'web',
-    repoDir: '/',
-    service: { name: 'web', repo: '/', type: PLAIN_BROWSER_TYPE },
+    repoDir,
+    service: { name: 'web', repo: repoDir, type: PLAIN_BROWSER_TYPE },
     config: parseConfig({}),
     pkg: {},
     project,
@@ -282,11 +282,11 @@ describe('plain browser code (P284)', () => {
       ['localhost:4700', '/health', 'health'],
       ['localhost:4800', '/ping', 'ping'],
       ['localhost:4900', '/probe', 'Probe.check'],
+      // Checked at the top of the script, which is a function of its own (P334): drawn from it at its port.
+      ['localhost:4900', '/probe', 'Probe.check'],
       ['localhost:5000', '/latest', 'readWith'],
       ['localhost:5100', '/levels', 'readWith'],
       ['localhost:5200', '/stock', 'readWith'],
-      // Checked outside any function: where it is written, the port unread and the path read.
-      ['localhost${…}', '/probe', undefined],
     ]);
     expect(graph.unresolved.filter((row) => row.reason === 'api-path-dynamic' || row.reason === 'api-client-base-unread')).toEqual([]);
   });
@@ -773,7 +773,7 @@ describe('plain browser code (P284)', () => {
         "jQuery(function ($) { $.getJSON('https://api.example.test/json'); });",
         "window.onload = function () { fetch('https://api.example.test/onload'); };",
         "$(window).on('load', function () { fetch('https://api.example.test/shown'); });",
-        // Not run once the page has loaded: a click, and a `$` the script declares.
+        // Not run once the page has loaded: a click, and a `$` the script declares - both written at the top of the script, so drawn from it (P334).
         "document.addEventListener('click', function () { fetch('https://api.example.test/click'); });",
       ].join('\n'),
       '/js/other.js': "export function $(fn) { return fn; }\n$(function () { fetch('https://api.example.test/mine'); });\n",
@@ -787,10 +787,12 @@ describe('plain browser code (P284)', () => {
       'onready GET /ready',
       'onready@11 GET /ready',
       'onready@12 GET /json',
+      'other.js:top GET /mine',
+      'page.js:top GET /click',
       'panel.open GET /panel',
       'refresh GET /refresh',
     ]);
-    expect(calls).toEqual(['onDOMContentLoaded -> panel.open', 'onDOMContentLoaded -> refresh']);
+    expect(calls).toEqual(['onDOMContentLoaded -> panel.open', 'onDOMContentLoaded -> refresh', 'other.js:top -> $']);
   });
 
   it('reads a client a CommonJS script requires as the client it imports (P317)', () => {
@@ -915,7 +917,7 @@ describe('plain browser code (P284)', () => {
         "window.onpageshow = function () { fetch('https://api.example.test/back'); };",
         "$(window).load(function () { fetch('https://api.example.test/old'); });",
         "$(window).bind('load', function () { fetch('https://api.example.test/bound'); });",
-        // jQuery's `.load(url)` on an element is a request of its own, no handler.
+        // jQuery's `.load(url)` on an element is a request of its own, no handler: drawn from the top of the script it is written at (P334), as a resize handler is.
         "$('#box').load(function () { fetch('https://api.example.test/box'); });",
         "window.addEventListener('resize', function () { fetch('https://api.example.test/resize'); });",
       ].join('\n'),
@@ -927,6 +929,8 @@ describe('plain browser code (P284)', () => {
       'onpageshow@5 GET /back',
       'onreadystatechange GET /state',
       'onreadystatechange@4 GET /assigned',
+      'page.js:top GET /box',
+      'page.js:top GET /resize',
     ]);
   });
 
@@ -1001,6 +1005,116 @@ describe('plain browser code (P284)', () => {
       [3, 'jquery', 'jQuery'],
     ]);
     expect(rows[0]?.hint).toContain('/* global ky */');
+  });
+
+  it("reads a plugin's configuration an extends names, a flat object's extends by text, and the one export a configuration imports (P334)", () => {
+    const script = "function items() { return axios.get('https://api.example.test/items'); }\n";
+    const urls = (pages: Record<string, string>): unknown[] => requests(read({ '/js/shop.js': script }, pages)).map((node) => node.meta?.['url']);
+    const items = ['https://api.example.test/items'];
+    const legacyPlugin = "module.exports = { configs: { browser: { globals: { axios: 'readonly' } }, node: { env: { node: true } } } };\n";
+    // `plugin:x/y` in a cascading `extends`: the plugin's `configs.y`, by its package's spelled-out name.
+    expect(urls({ '/.eslintrc.json': '{ "extends": ["plugin:shop/browser"] }', '/node_modules/eslint-plugin-shop/index.js': legacyPlugin })).toEqual(items);
+    expect(urls({ '/.eslintrc.json': '{ "extends": ["plugin:shop/node"] }', '/node_modules/eslint-plugin-shop/index.js': legacyPlugin })).toEqual([]);
+    expect(
+      urls({
+        '/.eslintrc.yml': 'extends:\n  - plugin:@acme/browser\n',
+        '/node_modules/@acme/eslint-plugin/package.json': '{ "main": "lib/plugin.js" }',
+        '/node_modules/@acme/eslint-plugin/lib/plugin.js': "const browser = require('./configs/browser');\nmodule.exports = { configs: { browser } };\n",
+        '/node_modules/@acme/eslint-plugin/lib/configs/browser.js': "module.exports = { globals: { axios: 'readonly' } };\n",
+      }),
+    ).toEqual(items);
+    // A flat object's `extends` by text: the plugin its `plugins` hands under the namespace, else the plugin's package.
+    const flatPlugin = "const plugin = { configs: {} };\nplugin.configs = { browser: { languageOptions: { globals: { axios: 'readonly' } } } };\nexport default plugin;\n";
+    expect(urls({ '/eslint.config.js': "import shop from './lint/plugin.js';\nexport default [{ plugins: { shop }, extends: ['shop/browser'] }];\n", '/lint/plugin.js': flatPlugin })).toEqual(items);
+    expect(urls({ '/eslint.config.js': "export default [{ extends: ['shop/browser'] }];\n", '/node_modules/eslint-plugin-shop/index.js': flatPlugin })).toEqual(items);
+    expect(urls({ '/eslint.config.js': "export default [{ files: ['test/**'], extends: ['shop/browser'] }];\n", '/node_modules/eslint-plugin-shop/index.js': flatPlugin })).toEqual([]);
+    // A plugin handed over and no configuration of it named: none of its configurations read.
+    expect(urls({ '/eslint.config.js': "import shop from './lint/plugin.js';\nexport default [{ plugins: { shop } }];\n", '/lint/plugin.js': flatPlugin })).toEqual([]);
+    // A named import reads that export alone; the module's others declare nothing for it.
+    const shared = "export const base = { languageOptions: { globals: { axios: 'readonly' } } };\nexport const node = { languageOptions: { globals: { process: 'readonly' } } };\n";
+    expect(urls({ '/eslint.config.js': "import { base } from './lint/shared.js';\nexport default [base];\n", '/lint/shared.js': shared })).toEqual(items);
+    expect(urls({ '/eslint.config.js': "import { node } from './lint/shared.js';\nexport default [node];\n", '/lint/shared.js': shared })).toEqual([]);
+    expect(urls({ '/eslint.config.js': "import { node as base } from './lint/shared.js';\nexport default [base];\n", '/lint/shared.js': shared })).toEqual([]);
+    const common = "module.exports = { base: { languageOptions: { globals: { axios: 'readonly' } } }, node: {} };\n";
+    expect(urls({ '/eslint.config.cjs': "const { base } = require('./lint/shared.cjs');\nmodule.exports = [base];\n", '/lint/shared.cjs': common })).toEqual(items);
+    expect(urls({ '/eslint.config.cjs': "const { node } = require('./lint/shared.cjs');\nmodule.exports = [node];\n", '/lint/shared.cjs': common })).toEqual([]);
+    expect(urls({ '/eslint.config.cjs': "module.exports = [require('./lint/shared.cjs').base];\n", '/lint/shared.cjs': common })).toEqual(items);
+    // Re-exported from another module, and kept under a local name.
+    expect(
+      urls({
+        '/eslint.config.js': "import { base } from './lint/index.js';\nexport default [base];\n",
+        '/lint/index.js': "export { base } from './shared.js';\n",
+        '/lint/shared.js': "const browser = { languageOptions: { globals: { axios: 'readonly' } } };\nexport { browser as base };\n",
+      }),
+    ).toEqual(items);
+  });
+
+  it("looks for what a linter's configuration names inside the repository alone, never above its root (P334)", () => {
+    const script = "function items() { return axios.get('https://api.example.test/items'); }\n";
+    const urls = (pages: Record<string, string>): unknown[] => requests(read({ '/repo/js/shop.js': script }, pages, '/repo')).map((node) => node.meta?.['url']);
+    const items = ['https://api.example.test/items'];
+    const declares = "module.exports = { globals: { axios: 'readonly' } };\n";
+    expect(urls({ '/repo/.eslintrc.json': '{ "extends": "shop" }', '/repo/node_modules/eslint-config-shop/index.js': declares })).toEqual(items);
+    // Installed above the repository's root, where Node would look next: not read.
+    expect(urls({ '/repo/.eslintrc.json': '{ "extends": "shop" }', '/node_modules/eslint-config-shop/index.js': declares })).toEqual([]);
+    expect(urls({ '/repo/.eslintrc.json': '{ "extends": "plugin:shop/browser" }', '/node_modules/eslint-plugin-shop/index.js': "module.exports = { configs: { browser: { globals: { axios: 'readonly' } } } };\n" })).toEqual([]);
+    expect(urls({ '/repo/eslint.config.js': "import shared from 'shop-lint';\nexport default [shared];\n", '/node_modules/shop-lint/index.js': "export default [{ languageOptions: { globals: { axios: 'readonly' } } }];\n" })).toEqual([]);
+    // A path leading out of it, relative or absolute: not read.
+    expect(urls({ '/repo/.eslintrc.json': '{ "extends": "../outside.json" }', '/outside.json': '{ "globals": { "axios": "readonly" } }' })).toEqual([]);
+    expect(urls({ '/repo/.eslintrc.json': '{ "extends": "/outside.json" }', '/outside.json': '{ "globals": { "axios": "readonly" } }' })).toEqual([]);
+    expect(urls({ '/repo/eslint.config.js': "import base from '../outside.js';\nexport default [base];\n", '/outside.js': "export default { languageOptions: { globals: { axios: 'readonly' } } };\n" })).toEqual([]);
+  });
+
+  it('reads the top of a script as a function of its own where it writes a call outside every function it keeps (P334)', () => {
+    const graph = read({
+      '/js/boot.js': [
+        '/* global superagent */',
+        "superagent.get('https://api.example.test/top');",
+        'init();',
+        "document.querySelector('#buy').addEventListener('click', function () { fetch('https://api.example.test/buy', { method: 'POST' }); });",
+        "function init() { return fetch('https://api.example.test/init'); }",
+        "class Cart { load() { return fetch('https://api.example.test/cart'); } }",
+      ].join('\n'),
+      // Functions, a wrapper run at once and a handler the page runs once it has loaded: no top of its own.
+      '/js/quiet.js': [
+        "function later() { return fetch('https://api.example.test/later'); }",
+        "(function () { fetch('https://api.example.test/wrapped'); })();",
+        "document.addEventListener('DOMContentLoaded', function () { fetch('https://api.example.test/ready'); });",
+      ].join('\n'),
+    });
+    const { found, calls } = drawn(graph);
+    expect(found).toEqual([
+      'Cart.load GET /cart',
+      'boot.js:top GET /top',
+      'boot.js:top POST /buy',
+      'init GET /init',
+      'later GET /later',
+      'onDOMContentLoaded GET /ready',
+      'wrapper GET /wrapped',
+    ]);
+    expect(calls).toEqual(['boot.js:top -> init']);
+    expect(graph.nodes.filter((node) => node.label === 'quiet.js:top')).toEqual([]);
+  });
+
+  it("asks a client's global called directly, or a wrapper's parameter called as one, for a declaration as its members are (P334)", () => {
+    const graph = read({
+      '/js/bare.js': [
+        "function a() { return ky('https://api.example.test/a'); }",
+        "(function (request) { request('https://api.example.test/b'); })(superagent);",
+        "(function (get) { get('https://api.example.test/c'); })(unfetch);",
+        // A parameter handed nothing a client's browser build leaves, and a call with no argument: nothing said.
+        "(function (load) { load('https://api.example.test/d'); })(loader);",
+        'function e() { return ky(); }',
+      ].join('\n'),
+      '/js/declared.js': "/* global ky, superagent */\nfunction f() { return ky('https://api.example.test/f'); }\n(function (request) { request('https://api.example.test/g'); })(superagent);\n",
+    });
+    expect(requests(graph).map((node) => node.meta?.['url']).sort()).toEqual(['https://api.example.test/f', 'https://api.example.test/g']);
+    const rows = graph.unresolved.filter((row) => row.reason === 'api-client-global-undeclared');
+    expect(rows.map((row) => [row.file, row.line, row.meta?.['client'], row.meta?.['global']])).toEqual([
+      ['js/bare.js', 1, 'ky', 'ky'],
+      ['js/bare.js', 2, 'superagent', 'superagent'],
+      ['js/bare.js', 3, 'unfetch', 'unfetch'],
+    ]);
   });
 
   it('leaves a verb it cannot read as unread', () => {

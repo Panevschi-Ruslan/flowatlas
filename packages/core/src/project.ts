@@ -29,6 +29,7 @@ import {
 } from './stand-ins.js';
 import { isTestDirectory, isTestName } from './test-files.js';
 import { findTsconfig } from './tsconfig-file.js';
+import { mayClimbTo, upwardCeilingOf } from './upward-walk.js';
 import {
   serviceExtent,
   serviceSourceDirs,
@@ -324,6 +325,8 @@ const tsconfigRoots = (rootDir: string, configPath: string | undefined, depth = 
       .pop();
     if (parent === undefined) return [];
     const path = resolve(dirname(configPath), parent);
+    // A relative `extends` leading out of the checkout is not read (P334).
+    if (!mayClimbTo(dirname(path), upwardCeilingOf(rootDir))) return [];
     return tsconfigRoots(rootDir, existsSync(path) ? path : `${path}.json`, depth + 1);
   }
   return entries.flatMap((entry) => rootOfEntry(rootDir, dirname(configPath), entry) ?? []);

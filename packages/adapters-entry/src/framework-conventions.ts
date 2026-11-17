@@ -6,6 +6,7 @@ import {
   configValueAt,
   hasDependency,
   implicitSourcesOf,
+  checkoutTopOf,
   isWithinDir,
   readConfigLiteral,
   scriptFilesIn,
@@ -394,13 +395,12 @@ const realOf = (path: string): string => {
   }
 };
 
-/** The directory holding `.git` at or above a directory, which is the repository the application is in. */
-const repositoryTopOf = (dir: string): string | undefined => {
-  for (let at = dir; ; at = dirname(at)) {
-    if (existsSync(join(at, '.git'))) return at;
-    if (dirname(at) === at) return undefined;
-  }
-};
+/**
+ * The directory holding `.git` at or above a directory, which is the
+ * repository the application is in; never the home directory or the file
+ * system's root (P334).
+ */
+const repositoryTopOf = (dir: string): string | undefined => checkoutTopOf(dir);
 
 /** The directory one `extends` entry names, or why it is not read. */
 const placeLayer = (

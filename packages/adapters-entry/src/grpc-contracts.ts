@@ -1,5 +1,5 @@
 import { basename, dirname, isAbsolute, join, relative } from 'node:path';
-import { parseProto, protoTypes, sameMethodName, toPosixPath, type ProtoFile, type ProtoMethod, type ProtoService, type ProtoTypes } from '@flowatlas/core';
+import { isNoRepositoryDir, parseProto, protoTypes, sameMethodName, toPosixPath, type ProtoFile, type ProtoMethod, type ProtoService, type ProtoTypes } from '@flowatlas/core';
 import type { FileSystemHost } from 'ts-morph';
 
 /**
@@ -87,6 +87,9 @@ const exists = (fs: FileSystemHost, path: string): boolean => {
 const searchRootOf = (fs: FileSystemHost, dir: string): string => {
   let at = dir;
   for (let depth = 0; depth < MAX_ASCENT; depth += 1) {
+    // The home directory is no repository's (P334): a checkout kept there (its
+    // files under version control) would have the search read all of it.
+    if (isNoRepositoryDir(at) && dirname(at) !== at) break;
     if (exists(fs, join(at, '.git')) || exists(fs, join(at, PROJECT_MARK))) return at;
     const parent = dirname(at);
     if (parent === at) break;

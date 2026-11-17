@@ -22,6 +22,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { z } from 'zod';
+import { isNoRepositoryDir } from './upward-walk.js';
 
 /** The file beside `graph.db`. */
 export const FRESHNESS_FILE = 'freshness.json';
@@ -185,6 +186,8 @@ interface GitDirs {
 const gitDirsOf = (dir: string): GitDirs | undefined => {
   let at = resolve(dir);
   for (;;) {
+    // The home directory and the file system's root are no repository's (P334).
+    if (isNoRepositoryDir(at)) return undefined;
     const dot = join(at, '.git');
     if (existsSync(dot)) {
       let gitDir = dot;

@@ -4,6 +4,7 @@ import { ts } from 'ts-morph';
 import { isWithinDir, toPosixPath } from './ids.js';
 import { readPackageJson, type PackageJson } from './package-json.js';
 import { findTsconfig } from './tsconfig-file.js';
+import { isNoRepositoryDir, mayClimbTo, upwardCeilingOf } from './upward-walk.js';
 
 /**
  * An application a workspace builds without giving it a manifest of its own (R180).
@@ -57,8 +58,10 @@ const readConfig = (path: string): Record<string, unknown> | undefined => {
 /** Every tsconfig a chain of relative `extends` names, starting with the one given. */
 const extendsChain = (configPath: string): string[] => {
   const chain: string[] = [];
+  // A relative `extends` leading out of the checkout is not read (P334).
+  const ceiling = upwardCeilingOf(dirname(resolve(configPath)));
   const visit = (path: string, depth: number): void => {
-    if (depth > DEEPEST_EXTENDS || chain.includes(path)) return;
+    if (depth > DEEPEST_EXTENDS || chain.includes(path) || !mayClimbTo(dirname(path), ceiling)) return;
     const config = readConfig(path);
     if (config === undefined) return;
     chain.push(path);
@@ -79,7 +82,8 @@ const manifestAbove = (dir: string): string | undefined => {
   for (let at = dir; ; ) {
     if (existsSync(join(at, '.git'))) return undefined;
     const parent = dirname(at);
-    if (parent === at) return undefined;
+    // Never in the home directory or at the file system's root (P334).
+    if (parent === at || isNoRepositoryDir(parent)) return undefined;
     at = parent;
     if (readPackageJson(at) !== undefined) return at;
   }

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { nuxtApplicationOf } from './framework-conventions.js';
-import { modulesReadRow } from './nuxt-modules.js';
+import { modulesReadRow, nuxtPackageDir } from './nuxt-modules.js';
 
 const roots: string[] = [];
 afterAll(() => {
@@ -24,6 +24,17 @@ const NUXT_4 = { dependencies: { nuxt: '^4.1.0' } };
 
 const module = (body: string, head = "import { createResolver, defineNuxtModule } from '@nuxt/kit';"): string =>
   `${head}\nexport default defineNuxtModule({\n  setup(_options, nuxt) {\n${body}\n  },\n});\n`;
+
+describe('where a package Nuxt is handed by its name is installed (P334)', () => {
+  it('looks for it under node_modules up to the repository and no further', () => {
+    const root = repo({ 'node_modules/shop-layer/package.json': '{ "name": "shop-layer" }', 'app/package.json': JSON.stringify({ name: 'app', ...NUXT_4 }) });
+    const app = join(root, 'app');
+    // Installed under the root the application is read from: found, a registry's package.
+    expect(nuxtPackageDir(root, app, 'shop-layer')).toEqual({ why: 'installed' });
+    // Installed above it: not looked at.
+    expect(nuxtPackageDir(app, app, 'shop-layer')).toEqual({ why: 'not-installed' });
+  });
+});
 
 describe('which modules of the repository a Nuxt application is built with (P251)', () => {
   it("reads each file of `modules/` and each folder's `index`, a listed path once, and a workspace package at its source", () => {

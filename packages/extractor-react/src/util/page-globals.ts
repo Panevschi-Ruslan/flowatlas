@@ -1,5 +1,5 @@
 import { basename, dirname, isAbsolute, join } from 'node:path';
-import { compileGlob, readDocument, type Glob } from '@flowatlas/core';
+import { compileGlob, isWithinDir, readDocument, scanCeilingOf, type Glob } from '@flowatlas/core';
 import type { FileSystemHost, SourceFile } from 'ts-morph';
 import { ts } from 'ts-morph';
 
@@ -159,8 +159,16 @@ interface Declared {
  */
 interface Reference {
   readonly specifier: string;
-  readonly kind: 'extends' | 'module';
+  readonly kind: 'extends' | 'module' | 'plugin';
   readonly scopes: readonly Scope[];
+  /** The one export a module is read for (P334): `import { base } from './shared.js'` reads `base` alone. */
+  readonly exported?: string;
+  /**
+   * A plugin's configuration by its name (P334): `plugin:shop/recommended` in a
+   * cascading `extends` (`flat` false), `'shop/recommended'` in a flat
+   * object's `extends` (`flat` true), read from the plugin's `configs`.
+   */
+  readonly config?: { readonly name: string; readonly flat: boolean };
 }
 
 /**
@@ -243,44 +251,161 @@ const globalsIn = (value: ts.Expression, names: Set<string>): void => {
 /** A scope an object written in a configuration opens, where it writes `files`. */
 const scopeOf = (files: readonly string[], excluded: readonly string[], flat: boolean): Scope => ({ files: globsOf(files), excluded: globsOf(excluded), byName: !flat });
 
-/** The module a `require('x')` names, read through a member taken off it (`require('x').default`). */
-const requiredIn = (node: ts.Node): string | undefined => {
+/**
+ * A module a configuration takes a name in from, and the one export it takes
+ * (P334): none for the whole module, which is what its default export is read
+ * as.
+ */
+interface Imported {
+  readonly from: string;
+  readonly exported?: string;
+}
+
+/** Whether a value read out of a configuration is a module it takes in rather than an expression it writes. */
+const isImported = (value: ts.Expression | Imported): value is Imported => !('kind' in value);
+
+/** The export an import or a re-export takes: none for a default, which is the module. */
+const takenExport = (from: string, name: string): Imported => (name === 'default' ? { from } : { from, exported: name });
+
+/**
+ * The module a `require('x')` names, read through a member taken off it:
+ * `require('x').base` takes `base` alone (P334), `require('x').default` the
+ * module.
+ */
+const requiredIn = (node: ts.Node): Imported | undefined => {
   let at = node;
-  while (ts.isPropertyAccessExpression(at)) at = at.expression;
+  let member: string | undefined;
+  while (ts.isPropertyAccessExpression(at)) {
+    member = at.name.text;
+    at = at.expression;
+  }
   if (!ts.isCallExpression(at) || !ts.isIdentifier(at.expression) || at.expression.text !== 'require') return undefined;
   const [specifier] = at.arguments;
-  return specifier !== undefined && ts.isStringLiteral(specifier) ? specifier.text : undefined;
+  if (specifier === undefined || !ts.isStringLiteral(specifier)) return undefined;
+  return member === undefined ? { from: specifier.text } : takenExport(specifier.text, member);
 };
 
 /**
- * The names a configuration script takes in from other modules, and the
- * module each names (P323): `import base from './base.js'`, `import * as
- * shared from 'x'`, `import { browser } from 'x'`, `const base =
- * require('./base')` and the names destructured out of a `require`.
+ * The names a configuration script takes in from other modules, the module
+ * each names and the export it takes (P323, P334): `import base from
+ * './base.js'` and `import * as shared from 'x'` the whole module, `import {
+ * browser } from 'x'` its `browser` alone; `const base = require('./base')`,
+ * and the names destructured out of a `require` each its own export.
  */
-const importedNames = (source: ts.SourceFile): ReadonlyMap<string, string> => {
-  const names = new Map<string, string>();
+const importedNames = (source: ts.SourceFile): ReadonlyMap<string, Imported> => {
+  const names = new Map<string, Imported>();
   for (const statement of source.statements) {
     if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) {
       const from = statement.moduleSpecifier.text;
       const clause = statement.importClause;
-      if (clause?.name !== undefined) names.set(clause.name.text, from);
+      if (clause?.name !== undefined) names.set(clause.name.text, { from });
       const bindings = clause?.namedBindings;
-      if (bindings !== undefined && ts.isNamespaceImport(bindings)) names.set(bindings.name.text, from);
-      else if (bindings !== undefined) for (const element of bindings.elements) names.set(element.name.text, from);
+      if (bindings !== undefined && ts.isNamespaceImport(bindings)) names.set(bindings.name.text, { from });
+      else if (bindings !== undefined) for (const element of bindings.elements) names.set(element.name.text, takenExport(from, (element.propertyName ?? element.name).text));
       continue;
     }
     if (!ts.isVariableStatement(statement)) continue;
     for (const declaration of statement.declarationList.declarations) {
-      const from = declaration.initializer === undefined ? undefined : requiredIn(declaration.initializer);
-      if (from === undefined) continue;
-      if (ts.isIdentifier(declaration.name)) names.set(declaration.name.text, from);
+      const required = declaration.initializer === undefined ? undefined : requiredIn(declaration.initializer);
+      if (required === undefined) continue;
+      if (ts.isIdentifier(declaration.name)) names.set(declaration.name.text, required);
       else if (ts.isObjectBindingPattern(declaration.name)) {
-        for (const element of declaration.name.elements) if (ts.isIdentifier(element.name)) names.set(element.name.text, from);
+        for (const element of declaration.name.elements) {
+          if (!ts.isIdentifier(element.name)) continue;
+          const taken = element.propertyName === undefined ? element.name.text : keyOf(element.propertyName);
+          names.set(element.name.text, required.exported === undefined && taken !== undefined ? takenExport(required.from, taken) : { from: required.from });
+        }
       }
     }
   }
   return names;
+};
+
+/** What a top-level `const name = …` of a module holds. */
+const localValue = (source: ts.SourceFile, name: string): ts.Expression | undefined => {
+  for (const statement of source.statements) {
+    if (!ts.isVariableStatement(statement)) continue;
+    for (const declaration of statement.declarationList.declarations) {
+      if (ts.isIdentifier(declaration.name) && declaration.name.text === name) return declaration.initializer;
+    }
+  }
+  return undefined;
+};
+
+/** Whether an expression is a CommonJS module's exports: `module.exports` or `exports`. */
+const isExportsObject = (node: ts.Expression): boolean =>
+  (ts.isIdentifier(node) && node.text === 'exports') ||
+  (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'module' && node.name.text === 'exports');
+
+/** The value an object written in place gives a key: its property's, or the name a shorthand writes. */
+const propertyValue = (object: ts.ObjectLiteralExpression, name: string): ts.Expression | undefined => {
+  for (const property of object.properties) {
+    if (ts.isPropertyAssignment(property) && keyOf(property.name) === name) return property.initializer;
+    if (ts.isShorthandPropertyAssignment(property) && property.name.text === name) return property.name;
+  }
+  return undefined;
+};
+
+/**
+ * What a module exports by a name (P334), as it writes it: `export const base
+ * = …`, `export { local as base }`, `export { base } from './x'`, `export
+ * default …` for `default`; `exports.base = …`, `module.exports.base = …`, a
+ * key of the object `module.exports` is, or `module.exports` itself for
+ * `default`. Nothing where the module writes it some other way.
+ */
+const exportedValue = (source: ts.SourceFile, name: string): ts.Expression | Imported | undefined => {
+  for (const statement of source.statements) {
+    if (ts.isExportAssignment(statement)) {
+      if (name === 'default') return statement.expression;
+      continue;
+    }
+    const modifiers = ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined;
+    if (ts.isVariableStatement(statement) && modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) === true) {
+      for (const declaration of statement.declarationList.declarations) {
+        if (ts.isIdentifier(declaration.name) && declaration.name.text === name) return declaration.initializer;
+      }
+      continue;
+    }
+    if (ts.isExportDeclaration(statement) && statement.exportClause !== undefined && ts.isNamedExports(statement.exportClause)) {
+      for (const element of statement.exportClause.elements) {
+        if (element.name.text !== name) continue;
+        const local = element.propertyName ?? element.name;
+        if (statement.moduleSpecifier !== undefined && ts.isStringLiteral(statement.moduleSpecifier)) return takenExport(statement.moduleSpecifier.text, local.text);
+        return ts.isIdentifier(local) ? local : undefined;
+      }
+      continue;
+    }
+    if (!ts.isExpressionStatement(statement) || !ts.isBinaryExpression(statement.expression)) continue;
+    const { left, operatorToken, right } = statement.expression;
+    if (operatorToken.kind !== ts.SyntaxKind.EqualsToken) continue;
+    if (ts.isPropertyAccessExpression(left) && left.name.text === name && isExportsObject(left.expression)) return right;
+    if (isExportsObject(left)) {
+      if (name === 'default') return right;
+      const object = ts.isObjectLiteralExpression(right) ? right : undefined;
+      const found = object === undefined ? undefined : propertyValue(object, name);
+      if (found !== undefined) return found;
+    }
+  }
+  return undefined;
+};
+
+/**
+ * What an expression of a module stands for (P334): the expression a name of
+ * the module holds, followed a few names deep, or the module and export a
+ * name it takes in, or a `require`, names.
+ */
+const valueOf = (source: ts.SourceFile, start: ts.Expression | Imported | undefined, imported: ReadonlyMap<string, Imported>): ts.Expression | Imported | undefined => {
+  let at = start;
+  for (let hop = 0; hop < 6; hop += 1) {
+    if (at === undefined || isImported(at)) return at;
+    let node: ts.Expression = at;
+    while (ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isSatisfiesExpression(node)) node = node.expression;
+    const required = requiredIn(node);
+    if (required !== undefined) return required;
+    if (!ts.isIdentifier(node)) return node;
+    at = imported.get(node.text) ?? localValue(source, node.text);
+  }
+  return undefined;
 };
 
 /**
@@ -294,7 +419,7 @@ const readAsValue = (name: ts.Identifier): boolean => {
   if (
     ts.isImportClause(parent) || ts.isImportSpecifier(parent) || ts.isNamespaceImport(parent) || ts.isBindingElement(parent) ||
     ts.isParameter(parent) || ts.isFunctionDeclaration(parent) || ts.isPropertyAssignment(parent) && parent.name === name ||
-    ts.isVariableDeclaration(parent) && parent.name === name
+    ts.isVariableDeclaration(parent) && parent.name === name || ts.isExportSpecifier(parent)
   ) {
     return false;
   }
@@ -315,22 +440,96 @@ const ignoresOnly = (written: ReadonlyMap<string, ts.Expression>, properties: nu
   written.has('ignores') && properties === written.size && [...written.keys()].every((key) => key === 'ignores' || key === 'name');
 
 /**
- * What a configuration written as a script or as JSON says: the globals under
- * `globals` or an environment turned on, wherever they are written, each
- * under the `files` of every object it is written in (P317), and `root`
- * written outside any of those. Also what it names to be read with it (P323):
- * a cascading `extends`, a module it imports or requires read as a value; and
- * a flat configuration's objects writing `ignores` alone, the files it reads
- * for nothing, where an object writing `ignores` beside anything else is for
- * every file but those.
+ * Keys of a configuration whose values are no configuration: a plugin, a
+ * parser, a processor (P334). A plugin's own configurations are read only
+ * where one is named (`plugin:x/y`, a flat object's `extends`), never all of
+ * them for being handed over.
  */
-const scriptConfig = (text: string, json: boolean, manifest: boolean, flat: boolean): ConfigReading => {
+const NOT_CONFIGURATION = new Set(['plugins', 'parser', 'processor']);
+
+/**
+ * The plugin a short name stands for, as the linter spells it out (P334):
+ * `shop` is `eslint-plugin-shop`, `@acme` is `@acme/eslint-plugin`,
+ * `@acme/web` is `@acme/eslint-plugin-web`.
+ */
+const pluginPackage = (name: string): string => {
+  if (name.startsWith('@')) {
+    const [scope, ...rest] = name.split('/');
+    const tail = rest.join('/');
+    if (tail === '') return `${scope}/eslint-plugin`;
+    return tail.startsWith('eslint-plugin') ? name : `${scope}/eslint-plugin-${tail}`;
+  }
+  return name.startsWith('eslint-plugin-') || name === 'eslint-plugin' ? name : `eslint-plugin-${name}`;
+};
+
+/**
+ * What one entry of a cascading `extends` names (P323, P334): a file or a
+ * shareable configuration, or a plugin's configuration - `plugin:shop/browser`
+ * is `eslint-plugin-shop`'s `configs.browser`, the plugin's name being what
+ * comes before the last slash.
+ */
+const extendsReference = (specifier: string, scopes: readonly Scope[]): Reference => {
+  const plugin = /^plugin:(.+)\/([^/]+)$/.exec(specifier);
+  if (plugin === null) return { specifier, kind: 'extends', scopes };
+  return { specifier: pluginPackage(plugin[1] as string), kind: 'plugin', scopes, config: { name: plugin[2] as string, flat: false } };
+};
+
+/** The plugins a flat object hands over by namespace, and the module each is (P334): `plugins: { shop: shopPlugin }`. */
+const pluginsOf = (value: ts.Expression | undefined, imported: ReadonlyMap<string, Imported>): ReadonlyMap<string, string> => {
+  const plugins = new Map<string, string>();
+  if (value === undefined || !ts.isObjectLiteralExpression(value)) return plugins;
+  for (const property of value.properties) {
+    let namespace: string | undefined;
+    let written: ts.Expression | undefined;
+    if (ts.isPropertyAssignment(property)) [namespace, written] = [keyOf(property.name), property.initializer];
+    else if (ts.isShorthandPropertyAssignment(property)) [namespace, written] = [property.name.text, property.name];
+    if (namespace === undefined || written === undefined) continue;
+    const module = ts.isIdentifier(written) ? imported.get(written.text) : requiredIn(written);
+    if (module !== undefined) plugins.set(namespace, module.from);
+  }
+  return plugins;
+};
+
+/**
+ * What one text entry of a flat object's `extends` names (P334): a plugin's
+ * configuration, `'shop/recommended'`, by the namespace the object's
+ * `plugins` hands the plugin under, else by the plugin's package name.
+ */
+const flatExtendsReference = (text: string, plugins: ReadonlyMap<string, string>, scopes: readonly Scope[]): Reference | undefined => {
+  const namespace = [...plugins.keys()].filter((key) => text.startsWith(`${key}/`)).sort((a, b) => b.length - a.length)[0];
+  if (namespace !== undefined) {
+    return { specifier: plugins.get(namespace) as string, kind: 'plugin', scopes, config: { name: text.slice(namespace.length + 1), flat: true } };
+  }
+  const slash = text.lastIndexOf('/');
+  if (slash <= 0) return undefined;
+  return { specifier: pluginPackage(text.slice(0, slash)), kind: 'plugin', scopes, config: { name: text.slice(slash + 1), flat: true } };
+};
+
+const NOTHING_READ: ConfigReading = { declared: [], root: false, references: [], ignored: [] };
+
+/** A configuration that is a module another names, read from that module (P334). */
+const readingOfModule = (module: Imported, flat: boolean): ConfigReading => ({
+  ...NOTHING_READ,
+  references: [{ specifier: module.from, kind: flat ? 'module' : 'extends', scopes: [], ...(module.exported === undefined ? {} : { exported: module.exported }) }],
+});
+
+/**
+ * What a configuration written as a script or as JSON says, from a node of it
+ * on: the globals under `globals` or an environment turned on, wherever they
+ * are written, each under the `files` of every object it is written in
+ * (P317), and `root` written outside any of those. Also what it names to be
+ * read with it (P323): a cascading `extends`, a module it imports or requires
+ * read as a value; and a flat configuration's objects writing `ignores`
+ * alone, the files it reads for nothing, where an object writing `ignores`
+ * beside anything else is for every file but those. A plugin's
+ * configurations named in a cascading or a flat `extends` are read too, and
+ * what a key holding a plugin or a parser hands over is not (P334).
+ */
+const readConfigNode = (start: ts.Node, imported: ReadonlyMap<string, Imported>, within: boolean, json: boolean, flat: boolean): ConfigReading => {
   const declared: Declared[] = [];
   const references: Reference[] = [];
   const ignored: string[] = [];
   let root = false;
-  const source = ts.createSourceFile('config.js', json ? `(${text})` : text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
-  const imported = json ? new Map<string, string>() : importedNames(source);
   const visit = (node: ts.Node, within: boolean, scopes: readonly Scope[]): void => {
     if (within && ts.isObjectLiteralExpression(node)) {
       const written = new Map<string, ts.Expression>();
@@ -344,9 +543,19 @@ const scriptConfig = (text: string, json: boolean, manifest: boolean, flat: bool
         if (scopes.length === 0) ignored.push(...writtenStrings(excluded));
         return;
       }
-      if (files !== undefined || (flat && excluded !== undefined)) {
-        const scope = scopeOf(files === undefined ? [] : writtenStrings(files), excluded === undefined ? [] : writtenStrings(excluded), flat);
-        node.properties.forEach((child) => visit(child, within, [...scopes, scope]));
+      const scoped = files !== undefined || (flat && excluded !== undefined);
+      const inner = scoped ? [...scopes, scopeOf(files === undefined ? [] : writtenStrings(files), excluded === undefined ? [] : writtenStrings(excluded), flat)] : scopes;
+      // A flat object's `extends` names a plugin's configuration by text (P334); its other entries are values read below.
+      const extended = flat ? written.get('extends') : undefined;
+      if (extended !== undefined) {
+        const plugins = pluginsOf(written.get('plugins'), imported);
+        for (const text of writtenStrings(extended)) {
+          const reference = flatExtendsReference(text, plugins, inner);
+          if (reference !== undefined) references.push(reference);
+        }
+      }
+      if (scoped) {
+        node.properties.forEach((child) => visit(child, within, inner));
         return;
       }
     }
@@ -357,6 +566,7 @@ const scriptConfig = (text: string, json: boolean, manifest: boolean, flat: bool
         visit(node.initializer, key === 'eslintConfig', scopes);
         return;
       }
+      if (key !== undefined && NOT_CONFIGURATION.has(key)) return;
       if (key === 'root' && scopes.length === 0 && node.initializer.kind === ts.SyntaxKind.TrueKeyword) root = true;
       if (key === 'globals') {
         const names = new Set<string>();
@@ -371,18 +581,68 @@ const scriptConfig = (text: string, json: boolean, manifest: boolean, flat: bool
         if (names.length > 0) declared.push({ names, scopes });
         return;
       }
-      // A cascading configuration's `extends` names files and shareable
-      // configurations; a flat one's names a plugin's by text, and a module by a name.
-      if (key === 'extends' && !flat) for (const specifier of writtenStrings(node.initializer)) references.push({ specifier, kind: 'extends', scopes });
+      // A cascading configuration's `extends` names files, shareable
+      // configurations and plugins' configurations; a flat one's are read above.
+      if (key === 'extends' && !flat) for (const specifier of writtenStrings(node.initializer)) references.push(extendsReference(specifier, scopes));
     }
     if (within && !json) {
       const from = ts.isIdentifier(node) ? (readAsValue(node) ? imported.get(node.text) : undefined) : ts.isCallExpression(node) && !declaredFrom(node) ? requiredIn(node) : undefined;
-      if (from !== undefined) references.push({ specifier: from, kind: 'module', scopes });
+      if (from !== undefined) references.push({ specifier: from.from, kind: 'module', scopes, ...(from.exported === undefined ? {} : { exported: from.exported }) });
     }
     ts.forEachChild(node, (child) => visit(child, within, scopes));
   };
-  visit(source, !manifest, []);
+  visit(start, within, []);
   return { declared, root, references, ignored };
+};
+
+/**
+ * What a configuration written as a script or as JSON says ({@link
+ * readConfigNode}): the whole of it, or the one export another configuration
+ * takes from it (P334) - the whole where the module writes that export in a
+ * way not read.
+ */
+const scriptConfig = (text: string, json: boolean, manifest: boolean, flat: boolean, exported?: string): ConfigReading => {
+  const source = ts.createSourceFile('config.js', json ? `(${text})` : text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const imported = json ? new Map<string, Imported>() : importedNames(source);
+  if (exported !== undefined && !json && !manifest) {
+    const value = valueOf(source, exportedValue(source, exported), imported);
+    if (value !== undefined) return isImported(value) ? readingOfModule(value, flat) : readConfigNode(value, imported, true, false, flat);
+  }
+  return readConfigNode(source, imported, !manifest, json, flat);
+};
+
+/**
+ * The configuration a plugin's module keeps by a name (P334): the entry of a
+ * `configs` object it writes - `{ configs: { browser: { … } } }`,
+ * `plugin.configs = { … }` - followed through the names and the modules it is
+ * kept under.
+ */
+const pluginConfigValue = (source: ts.SourceFile, name: string, imported: ReadonlyMap<string, Imported>): ts.Expression | Imported | undefined => {
+  let found: ts.Expression | Imported | undefined;
+  const take = (configs: ts.Expression): void => {
+    const object = valueOf(source, configs, imported);
+    if (object === undefined || isImported(object) || !ts.isObjectLiteralExpression(object)) return;
+    const value = propertyValue(object, name);
+    if (value !== undefined) found = valueOf(source, value, imported);
+  };
+  const visit = (node: ts.Node): void => {
+    if (found !== undefined) return;
+    if (ts.isPropertyAssignment(node) && keyOf(node.name) === 'configs') take(node.initializer);
+    else if (ts.isShorthandPropertyAssignment(node) && node.name.text === 'configs') take(node.name);
+    else if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken && ts.isPropertyAccessExpression(node.left) && node.left.name.text === 'configs') take(node.right);
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return found;
+};
+
+/** What a plugin's configuration by a name says (P334), read as a flat configuration or a cascading one as it was named in. */
+const pluginConfig = (text: string, name: string, flat: boolean): ConfigReading => {
+  const source = ts.createSourceFile('plugin.js', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const imported = importedNames(source);
+  const value = pluginConfigValue(source, name, imported);
+  if (value === undefined) return NOTHING_READ;
+  return isImported(value) ? readingOfModule(value, flat) : readConfigNode(value, imported, true, false, flat);
 };
 
 /** What a configuration written as YAML says, read as the cascading configuration's keys are: `root`, `globals`, `env`, `extends` and `overrides`. */
@@ -408,7 +668,7 @@ const yamlConfig = (text: string): ConfigReading => {
       const names = Object.entries(env).flatMap(([name, on]) => (on === true ? (ENVIRONMENTS[name] ?? []) : []));
       if (names.length > 0) declared.push({ names, scopes });
     }
-    for (const specifier of stringsOf(record['extends'])) references.push({ specifier, kind: 'extends', scopes });
+    for (const specifier of stringsOf(record['extends'])) references.push(extendsReference(specifier, scopes));
     const overrides = record['overrides'];
     for (const entry of Array.isArray(overrides) ? overrides : []) {
       if (entry === null || typeof entry !== 'object') continue;
@@ -431,10 +691,10 @@ const textAt = (fs: FileSystemHost, path: string): string | undefined => {
 };
 
 /** What a configuration file says, read by its kind: YAML, JSON (`.eslintrc` included), a manifest's `eslintConfig`, or a script. */
-const configText = (path: string, text: string, flat: boolean): ConfigReading => {
+const configText = (path: string, text: string, flat: boolean, exported?: string): ConfigReading => {
   const name = basename(path);
   if (/\.ya?ml$/.test(name)) return yamlConfig(text);
-  return scriptConfig(text, name === '.eslintrc' || name.endsWith('.json'), name === 'package.json', flat);
+  return scriptConfig(text, name === '.eslintrc' || name.endsWith('.json'), name === 'package.json', flat, exported);
 };
 
 /** How many configurations named by others one directory's reading follows, and how deep. */
@@ -490,10 +750,13 @@ const entryOf = (manifest: string | undefined): string => {
 /**
  * The file an installed package's name leads to from a directory, as Node
  * finds it: `node_modules/<name>` in the directory or any above it, then the
- * subpath, or the entry its manifest names.
+ * subpath, or the entry its manifest names. Up to the repository's root
+ * (`ceiling`) and no further (P334): Node would go on to the file system's
+ * root, and read a package installed outside the repository.
  */
-const installedFile = (fs: FileSystemHost, from: string, name: string, subpath: string, endings: readonly string[]): string | undefined => {
+const installedFile = (fs: FileSystemHost, from: string, name: string, subpath: string, endings: readonly string[], ceiling: string): string | undefined => {
   for (let at = from; ; at = dirname(at)) {
+    if (!isWithinDir(at, ceiling)) return undefined;
     const dir = join(at, 'node_modules', name);
     const manifest = textAt(fs, join(dir, 'package.json'));
     if (manifest !== undefined || fs.directoryExistsSync(dir)) {
@@ -526,18 +789,25 @@ const shareableName = (specifier: string): string => {
 
 /**
  * The file a configuration names from a directory, where it can be found: a
- * path from that directory, or an installed package. The linter's own
- * configurations (`eslint:recommended`) and a plugin's (`plugin:x/y`) are
- * none a client's globals are read from.
+ * path from that directory, or an installed package, inside the repository
+ * (`ceiling`, P334): a path leading out of it is not read. The linter's own
+ * configurations (`eslint:recommended`) are none a client's globals are read
+ * from.
  */
-const referencedFile = (fs: FileSystemHost, from: string, reference: Reference): string | undefined => {
+const referencedFile = (fs: FileSystemHost, from: string, reference: Reference, ceiling: string): string | undefined => {
+  const found = referencedPath(fs, from, reference, ceiling);
+  return found !== undefined && isWithinDir(found, ceiling) ? found : undefined;
+};
+
+/** Where a configuration's reference leads, inside the repository or not. */
+const referencedPath = (fs: FileSystemHost, from: string, reference: Reference, ceiling: string): string | undefined => {
   const { specifier, kind } = reference;
   const endings = kind === 'extends' ? EXTENDS_ENDINGS : MODULE_ENDINGS;
   if (specifier.startsWith('.') || isAbsolute(specifier)) return firstFile(fs, isAbsolute(specifier) ? specifier : join(from, specifier), endings);
   if (kind === 'extends' && /^(?:eslint|plugin):/.test(specifier)) return undefined;
-  if (kind === 'module' && UNREAD_MODULES.test(specifier)) return undefined;
+  if (kind !== 'extends' && UNREAD_MODULES.test(specifier)) return undefined;
   const { name, subpath } = packageOf(kind === 'extends' ? shareableName(specifier) : specifier);
-  return installedFile(fs, from, name, subpath, endings);
+  return installedFile(fs, from, name, subpath, endings, ceiling);
 };
 
 /**
@@ -546,21 +816,25 @@ const referencedFile = (fs: FileSystemHost, from: string, reference: Reference):
  * a flat module's ignores for every object. A file is read once, and so many
  * and so deep at most.
  */
-const withReferences = (fs: FileSystemHost, path: string, reading: ConfigReading): Omit<LinterConfig, 'dir' | 'root'> => {
+const withReferences = (fs: FileSystemHost, path: string, reading: ConfigReading, ceiling: string): Omit<LinterConfig, 'dir' | 'root'> => {
   const declared = [...reading.declared];
   const ignored = [...reading.ignored];
+  // A file is read once for each export and each plugin's configuration taken from it.
   const seen = new Set<string>([path]);
   let reads = 0;
   const follow = (references: readonly Reference[], from: string, depth: number): void => {
     for (const reference of references) {
       if (depth >= REFERENCE_DEPTH || reads >= REFERENCE_READS) return;
-      const file = referencedFile(fs, from, reference);
-      if (file === undefined || seen.has(file)) continue;
-      seen.add(file);
+      const file = referencedFile(fs, from, reference, ceiling);
+      if (file === undefined) continue;
+      const key = reference.config !== undefined ? `${file}#configs.${reference.config.name}` : reference.exported !== undefined ? `${file}#${reference.exported}` : file;
+      if (seen.has(key)) continue;
+      seen.add(key);
       reads += 1;
       const text = textAt(fs, file);
       if (text === undefined || text.length > REFERENCE_SIZE) continue;
-      const inner = configText(file, text, reference.kind === 'module');
+      const inner =
+        reference.config !== undefined ? pluginConfig(text, reference.config.name, reference.config.flat) : configText(file, text, reference.kind === 'module', reference.exported);
       for (const each of inner.declared) declared.push({ names: each.names, scopes: [...reference.scopes, ...each.scopes] });
       if (reference.scopes.length === 0) ignored.push(...inner.ignored);
       follow(inner.references.map((each) => ({ ...each, scopes: [...reference.scopes, ...each.scopes] })), dirname(file), depth + 1);
@@ -576,11 +850,11 @@ const withReferences = (fs: FileSystemHost, path: string, reading: ConfigReading
  * the cascading configuration's files the linter takes (P317), with what it
  * names read into it (P323).
  */
-const configIn = (fs: FileSystemHost, dir: string): LinterConfig | undefined => {
+const configIn = (fs: FileSystemHost, dir: string, ceiling: string): LinterConfig | undefined => {
   for (const name of FLAT_CONFIGS) {
     const path = join(dir, name);
     const text = textAt(fs, path);
-    if (text !== undefined) return { dir, ...withReferences(fs, path, scriptConfig(text, false, false, true)), root: true };
+    if (text !== undefined) return { dir, ...withReferences(fs, path, scriptConfig(text, false, false, true), ceiling), root: true };
   }
   for (const name of CASCADING_CONFIGS) {
     const path = join(dir, name);
@@ -589,7 +863,7 @@ const configIn = (fs: FileSystemHost, dir: string): LinterConfig | undefined => 
     // A manifest is a configuration only where it writes one.
     if (name === 'package.json' && !/"eslintConfig"\s*:/.test(text)) continue;
     const read = configText(path, text, false);
-    return { dir, ...withReferences(fs, path, read), root: read.root };
+    return { dir, ...withReferences(fs, path, read, ceiling), root: read.root };
   }
   return undefined;
 };
@@ -609,6 +883,15 @@ const isIgnored = (config: LinterConfig, path: string): boolean => {
 
 const NO_CONFIGS: readonly LinterConfig[] = [];
 
+/** The repository's root an upward walk stops at: the workspace declaring it, else the root itself (P334). */
+const readCeiling = (root: string): string => {
+  try {
+    return scanCeilingOf(root);
+  } catch {
+    return root;
+  }
+};
+
 /**
  * The globals a script declares for its linter (P311): its own `/* global *\/`
  * comment, and what the linter's configuration declares - `globals` in an
@@ -627,12 +910,16 @@ const NO_CONFIGS: readonly LinterConfig[] = [];
 export const linterGlobals = (fs: FileSystemHost, repoDir: string): ((file: SourceFile) => ReadonlySet<string>) => {
   const root = repoDir.length > 1 ? repoDir.replace(/[\\/]+$/, '') : repoDir;
   const inside = (dir: string): boolean => dir === root || dir.startsWith(root.endsWith('/') ? root : `${root}/`);
+  // What a configuration names is looked for inside the repository alone (P334):
+  // its root, or the workspace that declares it as a member.
+  let ceiling: string | undefined;
+  const ceilingOf = (): string => (ceiling ??= readCeiling(root));
   const byDirectory = new Map<string, readonly LinterConfig[]>();
   // The configurations a script in a directory is read under, nearest first.
   const configured = (dir: string): readonly LinterConfig[] => {
     const known = byDirectory.get(dir);
     if (known !== undefined) return known;
-    const own = configIn(fs, dir);
+    const own = configIn(fs, dir, ceilingOf());
     const parent = dirname(dir);
     const above = own?.root === true || dir === root || parent === dir || !inside(parent) ? NO_CONFIGS : configured(parent);
     const all = own === undefined ? above : [own, ...above];

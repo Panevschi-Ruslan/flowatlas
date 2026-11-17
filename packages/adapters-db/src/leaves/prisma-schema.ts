@@ -1,5 +1,5 @@
 import { dirname, isAbsolute, join, posix } from 'node:path';
-import { isWithinDir, toPosixPath } from '@flowatlas/core';
+import { isNoRepositoryDir, isWithinDir, toPosixPath } from '@flowatlas/core';
 import type { Project, SourceFile } from 'ts-morph';
 
 /**
@@ -127,6 +127,8 @@ export const prismaSchemaFor = (file: SourceFile): PrismaSchema | undefined => {
   let dir = dirname(file.getFilePath());
   let answer: PrismaSchema | null = null;
   for (let depth = 0; depth < MAX_ASCENT; depth += 1) {
+    // The home directory and the file system's root are no repository's (P334).
+    if (isNoRepositoryDir(dir)) break;
     const known = cache.get(dir);
     if (known !== undefined) {
       answer = known;

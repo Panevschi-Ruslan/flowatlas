@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T19:07:05.226Z",
+  "builtAt": "2026-11-17T20:35:12.537Z",
   "services": [
     {
       "name": "web",
@@ -534,7 +534,7 @@
           "files": 3,
           "filesRead": 3,
           "filesUnreadable": 0,
-          "functions": 14,
+          "functions": 15,
           "components": 0,
           "hooks": 0,
           "skippedExternalCalls": {}
@@ -748,10 +748,6 @@
         "client": "fetch",
         "via": "literal",
         "host": "localhost4600",
-        "portWithoutColon": {
-          "number": "4600",
-          "host": "localhost"
-        },
         "through": "probe"
       }
     },
@@ -1772,6 +1768,15 @@
         "host": "localhost"
       },
       "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "js/malformed.js",
+      "line": 7,
+      "reason": "ambiguous-route-target",
+      "message": "catalog and stock both answer GET /health",
+      "hint": "Set services[].apiTarget on the frontend to say which service its settings key names.",
+      "symbol": "ui_api_call:web#js/malformed.js:7:10@3:10"
     }
   ]
 }

@@ -2,7 +2,7 @@ import { builtExportFunctions } from '@flowatlas/adapters-entry';
 import { makeSymbolId, moduleFunctions, normalizeFilePath, type NamedFunction, startLineOf } from '@flowatlas/core';
 import type { Node as TsNode, Project, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
-import { scriptMembers, type ScriptMember } from './script-members.js';
+import { scriptMembers, scriptTop, type ScriptMember } from './script-members.js';
 
 /**
  * What a function is, as far as the graph is concerned.
@@ -471,6 +471,22 @@ export const buildReactFunctionIndex = (
       if (inner !== undefined && outer !== undefined) index.nest(outer, inner);
     }
     for (const [name, declarations] of reading.constructors) index.addGlobalConstructor(name, declarations);
+    // The top of a script that writes a call outside every function it keeps,
+    // itself a function (P334): every function of the file not written inside
+    // another is left to itself, as a wrapper's are.
+    const top = scriptTop(sourceFile);
+    if (top === undefined || skip(top) || index.byId(makeSymbolId(repo, file, top.name)) !== undefined) continue;
+    const topIndexed: IndexedFunction = { id: makeSymbolId(repo, file, top.name), name: top.name, role: 'plain', file, line: top.line, fn: top };
+    index.addMember({ fn: top, owners: [], also: [], globals: [] }, topIndexed);
+    for (const fn of [...found, ...reading.members.map((member) => member.fn)]) {
+      const indexed = index.get(fn.declaration);
+      if (indexed !== undefined && indexed !== topIndexed && enclosingMember(index, fn.declaration) === undefined) index.nest(topIndexed, indexed);
+    }
+    // A function the index leaves out (`skip`) still runs when it is called, not at the top.
+    for (const statement of sourceFile.getStatements()) {
+      const body = Node.isFunctionDeclaration(statement) ? statement.getBody() : undefined;
+      if (body !== undefined) index.nest(topIndexed, { ...topIndexed, fn: { ...top, body } });
+    }
   }
   return index;
 };

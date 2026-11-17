@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T18:45:45.324Z",
+  "builtAt": "2026-11-17T20:35:40.334Z",
   "services": [
     {
       "name": "web",
@@ -187,7 +187,7 @@
           "files": 6,
           "filesRead": 6,
           "filesUnreadable": 0,
-          "functions": 12,
+          "functions": 13,
           "components": 0,
           "hooks": 0,
           "skippedExternalCalls": {}
@@ -558,6 +558,14 @@
           "returns": "unknown"
         }
       }
+    },
+    {
+      "id": "web#js/page.js:page.js:top",
+      "type": "function",
+      "label": "page.js:top",
+      "repo": "web",
+      "file": "js/page.js",
+      "line": 15
     },
     {
       "id": "web#js/page.js:start",
@@ -947,6 +955,16 @@
       "confidence": "static",
       "file": "js/orders.js",
       "line": 5
+    },
+    {
+      "from": "web#js/page.js:page.js:top",
+      "to": "web#js/page.js:start",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "js/page.js",
+      "line": 15
     },
     {
       "from": "web#js/page.js:start",

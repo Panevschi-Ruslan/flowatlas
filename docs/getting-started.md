@@ -406,6 +406,7 @@ to look for.
 | [`script-wrappers`](../fixtures/script-wrappers) | a plain page with no manifest, its functions kept in wrappers, and jQuery, superagent and ky as globals a script tag or the linter declares |
 | [`script-ready-handlers`](../fixtures/script-ready-handlers) | a plain page whose code waits for the document to load, a CommonJS script requiring axios, and a server whose module exports name its functions |
 | [`script-load-events`](../fixtures/script-load-events) | requests at the top of a wrapper run at once, the page's other load events, superagent's sent query, globals a shared linter configuration declares, and a client's global nothing declares |
+| [`script-tops-plugin-configs`](../fixtures/script-tops-plugin-configs) | requests and calls at the very top of a script, a client's global called directly or through a wrapper's parameter asking for a declaration, globals a linter plugin's configuration declares, and a named import read for its export alone |
 | [`graphql-codegen-sdk`](../fixtures/graphql-codegen-sdk) | calls through the SDK GraphQL Code Generator writes, joined to the operations they send |
 | [`grpc-contract-messages`](../fixtures/grpc-contract-messages) | what a gRPC call sends compared with its contract's message, and a server that disagrees with its contract |
 | [`front-end-route-branches`](../fixtures/front-end-route-branches) | a route table written over a list, pages a condition chooses between, a locale prefix and Angular's guards |

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T17:26:53.397Z",
+  "builtAt": "2026-11-17T20:35:11.545Z",
   "configHash": "4ad4936b9843",
   "services": [
     {
@@ -81,11 +81,9 @@
   },
   "ui": {
     "total": 11,
-    "resolved": 10,
-    "unresolved": 1,
-    "byReason": {
-      "ambiguous-route-target": 1
-    }
+    "resolved": 11,
+    "unresolved": 0,
+    "byReason": {}
   },
   "channels": {
     "total": 0,
@@ -105,25 +103,15 @@
     "total": 0,
     "sharedPackage": 0
   },
-  "unresolved": [
-    {
-      "service": "web",
-      "file": "js/probe.js",
-      "line": 8,
-      "reason": "ambiguous-route-target",
-      "message": "catalog and stock both answer GET /health",
-      "hint": "Set services[].apiTarget on the frontend to say which service its settings key names.",
-      "symbol": "ui_api_call:web#js/probe.js:8:12"
-    }
-  ],
+  "unresolved": [],
   "totals": {
     "nodes": 57,
     "edges": 56,
     "types": 0,
-    "missed": 4,
-    "sites": 7,
+    "missed": 3,
+    "sites": 6,
     "notes": 0,
     "findings": 0,
-    "unresolved": 4
+    "unresolved": 3
   }
 }

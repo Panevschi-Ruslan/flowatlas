@@ -50,7 +50,7 @@ import {
 } from '../clients.js';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
-import { clientInstances, undeclaredPageGlobal, type ClientInstance } from '../util/client-instance.js';
+import { clientInstances, isBarePageGlobal, undeclaredPageGlobal, type ClientInstance } from '../util/client-instance.js';
 import { classMethods, enclosingIndexed, requestsOf, type ReadRequest, type RequestSite } from '../util/forward.js';
 import { localClientOf, type LocalClientReading } from '../util/local-client.js';
 import { linterGlobals, pageLoadedPackages } from '../util/page-globals.js';
@@ -756,9 +756,13 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
 
       if (Node.isIdentifier(callee)) {
         const name = callee.getText();
+        // A client's browser global called with no import, `ky(url)`, is the
+        // client's only where the page has it, as `ky.get(url)` is (P334):
+        // read below through what declares it, else said undeclared.
+        const pageGlobal = PAGE_GLOBAL_NAMES.has(name) && isBarePageGlobal(callee);
         for (const client of REQUEST_CLIENTS) {
           const shape = client.callee;
-          if (shape === undefined || !shape.names.includes(name)) continue;
+          if (pageGlobal || shape === undefined || !shape.names.includes(name)) continue;
           if (!isPlatformProvided(callee)) continue;
           found.push({ call: node, client, shape });
           return;
@@ -946,6 +950,9 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         record(one, request);
         continue;
       }
+      // Instances that disagree handed by one caller, the top of a script
+      // among them (P334): that caller carries none of their bases alone.
+      if (agreed === undefined) reportBasesDisagree(found, group, `in ${owner.name}, which carries none of their bases alone`);
       ensureOwner(ctx, owner.id);
       const handing = at.getFirstAncestor((node) => Node.isCallExpression(node) || Node.isNewExpression(node)) ?? at;
       record(one, { ...request, site: { call: handing, ownerId: owner.id, file: owner.file }, depth: request.depth + 1, through, calls: request.calls });
@@ -1200,8 +1207,9 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     const callee = node.getExpression();
     const holder = Node.isIdentifier(callee) ? callee : Node.isPropertyAccessExpression(callee) ? callee.getExpression() : undefined;
     if (holder === undefined || !Node.isIdentifier(holder)) return;
-    // A request's spelling on a client's global by its name, or on a wrapper's parameter it may be handed as.
-    if (Node.isPropertyAccessExpression(callee) ? !PAGE_GLOBAL_VERBS.has(callee.getName().toLowerCase()) : !PAGE_GLOBAL_NAMES.has(holder.getText())) return;
+    // A request's spelling on a client's global by its name, or on a wrapper's
+    // parameter it may be handed as - called on, or called itself (P334).
+    if (Node.isPropertyAccessExpression(callee) && !PAGE_GLOBAL_VERBS.has(callee.getName().toLowerCase())) return;
     if (!PAGE_GLOBAL_NAMES.has(holder.getText()) && !(holder.getSymbol()?.getDeclarations() ?? []).some((each) => Node.isParameterDeclaration(each))) return;
     const undeclared = undeclaredPageGlobal(holder, pageLoaded, declared);
     if (undeclared === undefined) return;

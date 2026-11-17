@@ -190,6 +190,26 @@ only one of them moved.
   global called with nothing declaring it (`ky.post(url)`, `axios.get(url)`
   with no import, script tag, `/* global */` comment or linter global) is a new
   `api-client-global-undeclared` row rather than silence.
+- **The top of a plain script, linter plugins' configurations and named
+  imports, and every client global asking for a declaration (P334).** A
+  plain script that writes a call at its very top, outside every function,
+  wrapper and handler, is a function of its own named after its file
+  (`boot.js:top`), so a request written there is drawn from it and a call
+  there joins the function it calls; a handler written there is drawn from
+  it as one written at a wrapper's top is. A client's browser global called
+  directly (`ky(url)`) needs the import, script tag, `/* global */` comment
+  or linter global its member calls (`ky.get(url)`) need, else it is an
+  `api-client-global-undeclared` row - as is a wrapper's parameter called as
+  a function when what the wrapper is handed is a client global nothing
+  declares (`(function (load) { load(url); })(unfetch)`). ESLint's
+  `plugin:x/y` in a cascading `extends` reads `configs.y` of the plugin
+  installed as `eslint-plugin-x` (`@acme/eslint-plugin` for `@acme`), and a
+  flat object's `extends: ['x/y']` reads the configuration of the plugin its
+  `plugins` hands under `x`, else of that package; a plugin, a parser or a
+  processor merely handed over is no configuration. A name a flat
+  configuration imports by name (`import { base } from './shared.js'`, `const
+  { base } = require(…)`, `require(…).base`) reads that export alone,
+  followed through a re-export and a local name.
 - **Receivers handed on, bases per caller and values after a host (P312).**
   A request object handed through functions is followed one call at a time
   to where each sends it; instances with different bases handed to one
@@ -1859,6 +1879,19 @@ only one of them moved.
 
 ### Fixed
 
+- **No look up the directories leaves the repository being read (P334).**
+  Looking for an ESLint shareable configuration or plugin under
+  `node_modules`, or a Nuxt layer or module by its package name, went on to
+  the file system's root as Node does, so a package installed above the
+  repository - in the home directory, say - was read into its globals; and a
+  configuration's `extends` by a path climbing out was followed. Each now
+  stops at the root the service was given, widened to the workspace that
+  declares it as a member. A walk given no root - the workspace roots above
+  a package, the package a file is in, a relative tsconfig `extends`, a
+  workspace application's manifest, a Prisma schema, the top a gRPC
+  contract is searched from, the checkout a build is stamped with - stops at
+  the top of the checkout it starts in, and none reads in the home
+  directory.
 - **fastify-cli's port order, checked against its source (P327).** `fastify
   start` loads `.env` with dotenv up to fastify-cli 7 and with Node's
   `process.loadEnvFile()` from 8, neither over a set variable, so a

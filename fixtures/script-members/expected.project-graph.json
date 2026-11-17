@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-15T16:09:20.593Z",
+  "builtAt": "2026-11-17T20:35:36.799Z",
   "services": [
     {
       "name": "web",
@@ -232,7 +232,7 @@
           "files": 5,
           "filesRead": 5,
           "filesUnreadable": 0,
-          "functions": 10,
+          "functions": 11,
           "components": 0,
           "hooks": 0,
           "skippedExternalCalls": {}
@@ -758,6 +758,14 @@
       }
     },
     {
+      "id": "web#js/page.js:page.js:top",
+      "type": "function",
+      "label": "page.js:top",
+      "repo": "web",
+      "file": "js/page.js",
+      "line": 11
+    },
+    {
       "id": "web#js/page.js:start",
       "type": "function",
       "label": "start",
@@ -1138,6 +1146,16 @@
       "confidence": "static",
       "file": "js/cart.js",
       "line": 22
+    },
+    {
+      "from": "web#js/page.js:page.js:top",
+      "to": "web#js/page.js:start",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "js/page.js",
+      "line": 11
     },
     {
       "from": "web#js/page.js:start",

@@ -16,8 +16,9 @@ addresses. One service answers them. What P312 reads:
    `https://reviews.example.test` by `latestReviews` and one on
    `https://ratings.example.test` by `latestRatings`: one request per caller,
    each under its own base. `Feed` is handed the two at the top of the
-   script, where no function can carry each: one request under the path
-   alone, and an `api-client-base-unread` row saying why.
+   script, `latest.js:top` (P334), which cannot carry each: one request
+   drawn from it under the path alone, and an `api-client-base-unread` row
+   saying why.
 3. **A value written straight after the host.** `versioned(version)` in
    `web/js/products.js` writes `https://shop.example.test${version}/products`
    and every caller hands a path: read at each caller, `/v1/products` and

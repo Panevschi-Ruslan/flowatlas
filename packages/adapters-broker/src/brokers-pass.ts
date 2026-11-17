@@ -313,8 +313,8 @@ const functionLikeOf = (handler: HandlerNode) => {
   if (Node.isMethodDeclaration(handler) || Node.isFunctionDeclaration(handler) || Node.isArrowFunction(handler) || Node.isFunctionExpression(handler)) {
     return handler;
   }
-  // A getter or a setter is no handler anything registers.
-  if (Node.isGetAccessorDeclaration(handler) || Node.isSetAccessorDeclaration(handler)) return undefined;
+  // A getter or a setter, or the top of a script, is no handler anything registers.
+  if (Node.isGetAccessorDeclaration(handler) || Node.isSetAccessorDeclaration(handler) || Node.isSourceFile(handler)) return undefined;
   const written = handler.getInitializer();
   return written !== undefined && (Node.isArrowFunction(written) || Node.isFunctionExpression(written)) ? written : undefined;
 };

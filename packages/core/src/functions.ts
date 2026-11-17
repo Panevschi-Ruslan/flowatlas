@@ -34,7 +34,9 @@ export interface NamedFunction {
     | PropertyAssignment
     | MethodDeclaration
     | GetAccessorDeclaration
-    | SetAccessorDeclaration;
+    | SetAccessorDeclaration
+    // The top of a plain script, read as a function of its own (P334).
+    | SourceFile;
   /** The body, for walking the calls inside it. */
   body: TsNode;
   line: number;

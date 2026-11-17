@@ -180,6 +180,20 @@ export const undeclaredPageGlobal = (
   return moduleFactory(target, pageLoaded, declared) === undefined ? { factory, name } : undefined;
 };
 
+/**
+ * Whether a call's name is a client's browser global, taken from no import
+ * and declared by nothing of the repository (P334): `ky(url)` with no `import
+ * ky`. Such a name is the client's only where the page has it - a script tag,
+ * a `/* global *\/` comment, a linter global - so it is read through
+ * {@link moduleFactory} like `ky.get(url)`, never by its name alone.
+ */
+export const isBarePageGlobal = (node: TsNode): boolean => {
+  const target = unwrap(node);
+  if (!Node.isIdentifier(target) || importedFrom(target) !== undefined) return false;
+  const name = target.getText();
+  return CLIENT_FACTORIES.some((factory) => factory.pageGlobals?.includes(name) === true) && declaredNowhere(target);
+};
+
 /** Whether nothing of the repository declares a name: no declaration, or only an installed package's typings. */
 const declaredNowhere = (name: TsNode): boolean =>
   (name.getSymbol()?.getDeclarations() ?? []).every((declaration) => declaration.getSourceFile().isDeclarationFile() || declaration.getSourceFile().isInNodeModules());

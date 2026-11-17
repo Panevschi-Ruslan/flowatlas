@@ -483,7 +483,10 @@ export {
   workspaceRootOf,
   workspaceRootsAbove,
   widenServiceExtent,
+  scanCeilingOf,
 } from './workspace.js';
+export { checkoutTopOf, forgetCheckouts, isNoRepositoryDir, mayClimbTo, upwardCeilingOf } from './upward-walk.js';
+export type { PathExists } from './upward-walk.js';
 export type { ExtentPackage, WorkspacePackage } from './workspace.js';
 export { applicationLibraryDirs, readServiceManifest, workspaceApplicationOf } from './workspace-application.js';
 export type { WorkspaceApplication } from './workspace-application.js';

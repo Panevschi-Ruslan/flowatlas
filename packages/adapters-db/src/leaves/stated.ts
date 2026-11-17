@@ -2,10 +2,12 @@ import { dirname, join } from 'node:path';
 import {
   classMembersOf,
   declarationOf,
+  mayClimbTo,
   packageOfSpecifier,
   readPackageJson,
   suppliedTypes,
   workspacePackages,
+  upwardCeilingOf,
   workspaceRootOf,
   type TypeOrigin,
 } from '@flowatlas/core';
@@ -448,11 +450,15 @@ interface ModuleReference {
 const packageDirs = new Map<string, ReadonlyMap<string, string>>();
 const rootsOf = new Map<string, string | undefined>();
 
-/** The workspace a directory is inside: the root that lists its nearest member ancestor. */
-const workspaceRootAbove = (dir: string): string | undefined => {
+/**
+ * The workspace a directory is inside: the root that lists its nearest member
+ * ancestor, looked for up to the checkout's top and no further (P334).
+ */
+const workspaceRootAbove = (dir: string, ceiling: string | undefined): string | undefined => {
   if (rootsOf.has(dir)) return rootsOf.get(dir);
+  if (!mayClimbTo(dir, ceiling)) return undefined;
   const parent = dirname(dir);
-  const root = workspaceRootOf(dir) ?? (parent === dir ? undefined : workspaceRootAbove(parent));
+  const root = workspaceRootOf(dir) ?? (parent === dir ? undefined : workspaceRootAbove(parent, ceiling));
   rootsOf.set(dir, root);
   return root;
 };
@@ -471,7 +477,8 @@ const workspaceRootAbove = (dir: string): string | undefined => {
 const workspaceEntry = (specifier: string, from: SourceFile): SourceFile | undefined => {
   const pkg = packageOfSpecifier(specifier);
   if (pkg === undefined) return undefined;
-  const root = workspaceRootAbove(dirname(from.getFilePath()));
+  const fromDir = dirname(from.getFilePath());
+  const root = workspaceRootAbove(fromDir, upwardCeilingOf(fromDir));
   if (root === undefined) return undefined;
   let byName = packageDirs.get(root);
   if (byName === undefined) {

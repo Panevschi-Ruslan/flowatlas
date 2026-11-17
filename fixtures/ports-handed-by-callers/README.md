@@ -16,9 +16,8 @@ What P318 reads:
    `web/js/probe.js` writes `${this.origin()}${port}/health`, the host a
    method always answers; `probeKept` hands `Ports.stock`, a constant the
    class keeps. Each caller's request is at its port; the call made as the
-   page loads, outside any function, stays where it is written, its port
-   unread (`localhost${…}`) and its path `/health` read, which two services
-   answer.
+   page loads, at the top of the script, is drawn from the script's top,
+   `probe.js:top`, a function of its own (P334), at its port too.
 3. **Instances with different bases, the address followed out.**
    `readWith(client, path)` in `web/js/latest.js` is handed an axios
    instance on port 4600 with `/latest` by one caller and one on 4700 with

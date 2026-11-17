@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T17:26:53.397Z",
+  "builtAt": "2026-11-17T20:35:11.545Z",
   "services": [
     {
       "name": "web",
@@ -209,15 +209,6 @@
         "middlewareRead": true,
         "handlerVia": "inline",
         "confidence": "heuristic"
-      }
-    },
-    {
-      "id": "external_api:localhost${…}",
-      "type": "external_api",
-      "label": "localhost${…}",
-      "repo": "web",
-      "meta": {
-        "host": "localhost${…}"
       }
     },
     {
@@ -573,7 +564,7 @@
           "files": 3,
           "filesRead": 3,
           "filesUnreadable": 0,
-          "functions": 14,
+          "functions": 15,
           "components": 0,
           "hooks": 0,
           "skippedExternalCalls": {}
@@ -863,16 +854,16 @@
       }
     },
     {
-      "id": "ui_api_call:web#js/probe.js:8:12",
+      "id": "ui_api_call:web#js/probe.js:31:1@8:12",
       "type": "ui_api_call",
       "label": "GET /health",
       "repo": "web",
       "file": "js/probe.js",
-      "line": 8,
+      "line": 31,
       "kind": "http",
       "meta": {
         "method": "GET",
-        "url": "http://localhost${…}/health",
+        "url": "http://localhost:4700/health",
         "path": "/health",
         "baseUrlEnv": null,
         "responseType": null,
@@ -880,7 +871,9 @@
         "package": null,
         "client": "fetch",
         "via": "literal",
-        "host": "localhost${…}"
+        "host": "localhost:4700",
+        "through": "Probe.check",
+        "targetService": "stock"
       }
     },
     {
@@ -1068,6 +1061,14 @@
       "repo": "web",
       "file": "js/probe.js",
       "line": 7
+    },
+    {
+      "id": "web#js/probe.js:probe.js:top",
+      "type": "function",
+      "label": "probe.js:top",
+      "repo": "web",
+      "file": "js/probe.js",
+      "line": 31
     },
     {
       "id": "web#js/probe.js:probeCatalog",
@@ -1528,12 +1529,17 @@
       }
     },
     {
-      "from": "ui_api_call:web#js/probe.js:8:12",
-      "to": "external_api:localhost${…}",
-      "type": "calls",
-      "confidence": "static",
+      "from": "ui_api_call:web#js/probe.js:31:1@8:12",
+      "to": "entry:stock:http:GET:/health",
+      "type": "hits",
+      "confidence": "heuristic",
       "file": "js/probe.js",
-      "line": 8
+      "line": 31,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:13"
+      }
     },
     {
       "from": "web#js/health.js:catalogHealth",
@@ -1691,12 +1697,12 @@
       "line": 11
     },
     {
-      "from": "web#js/probe.js:Probe.check",
-      "to": "ui_api_call:web#js/probe.js:8:12",
+      "from": "web#js/probe.js:probe.js:top",
+      "to": "ui_api_call:web#js/probe.js:31:1@8:12",
       "type": "calls",
       "confidence": "static",
       "file": "js/probe.js",
-      "line": 8
+      "line": 31
     },
     {
       "from": "web#js/probe.js:probeCatalog",
@@ -1801,15 +1807,6 @@
         ]
       },
       "service": "stock"
-    },
-    {
-      "service": "web",
-      "file": "js/probe.js",
-      "line": 8,
-      "reason": "ambiguous-route-target",
-      "message": "catalog and stock both answer GET /health",
-      "hint": "Set services[].apiTarget on the frontend to say which service its settings key names.",
-      "symbol": "ui_api_call:web#js/probe.js:8:12"
     }
   ]
 }

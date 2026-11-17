@@ -260,9 +260,13 @@ export const enclosingIndexed = (
   call: TsNode,
   isClient: ClientClass = () => false,
 ): IndexedFunction | undefined => {
+  let inClass = false;
   for (let at = call.getParent(); at !== undefined; at = at.getParent()) {
-    if (Node.isSourceFile(at)) return undefined;
+    // The top of a plain script is a function of its own where it writes a
+    // call (P334); a class's methods are not run there.
+    if (Node.isSourceFile(at)) return inClass ? undefined : ctx.functions.scriptMember(at);
     if (Node.isClassDeclaration(at) && isClient(at)) return undefined;
+    if (Node.isClassDeclaration(at) || Node.isClassExpression(at)) inClass = true;
     const owner = at.getParent();
     const indexed =
       Node.isFunctionDeclaration(at) || Node.isVariableDeclaration(at) || Node.isPropertyAssignment(at)
@@ -521,7 +525,8 @@ export const classMethods = (ctx: ReactExtractContext, isClientClass: ClientClas
     if (source.isDeclarationFile() || source.isInNodeModules()) continue;
     for (const cls of source.getDescendantsOfKind(SyntaxKind.ClassDeclaration)) {
       if (cls.getName() === undefined || ctx.functions.get(cls) !== undefined) continue;
-      if (cls.getAncestors().some((at) => ctx.functions.get(at as never) !== undefined)) continue;
+      // Inside a function; the top of a script (P334), though a function, holds its classes as any file does.
+      if (cls.getAncestors().some((at) => !Node.isSourceFile(at) && ctx.functions.get(at as never) !== undefined)) continue;
       if (isClientClass(cls)) continue;
       for (const member of cls.getMembers()) {
         const indexed = methodIndexed(ctx, member);

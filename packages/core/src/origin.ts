@@ -4,6 +4,7 @@ import type { ClassDeclaration, Node as TsNode, Type } from 'ts-morph';
 import { Node, SymbolFlags, VariableDeclarationKind } from 'ts-morph';
 import { toPosixPath } from './ids.js';
 import { declarationOf } from './static-value.js';
+import { mayClimbTo, upwardCeilingOf } from './upward-walk.js';
 
 /**
  * Where the type of a value was declared.
@@ -70,7 +71,10 @@ const manifestCache = new Map<string, string | null>();
  */
 export const packageNameOf = (filePath: string): string | null => {
   let dir = dirname(filePath);
+  const ceiling = upwardCeilingOf(dir);
   for (let up = 0; up < 12; up += 1) {
+    // Never a manifest outside the checkout the file is in (P334).
+    if (!mayClimbTo(dir, ceiling)) return null;
     const cached = manifestCache.get(dir);
     if (cached !== undefined) return cached;
     const manifest = join(dir, 'package.json');
