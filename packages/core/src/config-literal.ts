@@ -100,10 +100,14 @@ const defaultExportOf = (file: ts.SourceFile): ts.Expression | undefined => {
 const literalText = (node: ts.Expression): string | undefined =>
   ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) ? node.text : undefined;
 
-/** Names a configuration file's own directory: `__dirname`, `import.meta.dirname`, `process.cwd()`. */
-const isOwnDirectory = (node: ts.Expression, file: ts.SourceFile): boolean => {
+/**
+ * Names a configuration file's own directory: `__dirname`, `import.meta.dirname`,
+ * and `process.cwd()` where `cwd` says the file is run from where it is, as a
+ * configuration at the top of a repository is.
+ */
+const isOwnDirectory = (node: ts.Expression, file: ts.SourceFile, cwd = true): boolean => {
   const text = unwrap(node).getText(file);
-  return text === '__dirname' || text === 'import.meta.dirname' || text === 'process.cwd()';
+  return text === '__dirname' || text === 'import.meta.dirname' || (cwd && text === 'process.cwd()');
 };
 
 /** The callee's last name: `resolve`, `path.resolve` and `join` alike. */
@@ -115,8 +119,13 @@ const calleeName = (call: ts.CallExpression): string | undefined => {
 };
 
 /** A path built from the file's own directory, absolute, or undefined when it is not one. */
-const pathOf = (node: ts.Expression, file: ts.SourceFile, dir: string): string | undefined => {
+const pathOf = (node: ts.Expression, file: ts.SourceFile, dir: string, cwd = true): string | undefined => {
   const value = unwrap(node);
+  // `${__dirname}/defaults` (P321).
+  if (ts.isTemplateExpression(value) && value.head.text === '' && value.templateSpans.length === 1) {
+    const span = value.templateSpans[0] as ts.TemplateSpan;
+    return isOwnDirectory(span.expression, file, cwd) && span.literal.text.startsWith('/') ? join(dir, span.literal.text) : undefined;
+  }
   if (ts.isNewExpression(value) && value.expression.getText(file) === 'URL') {
     const [first, base] = value.arguments ?? [];
     const relative = first === undefined ? undefined : literalText(unwrap(first));
@@ -125,14 +134,24 @@ const pathOf = (node: ts.Expression, file: ts.SourceFile, dir: string): string |
   }
   if (!ts.isCallExpression(value)) return undefined;
   const name = calleeName(value);
-  if (name === 'fileURLToPath' && value.arguments.length === 1) return pathOf(value.arguments[0] as ts.Expression, file, dir);
+  if (name === 'fileURLToPath' && value.arguments.length === 1) return pathOf(value.arguments[0] as ts.Expression, file, dir, cwd);
   if (name !== 'resolve' && name !== 'join') return undefined;
   const [head, ...rest] = value.arguments;
-  if (head === undefined || !isOwnDirectory(head, file)) return undefined;
+  if (head === undefined || !isOwnDirectory(head, file, cwd)) return undefined;
   const parts = rest.map((part) => literalText(unwrap(part)));
   if (parts.some((part) => part === undefined)) return undefined;
   return name === 'resolve' ? resolve(dir, ...(parts as string[])) : join(dir, ...(parts as string[]));
 };
+
+/**
+ * A module path code builds from its own file's directory, made absolute
+ * (P321): `path.join(__dirname, 'defaults')`, `path.resolve(__dirname,
+ * '../config')`, `` `${__dirname}/defaults` ``, `fileURLToPath(new
+ * URL('./defaults', import.meta.url))`, read as a configuration's
+ * {@link ConfigPath} is. `process.cwd()` is where the code is run from, not
+ * where it is, so it is no such path here. Undefined for anything else.
+ */
+export const ownDirectoryPath = (node: ts.Expression, file: ts.SourceFile, dir: string): string | undefined => pathOf(node, file, dir, false);
 
 /** One expression as plain values. */
 const valueOf = (node: ts.Expression, file: ts.SourceFile, dir: string, depth = 0): unknown => {

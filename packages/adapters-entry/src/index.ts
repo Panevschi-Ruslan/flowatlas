@@ -23,6 +23,7 @@ import { nestjsTelegrafAdapter } from './nestjs-telegraf/index.js';
 import { telegrafCallsAdapter } from './telegraf-calls.js';
 import { tanstackStartAdapter } from './server-functions.js';
 import { mcpServerAdapter } from './mcp-servers.js';
+import { strapiServerAdapter } from './strapi-server.js';
 import { grpcServerAdapter } from './grpc-services.js';
 
 export const PACKAGE_NAME = '@flowatlas/adapters-entry';
@@ -55,6 +56,7 @@ export const entryAdapters: readonly EntryAdapter[] = [
   tanstackStartAdapter,
   mcpServerAdapter,
   grpcServerAdapter,
+  strapiServerAdapter,
   entryRegistriesAdapter,
   configuredRoutesAdapter,
   configuredProceduresAdapter,
@@ -239,7 +241,21 @@ export {
   repoSources,
   unwrapValue,
 } from './shared.js';
-export { envFilePort, filledFromEnv, frameworkListens, loadedEnvFiles, NITRO_ENV, REMIX_ENV, scriptCommands, scriptPorts } from './listen-ports.js';
+export {
+  bunEnvFiles,
+  envFilePort,
+  FASTIFY_CLI_ENV,
+  fastifyCliListens,
+  filledFromEnv,
+  frameworkListens,
+  loadedEnvFiles,
+  NITRO_ENV,
+  REMIX_ENV,
+  scriptCommands,
+  scriptPorts,
+  strapiListens,
+} from './listen-ports.js';
+export { strapiServerAdapter } from './strapi-server.js';
 export type { EnvLoading, ScriptCommand } from './listen-ports.js';
 export { factoryPorts, settingsReading } from './listen-settings.js';
 export { keyLine, nextProxies, nitroProxies, proxyConfigFile, proxyTableRules, rewriteOfFunction } from './proxy-config.js';

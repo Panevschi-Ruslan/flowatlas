@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-15T17:39:52.494Z",
+  "builtAt": "2026-11-17T17:31:16.296Z",
   "services": [
     {
       "name": "catalog",
@@ -871,7 +871,7 @@
       "reason": "listen-port-unread",
       "level": "info",
       "message": "app.listen(getConfig().apiOptions.port) listens on a port this did not read: it comes from a module loaded by a path decided at run time, import(defaultsPath) (src/config.ts:9), so no request to this machine is joined to the service by its port.",
-      "hint": "Import the module the port comes from by a path written as a string, or write the port where the server is started; a port a setting gives can be read from the repository's setting files.",
+      "hint": "Import the module the port comes from by a path written as a string or built from the file's own directory (path.join(__dirname, 'defaults')), or write the port where the server is started; a port a setting gives can be read from the repository's setting files.",
       "symbol": "app.listen(getConfig().apiOptions.port)",
       "service": "legacy"
     },

@@ -1,7 +1,9 @@
-import type { BinaryExpression, CallExpression, Node as TsNode, PropertyAccessExpression, SourceFile, VariableDeclaration } from 'ts-morph';
-import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
+import { dirname, join, resolve } from 'node:path';
+import type { BinaryExpression, CallExpression, NewExpression, Node as TsNode, PropertyAccessExpression, SourceFile } from 'ts-morph';
+import { Node, SyntaxKind, VariableDeclarationKind, ts } from 'ts-morph';
 import type { Unresolved } from './model/graph.js';
 import type { ExtractContext } from './adapters/context.js';
+import { ownDirectoryPath } from './config-literal.js';
 import { normalizeFilePath } from './ids.js';
 import { startLineOf } from './line-numbers.js';
 import { isTestName } from './test-files.js';
@@ -77,6 +79,13 @@ export interface ListenPort {
    * example of it, read only as a candidate (`default` kept).
    */
   readonly valueFrom?: string;
+  /**
+   * Where the value the port is read from is written again by something not
+   * read (P321), `file:line`: `config = await applyPlugins(config)` whose
+   * answer is no function of the repository's own. The port is the value from
+   * before that write, so a join made from it says it is a guess.
+   */
+  readonly rewritten?: string;
 }
 
 /** A port read at a node, before it is placed in a file. */
@@ -90,6 +99,8 @@ export interface ListenAt {
   readonly devServer?: true;
   /** The merge helper's call the port is read through (P305). */
   readonly mergedAt?: TsNode;
+  /** The write not read that the value the port is read from passes (P321). */
+  readonly rewrittenAt?: TsNode;
 }
 
 /** What an expression says of a port: the number, and the setting it falls back from. */
@@ -116,8 +127,8 @@ export interface PortReading {
 }
 
 /** Whether a port is written as a number the server listens on wherever it runs. */
-export const literalPort = (port: Pick<ListenPort, 'setting' | 'default' | 'merged'>): boolean =>
-  port.setting === undefined && port.default !== true && port.merged === undefined;
+export const literalPort = (port: Pick<ListenPort, 'setting' | 'default' | 'merged' | 'rewritten'>): boolean =>
+  port.setting === undefined && port.default !== true && port.merged === undefined && port.rewritten === undefined;
 
 /**
  * Whether a setting is named as a variable of the environment is: `PORT`,
@@ -149,6 +160,8 @@ interface Trail {
   others?: Candidate[];
   /** A module loaded from a path decided at run time, that the value was to come from (P315). */
   unreadAt?: TsNode;
+  /** A write of a variable or a property the value is read from, whose own value is not read (P321). */
+  rewrittenAt?: TsNode;
 }
 
 /** One value an expression may hold, and how it was reached (P315). */
@@ -184,9 +197,13 @@ const followed = (node: TsNode | undefined, depth = 0, trail?: Trail): TsNode | 
   // object declares it, in this file or another (P254). `process.env.PORT` is
   // a setting, read as one below.
   if (Node.isPropertyAccessExpression(node) && node.getExpression().getText() !== 'process.env') {
-    for (const declaration of node.getNameNode().getSymbol()?.getDeclarations() ?? []) {
-      const value = memberValue(declaration);
-      if (value !== undefined) return followed(value, depth + 1, trail);
+    // A property written after it is declared, or one of a value that is, is
+    // what its writes say rather than what its declaration does (P321).
+    if (heldIn(node) === undefined) {
+      for (const declaration of node.getNameNode().getSymbol()?.getDeclarations() ?? []) {
+        const value = memberValue(declaration);
+        if (value !== undefined) return followed(value, depth + 1, trail);
+      }
     }
     // `mergeConfig(given).apiOptions.port`: the key of what a merge helper answers (P305),
     // `getConfig().apiOptions.port` of what a function returns or a module variable holds (P315).
@@ -196,7 +213,8 @@ const followed = (node: TsNode | undefined, depth = 0, trail?: Trail): TsNode | 
   if (!Node.isIdentifier(node)) return node;
   const symbol = node.getSymbol();
   for (const declaration of (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []) {
-    // A module variable the repository's own functions write: each value written (P315).
+    // A variable the repository's own code writes: each value written (P315),
+    // or the one written last before the read in a function (P321).
     if (holderOf(declaration) !== undefined) {
       const value = adopt(valuesAt(node, [], 0, walkFrom(trail)).found, trail);
       return value === undefined || value === node ? node : followed(value, depth + 1, trail);
@@ -263,15 +281,20 @@ const destructured = (element: TsNode, depth: number, trail?: Trail): TsNode | u
  */
 const MERGES = /\.\.\.|\bObject\.(assign|entries|keys)\(|\bfor\s*\([^)]*\bin\b/;
 
-/** The function a callee names, where it is the repository's own and has a body. */
+/**
+ * The function a callee names, where it is the repository's own and has a
+ * body: a function, a constant holding one, and a method of a class or an
+ * object (`settings.load(given)`, P321).
+ */
 const ownFunction = (callee: TsNode): TsNode | undefined => {
-  if (!Node.isIdentifier(callee)) return undefined;
-  const symbol = callee.getSymbol();
+  const name = Node.isIdentifier(callee) ? callee : Node.isPropertyAccessExpression(callee) ? callee.getNameNode() : undefined;
+  if (name === undefined) return undefined;
+  const symbol = name.getSymbol();
   for (const declaration of (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []) {
     const file = declaration.getSourceFile();
     if (file.isInNodeModules() || file.isDeclarationFile()) continue;
-    if (Node.isFunctionDeclaration(declaration) && declaration.getBody() !== undefined) return declaration;
-    if (Node.isVariableDeclaration(declaration)) {
+    if ((Node.isFunctionDeclaration(declaration) || Node.isMethodDeclaration(declaration)) && declaration.getBody() !== undefined) return declaration;
+    if (Node.isVariableDeclaration(declaration) || Node.isPropertyAssignment(declaration) || Node.isPropertyDeclaration(declaration)) {
       const value = declaration.getInitializer();
       if (value !== undefined && (Node.isArrowFunction(value) || Node.isFunctionExpression(value))) return value;
     }
@@ -282,7 +305,7 @@ const ownFunction = (callee: TsNode): TsNode | undefined => {
 /** Whether a function of the repository's own merges what it is handed, and calls itself or merges in its body. */
 const isMergeHelper = (fn: TsNode): boolean => {
   if (parametersOf(fn).length === 0) return false;
-  const body = Node.isFunctionDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) ? fn.getBody() : undefined;
+  const body = Node.isFunctionDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) || Node.isMethodDeclaration(fn) ? fn.getBody() : undefined;
   if (body === undefined) return false;
   if (MERGES.test(body.getText())) return true;
   const name = nameOfFunction(fn)?.getText();
@@ -344,10 +367,16 @@ interface Walk {
   /** The calls stepped into on the way, the outermost first: where a value read inside them is read. */
   readonly via: readonly TsNode[];
   /** For each function stepped into, the call it was stepped into by: its parameters are that call's arguments. */
-  readonly bound: ReadonlyMap<TsNode, CallExpression>;
+  readonly bound: ReadonlyMap<TsNode, Invocation>;
   /** Where what could not be read is said. */
   readonly sink: Trail;
   readonly steps: { left: number };
+  /**
+   * The holder a setter's object spreads over itself (`{ ...this.values,
+   * ...given }`, P321): read there it is what lies beneath the setter's
+   * layer, which the layers below answer, so it answers nothing itself.
+   */
+  readonly beneath?: TsNode;
 }
 
 /** The values an expression may hold at a path, and whether it may leave the path out or hold something not seen into. */
@@ -400,6 +429,7 @@ const valuesAt = (expression: TsNode | undefined, keys: readonly string[], depth
   if (expression === undefined || depth > VALUE_DEPTH || walk.steps.left <= 0) return NOTHING;
   walk.steps.left -= 1;
   const node = unwrapped(expression);
+  if (walk.beneath !== undefined && refersTo(node, walk.beneath)) return NOTHING;
   if (Node.isObjectLiteralExpression(node)) return keys.length === 0 ? only(node) : objectValuesAt(node, keys, depth, walk);
   if (Node.isIdentifier(node)) {
     const symbol = node.getSymbol();
@@ -410,9 +440,15 @@ const valuesAt = (expression: TsNode | undefined, keys: readonly string[], depth
     return keys.length === 0 ? only(node) : NOTHING;
   }
   if (Node.isPropertyAccessExpression(node) && node.getExpression().getText() !== 'process.env') {
-    for (const declaration of node.getNameNode().getSymbol()?.getDeclarations() ?? []) {
-      const value = memberValue(declaration);
-      if (value !== undefined) return valuesAt(value, keys, depth + 1, walk);
+    const declarations = node.getNameNode().getSymbol()?.getDeclarations() ?? [];
+    // A property written after it is declared: each value written (P321).
+    const holder = declarations.find((each) => holderOf(each) !== undefined);
+    if (holder !== undefined) return holderValuesAt(holder, node, keys, depth, walk);
+    if (heldIn(node.getExpression()) === undefined) {
+      for (const declaration of declarations) {
+        const value = memberValue(declaration);
+        if (value !== undefined) return valuesAt(value, keys, depth + 1, walk);
+      }
     }
     const inner = valuesAt(node.getExpression(), [node.getName(), ...keys], depth + 1, walk);
     return inner.found.length === 0 && keys.length === 0 ? only(node) : inner;
@@ -445,7 +481,10 @@ const objectValuesAt = (node: TsNode, keys: readonly string[], depth: number, wa
 
 /** What a name's declaration holds at a path, or nothing where it is no declaration this follows. */
 const declaredValuesAt = (declaration: TsNode, at: TsNode, keys: readonly string[], depth: number, walk: Walk): Values | undefined => {
-  if (Node.isParameterDeclaration(declaration)) return parameterValuesAt(declaration, keys, depth, walk);
+  if (Node.isParameterDeclaration(declaration)) {
+    // A parameter written again in its function: the write before the read (P321).
+    return holderOf(declaration) === undefined ? parameterValuesAt(declaration, keys, depth, walk) : localValuesAt(declaration, at, keys, depth, walk);
+  }
   if (Node.isVariableDeclaration(declaration)) {
     if (holderOf(declaration) !== undefined) return holderValuesAt(declaration, at, keys, depth, walk);
     const initializer = declaration.getInitializer();
@@ -482,7 +521,7 @@ const parameterValuesAt = (parameter: TsNode, keys: readonly string[], depth: nu
     otherwise === undefined || !read.open ? read : union([read, valuesAt(otherwise, keys.slice(1), depth + 1, walk)]);
   const own = parameter.getInitializer();
   const leftOut = (): Values => keyDefault(own === undefined ? NOTHING : valuesAt(own, keys, depth + 1, walk));
-  const handedBy = (call: CallExpression): Values => {
+  const handedBy = (call: Invocation): Values => {
     const argument = index < 0 ? undefined : call.getArguments()[index];
     if (argument === undefined) return leftOut();
     const handed = valuesAt(argument, keys, depth + 1, walk);
@@ -527,15 +566,104 @@ const loadsModule = (call: CallExpression): boolean => {
   return callee.getKind() === SyntaxKind.ImportKeyword || (Node.isIdentifier(callee) && callee.getText() === 'require');
 };
 
+/** The extensions a module path is tried with where it is written without its source's, the source's first. */
+const MODULE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs'];
+
+/** The file of the project a module path names, tried as written, with each extension and as a directory's index. */
+const moduleFileAt = (project: ReturnType<TsNode['getProject']>, path: string): SourceFile | undefined => {
+  const bare = path.replace(/\.[cm]?[jt]sx?$/, '');
+  const candidates = [path, ...MODULE_EXTENSIONS.map((extension) => `${bare}${extension}`), ...MODULE_EXTENSIONS.map((extension) => join(bare, `index${extension}`))];
+  for (const candidate of candidates) {
+    const file = project.getSourceFile(candidate);
+    if (file !== undefined && !file.isDeclarationFile() && !file.isInNodeModules()) return file;
+  }
+  return undefined;
+};
+
+/**
+ * The file of the repository a call loads (P321): a path written relative to
+ * the file that loads it (`import('./defaults')`), or one built from that
+ * file's own directory - `require(path.join(__dirname, 'defaults'))`,
+ * `import(path.resolve(__dirname, '../config'))`, through the constant that
+ * holds it - read as a configuration's {@link ConfigPath} is. `computed` says
+ * the path is not written as a string; `file` is absent where the path is a
+ * package's, is built from something else, or names no file of the project.
+ */
+const moduleLoaded = (call: CallExpression): { readonly file?: SourceFile; readonly computed: boolean } => {
+  const argument = call.getArguments()[0];
+  if (argument === undefined) return { computed: false };
+  const literal = literalText(argument);
+  const relativeTo = (node: TsNode, text: string): string | undefined =>
+    text.startsWith('.') ? resolve(dirname(node.getSourceFile().getFilePath()), text) : undefined;
+  if (literal !== undefined) {
+    const path = relativeTo(argument, literal);
+    const file = path === undefined ? undefined : moduleFileAt(call.getProject(), path);
+    return file === undefined ? { computed: false } : { file, computed: false };
+  }
+  const written = followed(argument);
+  let path: string | undefined;
+  if (written !== undefined) {
+    const text = literalText(written);
+    const source = written.getSourceFile();
+    path =
+      text !== undefined
+        ? relativeTo(written, text)
+        : ownDirectoryPath(written.compilerNode as ts.Expression, source.compilerNode, dirname(source.getFilePath()));
+  }
+  const file = path === undefined ? undefined : moduleFileAt(call.getProject(), path);
+  return file === undefined ? { computed: true } : { file, computed: true };
+};
+
+/** What `module.exports = value` makes a module's whole export, where the module writes it. */
+const commonExportsOf = (file: SourceFile): TsNode | undefined => {
+  for (const statement of file.getStatements()) {
+    if (!Node.isExpressionStatement(statement)) continue;
+    const expression = statement.getExpression();
+    if (Node.isBinaryExpression(expression) && expression.getOperatorToken().getKind() === SyntaxKind.EqualsToken && expression.getLeft().getText() === 'module.exports') {
+      return expression.getRight();
+    }
+  }
+  return undefined;
+};
+
+/**
+ * What a module a call loads answers at a path (P321): `require()` answers
+ * the module's `module.exports`, or its exports by name where it writes none;
+ * `import()` its exports by name, `default` the default one. The module itself
+ * is no value a port is read from.
+ */
+const moduleValuesAt = (file: SourceFile, keys: readonly string[], required: boolean, depth: number, walk: Walk): Values => {
+  if (keys.length === 0) return NOTHING;
+  const whole = commonExportsOf(file);
+  if (whole !== undefined) {
+    if (required) return valuesAt(whole, keys, depth + 1, walk);
+    return keys[0] === 'default' ? valuesAt(whole, keys.slice(1), depth + 1, walk) : NOTHING;
+  }
+  const [name, ...rest] = keys as [string, ...string[]];
+  for (const declaration of file.getExportedDeclarations().get(name) ?? []) {
+    if (Node.isVariableDeclaration(declaration)) {
+      const value = declaration.getInitializer();
+      if (value !== undefined) return valuesAt(value, rest, depth + 1, walk);
+    } else if (Node.isExpression(declaration)) {
+      return valuesAt(declaration, rest, depth + 1, walk);
+    }
+  }
+  return NOTHING;
+};
+
 /**
  * What a call answers at a path: what a merge helper of the repository's own
  * lays over its defaults (P305), else what the function's `return`s answer,
  * its parameters being this call's arguments (P315). A module loaded by a
- * path decided at run time answers nothing this reads, and says so.
+ * path relative to its file, or built from its own directory, answers what it
+ * exports (P321); one loaded by a path decided otherwise at run time, or
+ * naming no file of the repository, answers nothing this reads, and says so.
  */
 const callValuesAt = (call: CallExpression, keys: readonly string[], depth: number, walk: Walk): Values => {
   if (loadsModule(call)) {
-    if (literalText(call.getArguments()[0]) === undefined) walk.sink.unreadAt ??= call;
+    const loaded = moduleLoaded(call);
+    if (loaded.file !== undefined) return moduleValuesAt(loaded.file, keys, Node.isIdentifier(call.getExpression()), depth, walk);
+    if (loaded.computed) walk.sink.unreadAt ??= call;
     return NOTHING;
   }
   const fn = ownFunction(call.getExpression());
@@ -549,32 +677,166 @@ const callValuesAt = (call: CallExpression, keys: readonly string[], depth: numb
   return union(returnsOf(fn).map((returned) => valuesAt(returned, keys, depth + 1, inner)));
 };
 
-/** The assignments `name = value` of a module variable, in its file. */
+/** A name as a regular expression matches it. */
+const escaped = (name: string): string => name.replace(/[$]/g, '\\$');
+
+const isAssignment = (each: BinaryExpression): boolean => each.getOperatorToken().getKind() === SyntaxKind.EqualsToken;
+
+/**
+ * A property that may be written after it is declared (P321): a field of a
+ * class that is not `readonly`, or a key of the object a variable is given
+ * (`const state = { config: defaults }`).
+ */
+const heldProperty = (declaration: TsNode): boolean => {
+  if (Node.isPropertyDeclaration(declaration)) return !declaration.isReadonly();
+  if (!Node.isPropertyAssignment(declaration)) return false;
+  const object = declaration.getParent();
+  return Node.isObjectLiteralExpression(object) && Node.isVariableDeclaration(object.getParent());
+};
+
+/**
+ * The assignments of a variable or a parameter in its file, `name = value`
+ * (P315), and those of a property anywhere it is written - in its class's
+ * file where it is private - `<object>.name = value`, `this.name = value`
+ * (P321). A test's writes are the test's.
+ */
 const writesCache = new WeakMap<TsNode, readonly BinaryExpression[]>();
 
-const writesOf = (declaration: VariableDeclaration): readonly BinaryExpression[] => {
+const writesOf = (declaration: TsNode): readonly BinaryExpression[] => {
   const cached = writesCache.get(declaration);
   if (cached !== undefined) return cached;
-  const name = declaration.getName();
-  const symbol = declaration.getSymbol()?.compilerSymbol;
-  const file = declaration.getSourceFile();
-  const found =
-    symbol === undefined || !new RegExp(`\\b${name}\\s*=[^=]`).test(file.getFullText())
-      ? []
-      : file.getDescendantsOfKind(SyntaxKind.BinaryExpression).filter((each) => {
-          const left = each.getLeft();
-          return each.getOperatorToken().getKind() === SyntaxKind.EqualsToken && Node.isIdentifier(left) && left.getText() === name && left.getSymbol()?.compilerSymbol === symbol;
-        });
+  let found: BinaryExpression[] = [];
+  if ((Node.isVariableDeclaration(declaration) || Node.isParameterDeclaration(declaration)) && Node.isIdentifier(declaration.getNameNode())) {
+    const name = declaration.getName();
+    const symbol = declaration.getSymbol()?.compilerSymbol;
+    const file = declaration.getSourceFile();
+    if (symbol !== undefined && new RegExp(`(?:^|[^.\\w$])${escaped(name)}\\s*=[^=]`).test(file.getFullText())) {
+      found = file.getDescendantsOfKind(SyntaxKind.BinaryExpression).filter((each) => {
+        const left = each.getLeft();
+        return isAssignment(each) && Node.isIdentifier(left) && left.getText() === name && left.getSymbol()?.compilerSymbol === symbol;
+      });
+    }
+  } else if ((Node.isPropertyDeclaration(declaration) || Node.isPropertyAssignment(declaration)) && heldProperty(declaration)) {
+    const name = declaration.getName();
+    if (/^#?[A-Za-z_$][\w$]*$/.test(name)) {
+      const pattern = new RegExp(`\\.${escaped(name)}\\s*=[^=]`);
+      const own = declaration.getSourceFile();
+      const kept = Node.isPropertyDeclaration(declaration) && (name.startsWith('#') || declaration.hasModifier(SyntaxKind.PrivateKeyword));
+      const files = kept ? [own] : own.getProject().getSourceFiles().filter((each) => !each.isInNodeModules() && !each.isDeclarationFile() && !isTestName(each.getBaseName()));
+      found = files
+        .filter((each) => pattern.test(each.getFullText()))
+        .flatMap((each) =>
+          each.getDescendantsOfKind(SyntaxKind.BinaryExpression).filter((write) => {
+            const left = write.getLeft();
+            return (
+              isAssignment(write) &&
+              Node.isPropertyAccessExpression(left) &&
+              left.getName() === name &&
+              (left.getNameNode().getSymbol()?.getDeclarations() ?? []).includes(declaration)
+            );
+          }),
+        );
+    }
+  }
   writesCache.set(declaration, found);
   return found;
 };
 
-/** A variable of a module, not a constant, that assignments write: a holder a setter fills and a getter returns (P315). */
-const holderOf = (declaration: TsNode): VariableDeclaration | undefined => {
-  if (!Node.isVariableDeclaration(declaration) || !Node.isIdentifier(declaration.getNameNode())) return undefined;
-  const statement = declaration.getVariableStatement();
-  if (statement === undefined || !Node.isSourceFile(statement.getParent()) || statement.getDeclarationKind() === VariableDeclarationKind.Const) return undefined;
-  return writesOf(declaration).length > 0 ? declaration : undefined;
+/**
+ * How a declaration written by assignments holds its value (P315, P321): a
+ * variable at the top of a module (`module`) or a property (`property`) holds
+ * each value written, a setter's laid over the others once per call; a
+ * variable of a function or a parameter (`local`) holds the one written last
+ * before it is read.
+ */
+type HolderKind = 'module' | 'local' | 'property';
+
+const kindCache = new WeakMap<TsNode, HolderKind | 'none'>();
+
+const holderKindOf = (declaration: TsNode): HolderKind | undefined => {
+  const cached = kindCache.get(declaration);
+  if (cached !== undefined) return cached === 'none' ? undefined : cached;
+  let kind: HolderKind | undefined;
+  if (Node.isVariableDeclaration(declaration) && Node.isIdentifier(declaration.getNameNode())) {
+    const statement = declaration.getVariableStatement();
+    if (statement !== undefined && statement.getDeclarationKind() !== VariableDeclarationKind.Const && writesOf(declaration).length > 0) {
+      kind = Node.isSourceFile(statement.getParent()) ? 'module' : 'local';
+    }
+  } else if (Node.isParameterDeclaration(declaration) && Node.isIdentifier(declaration.getNameNode())) {
+    if (writesOf(declaration).length > 0) kind = 'local';
+  } else if (heldProperty(declaration) && writesOf(declaration).length > 0) {
+    kind = 'property';
+  }
+  kindCache.set(declaration, kind ?? 'none');
+  return kind;
+};
+
+/** A declaration assignments write after it: a holder a setter fills and a getter returns (P315), a property, a variable of a function written again (P321). */
+const holderOf = (declaration: TsNode): TsNode | undefined => (holderKindOf(declaration) === undefined ? undefined : declaration);
+
+/** Whether an expression reads a declaration: a name of it, or a property access of it (`this.config`). */
+const refersTo = (node: TsNode, declaration: TsNode): boolean => {
+  const value = unwrapped(node);
+  const name = Node.isIdentifier(value) ? value : Node.isPropertyAccessExpression(value) ? value.getNameNode() : undefined;
+  const symbol = name?.getSymbol();
+  return ((symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []).includes(declaration);
+};
+
+/**
+ * Whether a value written is read (P321): something is found in it, or it is
+ * an object that leaves the key out; and, read whole, it is no call of a
+ * function that is not the repository's own, which answers what nothing here
+ * says (`await findFreePort(port)`).
+ */
+const readable = (value: TsNode, read: Values, keys: readonly string[]): boolean => {
+  const node = unwrapped(value);
+  if (read.found.length === 0) return keys.length > 0 && Node.isObjectLiteralExpression(node);
+  if (keys.length > 0 || !Node.isCallExpression(node)) return true;
+  return loadsModule(node) || ownFunction(node.getExpression()) !== undefined || /^(?:Number|parseInt|parseFloat|String)$/.test(node.getExpression().getText());
+};
+
+/** Whether a write is a statement of a block the read is in, and so is made on every way to the read after it (P321). */
+const surelyBefore = (write: TsNode, at: TsNode): boolean => {
+  const statement = write.getParent();
+  const block = statement?.getParent();
+  return (
+    statement !== undefined &&
+    Node.isExpressionStatement(statement) &&
+    block !== undefined &&
+    (Node.isBlock(block) || Node.isSourceFile(block)) &&
+    block.getStart() <= at.getStart() &&
+    at.getEnd() <= block.getEnd()
+  );
+};
+
+/**
+ * What a variable of a function, or a parameter, written again in it holds
+ * at a path where it is read (P321): `let config = getConfig(); config =
+ * await applyPlugins(config);`. The writes before the read are its values,
+ * the last first, down to the last one that is surely made on the way to the
+ * read (a statement of a block the read is in); its first value - the
+ * initializer, or what the parameter is handed - where no write surely is. A
+ * write whose value is not read is said (`rewrittenAt`), and the values from
+ * before it are read as well, as a guess.
+ */
+const localValuesAt = (declaration: TsNode, at: TsNode, keys: readonly string[], depth: number, walk: Walk): Values => {
+  const own = scopeOf(declaration);
+  const file = at.getSourceFile();
+  const before = writesOf(declaration)
+    .filter((write) => write.getSourceFile() === file && write.getEnd() <= at.getStart())
+    .sort((a, b) => b.getStart() - a.getStart());
+  const found: Candidate[] = [];
+  for (const write of before) {
+    const read = valuesAt(write.getRight(), keys, depth + 1, walk);
+    const clear = readable(write.getRight(), read, keys);
+    if (!clear) walk.sink.rewrittenAt ??= write;
+    found.push(...read.found);
+    if (clear && scopeOf(write) === own && surelyBefore(write, at)) return { found, open: read.open };
+  }
+  const first = Node.isParameterDeclaration(declaration)
+    ? parameterValuesAt(declaration, keys, depth, walk)
+    : valuesAt(Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : undefined, keys, depth + 1, walk);
+  return { found: [...found, ...first.found], open: first.open };
 };
 
 /** Whether an expression names a parameter of a function. */
@@ -583,6 +845,17 @@ const namesParameterOf = (value: TsNode, fn: TsNode): boolean => {
   if (!Node.isIdentifier(node)) return false;
   const declaration = node.getSymbol()?.getDeclarations()[0];
   return declaration !== undefined && Node.isParameterDeclaration(declaration) && declaration.getParent() === fn;
+};
+
+/**
+ * The function a write is made for (P321): the one it is in, or - where that
+ * is an unnamed callback (`ready.then(() => { active = given; })`) - the named
+ * function the callback is written in, whose calls are what make the write.
+ */
+const setterScopeOf = (write: TsNode): TsNode => {
+  let scope = scopeOf(write);
+  while ((Node.isArrowFunction(scope) || Node.isFunctionExpression(scope)) && nameOfFunction(scope) === undefined) scope = scopeOf(scope);
+  return scope;
 };
 
 /**
@@ -628,31 +901,35 @@ interface SetterWrite {
   readonly layers: readonly TsNode[];
   readonly mergedAt?: TsNode;
   readonly replaces?: true;
+  /** It is an object spreading the holder itself under what it writes: read with the holder answering nothing (P321). */
+  readonly spreads?: true;
 }
 
 /**
- * What a module variable holds at a path, read at `at` (P315). Its
- * initializer and every assignment that is not a setter's are the values it
- * may hold, each one; a setter's write - a merge over the variable itself
- * (`active = mergeConfig(active, given)`), or the plain write of a parameter
- * (`active = given`) - is laid over them once per call of the setter made
- * before the read, the latest on top, each call's own argument for the
- * parameter. A value read below a merge says it was read through it.
+ * What a variable of a module, or a property, holds at a path, read at `at`
+ * (P315, P321). Its initializer and every assignment that is not a setter's
+ * are the values it may hold, each one - a constructor's write among them,
+ * its parameters what each `new` hands; a setter's write - a merge over the
+ * holder itself (`active = mergeConfig(active, given)`,
+ * `this.config = mergeConfig(this.config, given)`), or the plain write of a
+ * parameter (`active = given`) - is laid over them once per call of the
+ * setter made before the read, the latest on top, each call's own argument
+ * for the parameter. A write in an unnamed callback is the named function's
+ * it is written in. A value read below a merge says it was read through it.
+ * A variable of a function is read by {@link localValuesAt}.
  */
-const holderValuesAt = (declaration: VariableDeclaration, at: TsNode, keys: readonly string[], depth: number, walk: Walk): Values => {
-  const symbol = declaration.getSymbol()?.compilerSymbol;
-  const holds = (node: TsNode): boolean => {
-    const value = unwrapped(node);
-    return Node.isIdentifier(value) && value.getSymbol()?.compilerSymbol === symbol;
-  };
-  const written: TsNode[] = [];
-  const initializer = declaration.getInitializer();
-  if (initializer !== undefined) written.push(initializer);
+const holderValuesAt = (declaration: TsNode, at: TsNode, keys: readonly string[], depth: number, walk: Walk): Values => {
+  if (holderKindOf(declaration) === 'local') return localValuesAt(declaration, at, keys, depth, walk);
+  const holds = (node: TsNode): boolean => refersTo(node, declaration);
+  const written: { readonly value: TsNode; readonly write?: TsNode }[] = [];
+  const initializer =
+    Node.isVariableDeclaration(declaration) || Node.isPropertyAssignment(declaration) || Node.isPropertyDeclaration(declaration) ? declaration.getInitializer() : undefined;
+  if (initializer !== undefined) written.push({ value: initializer });
   const setters: SetterWrite[] = [];
   let mergedAt: TsNode | undefined;
   for (const write of writesOf(declaration)) {
     const value = write.getRight();
-    const scope = scopeOf(write);
+    const scope = setterScopeOf(write);
     const call = unwrapped(value);
     const helper = Node.isCallExpression(call) ? ownFunction(call.getExpression()) : undefined;
     if (Node.isCallExpression(call) && helper !== undefined && isMergeHelper(helper) && call.getArguments().some(holds)) {
@@ -660,17 +937,24 @@ const holderValuesAt = (declaration: VariableDeclaration, at: TsNode, keys: read
       setters.push({ scope, layers: call.getArguments().filter((each) => !holds(each)), mergedAt: call });
       continue;
     }
-    if (!Node.isSourceFile(scope) && namesParameterOf(value, scope)) {
+    // `this.values = { ...this.values, ...given }`: a merge written in place over the holder itself (P321).
+    if (Node.isObjectLiteralExpression(call) && call.getProperties().some((each) => Node.isSpreadAssignment(each) && holds(each.getExpression()))) {
+      mergedAt ??= call;
+      setters.push({ scope, layers: [call], mergedAt: call, spreads: true });
+      continue;
+    }
+    // A constructor's write is the value each instance starts with, its parameters what each `new` hands (P321).
+    if (!Node.isSourceFile(scope) && !Node.isConstructorDeclaration(scope) && namesParameterOf(value, scope)) {
       setters.push({ scope, layers: [value], replaces: true });
       continue;
     }
-    written.push(value);
+    written.push({ value, write });
   }
   const points = [at, ...[...walk.via].reverse()];
   interface Made {
     readonly setter: SetterWrite;
     readonly place: TsNode;
-    readonly call?: CallExpression;
+    readonly call?: Invocation;
   }
   const made = setters
     .flatMap((setter): Made[] =>
@@ -682,7 +966,8 @@ const holderValuesAt = (declaration: VariableDeclaration, at: TsNode, keys: read
     )
     .sort((a, b) => byPlace(a.place, b.place));
   const layers: Layer[] = made.reverse().flatMap(({ setter, call }) => {
-    const inner: Walk = call === undefined ? walk : { ...walk, bound: new Map([...walk.bound, [setter.scope, call]]) };
+    const bound: Walk = call === undefined ? walk : { ...walk, bound: new Map([...walk.bound, [setter.scope, call]]) };
+    const inner: Walk = setter.spreads === true ? { ...bound, beneath: declaration } : bound;
     return [...setter.layers].reverse().map((node) => ({
       node,
       walk: inner,
@@ -693,33 +978,66 @@ const holderValuesAt = (declaration: VariableDeclaration, at: TsNode, keys: read
   });
   const top = layered(layers, keys, depth, walk);
   if (!top.open) return top;
-  const below = union(written.map((value) => valuesAt(value, keys, depth + 1, walk)));
+  const below = union(
+    written.map(({ value, write }) => {
+      const read = valuesAt(value, keys, depth + 1, walk);
+      // A write whose value is not read leaves the holder's value unknown from there on (P321).
+      if (write !== undefined && !readable(value, read, keys)) walk.sink.rewrittenAt ??= write;
+      return read;
+    }),
+  );
   return { found: [...top.found, ...marked(below.found, mergedAt === undefined ? {} : { mergedAt })], open: below.open };
 };
 
 /**
- * The value at a path of what a call answers or a module variable holds
- * (P305, P315), `expression` an access of it (`config.apiOptions`, `config` a
- * constant holding the call) and `more` the keys read after it. Where it may
- * hold several values, the first is followed and the others are kept on the
- * trail.
+ * The access in an expression read off a variable or a property its code
+ * writes after declaring it (P315, P321) - `active` of `active.api.port`,
+ * `this.config` of `this.config.port` - and the keys read after it, or
+ * undefined where the expression reads none.
+ */
+const heldIn = (expression: TsNode): { readonly base: TsNode; readonly keys: readonly string[] } | undefined => {
+  const keys: string[] = [];
+  let at = unwrapped(expression);
+  for (let step = 0; step < DEPTH * 2; step++) {
+    if (Node.isPropertyAccessExpression(at)) {
+      if (at.getExpression().getText() === 'process.env') return undefined;
+      if ((at.getNameNode().getSymbol()?.getDeclarations() ?? []).some((each) => holderOf(each) !== undefined)) return { base: at, keys };
+      keys.unshift(at.getName());
+      at = unwrapped(at.getExpression());
+      continue;
+    }
+    if (!Node.isIdentifier(at)) return undefined;
+    const symbol = at.getSymbol();
+    return ((symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []).some((each) => holderOf(each) !== undefined) ? { base: at, keys } : undefined;
+  }
+  return undefined;
+};
+
+/**
+ * The value at a path of what a call answers, or a variable or a property
+ * its code writes holds (P305, P315, P321), `expression` an access of it
+ * (`config.apiOptions`, `config` a constant holding the call; `this.config`)
+ * and `more` the keys read after it. Where it may hold several values, the
+ * first is followed and the others are kept on the trail.
  */
 const throughMerge = (expression: TsNode, more: readonly string[], depth: number, trail: Trail | undefined): TsNode | undefined => {
   if (depth > DEPTH) return undefined;
-  const keys: string[] = [...more];
-  let base = expression;
-  while (Node.isPropertyAccessExpression(base)) {
-    keys.unshift(base.getName());
-    base = base.getExpression();
+  const held = heldIn(expression);
+  const keys: string[] = held === undefined ? [] : [...held.keys];
+  let base = held?.base ?? expression;
+  if (held === undefined) {
+    while (Node.isPropertyAccessExpression(base)) {
+      keys.unshift(base.getName());
+      base = base.getExpression();
+    }
+    // Only what a call answers or a holder holds: an object handed in as a
+    // parameter is read where each caller hands it (P254).
+    if (callBehind(base, depth + 1) === undefined) return undefined;
   }
-  if (keys.length === 0) return undefined;
-  // Only what a call answers or a module variable holds: an object handed in
-  // as a parameter is read where each caller hands it (P254).
-  const name = unwrapped(base);
-  const held = Node.isIdentifier(name) && (name.getSymbol()?.getDeclarations() ?? []).some((each) => holderOf(each) !== undefined);
-  if (!held && callBehind(base, depth + 1) === undefined) return undefined;
+  keys.push(...more);
+  if (keys.length === 0 && held === undefined) return undefined;
   const value = adopt(valuesAt(base, keys, 0, walkFrom(trail)).found, trail);
-  return value === undefined ? undefined : followed(value, depth + 1, trail);
+  return value === undefined || value === base ? undefined : followed(value, depth + 1, trail);
 };
 
 /** A literal key of an access or a call: `process.env['PORT']`, `config.get('PORT')`. */
@@ -844,7 +1162,9 @@ interface Parameter {
 }
 
 const parametersOf = (fn: TsNode): readonly TsNode[] =>
-  Node.isFunctionDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) || Node.isMethodDeclaration(fn) ? fn.getParameters() : [];
+  Node.isFunctionDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) || Node.isMethodDeclaration(fn) || Node.isConstructorDeclaration(fn)
+    ? fn.getParameters()
+    : [];
 
 /** The parameter a declaration is, and the key of it read where it is destructured: `port`, `{ port }`. */
 const parameterAt = (declaration: TsNode | undefined, key: string | undefined): Parameter | undefined => {
@@ -878,16 +1198,33 @@ const parameterOf = (node: TsNode): Parameter | undefined => {
   return Node.isIdentifier(node) ? parameterAt(node.getSymbol()?.getDeclarations()[0], undefined) : undefined;
 };
 
-/** The name a function is called by: its own, or the constant it is assigned to. */
+/** The name a function is called by: its own, or the constant or the property it is assigned to (P321). */
 const nameOfFunction = (fn: TsNode): TsNode | undefined => {
   if (Node.isFunctionDeclaration(fn) || Node.isMethodDeclaration(fn)) return fn.getNameNode();
   const parent = fn.getParent();
-  if ((Node.isArrowFunction(fn) || Node.isFunctionExpression(fn)) && parent !== undefined && Node.isVariableDeclaration(parent)) return parent.getNameNode();
+  const named = parent !== undefined && (Node.isVariableDeclaration(parent) || Node.isPropertyAssignment(parent) || Node.isPropertyDeclaration(parent));
+  if ((Node.isArrowFunction(fn) || Node.isFunctionExpression(fn)) && named) return parent.getNameNode();
   return undefined;
 };
 
+/** A call of a function, or a `new` of a class, whose arguments are the parameters' (P321). */
+type Invocation = CallExpression | NewExpression;
+
+/** Every `new` of the class a constructor belongs to, outside tests (P321). */
+const newsOf = (constructor: TsNode): NewExpression[] => {
+  const owner = constructor.getParent();
+  const name = owner !== undefined && Node.isClassDeclaration(owner) ? owner.getNameNode() : undefined;
+  if (name === undefined) return [];
+  return name.findReferencesAsNodes().flatMap((found) => {
+    if (isTestName(found.getSourceFile().getBaseName()) || !Node.isIdentifier(found)) return [];
+    const made = found.getParent();
+    return made !== undefined && Node.isNewExpression(made) && made.getExpression() === found ? [made] : [];
+  });
+};
+
 /** Every call of a function in the repository's files, outside tests: `start(3001)`, `servers.start(3001)`. */
-const callsOf = (fn: TsNode): CallExpression[] => {
+const callsOf = (fn: TsNode): Invocation[] => {
+  if (Node.isConstructorDeclaration(fn)) return newsOf(fn);
   const name = nameOfFunction(fn);
   if (name === undefined || !Node.isIdentifier(name)) return [];
   return name.findReferencesAsNodes().flatMap((found) => {
@@ -950,6 +1287,7 @@ const handedPorts = (argument: TsNode | undefined, key: string | undefined, read
   const trail: Trail = {};
   const node = followed(argument, 0, trail);
   if (sink !== undefined && trail.unreadAt !== undefined) sink.unreadAt ??= trail.unreadAt;
+  if (sink !== undefined && trail.rewrittenAt !== undefined) sink.rewrittenAt ??= trail.rewrittenAt;
   const own = node === undefined ? [] : handedNode(node, trail, key, reading, depth, sink);
   const others = (trail.others ?? []).flatMap((other) =>
     handedPorts(other.value, key, reading, depth + 1, sink).map((each) => {
@@ -969,10 +1307,30 @@ const handedNode = (node: TsNode, trail: Trail, key: string | undefined, reading
     if (Node.isShorthandPropertyAssignment(property)) {
       // `{ port }`: a constant of that name, or a parameter handed in.
       const declaration = property.getValueSymbol()?.getDeclarations()[0];
+      // A variable or a parameter written again before the read: what it holds there (P321).
+      if (declaration !== undefined && holderOf(declaration) !== undefined) {
+        const held = declaredValuesAt(declaration, property.getNameNode(), [], 0, walkFrom(sink)) ?? NOTHING;
+        return held.found.flatMap((each) =>
+          handedPorts(each.value, undefined, reading, depth + 1, sink).map((handed) => {
+            const read = handed.read.mergedAt !== undefined || each.mergedAt === undefined ? handed.read : { ...handed.read, mergedAt: each.mergedAt };
+            const handedAt = handed.handedAt ?? each.handedAt;
+            return handedAt === undefined ? { read } : { read, handedAt };
+          }),
+        );
+      }
       if (declaration !== undefined && Node.isVariableDeclaration(declaration)) return handedPorts(declaration.getInitializer(), undefined, reading, depth, sink);
       return fromParameter(parameterAt(declaration, undefined), reading, depth, sink);
     }
     return handedPorts(propertyValue(property), undefined, reading, depth, sink);
+  }
+  // `Number(port)`, `+port`: each value the number is made of, every caller's included (P321).
+  const converted = Node.isCallExpression(node) && /^(?:Number|parseInt|parseFloat)$/.test(node.getExpression().getText()) ? node.getArguments()[0] : Node.isPrefixUnaryExpression(node) ? node.getOperand() : undefined;
+  if (key === undefined && converted !== undefined) {
+    return handedPorts(converted, undefined, reading, depth + 1, sink).map((each) => {
+      const handedAt = each.handedAt ?? trail.handedAt;
+      const read = trail.mergedAt === undefined || each.read.mergedAt !== undefined ? each.read : { ...each.read, mergedAt: trail.mergedAt };
+      return handedAt === undefined ? { read } : { read, handedAt };
+    });
   }
   const written = key === undefined ? portWritten(node, reading) : {};
   // A port read through a merge helper on the way here says so (P305).
@@ -986,12 +1344,22 @@ const handedNode = (node: TsNode, trail: Trail, key: string | undefined, reading
   return fromParameter(key === undefined ? parameter : { ...parameter, key }, reading, depth, sink);
 };
 
-/** What is said where the port a server is started with could not be read (P315). */
+/**
+ * What is said where the port a server is started with could not be read
+ * (P315), or was read only as far as a write not read (P321).
+ */
 export interface PortUnread {
   /** The call that starts the server. */
   readonly at: TsNode;
-  /** The load of a module by a path decided at run time, that the port was to come from. */
+  /**
+   * The load of a module by a path decided at run time, that the port was to
+   * come from (`loaded`); or a write of the value it is read from, whose own
+   * value is not read (`rewritten`).
+   */
   readonly from: TsNode;
+  readonly how?: 'loaded' | 'rewritten';
+  /** Whether ports were read all the same, from before the write: a guess (P321). */
+  readonly guessed?: true;
 }
 
 /**
@@ -1007,11 +1375,16 @@ export const listensIn = (
   options: { readonly key?: string; readonly reading?: PortReading; readonly unread?: (unread: PortUnread) => void } = {},
 ): ListenAt[] => {
   const sink: Trail = {};
-  const found = handedPorts(argument, options.key, options.reading, 0, sink).flatMap(({ read, handedAt }) => {
-    const port = listenAt(read, at, handedAt === undefined ? {} : { handedAt });
+  const read = handedPorts(argument, options.key, options.reading, 0, sink).flatMap(({ read: each, handedAt }) => {
+    const port = listenAt(each, at, handedAt === undefined ? {} : { handedAt });
     return port === undefined ? [] : [port];
   });
-  if (found.length === 0 && sink.unreadAt !== undefined) options.unread?.({ at, from: sink.unreadAt });
+  // Ports read past a write whose value is not read are the values from before it, a guess (P321).
+  const rewrittenAt = sink.rewrittenAt;
+  const found = rewrittenAt === undefined ? read : read.map((port) => ({ ...port, rewrittenAt }));
+  if (found.length === 0 && sink.unreadAt !== undefined) options.unread?.({ at, from: sink.unreadAt, how: 'loaded' });
+  else if (found.length === 0 && rewrittenAt !== undefined) options.unread?.({ at, from: rewrittenAt, how: 'rewritten' });
+  else if (rewrittenAt !== undefined) options.unread?.({ at, from: rewrittenAt, how: 'rewritten', guessed: true });
   return found;
 };
 
@@ -1044,15 +1417,38 @@ export const listenCallsIn = (sources: Iterable<SourceFile>, reading?: PortReadi
  * decided at run time (P315): defaults kept in `settings-defaults` and loaded by
  * `import(path.join(__dirname, 'settings-defaults'))`, which nothing reads.
  */
-export const portUnreadRow = (unread: PortUnread, repoDir: string): Unresolved => ({
-  file: normalizeFilePath(unread.at.getSourceFile().getFilePath(), repoDir),
-  line: startLineOf(unread.at),
-  reason: 'listen-port-unread',
-  level: 'info',
-  message: `${unread.at.getText().split('\n')[0]} listens on a port this did not read: it comes from a module loaded by a path decided at run time, ${unread.from.getText()} (${normalizeFilePath(unread.from.getSourceFile().getFilePath(), repoDir)}:${startLineOf(unread.from)}), so no request to this machine is joined to the service by its port.`,
-  hint: "Import the module the port comes from by a path written as a string, or write the port where the server is started; a port a setting gives can be read from the repository's setting files.",
-  symbol: unread.at.getText().split('\n')[0] ?? '',
-});
+export const portUnreadRow = (unread: PortUnread, repoDir: string): Unresolved => {
+  const starts = unread.at.getText().split('\n')[0] ?? '';
+  const from = `${unread.from.getText().split('\n')[0]} (${normalizeFilePath(unread.from.getSourceFile().getFilePath(), repoDir)}:${startLineOf(unread.from)})`;
+  const place = { file: normalizeFilePath(unread.at.getSourceFile().getFilePath(), repoDir), line: startLineOf(unread.at), symbol: starts };
+  // The value the port is read from is written again by something not read (P321): a guess where ports were read from before it.
+  if (unread.how === 'rewritten' && unread.guessed === true) {
+    return {
+      ...place,
+      reason: 'listen-port-guessed',
+      level: 'info',
+      message: `${starts} is read listening on the port the value it reads held before ${from}, a guess: what that write puts there is not read.`,
+      hint: "Write the port where the server is started, or keep the write to a function of the repository's own whose answer can be read; a port a setting gives can be read from the repository's setting files.",
+    };
+  }
+  if (unread.how === 'rewritten') {
+    return {
+      ...place,
+      reason: 'listen-port-unread',
+      level: 'info',
+      message: `${starts} listens on a port this did not read: the value it is read from is written by ${from}, whose value is not read, so no request to this machine is joined to the service by its port.`,
+      hint: "Write the port where the server is started, or keep the write to a function of the repository's own whose answer can be read; a port a setting gives can be read from the repository's setting files.",
+    };
+  }
+  return {
+    ...place,
+    reason: 'listen-port-unread',
+    level: 'info',
+    message: `${starts} listens on a port this did not read: it comes from a module loaded by a path decided at run time, ${from}, so no request to this machine is joined to the service by its port.`,
+    hint: "Import the module the port comes from by a path written as a string or built from the file's own directory (path.join(__dirname, 'defaults')), or write the port where the server is started; a port a setting gives can be read from the repository's setting files.",
+  };
+};
+
 /** A port read at a node, placed in the repository. */
 export const placedPort = (read: ListenAt, repoDir: string): ListenPort => ({
   ...(read.port === undefined ? {} : { port: read.port }),
@@ -1067,6 +1463,9 @@ export const placedPort = (read: ListenAt, repoDir: string): ListenPort => ({
   ...(read.mergedAt === undefined
     ? {}
     : { merged: `${normalizeFilePath(read.mergedAt.getSourceFile().getFilePath(), repoDir)}:${startLineOf(read.mergedAt)}` }),
+  ...(read.rewrittenAt === undefined
+    ? {}
+    : { rewritten: `${normalizeFilePath(read.rewrittenAt.getSourceFile().getFilePath(), repoDir)}:${startLineOf(read.rewrittenAt)}` }),
 });
 
 /**

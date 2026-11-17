@@ -345,6 +345,56 @@ export const createReactAppListens = (repoDir: string): ListenPort[] => {
   return filed === undefined ? [] : [{ ...filed, devServer: true }];
 };
 
+/** Gatsby's own ports, for `gatsby develop` and for `gatsby serve`, where nothing writes one (P321). */
+const GATSBY_DEFAULT = { develop: 8000, serve: 9000 } as const;
+
+/**
+ * The environment files a Gatsby site keeps, the one whose value wins first:
+ * Gatsby loads them into the site's browser code and its functions (P321).
+ */
+const GATSBY_ENV: EnvLoading = { commands: /\bgatsby\s+develop\b/, files: ['.env.development', '.env'], settings: ['PORT'] };
+
+/**
+ * Gatsby's development server, `gatsby develop`, and the server of a built
+ * site, `gatsby serve` (P321): a script's `-p` / `--port`, and for `develop`
+ * the `PORT` its command's environment gives; where neither says, Gatsby's
+ * own 8000 and 9000, as defaults - each moves to another port when its own is
+ * taken. Gatsby loads `.env.development` into the site's browser code and its
+ * functions, and its documentation has the site's own configuration load it
+ * into Node's, after the command has chosen its port; so a `PORT` that file
+ * sets is not taken as where it listens, the default is kept as a guess, and
+ * an info `listen-port-guessed` row names the file and the port it sets.
+ */
+export const gatsbyListens = (ctx: ExtractContext): ListenPort[] => {
+  const scripts = scriptCommands(ctx.repoDir, /\bgatsby\s+(?:develop|serve)\b/);
+  const found: ListenPort[] = [];
+  for (const command of ['develop', 'serve'] as const) {
+    const commands = scripts.filter((each) => new RegExp(`\\bgatsby\\s+${command}\\b`).test(each.command));
+    const given = commands.flatMap((each) => {
+      const port = each.port ?? (command === 'develop' ? each.environmentPort : undefined);
+      return port === undefined ? [] : [{ port, file: 'package.json', line: each.line, devServer: true as const }];
+    });
+    found.push(...given);
+    const first = commands[0];
+    if (first === undefined || given.length > 0 || commands.some((each) => each.portUnread === true)) continue;
+    found.push({ port: GATSBY_DEFAULT[command], file: 'package.json', line: first.line, ...(command === 'develop' ? { setting: 'PORT' } : {}), default: true, devServer: true });
+    if (command !== 'develop') continue;
+    // A committed file the site keeps that sets PORT: not loaded before the port is chosen, so said, not taken.
+    const filed = envFilePort(ctx.repoDir, commands, GATSBY_ENV);
+    if (filed === undefined || filed.default === true || filed.port === undefined) continue;
+    ctx.builder.addUnresolved({
+      file: 'package.json',
+      line: first.line,
+      reason: 'listen-port-guessed',
+      level: 'info',
+      message: `${first.command} is read listening on Gatsby's own ${GATSBY_DEFAULT.develop}, a guess: ${filed.file} sets ${filed.setting ?? 'PORT'}=${filed.port} (line ${filed.line}), but Gatsby loads that file into the site's code and functions, not before the command chooses its port.`,
+      hint: `Give the port on the command (gatsby develop -p ${filed.port}, or PORT=${filed.port} before it), where it is read; or export the setting in the shell that starts the server.`,
+      symbol: first.command,
+    });
+  }
+  return found;
+};
+
 /**
  * Where a React, Vue or Svelte front end's own servers listen: its bundler's
  * configuration and scripts, and the dev server targets a workspace tool's
@@ -355,6 +405,7 @@ export const frontEndListens = (ctx: ExtractContext): ListenPort[] => [
   ...astroListens(ctx.repoDir),
   ...appServerListens(ctx.repoDir),
   ...createReactAppListens(ctx.repoDir),
+  ...gatsbyListens(ctx),
   ...targetPorts(ctx.repoDir, VITE_SERVER_EXECUTORS, true),
   ...targetPorts(ctx.repoDir, WEBPACK_SERVER_EXECUTORS, true),
 ];

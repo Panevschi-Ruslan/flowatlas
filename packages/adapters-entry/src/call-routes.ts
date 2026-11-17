@@ -37,7 +37,7 @@ import {
   repoSources,
 } from './shared.js';
 import { evidenceOf, unwrapWork } from './wrapped-work.js';
-import { honoListens, listensByCall } from './listen-ports.js';
+import { fastifyCliListens, honoListens, listensByCall } from './listen-ports.js';
 
 /**
  * The sentence for a route whose own path could not be read.
@@ -1465,7 +1465,11 @@ export interface CallRoutesOptions {
 }
 
 /** The dialects whose server starts other than by `app.listen(port)` as well (P250). */
-const LISTENS_OF: Readonly<Record<string, (ctx: ExtractContext) => ListenPort[]>> = { [HONO.name]: honoListens };
+// fastify-cli's `fastify start` listens for an application that calls no `listen` of its own (P321).
+const LISTENS_OF: Readonly<Record<string, (ctx: ExtractContext) => ListenPort[]>> = {
+  [HONO.name]: honoListens,
+  [FASTIFY.name]: (ctx) => [...listensByCall(ctx), ...fastifyCliListens(ctx)],
+};
 
 export const callRoutesAdapter = (
   dialect: RouteDialect,

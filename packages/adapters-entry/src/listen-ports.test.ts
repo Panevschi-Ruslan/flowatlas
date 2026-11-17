@@ -1,6 +1,6 @@
-import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { GraphBuilder, listeningOf, noAdapters, parseConfig, silentLogger, type EntryAdapter, type ExtractContext, type ListenPort } from '@flowatlas/core';
 import { Project } from 'ts-morph';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -8,6 +8,7 @@ import { expressRoutesAdapter, fastifyRoutesAdapter, honoRoutesAdapter, koaRoute
 import { nestjsHttpAdapter } from './nestjs-http.js';
 import { nextjsRoutesAdapter } from './nextjs-routes.js';
 import { nitroRoutesAdapter } from './nuxt-routes.js';
+import { strapiServerAdapter } from './strapi-server.js';
 
 const roots: string[] = [];
 afterEach(() => {
@@ -22,7 +23,10 @@ afterEach(() => {
 const listening = (adapters: EntryAdapter[], code: Record<string, string>, files: Record<string, string> = {}): string[] => {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'flowatlas-listen-')));
   roots.push(root);
-  for (const [path, text] of Object.entries(files)) writeFileSync(join(root, path), text);
+  for (const [path, text] of Object.entries(files)) {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), text);
+  }
   const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: false } });
   for (const [path, text] of Object.entries(code)) project.createSourceFile(join(root, path), text);
   const ctx: ExtractContext = {
@@ -348,5 +352,83 @@ describe('the last ways a port is set (P257)', () => {
       2,
     );
     expect(listening([nextjsRoutesAdapter], {}, { 'project.json': project })).toEqual(['project.json:8 4300', 'project.json:12 4301']);
+  });
+});
+
+describe('which loaded file wins, as each loader orders them (P321)', () => {
+  const listen = 'const app = express();\napp.listen(process.env.PORT ?? 3000);';
+  const pkg = (start: string): string => JSON.stringify({ scripts: { start } }, null, 2);
+
+  it("takes the last of Node's repeated --env-file, the first of dotenv's paths, and the last of them with override", () => {
+    expect(
+      listening([expressRoutesAdapter], { 'src/main.ts': listen }, { 'package.json': pkg('node --env-file=.env --env-file=.env.local dist/main.js'), '.env': 'PORT=4999\n', '.env.local': 'PORT=4030\n' }),
+    ).toEqual(['src/main.ts:2 4030[PORT] from .env.local']);
+    expect(
+      listening(
+        [expressRoutesAdapter],
+        { 'src/main.ts': `import dotenv from 'dotenv';\ndotenv.config({ path: ['.env.local', '.env'] });\n${listen}` },
+        { '.env': 'PORT=4999\n', '.env.local': 'PORT=4031\n' },
+      ),
+    ).toEqual(['src/main.ts:4 4031[PORT] from .env.local']);
+    expect(
+      listening(
+        [expressRoutesAdapter],
+        { 'src/main.ts': `import dotenv from 'dotenv';\ndotenv.config({ path: ['.env', '.env.local'], override: true });\n${listen}` },
+        { '.env': 'PORT=4999\n', '.env.local': 'PORT=4032\n' },
+      ),
+    ).toEqual(['src/main.ts:4 4032[PORT] from .env.local']);
+  });
+
+  it("puts what a script loads before the code runs over what the code loads, and reads dotenv-cli's cascade", () => {
+    expect(
+      listening([expressRoutesAdapter], { 'src/main.ts': `import 'dotenv/config';\n${listen}` }, { 'package.json': pkg('node --env-file=.env.ci dist/main.js'), '.env': 'PORT=4999\n', '.env.ci': 'PORT=4033\n' }),
+    ).toEqual(['src/main.ts:3 4033[PORT] from .env.ci']);
+    expect(
+      listening([expressRoutesAdapter], { 'src/main.ts': listen }, { 'package.json': pkg('dotenv -c development -- node dist/main.js'), '.env': 'PORT=4999\n', '.env.development': 'PORT=4034\n' }),
+    ).toEqual(['src/main.ts:2 4034[PORT] from .env.development']);
+  });
+
+  it("reads Bun's files by the NODE_ENV its command sets, .env.local over both, and only the files its --env-file names", () => {
+    const files = { '.env': 'PORT=4999\n', '.env.development': 'PORT=4035\n', '.env.production': 'PORT=4036\n' };
+    expect(listening([expressRoutesAdapter], { 'src/main.ts': listen }, { 'package.json': pkg('bun src/main.ts'), ...files })).toEqual(['src/main.ts:2 4035[PORT] from .env.development']);
+    expect(listening([expressRoutesAdapter], { 'src/main.ts': listen }, { 'package.json': pkg('NODE_ENV=production bun src/main.ts'), ...files })).toEqual([
+      'src/main.ts:2 4036[PORT] from .env.production',
+    ]);
+    expect(listening([expressRoutesAdapter], { 'src/main.ts': listen }, { 'package.json': pkg('bun src/main.ts'), ...files, '.env.local': 'PORT=4037\n' })).toEqual([
+      'src/main.ts:2 4037[PORT] from .env.local',
+    ]);
+    expect(listening([expressRoutesAdapter], { 'src/main.ts': listen }, { 'package.json': pkg('bun --env-file=.env.staging src/main.ts'), ...files, '.env.staging': 'PORT=4038\n' })).toEqual([
+      'src/main.ts:2 4038[PORT] from .env.staging',
+    ]);
+  });
+});
+
+describe('where fastify-cli and Strapi start a server the code does not (P321)', () => {
+  it("reads fastify start's -p, the FASTIFY_PORT or PORT its command or its .env gives, and its 3000", () => {
+    const pkg = (start: string): string => JSON.stringify({ scripts: { start } }, null, 2);
+    const app = { 'app.ts': "export default async function (fastify: any) { fastify.get('/', async () => 'ok'); }" };
+    expect(listening([fastifyRoutesAdapter], app, { 'package.json': pkg('fastify start -l info app.js'), '.env': 'PORT=4999\nFASTIFY_PORT=4040\n' })).toEqual([
+      '.env:2 4040[FASTIFY_PORT] from .env',
+    ]);
+    expect(listening([fastifyRoutesAdapter], app, { 'package.json': pkg('fastify start -p 4041 app.js'), '.env': 'PORT=4999\n' })).toEqual(['package.json:3 4041']);
+    expect(listening([fastifyRoutesAdapter], app, { 'package.json': pkg('FASTIFY_PORT=4042 fastify start app.js') })).toEqual(['package.json:3 4042']);
+    expect(listening([fastifyRoutesAdapter], app, { 'package.json': pkg('fastify start app.js') })).toEqual(['package.json:3 3000[PORT] default']);
+    expect(listening([fastifyRoutesAdapter], app, { 'package.json': pkg('node dist/app.js') })).toEqual([]);
+  });
+
+  it("reads Strapi's config/server port, moved by the .env Strapi loads, and its 1337 where none is written", () => {
+    const server = "module.exports = ({ env }) => ({\n  host: env('HOST', '0.0.0.0'),\n  port: env.int('PORT', 1337),\n});\n";
+    const pkg = (develop: string): string => JSON.stringify({ scripts: { develop }, dependencies: { '@strapi/strapi': '^5.0.0' } }, null, 2);
+    expect(listening([strapiServerAdapter], {}, { 'package.json': pkg('strapi develop'), 'config/server.js': server, '.env': 'HOST=0.0.0.0\nPORT=4050\n' })).toEqual([
+      'config/server.js:3 4050[PORT] from .env',
+    ]);
+    expect(listening([strapiServerAdapter], {}, { 'package.json': pkg('strapi develop'), 'config/server.js': server })).toEqual(['config/server.js:3 1337[PORT]']);
+    expect(
+      listening([strapiServerAdapter], {}, { 'package.json': pkg('ENV_PATH=./.env.dev strapi develop'), 'config/server.js': server, '.env': 'PORT=4999\n', '.env.dev': 'PORT=4051\n' }),
+    ).toEqual(['config/server.js:3 4051[PORT] from .env.dev']);
+    expect(listening([strapiServerAdapter], {}, { 'package.json': pkg('strapi develop') })).toEqual(['package.json:1 1337[PORT] default']);
+    expect(listening([strapiServerAdapter], {}, { 'package.json': pkg('strapi develop'), 'config/server.ts': 'export default () => ({ port: 4052 });\n' })).toEqual([
+      'config/server.ts:1 4052',
+    ]);
   });
 });

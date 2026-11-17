@@ -53,7 +53,8 @@ code itself). The reasons added most recently:
 | `grpc-method-undeclared` | finding | `info` | the server implements a member the service's contract does not declare |
 | `grpc-field-undeclared` | finding | `info` | a gRPC handler reads a request field the method's message does not declare under the names its loader hands |
 | `navigation-locale-prefixed` | note | `info` | a navigation written without the locale the application puts in front of every address, joined to the page under the locale segment, as a guess |
-| `listen-port-unread` | gap | `info` | a server's port comes from defaults a module loads by a path decided at run time, so no request to a port on this machine is joined to it by that port |
+| `listen-port-unread` | gap | `info` | a server's port comes from defaults a module loads by a path decided at run time, or from a value a write not read sets, so no request to a port on this machine is joined to it by that port |
+| `listen-port-guessed` | note | `info` | a server's port is read only as a guess: the value from before a write whose own value is not read (`port = await getPort({ port })`, the port's `rewritten`), or a framework's default kept where an environment file the framework does not load before choosing its port sets it (Gatsby's `.env.development`) (P321) |
 | `route-entries-unread` | gap | `info` | a `<Route>` is written over a list some of whose entries are not read - an item not written as an object, a view or a `map` made otherwise, an entry whose path or screen is not read - so the screens they place are not placed; `meta.unread`, `meta.read` and `meta.why` say how many and why |
 
 Some older reasons now say more. `ambiguous-route-target` also names the

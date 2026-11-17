@@ -330,3 +330,183 @@ describe("a port a parameter is given: each caller's, and the default (P315)", (
     ).toEqual(['src/a.ts:1 4000', 'src/a.ts:1 3001', 'src/b.ts:1 4001', 'src/b.ts:1 3002', 'src/c.ts:1 3003']);
   });
 });
+
+describe('a port held where P315 left it unread: callbacks, properties, locals and computed paths (P321)', () => {
+  /** The ports read in some files, with how each was reached, and what was said of the ones not read. */
+  const read = (files: Record<string, string>, said: string[] = []): string[] => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sources = Object.entries(files).map(([path, text]) => project.createSourceFile(path, text));
+    return listenCallsIn(sources, undefined, (each) =>
+      said.push(`${each.at.getSourceFile().getBaseName()}:${each.at.getStartLineNumber()} ${each.how ?? ''}${each.guessed === true ? ' guessed' : ''} ${each.from.getText()}`),
+    )
+      .map((port) => placedPort(port, '/'))
+      .map(
+        (placed) =>
+          `${placed.file}:${placed.line} ${placed.port}` +
+          `${placed.merged === undefined ? '' : ` merged at ${placed.merged}`}` +
+          `${placed.handed === undefined ? '' : ` handed at ${placed.handed}`}` +
+          `${placed.rewritten === undefined ? '' : ` rewritten at ${placed.rewritten}`}`,
+      )
+      .sort();
+  };
+  const merge = 'export function mergeConfig(target: any, source: any): any {\n  for (const key in source) target[key] = source[key];\n  return target;\n}';
+  const defaults = "export const defaults = { api: { host: '', port: 3000 } };";
+
+  it('reads defaults a module loads by a path built from its own directory, through the constant that holds it', () => {
+    const said: string[] = [];
+    expect(
+      read(
+        {
+          '/src/merge.ts': merge,
+          '/src/config/defaults.ts': defaults,
+          '/src/config/index.ts': [
+            "import path from 'path';",
+            "import { mergeConfig } from '../merge';",
+            'let active: any;',
+            "const defaultsPath = path.join(__dirname, 'defaults');",
+            'async function loadDefaults() { return (await import(defaultsPath)).defaults; }',
+            'export async function setConfig(given: any) {',
+            '  if (!active) active = await loadDefaults();',
+            '  active = mergeConfig(active, given);',
+            '}',
+            'export function getConfig() { return active; }',
+          ].join('\n'),
+          '/src/main.ts': "import { getConfig, setConfig } from './config';\nexport async function bootstrap(given: any) {\n  await setConfig(given);\n  await app.listen(getConfig().api.port);\n}",
+          '/src/index.ts': "import { bootstrap } from './main';\nvoid bootstrap({ api: { host: 'x' } });",
+        },
+        said,
+      ),
+    ).toEqual(['src/main.ts:4 3000 merged at src/config/index.ts:8']);
+    expect(said).toEqual([]);
+  });
+
+  it("reads a module's exports through require and a resolved path, and says so where the path names no file", () => {
+    const said: string[] = [];
+    expect(
+      read(
+        {
+          '/config/server.js': 'module.exports = { port: 3400 };',
+          '/src/a.ts': "import { resolve } from 'path';\nconst settings = require(resolve(__dirname, '../config/server'));\napp.listen(settings.port);",
+          '/src/b.ts': "const settings = require(`${__dirname}/missing`);\napp.listen(settings.port);",
+        },
+        said,
+      ),
+    ).toEqual(['src/a.ts:3 3400']);
+    expect(said).toEqual(['b.ts:2 loaded require(`${__dirname}/missing`)']);
+  });
+
+  it('reads a setter whose write is inside a callback as the named function it is written in', () => {
+    expect(
+      read({
+        '/src/defaults.ts': defaults,
+        '/src/merge.ts': merge,
+        '/src/config.ts': [
+          "import { defaults } from './defaults';",
+          "import { mergeConfig } from './merge';",
+          'let active: any = defaults;',
+          'export function setConfig(given: any) {',
+          '  return ready().then(() => {',
+          '    active = mergeConfig(active, given);',
+          '  });',
+          '}',
+          'export function getConfig() { return active; }',
+        ].join('\n'),
+        '/src/main.ts': "import { getConfig, setConfig } from './config';\nexport async function bootstrap() {\n  await setConfig({ api: { port: 4100 } });\n  app.listen(getConfig().api.port);\n}",
+      }),
+    ).toEqual(['src/main.ts:4 4100 merged at src/config.ts:6 handed at src/main.ts:3']);
+  });
+
+  it("reads a property an object's key or a class's field holds, written by a setter or a constructor", () => {
+    expect(
+      read({
+        '/src/defaults.ts': defaults,
+        '/src/merge.ts': merge,
+        '/src/state.ts': [
+          "import { defaults } from './defaults';",
+          "import { mergeConfig } from './merge';",
+          'export const state = { config: defaults };',
+          'export function setConfig(given: any) { state.config = mergeConfig(state.config, given); }',
+        ].join('\n'),
+        '/src/a.ts': "import { setConfig, state } from './state';\nsetConfig({ api: { port: 4200 } });\napp.listen(state.config.api.port);",
+        '/src/settings.ts': [
+          "import { defaults } from './defaults';",
+          "import { mergeConfig } from './merge';",
+          'export class Settings {',
+          '  private config: any = defaults;',
+          '  load(given: any) { this.config = mergeConfig(this.config, given); }',
+          '  get() { return this.config; }',
+          '}',
+        ].join('\n'),
+        '/src/b.ts': "import { Settings } from './settings';\nconst settings = new Settings();\nsettings.load({ api: { port: 4300 } });\napp.listen(settings.get().api.port);",
+        '/src/server.ts': [
+          'export class Server {',
+          '  private options: any;',
+          '  constructor(options: any) { this.options = options; }',
+          '  start() { app.listen(this.options.port); }',
+          '}',
+        ].join('\n'),
+        '/src/c.ts': "import { Server } from './server';\nnew Server({ port: 4400 }).start();",
+      }),
+    ).toEqual([
+      'src/a.ts:3 4200 merged at src/state.ts:4 handed at src/a.ts:2',
+      'src/b.ts:4 4300 merged at src/settings.ts:5 handed at src/b.ts:3',
+      'src/server.ts:4 4400 handed at src/c.ts:2',
+    ]);
+  });
+
+  it('reads a merge written in place over the holder itself as a setter, the spread answered by what lies beneath', () => {
+    expect(
+      read({
+        '/src/settings.ts': [
+          'const defaults = { port: 3200, index: "products" };',
+          'export class Settings {',
+          '  private values: any = defaults;',
+          '  load(given: any) { this.values = { ...this.values, ...given }; }',
+          '  get() { return this.values; }',
+          '}',
+        ].join('\n'),
+        '/src/a.ts': "import { Settings } from './settings';\nconst settings = new Settings();\nsettings.load({ port: 4200 });\napp.listen(settings.get().port);",
+        '/src/b.ts': "import { Settings } from './settings';\nconst settings = new Settings();\nsettings.load({ index: 'other' });\napp.listen(settings.get().port);",
+      }),
+    ).toEqual(['src/a.ts:4 4200 merged at src/settings.ts:4 handed at src/a.ts:3', 'src/b.ts:4 3200 merged at src/settings.ts:4']);
+  });
+
+  it('reads a variable of a function at the write before the read, each write that may be made, and a parameter written again', () => {
+    expect(
+      read({
+        '/src/a.ts': [
+          'function applyPlugins(config: any) { return config; }',
+          'export async function boot() {',
+          '  let config: any = { port: 3100 };',
+          '  config = await applyPlugins({ ...config, port: 4100 });',
+          '  app.listen(config.port);',
+          '}',
+        ].join('\n'),
+        '/src/b.ts': 'export function start(flag: boolean) {\n  let port = 3200;\n  if (flag) port = 4200;\n  app.listen(port);\n}',
+        '/src/c.ts': 'export function serve(port = 3300) {\n  port = Number(port);\n  app.listen(port);\n}\nserve(4300);',
+      }),
+    ).toEqual(['src/a.ts:5 4100 handed at src/a.ts:4', 'src/b.ts:4 3200', 'src/b.ts:4 4200', 'src/c.ts:3 4300 handed at src/c.ts:5']);
+  });
+
+  it('reads the value from before a write whose own value is not read, as a guess, and says so', () => {
+    const said: string[] = [];
+    expect(
+      read(
+        {
+          '/src/a.ts': "import getPort from 'get-port';\nexport async function start() {\n  let port = 3500;\n  port = await getPort({ port });\n  app.listen(port);\n}",
+          '/src/b.ts': [
+            "import { applyAll } from 'plugin-kit';",
+            'export async function boot() {',
+            '  let config: any = { port: 3600 };',
+            '  config = await applyAll(config);',
+            '  app.listen(config.port);',
+            '}',
+          ].join('\n'),
+        },
+        said,
+      ),
+    ).toEqual(['src/a.ts:5 3500 rewritten at src/a.ts:4', 'src/b.ts:5 3600 rewritten at src/b.ts:4']);
+    expect(said).toEqual(['a.ts:5 rewritten guessed port = await getPort({ port })', 'b.ts:5 rewritten guessed config = await applyAll(config)']);
+    expect(literalPort({ rewritten: 'src/a.ts:4' })).toBe(false);
+  });
+});

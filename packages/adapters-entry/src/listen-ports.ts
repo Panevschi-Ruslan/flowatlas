@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  NotLiteral,
   configValueAt,
   isEnvironmentName,
   isTestFile,
@@ -62,61 +63,109 @@ export const listensByCall = (ctx: ExtractContext): ListenPort[] => {
  * `ConfigModule.forRoot({ envFilePath })` (`.env` unless `ignoreEnvFile`),
  * Node's own `process.loadEnvFile(path)` and `--env-file`, Deno's
  * `--env-file`, the `dotenv` and `env-cmd` commands a script runs a server
- * with, and Bun, which loads `.env.local` and `.env` before it runs a file. A
- * path given as anything but a literal names no file this reads.
+ * with, and Bun, which loads its files before it runs a file. A path given as
+ * anything but a literal names no file this reads.
+ *
+ * Which file wins where several set one value is each loader's own order
+ * (P321). Neither dotenv nor Node overwrites a value the environment already
+ * holds, so what a script's command or the runtime loads before the code runs
+ * wins over what the code loads, and dotenv's `override: true` wins over
+ * both. Within one loader: dotenv (`path: [a, b]`), dotenv-cli (`-e a -e b`,
+ * and `-c`'s cascade, `.env.<mode>.local`, `.env.local`, `.env.<mode>`, `.env`)
+ * and `ConfigModule`'s `envFilePath` keep the first file's value; Node's and
+ * Deno's repeated `--env-file`, and dotenv's with `override`, the last one's;
+ * Bun reads `.env`, then `.env.<NODE_ENV>` (`development` where the command
+ * sets none), then `.env.local`, each over the one before, or only the files
+ * its own `--env-file` names.
  */
 export const loadedEnvFiles = (ctx: ExtractContext): string[] => {
-  const files: string[] = [];
-  const add = (named: readonly string[] | undefined, otherwise: readonly string[]): void => {
-    for (const file of named ?? otherwise) files.push(file.replace(/^\.\//, ''));
+  // The files a `dotenv.config({ override: true })` loads, the ones before the code runs, the code's own.
+  const overriding: string[] = [];
+  const before: string[] = [];
+  const code: string[] = [];
+  const add = (into: string[], named: readonly string[] | undefined, otherwise: readonly string[]): void => {
+    for (const file of named ?? otherwise) into.push(file.replace(/^\.\//, ''));
   };
   for (const sourceFile of repoSources(ctx)) {
     if (isTestFile(normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir))) continue;
     const text = sourceFile.getFullText();
-    if (/\bBun\.serve\s*\(/.test(text)) add(undefined, BUN_ENV_FILES);
+    if (/\bBun\.serve\s*\(/.test(text)) add(before, undefined, bunEnvFiles());
     if (!/dotenv|loadEnvFile|ConfigModule/.test(text)) continue;
-    if (sourceFile.getImportDeclarations().some((each) => each.getModuleSpecifierValue() === 'dotenv/config')) add(undefined, ['.env']);
+    if (sourceFile.getImportDeclarations().some((each) => each.getModuleSpecifierValue() === 'dotenv/config')) add(code, undefined, ['.env']);
     for (const call of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
       const callee = call.getExpression();
       const first = call.getArguments()[0];
       const literal = first !== undefined && (Node.isStringLiteral(first) || Node.isNoSubstitutionTemplateLiteral(first)) ? first.getLiteralValue() : undefined;
-      if (callee.getText() === 'require' && literal === 'dotenv/config') add(undefined, ['.env']);
+      if (callee.getText() === 'require' && literal === 'dotenv/config') add(code, undefined, ['.env']);
       else if (callee.getText() === 'process.loadEnvFile') {
         // `process.loadEnvFile()` loads `.env`; a path not written as a literal names no file read.
-        if (first === undefined) add(undefined, ['.env']);
-        else if (literal !== undefined) add([literal], []);
-      } else if (isDotenvConfig(call, sourceFile)) add(hasOption(first, 'path') ? (pathsOption(first, 'path') ?? []) : undefined, ['.env']);
-      else if (Node.isPropertyAccessExpression(callee) && callee.getName() === 'forRoot' && callee.getExpression().getText() === 'ConfigModule' && importOf(sourceFile, 'ConfigModule') === '@nestjs/config') {
-        if (first !== undefined && Node.isObjectLiteralExpression(first) && first.getProperty('ignoreEnvFile')?.getText().endsWith('true') === true) continue;
-        add(hasOption(first, 'envFilePath') ? (pathsOption(first, 'envFilePath') ?? []) : undefined, ['.env']);
+        if (first === undefined) add(code, undefined, ['.env']);
+        else if (literal !== undefined) add(code, [literal], []);
+      } else if (isDotenvConfig(call, sourceFile)) {
+        const named = hasOption(first, 'path') ? (pathsOption(first, 'path') ?? []) : undefined;
+        // With `override`, each file is laid over what is there, so the last one wins, and over the environment.
+        if (isTrueOption(first, 'override')) overriding.unshift(...[...(named ?? ['.env'])].reverse().map((file) => file.replace(/^\.\//, '')));
+        else add(code, named, ['.env']);
+      } else if (Node.isPropertyAccessExpression(callee) && callee.getName() === 'forRoot' && callee.getExpression().getText() === 'ConfigModule' && importOf(sourceFile, 'ConfigModule') === '@nestjs/config') {
+        if (isTrueOption(first, 'ignoreEnvFile')) continue;
+        add(code, hasOption(first, 'envFilePath') ? (pathsOption(first, 'envFilePath') ?? []) : undefined, ['.env']);
       }
     }
   }
   for (const each of scriptCommands(ctx.repoDir, SCRIPT_LOADS_ENV)) {
     if (/\b(?:jest|vitest|mocha|playwright|cypress)\b/.test(each.command)) continue;
     const command = each.command;
+    // Node's, Deno's and Bun's `--env-file`, repeated: the last one wins.
+    const flagged: string[] = [];
     for (const match of command.matchAll(/(?:^|\s)--env-file(?:-if-exists)?(?:=(\S+)|\s+(\S+))?/g)) {
       const value = match[1] ?? match[2];
-      add(value === undefined || value.startsWith('-') || /\.[cm]?[jt]sx?$/.test(value) ? undefined : [value], ['.env']);
+      add(flagged, value === undefined || value.startsWith('-') || /\.[cm]?[jt]sx?$/.test(value) ? undefined : [value], ['.env']);
     }
+    before.push(...flagged.reverse());
     if (/(?:^|\s)dotenv(?:-cli)?\s/.test(command)) {
       const named = [...command.matchAll(/(?:^|\s)-e\s+(\S+)/g)].map((match) => match[1] as string);
-      add(named.length === 0 ? undefined : named, ['.env']);
+      add(before, dotenvCliFiles(named.length === 0 ? ['.env'] : named, command), []);
     }
     if (/(?:^|\s)env-cmd\s/.test(command)) {
       const named = /(?:^|\s)(?:-f|--file)\s+(\S+)/.exec(command)?.[1];
-      add(named === undefined ? undefined : [named], ['.env']);
+      add(before, named === undefined ? undefined : [named], ['.env']);
     }
-    if (/(?:^|\s)bun\s+(?:run\s+)?(?:--[\w-]+\s+)*[\w./-]+\.[cm]?[jt]sx?(?:\s|$)/.test(command)) add(undefined, BUN_ENV_FILES);
+    if (flagged.length === 0 && /(?:^|\s)bun\s+(?:run\s+)?(?:--[\w-]+\s+)*[\w./-]+\.[cm]?[jt]sx?(?:\s|$)/.test(command)) {
+      add(before, undefined, bunEnvFiles(/(?:^|\s)NODE_ENV=(\w+)/.exec(command)?.[1]));
+    }
   }
-  return [...new Set(files.map((file) => file.replace(/^['"]|['"]$/g, '')))];
+  return [...new Set([...overriding, ...before, ...code].map((file) => file.replace(/^['"]|['"]$/g, '')))];
 };
 
 /** The script commands that load an environment file before what they run (P315). */
 const SCRIPT_LOADS_ENV = /--env-file|(?:^|\s)dotenv(?:-cli)?\s|(?:^|\s)env-cmd\s|(?:^|\s)bun\s/;
 
-/** The files Bun loads before it runs a file, the one whose value wins first (P315). */
-const BUN_ENV_FILES = ['.env.local', '.env'] as const;
+/**
+ * The files Bun loads before it runs a file, the one whose value wins first
+ * (P315, P321): `.env.local`, `.env.<NODE_ENV>` and `.env`, as its documentation
+ * orders them, `NODE_ENV` being `development` where nothing sets it.
+ */
+export const bunEnvFiles = (mode = 'development'): readonly string[] => ['.env.local', `.env.${mode}`, '.env'];
+
+/**
+ * The files the dotenv-cli command loads, the one whose value wins first
+ * (P321): each `-e` file in order, and with `-c` its cascade - `.env.<mode>.local`,
+ * `.env.local`, `.env.<mode>`, `.env` for `-c <mode>`, `.env.local` and `.env`
+ * for a bare `-c`.
+ */
+const dotenvCliFiles = (named: readonly string[], command: string): string[] => {
+  const cascade = /(?:^|\s)-c(?:\s+(?!--)([^-\s]\S*))?(?=\s|$)/.exec(command);
+  if (cascade === null) return [...named];
+  const mode = cascade[1];
+  return named.flatMap((file) => (mode === undefined ? [`${file}.local`, file] : [`${file}.${mode}.local`, `${file}.local`, `${file}.${mode}`, file]));
+};
+
+/** Whether an options object writes a key as `true`. */
+const isTrueOption = (options: Node | undefined, key: string): boolean => {
+  if (options === undefined || !Node.isObjectLiteralExpression(options)) return false;
+  const property = options.getProperty(key);
+  return property !== undefined && Node.isPropertyAssignment(property) && property.getInitializer()?.getText() === 'true';
+};
 
 /** Whether a call is dotenv's `config`: `dotenv.config()`, `config()` imported from it, `require('dotenv').config()`. */
 const isDotenvConfig = (call: Node, sourceFile: SourceFile): boolean => {
@@ -216,7 +265,7 @@ const HONO_SERVES: readonly ServeShape[] = [
     starts: (callee) => callee.getText() === 'Bun.serve',
     optionsAt: 0,
     otherwise: 3000,
-    fromEnv: { settings: ['BUN_PORT', 'PORT', 'NODE_PORT'], files: ['.env.local', '.env'] },
+    fromEnv: { settings: ['BUN_PORT', 'PORT', 'NODE_PORT'], files: bunEnvFiles() },
   },
   { starts: (callee) => callee.getText() === 'Deno.serve', optionsAt: 0, otherwise: 8000 },
 ];
@@ -289,6 +338,12 @@ export interface ScriptCommand {
   readonly environmentPort?: number;
   /** Whether the command hands the port in from somewhere nothing here reads: `-p $PORT` (P296). */
   readonly portUnread?: true;
+  /**
+   * Every number the command's own environment gives a setting (P321):
+   * `FASTIFY_PORT=3020 fastify start`, `PORT=3020 gatsby develop`, for a
+   * framework that reads its port from a setting of another name.
+   */
+  readonly environment?: Readonly<Record<string, number>>;
 }
 
 /**
@@ -321,6 +376,10 @@ export const scriptCommands = (repoDir: string, commands: RegExp): ScriptCommand
       // `PORT=3020 next start`, `-p ${PORT:-3020}`: where a server reading PORT listens (P296).
       const given = /(?:^|\s)PORT=(\d{2,5})(?=\s)/.exec(part)?.[1] ?? /\$\{PORT:?-(\d{2,5})\}/.exec(part)?.[1];
       const environmentPort = given === undefined || Number(given) >= 65536 ? undefined : Number(given);
+      const environment: Record<string, number> = {};
+      for (const match of part.matchAll(/(?:^|\s)([A-Z][A-Z0-9_]*)=['"]?(\d{2,5})['"]?(?=\s)/g)) {
+        if (Number(match[2]) < 65536) environment[match[1] as string] ??= Number(match[2]);
+      }
       const handed = port === undefined && environmentPort === undefined && /(?:^|\s)(?:-p|--port)(?:\s+|=)\S/.test(part);
       const at = text.indexOf(JSON.stringify(name));
       found.push({
@@ -330,6 +389,7 @@ export const scriptCommands = (repoDir: string, commands: RegExp): ScriptCommand
         strict: /(?:^|\s)--strict-?port\b/i.test(part),
         ...(environmentPort === undefined ? {} : { environmentPort }),
         ...(handed ? { portUnread: true as const } : {}),
+        ...(Object.keys(environment).length === 0 ? {} : { environment }),
       });
     }
   }
@@ -364,8 +424,10 @@ export const frameworkListens = (
   const scripts = scriptCommands(repoDir, commands);
   const found: ListenPort[] = [...written];
   for (const each of scripts) {
+    // The setting the framework reads first that the command's own environment gives (P321).
+    const given = (loads?.settings ?? []).map((setting) => each.environment?.[setting]).find((port) => port !== undefined) ?? each.environmentPort;
     if (each.port !== undefined) found.push({ port: each.port, file: 'package.json', line: each.line });
-    else if (each.environmentPort !== undefined) found.push({ port: each.environmentPort, file: 'package.json', line: each.line });
+    else if (given !== undefined) found.push({ port: given, file: 'package.json', line: each.line });
   }
   if (found.length > 0 || scripts.some((each) => each.portUnread === true) || !existsSync(join(repoDir, 'package.json'))) return found;
   const filed = loads === undefined ? undefined : envFilePort(repoDir, scripts, loads);
@@ -502,4 +564,66 @@ export const nitroListens = (ctx: ExtractContext): ListenPort[] => {
   }
   // Nuxt's and Nitro's servers listen on 3000 where nothing says (P296).
   return frameworkListens(ctx.repoDir, /\b(nuxi|nuxt|nitro|nitropack)\s+(dev|preview|start)\b/, 3000, found, NITRO_ENV);
+};
+
+/**
+ * fastify-cli's `fastify start` (P321): it loads `.env` with dotenv before it
+ * reads its options, and takes its port from `-p` / `--port`, then
+ * `FASTIFY_PORT`, then `PORT`, then 3000.
+ */
+export const FASTIFY_CLI_ENV: EnvLoading = { commands: /\bfastify\s+start\b/, files: ['.env'], settings: ['FASTIFY_PORT', 'PORT'] };
+
+/**
+ * Where an application fastify-cli starts listens (P321): an application
+ * written as a plugin for `fastify start` calls no `listen` of its own, so
+ * the script's `-p`, the port its environment or the `.env` it loads gives
+ * `FASTIFY_PORT` or `PORT`, or fastify-cli's 3000 as a default. Nothing
+ * where no script runs `fastify start`.
+ */
+export const fastifyCliListens = (ctx: ExtractContext): ListenPort[] =>
+  scriptCommands(ctx.repoDir, FASTIFY_CLI_ENV.commands).length === 0 ? [] : frameworkListens(ctx.repoDir, FASTIFY_CLI_ENV.commands, 3000, [], FASTIFY_CLI_ENV);
+
+/** Where a Strapi application's server configuration is, the source first. */
+const STRAPI_CONFIGS = ['config/server.ts', 'config/server.js', 'config/server.mjs', 'config/server.cjs'];
+
+/** Strapi's own port, where its configuration gives none (P321). */
+const STRAPI_DEFAULT = 1337;
+
+/** The commands that start Strapi's server, and the file `ENV_PATH` on one names in place of `.env`. */
+const STRAPI_STARTS = /\bstrapi\s+(?:develop|dev|start)\b/;
+
+/**
+ * Where a Strapi application's server listens (P321): the `port` of its
+ * `config/server.*`, `env.int('PORT', 1337)` read as the setting with its
+ * fallback, or Strapi's 1337 as a default where the file writes none. Strapi
+ * loads `.env` (or the file `ENV_PATH` names) before it reads the
+ * configuration, as its documentation says, so a port that file gives the
+ * setting is where it listens. A port written in a way not read assumes
+ * nothing.
+ */
+export const strapiListens = (ctx: ExtractContext): ListenPort[] => {
+  const repoDir = ctx.repoDir;
+  const config = readConfigLiteral(repoDir, STRAPI_CONFIGS);
+  const written = config === undefined ? undefined : configValueAt(config.value, 'port');
+  let text = '';
+  try {
+    text = config === undefined ? '' : readFileSync(config.file, 'utf8');
+  } catch {
+    // The line falls back to the first.
+  }
+  const at = /\bport\s*:/.exec(text);
+  const file = config === undefined ? 'package.json' : normalizeFilePath(config.file, repoDir);
+  const line = at === null ? 1 : lineAt(text, at.index);
+  if (typeof written === 'number') return Number.isInteger(written) && written > 0 && written < 65536 ? [{ port: written, file, line }] : [];
+  const read = written instanceof NotLiteral ? /\benv(?:\.int)?\(\s*['"]([A-Za-z_]\w*)['"](?:\s*,\s*['"]?(\d{2,5})['"]?)?\s*\)/.exec(written.text) : null;
+  if (written !== undefined && read === null) return [];
+  const setting = read?.[1] ?? 'PORT';
+  const fallback = read?.[2] === undefined ? undefined : Number(read[2]);
+  const port: ListenPort =
+    fallback !== undefined && fallback < 65536 ? { port: fallback, file, line, setting } : { port: STRAPI_DEFAULT, file, line, setting, default: true };
+  const named = scriptCommands(repoDir, STRAPI_STARTS).flatMap((each) => {
+    const path = /(?:^|\s)ENV_PATH=(\S+)/.exec(each.command)?.[1];
+    return path === undefined ? [] : [path.replace(/^['"]|['"]$/g, '').replace(/^\.\//, '')];
+  });
+  return [filledFromEnv(port, repoDir, named.length > 0 ? [...new Set(named)] : ['.env'], [setting])];
 };

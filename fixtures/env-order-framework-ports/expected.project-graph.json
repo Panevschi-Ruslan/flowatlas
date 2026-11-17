@@ -1,0 +1,1229 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-17T17:31:13.487Z",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "search",
+      "repo": "./search",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "fastify",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "cms",
+      "repo": "./cms",
+      "type": "koa",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "worker",
+      "repo": "./worker",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "billing#src/main.ts:GET /api/invoices@5",
+      "type": "function",
+      "label": "GET /api/invoices@5",
+      "repo": "billing",
+      "file": "src/main.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/bootstrap.ts:GET /api/items@10",
+      "type": "function",
+      "label": "GET /api/items@10",
+      "repo": "catalog",
+      "file": "src/bootstrap.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "entry:billing:http:GET:/api/invoices",
+      "type": "entry",
+      "label": "GET /api/invoices",
+      "repo": "billing",
+      "file": "src/main.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/invoices",
+        "rawPath": "/api/invoices",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/api/items",
+      "type": "entry",
+      "label": "GET /api/items",
+      "repo": "catalog",
+      "file": "src/bootstrap.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/items",
+        "rawPath": "/api/items",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:gateway:http:GET:/api/health",
+      "type": "entry",
+      "label": "GET /api/health",
+      "repo": "gateway",
+      "file": "src/app.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/health",
+        "rawPath": "/api/health",
+        "adapter": "fastify-routes",
+        "registration": "fastify.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:inventory:http:GET:/api/stock",
+      "type": "entry",
+      "label": "GET /api/stock",
+      "repo": "inventory",
+      "file": "src/main.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/stock",
+        "rawPath": "/api/stock",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "orders",
+      "file": "src/main.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:search:http:GET:/api/search",
+      "type": "entry",
+      "label": "GET /api/search",
+      "repo": "search",
+      "file": "src/main.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/search",
+        "rawPath": "/api/search",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:worker:http:GET:/api/tasks",
+      "type": "entry",
+      "label": "GET /api/tasks",
+      "repo": "worker",
+      "file": "src/main.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/tasks",
+        "rawPath": "/api/tasks",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "gateway#src/app.ts:GET /api/health@5",
+      "type": "function",
+      "label": "GET /api/health@5",
+      "repo": "gateway",
+      "file": "src/app.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{ok:true}"
+        }
+      }
+    },
+    {
+      "id": "http_out:jobs#src/sync.ts:11:31",
+      "type": "http_out",
+      "label": "GET /api/invoices",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 11,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4400/api/invoices",
+        "path": "/api/invoices",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4400",
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/sync.ts:14:28",
+      "type": "http_out",
+      "label": "GET /api/stock",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 14,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4500/api/stock",
+        "path": "/api/stock",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4500",
+        "targetService": "inventory"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/sync.ts:17:29",
+      "type": "http_out",
+      "label": "GET /api/health",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 17,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/api/health",
+        "path": "/api/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4600",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/sync.ts:20:28",
+      "type": "http_out",
+      "label": "GET /api/tasks",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 20,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3800/api/tasks",
+        "path": "/api/tasks",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:3800",
+        "targetService": "worker"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/sync.ts:2:28",
+      "type": "http_out",
+      "label": "GET /api/items",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 2,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4100/api/items",
+        "path": "/api/items",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4100",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/sync.ts:5:29",
+      "type": "http_out",
+      "label": "GET /api/search",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 5,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4200/api/search",
+        "path": "/api/search",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4200",
+        "targetService": "search"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/sync.ts:8:29",
+      "type": "http_out",
+      "label": "GET /api/orders",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4300/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4300",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "inventory#src/main.ts:GET /api/stock@5",
+      "type": "function",
+      "label": "GET /api/stock@5",
+      "repo": "inventory",
+      "file": "src/main.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/sync.ts:health",
+      "type": "function",
+      "label": "health",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/sync.ts:invoices",
+      "type": "function",
+      "label": "invoices",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/sync.ts:items",
+      "type": "function",
+      "label": "items",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/sync.ts:orders",
+      "type": "function",
+      "label": "orders",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/sync.ts:search",
+      "type": "function",
+      "label": "search",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/sync.ts:stock",
+      "type": "function",
+      "label": "stock",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/sync.ts:tasks",
+      "type": "function",
+      "label": "tasks",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "orders#src/main.ts:GET /api/orders@5",
+      "type": "function",
+      "label": "GET /api/orders@5",
+      "repo": "orders",
+      "file": "src/main.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:billing",
+      "type": "repo",
+      "label": "billing",
+      "repo": "billing",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4400,
+            "file": "src/main.ts",
+            "line": 9,
+            "setting": "PORT",
+            "valueFrom": ".env.production"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4100,
+            "file": "src/bootstrap.ts",
+            "line": 14,
+            "handed": "src/main.ts:3",
+            "merged": "src/config/holder.ts:10"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:cms",
+      "type": "repo",
+      "label": "cms",
+      "repo": "cms",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "strapi-server"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4700,
+            "file": "config/server.js",
+            "line": 3,
+            "setting": "PORT",
+            "valueFrom": ".env"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:gateway",
+      "type": "repo",
+      "label": "gateway",
+      "repo": "gateway",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "fastify-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4600,
+            "file": ".env",
+            "line": 1,
+            "setting": "FASTIFY_PORT",
+            "valueFrom": ".env"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:inventory",
+      "type": "repo",
+      "label": "inventory",
+      "repo": "inventory",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 9,
+            "setting": "INVENTORY_PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4300,
+            "file": "src/main.ts",
+            "line": 9,
+            "setting": "PORT",
+            "valueFrom": ".env.local"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:search",
+      "type": "repo",
+      "label": "search",
+      "repo": "search",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4200,
+            "file": "src/main.ts",
+            "line": 11,
+            "handed": "src/main.ts:5",
+            "merged": "src/settings.ts:8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:site",
+      "type": "repo",
+      "label": "site",
+      "repo": "site",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "functions": 1,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        },
+        "listen": [
+          {
+            "port": 8000,
+            "file": "package.json",
+            "line": 5,
+            "setting": "PORT",
+            "default": true,
+            "devServer": true
+          },
+          {
+            "port": 9100,
+            "file": "package.json",
+            "line": 6,
+            "devServer": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:worker",
+      "type": "repo",
+      "label": "worker",
+      "repo": "worker",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3800,
+            "file": "src/main.ts",
+            "line": 11,
+            "rewritten": "src/main.ts:6"
+          }
+        ]
+      }
+    },
+    {
+      "id": "search#src/main.ts:GET /api/search@8",
+      "type": "function",
+      "label": "GET /api/search@8",
+      "repo": "search",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "site#src/pages/index.tsx:Home",
+      "type": "ui_component",
+      "label": "Home",
+      "repo": "site",
+      "file": "src/pages/index.tsx",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "worker#src/main.ts:GET /api/tasks@8",
+      "type": "function",
+      "label": "GET /api/tasks@8",
+      "repo": "worker",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:billing:http:GET:/api/invoices",
+      "to": "billing#src/main.ts:GET /api/invoices@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/api/items",
+      "to": "catalog#src/bootstrap.ts:GET /api/items@10",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/bootstrap.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:gateway:http:GET:/api/health",
+      "to": "gateway#src/app.ts:GET /api/health@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:true}",
+      "file": "src/app.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:inventory:http:GET:/api/stock",
+      "to": "inventory#src/main.ts:GET /api/stock@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/api/orders",
+      "to": "orders#src/main.ts:GET /api/orders@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:search:http:GET:/api/search",
+      "to": "search#src/main.ts:GET /api/search@8",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{hits:undefined[]}",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:worker:http:GET:/api/tasks",
+      "to": "worker#src/main.ts:GET /api/tasks@8",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:jobs#src/sync.ts:11:31",
+      "to": "entry:billing:http:GET:/api/invoices",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/sync.ts",
+      "line": 11,
+      "meta": {
+        "via": "host",
+        "targetService": "billing",
+        "listensAt": "src/main.ts:9 (PORT from .env.production)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/sync.ts:14:28",
+      "to": "entry:inventory:http:GET:/api/stock",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/sync.ts",
+      "line": 14,
+      "meta": {
+        "via": "host",
+        "targetService": "inventory",
+        "listensAt": "src/main.ts:9 (INVENTORY_PORT from .env.example)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/sync.ts:17:29",
+      "to": "entry:gateway:http:GET:/api/health",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/sync.ts",
+      "line": 17,
+      "meta": {
+        "via": "host",
+        "targetService": "gateway",
+        "listensAt": ".env:1 (FASTIFY_PORT from .env)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/sync.ts:20:28",
+      "to": "entry:worker:http:GET:/api/tasks",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/sync.ts",
+      "line": 20,
+      "meta": {
+        "via": "host",
+        "targetService": "worker",
+        "listensAt": "src/main.ts:11 (from before the write at src/main.ts:6)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/sync.ts:2:28",
+      "to": "entry:catalog:http:GET:/api/items",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/sync.ts",
+      "line": 2,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/bootstrap.ts:14 (read through the merge at src/config/holder.ts:10) (handed at src/main.ts:3)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/sync.ts:5:29",
+      "to": "entry:search:http:GET:/api/search",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/sync.ts",
+      "line": 5,
+      "meta": {
+        "via": "host",
+        "targetService": "search",
+        "listensAt": "src/main.ts:11 (read through the merge at src/settings.ts:8) (handed at src/main.ts:5)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/sync.ts:8:29",
+      "to": "entry:orders:http:GET:/api/orders",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/sync.ts",
+      "line": 8,
+      "meta": {
+        "via": "host",
+        "targetService": "orders",
+        "listensAt": "src/main.ts:9 (PORT from .env.local)"
+      }
+    },
+    {
+      "from": "jobs#src/sync.ts:health",
+      "to": "http_out:jobs#src/sync.ts:17:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.ts",
+      "line": 17
+    },
+    {
+      "from": "jobs#src/sync.ts:invoices",
+      "to": "http_out:jobs#src/sync.ts:11:31",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.ts",
+      "line": 11
+    },
+    {
+      "from": "jobs#src/sync.ts:items",
+      "to": "http_out:jobs#src/sync.ts:2:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.ts",
+      "line": 2
+    },
+    {
+      "from": "jobs#src/sync.ts:orders",
+      "to": "http_out:jobs#src/sync.ts:8:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.ts",
+      "line": 8
+    },
+    {
+      "from": "jobs#src/sync.ts:search",
+      "to": "http_out:jobs#src/sync.ts:5:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.ts",
+      "line": 5
+    },
+    {
+      "from": "jobs#src/sync.ts:stock",
+      "to": "http_out:jobs#src/sync.ts:14:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.ts",
+      "line": 14
+    },
+    {
+      "from": "jobs#src/sync.ts:tasks",
+      "to": "http_out:jobs#src/sync.ts:20:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.ts",
+      "line": 20
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/main.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /api/invoices@5 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "billing"
+    },
+    {
+      "file": "src/bootstrap.ts",
+      "line": 11,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /api/items@10 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/main.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /api/stock@5 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "inventory"
+    },
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "jobs"
+    },
+    {
+      "file": "src/main.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /api/orders@5 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "orders"
+    },
+    {
+      "file": "src/main.ts",
+      "line": 9,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /api/search@8 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "search"
+    },
+    {
+      "file": "package.json",
+      "line": 5,
+      "reason": "listen-port-guessed",
+      "level": "info",
+      "message": "gatsby develop is read listening on Gatsby's own 8000, a guess: .env.development sets PORT=8102 (line 2), but Gatsby loads that file into the site's code and functions, not before the command chooses its port.",
+      "hint": "Give the port on the command (gatsby develop -p 8102, or PORT=8102 before it), where it is read; or export the setting in the shell that starts the server.",
+      "symbol": "gatsby develop",
+      "service": "site"
+    },
+    {
+      "file": "src/pages/index.tsx",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/main.ts",
+      "line": 9,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /api/tasks@8 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "worker"
+    },
+    {
+      "file": "src/main.ts",
+      "line": 11,
+      "reason": "listen-port-guessed",
+      "level": "info",
+      "message": "app.listen(port) is read listening on the port the value it reads held before port = await getPort({ port }) (src/main.ts:6), a guess: what that write puts there is not read.",
+      "hint": "Write the port where the server is started, or keep the write to a function of the repository's own whose answer can be read; a port a setting gives can be read from the repository's setting files.",
+      "symbol": "app.listen(port)",
+      "service": "worker"
+    }
+  ]
+}

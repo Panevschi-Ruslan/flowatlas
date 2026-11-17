@@ -77,6 +77,8 @@ export interface Listening {
   readonly valueFrom?: string;
   /** The merge helper's call the port is read through, `file:line` (P305). */
   readonly merged?: string;
+  /** The write not read that the value the port is read from passes, `file:line` (P321). */
+  readonly rewritten?: string;
   /**
    * `valueFrom` is an example environment file (`.env.example`, a template),
    * which offers the value rather than giving it: a guess (P309).
@@ -129,6 +131,7 @@ const isFallback = (listening: Listening): boolean =>
   listening.setting !== undefined &&
   listening.default !== true &&
   listening.merged === undefined &&
+  listening.rewritten === undefined &&
   listening.valueFrom === undefined &&
   listening.published === undefined &&
   listening.routed === undefined &&
@@ -144,7 +147,7 @@ const isFallback = (listening: Listening): boolean =>
  * no guess.
  */
 const isGuessed = (listening: Listening): boolean =>
-  listening.default === true || listening.merged !== undefined || listening.example === true || isFallback(listening);
+  listening.default === true || listening.merged !== undefined || listening.rewritten !== undefined || listening.example === true || isFallback(listening);
 
 /**
  * One service listening at a port, kept once: the surer word where one
@@ -170,6 +173,7 @@ const listeningOf = (service: string, port: ListenPort): Listening => ({
   ...(port.devServer === undefined ? {} : { devServer: port.devServer }),
   ...(port.valueFrom === undefined ? {} : { valueFrom: port.valueFrom }),
   ...(port.merged === undefined ? {} : { merged: port.merged }),
+  ...(port.rewritten === undefined ? {} : { rewritten: port.rewritten }),
 });
 
 /** Every port each service's code says it listens on, a setting alone included, by service. */
@@ -325,8 +329,13 @@ export const portsListening = (nodes: ReadonlyMap<string, GraphNode>, settings: 
   const code = codePortsOf(nodes);
   for (const [service, ports] of [...code.entries()].sort(([a], [b]) => cmp(a, b))) {
     for (const port of ports) {
-      if (port.port !== undefined || port.setting === undefined) continue;
+      if (port.setting === undefined || port.valueFrom !== undefined) continue;
+      // A setting read with a fallback or a default is offered the value an
+      // example environment file gives it, as a guess beside the fallback, as
+      // a setting read alone is (P321); a file nothing loads moves no fallback.
+      const withFallback = port.port !== undefined;
       for (const value of settings[service]?.ports?.[port.setting] ?? []) {
+        if (withFallback && (value.example !== true || value.port === port.port)) continue;
         addListening(byPort, value.port, { ...listeningOf(service, port), valueFrom: value.file, ...(value.example === true ? { example: true as const } : {}) });
       }
     }
@@ -407,6 +416,7 @@ export const whereListening = (listening: Listening): string =>
   (listening.setting === undefined ? '' : listening.valueFrom === undefined ? ` (${listening.setting})` : ` (${listening.setting} from ${listening.valueFrom})`) +
   (listening.default !== true ? '' : listening.valueFrom === undefined ? ' (its default)' : ' (an example value)') +
   (listening.merged === undefined ? '' : ` (read through the merge at ${listening.merged})`) +
+  (listening.rewritten === undefined ? '' : ` (from before the write at ${listening.rewritten})`) +
   (listening.handed === undefined ? '' : ` (handed at ${listening.handed})`) +
   (listening.published === undefined ? '' : publishedAs(listening.published)) +
   (listening.inContainer === undefined ? '' : `, in the container ${listening.inContainer.name} (${listening.inContainer.file})`) +

@@ -2,7 +2,7 @@ import { NO_SETTINGS, SCHEMA_VERSION, parseConfig, type GraphNode, type RepoGrap
 import { describe, expect, it } from 'vitest';
 import { branchClaims } from './base-url-value.js';
 import { linkGraphs } from './link.js';
-import { atLocalPort, type Listening, type PortIndex } from './local-port.js';
+import { atLocalPort, portsListening, whereListening, type Listening, type PortIndex } from './local-port.js';
 import { servesRequest } from './request-served.js';
 
 const FIXED = '2026-01-01T00:00:00.000Z';
@@ -174,5 +174,32 @@ describe('a port an example environment file offers (P309)', () => {
     expect(joins(linkGraphs([shop, api], services, { builtAt: FIXED, settings: example(true) }))).toEqual(['http_out entry:shop:http:GET:/api/cart heuristic']);
     // A port a deployment file places stays firm: the request goes to api, which lacks the route.
     expect(joins(linkGraphs([shop, api], services, { builtAt: FIXED, settings: example(false) }))).toEqual([]);
+  });
+});
+
+describe("a code port's fallback, and the value an example environment file offers its setting (P321)", () => {
+  const nodes = (ports: readonly Record<string, unknown>[]) => new Map([['repo:orders', listening('orders', ports)]]);
+  const settings = (values: readonly { port: number; file: string; example?: true }[]): Record<string, RepoSettings> => ({
+    orders: { ...NO_SETTINGS, ports: { ORDERS_PORT: values } },
+  });
+  const heard = (index: ReturnType<typeof portsListening>) =>
+    [...index.byPort.entries()]
+      .map(([port, all]) => `${port} ${all.map((each) => `${each.service}${each.valueFrom === undefined ? '' : ` from ${each.valueFrom}`}${each.example === true ? ' example' : ''}`).join(', ')}`)
+      .sort();
+
+  it("offers the example's value beside the fallback, and nothing a committed file nothing loads gives", () => {
+    const fallback = [{ port: 3000, file: 'src/main.ts', line: 4, setting: 'ORDERS_PORT' }];
+    expect(heard(portsListening(nodes(fallback), settings([{ port: 4100, file: '.env.example', example: true }])))).toEqual(['3000 orders', '4100 orders from .env.example example']);
+    expect(heard(portsListening(nodes(fallback), settings([{ port: 4100, file: '.env' }])))).toEqual(['3000 orders']);
+    // A port filled from a file the code loads is the file's, with nothing more offered.
+    const filled = [{ port: 4200, file: 'src/main.ts', line: 4, setting: 'ORDERS_PORT', valueFrom: '.env' }];
+    expect(heard(portsListening(nodes(filled), settings([{ port: 4100, file: '.env.example', example: true }])))).toEqual(['4200 orders from .env']);
+  });
+
+  it('takes a port read from before a write not read as a guess', () => {
+    const rewritten = [{ port: 3000, file: 'src/main.ts', line: 6, rewritten: 'src/main.ts:5' }];
+    const [only] = portsListening(nodes(rewritten), {}).byPort.get(3000) ?? [];
+    expect(only).toMatchObject({ service: 'orders', rewritten: 'src/main.ts:5' });
+    expect(whereListening(only as Listening)).toBe('src/main.ts:6 (from before the write at src/main.ts:5)');
   });
 });

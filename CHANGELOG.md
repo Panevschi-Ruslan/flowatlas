@@ -25,6 +25,31 @@ only one of them moved.
   row. Astro's `server` written as a function is read per command. A tRPC or
   gRPC link at a port only a default answers is placed where the procedure
   is served.
+- **Ports P315 left open: framework commands, loaders' order, example
+  fallbacks, held writes and computed paths (P321).** `gatsby develop` and
+  `gatsby serve` (`-p`, `PORT=`, else 8000 and 9000 as defaults; a `PORT` in
+  the site's `.env.development` is not loaded before the port is chosen, so
+  the default stays a guess with an info `listen-port-guessed` row),
+  `fastify start` (`-p`, then `FASTIFY_PORT` or `PORT` from its command or
+  the `.env` fastify-cli loads, else 3000) and Strapi's `config/server.*`
+  (`env.int('PORT', 1337)`, moved by the `.env` or `ENV_PATH` Strapi loads,
+  1337 where none is written; read by a new `strapi-server` adapter that
+  reads no route yet). Several loaded files are ordered as each loader
+  does: a script's or the runtime's files over the code's, the last of
+  Node's and Deno's repeated `--env-file`, dotenv's `override`, dotenv-cli's
+  `-c` cascade, and Bun's `.env.local` over `.env.<NODE_ENV>` over `.env`;
+  dotenv's paths and `ConfigModule`'s `envFilePath` stay first-wins. A code
+  fallback is offered the port an example environment file gives its
+  setting, as a guess. A setter's write inside a callback, a write through
+  `this` or an object's key (a field or key merged by a setter, a
+  constructor's write read at each `new`, `{ ...this.values, ...given }`),
+  and a variable of a function written again (`config = await
+  applyPlugins(config)`) are followed to the write before the read; a write
+  whose value is not read (`port = await getPort({ port })`) keeps the value
+  from before it as a guess (`rewritten`, a `listen-port-guessed` row).
+  Defaults loaded by `require`/`import` of a path built from the file's own
+  directory (`path.join(__dirname, 'defaults')`, `path.resolve(__dirname,
+  '../config')`, `` `${__dirname}/x` ``) or written relative to it are read.
 - **Jinja, kustomize, sceptre and CDK items (P306).** Namespaces are shared
   back out of macros, set and filter blocks and recursive loops, and
   `loop.changed` compares as Jinja does; kustomize name references for

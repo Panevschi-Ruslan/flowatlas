@@ -1,9 +1,9 @@
 import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { ListenPort } from '@flowatlas/core';
+import { GraphBuilder, type ExtractContext, type ListenPort } from '@flowatlas/core';
 import { afterAll, describe, expect, it } from 'vitest';
-import { astroListens, createReactAppListens, viteListens } from './dev-server.js';
+import { astroListens, createReactAppListens, gatsbyListens, viteListens } from './dev-server.js';
 
 const roots: string[] = [];
 afterAll(() => {
@@ -163,5 +163,32 @@ describe("where Create React App's development server listens (P315)", () => {
     expect(said(createReactAppListens(repo({ 'package.json': scripts({ start: 'PORT=3108 craco start' }), '.env': 'PORT=3109\n' })))).toEqual(['package.json:3 3108']);
     expect(said(createReactAppListens(repo({ 'package.json': scripts({ start: 'react-scripts start' }) })))).toEqual([]);
     expect(said(createReactAppListens(repo({ 'package.json': scripts({ build: 'react-scripts build' }), '.env': 'PORT=3110\n' })))).toEqual([]);
+  });
+});
+
+describe("where Gatsby's development server and a built site's server listen (P321)", () => {
+  const gatsby = (files: Record<string, string>): { ports: string[]; rows: string[] } => {
+    const builder = new GraphBuilder({ repo: 'site' });
+    const ports = said(gatsbyListens({ repoDir: repo(files), builder } as unknown as ExtractContext));
+    return { ports, rows: builder.build().unresolved.map((row) => `${row.reason} ${row.file}:${row.line} ${row.message}`) };
+  };
+
+  it("reads a script's -p and PORT=, and Gatsby's 8000 and 9000 where neither says", () => {
+    expect(gatsby({ 'package.json': scripts({ develop: 'gatsby develop -p 8100', serve: 'gatsby serve --port 9100' }) }).ports).toEqual(['package.json:3 8100', 'package.json:4 9100']);
+    expect(gatsby({ 'package.json': scripts({ develop: 'PORT=8101 gatsby develop' }) }).ports).toEqual(['package.json:3 8101']);
+    expect(gatsby({ 'package.json': scripts({ develop: 'gatsby develop', serve: 'gatsby serve' }) })).toEqual({
+      ports: ['package.json:3 8000[PORT] default', 'package.json:4 9000 default'],
+      rows: [],
+    });
+    expect(gatsby({ 'package.json': scripts({ build: 'gatsby build' }) }).ports).toEqual([]);
+  });
+
+  it('keeps the default where the .env.development the site keeps sets PORT, and says so', () => {
+    expect(gatsby({ 'package.json': scripts({ develop: 'gatsby develop' }), '.env.development': 'GATSBY_API_URL=http://localhost:4000\nPORT=8102\n' })).toEqual({
+      ports: ['package.json:3 8000[PORT] default'],
+      rows: [
+        "listen-port-guessed package.json:3 gatsby develop is read listening on Gatsby's own 8000, a guess: .env.development sets PORT=8102 (line 2), but Gatsby loads that file into the site's code and functions, not before the command chooses its port.",
+      ],
+    });
   });
 });
