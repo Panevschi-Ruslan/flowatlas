@@ -509,4 +509,57 @@ describe('a port held where P315 left it unread: callbacks, properties, locals a
     expect(said).toEqual(['a.ts:5 rewritten guessed port = await getPort({ port })', 'b.ts:5 rewritten guessed config = await applyAll(config)']);
     expect(literalPort({ rewritten: 'src/a.ts:4' })).toBe(false);
   });
+
+  it('reads a held configuration mutated in place: Object.assign over it or a key of it, and a nested key written (P327)', () => {
+    const said: string[] = [];
+    expect(
+      read(
+        {
+          '/src/a.ts': 'export {};\nconst config = { port: 3100 };\nObject.assign(config, { port: 4100 });\napp.listen(config.port);',
+          '/src/b.ts': 'export {};\nconst config = { server: { port: 3200 } };\nconfig.server.port = 4200;\napp.listen(config.server.port);',
+          '/src/c.ts': 'export {};\nconst config = { port: 3300 };\nconfig.port = 4300;\napp.listen(config.port);',
+          '/src/d.ts': 'export function boot() {\n  const config = { port: 3400, host: "" };\n  Object.assign(config, { host: "x" });\n  app.listen(config);\n}',
+          '/src/e.ts': 'export {};\nconst config = { server: { port: 3500 } };\nObject.assign(config.server, { port: 4500 });\napp.listen(config.server.port);',
+          '/src/f.ts': 'export {};\nconst config = { port: 3600 };\nObject.assign(config, loadOverrides());\napp.listen(config.port);',
+          '/src/g.ts': 'export function boot() {\n  const options = { port: 3700 };\n  Object.assign(options, { port: 4700 });\n  app.listen(options);\n}',
+          '/src/h.ts': 'export {};\nconst config = { port: 3800 };\nexport function configure() { config.port = 4800; }\napp.listen(config.port);',
+        },
+        said,
+      ),
+    ).toEqual([
+      'src/a.ts:4 4100',
+      'src/b.ts:4 4200',
+      'src/c.ts:4 4300',
+      'src/d.ts:4 3400',
+      'src/e.ts:4 4500',
+      'src/f.ts:4 3600 rewritten at src/f.ts:3',
+      'src/g.ts:4 4700',
+      'src/h.ts:4 3800',
+      'src/h.ts:4 4800',
+    ]);
+    expect(said).toEqual(['f.ts:4 rewritten guessed Object.assign(config, loadOverrides())']);
+  });
+
+  it("reads a class's field per instance: each instance's setter calls, its own new, each call of the method that reads it (P327)", () => {
+    expect(
+      read({
+        '/src/settings.ts': [
+          'export class Settings {',
+          '  private values: any = { port: 3700 };',
+          '  load(given: any) { this.values = { ...this.values, ...given }; }',
+          '  get() { return this.values; }',
+          '}',
+        ].join('\n'),
+        '/src/a.ts': "import { Settings } from './settings';\nconst one = new Settings();\nconst two = new Settings();\none.load({ port: 4701 });\ntwo.load({ port: 4702 });\napp.listen(one.get().port);",
+        '/src/server.ts': ['export class Server {', '  private port: number;', '  constructor(port: number) { this.port = port; }', '  start() { app.listen(this.port); }', '}'].join('\n'),
+        '/src/b.ts': "import { Server } from './server';\nconst first = new Server(4801);\nconst second = new Server(4802);\nfirst.start();",
+        '/src/worker.ts': ['export class Worker {', '  port = 3900;', '  constructor(options: any) { Object.assign(this, options); }', '  run() { app.listen(this.port); }', '}'].join('\n'),
+        '/src/c.ts': "import { Worker } from './worker';\nconst worker = new Worker({ port: 4900 });\nworker.run();",
+      }),
+    ).toEqual([
+      'src/a.ts:6 4701 merged at src/settings.ts:3 handed at src/a.ts:4',
+      'src/server.ts:4 4801 handed at src/b.ts:2',
+      'src/worker.ts:4 4900 handed at src/c.ts:2',
+    ]);
+  });
 });

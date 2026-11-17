@@ -60,6 +60,11 @@ describe('the stack a repository is built on', () => {
     expect(guessUnread(pkg)).toBeUndefined();
   });
 
+  it('types a Strapi application and a Gatsby site by their framework, not the Koa or React they bring (P327)', () => {
+    expect(guessType({ dependencies: { '@strapi/strapi': '5.10.0', react: '18.3.1', 'react-dom': '18.3.1' } })).toBe('strapi');
+    expect(guessType({ dependencies: { gatsby: '5.14.0', react: '18.3.1' } })).toBe('gatsby');
+  });
+
   it('reads the two file-system routers described as rows (P38)', () => {
     expect(guessType({ dependencies: { '@remix-run/react': '2.0.0', react: '18.3.1' } })).toBe('remix');
     expect(guessType({ devDependencies: { '@sveltejs/kit': '2.8.0', svelte: '5.0.0' } })).toBe('sveltekit');

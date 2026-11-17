@@ -155,7 +155,8 @@ The type of a repository is read from its manifest: `@nestjs/core` makes it
 `nestjs`, `@medusajs/framework` or `@medusajs/medusa` makes it `medusa`, `next`
 makes it `nextjs`, `@sveltejs/kit` makes it `sveltekit`, `@remix-run/node` or
 `@remix-run/react` makes it `remix`, `@react-router/dev` makes it `react-router`,
-`nuxt` makes it `nuxt`, `express`, `fastify` and `koa` make it each of those,
+`nuxt` makes it `nuxt`, `@strapi/strapi` makes it `strapi` and `gatsby` makes it
+`gatsby` (P327), `express`, `fastify` and `koa` make it each of those,
 `@grpc/grpc-js` or `grpc` makes it `grpc` (a gRPC server written on the library
 itself, read for its services and its calls), `@angular/core` makes it `angular`, `react` makes it `react`, `vue` makes it `vue`,
 `svelte` makes it `svelte`, and anything else is
@@ -5020,7 +5021,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 |---|---|---|---|
 | `name` | string | required | what this service is called everywhere else |
 | `repo` | string | required unless `document` is given | path to the repository, relative to this file or absolute. A service has a `repo` or a `document`, never both |
-| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `sveltekit`, `nuxt`, `remix`, `react-router`, `express`, `fastify` or `koa` for anything with a server in it, `grpc` for a gRPC server written on `@grpc/grpc-js`, `lambda` for functions whose ways in are declared in Terraform, `angular`, `react`, `vue` or `svelte` for a repository that is only a browser, `browser` for plain pages and scripts with no framework (P284). Anything else is skipped and `build` says which type to set |
+| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `sveltekit`, `nuxt`, `remix`, `react-router`, `strapi`, `gatsby`, `express`, `fastify` or `koa` for anything with a server in it, `grpc` for a gRPC server written on `@grpc/grpc-js`, `lambda` for functions whose ways in are declared in Terraform, `angular`, `react`, `vue` or `svelte` for a repository that is only a browser, `browser` for plain pages and scripts with no framework (P284). Anything else is skipped and `build` says which type to set |
 | `baseUrlEnv` | string[] | `[]` | settings keys other services use to address this one |
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
 | `hosts` | string[] | `[]` | hosts this service is reached at, as `host` or `host:port` (`["orders.example.com"]`), for a base address read from a repository's files to be matched against beside the service's name |
@@ -6207,10 +6208,11 @@ repository decides it, not only on the line that starts the server:
 |---|---|
 | A front end's dev and preview server | `server.port` and `preview.port` in `vite.config.*` (SvelteKit, Remix, React Router, Vue, React and any other Vite front end), `--port` on a `vite`, `vite dev`, `vite preview`, `svelte-kit dev`, `remix vite:dev`, `react-router dev` script; Astro's `server.port` and `astro dev --port`; Angular's `serve` target `port` in `angular.json` and `ng serve --port`; each marked `devServer`. Vite's own 5173 / 4173 where `strictPort` keeps it there (`default`, a guess); 5173 where neither the configuration nor the script writes a port for a Vite dev server that serves a full-stack application's own routes - Remix's `remix vite:dev`, React Router's `react-router dev`, SvelteKit's `vite dev` (P303); Astro's own 4321 for `astro dev` and `astro preview` (P310), and where `server` is written as a function of the command (`({ command }) => ({ port: command === 'dev' ? 4400 : 4401 })`) each command's own port (P315). Create React App's `react-scripts start` (or `craco start`) listens on the `PORT` its script gives or that the `.env.development.local`, `.env.local`, `.env.development` or `.env` it loads sets, and on no default, since it moves to the next free port when 3000 is taken (P315). No other default |
 | A port handed through code | `start(3001)` where `start = (port) => app.listen(port)`, `bootstrap({ port: 3002 })`, `(options) => app.listen(options.port)`, through up to three functions, each call its own port with `handed` naming it; a parameter's default (`start(port = 3001)`, `startAdmin({ port = 3201 } = {})`) for each caller that hands none, or where nobody calls the function (P315) |
-| A settings object | `app.listen(config.port)` where a literal object in any file of the repository writes `port` (a fallback read with its setting); NestJS's `config.get('app.port')` through `registerAs('app', …)` or a `ConfigModule.forRoot({ load })` factory; convict's `config.get('port')` through the schema's `default` and `env`; a configuration a merge helper of the repository's own lays over defaults another module keeps (`const { port } = mergeConfig(given).apiOptions`) is the last of the objects it lays over each other that writes the key at its whole path - the object literals its body names, then the call's arguments - and one a setter merges into a module variable that a getter returns (`setConfig(given)` before `getConfig().apiOptions.port`) is what each call of the setter made before the read hands, laid over the variable's first value, either way with `merged` naming the merge, a guess (P305, P315); a function of the repository's own is what its `return`s answer, its parameters the call's arguments (P315). Defaults loaded by an import of a path decided at run time (`import(path.join(__dirname, 'defaults'))`) leave the port unread, with an info `listen-port-unread` row at the line that starts the server naming the load |
+| A settings object | `app.listen(config.port)` where a literal object in any file of the repository writes `port` (a fallback read with its setting); NestJS's `config.get('app.port')` through `registerAs('app', …)` or a `ConfigModule.forRoot({ load })` factory; convict's `config.get('port')` through the schema's `default` and `env`; a configuration a merge helper of the repository's own lays over defaults another module keeps (`const { port } = mergeConfig(given).apiOptions`) is the last of the objects it lays over each other that writes the key at its whole path - the object literals its body names, then the call's arguments - and one a setter merges into a module variable that a getter returns (`setConfig(given)` before `getConfig().apiOptions.port`) is what each call of the setter made before the read hands, laid over the variable's first value, either way with `merged` naming the merge, a guess (P305, P315); a function of the repository's own is what its `return`s answer, its parameters the call's arguments (P315). Defaults loaded by an import of a path decided at run time (`import(path.join(__dirname, 'defaults'))`) leave the port unread, with an info `listen-port-unread` row at the line that starts the server naming the load. A configuration changed in place is read where it is changed (P327): `Object.assign(config, { port })`, `Object.assign(config.server, overrides)`, `config.port = 4000`, `config.server.port = 4000` and `Object.assign(this, options)` in a constructor; of the writes made in the read's own block before it, the last one is what it holds; a source not read (`Object.assign(config, loadOverrides())`) keeps the value from before it as a guess, with an info `listen-port-guessed` row. A class's field is read per instance: `one.load(...)` is laid over what `one` reads and not what `two` does, a constructor's write is read for the instance's own `new`, and a field read through `this` in a method is read once per call of the method (`panel.start()` reads `panel`'s port, and an instance never started is not a port) |
 | A setting alone | `app.listen(process.env.AUDIT_PORT)` is kept as `{ setting, file, line }`, and the service's own example environment file fills it (`AUDIT_PORT=3006`), whatever the setting is called; a value only an example or template file gives is offered rather than given, a guess (P309) |
 | A container | a compose service's `ports` (`"3001:3000"`, `"127.0.0.1:3001:3000/tcp"`, `{ published, target }`), `environment` and `env_file`; `docker run -p 3009:3000 --name n -e PORT=3000` in a `package.json` script of the service |
-| An environment file the server loads | a port read from a setting (`app.listen(process.env.PORT ?? 3000)`) where the code loads a file before it listens - dotenv (`import 'dotenv/config'`, `dotenv.config({ path })`), NestJS's `ConfigModule.forRoot({ envFilePath })` (`.env` unless `ignoreEnvFile`), `process.loadEnvFile(path)` - or its script runs it with `--env-file`, `dotenv -e`, `env-cmd -f` or `bun`: the first committed loaded file that sets the setting gives the port, `valueFrom` naming it, the code's fallback giving way (P315). A path not written as a literal names no file, and a server whose code loads nothing keeps its fallback whatever its `.env` says |
+| An environment file the server loads | a port read from a setting (`app.listen(process.env.PORT ?? 3000)`) where the code loads a file before it listens - dotenv (`import 'dotenv/config'`, `dotenv.config({ path })`), NestJS's `ConfigModule.forRoot({ envFilePath })` (`.env` unless `ignoreEnvFile`), `process.loadEnvFile(path)` - or its script runs it with `--env-file`, `dotenv -e`, `env-cmd -f` or `bun`: the first committed loaded file that sets the setting gives the port, `valueFrom` naming it, the code's fallback giving way (P315). A path not written as a literal names no file, and a server whose code loads nothing keeps its fallback whatever its `.env` says. `process.loadEnvFile(a)` called again with `b` (or `loadEnvFile` imported from `node:process`) keeps `a`'s value: as Node documents it, each call sets only what the environment does not hold yet (P327) |
+| A framework that starts the server itself | `fastify start`: `-p`, then `FASTIFY_PORT`, then `PORT`, each from the command's own environment or the `.env` fastify-cli loads from the directory it runs in (with dotenv up to fastify-cli 7, with `process.loadEnvFile()` from 8, neither over a set variable), else 3000 as a default; a `FASTIFY_PORT` the `.env` gives wins over a `PORT` the command gives (P321, P327). Strapi: the `port` of `config/server.*` under `config/env/production/server.*` where that file writes one (production being the build read), `env.int('PORT', 1337)` moved by the `.env` or `ENV_PATH` Strapi loads, 1337 where no file writes one; another environment's override that moves the port is an info `framework-environment-differs` row (P321, P327). Gatsby's `gatsby develop` and `gatsby serve` (P321) |
 
 A container mapping is reconciled with the code: the port the service listens
 on inside the container - the value its environment gives the setting the code
@@ -7303,6 +7305,35 @@ between the path and the handler are not mistaken for it. Where the same address
 is declared on both sides, it is one entry point with two handlers, and
 `flowatlas build` lists it under `routes.duplicated`: which of the two answers
 depends on how they are wired together, and that cannot be read from either.
+
+### Strapi's routes and Gatsby's functions
+
+A Strapi application (`type: "strapi"`, P327) declares its ways in in the routes
+files of each API, `src/api/<api>/routes/*`, served under `/api` (or the
+`rest.prefix` of `config/api.*`; one not written as a literal is a
+`route-mount-unread` row and `/api` is kept). A core router,
+`createCoreRouter('api::product.product')`, is the routes Strapi builds for the
+content type its `src/api/<api>/content-types/<type>/schema.json` declares - for
+a collection type `GET` and `POST /api/<pluralName>` and `GET`, `PUT` and
+`DELETE /api/<pluralName>/:id`, for a single type `GET`, `PUT` and
+`DELETE /api/<singularName>` - narrowed by its `only` and `except` and put under
+its `prefix`. A custom routes file is the `{ method, path, handler }` entries of
+its `routes`, under the file's `prefix` except for a route whose `config` writes
+one. A handler `product.featured` (or `api::product.product.featured`) points
+at the `featured` action of `src/api/product/controllers/product.*`, a member of
+the object the file exports or of the one `createCoreController`'s factory
+returns; a core route whose action the controller does not write is answered by
+Strapi's own core controller (`handlerVia: "framework"`, no handler); any other
+handler not found is a `route-handler-unread` row, and a routes file read as
+neither shape a `route-registry-unread` row. Each handler is handed Koa's
+context. Routes of Strapi's plugins and its admin panel are not read.
+
+A Gatsby site (`type: "gatsby"`, P327) is read by the server reader, its pages
+as well as its functions: every `.js` or `.ts` file under `src/api` is a way in at
+`/api/<path>` (`index` standing for its directory, `[id]` a parameter,
+`[...rest]` the rest of the path), answering every verb from its default
+export unless the handler compares the method, as a Next `pages/api` route
+does. Declaration files, tests and `__tests__` are not functions.
 
 ### What stands in front of a way in
 

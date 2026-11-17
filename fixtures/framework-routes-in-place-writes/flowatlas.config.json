@@ -1,0 +1,12 @@
+{
+  "services": [
+    { "name": "cms", "repo": "./cms", "type": "strapi" },
+    { "name": "site", "repo": "./site", "type": "gatsby" },
+    { "name": "api", "repo": "./api", "type": "express" },
+    { "name": "jobs", "repo": "./jobs", "type": "express" },
+    { "name": "admin", "repo": "./admin", "type": "express" },
+    { "name": "gateway", "repo": "./gateway", "type": "fastify" },
+    { "name": "poller", "repo": "./poller", "type": "express" }
+  ],
+  "output": ".flowatlas"
+}

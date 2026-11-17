@@ -1,0 +1,1589 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-17T18:17:57.907Z",
+  "services": [
+    {
+      "name": "cms",
+      "repo": "./cms",
+      "type": "strapi",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "gatsby",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "fastify",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "poller",
+      "repo": "./poller",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "admin#src/listener.ts:GET /api/admin@13",
+      "type": "function",
+      "label": "GET /api/admin@13",
+      "repo": "admin",
+      "file": "src/listener.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "api#src/main.ts:GET /health@7",
+      "type": "function",
+      "label": "GET /health@7",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cms#src/api/product/controllers/product.ts:api::product.product.find@5",
+      "type": "function",
+      "label": "api::product.product.find@5",
+      "repo": "cms",
+      "file": "src/api/product/controllers/product.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cms#src/api/product/controllers/product.ts:product.featured@9",
+      "type": "function",
+      "label": "product.featured@9",
+      "repo": "cms",
+      "file": "src/api/product/controllers/product.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "entry:admin:http:GET:/api/admin",
+      "type": "entry",
+      "label": "GET /api/admin",
+      "repo": "admin",
+      "file": "src/listener.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/admin",
+        "rawPath": "/api/admin",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/homepage",
+      "type": "entry",
+      "label": "GET /api/homepage",
+      "repo": "cms",
+      "file": "src/api/homepage/routes/homepage.ts",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/homepage",
+        "adapter": "strapi-server",
+        "registration": "strapi/core-router",
+        "handlerVia": "framework",
+        "handlerName": "api::homepage.homepage.find",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/products",
+      "type": "entry",
+      "label": "GET /api/products",
+      "repo": "cms",
+      "file": "src/api/product/routes/product.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/products",
+        "adapter": "strapi-server",
+        "registration": "strapi/core-router",
+        "handlerVia": "inline",
+        "handlerName": "api::product.product.find",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/products/:param",
+      "type": "entry",
+      "label": "GET /api/products/:id",
+      "repo": "cms",
+      "file": "src/api/product/routes/product.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/products/:id",
+        "adapter": "strapi-server",
+        "registration": "strapi/core-router",
+        "handlerVia": "framework",
+        "handlerName": "api::product.product.findOne",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/products/featured",
+      "type": "entry",
+      "label": "GET /api/products/featured",
+      "repo": "cms",
+      "file": "src/api/product/routes/custom.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/products/featured",
+        "adapter": "strapi-server",
+        "registration": "strapi/routes",
+        "handlerVia": "inline",
+        "handlerName": "product.featured",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:POST:/api/products",
+      "type": "entry",
+      "label": "POST /api/products",
+      "repo": "cms",
+      "file": "src/api/product/routes/product.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/products",
+        "adapter": "strapi-server",
+        "registration": "strapi/core-router",
+        "handlerVia": "framework",
+        "handlerName": "api::product.product.create",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:POST:/api/products/:param/archive",
+      "type": "entry",
+      "label": "POST /api/products/:id/archive",
+      "repo": "cms",
+      "file": "src/api/product/routes/custom.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/products/:id/archive",
+        "adapter": "strapi-server",
+        "registration": "strapi/routes",
+        "handlerVia": "unread",
+        "handlerName": "api::product.product.archive",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:PUT:/api/products/:param",
+      "type": "entry",
+      "label": "PUT /api/products/:id",
+      "repo": "cms",
+      "file": "src/api/product/routes/product.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/api/products/:id",
+        "adapter": "strapi-server",
+        "registration": "strapi/core-router",
+        "handlerVia": "framework",
+        "handlerName": "api::product.product.update",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:gateway:http:GET:/api/status",
+      "type": "entry",
+      "label": "GET /api/status",
+      "repo": "gateway",
+      "file": "src/app.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/status",
+        "rawPath": "/api/status",
+        "adapter": "fastify-routes",
+        "registration": "fastify.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:jobs:http:GET:/api/jobs",
+      "type": "entry",
+      "label": "GET /api/jobs",
+      "repo": "jobs",
+      "file": "src/main.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/jobs",
+        "rawPath": "/api/jobs",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:site:http:ALL:/api/users/:param",
+      "type": "entry",
+      "label": "ALL /api/users/:param",
+      "repo": "site",
+      "file": "src/api/users/[id].ts",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/users/:param",
+        "rawPath": "/api/users/:id",
+        "adapter": "gatsby-functions",
+        "registration": "gatsby/function",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:site:http:POST:/api/subscribe",
+      "type": "entry",
+      "label": "POST /api/subscribe",
+      "repo": "site",
+      "file": "src/api/subscribe.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/subscribe",
+        "rawPath": "/api/subscribe",
+        "adapter": "gatsby-functions",
+        "registration": "gatsby/function",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "gateway#src/app.ts:GET /api/status@5",
+      "type": "function",
+      "label": "GET /api/status@5",
+      "repo": "gateway",
+      "file": "src/app.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{ok:true}"
+        }
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:11:37",
+      "type": "http_out",
+      "label": "GET /api/users/:param",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 11,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:8100/api/users/${…}",
+        "path": "/api/users/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:8100",
+        "targetService": "site"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:14:29",
+      "type": "http_out",
+      "label": "GET /health",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 14,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4330/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4330",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:17:27",
+      "type": "http_out",
+      "label": "GET /api/jobs",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 17,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4340/api/jobs",
+        "path": "/api/jobs",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4340",
+        "targetService": "jobs"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:20:28",
+      "type": "http_out",
+      "label": "GET /api/admin",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 20,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4341/api/admin",
+        "path": "/api/admin",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4341",
+        "targetService": "admin"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:23:29",
+      "type": "http_out",
+      "label": "GET /api/status",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 23,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4351/api/status",
+        "path": "/api/status",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4351",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:2:31",
+      "type": "http_out",
+      "label": "GET /api/products/featured",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 2,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4310/api/products/featured",
+        "path": "/api/products/featured",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4310",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:5:31",
+      "type": "http_out",
+      "label": "GET /api/homepage",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 5,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4310/api/homepage",
+        "path": "/api/homepage",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4310",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:8:40",
+      "type": "http_out",
+      "label": "GET /api/products/:param",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4310/api/products/${…}",
+        "path": "/api/products/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4310",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "jobs#src/main.ts:GET /api/jobs@9",
+      "type": "function",
+      "label": "GET /api/jobs@9",
+      "repo": "jobs",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:admin",
+      "type": "function",
+      "label": "admin",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:featured",
+      "type": "function",
+      "label": "featured",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:health",
+      "type": "function",
+      "label": "health",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:homepage",
+      "type": "function",
+      "label": "homepage",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:jobs",
+      "type": "function",
+      "label": "jobs",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:product",
+      "type": "function",
+      "label": "product",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:status",
+      "type": "function",
+      "label": "status",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:user",
+      "type": "function",
+      "label": "user",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "repo:admin",
+      "type": "repo",
+      "label": "admin",
+      "repo": "admin",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4341,
+            "file": "src/listener.ts",
+            "line": 16,
+            "handed": "src/main.ts:3"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4330,
+            "file": "src/main.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:cms",
+      "type": "repo",
+      "label": "cms",
+      "repo": "cms",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 0,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "strapi-server"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4310,
+            "file": "config/env/production/server.ts",
+            "line": 2,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:gateway",
+      "type": "repo",
+      "label": "gateway",
+      "repo": "gateway",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "fastify-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4351,
+            "file": ".env",
+            "line": 1,
+            "setting": "FASTIFY_PORT",
+            "valueFrom": ".env"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4340,
+            "file": "src/main.ts",
+            "line": 12,
+            "setting": "JOBS_PORT",
+            "valueFrom": ".env.local"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:poller",
+      "type": "repo",
+      "label": "poller",
+      "repo": "poller",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:site",
+      "type": "repo",
+      "label": "site",
+      "repo": "site",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 3,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "gatsby-functions"
+          ]
+        },
+        "listen": [
+          {
+            "port": 8100,
+            "file": "package.json",
+            "line": 5,
+            "devServer": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "site#src/api/subscribe.ts:subscribe",
+      "type": "function",
+      "label": "subscribe",
+      "repo": "site",
+      "file": "src/api/subscribe.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "unknown"
+            },
+            {
+              "name": "res",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "site#src/api/users/[id].ts:user",
+      "type": "function",
+      "label": "user",
+      "repo": "site",
+      "file": "src/api/users/[id].ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "unknown"
+            },
+            {
+              "name": "res",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "site#src/pages/index.tsx:Home",
+      "type": "ui_component",
+      "label": "Home",
+      "repo": "site",
+      "file": "src/pages/index.tsx",
+      "line": 3,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "ui_action:site#src/pages/index.tsx:14:15",
+      "type": "ui_action",
+      "label": "onClick={() => subscribe('reader@example.com')}",
+      "repo": "site",
+      "file": "src/pages/index.tsx",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => subscribe('reader@example.com')",
+        "component": "site#src/pages/index.tsx:Home",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:site#src/pages/index.tsx:10:40",
+      "type": "ui_api_call",
+      "label": "POST /api/subscribe",
+      "repo": "site",
+      "file": "src/pages/index.tsx",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/subscribe",
+        "path": "/api/subscribe",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{email:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "email"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "targetService": "site"
+      }
+    },
+    {
+      "id": "ui_api_call:site#src/pages/index.tsx:6:5",
+      "type": "ui_api_call",
+      "label": "GET /api/products",
+      "repo": "site",
+      "file": "src/pages/index.tsx",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4310/api/products",
+        "path": "/api/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:4310",
+        "targetService": "cms"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:admin:http:GET:/api/admin",
+      "to": "admin#src/listener.ts:GET /api/admin@13",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/listener.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/health",
+      "to": "api#src/main.ts:GET /health@7",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/main.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:GET:/api/products",
+      "to": "cms#src/api/product/controllers/product.ts:api::product.product.find@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/api/product/controllers/product.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:GET:/api/products/featured",
+      "to": "cms#src/api/product/controllers/product.ts:product.featured@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/api/product/controllers/product.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:gateway:http:GET:/api/status",
+      "to": "gateway#src/app.ts:GET /api/status@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:true}",
+      "file": "src/app.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:jobs:http:GET:/api/jobs",
+      "to": "jobs#src/main.ts:GET /api/jobs@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:site:http:ALL:/api/users/:param",
+      "to": "site#src/api/users/[id].ts:user",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:unknown}",
+      "file": "src/api/users/[id].ts",
+      "line": 3,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:site:http:POST:/api/subscribe",
+      "to": "site#src/api/subscribe.ts:subscribe",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{subscribed:unknown}",
+      "file": "src/api/subscribe.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:11:37",
+      "to": "entry:site:http:ALL:/api/users/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 11,
+      "meta": {
+        "via": "host",
+        "targetService": "site",
+        "listensAt": "package.json:5"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:14:29",
+      "to": "entry:api:http:GET:/health",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/poll.ts",
+      "line": 14,
+      "meta": {
+        "via": "host",
+        "targetService": "api",
+        "listensAt": "src/main.ts:10"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:17:27",
+      "to": "entry:jobs:http:GET:/api/jobs",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/poll.ts",
+      "line": 17,
+      "meta": {
+        "via": "host",
+        "targetService": "jobs",
+        "listensAt": "src/main.ts:12 (JOBS_PORT from .env.local)"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:20:28",
+      "to": "entry:admin:http:GET:/api/admin",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/poll.ts",
+      "line": 20,
+      "meta": {
+        "via": "host",
+        "targetService": "admin",
+        "listensAt": "src/listener.ts:16 (handed at src/main.ts:3)"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:23:29",
+      "to": "entry:gateway:http:GET:/api/status",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/poll.ts",
+      "line": 23,
+      "meta": {
+        "via": "host",
+        "targetService": "gateway",
+        "listensAt": ".env:1 (FASTIFY_PORT from .env)"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:2:31",
+      "to": "entry:cms:http:GET:/api/products/featured",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/poll.ts",
+      "line": 2,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/env/production/server.ts:2 (PORT)",
+        "note": "chosen over entry:cms:http:GET:/api/products/:param for being more specific; the framework decides by registration order"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:5:31",
+      "to": "entry:cms:http:GET:/api/homepage",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/poll.ts",
+      "line": 5,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/env/production/server.ts:2 (PORT)"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:8:40",
+      "to": "entry:cms:http:GET:/api/products/:param",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/poll.ts",
+      "line": 8,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/env/production/server.ts:2 (PORT)"
+      }
+    },
+    {
+      "from": "poller#src/poll.ts:admin",
+      "to": "http_out:poller#src/poll.ts:20:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 20
+    },
+    {
+      "from": "poller#src/poll.ts:featured",
+      "to": "http_out:poller#src/poll.ts:2:31",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 2
+    },
+    {
+      "from": "poller#src/poll.ts:health",
+      "to": "http_out:poller#src/poll.ts:14:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 14
+    },
+    {
+      "from": "poller#src/poll.ts:homepage",
+      "to": "http_out:poller#src/poll.ts:5:31",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 5
+    },
+    {
+      "from": "poller#src/poll.ts:jobs",
+      "to": "http_out:poller#src/poll.ts:17:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 17
+    },
+    {
+      "from": "poller#src/poll.ts:product",
+      "to": "http_out:poller#src/poll.ts:8:40",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 8
+    },
+    {
+      "from": "poller#src/poll.ts:status",
+      "to": "http_out:poller#src/poll.ts:23:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 23
+    },
+    {
+      "from": "poller#src/poll.ts:user",
+      "to": "http_out:poller#src/poll.ts:11:37",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 11
+    },
+    {
+      "from": "site#src/pages/index.tsx:Home",
+      "to": "ui_api_call:site#src/pages/index.tsx:10:40",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/index.tsx",
+      "line": 10
+    },
+    {
+      "from": "site#src/pages/index.tsx:Home",
+      "to": "ui_api_call:site#src/pages/index.tsx:6:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/index.tsx",
+      "line": 6
+    },
+    {
+      "from": "ui_action:site#src/pages/index.tsx:14:15",
+      "to": "site#src/pages/index.tsx:Home",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/index.tsx",
+      "line": 14
+    },
+    {
+      "from": "ui_api_call:site#src/pages/index.tsx:10:40",
+      "to": "entry:site:http:POST:/api/subscribe",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages/index.tsx",
+      "line": 10,
+      "params": [
+        "{email:string}"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "site"
+      }
+    },
+    {
+      "from": "ui_api_call:site#src/pages/index.tsx:6:5",
+      "to": "entry:cms:http:GET:/api/products",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pages/index.tsx",
+      "line": 6,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/env/production/server.ts:2 (PORT)"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/listener.ts",
+      "line": 13,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 4,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "Listener.start -> app.get",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/listener.ts",
+                "line": 14,
+                "symbol": "Listener.start -> res.json"
+              },
+              {
+                "file": "src/listener.ts",
+                "line": 14,
+                "symbol": "GET /api/admin@13 -> res.json"
+              }
+            ]
+          },
+          {
+            "cause": "module-not-installed",
+            "package": "express",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/listener.ts",
+                "line": 13,
+                "symbol": "Listener.start -> app.get"
+              },
+              {
+                "file": "src/listener.ts",
+                "line": 16,
+                "symbol": "Listener.start -> app.listen"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "admin"
+    },
+    {
+      "file": "src/main.ts",
+      "line": 8,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /health@7 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "api"
+    },
+    {
+      "file": "config/env/staging/server.ts",
+      "line": 1,
+      "reason": "framework-environment-differs",
+      "level": "info",
+      "message": "Strapi's server is read listening on 4310, the production build's; for staging, config/env/staging/server.ts moves it to 4311. Which one runs is NODE_ENV's, development where nothing sets it",
+      "hint": "Nothing to do. The graph is the production build's; give every environment the same port to have one answer.",
+      "symbol": "staging",
+      "adapter": "strapi-server",
+      "meta": {
+        "cause": "framework-environment-differs",
+        "environments": [
+          {
+            "environment": "staging",
+            "port": "4311",
+            "file": "config/env/staging/server.ts"
+          }
+        ]
+      },
+      "service": "cms"
+    },
+    {
+      "file": "src/api/product/controllers/product.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 4,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "api::product.product.find@5 -> strapi.documents('api::product.product').findMany",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 4,
+            "samples": [
+              {
+                "file": "src/api/product/controllers/product.ts",
+                "line": 6,
+                "symbol": "api::product.product.find@5 -> strapi.documents('api::product.product').findMany"
+              },
+              {
+                "file": "src/api/product/controllers/product.ts",
+                "line": 6,
+                "symbol": "api::product.product.find@5 -> strapi.documents"
+              },
+              {
+                "file": "src/api/product/controllers/product.ts",
+                "line": 10,
+                "symbol": "product.featured@9 -> strapi.documents('api::product.product').findMany"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "cms"
+    },
+    {
+      "file": "src/api/product/routes/custom.ts",
+      "line": 5,
+      "reason": "route-handler-unread",
+      "message": "The handler of POST /api/products/:id/archive, api::product.product.archive, was not found in the API's controllers, so the code behind the route is not pointed at.",
+      "hint": "Write the action in src/api/<api>/controllers/<controller>, as a member of the object the file exports or of the one createCoreController returns.",
+      "symbol": "api::product.product.archive",
+      "adapter": "strapi-server",
+      "service": "cms"
+    },
+    {
+      "file": "src/main.ts",
+      "line": 10,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /api/jobs@9 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "jobs"
+    },
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "poller"
+    },
+    {
+      "file": "src/api/subscribe.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "GatsbyFunctionRequest",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "gatsby"
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/api/subscribe.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "GatsbyFunctionResponse",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "gatsby"
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/api/subscribe.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 4,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "subscribe -> res.status(405).end",
+      "meta": {
+        "causes": [
+          {
+            "cause": "module-not-installed",
+            "package": "gatsby",
+            "sites": 4,
+            "samples": [
+              {
+                "file": "src/api/subscribe.ts",
+                "line": 6,
+                "symbol": "subscribe -> res.status(405).end"
+              },
+              {
+                "file": "src/api/subscribe.ts",
+                "line": 6,
+                "symbol": "subscribe -> res.status"
+              },
+              {
+                "file": "src/api/subscribe.ts",
+                "line": 9,
+                "symbol": "subscribe -> res.json"
+              }
+            ],
+            "files": [
+              "src/api/users/[id].ts"
+            ]
+          }
+        ]
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/api/subscribe.ts",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "gatsby"
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/api/users/[id].ts",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "GatsbyFunctionRequest",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "gatsby"
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/api/users/[id].ts",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "GatsbyFunctionResponse",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "gatsby"
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/api/users/[id].ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "gatsby"
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/pages/index.tsx",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    }
+  ]
+}

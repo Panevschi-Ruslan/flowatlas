@@ -24,6 +24,7 @@ import { telegrafCallsAdapter } from './telegraf-calls.js';
 import { tanstackStartAdapter } from './server-functions.js';
 import { mcpServerAdapter } from './mcp-servers.js';
 import { strapiServerAdapter } from './strapi-server.js';
+import { gatsbyFunctionsAdapter } from './gatsby-functions.js';
 import { grpcServerAdapter } from './grpc-services.js';
 
 export const PACKAGE_NAME = '@flowatlas/adapters-entry';
@@ -57,6 +58,7 @@ export const entryAdapters: readonly EntryAdapter[] = [
   mcpServerAdapter,
   grpcServerAdapter,
   strapiServerAdapter,
+  gatsbyFunctionsAdapter,
   entryRegistriesAdapter,
   configuredRoutesAdapter,
   configuredProceduresAdapter,
@@ -256,6 +258,7 @@ export {
   strapiListens,
 } from './listen-ports.js';
 export { strapiServerAdapter } from './strapi-server.js';
+export { GATSBY_FUNCTIONS, gatsbyFunctionsAdapter } from './gatsby-functions.js';
 export type { EnvLoading, ScriptCommand } from './listen-ports.js';
 export { factoryPorts, settingsReading } from './listen-settings.js';
 export { keyLine, nextProxies, nitroProxies, proxyConfigFile, proxyTableRules, rewriteOfFunction } from './proxy-config.js';

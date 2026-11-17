@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   NotLiteral,
@@ -74,6 +74,8 @@ export const listensByCall = (ctx: ExtractContext): ListenPort[] => {
  * and `-c`'s cascade, `.env.<mode>.local`, `.env.local`, `.env.<mode>`, `.env`)
  * and `ConfigModule`'s `envFilePath` keep the first file's value; Node's and
  * Deno's repeated `--env-file`, and dotenv's with `override`, the last one's;
+ * Node's `process.loadEnvFile(a)` called again with `b` keeps `a`'s, each
+ * call setting only what the environment does not hold yet (P327);
  * Bun reads `.env`, then `.env.<NODE_ENV>` (`development` where the command
  * sets none), then `.env.local`, each over the one before, or only the files
  * its own `--env-file` names.
@@ -97,8 +99,10 @@ export const loadedEnvFiles = (ctx: ExtractContext): string[] => {
       const first = call.getArguments()[0];
       const literal = first !== undefined && (Node.isStringLiteral(first) || Node.isNoSubstitutionTemplateLiteral(first)) ? first.getLiteralValue() : undefined;
       if (callee.getText() === 'require' && literal === 'dotenv/config') add(code, undefined, ['.env']);
-      else if (callee.getText() === 'process.loadEnvFile') {
+      else if (isLoadEnvFile(callee, sourceFile)) {
         // `process.loadEnvFile()` loads `.env`; a path not written as a literal names no file read.
+        // Each call sets only what the environment does not hold yet, so of
+        // several calls the first file's value wins (P327, Node's documentation).
         if (first === undefined) add(code, undefined, ['.env']);
         else if (literal !== undefined) add(code, [literal], []);
       } else if (isDotenvConfig(call, sourceFile)) {
@@ -158,6 +162,21 @@ const dotenvCliFiles = (named: readonly string[], command: string): string[] => 
   if (cascade === null) return [...named];
   const mode = cascade[1];
   return named.flatMap((file) => (mode === undefined ? [`${file}.local`, file] : [`${file}.${mode}.local`, `${file}.local`, `${file}.${mode}`, file]));
+};
+
+/**
+ * Whether a callee is Node's `process.loadEnvFile`: written so, or
+ * `loadEnvFile` imported from `node:process` (P327).
+ */
+const isLoadEnvFile = (callee: Node, sourceFile: SourceFile): boolean => {
+  if (callee.getText() === 'process.loadEnvFile') return true;
+  if (!Node.isIdentifier(callee)) return false;
+  const from = importOf(sourceFile, callee.getText());
+  if (from !== 'node:process' && from !== 'process') return false;
+  // `import { loadEnvFile as load } from 'node:process'`: the name imported, whatever it is called here.
+  return sourceFile
+    .getImportDeclarations()
+    .some((each) => each.getModuleSpecifierValue() === from && each.getNamedImports().some((named) => named.getName() === 'loadEnvFile' && (named.getAliasNode() ?? named.getNameNode()).getText() === callee.getText()));
 };
 
 /** Whether an options object writes a key as `true`. */
@@ -424,9 +443,19 @@ export const frameworkListens = (
   const scripts = scriptCommands(repoDir, commands);
   const found: ListenPort[] = [...written];
   for (const each of scripts) {
-    // The setting the framework reads first that the command's own environment gives (P321).
-    const given = (loads?.settings ?? []).map((setting) => each.environment?.[setting]).find((port) => port !== undefined) ?? each.environmentPort;
-    if (each.port !== undefined) found.push({ port: each.port, file: 'package.json', line: each.line });
+    if (each.port !== undefined) {
+      found.push({ port: each.port, file: 'package.json', line: each.line });
+      continue;
+    }
+    // The setting the framework reads first that the command's own environment
+    // gives (P321) - unless a file the command loads gives one the framework
+    // reads before it: no variable of the command's holds that one, so the
+    // file's value is there and wins (P327).
+    const settings = loads?.settings ?? [];
+    const at = settings.findIndex((setting) => each.environment?.[setting] !== undefined);
+    const earlier = at <= 0 || loads === undefined ? undefined : envFilePort(repoDir, [each], { ...loads, settings: settings.slice(0, at) });
+    const given = at < 0 ? each.environmentPort : each.environment?.[settings[at] as string];
+    if (earlier !== undefined && earlier.default !== true) found.push(earlier);
     else if (given !== undefined) found.push({ port: given, file: 'package.json', line: each.line });
   }
   if (found.length > 0 || scripts.some((each) => each.portUnread === true) || !existsSync(join(repoDir, 'package.json'))) return found;
@@ -567,9 +596,13 @@ export const nitroListens = (ctx: ExtractContext): ListenPort[] => {
 };
 
 /**
- * fastify-cli's `fastify start` (P321): it loads `.env` with dotenv before it
- * reads its options, and takes its port from `-p` / `--port`, then
- * `FASTIFY_PORT`, then `PORT`, then 3000.
+ * fastify-cli's `fastify start` (P321, checked against its published source
+ * in P327): before it reads its options it loads the `.env` of the directory
+ * it runs in - with dotenv up to fastify-cli 7, with Node's own
+ * `process.loadEnvFile()` from 8 - neither over a variable the environment
+ * already holds; it takes its port from `-p` / `--port`, then
+ * `FASTIFY_PORT`, then the `port` of a `--config` file (not read here), then
+ * `PORT`, then 3000.
  */
 export const FASTIFY_CLI_ENV: EnvLoading = { commands: /\bfastify\s+start\b/, files: ['.env'], settings: ['FASTIFY_PORT', 'PORT'] };
 
@@ -583,8 +616,8 @@ export const FASTIFY_CLI_ENV: EnvLoading = { commands: /\bfastify\s+start\b/, fi
 export const fastifyCliListens = (ctx: ExtractContext): ListenPort[] =>
   scriptCommands(ctx.repoDir, FASTIFY_CLI_ENV.commands).length === 0 ? [] : frameworkListens(ctx.repoDir, FASTIFY_CLI_ENV.commands, 3000, [], FASTIFY_CLI_ENV);
 
-/** Where a Strapi application's server configuration is, the source first. */
-const STRAPI_CONFIGS = ['config/server.ts', 'config/server.js', 'config/server.mjs', 'config/server.cjs'];
+/** The names a Strapi configuration file of one kind may have, the source first. */
+const strapiConfigFiles = (dir: string, kind: string): string[] => ['ts', 'js', 'mjs', 'cjs'].map((extension) => `${dir}/${kind}.${extension}`);
 
 /** Strapi's own port, where its configuration gives none (P321). */
 const STRAPI_DEFAULT = 1337;
@@ -593,37 +626,109 @@ const STRAPI_DEFAULT = 1337;
 const STRAPI_STARTS = /\bstrapi\s+(?:develop|dev|start)\b/;
 
 /**
- * Where a Strapi application's server listens (P321): the `port` of its
- * `config/server.*`, `env.int('PORT', 1337)` read as the setting with its
- * fallback, or Strapi's 1337 as a default where the file writes none. Strapi
- * loads `.env` (or the file `ENV_PATH` names) before it reads the
- * configuration, as its documentation says, so a port that file gives the
- * setting is where it listens. A port written in a way not read assumes
- * nothing.
+ * The environment whose `config/env/<NODE_ENV>` overrides are read, as the
+ * build the graph is of (P327); every other environment's port is a note.
  */
-export const strapiListens = (ctx: ExtractContext): ListenPort[] => {
-  const repoDir = ctx.repoDir;
-  const config = readConfigLiteral(repoDir, STRAPI_CONFIGS);
-  const written = config === undefined ? undefined : configValueAt(config.value, 'port');
+const STRAPI_PRODUCTION = 'production';
+
+/** What one Strapi server configuration writes for the port. */
+interface StrapiPort {
+  /** The file, repository-relative, and the line of its `port`. */
+  readonly file: string;
+  readonly line: number;
+  /** A number written, a setting read with its fallback, or `unread` for a port written another way. */
+  readonly written: { readonly port: number } | { readonly setting: string; readonly fallback?: number } | 'unread';
+}
+
+/** The port a Strapi server configuration in a directory writes, or nothing where it has no file or writes no `port`. */
+const strapiPortIn = (repoDir: string, dir: string): StrapiPort | undefined => {
+  const config = readConfigLiteral(repoDir, strapiConfigFiles(dir, 'server'));
+  if (config === undefined) return undefined;
+  const written = configValueAt(config.value, 'port');
+  if (written === undefined) return undefined;
   let text = '';
   try {
-    text = config === undefined ? '' : readFileSync(config.file, 'utf8');
+    text = readFileSync(config.file, 'utf8');
   } catch {
     // The line falls back to the first.
   }
   const at = /\bport\s*:/.exec(text);
-  const file = config === undefined ? 'package.json' : normalizeFilePath(config.file, repoDir);
+  const file = normalizeFilePath(config.file, repoDir);
   const line = at === null ? 1 : lineAt(text, at.index);
-  if (typeof written === 'number') return Number.isInteger(written) && written > 0 && written < 65536 ? [{ port: written, file, line }] : [];
+  if (typeof written === 'number') return { file, line, written: Number.isInteger(written) && written > 0 && written < 65536 ? { port: written } : 'unread' };
   const read = written instanceof NotLiteral ? /\benv(?:\.int)?\(\s*['"]([A-Za-z_]\w*)['"](?:\s*,\s*['"]?(\d{2,5})['"]?)?\s*\)/.exec(written.text) : null;
-  if (written !== undefined && read === null) return [];
-  const setting = read?.[1] ?? 'PORT';
-  const fallback = read?.[2] === undefined ? undefined : Number(read[2]);
-  const port: ListenPort =
-    fallback !== undefined && fallback < 65536 ? { port: fallback, file, line, setting } : { port: STRAPI_DEFAULT, file, line, setting, default: true };
+  if (read === null) return { file, line, written: 'unread' };
+  const fallback = read[2] === undefined || Number(read[2]) >= 65536 ? undefined : Number(read[2]);
+  return { file, line, written: { setting: read[1] as string, ...(fallback === undefined ? {} : { fallback }) } };
+};
+
+/** The environments a Strapi application writes overrides for under `config/env`, by directory. */
+const strapiEnvironments = (repoDir: string): string[] => {
+  try {
+    return readdirSync(join(repoDir, 'config', 'env'), { withFileTypes: true })
+      .filter((each) => each.isDirectory())
+      .map((each) => each.name)
+      .sort();
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Where a Strapi application's server listens (P321, P327): the `port` of its
+ * `config/server.*`, under the `config/env/production/server.*` Strapi
+ * merges over it where that environment runs - production being the build
+ * the graph is of - with `env.int('PORT', 1337)` read as the setting with its
+ * fallback, or Strapi's 1337 as a default where no file writes one. Strapi
+ * loads `.env` (or the file `ENV_PATH` names) before it reads the
+ * configuration, as its documentation says, so a port that file gives the
+ * setting is where it listens. A port written in a way not read assumes
+ * nothing. Another environment's override that moves the port is an info
+ * `framework-environment-differs` row naming it.
+ */
+export const strapiListens = (ctx: ExtractContext): ListenPort[] => {
+  const repoDir = ctx.repoDir;
   const named = scriptCommands(repoDir, STRAPI_STARTS).flatMap((each) => {
     const path = /(?:^|\s)ENV_PATH=(\S+)/.exec(each.command)?.[1];
     return path === undefined ? [] : [path.replace(/^['"]|['"]$/g, '').replace(/^\.\//, '')];
   });
-  return [filledFromEnv(port, repoDir, named.length > 0 ? [...new Set(named)] : ['.env'], [setting])];
+  const files = named.length > 0 ? [...new Set(named)] : ['.env'];
+  const base = strapiPortIn(repoDir, 'config');
+  const portOf = (written: StrapiPort | undefined): ListenPort | undefined => {
+    // Strapi's own server configuration reads `PORT`, else 1337.
+    if (written === undefined) return filledFromEnv({ port: STRAPI_DEFAULT, file: 'package.json', line: 1, setting: 'PORT', default: true }, repoDir, files, ['PORT']);
+    if (written.written === 'unread') return undefined;
+    if ('port' in written.written) return { port: written.written.port, file: written.file, line: written.line };
+    const { setting, fallback } = written.written;
+    const port: ListenPort =
+      fallback === undefined
+        ? { port: STRAPI_DEFAULT, file: written.file, line: written.line, setting, default: true }
+        : { port: fallback, file: written.file, line: written.line, setting };
+    return filledFromEnv(port, repoDir, files, [setting]);
+  };
+  const atEnvironment = (environment: string): StrapiPort | undefined => strapiPortIn(repoDir, `config/env/${environment}`) ?? base;
+  const chosen = portOf(atEnvironment(STRAPI_PRODUCTION));
+  const said = (port: ListenPort | undefined): string => (port === undefined ? 'a port not read' : `${port.port}`);
+  const differs = strapiEnvironments(repoDir)
+    .filter((environment) => environment !== STRAPI_PRODUCTION && strapiPortIn(repoDir, `config/env/${environment}`) !== undefined)
+    .flatMap((environment) => {
+      const other = portOf(atEnvironment(environment));
+      return said(other) === said(chosen) ? [] : [{ environment, port: said(other), file: atEnvironment(environment)?.file ?? 'package.json' }];
+    });
+  if (differs.length > 0) {
+    ctx.builder.addUnresolved({
+      file: differs[0]?.file ?? 'package.json',
+      line: 1,
+      reason: 'framework-environment-differs',
+      level: 'info',
+      symbol: differs.map((each) => each.environment).join(', '),
+      message: `Strapi's server is read listening on ${said(chosen)}, the production build's; ${differs
+        .map((each) => `for ${each.environment}, ${each.file} moves it to ${each.port}`)
+        .join('; ')}. Which one runs is NODE_ENV's, development where nothing sets it`,
+      hint: "Nothing to do. The graph is the production build's; give every environment the same port to have one answer.",
+      adapter: 'strapi-server',
+      meta: { cause: 'framework-environment-differs', environments: differs.map((each) => ({ environment: each.environment, port: each.port, file: each.file })) },
+    });
+  }
+  return chosen === undefined ? [] : [chosen];
 };

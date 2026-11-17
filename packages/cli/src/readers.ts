@@ -115,6 +115,12 @@ export const READERS: readonly ReaderRow[] = [
   // Nuxt (P233): Nitro's routes are the server half, its `.vue` components
   // the browser half, one directory read by the server reader for both.
   ['nuxt', 'nuxt', NESTJS_EXTRACTOR],
+  // Strapi (P327): its routes files and controllers are the server half; it
+  // is built on Koa and its admin panel is React, neither of which it is.
+  ['strapi', '@strapi/strapi', NESTJS_EXTRACTOR],
+  // Gatsby (P327): its functions under `src/api` are ways in, so the site is
+  // read by the server reader, which reads its React pages too.
+  ['gatsby', 'gatsby', NESTJS_EXTRACTOR],
   ['express', 'express', NESTJS_EXTRACTOR],
   ['fastify', 'fastify', NESTJS_EXTRACTOR],
   ['koa', 'koa', NESTJS_EXTRACTOR],

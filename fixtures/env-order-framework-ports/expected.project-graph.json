@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T17:31:13.487Z",
+  "builtAt": "2026-11-17T18:17:14.983Z",
   "services": [
     {
       "name": "catalog",
@@ -773,7 +773,9 @@
           "frontend": [
             "react"
           ],
-          "entry": []
+          "entry": [
+            "gatsby-functions"
+          ]
         },
         "listen": [
           {

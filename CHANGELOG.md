@@ -50,6 +50,26 @@ only one of them moved.
   Defaults loaded by `require`/`import` of a path built from the file's own
   directory (`path.join(__dirname, 'defaults')`, `path.resolve(__dirname,
   '../config')`, `` `${__dirname}/x` ``) or written relative to it are read.
+- **Strapi's routes, Gatsby's functions, ports written in place and per
+  instance (P327).** A Strapi application (new type `strapi`, which `init`
+  suggests for `@strapi/strapi`) is read for its ways in: each API's
+  `createCoreRouter` routes, named by the content type's `schema.json`
+  (`only`, `except`, `prefix`), and custom `routes: [{ method, path,
+  handler }]`, under `/api` or `config/api`'s `rest.prefix`, each handler
+  the controller's action where it is written and Strapi's own core action
+  where a core controller writes none; its port reads
+  `config/env/production/server.*` over `config/server.*`, another
+  environment's port an info `framework-environment-differs` row. A Gatsby
+  site (new type `gatsby`) is read by the server reader, each `.js`/`.ts`
+  file under `src/api` a function at `/api/<path>`. A held configuration
+  changed in place - `Object.assign(config, { port })`,
+  `Object.assign(config.server, ...)`, `Object.assign(this, options)`,
+  `config.server.port = 4000` - is read where it is changed, the last write
+  of the read's own block standing for those before it; a class's field is
+  read per instance (each instance's setter calls, its own `new`, each call
+  of the method reading it). Repeated `process.loadEnvFile` calls, and
+  `loadEnvFile` imported from `node:process`, keep the first file's value, as
+  Node sets only what is unset.
 - **Jinja, kustomize, sceptre and CDK items (P306).** Namespaces are shared
   back out of macros, set and filter blocks and recursive loops, and
   `loop.changed` compares as Jinja does; kustomize name references for
@@ -1695,6 +1715,12 @@ only one of them moved.
 
 ### Fixed
 
+- **fastify-cli's port order, checked against its source (P327).** `fastify
+  start` loads `.env` with dotenv up to fastify-cli 7 and with Node's
+  `process.loadEnvFile()` from 8, neither over a set variable, so a
+  `FASTIFY_PORT` its `.env` gives now wins over a `PORT` its command gives
+  (it reads `FASTIFY_PORT` first); P321 had it loaded with dotenv,
+  true only up to version 7.
 - **A guess no longer shares a port with a firm one (P319).** Where one
   service is firmly at a port of this machine - the code writes the number,
   a loaded file or a setting file gives it, a container publishes it - and

@@ -162,6 +162,8 @@ interface Trail {
   unreadAt?: TsNode;
   /** A write of a variable or a property the value is read from, whose own value is not read (P321). */
   rewrittenAt?: TsNode;
+  /** Where the value is read: the call that starts the server, for a key of an object written after it is declared (P327). */
+  readAt?: TsNode;
 }
 
 /** One value an expression may hold, and how it was reached (P315). */
@@ -474,6 +476,8 @@ const objectValuesAt = (node: TsNode, keys: readonly string[], depth: number, wa
       const declaration = property.getValueSymbol()?.getDeclarations()[0];
       return (declaration === undefined ? undefined : declaredValuesAt(declaration, property.getNameNode(), rest, depth + 1, walk)) ?? NOTHING;
     }
+    // A key written after the object is declared: what its writes say where it is read (P327).
+    if (holderOf(property) !== undefined) return holderValuesAt(property, walk.sink.readAt ?? node, rest, depth + 1, walk);
     return valuesAt(property.getInitializer(), rest, depth + 1, walk);
   }
   return NOTHING;
@@ -690,8 +694,84 @@ const isAssignment = (each: BinaryExpression): boolean => each.getOperatorToken(
 const heldProperty = (declaration: TsNode): boolean => {
   if (Node.isPropertyDeclaration(declaration)) return !declaration.isReadonly();
   if (!Node.isPropertyAssignment(declaration)) return false;
-  const object = declaration.getParent();
-  return Node.isObjectLiteralExpression(object) && Node.isVariableDeclaration(object.getParent());
+  // A key of an object inside such an object too, `{ server: { port } }` (P327).
+  let object: TsNode | undefined = declaration.getParent();
+  for (let depth = 0; depth < DEPTH && object !== undefined && Node.isObjectLiteralExpression(object); depth++) {
+    const owner = object.getParent();
+    if (owner !== undefined && Node.isVariableDeclaration(owner)) return true;
+    if (owner === undefined || !Node.isPropertyAssignment(owner)) return false;
+    object = owner.getParent();
+  }
+  return false;
+};
+
+/**
+ * One key an `Object.assign(target, ...sources)` lays over an object holding
+ * a property (P327): the source the key is read from (`value` at `under`),
+ * and the call, which is where it is written.
+ */
+interface Assigned {
+  readonly call: CallExpression;
+  readonly value: TsNode;
+  readonly under: readonly string[];
+}
+
+/** The `Object.assign` calls of a project's files, outside tests, cached per project. */
+const assignCallsCache = new WeakMap<object, readonly CallExpression[]>();
+
+const assignCallsOf = (file: SourceFile): readonly CallExpression[] => {
+  const project = file.getProject();
+  const cached = assignCallsCache.get(project);
+  if (cached !== undefined) return cached;
+  const found = project
+    .getSourceFiles()
+    .filter((each) => !each.isInNodeModules() && !each.isDeclarationFile() && !isTestName(each.getBaseName()) && each.getFullText().includes('Object.assign('))
+    .flatMap((each) => each.getDescendantsOfKind(SyntaxKind.CallExpression).filter((call) => call.getExpression().getText() === 'Object.assign' && call.getArguments().length >= 2));
+  assignCallsCache.set(project, found);
+  return found;
+};
+
+/**
+ * The properties an object an expression names declares (P327): the keys of
+ * the literal a variable or a key holds (`config`, `config.server`), or the
+ * fields of the class `this` is in.
+ */
+const propertiesHeldBy = (target: TsNode): readonly TsNode[] => {
+  const node = unwrapped(target);
+  if (Node.isThisExpression(node)) {
+    const owner = node.getFirstAncestor((each) => Node.isClassDeclaration(each) || Node.isClassExpression(each));
+    return owner !== undefined && (Node.isClassDeclaration(owner) || Node.isClassExpression(owner)) ? owner.getProperties().filter((each) => !each.isStatic()) : [];
+  }
+  const name = Node.isIdentifier(node) ? node : Node.isPropertyAccessExpression(node) ? node.getNameNode() : undefined;
+  const declaration = name?.getSymbol()?.getDeclarations()[0];
+  const value = declaration !== undefined && (Node.isVariableDeclaration(declaration) || Node.isPropertyAssignment(declaration)) ? declaration.getInitializer() : undefined;
+  const object = value === undefined ? undefined : unwrapped(value);
+  return object !== undefined && Node.isObjectLiteralExpression(object) ? object.getProperties() : [];
+};
+
+/** Whether a source of `Object.assign` surely leaves a key out: a literal object that neither writes nor spreads it. */
+const leavesOut = (source: TsNode, key: string): boolean => {
+  const node = unwrapped(source);
+  return Node.isObjectLiteralExpression(node) && node.getProperty(key) === undefined && !node.getProperties().some((each) => Node.isSpreadAssignment(each));
+};
+
+/** The keys `Object.assign` calls lay over a property's object, the last source of a call first (P327). */
+const assignedCache = new WeakMap<TsNode, readonly Assigned[]>();
+
+const assignedOf = (declaration: TsNode): readonly Assigned[] => {
+  const cached = assignedCache.get(declaration);
+  if (cached !== undefined) return cached;
+  let found: Assigned[] = [];
+  if ((Node.isPropertyDeclaration(declaration) || Node.isPropertyAssignment(declaration)) && heldProperty(declaration)) {
+    const name = declaration.getName();
+    found = assignCallsOf(declaration.getSourceFile()).flatMap((call) => {
+      const [target, ...sources] = call.getArguments();
+      if (target === undefined || !propertiesHeldBy(target).includes(declaration)) return [];
+      return [...sources].reverse().flatMap((value) => (leavesOut(value, name) ? [] : [{ call, value, under: [name] }]));
+    });
+  }
+  assignedCache.set(declaration, found);
+  return found;
 };
 
 /**
@@ -764,7 +844,7 @@ const holderKindOf = (declaration: TsNode): HolderKind | undefined => {
     }
   } else if (Node.isParameterDeclaration(declaration) && Node.isIdentifier(declaration.getNameNode())) {
     if (writesOf(declaration).length > 0) kind = 'local';
-  } else if (heldProperty(declaration) && writesOf(declaration).length > 0) {
+  } else if (heldProperty(declaration) && (writesOf(declaration).length > 0 || assignedOf(declaration).length > 0)) {
     kind = 'property';
   }
   kindCache.set(declaration, kind ?? 'none');
@@ -905,6 +985,87 @@ interface SetterWrite {
   readonly spreads?: true;
 }
 
+/** The function `this` is the receiver of in a node: the nearest one that is not an arrow, which keeps the `this` around it. */
+const thisScopeOf = (node: TsNode): TsNode | undefined => {
+  let scope = node.getFirstAncestor(isFunctionLike);
+  while (scope !== undefined && Node.isArrowFunction(scope)) scope = scope.getFirstAncestor(isFunctionLike);
+  return scope;
+};
+
+/**
+ * The instance of a class an expression is, where it is told (P327): a `new`
+ * written there or held by a constant (`const one = new Settings()`, the
+ * constant standing for it), or `this` in a method stepped into by a call on
+ * such an instance, or in a constructor stepped into by its `new`.
+ */
+const instanceOf = (receiver: TsNode, walk: Walk, depth = 0): TsNode | undefined => {
+  if (depth > DEPTH) return undefined;
+  const node = unwrapped(receiver);
+  if (Node.isNewExpression(node)) {
+    const parent = node.getParent();
+    return parent !== undefined && Node.isVariableDeclaration(parent) ? parent : node;
+  }
+  if (Node.isIdentifier(node)) {
+    const declaration = node.getSymbol()?.getDeclarations()[0];
+    if (declaration === undefined || !Node.isVariableDeclaration(declaration)) return undefined;
+    const value = declaration.getInitializer();
+    return value !== undefined && Node.isNewExpression(unwrapped(value)) ? declaration : undefined;
+  }
+  if (!Node.isThisExpression(node)) return undefined;
+  const method = thisScopeOf(node);
+  const bound = method === undefined ? undefined : walk.bound.get(method);
+  if (bound === undefined) return undefined;
+  if (Node.isNewExpression(bound)) return instanceOf(bound, walk, depth + 1);
+  const callee = bound.getExpression();
+  return Node.isPropertyAccessExpression(callee) ? instanceOf(callee.getExpression(), walk, depth + 1) : undefined;
+};
+
+/** The `new` an instance was made by. */
+const newOf = (instance: TsNode): NewExpression | undefined => {
+  const made = Node.isVariableDeclaration(instance) ? instance.getInitializer() : instance;
+  const node = made === undefined ? undefined : unwrapped(made);
+  return node !== undefined && Node.isNewExpression(node) ? node : undefined;
+};
+
+/** The receiver a call is made on: `one` of `one.load(given)`. */
+const receiverOf = (call: Invocation): TsNode | undefined => {
+  const callee = call.getExpression();
+  return Node.isPropertyAccessExpression(callee) ? callee.getExpression() : undefined;
+};
+
+/** Whether a declaration is a field each instance of its class holds its own of. */
+const isInstanceField = (declaration: TsNode): boolean => Node.isPropertyDeclaration(declaration) && !declaration.isStatic();
+
+/**
+ * A field read through `this` in a method no call was stepped through to
+ * reach (P327): read once per call of the method, each on the instance it is
+ * made on - `first.start()` reads the field `first` was made with - where
+ * every call's instance is told; otherwise nothing, and the field is read
+ * for every instance at once.
+ */
+const perCallOfMethod = (declaration: TsNode, at: TsNode, keys: readonly string[], depth: number, walk: Walk): Values | undefined => {
+  if (!isInstanceField(declaration) || !Node.isPropertyAccessExpression(at) || !Node.isThisExpression(unwrapped(at.getExpression()))) return undefined;
+  const method = thisScopeOf(at);
+  if (method === undefined || Node.isConstructorDeclaration(method) || walk.bound.has(method)) return undefined;
+  const calls = callsOf(method);
+  if (calls.length === 0) return undefined;
+  const instances = calls.map((call) => {
+    const receiver = receiverOf(call);
+    return receiver === undefined ? undefined : instanceOf(receiver, walk);
+  });
+  if (instances.some((each) => each === undefined)) return undefined;
+  return union(calls.map((call) => holderValuesAt(declaration, at, keys, depth + 1, { ...walk, bound: new Map([...walk.bound, [method, call]]) })));
+};
+
+/** One value a holder may be given otherwise than by a setter: its initializer, an assignment, a key `Object.assign` lays over it. */
+interface Written {
+  readonly value: TsNode;
+  /** The assignment or the call; none for the initializer. */
+  readonly write?: TsNode;
+  /** The key of `value` the holder is given, for a key `Object.assign` lays over it (P327). */
+  readonly under?: readonly string[];
+}
+
 /**
  * What a variable of a module, or a property, holds at a path, read at `at`
  * (P315, P321). Its initializer and every assignment that is not a setter's
@@ -917,11 +1078,32 @@ interface SetterWrite {
  * for the parameter. A write in an unnamed callback is the named function's
  * it is written in. A value read below a merge says it was read through it.
  * A variable of a function is read by {@link localValuesAt}.
+ *
+ * In place (P327): a key `Object.assign(config, { port })` lays over the
+ * object holding the property is a write of it (`Object.assign(this, opts)`
+ * of a field), and so is `config.server.port = 4000` of a key nested in the
+ * object a variable holds; of the writes made in the read's own block before
+ * it, the last one read is what it holds, the initializer and the earlier
+ * ones there no longer. A field of a class is read per instance: on an
+ * instance the read is told to be of, only that instance's setter calls are
+ * laid over it and a constructor's write is read for its own `new`; a field
+ * read through `this` in a method reached by no call is read once per call
+ * of the method ({@link perCallOfMethod}).
  */
 const holderValuesAt = (declaration: TsNode, at: TsNode, keys: readonly string[], depth: number, walk: Walk): Values => {
   if (holderKindOf(declaration) === 'local') return localValuesAt(declaration, at, keys, depth, walk);
+  const perCall = perCallOfMethod(declaration, at, keys, depth, walk);
+  if (perCall !== undefined) return perCall;
+  // The instance a field is read on, where it is told (P327).
+  const instance = isInstanceField(declaration) && Node.isPropertyAccessExpression(at) ? instanceOf(at.getExpression(), walk) : undefined;
+  const ofInstance = (call: Invocation): boolean => {
+    if (instance === undefined) return true;
+    const receiver = receiverOf(call);
+    const other = receiver === undefined ? undefined : instanceOf(receiver, walk);
+    return other === undefined || other === instance;
+  };
   const holds = (node: TsNode): boolean => refersTo(node, declaration);
-  const written: { readonly value: TsNode; readonly write?: TsNode }[] = [];
+  const written: Written[] = [];
   const initializer =
     Node.isVariableDeclaration(declaration) || Node.isPropertyAssignment(declaration) || Node.isPropertyDeclaration(declaration) ? declaration.getInitializer() : undefined;
   if (initializer !== undefined) written.push({ value: initializer });
@@ -950,6 +1132,7 @@ const holderValuesAt = (declaration: TsNode, at: TsNode, keys: readonly string[]
     }
     written.push({ value, write });
   }
+  for (const assigned of assignedOf(declaration)) written.push({ value: assigned.value, write: assigned.call, under: assigned.under });
   const points = [at, ...[...walk.via].reverse()];
   interface Made {
     readonly setter: SetterWrite;
@@ -961,7 +1144,7 @@ const holderValuesAt = (declaration: TsNode, at: TsNode, keys: readonly string[]
       Node.isSourceFile(setter.scope)
         ? [{ setter, place: setter.layers[0] ?? setter.scope }]
         : callsOf(setter.scope)
-            .filter((call) => precedes(call, points))
+            .filter((call) => precedes(call, points) && ofInstance(call))
             .map((call) => ({ setter, place: call, call })),
     )
     .sort((a, b) => byPlace(a.place, b.place));
@@ -978,16 +1161,35 @@ const holderValuesAt = (declaration: TsNode, at: TsNode, keys: readonly string[]
   });
   const top = layered(layers, keys, depth, walk);
   if (!top.open) return top;
-  const below = union(
-    written.map(({ value, write }) => {
-      const read = valuesAt(value, keys, depth + 1, walk);
-      // A write whose value is not read leaves the holder's value unknown from there on (P321).
-      if (write !== undefined && !readable(value, read, keys)) walk.sink.rewrittenAt ??= write;
-      return read;
-    }),
-  );
+  // The instance's own `new` is the one its constructor's write is read for (P327).
+  const born = instance === undefined ? undefined : newOf(instance);
+  const constructor = isInstanceField(declaration) ? declaration.getParent()?.getChildrenOfKind(SyntaxKind.Constructor)[0] : undefined;
+  const own: Walk = born === undefined || constructor === undefined ? walk : { ...walk, bound: new Map([...walk.bound, [constructor, born]]) };
+  const reads = written.map((each) => {
+    const path = [...(each.under ?? []), ...keys];
+    const read = valuesAt(each.value, path, depth + 1, own);
+    return { ...each, read, clear: each.write === undefined || readable(each.value, read, path) };
+  });
+  // The last write of the read's own block made before it, read whole, stands for the ones before it there (P327).
+  const scope = scopeOf(at);
+  const inBlock = (write: TsNode | undefined): boolean =>
+    write !== undefined && write.getSourceFile() === at.getSourceFile() && write.getEnd() <= at.getStart() && scopeOf(write) === scope && surelyBefore(write, at);
+  const cut = reads
+    .filter((each) => inBlock(each.write) && each.clear && !each.read.open)
+    .sort((a, b) => (b.write?.getStart() ?? 0) - (a.write?.getStart() ?? 0))[0];
+  const cutBlock = cut === undefined ? reads : reads.filter((each) => each === cut || (each.write !== undefined && !(inBlock(each.write) && each.write.getStart() < (cut.write?.getStart() ?? 0))));
+  // A write the constructor surely makes, read whole, is what every instance starts with in place of the initializer (P327).
+  const constructed = (write: TsNode | undefined): boolean =>
+    constructor !== undefined && write !== undefined && scope !== constructor && write.getParent()?.getParent() === constructor.getBody() && Node.isExpressionStatement(write.getParent());
+  const kept = cutBlock.some((each) => constructed(each.write) && each.clear && !each.read.open) ? cutBlock.filter((each) => each.write !== undefined) : cutBlock;
+  for (const each of kept) {
+    // A write whose value is not read leaves the holder's value unknown from there on (P321).
+    if (each.write !== undefined && !each.clear) walk.sink.rewrittenAt ??= each.write;
+  }
+  const below = union(kept.map((each) => each.read));
   return { found: [...top.found, ...marked(below.found, mergedAt === undefined ? {} : { mergedAt })], open: below.open };
 };
+
 
 /**
  * The access in an expression read off a variable or a property its code
@@ -1284,7 +1486,7 @@ const fromParameter = (parameter: Parameter | undefined, reading: PortReading | 
  */
 const handedPorts = (argument: TsNode | undefined, key: string | undefined, reading: PortReading | undefined, depth: number, sink?: Trail): Handed[] => {
   if (depth > DEPTH) return [];
-  const trail: Trail = {};
+  const trail: Trail = sink?.readAt === undefined ? {} : { readAt: sink.readAt };
   const node = followed(argument, 0, trail);
   if (sink !== undefined && trail.unreadAt !== undefined) sink.unreadAt ??= trail.unreadAt;
   if (sink !== undefined && trail.rewrittenAt !== undefined) sink.rewrittenAt ??= trail.rewrittenAt;
@@ -1320,6 +1522,17 @@ const handedNode = (node: TsNode, trail: Trail, key: string | undefined, reading
       }
       if (declaration !== undefined && Node.isVariableDeclaration(declaration)) return handedPorts(declaration.getInitializer(), undefined, reading, depth, sink);
       return fromParameter(parameterAt(declaration, undefined), reading, depth, sink);
+    }
+    // A key written after the object is declared, `config.port = 4000`, `Object.assign(config, { port })`: each value it may hold there (P327).
+    if (Node.isPropertyAssignment(property) && holderOf(property) !== undefined) {
+      const held = holderValuesAt(property, sink?.readAt ?? node, [], 0, walkFrom(sink));
+      return held.found.flatMap((each) =>
+        handedPorts(each.value, undefined, reading, depth + 1, sink).map((handed) => {
+          const read = handed.read.mergedAt !== undefined || each.mergedAt === undefined ? handed.read : { ...handed.read, mergedAt: each.mergedAt };
+          const handedAt = handed.handedAt ?? each.handedAt;
+          return handedAt === undefined ? { read } : { read, handedAt };
+        }),
+      );
     }
     return handedPorts(propertyValue(property), undefined, reading, depth, sink);
   }
@@ -1374,7 +1587,7 @@ export const listensIn = (
   at: TsNode,
   options: { readonly key?: string; readonly reading?: PortReading; readonly unread?: (unread: PortUnread) => void } = {},
 ): ListenAt[] => {
-  const sink: Trail = {};
+  const sink: Trail = { readAt: at };
   const read = handedPorts(argument, options.key, options.reading, 0, sink).flatMap(({ read: each, handedAt }) => {
     const port = listenAt(each, at, handedAt === undefined ? {} : { handedAt });
     return port === undefined ? [] : [port];

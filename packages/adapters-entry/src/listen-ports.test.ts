@@ -20,7 +20,7 @@ afterEach(() => {
  * is the repository's TypeScript, read in memory; `files` are written to a
  * directory, for the configurations and the manifest read off the disk.
  */
-const listening = (adapters: EntryAdapter[], code: Record<string, string>, files: Record<string, string> = {}): string[] => {
+const listening = (adapters: EntryAdapter[], code: Record<string, string>, files: Record<string, string> = {}, rows?: string[]): string[] => {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'flowatlas-listen-')));
   roots.push(root);
   for (const [path, text] of Object.entries(files)) {
@@ -44,7 +44,9 @@ const listening = (adapters: EntryAdapter[], code: Record<string, string>, files
   const said = (port: ListenPort): string =>
     `${port.file}:${port.line} ${port.port}${port.setting === undefined ? '' : `[${port.setting}]`}${port.default === true ? ' default' : ''}` +
     `${port.valueFrom === undefined ? '' : ` from ${port.valueFrom}`}${port.merged === undefined ? '' : ` merged at ${port.merged}`}`;
-  return listeningOf(ctx).map(said);
+  const ports = listeningOf(ctx).map(said);
+  rows?.push(...ctx.builder.build().unresolved.map((row) => `${row.reason} ${row.message}`));
+  return ports;
 };
 
 describe('where a framework server listens by the environment file it loads (P305)', () => {
@@ -429,6 +431,64 @@ describe('where fastify-cli and Strapi start a server the code does not (P321)',
     expect(listening([strapiServerAdapter], {}, { 'package.json': pkg('strapi develop') })).toEqual(['package.json:1 1337[PORT] default']);
     expect(listening([strapiServerAdapter], {}, { 'package.json': pkg('strapi develop'), 'config/server.ts': 'export default () => ({ port: 4052 });\n' })).toEqual([
       'config/server.ts:1 4052',
+    ]);
+  });
+});
+
+describe('the loader and framework items P321 left open (P327)', () => {
+  const pkg = (start: string, dependencies: Record<string, string> = {}): string => JSON.stringify({ scripts: { start }, dependencies }, null, 2);
+
+  it('keeps the first file of repeated process.loadEnvFile calls, imported from node:process or not, as Node sets only what is unset', () => {
+    const listen = 'const app = express();\napp.listen(process.env.PORT ?? 3000);';
+    const files = { '.env.local': 'PORT=4061\n', '.env': 'PORT=4999\n' };
+    expect(
+      listening([expressRoutesAdapter], { 'src/main.ts': `process.loadEnvFile('.env.local');\nprocess.loadEnvFile('.env');\n${listen}` }, { 'package.json': pkg('node dist/main.js'), ...files }),
+    ).toEqual(['src/main.ts:4 4061[PORT] from .env.local']);
+    expect(
+      listening(
+        [expressRoutesAdapter],
+        { 'src/main.ts': `import { loadEnvFile as load } from 'node:process';\nload('.env.local');\nload();\n${listen}` },
+        { 'package.json': pkg('node dist/main.js'), ...files },
+      ),
+    ).toEqual(['src/main.ts:5 4061[PORT] from .env.local']);
+  });
+
+  it('lets a FASTIFY_PORT the loaded .env gives win over a PORT the command gives, as fastify-cli reads FASTIFY_PORT first', () => {
+    const app = { 'app.ts': "export default async function (fastify: any) { fastify.get('/', async () => 'ok'); }" };
+    expect(listening([fastifyRoutesAdapter], app, { 'package.json': pkg('PORT=4062 fastify start app.js'), '.env': 'FASTIFY_PORT=4063\n' })).toEqual([
+      '.env:1 4063[FASTIFY_PORT] from .env',
+    ]);
+    expect(listening([fastifyRoutesAdapter], app, { 'package.json': pkg('PORT=4062 fastify start app.js'), '.env': 'PORT=4999\n' })).toEqual(['package.json:3 4062']);
+  });
+
+  it("reads Strapi's production override of the port, and says another environment's in a row", () => {
+    const strapi = { '@strapi/strapi': '^5.0.0' };
+    const server = "module.exports = ({ env }) => ({\n  host: env('HOST', '0.0.0.0'),\n  port: env.int('PORT', 1337),\n});\n";
+    const rows: string[] = [];
+    expect(
+      listening(
+        [strapiServerAdapter],
+        {},
+        {
+          'package.json': pkg('strapi start', strapi),
+          'config/server.js': server,
+          'config/env/production/server.js': 'module.exports = () => ({\n  port: 4064,\n});\n',
+          'config/env/staging/server.js': 'module.exports = () => ({\n  port: 4065,\n});\n',
+          'config/env/development/server.js': 'module.exports = () => ({\n  port: 4064,\n});\n',
+          'config/env/test/database.js': 'module.exports = () => ({});\n',
+        },
+        rows,
+      ),
+    ).toEqual(['config/env/production/server.js:2 4064']);
+    expect(rows).toEqual([
+      "framework-environment-differs Strapi's server is read listening on 4064, the production build's; for staging, config/env/staging/server.js moves it to 4065. Which one runs is NODE_ENV's, development where nothing sets it",
+    ]);
+    // An override that writes no port leaves the base file's; a base file writing none is Strapi's own, moved by .env.
+    expect(
+      listening([strapiServerAdapter], {}, { 'package.json': pkg('strapi start', strapi), 'config/server.js': server, 'config/env/production/server.js': "module.exports = () => ({ url: 'https://cms.example.com' });\n" }),
+    ).toEqual(['config/server.js:3 1337[PORT]']);
+    expect(listening([strapiServerAdapter], {}, { 'package.json': pkg('strapi start', strapi), 'config/server.js': 'module.exports = () => ({});\n', '.env': 'PORT=4066\n' })).toEqual([
+      'package.json:1 4066[PORT] from .env',
     ]);
   });
 });
