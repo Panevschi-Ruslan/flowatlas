@@ -3,7 +3,7 @@ import type { BinaryExpression, CallExpression, NewExpression, Node as TsNode, P
 import { Node, SyntaxKind, VariableDeclarationKind, ts } from 'ts-morph';
 import type { Unresolved } from './model/graph.js';
 import type { ExtractContext } from './adapters/context.js';
-import { ownDirectoryPath } from './config-literal.js';
+import { joinFrom, ownDirectoryPath, resolveFrom } from './config-literal.js';
 import { normalizeFilePath } from './ids.js';
 import { startLineOf } from './line-numbers.js';
 import { isTestName } from './test-files.js';
@@ -581,7 +581,7 @@ const MODULE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs',
 /** The file of the project a module path names, tried as written, with each extension and as a directory's index. */
 const moduleFileAt = (project: ReturnType<TsNode['getProject']>, path: string): SourceFile | undefined => {
   const bare = path.replace(/\.[cm]?[jt]sx?$/, '');
-  const candidates = [path, ...MODULE_EXTENSIONS.map((extension) => `${bare}${extension}`), ...MODULE_EXTENSIONS.map((extension) => join(bare, `index${extension}`))];
+  const candidates = [path, ...MODULE_EXTENSIONS.map((extension) => `${bare}${extension}`), ...MODULE_EXTENSIONS.map((extension) => joinFrom(bare, `index${extension}`))];
   for (const candidate of candidates) {
     const file = project.getSourceFile(candidate);
     if (file !== undefined && !file.isDeclarationFile() && !file.isInNodeModules()) return file;
@@ -603,7 +603,7 @@ const moduleLoaded = (call: CallExpression): { readonly file?: SourceFile; reado
   if (argument === undefined) return { computed: false };
   const literal = literalText(argument);
   const relativeTo = (node: TsNode, text: string): string | undefined =>
-    text.startsWith('.') ? resolve(dirname(node.getSourceFile().getFilePath()), text) : undefined;
+    text.startsWith('.') ? resolveFrom(dirname(node.getSourceFile().getFilePath()), text) : undefined;
   if (literal !== undefined) {
     const path = relativeTo(argument, literal);
     const file = path === undefined ? undefined : moduleFileAt(call.getProject(), path);

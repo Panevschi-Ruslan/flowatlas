@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, posix, resolve } from 'node:path';
 import { ts } from 'ts-morph';
 
 /**
@@ -118,18 +118,27 @@ const calleeName = (call: ts.CallExpression): string | undefined => {
   return undefined;
 };
 
+/**
+ * `path.resolve` and `path.join` from a directory as the file system the
+ * directory is written for spells them: a POSIX path (`/src`, an in-memory
+ * project's) stays one on Windows, where `resolve` would put the drive in
+ * front and turn it into another file.
+ */
+export const resolveFrom = (dir: string, ...parts: string[]): string => (dir.startsWith('/') ? posix.resolve(dir, ...parts) : resolve(dir, ...parts));
+export const joinFrom = (dir: string, ...parts: string[]): string => (dir.startsWith('/') ? posix.join(dir, ...parts) : join(dir, ...parts));
+
 /** A path built from the file's own directory, absolute, or undefined when it is not one. */
 const pathOf = (node: ts.Expression, file: ts.SourceFile, dir: string, cwd = true): string | undefined => {
   const value = unwrap(node);
   // `${__dirname}/defaults` (P321).
   if (ts.isTemplateExpression(value) && value.head.text === '' && value.templateSpans.length === 1) {
     const span = value.templateSpans[0] as ts.TemplateSpan;
-    return isOwnDirectory(span.expression, file, cwd) && span.literal.text.startsWith('/') ? join(dir, span.literal.text) : undefined;
+    return isOwnDirectory(span.expression, file, cwd) && span.literal.text.startsWith('/') ? joinFrom(dir, span.literal.text) : undefined;
   }
   if (ts.isNewExpression(value) && value.expression.getText(file) === 'URL') {
     const [first, base] = value.arguments ?? [];
     const relative = first === undefined ? undefined : literalText(unwrap(first));
-    if (relative !== undefined && base !== undefined && unwrap(base).getText(file) === 'import.meta.url') return resolve(dir, relative);
+    if (relative !== undefined && base !== undefined && unwrap(base).getText(file) === 'import.meta.url') return resolveFrom(dir, relative);
     return undefined;
   }
   if (!ts.isCallExpression(value)) return undefined;
@@ -140,7 +149,7 @@ const pathOf = (node: ts.Expression, file: ts.SourceFile, dir: string, cwd = tru
   if (head === undefined || !isOwnDirectory(head, file, cwd)) return undefined;
   const parts = rest.map((part) => literalText(unwrap(part)));
   if (parts.some((part) => part === undefined)) return undefined;
-  return name === 'resolve' ? resolve(dir, ...(parts as string[])) : join(dir, ...(parts as string[]));
+  return name === 'resolve' ? resolveFrom(dir, ...(parts as string[])) : joinFrom(dir, ...(parts as string[]));
 };
 
 /**
