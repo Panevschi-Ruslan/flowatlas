@@ -25,6 +25,12 @@ export interface ComposeService {
     readonly target?: string;
     readonly args: Readonly<Record<string, string>>;
   };
+  /**
+   * The image it runs, as `image:` writes it (interpolated): what compose
+   * pulls where nothing builds it, and the name it tags what it builds with
+   * where `build:` is written too (P331).
+   */
+  readonly imageName?: string;
   /** Ports published on the machine running it. */
   readonly published: readonly number[];
   /** Each published port with the port inside the container it reaches, and the line it is written on (P254). */
@@ -106,21 +112,25 @@ const lineAt = (text: string, offset: number): number => (offset < 0 ? 1 : text.
  * container is written). A bare container port publishes nothing fixed, and a
  * range is not one port.
  */
-const mappingsOf = (value: unknown, text: string, from: number): Mapping[] => {
+const mappingsOf = (value: unknown, text: string, from: number, variables: Readonly<Record<string, string>> = {}): Mapping[] => {
   if (!Array.isArray(value)) return [];
   const out: Mapping[] = [];
+  // A side written as a placeholder is the value compose fills it with (P331).
+  const filled = (raw: string | undefined): string | undefined => (raw === undefined ? undefined : interpolated(raw, variables));
   for (const item of value) {
     if (isRecord(item)) {
-      const published = portNumber(scalar(item['published']));
-      const container = portNumber(scalar(item['target']));
+      const written = scalar(item['published']) ?? '';
+      const published = portNumber(filled(written));
+      const container = portNumber(filled(scalar(item['target'])));
       if (published === undefined) continue;
-      const at = new RegExp(`published\\s*:\\s*['"]?${published}\\b`).exec(text.slice(from));
+      const at = new RegExp(`published\\s*:\\s*['"]?${written.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?!\\w)`).exec(text.slice(from));
       out.push({ published, container: container ?? published, line: lineAt(text, at === null ? -1 : from + at.index) });
       continue;
     }
     const written = scalar(item);
-    if (written === undefined) continue;
-    const parts = written.replace(/\/\w+$/, '').split(':');
+    const settled = filled(written);
+    if (written === undefined || settled === undefined) continue;
+    const parts = settled.replace(/\/\w+$/, '').split(':');
     if (parts.length < 2) continue;
     const published = portNumber(parts[parts.length - 2]);
     const container = portNumber(parts[parts.length - 1]);
@@ -171,8 +181,11 @@ const imageOf = (build: unknown, variables: Readonly<Record<string, string>>): C
 
 /**
  * The containers a compose file starts. Nothing for a file that is not one.
- * `variables` are what compose interpolates the file with from the `.env`
- * beside it, where that is read (P325).
+ * `variables` are what compose interpolates the file with: the `.env` beside
+ * it, or the environment files a command of the project runs it with
+ * (`--env-file`), where those are read (P325, P331). A name, a port, an
+ * environment file or an image written with a placeholder is what they fill
+ * it with, or its default; one nothing settles is not read.
  */
 export const readComposeFile = (text: string, variables: Readonly<Record<string, string>> = {}): ComposeService[] => {
   let document: unknown;
@@ -186,21 +199,27 @@ export const readComposeFile = (text: string, variables: Readonly<Record<string,
   return Object.entries(services).flatMap(([name, value]) => {
     if (!isRecord(value)) return [];
     const build = value['build'];
-    const context = typeof build === 'string' ? build : isRecord(build) ? scalar(build['context']) : undefined;
+    const contextWritten = typeof build === 'string' ? build : isRecord(build) ? scalar(build['context']) : undefined;
+    const context = contextWritten === undefined ? undefined : (interpolated(contextWritten, variables) ?? contextWritten);
+    // A name written with a placeholder is the one compose fills it with, or none (P331).
     const aliases = [scalar(value['container_name']), scalar(value['hostname']), ...aliasesOf(value['networks'])]
+      .map((alias) => (alias === undefined ? undefined : interpolated(alias, variables)))
       .filter((alias): alias is string => alias !== undefined && alias !== '' && alias !== name);
-    const mappings = mappingsOf(value['ports'], text, keyAt(text, name));
+    const mappings = mappingsOf(value['ports'], text, keyAt(text, name), variables);
     const image = imageOf(build, variables);
+    const written = scalar(value['image']);
+    const imageName = written === undefined ? undefined : interpolated(written, variables);
     return [
       {
         name,
         aliases: [...new Set(aliases)],
         ...(context === undefined ? {} : { context }),
         ...(image === undefined ? {} : { image }),
+        ...(imageName === undefined || imageName === '' ? {} : { imageName }),
         published: [...new Set(mappings.map((mapping) => mapping.published))],
         mappings,
         environment: environmentOf(value['environment'], variables),
-        envFiles: listOf(value['env_file']),
+        envFiles: listOf(value['env_file']).flatMap((path) => interpolated(path, variables) ?? []),
       },
     ];
   });

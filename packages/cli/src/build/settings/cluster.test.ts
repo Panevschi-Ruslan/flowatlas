@@ -380,7 +380,7 @@ describe('what a project’s cluster files say about how its services are reache
     ]);
     expect(read['stock']?.ingress?.map((each) => each.rule)).toEqual([{ path: '/health', target: `http:${'/'.repeat(2)}stock:8080`, to: '/health', file: 'deploy/ingress.yaml', line: 17, exact: true }]);
     expect(read['orders']?.containers).toEqual([
-      { name: 'svc/orders', names: [], file: 'Makefile', ports: [{ published: 8081, container: 3000, file: 'Makefile', line: 2 }], environment: {}, via: 'forwarded', environmentFrom: 'k8s/orders.yaml' },
+      { name: 'svc/orders', names: [], file: 'Makefile', ports: [{ published: 8081, container: 3000, file: 'Makefile', line: 2 }], environment: {}, via: 'forwarded', environmentFrom: 'k8s/orders.yaml', imageUnread: { image: 'orders', why: 'nothing in the project builds it, and an image is never fetched' } },
     ]);
     expect(read['stock']?.containers?.map((each) => `${each.via} ${each.name} ${each.ports.map((port) => `${port.published}:${port.container}`).join(',')}`)).toEqual(['forwarded deploy/stock 4001:4000']);
   });

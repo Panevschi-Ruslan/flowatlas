@@ -56,6 +56,14 @@ export interface HostAlias {
    * not one a run is given, so it places the service only as a guess (P309).
    */
   readonly example?: true;
+  /**
+   * The host is a port an environment file of the service gives on this
+   * machine (`PORT=` in `.env.development`), no example: a run has the value
+   * only where something loads the file (P331). The linker places the
+   * service there firmly where the code is read loading the file, and offers
+   * it as a guess, as an example's is, where nothing is.
+   */
+  readonly environmentFile?: true;
 }
 
 /** A port a container publishes on the machine running it, and the port inside it that it reaches (P254). */
@@ -102,6 +110,23 @@ export interface ContainerRun {
   readonly via?: 'forwarded' | 'node-port';
   /** Where the environment is written, where that is not `file`: the manifest of the pods a port is forwarded to (P260). */
   readonly environmentFrom?: string;
+  /** The image the container runs, where its Dockerfile is not read (P331). */
+  readonly imageUnread?: ImageUnread;
+}
+
+/**
+ * An image a container runs whose environment is not read (P331): pulled
+ * from a registry (`image:` with no `build:`), built by no command the
+ * project holds, or built from a Dockerfile that is not in the project. Its
+ * `ENV` may give the setting the code reads its port from, so where the
+ * environment read does not, the port there is said to be open, never
+ * fetched.
+ */
+export interface ImageUnread {
+  /** The image as written: `registry.example.test/shop/orders:1.4`. */
+  readonly image: string;
+  /** Why it is not read, as a row says it: `nothing in the project builds it, and an image is never fetched`. */
+  readonly why: string;
 }
 
 /**
@@ -145,6 +170,14 @@ export interface RoutedName {
   readonly environment: Readonly<Record<string, number>>;
   /** Where that environment is written, where it is not `file`: a workload's manifest, or the patch that gave it (P260). */
   readonly environmentFrom?: string;
+  /**
+   * The file each setting of `environment` is from, where that is not
+   * `environmentFrom`: the Dockerfile of the image the containers run, built
+   * by the project, under the manifest's own environment (P331).
+   */
+  readonly environmentFiles?: Readonly<Record<string, string>>;
+  /** The image the containers run, where its Dockerfile is not read (P331). */
+  readonly imageUnread?: ImageUnread;
 }
 
 /** A port one of a service's own files gives a setting, on the machine a developer runs it on (P254). */
@@ -309,6 +342,23 @@ const decodeURIComponentSafe = (text: string): string => {
 /** The value a setting may be kept with, or nothing: a secret's name, or a value that is not an address. */
 export const keptValue = (name: string, raw: string): string | undefined =>
   looksSecret(name) ? undefined : addressOnly(raw);
+
+/**
+ * What a file whose values are never read (`.env`, P77) may lend a compose
+ * file's interpolation (P331): only what the graph keeps of a value anyway,
+ * and nothing under a secret's name - a port, an address cut as
+ * `addressOnly` cuts it, or a host's name (`orders`, `db.internal`) that does
+ * not read like a token. Anything else is left out, so the placeholder that
+ * names it stays unsettled.
+ */
+export const interpolationValue = (name: string, raw: string): string | undefined => {
+  if (looksSecret(name)) return undefined;
+  const text = raw.trim();
+  if (portOf(text) !== undefined) return text;
+  const address = addressOnly(text);
+  if (address !== undefined) return address;
+  return /^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,62}[A-Za-z0-9])?$/.test(text) && !tokenLike(text) && !/^\d+$/.test(text) ? text : undefined;
+};
 
 /** A port, as a file writes one. */
 export const portOf = (raw: string | number): number | undefined => {

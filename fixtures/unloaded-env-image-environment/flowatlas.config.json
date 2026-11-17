@@ -1,0 +1,60 @@
+{
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "express"
+    },
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express"
+    },
+    {
+      "name": "bare",
+      "repo": "./bare",
+      "type": "express"
+    },
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "express"
+    },
+    {
+      "name": "loaded",
+      "repo": "./loaded",
+      "type": "express"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express"
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "express"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express"
+    }
+  ],
+  "output": ".flowatlas"
+}

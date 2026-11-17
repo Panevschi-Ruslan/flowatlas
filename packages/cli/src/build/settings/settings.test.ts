@@ -232,6 +232,8 @@ describe('what a project’s files say its settings are', () => {
         ],
         environment: { PORT: 3000, ADMIN_PORT: 3100 },
         environmentFiles: { ADMIN_PORT: 'orders/docker/.env.example' },
+        // No Dockerfile is written for it here.
+        imageUnread: { image: 'orders', why: 'the Dockerfile compose builds it from is not found' },
       },
     ]);
     expect(read['orders']?.hosts.filter((alias) => alias.mapped !== undefined).map((alias) => `${alias.host} ${alias.mapped?.side}`)).toEqual([
@@ -248,7 +250,7 @@ describe('what a project’s files say its settings are', () => {
     ]);
     expect(read['orders']?.ports).toEqual({ ORDERS_PORT: [{ port: 3006, file: '.env.example', example: true }], PORT: [{ port: 3005, file: '.env.example', example: true }] });
     expect(read['stock']?.containers).toEqual([
-      { name: 'stock-api', names: ['stock-api'], file: 'package.json', ports: [{ published: 3002, container: 8080, file: 'package.json', line: 4 }], environment: { PORT: 8080 } },
+      { name: 'stock-api', names: ['stock-api'], file: 'package.json', ports: [{ published: 3002, container: 8080, file: 'package.json', line: 4 }], environment: { PORT: 8080 }, imageUnread: { image: 'stock:latest', why: 'the Dockerfile the project builds it from is not found' } },
     ]);
   });
 
@@ -259,11 +261,11 @@ describe('what a project’s files say its settings are', () => {
     });
     const read = readProjectSettings({ services: ['search', 'audit'].map((name) => ({ name, dir: join(dir, name) })), rootDir: dir });
     expect(read['search']?.containers).toEqual([
-      { name: 'search', names: ['search'], file: 'Makefile', ports: [{ published: 4010, container: 3000, file: 'Makefile', line: 4 }], environment: {} },
-      { name: 'search', names: [], file: 'Makefile', ports: [], environment: {} },
+      { name: 'search', names: ['search'], file: 'Makefile', ports: [{ published: 4010, container: 3000, file: 'Makefile', line: 4 }], environment: {}, imageUnread: { image: 'search:latest', why: 'nothing in the project builds it, and an image is never fetched' } },
+      { name: 'search', names: [], file: 'Makefile', ports: [], environment: {}, imageUnread: { image: 'search', why: 'nothing in the project builds it, and an image is never fetched' } },
     ]);
     expect(read['audit']?.containers).toEqual([
-      { name: 'audit-api', names: ['audit-api'], file: 'scripts/run.sh', ports: [{ published: 4011, container: 3000, file: 'scripts/run.sh', line: 3 }], environment: { PORT: 3000 } },
+      { name: 'audit-api', names: ['audit-api'], file: 'scripts/run.sh', ports: [{ published: 4011, container: 3000, file: 'scripts/run.sh', line: 3 }], environment: { PORT: 3000 }, imageUnread: { image: 'audit', why: 'nothing in the project builds it, and an image is never fetched' } },
     ]);
   });
 
@@ -359,6 +361,7 @@ describe('what a project’s files say its settings are', () => {
         file: 'k8s/orders.yaml',
         ports: [{ port: 80, target: 3000, file: 'k8s/orders.yaml', line: 30 }],
         environment: { PORT: 3000 },
+        imageUnread: { image: 'orders', why: 'nothing in the project builds it, and an image is never fetched' },
       },
     ]);
     expect(read['orders']?.hosts.filter((alias) => alias.mapped?.side === 'routed').map((alias) => alias.host)).toEqual([
@@ -368,7 +371,7 @@ describe('what a project’s files say its settings are', () => {
       'orders-svc.shop.svc.cluster.local:80',
     ]);
     expect(read['stock']?.routes).toEqual([
-      { name: 'stock', names: ['stock'], file: 'deploy/stock.yaml', ports: [{ port: 8080, target: 4000, file: 'deploy/stock.yaml', line: 9 }], environment: { PORT: 4000 } },
+      { name: 'stock', names: ['stock'], file: 'deploy/stock.yaml', ports: [{ port: 8080, target: 4000, file: 'deploy/stock.yaml', line: 9 }], environment: { PORT: 4000 }, imageUnread: { image: 'stock', why: 'nothing in the project builds it, and an image is never fetched' } },
     ]);
     // The templated port is not read; the literal one is, by the service's own name.
     expect(read['notify']?.routes?.map((routed) => routed.ports.map((port) => `${port.port}:${port.target}`))).toEqual([['81:3000']]);

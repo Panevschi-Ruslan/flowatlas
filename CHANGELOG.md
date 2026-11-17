@@ -1891,6 +1891,30 @@ only one of them moved.
   a written fallback such as `process.env.PORT ?? 3100`), the firm one is
   the port's service outright; a request to it was a `local-port-shared`
   row naming both.
+- **An image read wherever the project builds it, compose run with
+  `--env-file`, and a cluster's workload under its image (P331).** A
+  compose service's `image:` with no `build:` and a `docker run`'s image are
+  read with the Dockerfile a build of the project tags that image from - a
+  `docker build -t`, another compose service's `build:` under that
+  `image:`, a Skaffold artifact (`build.artifacts` and each profile's, with
+  its context, Dockerfile, target and build arguments). An image nothing of
+  the project builds is pulled as it is and never fetched: where the setting
+  the code reads its port from hangs on it, a new info row,
+  `container-image-unread`, says the image's environment is not read and
+  where the port is taken to be, rather than silence; so does a Dockerfile
+  that is not found. A `docker compose --env-file <f>` in a script, Makefile
+  or shell script of the project fills the compose file's placeholders from
+  those files, in order, in place of the `.env` beside it; where several
+  commands run one file only what they all agree on is read, and a file the
+  shell names settles nothing. What fills a placeholder is a port, an
+  address or a host's name under a name that is no secret's - nothing else
+  of a names-only file - and it now fills a port mapping, a container's
+  name and aliases, an `env_file:`, a build's context, the image and the
+  `environment:` values the graph keeps (`CATALOG_URL:
+  http://${CATALOG_HOST}:3000`), not only a port. A cluster workload's
+  containers (behind a service object, a node port or a port-forward) are
+  read with the Dockerfile of the image they run, where the project builds
+  it, under the manifest's `env`, `listensAt` naming the Dockerfile.
 - **A file nothing loads offers a fallback port rather than moving it
   (P325).** P319 moved a written fallback, `process.env.API_PORT ?? 3000`,
   firmly to the value any committed environment file of the service gives,
@@ -1904,6 +1928,16 @@ only one of them moved.
   service firmly where its code reads the setting with a fallback
   (`claimants-nested-chain-env-port` snapshot: `localhost:3000/items`
   joins `api` at its fallback, `localhost:4000/items` as an offer).
+- **A file nothing loads offers a port whatever the code reads (P331).** The
+  rule P325 made for a written fallback now holds for a setting the code
+  reads alone (`app.listen(process.env.PORT)`) and for a service whose
+  server is not read listening at all: a `PORT=` in a committed
+  environment file that is no example (`.env.development`) is offered as a
+  guess where nothing the code reader follows loads the file, and firm
+  where the code is read loading it (dotenv, `--env-file`, a framework's
+  loader). A service the code places at the port firmly is then its
+  service outright, where the two used to be a `local-port-shared` row. A
+  names-only file such as `.env` still gives no port on the machine.
 - **Fields written through an alias or in a subclass, domains a workspace
   names, and grants of a bus, table or stream by the CDK's version (P322).**
   A static field written through the class under `any` - `const R: any =

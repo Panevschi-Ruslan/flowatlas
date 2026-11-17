@@ -7,6 +7,7 @@ import {
   type EnvironmentValue,
   type FlowatlasConfig,
   type GraphNode,
+  type HostAlias,
   type RepoSettings,
 } from '@flowatlas/core';
 import { wordsOf } from './api-choice.js';
@@ -109,13 +110,19 @@ export const hostIndexOf = (config: FlowatlasConfig, settings: Readonly<Record<s
 /**
  * The hosts only an example environment file gives a service (P309): each
  * host with the services every file placing them there at it is an example
- * or a template of. Such a host is offered, not where a run is placed.
+ * or a template of. Such a host is offered, not where a run is placed. So
+ * is one an environment file gives that nothing the code reader follows
+ * loads (P331): `PORT=4000` in a `.env.development` nothing is read loading
+ * is a value a run may or may not have, while the same file loaded by the
+ * code (`loaded`, the files the service's code ports are filled from) places
+ * the service firmly.
  */
-export const offeredHostsOf = (settings: Readonly<Record<string, RepoSettings>>): HostIndex => {
+export const offeredHostsOf = (settings: Readonly<Record<string, RepoSettings>>, loaded: (service: string, file: string) => boolean = () => false): HostIndex => {
   const index = new Map<string, string[]>();
   for (const [service, own] of Object.entries(settings)) {
-    const firm = new Set(own.hosts.filter((alias) => alias.example !== true).map((alias) => alias.host.toLowerCase()));
-    for (const alias of own.hosts) if (alias.example === true && !firm.has(alias.host.toLowerCase())) addTo(index, alias.host, service);
+    const offers = (alias: HostAlias): boolean => alias.example === true || (alias.environmentFile === true && !loaded(service, alias.file));
+    const firm = new Set(own.hosts.filter((alias) => !offers(alias)).map((alias) => alias.host.toLowerCase()));
+    for (const alias of own.hosts) if (offers(alias) && !firm.has(alias.host.toLowerCase())) addTo(index, alias.host, service);
   }
   for (const list of index.values()) list.sort(cmp);
   return index;

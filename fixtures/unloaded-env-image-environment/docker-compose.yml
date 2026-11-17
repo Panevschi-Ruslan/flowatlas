@@ -1,0 +1,21 @@
+# Started with `make up`, which hands compose.env to compose for its
+# placeholders in place of a .env beside this file.
+services:
+  orders:
+    # Pulled: nothing in the project builds this image.
+    image: registry.example.test/shop/orders:1.2
+    ports:
+      - "8080:4000"
+  stock:
+    # Built by stock's Makefile (docker build -t stock-api).
+    image: stock-api:dev
+    ports:
+      - "8081:4300"
+  billing:
+    build: ./billing
+    ports:
+      - "${BILLING_PORT:-8099}:3000"
+    environment:
+      CATALOG_URL: http://${CATALOG_HOST}:3000
+  catalog:
+    build: ./catalog

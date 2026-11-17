@@ -310,6 +310,7 @@ export {
   addressOnly,
   hostOf,
   innerServiceName,
+  interpolationValue,
   isInnerHost,
   keptValue,
   localHostsOf,
@@ -317,7 +318,7 @@ export {
   NO_SETTINGS,
   portOf,
 } from './setting-files.js';
-export type { ContainerRun, HostAlias, IngressRoute, PortValue, PublishedPort, RepoSettings, RoutedName, RoutedPort, ServiceBinding, SettingValue } from './setting-files.js';
+export type { ContainerRun, HostAlias, ImageUnread, IngressRoute, PortValue, PublishedPort, RepoSettings, RoutedName, RoutedPort, ServiceBinding, SettingValue } from './setting-files.js';
 export { GUESSED_META, isTaken, RECORDED_META, strongestTaken, TAKEN_BY_META, TAKES_META } from './takes.js';
 export type { Takes, Taken, TakenInstead } from './takes.js';
 export { OPERATION_VERBS, operationsOf } from './declared-operations.js';

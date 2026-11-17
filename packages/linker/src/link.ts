@@ -64,6 +64,7 @@ import { joinGraphqlFields } from './graphql-link.js';
 import { routeGateways, type RouteAnswer } from './graphql-federation.js';
 import {
   atLocalPort,
+  loadedFilesOf,
   closedAt,
   inNetworkAt,
   portClosedFinding,
@@ -735,7 +736,7 @@ const portIndexOf = (
   return {
     configured,
     all: config.settingFiles.read === false ? configured : hostIndexOf(config, settings),
-    ...(config.settingFiles.read === false ? {} : { offered: offeredHostsOf(settings) }),
+    ...(config.settingFiles.read === false ? {} : { offered: offeredHostsOf(settings, loadedFilesOf(nodes)) }),
     listening: listening.byPort,
     inNetwork: listening.inNetwork,
     closed: listening.closed,

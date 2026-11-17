@@ -185,6 +185,67 @@ export const dockerBuildsOf = (commands: readonly CommandAt[]): DockerBuildAt[] 
   });
 
 /**
+ * A `docker compose` (or `docker-compose`) a command runs (P331): the compose
+ * files it names (`-f`, `--file`), the environment files it interpolates them
+ * with (`--env-file`, in order, a later over an earlier, in place of the
+ * `.env` beside the files), and the directory it takes as the project's
+ * (`--project-directory`), each as written.
+ */
+export interface ComposeRun {
+  readonly files: readonly string[];
+  readonly envFiles: readonly string[];
+  readonly projectDirectory?: string;
+  /** A compose file or an environment file is named by what the shell fills (`--env-file $ENV_FILE`): its variables are not known. */
+  readonly unsettled?: true;
+}
+
+export type ComposeRunAt = ComposeRun & { readonly file: string; readonly line: number; readonly dirs?: readonly string[] };
+
+/** Compose's own options before its command that take a value. */
+const COMPOSE_VALUED = /^(?:-[fp]|--(?:file|env-file|project-name|project-directory|profile|ansi|progress|parallel))$/;
+
+/** The `docker compose` a command is, if it is one, with every option before its command read. */
+const composeOf = (words: readonly string[]): ComposeRun | undefined => {
+  const at = words.findIndex((word, index) => isProgram(word, 'docker-compose') || (word === 'compose' && isProgram(words[index - 1], 'docker')));
+  if (at < 0) return undefined;
+  const files: string[] = [];
+  const envFiles: string[] = [];
+  let projectDirectory: string | undefined;
+  let unsettled = false;
+  for (let index = at + 1; index < words.length; index += 1) {
+    const word = words[index] as string;
+    const [flag, inline] = splitFlag(word);
+    const valued = COMPOSE_VALUED.test(flag);
+    // The command: what follows it is its own.
+    if (!valued && !word.startsWith('-')) break;
+    const value = valued ? (inline ?? words[(index += 1)]) : undefined;
+    // A value the shell fills names no file read here.
+    if (value === undefined || value === '' || value.includes('$')) {
+      if (flag === '--env-file' || flag === '-f' || flag === '--file' || flag === '--project-directory') unsettled = true;
+      continue;
+    }
+    if (flag === '-f' || flag === '--file') files.push(value);
+    else if (flag === '--env-file') envFiles.push(value);
+    else if (flag === '--project-directory') projectDirectory = value;
+  }
+  return { files, envFiles, ...(projectDirectory === undefined ? {} : { projectDirectory }), ...(unsettled ? { unsettled: true as const } : {}) };
+};
+
+/**
+ * Every `docker compose` the commands of a repository run (P331), its
+ * `package.json` scripts, Makefiles and shell scripts, so a compose file is
+ * interpolated with the environment files the command hands it. A
+ * pipeline's is not read, as a `docker run` in one is not: it runs on the
+ * pipeline's machine.
+ */
+export const composeRunsOf = (commands: readonly CommandAt[]): ComposeRunAt[] =>
+  commands.flatMap((command) => {
+    if (isPipeline(command.file)) return [];
+    const run = composeOf(command.words);
+    return run === undefined ? [] : [{ ...run, file: command.file, line: command.line, ...(command.dirs === undefined ? {} : { dirs: command.dirs }) }];
+  });
+
+/**
  * A port this machine forwards to a cluster's object (P260): `kubectl
  * port-forward svc/orders 8080:80` makes `localhost:8080` reach port 80 of the
  * service object `orders`; `deploy/orders 8080:3000` port 3000 of its pods.

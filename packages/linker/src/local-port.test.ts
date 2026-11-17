@@ -223,7 +223,7 @@ describe('a port the code and the files decide together (P254)', () => {
   });
 
   it("fills a port the code reads from a setting alone with the service's own example environment file", () => {
-    const settings = { orders: { ...NO_SETTINGS, ports: { ORDERS_PORT: [{ port: 3006, file: '.env.example' }] } } };
+    const settings = { orders: { ...NO_SETTINGS, ports: { ORDERS_PORT: [{ port: 3006, file: '.env.example', example: true as const }] } } };
     const result = link('localhost:3006', { orders: [{ file: 'src/main.ts', line: 7, setting: 'ORDERS_PORT' }] }, config(), settings);
     expect(joins(result)[1]).toBe('http_calls entry:orders:http:GET:/items heuristic src/main.ts:7 (ORDERS_PORT from .env.example)');
     // Without the file, a setting alone places nothing.

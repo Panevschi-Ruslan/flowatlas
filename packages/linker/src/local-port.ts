@@ -89,8 +89,9 @@ export interface Listening {
    * but that nothing the code reader follows loads (no dotenv, `--env-file`
    * or framework loader names it), offering its value to a fallback the code
    * writes rather than giving it: a guess beside the fallback, asked whether
-   * it serves the request (P325). A file the reader finds loaded fills
-   * `valueFrom` on the code's own port instead, firm.
+   * it serves the request (P325); and to a setting the code reads alone, a
+   * guess as an example's value is (P331). A file the reader finds loaded
+   * fills `valueFrom` on the code's own port instead, firm.
    */
   readonly unloaded?: true;
   /**
@@ -198,6 +199,17 @@ const codePortsOf = (nodes: ReadonlyMap<string, GraphNode>): Map<string, ListenP
     if (ports.length > 0) out.set(node.repo, [...(out.get(node.repo) ?? []), ...ports]);
   }
   return out;
+};
+
+/**
+ * Whether the code of a service is read loading an environment file (P331):
+ * a port of its code is filled from the file (`valueFrom`, by dotenv,
+ * `--env-file` or a framework's loader, P315, P321).
+ */
+export const loadedFilesOf = (nodes: ReadonlyMap<string, GraphNode>): ((service: string, file: string) => boolean) => {
+  const loaded = new Set<string>();
+  for (const [service, ports] of codePortsOf(nodes)) for (const port of ports) if (port.valueFrom !== undefined) loaded.add(`${service}\0${port.valueFrom}`);
+  return (service, file) => loaded.has(`${service}\0${file}`);
 };
 
 /**
@@ -316,6 +328,41 @@ const unroutedRow = (service: string, routed: RoutedName, port: RoutedName['port
   meta: { routed: port.port, container: port.target, listens: [...new Set(ports.flatMap((each) => (each.port === undefined ? [] : [each.port])))].sort((a, b) => a - b) },
 });
 
+/**
+ * The row for a container whose image's environment is not read (P331) -
+ * pulled, built by nothing the project holds, or from a Dockerfile not found
+ * - where the port the service listens on there hangs on it: a setting the
+ * code reads its port from that what is read of the container's environment
+ * does not give, which the image's `ENV` may. Nothing where the environment
+ * read gives every such setting, or the code reads none.
+ */
+const imageUnreadRow = (
+  service: string,
+  container: Pick<ContainerRun, 'name' | 'file' | 'environment' | 'imageUnread'> & { readonly line: number },
+  ports: readonly ListenPort[],
+): Unresolved | undefined => {
+  const unread = container.imageUnread;
+  if (unread === undefined) return undefined;
+  const hanging = ports.filter((port) => port.setting !== undefined && container.environment[port.setting] === undefined);
+  if (hanging.length === 0) return undefined;
+  const settings = [...new Set(hanging.map((port) => `${port.setting} (${port.file}:${port.line})`))];
+  const fallbacks = [...new Set(hanging.flatMap((port) => (port.port === undefined ? [] : [port.port])))].sort((a, b) => a - b);
+  return {
+    service,
+    file: container.file,
+    line: container.line,
+    reason: 'container-image-unread',
+    level: 'info',
+    message:
+      `${container.file} runs ${container.name} (${service}) from the image ${unread.image}; ${unread.why}, so the environment the image gives is not read: ` +
+      `it may set ${settings.join(', ')}, which ${service}'s code reads its port from` +
+      (fallbacks.length === 0 ? ', and no port is read there' : `; the port there is taken as ${fallbacks.join(', ')}, where nothing read gives the setting`),
+    hint: 'Build the image in the project (docker build -t, a compose build:, a Skaffold artifact) so its Dockerfile is read, or give the setting in the container\'s own environment.',
+    symbol: `${container.name}:${unread.image}`,
+    meta: { image: unread.image, settings: [...new Set(hanging.map((port) => port.setting as string))].sort() },
+  };
+};
+
 /** How a file makes a port of this machine reach a container's, as a row says it (P254, P260). */
 const publishing = (container: ContainerRun, mapping: ContainerRun['ports'][number], service: string): string =>
   container.via === 'forwarded'
@@ -357,6 +404,15 @@ export const portsListening = (nodes: ReadonlyMap<string, GraphNode>, settings: 
     inNetwork.set(key, list);
   };
   const code = codePortsOf(nodes);
+  // One row for each image of a service whose environment is not read (P331).
+  const imagesSaid = new Set<string>();
+  const imageRow = (service: string, container: Parameters<typeof imageUnreadRow>[1], ports: readonly ListenPort[]): void => {
+    const row = imageUnreadRow(service, container, ports);
+    const key = `${service}\0${container.imageUnread?.image ?? ''}`;
+    if (row === undefined || imagesSaid.has(key)) return;
+    imagesSaid.add(key);
+    rows.push(row);
+  };
   for (const [service, ports] of [...code.entries()].sort(([a], [b]) => cmp(a, b))) {
     for (const port of ports) {
       if (port.setting === undefined || port.valueFrom !== undefined) continue;
@@ -365,17 +421,20 @@ export const portsListening = (nodes: ReadonlyMap<string, GraphNode>, settings: 
       // A default or a merged port is offered the value an example
       // environment file gives the setting, as a guess beside it, as a
       // setting read alone is (P321); another file nothing loads moves no
-      // default.
+      // default. A setting read alone is offered each file's value, an
+      // example's and a file's nothing is read loading alike (P331): a file
+      // the code loads has filled the port already (`valueFrom`), firm.
       const withFallback = port.port !== undefined;
       for (const value of settings[service]?.ports?.[port.setting] ?? []) {
         if (withFallback && (value.example !== true || value.port === port.port)) continue;
-        addListening(byPort, value.port, { ...listeningOf(service, port), valueFrom: value.file, ...(value.example === true ? { example: true as const } : {}) });
+        addListening(byPort, value.port, { ...listeningOf(service, port), valueFrom: value.file, ...(value.example === true ? { example: true as const } : { unloaded: true as const }) });
       }
     }
   }
   for (const [service, own] of Object.entries(settings).sort(([a], [b]) => cmp(a, b))) {
     const ports = code.get(service) ?? [];
     for (const container of own.containers ?? []) {
+      imageRow(service, { ...container, line: container.ports[0]?.line ?? 1 }, ports);
       const inside = insideContainer(service, ports, container);
       for (const [port, listening] of inside) {
         for (const name of container.names) inNetworkAdd(`${name}:${port}`, { ...listening, inContainer: { name: container.name, file: container.file } });
@@ -396,6 +455,7 @@ export const portsListening = (nodes: ReadonlyMap<string, GraphNode>, settings: 
       }
     }
     for (const routed of own.routes ?? []) {
+      imageRow(service, { ...routed, line: routed.ports[0]?.line ?? 1 }, ports);
       const inside = insideContainer(service, ports, routed);
       const routes = new Set(routed.ports.map((port) => port.port));
       for (const port of routed.ports) {
@@ -509,7 +569,8 @@ export interface PortIndex {
   /**
    * The hosts only an example environment file gives a service (`PORT=` in
    * `.env.example`), which offers the port rather than placing the service
-   * there: a guess, as a framework's default is (P309).
+   * there: a guess, as a framework's default is (P309); and those an
+   * environment file nothing the code is read loading gives (P331).
    */
   readonly offered?: HostIndex;
   readonly listening: ReadonlyMap<number, readonly Listening[]>;
@@ -544,7 +605,9 @@ export interface PortIndex {
  * it serves the request like the others and outranking them where nobody
  * does. A value an environment file gives that fallback's setting, where
  * nothing the code reader follows loads the file, is offered beside it, a
- * guess as an example's is (P325). A port a loaded environment file or a
+ * guess as an example's is (P325); so is its value for a setting the code
+ * reads alone, and a `PORT=` host such a file gives a service whatever its
+ * code reads (P331). A port a loaded environment file or a
  * deployment gives the setting,
  * and a port a container publishes, are written facts about where the
  * service is reached, and stay firm. Where one is, it wins outright: a guess
