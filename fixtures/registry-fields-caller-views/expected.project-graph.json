@@ -1,0 +1,757 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-17T17:24:08.804Z",
+  "services": [
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "console#src/App.tsx:App",
+      "type": "ui_component",
+      "label": "App",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 13,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Archive",
+      "type": "ui_component",
+      "label": "Archive",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/archive"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Clock",
+      "type": "ui_component",
+      "label": "Clock",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/widgets/clock"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Drafts",
+      "type": "ui_component",
+      "label": "Drafts",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 8,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/app/drafts"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Exporter",
+      "type": "ui_component",
+      "label": "Exporter",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 9,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Home",
+      "type": "ui_component",
+      "label": "Home",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/app/home"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Inbox",
+      "type": "ui_component",
+      "label": "Inbox",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/inbox"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Outbox",
+      "type": "ui_component",
+      "label": "Outbox",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/outbox"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Weather",
+      "type": "ui_component",
+      "label": "Weather",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 3,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/widgets/weather"
+      }
+    },
+    {
+      "id": "console#src/lib/pages.ts:listPages",
+      "type": "function",
+      "label": "listPages",
+      "repo": "console",
+      "file": "src/lib/pages.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#Page[]"
+        }
+      }
+    },
+    {
+      "id": "console#src/lib/sections.ts:listSections",
+      "type": "function",
+      "label": "listSections",
+      "repo": "console",
+      "file": "src/lib/sections.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#Section[]"
+        }
+      }
+    },
+    {
+      "id": "console#src/lib/shelf.ts:shelfPages",
+      "type": "function",
+      "label": "shelfPages",
+      "repo": "console",
+      "file": "src/lib/shelf.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#ShelfPage[]"
+        }
+      }
+    },
+    {
+      "id": "console#src/lib/tools.ts:listTools",
+      "type": "function",
+      "label": "listTools",
+      "repo": "console",
+      "file": "src/lib/tools.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#Tool[]"
+        }
+      }
+    },
+    {
+      "id": "repo:console",
+      "type": "repo",
+      "label": "console",
+      "repo": "console",
+      "meta": {
+        "stats": {
+          "files": 13,
+          "filesRead": 13,
+          "filesUnreadable": 0,
+          "functions": 15,
+          "components": 9,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:site",
+      "type": "repo",
+      "label": "site",
+      "repo": "site",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 4,
+          "components": 4,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 6,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "site#src/app/app/settings/page.tsx:SettingsPage",
+      "type": "ui_component",
+      "label": "SettingsPage",
+      "repo": "site",
+      "file": "src/app/app/settings/page.tsx",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/app/settings"
+      }
+    },
+    {
+      "id": "site#src/app/help/page.tsx:HelpPage",
+      "type": "ui_component",
+      "label": "HelpPage",
+      "repo": "site",
+      "file": "src/app/help/page.tsx",
+      "line": 3,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/help"
+      }
+    },
+    {
+      "id": "site#src/components/AppLink.tsx:AppLink",
+      "type": "ui_component",
+      "label": "AppLink",
+      "repo": "site",
+      "file": "src/components/AppLink.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ to, children }",
+              "type": "{to:string;children:unknown}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "site#src/components/Resume.tsx:Resume",
+      "type": "ui_component",
+      "label": "Resume",
+      "repo": "site",
+      "file": "src/components/Resume.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/features/screens.tsx:Clock",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/App.tsx",
+      "line": 23,
+      "meta": {
+        "navigates": "/widgets/clock",
+        "route": "/widgets/clock",
+        "page": "src/features/screens.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/features/screens.tsx:Home",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/App.tsx",
+      "line": 24,
+      "meta": {
+        "navigates": "/app/home",
+        "route": "/app/home",
+        "page": "src/features/screens.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/pages.ts:listPages",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#Page[]",
+      "file": "src/App.tsx",
+      "line": 15
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/sections.ts:listSections",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#Section[]",
+      "file": "src/App.tsx",
+      "line": 34
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/shelf.ts:shelfPages",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#ShelfPage[]",
+      "file": "src/App.tsx",
+      "line": 31
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/tools.ts:listTools",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#Tool[]",
+      "file": "src/App.tsx",
+      "line": 19
+    },
+    {
+      "from": "site#src/app/help/page.tsx:HelpPage",
+      "to": "site#src/components/Resume.tsx:Resume",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/app/help/page.tsx",
+      "line": 7,
+      "meta": {
+        "renders": "Resume"
+      }
+    },
+    {
+      "from": "site#src/components/Resume.tsx:Resume",
+      "to": "site#src/components/AppLink.tsx:AppLink",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{to:string;children:unknown}"
+      ],
+      "returns": "unknown",
+      "file": "src/components/Resume.tsx",
+      "line": 9,
+      "meta": {
+        "renders": "AppLink"
+      }
+    }
+  ],
+  "types": {
+    "type:console#Page": {
+      "name": "Page",
+      "kind": "object",
+      "declaredIn": "console#src/lib/pages.ts",
+      "structuralHash": "57606a3005dbecbd",
+      "fields": [
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "Screen",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:console#Section": {
+      "name": "Section",
+      "kind": "object",
+      "declaredIn": "console#src/lib/sections.ts",
+      "structuralHash": "42dddeeb16fddd2a",
+      "fields": [
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "Screen",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:console#ShelfPage": {
+      "name": "ShelfPage",
+      "kind": "object",
+      "declaredIn": "console#src/lib/shelf.ts",
+      "structuralHash": "42dddeeb16fddd2a",
+      "fields": [
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "Screen",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:console#Tool": {
+      "name": "Tool",
+      "kind": "object",
+      "declaredIn": "console#src/lib/tools.ts",
+      "structuralHash": "96a4e5da90ab39af",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "Screen",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/App.tsx",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/App.tsx",
+      "line": 25,
+      "reason": "navigation-unresolved",
+      "level": "info",
+      "message": "src/App.tsx navigates to /tools/export, which no page this reading placed shows; 1 route of the application is written in a way not read, and it may be one of them",
+      "hint": "Write the route's path as a literal and its screen as a component of the repository, so the page is placed.",
+      "symbol": "App navigates to /tools/export",
+      "meta": {
+        "cause": "navigation-unresolved",
+        "why": "unplaced",
+        "navigates": "/tools/export"
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/App.tsx",
+      "line": 41,
+      "reason": "route-entries-unread",
+      "level": "info",
+      "message": "1 entry of tools, which a route of src/App.tsx is written over, is not read, so the screen it places is not placed (the list is mapped in a way not read: a function of its own maps each entry)",
+      "hint": "Write the entries as objects in place - in the list, or handed to the functions adding to a registry - with the path as text and the screen as a component of the repository, and map them, where they are mapped, to an object written over each.",
+      "symbol": "routes over tools",
+      "meta": {
+        "cause": "route-entries-unread",
+        "list": "tools",
+        "unread": 1,
+        "read": 0,
+        "why": [
+          "the list is mapped in a way not read: a function of its own maps each entry"
+        ]
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/lib/pages.ts",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ComponentType",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/lib/sections.ts",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ComponentType",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/lib/shelf.ts",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ComponentType",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/lib/tools.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ComponentType",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/app/app/settings/page.tsx",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/app/help/page.tsx",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/components/AppLink.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ReactNode",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/components/AppLink.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/components/Resume.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/components/Resume.tsx",
+      "line": 9,
+      "reason": "navigation-unresolved",
+      "level": "info",
+      "message": "src/components/Resume.tsx navigates to an address under /app whose rest is written as code (/app${search.get('from')}), so which page it shows is not read",
+      "hint": "Write the address as a literal or a template of one, or as `{ name: '...' }` with a literal name.",
+      "symbol": "Resume navigates to /app${search.get('from')}",
+      "meta": {
+        "cause": "navigation-unresolved",
+        "why": "dynamic",
+        "navigates": "/app${search.get('from')}",
+        "prefix": "/app"
+      },
+      "service": "site"
+    }
+  ]
+}

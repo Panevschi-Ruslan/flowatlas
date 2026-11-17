@@ -870,6 +870,25 @@ entry's and the rest read through the spread; the entries of a view made any
 other way (a function of its own handed to `map`, `Object.entries`, `reduce`,
 two maps) are not read and count toward `unplaced`.
 
+A class's field is followed the same way (P320): a static one wherever any
+module names it (`Registry.items.push({ path: '/x', ... })` outside the class,
+in a function or outside any, or a static block of the class), an instance's
+off the `const` holding the instance, and a function outside the class that
+adds to it is an adding function of the registry's, found by its calls. A
+static field read by name (`Shelf.entries`) is a store as a module's variable
+is, and the functions reading or adding to a store may be methods of a class
+of another module, called on the class (`Catalog.register(...)`) or on an
+instance a `const` holds (`book.add(...)`, through `this.keep(...)`). A view
+the caller makes of what a reader hands back is read as the reader's own view
+is: `const pages = listPages().filter(...).map((page) => ({ ...page, path:
+`/app${page.path}` }))` and then `pages.map((page) => <Route path={page.path}
+/>)` places each page at `/app` and its path. Where a `<Route>` written over a
+list stands for entries that are not read - an item not written as an object,
+a view or a `map` made otherwise, an entry whose path or screen is not read -
+an info `route-entries-unread` row at the route says how many and why
+(`meta.unread`, `meta.read`, `meta.why`), beside what the count makes a
+navigation landing nowhere say (`fixtures/registry-fields-caller-views`).
+
 A link component's address prop may be named apart from the link's attribute
 (P303, P314): `<DocLink page="/intro">` rendering `` <Link
 to={`/docs${page}`}> `` lands on `/docs/intro`. Put after text that does not
@@ -879,8 +898,11 @@ value followed: a `const`, a function of the repository handing text back, an
 entry's member read over a list (`LINKS.map((item) => <DocLink
 page={item.path} />)`), one text per entry. Where every value handed is not
 read, it is the address only where the text before it ends in a segment of
-values alone (`` `/${locale}${to}` ``), and each use then carries a
-`navigation-unresolved` `dynamic` row where the value is handed, never the
+values alone (`` `/${locale}${to}` ``), or the prop is named as a framework
+link's address (`to`, `href`) and the text before it ends in a segment written
+out whole (`` `/app${to}` ``, P320), and each use then carries a
+`navigation-unresolved` `dynamic` row where the value is handed, the text in
+front written into the address it names and said in `meta.prefix`, never the
 component's own navigation. Text before the prop that ends a segment, or uses
 that hand something else (`` `/orders/${id}` ``, `` `/tags/t-${name}` `` with
 `name="news"`), leave it the component's own navigation. A link's address read
@@ -3991,7 +4013,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | The layers a framework builds an application from (P243) | `framework-layer-read` (info), `framework-layer-overridden` (info), `implicit-import-overridden` (info), `framework-layer-alias` |
 | What a framework still decides when it builds (P251) | `framework-module-skipped` (info, P255), `framework-module-read` (info), `framework-module-installed` (info), `framework-environment-differs` (info), `framework-module-unread` |
 | Components, layouts and route middleware by name (P255) | `component-unresolved` (info), `layout-unresolved`, `route-middleware-unresolved` |
-| Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed`, `navigation-unresolved`, `navigation-external` (info), `navigation-locale-prefixed` (info, P291) |
+| Screens and templates | `route-config-unread`, `route-entries-unread` (info: entries of a list a route is written over that are not read, P320), `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed`, `navigation-unresolved`, `navigation-external` (info), `navigation-locale-prefixed` (info, P291) |
 | The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key`, `query-in-loop` (a query, request or publish run once per item of a loop) |
 | Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `channel-from-environment`, `consumer-handler-unresolved`, `payload-type-unknown` |
 | Starting a workflow or a function by its deployed name | `start-from-environment`, `start-name-unread`, `starter-undescribed` |

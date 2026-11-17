@@ -82,6 +82,7 @@ describe("a module's store added to from other modules, a registry handing back 
       'src/components/TagLink.tsx:TagLink -> src/app/tags/[tag]/page.tsx:TagPage (/tags/t-${name}) static',
     ]);
     // `<LocaleLink target={params.get('next')}>`: put after `/${locale}`, the prop is an address; its value is not read, and that is said where it is handed.
-    expect(rows(site, 'navigation-unresolved')).toEqual(["src/components/Back.tsx Back navigates to params.get('next') (dynamic)"]);
+    // The text the wrapper puts in front is part of the address said (P320).
+    expect(rows(site, 'navigation-unresolved')).toEqual(["src/components/Back.tsx Back navigates to /${locale}${params.get('next')} (dynamic)"]);
   });
 });

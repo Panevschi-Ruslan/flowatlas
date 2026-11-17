@@ -95,7 +95,19 @@ type Landing =
   /** Pages at one address, each placed under its own side of a condition nothing written decides (P291). */
   | { readonly kind: 'branches'; readonly landings: readonly PageLanding[] }
   | { readonly kind: 'external'; readonly written: string }
-  | { readonly kind: 'unresolved'; readonly why: 'missing' | 'dynamic' | 'ambiguous'; readonly written: string };
+  /** `prefix`: the text a link of the application's own puts in front of a value not read (P320). */
+  | { readonly kind: 'unresolved'; readonly why: 'missing' | 'dynamic' | 'ambiguous'; readonly written: string; readonly prefix?: string };
+
+/**
+ * A navigation to a value not read: through a link of the application's own
+ * that puts text around it (`` `/app${to}` ``), the address is that text with
+ * the value in it, the text in front said as its prefix (P320).
+ */
+const dynamicLanding = (to: TsNode, via?: Via): Landing => {
+  const value = to.getText().replace(/\s+/g, ' ').slice(0, 60);
+  if (via === undefined || via.localized || (via.before === '' && via.after === '')) return { kind: 'unresolved', why: 'dynamic', written: value };
+  return { kind: 'unresolved', why: 'dynamic', written: `${via.before}\${${value}}${via.after}`, ...(via.before === '' ? {} : { prefix: via.before }) };
+};
 
 /**
  * Whether no two of these pages are placed together: for each two, a
@@ -392,7 +404,7 @@ const listedLandings = (pages: readonly Page[], to: TsNode, from: string, extern
     if (spelled === undefined) unread = true;
     else for (const each of spelled) landings.push(pathLanding(pages, each.text, from, external, each.guessed === true, via));
   }
-  if (unread) landings.push({ kind: 'unresolved', why: 'dynamic', written: to.getText().replace(/\s+/g, ' ').slice(0, 60) });
+  if (unread) landings.push(dynamicLanding(to, via));
   return landings.length === 0 ? undefined : landings;
 };
 
@@ -425,7 +437,7 @@ const landingOf = (pages: readonly Page[], to: TsNode | undefined, options: TsNo
     const pathText = pathname === undefined ? undefined : addressText(pathname);
     if (name === undefined && pathText !== undefined) return EXTERNAL.test(pathText) ? { kind: 'external', written: pathText } : byPath(pages, pathText, from, via);
   }
-  return { kind: 'unresolved', why: 'dynamic', written: to.getText().replace(/\s+/g, ' ').slice(0, 60) };
+  return dynamicLanding(to, via);
 };
 
 /** A step back or forward through the history, `navigate(-1)`: no page is named, and nothing is said. */
@@ -773,20 +785,33 @@ const handedToProp = (fn: TsNode, prop: string): HandedProp => {
 /** Whether text written before a prop ends in a segment that is all values (`/${locale}`): what follows it starts a segment of its own, so it is an address. */
 const endsInValueSegment = (before: string): boolean => /^(?:\$\{[^}]*\})+$/.test(before.slice(before.lastIndexOf('/') + 1));
 
+/** Whether text written before a prop ends in a segment written out whole (`/app`, `/console/v2`), not one a value is glued into (`/tags/t-`) (P320). */
+const endsInWrittenSegment = (before: string): boolean => {
+  const last = before.slice(before.lastIndexOf('/') + 1);
+  return before.startsWith('/') && /^[A-Za-z0-9][A-Za-z0-9._~-]*$/.test(last) && /[A-Za-z0-9]$/.test(last);
+};
+
+/** The props a framework's link takes its address in (`to`, `href`): a prop of a link of the application's own named so is one it is handed an address in (P320). */
+const ADDRESS_PROPS: ReadonlySet<string> = new Set(['href', ...LINK_COMPONENTS.map((link) => link.attribute)]);
+
 /**
  * Whether a prop of another name than the link's attribute, put after text
  * that does not end a segment, is the address its uses hand (P303, P314): no
  * use hands text that is not an address, and one at least hands an address -
  * or, where every value handed is not read, the text before it ends in a
  * segment that is all values (`/${locale}${to}`), so the prop can only be an
- * address. Its values are then read at each use, and one not read is said
- * there, never taken as the component's own navigation.
+ * address; or the text before it ends in a segment written out whole and
+ * the prop is named as a framework link's address (`` `/app${to}` ``, P320).
+ * Its values are then read at each use, and one not read is said there,
+ * with the text in front as its prefix, never taken as the component's own
+ * navigation.
  */
 const isHandedAddress = (fn: TsNode, prop: string, before: string): boolean => {
   if (before === '' || before.endsWith('/')) return false;
   const handed = handedToProp(fn, prop);
   if (handed.other > 0) return false;
-  return handed.addresses > 0 || (handed.unread > 0 && endsInValueSegment(before));
+  // Every value not read, after a segment written out whole and in a prop named as a link's address (`/app${to}`): an address under it (P320).
+  return handed.addresses > 0 || (handed.unread > 0 && (endsInValueSegment(before) || (ADDRESS_PROPS.has(prop) && endsInWrittenSegment(before))));
 };
 
 /** What a wrapper's inner link is handed: a prop as it is, put inside a template, or handed to a call among other values. */
@@ -950,7 +975,9 @@ const navigationRow = (ctx: ReactExtractContext, file: string, line: number, sym
           ? `${file} navigates to ${landing.written}, which no page this reading placed shows; ${unplaced} route${unplaced === 1 ? '' : 's'} of the application ${unplaced === 1 ? 'is' : 'are'} written in a way not read, and it may be one of them`
           : why === 'ambiguous'
             ? `${file} navigates to ${landing.written}, which two pages of the application fit as well, so which one it shows is not said`
-            : `${file} navigates to an address written as code (${landing.written}), so which page it shows is not read`,
+            : landing.prefix !== undefined
+              ? `${file} navigates to an address under ${landing.prefix} whose rest is written as code (${landing.written}), so which page it shows is not read`
+              : `${file} navigates to an address written as code (${landing.written}), so which page it shows is not read`,
     hint:
       why === 'missing'
         ? 'Correct the address or the name, or add the page under `pages/`.'
@@ -959,7 +986,7 @@ const navigationRow = (ctx: ReactExtractContext, file: string, line: number, sym
           : why === 'ambiguous'
             ? 'Rename one of the two pages, so one address is one page.'
             : 'Write the address as a literal or a template of one, or as `{ name: \'...\' }` with a literal name.',
-    meta: { cause: 'navigation-unresolved', why, navigates: landing.written },
+    meta: { cause: 'navigation-unresolved', why, navigates: landing.written, ...(landing.kind === 'unresolved' && landing.prefix !== undefined ? { prefix: landing.prefix } : {}) },
   });
 };
 

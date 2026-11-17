@@ -54,6 +54,7 @@ code itself). The reasons added most recently:
 | `grpc-field-undeclared` | finding | `info` | a gRPC handler reads a request field the method's message does not declare under the names its loader hands |
 | `navigation-locale-prefixed` | note | `info` | a navigation written without the locale the application puts in front of every address, joined to the page under the locale segment, as a guess |
 | `listen-port-unread` | gap | `info` | a server's port comes from defaults a module loads by a path decided at run time, so no request to a port on this machine is joined to it by that port |
+| `route-entries-unread` | gap | `info` | a `<Route>` is written over a list some of whose entries are not read - an item not written as an object, a view or a `map` made otherwise, an entry whose path or screen is not read - so the screens they place are not placed; `meta.unread`, `meta.read` and `meta.why` say how many and why |
 
 Some older reasons now say more. `ambiguous-route-target` also names the
 services a request's base may be - a condition's branches nobody settles, or a

@@ -570,6 +570,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     "Write the loader as () => import('./x').then((m) => m.X); a specifier built at run time is not followed.",
   'route-config-unread': () =>
     'A piece of the route configuration was not read, so nothing behind it answers a link. Write the spread, the children or the loadChildren as a name that leads to an array or an object in this repository.',
+  'route-entries-unread': () =>
+    "A `<Route>` is written over a list (`pages.map((page) => <Route path={page.path} />)`) and some of the list's entries are not read - an item that is not an object written in place, a registry's view or a `map` made otherwise than as an object written over each entry, an entry whose path or screen is not read - so the screens they place are not placed, and a navigation to one lands nowhere. Write the entries as objects in place, with the path as text and the screen as a component of the repository.",
 
   // Ways in declared where a service is deployed (adapters-entry/deployed-functions.ts, terraform)
   'infra-file-unparsed': () =>

@@ -1,5 +1,5 @@
 import { APP_PAGES, PAGES_SCREENS, routePathOfFile } from '@flowatlas/adapters-entry';
-import { hasDependency, normalizePath } from '@flowatlas/core';
+import { hasDependency, normalizePath, startLineOf } from '@flowatlas/core';
 import type { JsxAttributeLike, Node as TsNode, ObjectLiteralExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
@@ -101,12 +101,16 @@ export interface ListedRoute {
  * outright is every entry's. Nothing where the path is not read off a list's
  * item; `unread` counts the items not written as an object in place.
  */
-export const listedRoutes = (pathValue: TsNode | undefined, screenValue: TsNode | undefined): { readonly routes: readonly ListedRoute[]; readonly unread: number } | undefined => {
+export const listedRoutes = (
+  pathValue: TsNode | undefined,
+  screenValue: TsNode | undefined,
+): { readonly routes: readonly ListedRoute[]; readonly unread: number; readonly why: readonly string[]; readonly list: string } | undefined => {
   if (pathValue === undefined) return undefined;
   const listed = listedKey(pathValue);
   if (listed === undefined) return undefined;
   const read = listEntries(listed.list);
-  if (read === undefined) return { routes: [], unread: 1 };
+  const list = listed.list.getText().replace(/\s+/g, ' ').slice(0, 80);
+  if (read === undefined) return { routes: [], unread: 1, why: [`${list} is not read as a list`], list };
   const screenKey = screenValue === undefined ? undefined : screenKeyOf(screenValue, listed.parameter);
   const routes = read.entries.map((entry) => ({
     // Through the entry's spreads, the element a mapped entry is written over among them (P314).
@@ -114,7 +118,46 @@ export const listedRoutes = (pathValue: TsNode | undefined, screenValue: TsNode 
     screen: screenKey === undefined ? screenValue : screenKey === null ? undefined : entryValue(entry, screenKey),
     ...(entry.bound === undefined ? {} : { bound: entry.bound }),
   }));
-  return { routes, unread: read.unread };
+  return { routes, unread: read.unread, why: read.why, list };
+};
+
+/**
+ * The row saying a route list's entries were not read (P320): how many of
+ * the entries a `<Route>` written over a list stands for are not read - the
+ * list's items not read, and entries whose path, or whose screen read off
+ * the entry, is not - and why, so what the routes miss is said where they
+ * are written rather than only through a navigation landing nowhere.
+ */
+const listedRow = (
+  ctx: ReactExtractContext,
+  node: TsNode,
+  listed: NonNullable<ReturnType<typeof listedRoutes>>,
+  screenValue: TsNode | undefined,
+): void => {
+  const why = new Set(listed.why);
+  let unread = listed.unread;
+  for (const route of listed.routes) {
+    if (routePathsOf(route.path, route.bound) === undefined) {
+      unread += 1;
+      why.add(route.path === undefined ? "an entry writes no path" : `an entry's path ${route.path.getText().replace(/\s+/g, ' ').slice(0, 60)} is not read`);
+    } else if (route.screen !== undefined && route.screen !== screenValue && routeScreenOf(ctx, route.screen, route.bound) === undefined) {
+      unread += 1;
+      why.add(`an entry's screen ${route.screen.getText().replace(/\s+/g, ' ').slice(0, 60)} is not read`);
+    }
+  }
+  if (unread === 0) return;
+  const read = listed.routes.length - (unread - listed.unread);
+  const file = ctx.fileOf(node);
+  ctx.report({
+    file,
+    line: startLineOf(node),
+    reason: 'route-entries-unread',
+    level: 'info',
+    symbol: `routes over ${listed.list}`,
+    message: `${unread} ${unread === 1 ? 'entry' : 'entries'} of ${listed.list}, which a route of ${file} is written over, ${unread === 1 ? 'is' : 'are'} not read, so the screen${unread === 1 ? '' : 's'} ${unread === 1 ? 'it places is' : 'they place are'} not placed (${[...why].join('; ')})${read > 0 ? `; ${read} ${read === 1 ? 'is' : 'are'} read and placed` : ''}`,
+    hint: 'Write the entries as objects in place - in the list, or handed to the functions adding to a registry - with the path as text and the screen as a component of the repository, and map them, where they are mapped, to an object written over each.',
+    meta: { cause: 'route-entries-unread', list: listed.list, unread, read, why: [...why] },
+  });
 };
 
 /** The key of a list's item a screen is read from, `null` for another list's item, `undefined` for a screen written outright. */
@@ -271,6 +314,8 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
       const listed = listedRoutes(pathValue, screenValue);
       if (listed !== undefined) {
         for (const route of listed.routes) claimAll(routeScreenOf(ctx, route.screen, route.bound), routePathsOf(route.path, route.bound), placing);
+        // The entries not read, said where the route is written (P320).
+        listedRow(ctx, node, listed, screenValue);
         return;
       }
       const paths = routePathsOf(pathValue);

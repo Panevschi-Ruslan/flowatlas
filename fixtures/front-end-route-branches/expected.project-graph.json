@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:48:37.741Z",
+  "builtAt": "2026-11-17T17:13:23.024Z",
   "services": [
     {
       "name": "wiki",
@@ -1535,6 +1535,25 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "any",
+      "service": "wiki"
+    },
+    {
+      "file": "src/routes/settings.tsx",
+      "line": 18,
+      "reason": "route-entries-unread",
+      "level": "info",
+      "message": "1 entry of entries, which a route of src/routes/settings.tsx is written over, is not read, so the screen it places is not placed (an entry is written over installed, a list not read); 3 are read and placed",
+      "hint": "Write the entries as objects in place - in the list, or handed to the functions adding to a registry - with the path as text and the screen as a component of the repository, and map them, where they are mapped, to an object written over each.",
+      "symbol": "routes over entries",
+      "meta": {
+        "cause": "route-entries-unread",
+        "list": "entries",
+        "unread": 1,
+        "read": 3,
+        "why": [
+          "an entry is written over installed, a list not read"
+        ]
+      },
       "service": "wiki"
     },
     {

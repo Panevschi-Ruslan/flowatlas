@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-15T17:19:36.963Z",
+  "builtAt": "2026-11-17T17:24:12.319Z",
   "services": [
     {
       "name": "console",
@@ -896,6 +896,25 @@
       "service": "console"
     },
     {
+      "file": "src/App.tsx",
+      "line": 37,
+      "reason": "route-entries-unread",
+      "level": "info",
+      "message": "1 entry of toolRoutes(), which a route of src/App.tsx is written over, is not read, so the screen it places is not placed (the registry's reader hands back a view of its entries not read: a function of its own maps each entry)",
+      "hint": "Write the entries as objects in place - in the list, or handed to the functions adding to a registry - with the path as text and the screen as a component of the repository, and map them, where they are mapped, to an object written over each.",
+      "symbol": "routes over toolRoutes()",
+      "meta": {
+        "cause": "route-entries-unread",
+        "list": "toolRoutes()",
+        "unread": 1,
+        "read": 0,
+        "why": [
+          "the registry's reader hands back a view of its entries not read: a function of its own maps each entry"
+        ]
+      },
+      "service": "console"
+    },
+    {
       "file": "src/features/screens.tsx",
       "line": 2,
       "reason": "type-unresolved",
@@ -1052,13 +1071,14 @@
       "line": 9,
       "reason": "navigation-unresolved",
       "level": "info",
-      "message": "src/components/Back.tsx navigates to an address written as code (params.get('next')), so which page it shows is not read",
+      "message": "src/components/Back.tsx navigates to an address under /${locale} whose rest is written as code (/${locale}${params.get('next')}), so which page it shows is not read",
       "hint": "Write the address as a literal or a template of one, or as `{ name: '...' }` with a literal name.",
-      "symbol": "Back navigates to params.get('next')",
+      "symbol": "Back navigates to /${locale}${params.get('next')}",
       "meta": {
         "cause": "navigation-unresolved",
         "why": "dynamic",
-        "navigates": "params.get('next')"
+        "navigates": "/${locale}${params.get('next')}",
+        "prefix": "/${locale}"
       },
       "service": "site"
     },

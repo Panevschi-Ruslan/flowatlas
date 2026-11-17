@@ -88,6 +88,22 @@ only one of them moved.
   that view, any other view its entries unread; a link prop of another name
   is followed through the values each use hands, and a link rendered over a
   list lands once per entry.
+- **Registries kept by a class's field or added to by another module's
+  class, views the caller makes, and a row for a route list's entries not
+  read (P320).** A class's static field is followed wherever a module names
+  it (`Registry.items.push(...)` outside the class, in a function or
+  outside any), an instance's off the `const` holding it, and a static
+  field read by name is a store as a module's variable is; a registry's
+  adding function may be a method of another module's class, called on the
+  class or on an instance. A view the caller makes before the route list
+  (`listPages().filter(...).map((page) => ({ ...page, path }))`) is read as
+  a reader's own view is. A link of the application's own handing its `to`
+  or `href` prop after a segment written out whole (`` `/app${to}` ``),
+  every use's value unread, is an address under that segment: each use
+  says so in a `navigation-unresolved` row with the text in front as its
+  `prefix`, and the wrapper draws no navigation of its own. A new info
+  `route-entries-unread` row says, at the route, how many entries of the
+  list it is written over are not read and why.
 - **Settings chosen by a branch, and read inside a function handed nothing
   (P302).** A condition nobody settles whose branches read different
   settings, `isProd ? process.env.API_URL : process.env.DEV_API_URL`, written

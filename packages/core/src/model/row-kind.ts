@@ -353,6 +353,8 @@ const GAPS: readonly string[] = [
   'route-target-unresolved',
   'route-loader-unread',
   'route-config-unread',
+  // Entries of a list a route is written over that are not read (P320)
+  'route-entries-unread',
   // Ways in declared where a service is deployed (deployment files, deployed functions)
   'infra-file-unparsed',
   'infra-module-missing',
