@@ -37,6 +37,17 @@ only one of them moved.
   each asked in turn: the request joins the service that serves its route,
   as a guess, several serving it an `ambiguous-route-target` row, and a key
   built from a variable is looked up for every one of them.
+- **A setting several services claim, and a chain after a condition
+  (P319).** A request rooted at a setting two services claim, alone or first
+  in a chain, asks each claimant whether it serves the route: the one that
+  does is the join, a guess naming each claim in `chosenAmong`; several are
+  an `ambiguous-route-target` row; none, and the `unknown-base-url-env` row
+  naming them stays. `(isProd ? A : B) || C` reads `C` as a later tier
+  after both branches, as a plain chain does. A port the code writes as a
+  setting's fallback, `process.env.API_PORT ?? 3000`, where the service's
+  own environment file gives the setting (`API_PORT=4000` in
+  `.env.development`), is heard at the file's port, firm, and no longer at
+  the fallback; an example file's value is offered beside the fallback.
 - **Plain scripts (P310, P311).** An object's methods, a prototype's
   members, members inside a wrapper run at once, `window.x`,
   `module.exports` and `exports.m`, and getters and setters are functions of
@@ -1610,6 +1621,13 @@ only one of them moved.
 
 ### Fixed
 
+- **A guess no longer shares a port with a firm one (P319).** Where one
+  service is firmly at a port of this machine - the code writes the number,
+  a loaded file or a setting file gives it, a container publishes it - and
+  another is there only by a guess (a default, a merge, an example's offer,
+  a written fallback such as `process.env.PORT ?? 3100`), the firm one is
+  the port's service outright; a request to it was a `local-port-shared`
+  row naming both.
 - **Fields written elsewhere, jobs caught at the queue's call, mapped stages
   and grants on a resource's own policy (P316).** A static field another
   module writes once (`Queues.mail = new Queue('mail')` in a setup file) is

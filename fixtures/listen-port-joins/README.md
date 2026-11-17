@@ -10,7 +10,10 @@ service listening there, `via: host`, with `meta.listensAt` on the edge.
 
 A port the code writes as a number joins `static`. One that is a setting's
 fallback (`Number(process.env.PORT) || 3002`) is where a local run listens,
-and joins `heuristic`. Two services on one port is a row, `local-port-shared`.
+and joins `heuristic`. Two services firmly on one port is a row,
+`local-port-shared`; a service only an example environment file offers the
+port to is a guess, and a port the code writes as a number is the firm
+service's outright (P319).
 
 It also holds the two hook spellings P250 reads: a Nuxt `useFetch` whose own
 `onRequest` sends that one call to another service, and two ky hooks that
@@ -39,7 +42,7 @@ path against another server.
 | `web` `Dashboard.tsx:7` | `fetch('http://localhost:3001/orders')` | orders, `static`, `listensAt: src/app.ts:16` | orders by its route alone (`unique-route`, `heuristic`), and a third party `localhost:3001` |
 | `web` `Dashboard.tsx:8` | `fetch('http://localhost:3001/health')` | orders, `static` | nothing: `ambiguous-route-target` (orders and stock) |
 | `web` `Dashboard.tsx:9` | `axios.get('http://127.0.0.1:3003/products')` | catalog, `static` | `unique-route`, `heuristic`, and a third party |
-| `web` `Dashboard.tsx:10` | `fetch('http://localhost:3005/entries')` | nothing: `local-port-shared`, naming `audit (src/server.ts:19)` (its `process.env.PORT`, which `.env.example` fills, P254) and `ledger (src/main.ts:8)` | audit, `heuristic`, by its example environment file alone |
+| `web` `Dashboard.tsx:10` | `fetch('http://localhost:3005/entries')` | ledger, `static`, `listensAt: src/main.ts:8`: audit is there only by the port `.env.example` offers its `process.env.PORT` (P309), a guess that yields to the port ledger's code writes (P319; before, `local-port-shared` naming both) | audit, `heuristic`, by its example environment file alone |
 | `web` `Dashboard.tsx:11` | `fetch('http://localhost:3020/api/reports')` | admin, `static`, `listensAt: package.json:6` | `unique-route`, `heuristic`, and a third party |
 | `web` `Dashboard.tsx:12` | `stockApi.get('ABC-1')`, a ky hook answering `new Request(request.url.replace(window.location.origin, 'http://localhost:3002'), request)` under `prefixUrl: '/stock'` | `GET http://localhost:3002/stock/ABC-1`, stock, `heuristic` (the port is a fallback) | `GET /stock/ABC-1`, `unique-route`, and `api-client-base-unread` at `api.ts:10` |
 | `web` `Dashboard.tsx:13` | `basketApi.get('basket')`, a ky hook answering `new Request(new URL(url.pathname, 'http://localhost:3010'), request)` under `prefixUrl: '/api'` | `GET http://localhost:3010/api/basket`, storefront, `static` | `GET /api/basket`, `unique-route`, and `api-client-base-unread` at `api.ts:21` |
@@ -51,14 +54,14 @@ path against another server.
 Every join made by a port carries `via: host` and `listensAt`. The third-party
 nodes the readers drew for `localhost:3001`, `127.0.0.1:3003`, `localhost:3020`,
 `localhost:3005` and `0.0.0.0:3002` are gone: each is one of the project's own
-services, or two of them. `localhost:4999` stays.
+services. `localhost:4999` stays.
 
 ## Expected
 
 ```
 calls out: 2 total, 1 linked, 1 third party
-ui calls: 9 total, 8 joined to a route, 1 not (local-port-shared 1)
-routes:   11 total, 6 reached, 5 never called
+ui calls: 9 total, 9 joined to a route
+routes:   11 total, 7 reached, 4 never called
 ```
 
 Measured with the tool at the commit before P250 over the same tree:

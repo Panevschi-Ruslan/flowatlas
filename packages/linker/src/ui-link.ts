@@ -332,8 +332,9 @@ const claimingOf = (ask: Ask, env: string): readonly string[] => {
 
 /**
  * The settings of a condition's branches nobody settles, each the request's
- * base (P309), and a chain's later settings where the first claimant does
- * not serve it (P313): the one serving the request is the answer, a guess,
+ * base (P309), a chain's later settings where the first claimant does
+ * not serve it (P313), and every claimant of a setting several services
+ * claim (P319): the one serving the request is the answer, a guess,
  * and several serving it are a row; where none does, nothing, and the first
  * claimant is asked as before.
  */

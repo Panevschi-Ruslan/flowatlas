@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-17T17:01:47.045Z",
+  "configHash": "1d893611b805",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1698,
+      "packages": {
+        "name": "claimants-nested-chain-env-port-api",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "archive",
+      "repo": "./archive",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1607,
+      "packages": {
+        "name": "claimants-nested-chain-env-port-archive",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1660,
+      "packages": {
+        "name": "claimants-nested-chain-env-port-audit",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1727,
+      "packages": {
+        "name": "claimants-nested-chain-env-port-catalog",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 24,
+      "edges": 16,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 1700,
+      "packages": {
+        "name": "claimants-nested-chain-env-port-jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "legacy",
+      "repo": "./legacy",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1671,
+      "packages": {
+        "name": "claimants-nested-chain-env-port-legacy",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1709,
+      "packages": {
+        "name": "claimants-nested-chain-env-port-orders",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "reports",
+      "repo": "./reports",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1604,
+      "packages": {
+        "name": "claimants-nested-chain-env-port-reports",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1706,
+      "packages": {
+        "name": "claimants-nested-chain-env-port-stock",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 8,
+    "linked": 5,
+    "byMarker": 0,
+    "unknownEnv": 1,
+    "noRoute": 0,
+    "ambiguous": 1,
+    "external": 1,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 10,
+    "called": 5,
+    "uncalled": [
+      "entry:legacy:http:GET:/status",
+      "entry:orders:http:GET:/orders/open",
+      "entry:orders:http:GET:/status",
+      "entry:reports:http:GET:/reports",
+      "entry:stock:http:GET:/levels"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "jobs",
+      "file": "src/calls.ts",
+      "line": 11,
+      "reason": "ambiguous-route-target",
+      "message": "the request's base is one of ORDERS_URL (orders) and ORDERS_URL (legacy), a setting several services claim, and orders and legacy each serve GET /status",
+      "hint": "Read the base from one setting, or annotate the call with @CallsService naming the service it reaches.",
+      "symbol": "http_out:jobs#src/calls.ts:11:35"
+    },
+    {
+      "service": "jobs",
+      "file": "src/calls.ts",
+      "line": 14,
+      "reason": "unknown-base-url-env",
+      "message": "ORDERS_URL is declared on services orders and legacy",
+      "hint": "Leave ORDERS_URL on the one service that answers it.",
+      "symbol": "http_out:jobs#src/calls.ts:14:36"
+    }
+  ],
+  "totals": {
+    "nodes": 50,
+    "edges": 29,
+    "types": 2,
+    "missed": 4,
+    "sites": 4,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 4
+  }
+}

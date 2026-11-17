@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T12:52:57.426Z",
+  "builtAt": "2026-11-17T17:07:56.712Z",
   "services": [
     {
       "name": "orders",
@@ -1032,7 +1032,8 @@
         "package": null,
         "client": "fetch",
         "via": "literal",
-        "host": "localhost:3005"
+        "host": "localhost:3005",
+        "targetService": "ledger"
       }
     },
     {
@@ -1467,6 +1468,19 @@
       }
     },
     {
+      "from": "ui_api_call:web#src/Dashboard.tsx:10:29",
+      "to": "entry:ledger:http:GET:/entries",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 10,
+      "meta": {
+        "via": "host",
+        "targetService": "ledger",
+        "listensAt": "src/main.ts:8"
+      }
+    },
+    {
       "from": "ui_api_call:web#src/Dashboard.tsx:11:29",
       "to": "entry:admin:http:GET:/api/reports",
       "type": "hits",
@@ -1698,15 +1712,6 @@
         }
       },
       "service": "storefront"
-    },
-    {
-      "service": "web",
-      "file": "src/Dashboard.tsx",
-      "line": 10,
-      "reason": "local-port-shared",
-      "message": "port 3005 on this machine is where audit (src/server.ts:19) and ledger (src/main.ts:8) each listen, so it is not one service",
-      "hint": "Name the host under services[].hosts of the service this request means (localhost:3005), or start the servers on different ports.",
-      "symbol": "ui_api_call:web#src/Dashboard.tsx:10:29"
     }
   ]
 }

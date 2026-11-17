@@ -228,16 +228,19 @@ export interface BranchClaim {
 
 /**
  * The services a request's base may be, where its settings are claimed by
- * more than one (P309, P313), asked in tiers:
+ * more than one (P309, P313, P319), asked in tiers:
  *
  * - `either`: a condition's branches nobody settles, one tier, every
  *   claimant of every branch's setting as much the base as another, a setting
- *   several services claim naming each of them;
+ *   several services claim naming each of them; a chain read after the
+ *   condition, `(isProd ? A : B) || C`, is a later tier per setting, as in a
+ *   plain chain (P319);
  * - `chain`: `A || B`, `A ?? B`, one tier per setting someone claims, in the
- *   order they are read, a service counted at the first setting it claims.
+ *   order they are read, a service counted at the first setting it claims;
+ * - `claimed`: one setting several services claim, one tier (P319).
  */
 export interface SettingCandidates {
-  readonly order: 'either' | 'chain';
+  readonly order: 'either' | 'chain' | 'claimed';
   readonly tiers: readonly (readonly BranchClaim[])[];
 }
 
@@ -256,27 +259,35 @@ const claimsOf = (call: GraphNode, settings: readonly string[], claimantsOf: (se
 
 /**
  * Who may be a request's base among the settings it is read from (P313): a
- * condition's branches as one tier, else the settings of a chain, each its
- * own tier. Nothing where they name one service or none, so the setting the
- * request is rooted at is looked up as it always was.
+ * condition's branches as one tier, then each setting of a chain read after
+ * the condition (P319); else the settings of a chain, each its own tier, the
+ * first setting's several claimants a tier like any other (P319). Nothing
+ * where they name one service or none, so the setting the request is rooted
+ * at is looked up as it always was.
  */
 export const settingCandidates = (call: GraphNode, claimantsOf: (setting: string) => readonly string[]): SettingCandidates | undefined => {
   const either = settingsEither(call);
-  if (either.length > 0) {
-    const claims = claimsOf(call, either, claimantsOf, new Set());
-    return claims.length > 1 ? { order: 'either', tiers: [claims] } : undefined;
-  }
   const env = call.meta?.['baseUrlEnv'];
-  if (typeof env !== 'string') return undefined;
   const seen = new Set<string>();
   const tiers: BranchClaim[][] = [];
-  for (const setting of [env, ...settingsAfter(call)]) {
-    const tier = claimsOf(call, [setting], claimantsOf, seen);
-    if (tier.length === 0) continue;
+  const add = (settings: readonly string[]): boolean => {
+    const tier = claimsOf(call, settings, claimantsOf, seen);
+    if (tier.length === 0) return false;
     for (const claim of tier) seen.add(claim.service);
     tiers.push(tier);
+    return true;
+  };
+  let fromEither = false;
+  if (either.length > 0) {
+    fromEither = add(either);
+    // `(isProd ? A : B) || C`: C is where the base is read where neither branch's setting is set.
+    for (const setting of settingsAfter(call)) if (!either.includes(setting)) add([setting]);
+  } else if (typeof env === 'string') {
+    for (const setting of [env, ...settingsAfter(call)]) add([setting]);
   }
-  return seen.size > 1 ? { order: 'chain', tiers } : undefined;
+  if (seen.size <= 1) return undefined;
+  const settings = new Set(tiers.flat().flatMap((claim) => claim.settings));
+  return { order: fromEither ? 'either' : settings.size === 1 ? 'claimed' : 'chain', tiers };
 };
 
 /**
@@ -307,9 +318,12 @@ export type SettingChoice<T> =
  * The claimant serving the request among a request's base settings (P309,
  * P313), `ask` answering for a service that serves it and nothing for one
  * that does not. Tier by tier: the first tier anyone serves it in is the
- * answer, one service the join, a guess, several a row. A chain's first tier
- * serving it is the join it always was, so nothing; and where nobody serves
- * it, nothing, and the first claimant is asked as before.
+ * answer, one service the join, a guess, several a row. A first tier of one
+ * claimant serving it is the join it always was, so nothing; a first tier
+ * several services claim is asked like any other (P319), so one setting two
+ * services claim joins the one serving the request. Where nobody serves it,
+ * nothing, and the first claimant is asked as before. A choice made in the
+ * first tier says how that tier is read, one made after it a chain's.
  */
 export const chooseAmongSettings = <T>(candidates: SettingCandidates, ask: (service: string) => T | undefined): SettingChoice<T> | undefined => {
   const said = candidates.tiers.flat().map(branchSaid);
@@ -319,18 +333,17 @@ export const chooseAmongSettings = <T>(candidates: SettingCandidates, ask: (serv
       return found === undefined ? [] : [{ claim, found }];
     });
     if (serving.length === 0) continue;
-    if (candidates.order === 'chain' && index === 0) return undefined;
+    if (index === 0 && tier.length === 1) return undefined;
+    const order = index === 0 ? candidates.order : 'chain';
     const [only] = serving;
-    return only !== undefined && serving.length === 1
-      ? { kind: 'one', claim: only.claim, found: only.found, said, order: candidates.order }
-      : { kind: 'several', serving, said, order: candidates.order };
+    return only !== undefined && serving.length === 1 ? { kind: 'one', claim: only.claim, found: only.found, said, order } : { kind: 'several', serving, said, order };
   }
   return undefined;
 };
 
-/** How a row says the base was read from its settings: chosen by a condition, or the first of a chain that is set. */
+/** How a row says the base was read from its settings: chosen by a condition, the first of a chain that is set, or one setting several claim. */
 export const howChosen = (order: SettingCandidates['order']): string =>
-  order === 'either' ? 'chosen by a condition nobody settles' : 'read from the first of them that is set';
+  order === 'either' ? 'chosen by a condition nobody settles' : order === 'claimed' ? 'a setting several services claim' : 'read from the first of them that is set';
 
 /** Every value the setting is found with, strongest first: the deployment's alone, where it says. */
 export const valuesOf = (input: BaseUrlInput): FoundValue[] => {

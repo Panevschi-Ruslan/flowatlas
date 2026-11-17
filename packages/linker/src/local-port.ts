@@ -6,6 +6,7 @@ import {
   type ContainerRun,
   type GraphNode,
   type ListenPort,
+  type PortValue,
   type RepoSettings,
   type RoutedName,
   type Unresolved,
@@ -182,14 +183,40 @@ const codePortsOf = (nodes: ReadonlyMap<string, GraphNode>): Map<string, ListenP
 };
 
 /**
+ * The values a service's own environment files give the setting a port the
+ * code writes is the fallback of (P319): `process.env.PORT ?? 3000` with a
+ * `.env` of `PORT=4000`. Nothing for a port the code writes no setting for,
+ * a default, a merged port, or one a file already gave the reader.
+ */
+const fallbackValues = (port: ListenPort, own: RepoSettings | undefined): readonly PortValue[] =>
+  port.port === undefined || port.setting === undefined || port.default === true || port.merged !== undefined || port.valueFrom !== undefined
+    ? []
+    : (own?.ports?.[port.setting] ?? []);
+
+/**
  * Every port the servers of the project listen on, as their code writes it:
  * each service's repository node (P250), and a GraphQL endpoint's own, which
  * P245 carried first. A service is listed once per port.
+ *
+ * A port the code only falls back to where a setting is not given is where
+ * the service's own environment file gives the setting instead, where one
+ * does (P319): the file's port, firm, and the fallback dropped, since a run
+ * with the file never listens there. An example file's value is offered
+ * beside the fallback, a guess as the fallback is (P309).
  */
-export const listeningAt = (nodes: ReadonlyMap<string, GraphNode>): Map<number, Listening[]> => {
+export const listeningAt = (nodes: ReadonlyMap<string, GraphNode>, settings: Readonly<Record<string, RepoSettings>> = {}): Map<number, Listening[]> => {
   const found = new Map<number, Listening[]>();
   for (const [service, ports] of codePortsOf(nodes)) {
-    for (const port of ports) if (port.port !== undefined) addListening(found, port.port, listeningOf(service, port));
+    for (const port of ports) {
+      if (port.port === undefined) continue;
+      const values = fallbackValues(port, settings[service]);
+      const given = values.filter((value) => value.example !== true);
+      const listening = listeningOf(service, port);
+      if (given.length === 0) addListening(found, port.port, listening);
+      for (const value of given.length > 0 ? given : values) {
+        addListening(found, value.port, { ...listening, valueFrom: value.file, ...(value.example === true ? { example: true as const } : {}) });
+      }
+    }
   }
   return found;
 };
@@ -286,7 +313,7 @@ const unheardRow = (service: string, container: ContainerRun, mapping: Container
  * that meets nothing in the code.
  */
 export const portsListening = (nodes: ReadonlyMap<string, GraphNode>, settings: Readonly<Record<string, RepoSettings>>): PortListening => {
-  const byPort = listeningAt(nodes);
+  const byPort = listeningAt(nodes, settings);
   const inNetwork = new Map<string, Listening[]>();
   const rows: Unresolved[] = [];
   const closed = new Map<string, ClosedPort>();
@@ -473,7 +500,8 @@ export interface PortIndex {
  * it serves the request like the others and outranking them where nobody
  * does. A port a loaded environment file or a deployment gives the setting,
  * and a port a container publishes, are written facts about where the
- * service is reached, and stay firm.
+ * service is reached, and stay firm. Where one is, it wins outright: a guess
+ * at the same port is dropped, never making the port shared (P319).
  */
 export const atLocalPort = (address: string, index: PortIndex, serves?: ServesRequest): PortAnswer | undefined => {
   const port = localPortOf(address);
@@ -491,10 +519,14 @@ export const atLocalPort = (address: string, index: PortIndex, serves?: ServesRe
   // A port an example environment file alone gives a service is offered, not placed (P309).
   const offeredAt = index.offered?.get(`localhost:${port}`) ?? [];
   const offered = fromFiles.filter((service) => offeredAt.includes(service));
-  const firm = heard.some((each) => !isGuessed(each)) || fromFiles.some((service) => !offered.includes(service));
+  const filedFirm = fromFiles.filter((service) => !offered.includes(service));
+  const firm = heard.some((each) => !isGuessed(each)) || filedFirm.length > 0;
   const chosen = firm ? undefined : guessedAt(heard, offered, serves);
-  const listening = chosen === undefined ? heard.filter((each) => each.default !== true || fromFiles.includes(each.service)) : heard.filter((each) => chosen.has(each.service));
-  const filedHere = chosen === undefined ? fromFiles : fromFiles.filter((service) => chosen.has(service));
+  // Where a port is firmly somebody's, a guess at it is nobody's (P319): a
+  // default, a merged port, an example's offer or a written fallback never
+  // makes the port two services' at once.
+  const listening = chosen === undefined ? heard.filter((each) => !isGuessed(each) || filedFirm.includes(each.service)) : heard.filter((each) => chosen.has(each.service));
+  const filedHere = chosen === undefined ? filedFirm : fromFiles.filter((service) => chosen.has(service));
   const services = [...new Set([...filedHere, ...listening.map((each) => each.service)])].sort(cmp);
   if (services.length === 0) return undefined;
   if (services.length === 1) {

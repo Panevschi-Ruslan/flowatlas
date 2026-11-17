@@ -875,9 +875,10 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
   const claiming = claimed.length > 0 ? claimed : (settingsAfter(call).map(claimantsOf).find((each) => each.length > 0) ?? claimed);
   // The settings of a condition's branches nobody settles are each the
   // request's base (P309), and a chain's later settings are where it goes
-  // where the first claimant does not serve it (P313): the one that serves
-  // the request is the answer, a guess; several serving it are a row; none,
-  // and the first claimant is asked as it always was.
+  // where the first claimant does not serve it (P313), and a setting several
+  // services claim, or a chain after a condition, is read the same way
+  // (P319): the one that serves the request is the answer, a guess; several
+  // serving it are a row; none, and the first claimant is asked as it always was.
   const candidates = settingCandidates(call, (setting) => index.claimantsOf(setting));
   const chosen =
     candidates === undefined
