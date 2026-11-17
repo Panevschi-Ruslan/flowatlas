@@ -312,6 +312,20 @@ describe("a grant of a bus, a table or a stream to a role that takes nothing, by
     expect(grantsOf(stack(bus('{ mutable: false }', ", 'StockMover'"), files(true)))).toEqual([]);
   });
 
+  it("leaves a bus's grant unread where the statement id it is handed may be none, and takes one a deployment publishes as given (P328)", () => {
+    const files: Record<string, string> = {
+      'cdk.json': JSON.stringify({ app: 'npx ts-node bin/app.ts', context: { '@aws-cdk/aws-events:requireEventBusPolicySid': true } }),
+      'package-lock.json': JSON.stringify({ lockfileVersion: 3, packages: { '': {}, 'node_modules/aws-cdk-lib': { version: '2.190.0' } } }),
+    };
+    const bus = (sid: string): string =>
+      `${ROLE('{ mutable: false, addGrantsToResources: true }')}\n    ${MOVE}\n    new cdk.aws_events.EventBus(this, 'Moves', { eventBusName: 'stock-moves' }).grantPutEventsTo(role, ${sid});`;
+    const [fromEnv] = grantsOf(stack(bus('process.env.MOVER_SID'), files));
+    expect(fromEnv).toMatch(/^bus open: the bus's policy takes the grant only with a statement id, and the one it is handed is not read: .*MOVER_SID.* grantPutEventsTo$/);
+    expect(grantsOf(stack(bus('null'), files))).toEqual([]);
+    expect(grantsOf(stack(bus("''"), files))).toEqual(["bus stock-moves grantPutEventsTo, on the bus's own policy"]);
+    expect(grantsOf(stack(bus("cdk.Fn.importValue('mover-sid')"), files))).toEqual(["bus stock-moves grantPutEventsTo, on the bus's own policy"]);
+  });
+
   it("puts a grant on the resource for a role asking for it in the stack's own account, and takes a role of another account than its stack's as one that takes nothing", () => {
     const same = stack(`const here = new cdk.Stack(scope, 'Here', { env: { account: '111122223333' } });
     const role = iam.Role.fromRoleArn(here, 'MoveRole', 'arn:aws:iam::111122223333:role/stock-mover', { mutable: false, addGrantsToResources: true });

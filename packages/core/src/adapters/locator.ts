@@ -640,24 +640,167 @@ const memberAround = (node: TsNode): TsNode | undefined =>
   );
 
 /**
+ * The text a key is, where it is written as text or a `const` holding text:
+ * `'queue'`, `` `queue` ``, `KEY` of `const KEY = 'queue'` (P328).
+ */
+const keyText = (key: TsNode): string | undefined => {
+  const value = writtenValue(key);
+  if (Node.isNumericLiteral(value)) return value.getText();
+  return Node.isStringLiteral(value) || Node.isNoSubstitutionTemplateLiteral(value) ? value.getLiteralText() : undefined;
+};
+
+/**
+ * A member access, by name (P328): `x.queue`, and `x['queue']` or `x[KEY]`
+ * with the key text (a number as written) - `name` left out where the key is not read, which may
+ * then be any member.
+ */
+const accessed = (node: TsNode): { readonly object: TsNode; readonly name?: string } | undefined => {
+  if (Node.isPropertyAccessExpression(node)) return { object: node.getExpression(), name: node.getName() };
+  if (!Node.isElementAccessExpression(node)) return undefined;
+  const key = node.getArgumentExpression();
+  const name = key === undefined ? undefined : keyText(key);
+  return { object: node.getExpression(), ...(name === undefined ? {} : { name }) };
+};
+
+/** Whether the member a node is written in is a static one: what `this` is there is the class itself. */
+const inStaticMember = (member: TsNode): boolean =>
+  Node.isClassStaticBlockDeclaration(member) || (!Node.isConstructorDeclaration(member) && (member as PropertyDeclaration).isStatic());
+
+/**
+ * The classes a value may stand for, where each it may be is one (P328):
+ * the class it names - past parentheses and assertions, `Registry as any` -
+ * a `const` given one, a `let` each value it is given, an alias of any of
+ * these, and a parameter what each caller hands it, the walk bounded as the
+ * writes through such names are (`MOST_ALIASES`). `undefined` where any
+ * value it may be is not a class this program declares.
+ */
+const classesStoodFor = (expression: TsNode): (ClassDeclaration | ClassExpression)[] | undefined => {
+  const out: (ClassDeclaration | ClassExpression)[] = [];
+  const seen = new Set<TsNode>();
+  const queue: TsNode[] = [expression];
+  while (queue.length > 0) {
+    const at = peeled(queue.shift() as TsNode);
+    if (Node.isClassExpression(at)) {
+      if (!out.includes(at)) out.push(at);
+      continue;
+    }
+    const declared = declarationNamed(at);
+    if (declared === undefined) return undefined;
+    if (seen.has(declared)) continue;
+    if (seen.size >= MOST_ALIASES) return undefined;
+    seen.add(declared);
+    if (Node.isClassDeclaration(declared)) {
+      if (!out.includes(declared)) out.push(declared);
+    } else if (Node.isVariableDeclaration(declared)) {
+      const values = isConstDeclaration(declared) ? [declared.getInitializer()] : valuesGiven(declared);
+      if (values === undefined || values.some((value) => value === undefined)) return undefined;
+      queue.push(...(values as TsNode[]));
+    } else if (Node.isParameterDeclaration(declared)) {
+      const callable = callableOf(declared);
+      const owner = declared.getParent();
+      if (declared.isRestParameter() || callable === undefined || !Node.isParametered(owner)) return undefined;
+      const index = owner.getParameters().indexOf(declared);
+      const sites = callSitesOf(callable);
+      if (sites.length === 0) return undefined;
+      for (const site of sites) {
+        const handed = site.getArguments();
+        if (handed.slice(0, index + 1).some((each) => Node.isSpreadElement(each))) return undefined;
+        const value = handed[index] ?? declared.getInitializer();
+        if (value === undefined) return undefined;
+        queue.push(value);
+      }
+    } else {
+      return undefined;
+    }
+  }
+  return out;
+};
+
+/**
  * The class a read of a field is made through: the class whose member says
  * `this.queue`, or the class named in `Reports.queue`, where it is the
- * field's class or one extending it (P308, P316). `undefined` where the read
- * is not of that field of that class.
+ * field's class or one extending it (P308, P316) - also `this['queue']` and
+ * `this[KEY]`, and the class through whatever stands for it, `R.queue` of
+ * `const R: any = Reports` (P328). `undefined` where the read is not of that
+ * field of that class.
  */
 const readerOf = (target: TsNode, name: string, owner: TsNode, isStatic: boolean): TsNode | undefined => {
-  if (!Node.isPropertyAccessExpression(target) || target.getName() !== name) return undefined;
-  const object = peeled(target.getExpression());
+  const access = accessed(target);
+  if (access === undefined || access.name !== name) return undefined;
+  const object = peeled(access.object);
   if (Node.isThisExpression(object)) {
     const member = memberAround(target);
     const cls = member?.getParent();
     if (member === undefined || !derivesFrom(cls, owner)) return undefined;
-    const staticMember = Node.isClassStaticBlockDeclaration(member) || (!Node.isConstructorDeclaration(member) && (member as PropertyDeclaration).isStatic());
-    return staticMember === isStatic ? cls : undefined;
+    return inStaticMember(member) === isStatic ? cls : undefined;
   }
   if (!isStatic || !Node.isIdentifier(object)) return undefined;
   const named = declarationNamed(object);
-  return derivesFrom(named, owner) ? named : undefined;
+  if (derivesFrom(named, owner)) return named;
+  const classes = classesStoodFor(object);
+  return classes !== undefined && classes.length > 0 && classes.every((each) => derivesFrom(each, owner)) ? classes[0] : undefined;
+};
+
+/** A member of a class, or of one it extends, by name: a field declared, or a constructor's parameter property. */
+const memberUp = (cls: TsNode, name: string, isStatic: boolean): TsNode | undefined => {
+  let current: TsNode | undefined = cls;
+  for (let depth = 0; depth < MOST_BASES && current !== undefined; depth += 1) {
+    if (!Node.isClassDeclaration(current) && !Node.isClassExpression(current)) return undefined;
+    const field = current.getMembers().find((each) => Node.isPropertyDeclaration(each) && each.isStatic() === isStatic && each.getName() === name);
+    if (field !== undefined) return field;
+    if (!isStatic) {
+      const kept = current.getConstructors().flatMap((each) => each.getParameters()).find((each) => each.isParameterProperty() && each.getName() === name);
+      if (kept !== undefined) return kept;
+    }
+    current = current.getBaseClass();
+  }
+  return undefined;
+};
+
+/**
+ * The field a member access reads (P328): what the checker links it to, else
+ * - where it reads through `any`, or by a key - the field of that name of
+ * the class `this` is in, or the static one of each class the object may
+ * stand for, where they are one.
+ */
+const fieldDeclared = (node: TsNode, object: TsNode, name: string): TsNode | undefined => {
+  const key = Node.isElementAccessExpression(node) ? node.getArgumentExpression() : undefined;
+  const linked = Node.isPropertyAccessExpression(node)
+    ? node.getNameNode().getSymbol()?.getDeclarations()[0]
+    : key !== undefined && (Node.isStringLiteral(key) || Node.isNoSubstitutionTemplateLiteral(key))
+      ? key.getSymbol()?.getDeclarations()[0]
+      : undefined;
+  if (linked !== undefined) return linked;
+  if (Node.isThisExpression(object)) {
+    const member = memberAround(node);
+    return member === undefined ? undefined : memberUp(member.getParent() as TsNode, name, inStaticMember(member));
+  }
+  const fields = classesStoodFor(object)?.map((cls) => memberUp(cls, name, true));
+  const [first] = fields ?? [];
+  return first !== undefined && fields?.every((each) => each === first) === true ? first : undefined;
+};
+
+/**
+ * The field a member access reads, where it is one (P328): `R.queue` of
+ * `const R: any = Registry`, `Registry[KEY]`, `this['queue']` - what
+ * states the class of a receiver the checker sees only as `any`.
+ */
+export const fieldRead = (node: TsNode): TsNode | undefined => {
+  const access = accessed(node);
+  if (access === undefined || access.name === undefined) return undefined;
+  const object = peeled(access.object);
+  if (!Node.isThisExpression(object) && !Node.isIdentifier(object)) return undefined;
+  const field = fieldDeclared(node, object, access.name);
+  return field !== undefined && (Node.isPropertyDeclaration(field) || Node.isParameterDeclaration(field)) ? field : undefined;
+};
+
+/** Whether a node writes a member of `this` by a key not read, `this[key] = value`, in a member of a class extending `owner` (P328). */
+const unreadKeyWrite = (node: TsNode, owner: TsNode, isStatic: boolean): boolean => {
+  const access = accessed(node);
+  if (access === undefined || access.name !== undefined || !Node.isThisExpression(peeled(access.object))) return false;
+  const member = memberAround(node);
+  if (member === undefined || !derivesFrom(member.getParent(), owner) || inStaticMember(member) !== isStatic) return false;
+  return writeAt(node) !== undefined;
 };
 
 /** How a reference to a field is written to, where it is: given a value, or changed in place. */
@@ -720,17 +863,34 @@ const staticWrites = (declaration: PropertyDeclaration): FieldValues => {
   for (const reference of references) {
     if (reference === nameNode) continue;
     const access = reference.getParent();
-    if (access === undefined || !Node.isPropertyAccessExpression(access) || access.getNameNode() !== reference) continue;
-    accesses.add(access);
+    if (access === undefined) continue;
+    // `Queues['mail']`, which the checker links by its text (P328).
+    if ((Node.isPropertyAccessExpression(access) && access.getNameNode() === reference) || (Node.isElementAccessExpression(access) && access.getArgumentExpression() === reference)) {
+      accesses.add(access);
+    }
   }
   // What the checker does not link to the field: a write through the class
-  // under `any` - an alias, an assertion, a parameter handed it (P322).
+  // under `any` - an alias, an assertion, a parameter handed it (P322) - and
+  // one through `this` in a static member by a key written apart from it,
+  // `this[KEY]` (P328). A write by a key not read may be to it.
   const owner = declaration.getParent();
   if (Node.isIdentifier(nameNode) && (Node.isClassDeclaration(owner) || Node.isClassExpression(owner))) {
-    for (const access of aliasedAccesses(owner, nameNode.getText())) accesses.add(access);
+    const name = nameNode.getText();
+    for (const access of aliasedAccesses(owner, name)) accesses.add(access);
+    for (const cls of [owner, ...derivedOf(owner)]) {
+      cls.forEachDescendant((each) => {
+        if (readerOf(each, name, owner, true) !== undefined) accesses.add(each);
+        else if (unreadKeyWrite(each, owner, true)) changed = true;
+      });
+    }
   }
   for (const access of accesses) {
     const write = writeAt(access);
+    // `R[key] = value` through what stands for the class: any of its fields (P328).
+    if (write !== undefined && accessed(access)?.name === undefined) {
+      changed = true;
+      continue;
+    }
     if (write === 'changed') changed = true;
     else if (write !== undefined) values.push(write.value);
   }
@@ -783,7 +943,8 @@ const calleeParameters = (call: CallExpression | NewExpression): TsNode[] => {
  * (P322): the class under an assertion, `(Registry as any).queue`; a
  * variable given the class, `const R: any = Registry` or `R = Registry`; an
  * alias of such a variable; a parameter a call hands any of these - and
- * `R['queue']` written with the name as a string. A class extending it is
+ * `R['queue']` written with the name as a string or a `const` holding it,
+ * `R[key]` by a key not read as one that may be any field (P328). A class extending it is
  * followed the same way, a write through it being one the field's readers
  * through that class may see. Each access is a write the field may be given:
  * where the alias may also stand for something else, the write still may
@@ -798,7 +959,7 @@ const aliasedAccesses = (owner: ClassDeclaration | ClassExpression, name: string
   };
   const own = nameOf(owner);
   if (own !== undefined) starts.push(own);
-  if (Node.isClassDeclaration(owner)) for (const derived of owner.getDerivedClasses()) starts.push(derived.getNameNode() ?? derived);
+  for (const derived of derivedOf(owner)) starts.push(derived.getNameNode() ?? derived);
   const seen = new Set<TsNode>();
   const queue = starts.filter((each) => Node.isIdentifier(each));
   const accesses: TsNode[] = [];
@@ -821,8 +982,9 @@ const aliasedAccesses = (owner: ClassDeclaration | ClassExpression, name: string
         continue;
       }
       if (Node.isElementAccessExpression(parent) && parent.getExpression() === at) {
-        const key = parent.getArgumentExpression();
-        if (key !== undefined && (Node.isStringLiteral(key) || Node.isNoSubstitutionTemplateLiteral(key)) && key.getLiteralText() === name) accesses.push(parent);
+        // `R['queue']`, `R[KEY]`, and `R[key]` by a key not read, which may be it (P328).
+        const keyed = accessed(parent)?.name;
+        if (keyed === undefined || keyed === name) accesses.push(parent);
         continue;
       }
       if (Node.isVariableDeclaration(parent) && parent.getInitializer() === at) follow(parent);
@@ -842,7 +1004,8 @@ const aliasedAccesses = (owner: ClassDeclaration | ClassExpression, name: string
  * P308, P316): its initializer, if it has one, and each `this.<field> =` the
  * members of `reader` and of each class between it and the field's class
  * write - a base class's own `this.queue = new Queue('x')` read in a class
- * extending it included - and, below `reader`, each class extending it whose
+ * extending it included, `this['queue'] =` and `this[KEY] =` as well, and one
+ * by a key not read changing it (P328) - and, below `reader`, each class extending it whose
  * instances run the member the read is made in (P322): its own `this.queue =`
  * and a field it declares again with a value, one it takes as a parameter
  * property being whatever it is built with.
@@ -852,7 +1015,9 @@ const instanceWrites = (name: string, owner: TsNode, initializer: TsNode | undef
   let changed = false;
   const writesIn = (cls: TsNode): void => {
     cls.forEachDescendant((each) => {
-      if (!Node.isPropertyAccessExpression(each) || readerOf(each, name, owner, false) === undefined) return;
+      // `this[key] = value` by a key not read may be to it (P328).
+      if (unreadKeyWrite(each, owner, false)) changed = true;
+      if (readerOf(each, name, owner, false) === undefined) return;
       const write = writeAt(each);
       if (write === 'changed') changed = true;
       else if (write !== undefined) values.push(write.value);
@@ -888,6 +1053,14 @@ const memberName = (member: TsNode | undefined): string | undefined =>
 /** The classes extending each class met, found once: finding them asks for every reference to it. */
 const DERIVED = new WeakMap<TsNode, ClassDeclaration[]>();
 
+/** The classes extending a class declared by name, however far down. */
+const derivedOf = (cls: TsNode): ClassDeclaration[] => {
+  if (!Node.isClassDeclaration(cls)) return [];
+  const derived = DERIVED.get(cls) ?? cls.getDerivedClasses();
+  DERIVED.set(cls, derived);
+  return derived;
+};
+
 /**
  * The classes extending `reader`, however far down, whose instances run
  * `member` of it (P322): each, unless it - or a class between - declares a
@@ -898,8 +1071,7 @@ const runningBelow = (reader: TsNode, member: TsNode | undefined): ClassDeclarat
   if (!Node.isClassDeclaration(reader)) return [];
   const overridden = memberName(member);
   const out: ClassDeclaration[] = [];
-  const derived = DERIVED.get(reader) ?? reader.getDerivedClasses();
-  DERIVED.set(reader, derived);
+  const derived = derivedOf(reader);
   const visit = (cls: ClassDeclaration, depth: number): void => {
     if (depth >= MOST_BASES) return;
     for (const child of derived) {
@@ -992,16 +1164,21 @@ const constructorParameter = (value: TsNode): { cls: TsNode; index: number } | u
  * static field written through the class under `any` - an alias, an
  * assertion, a parameter - is written all the same, and an instance field
  * read in a class is also what each class extending it sets, where its
- * instances run the member the read is made in (P322). A field set in two
- * places holds whichever ran last, which nothing here can say.
+ * instances run the member the read is made in (P322). A read through what
+ * stands for the class the checker does not link - `R.queue` of
+ * `const R: any = Reports`, `(Reports as any).queue`, a parameter each
+ * caller hands the class - and a read by a key, `this['queue']` or
+ * `Reports[KEY]`, are read the same (P328). A field set in two places holds
+ * whichever ran last, which nothing here can say.
  */
 const assignedField = (node: TsNode): TsNode | undefined => {
-  if (!Node.isPropertyAccessExpression(node)) return undefined;
-  const object = peeled(node.getExpression());
+  const access = accessed(node);
+  if (access === undefined || access.name === undefined) return undefined;
+  const object = peeled(access.object);
   if (!Node.isThisExpression(object) && !Node.isIdentifier(object)) return undefined;
-  const declaration = node.getNameNode().getSymbol()?.getDeclarations()[0];
+  const name = access.name;
+  const declaration = fieldDeclared(node, object, name);
   if (declaration === undefined) return undefined;
-  const name = node.getName();
   // `constructor(protected queue: Queue)`: what a class extending it hands `super(...)`.
   if (Node.isParameterDeclaration(declaration)) {
     const constructor = declaration.getParent();

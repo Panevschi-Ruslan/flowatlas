@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-17T18:25:17.229Z",
+  "configHash": "23f8db3e2220",
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 2800,
+      "packages": {
+        "name": "shop-gateway",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 20,
+      "edges": 11,
+      "types": 0,
+      "unresolved": 3,
+      "durationMs": 2936,
+      "packages": {
+        "name": "shop-jobs",
+        "runtime": [
+          "bullmq",
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 6,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 3319,
+      "packages": {
+        "name": "stock",
+        "runtime": [
+          "@aws-sdk/client-eventbridge",
+          "aws-cdk-lib",
+          "constructs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 4,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 2617
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 1,
+    "resolved": 1,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 5,
+    "linked": 0,
+    "noConsumers": [
+      "channel:billing",
+      "channel:digests",
+      "channel:eventbridge/stock-events/stock/StockCounted",
+      "channel:eventbridge/stock-events/stock/StockMoved",
+      "channel:mail"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 1,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 5,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://eu.staging.orders.shop.example.test/v1/orders names its API by an id no file holds; it is taken as shop-orders of gateway, the API of the project served at **.orders.shop.example.test with a route for it, at whatever host the workspace names (default.orders.shop.example.test where none is given), and the request as one for /v1/orders on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:5:24"
+    }
+  ],
+  "totals": {
+    "nodes": 36,
+    "edges": 21,
+    "types": 0,
+    "missed": 5,
+    "sites": 5,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 5
+  }
+}

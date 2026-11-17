@@ -273,7 +273,7 @@ const namedThrough = (instance: Instance, name: string): readonly [Instance, str
 
 /** A custom domain a mapping maps its API onto, as a caller's host is matched against it. */
 interface MappedDomain {
-  /** The domain, or with `chosenHost` the pattern every workspace's is: `*.api.example.com`. */
+  /** The domain, or with `chosenHost` the pattern every workspace's is: `**.api.example.com`. */
   readonly host: string;
   /** The domain where no workspace is selected, where `host` is a pattern. */
   readonly chosenHost?: string;
@@ -295,7 +295,7 @@ const ANY_WORKSPACE = 'flowatlas0any0workspace';
  * workspace and in each workspace a map it is looked up in is written for,
  * another workspace's saying so, and where the workspace's own name is
  * written into it (`"${terraform.workspace}.api.example.com"`) the pattern
- * every workspace's is, with the default workspace's beside it. A name a
+ * every workspace's is, each place one label or several (P328), with the default workspace's beside it. A name a
  * lookup falls back to is any other workspace's.
  */
 const mappedDomains = (instance: Instance, name: string): MappedDomain[] => {
@@ -312,7 +312,11 @@ const mappedDomains = (instance: Instance, name: string): MappedDomain[] => {
   if (!elsewhere.toLowerCase().includes(ANY_WORKSPACE)) {
     return out.some((each) => each.host === elsewhere) ? out : [...out, { host: elsewhere, chosenIn: 'any other workspace' }];
   }
-  const pattern = elsewhere.toLowerCase().split(ANY_WORKSPACE).join('*');
+  // Terraform takes as a workspace's name any text URL path escaping leaves as
+  // it is (`ValidWorkspaceName`): dots included, so `eu.prod` is a workspace,
+  // and the domain it names is two labels where its name is written. Each
+  // place is one label or several, `**` (P328).
+  const pattern = elsewhere.toLowerCase().split(ANY_WORKSPACE).join('**');
   const byDefault = named.find((each) => each.workspace === DEFAULT_WORKSPACE)?.name;
   const open: MappedDomain = { host: pattern, ...(byDefault === undefined ? {} : { chosenHost: byDefault }) };
   // A workspace's domain the pattern does not cover - a map's own name for it - is said beside it.

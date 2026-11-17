@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T17:32:17.755Z",
+  "builtAt": "2026-11-17T18:25:46.941Z",
   "configHash": "23f8db3e2220",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 3677,
+      "durationMs": 2445,
       "packages": {
         "name": "shop-gateway",
         "runtime": [],
@@ -30,7 +30,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 4464,
+      "durationMs": 2844,
       "packages": {
         "name": "shop-jobs",
         "runtime": [
@@ -49,7 +49,7 @@
       "edges": 10,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4872,
+      "durationMs": 3201,
       "packages": {
         "name": "stock",
         "runtime": [
@@ -71,7 +71,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 3877
+      "durationMs": 2482
     }
   ],
   "httpOut": {
@@ -119,7 +119,7 @@
       "line": 6,
       "reason": "base-url-from-files",
       "level": "info",
-      "message": "https://staging.orders.shop.example.test/v1/orders names its API by an id no file holds; it is taken as shop-orders of gateway, the API of the project served at *.orders.shop.example.test with a route for it, at whatever host the workspace names (default.orders.shop.example.test where none is given), and the request as one for /v1/orders on it",
+      "message": "https://staging.orders.shop.example.test/v1/orders names its API by an id no file holds; it is taken as shop-orders of gateway, the API of the project served at **.orders.shop.example.test with a route for it, at whatever host the workspace names (default.orders.shop.example.test where none is given), and the request as one for /v1/orders on it",
       "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
       "symbol": "ui_api_call:web#js/shop.js:6:24"
     },

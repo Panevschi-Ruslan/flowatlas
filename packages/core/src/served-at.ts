@@ -17,7 +17,12 @@ export const SERVED_AT_META = 'servedAt';
 
 /** One address an API is served at. */
 export interface ServedAt {
-  /** The host, `*` standing for one label the platform assigns: `*.gateway.region-1.example.test`. */
+  /**
+   * The host, `*` standing for one label the platform assigns:
+   * `*.gateway.region-1.example.test`; `**` for a part that may be one label
+   * or several, as a name that may hold dots - a Terraform workspace's -
+   * written into a domain is (P328): `**.orders.example.test`.
+   */
   readonly host: string;
   /**
    * The segments in front of every route of the API at that host: `['prod']`
@@ -70,8 +75,17 @@ export interface ServedMatch {
 /** One DNS label, which is what a `*` of a host stands for. */
 const LABEL = '[a-z0-9](?:[a-z0-9-]*[a-z0-9])?';
 
+/** One label or several, dotted, which is what a `**` of a host stands for (P328). */
+const LABELS = `${LABEL}(?:\\.${LABEL})*`;
+
 const hostPattern = (host: string): RegExp =>
-  new RegExp(`^${host.split('*').map((part) => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join(LABEL)}$`, 'i');
+  new RegExp(
+    `^${host
+      .split('**')
+      .map((wide) => wide.split('*').map((part) => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join(LABEL))
+      .join(LABELS)}$`,
+    'i',
+  );
 
 /** Whether a value is a list of `ServedAt`, as a route's meta holds it. */
 export const servedAtOf = (value: unknown): readonly ServedAt[] =>

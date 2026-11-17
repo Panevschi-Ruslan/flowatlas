@@ -1761,6 +1761,25 @@ only one of them moved.
   `FASTIFY_PORT` its `.env` gives now wins over a `PORT` its command gives
   (it reads `FASTIFY_PORT` first); P321 had it loaded with dotenv,
   true only up to version 7.
+- **Fields read through an alias and written by a key, workspace names with
+  dots, and a bus grant's unread statement id (P328).** A static field read
+  through what stands for its class under `any` - `const R: any = Registry;
+  R.queue.add(...)`, `(Registry as any).queue`, a parameter each caller
+  hands the class, an alias of any of these - is now read as the field,
+  every write to it counted, and a call on it (`R.queue.add`) is the
+  library's call by the field's declared class where the library is not
+  installed; so is a class held under a typed alias. A
+  field written or read by a key, `this['queue']`, `this[KEY]` or
+  `Registry[KEY]` where `KEY` is a constant holding the name, counts as the
+  field; a write by a key not read (`this[key] = value`) may be to any
+  field, so a field a class writes so is no longer read as its declared
+  value. A Terraform workspace's name may hold dots (Terraform takes any
+  name URL path escaping leaves as it is), so a domain the workspace is
+  written into is now the pattern `**.api.example.com`, `**` one label or
+  several, and `eu.prod.api.example.com` is joined to it. A bus's
+  `grantPutEventsTo` handed a statement id the files do not read
+  (`process.env.SID`) is an unread grant saying the bus's policy takes it
+  only with an id; `null` is none, and a value another stack exports is one.
 - **A guess no longer shares a port with a firm one (P319).** Where one
   service is firmly at a port of this machine - the code writes the number,
   a loaded file or a setting file gives it, a container publishes it - and
@@ -1793,7 +1812,7 @@ only one of them moved.
   workspace: each name a map gives (another workspace's said to be its), a
   lookup's fallback as any other workspace's, and a domain the workspace is
   written into (`"${terraform.workspace}.api.example.com"`) as the pattern
-  `*.api.example.com`, the default workspace's beside it - taken only for a
+  `**.api.example.com` (P328), the default workspace's beside it - taken only for a
   request with a route there - also through the domain resource's own
   `domain_name`. A CDK grant of a table, a stream or a bus to a role that
   takes nothing is read on the resource's own policy where the

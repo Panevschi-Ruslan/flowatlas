@@ -341,17 +341,17 @@ describe('a custom domain the workspace names (P322)', () => {
     });
     const at = (api: string, ...hosts: Record<string, string>[]): unknown[] => [api, hosts.map((each) => ({ base: [], api, ...each }))];
     expect(deployment.routes.map((each) => [each.api, each.meta?.['servedAt']])).toEqual([
-      at('open', { host: '*.orders.shop.example', chosenHost: 'default.orders.shop.example', hostChosenBy: 'the workspace' }),
+      at('open', { host: '**.orders.shop.example', chosenHost: 'default.orders.shop.example', hostChosenBy: 'the workspace' }),
       at('keyed', { host: 'api.shop.example', chosenIn: 'the workspace production' }, { host: 'dev.shop.example' }),
       at('fallback', { host: 'api.shop.example', chosenIn: 'the workspace production' }, { host: 'dev.shop.example' }, { host: 'sandbox.shop.example', chosenIn: 'any other workspace' }),
-      at('through', { host: '*-v2.shop.example', chosenHost: 'default-v2.shop.example', hostChosenBy: 'the workspace' }),
+      at('through', { host: '**-v2.shop.example', chosenHost: 'default-v2.shop.example', hostChosenBy: 'the workspace' }),
       at('fixed', { host: 'fixed.shop.example' }),
     ]);
     expect(deployment.routes.map((each) => [each.api, each.meta?.['domains']])).toEqual([
-      ['open', ['*.orders.shop.example']],
+      ['open', ['**.orders.shop.example']],
       ['keyed', ['api.shop.example', 'dev.shop.example']],
       ['fallback', ['api.shop.example', 'dev.shop.example', 'sandbox.shop.example']],
-      ['through', ['*-v2.shop.example']],
+      ['through', ['**-v2.shop.example']],
       ['fixed', ['fixed.shop.example']],
     ]);
   });

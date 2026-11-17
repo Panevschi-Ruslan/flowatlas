@@ -1,3 +1,4 @@
+import { fieldRead } from './adapters/locator.js';
 import { packageOfSpecifier } from './adapters/manifest.js';
 import { Node, SyntaxKind, type Node as TsNode, type PropertyDeclaration } from 'ts-morph';
 
@@ -234,13 +235,17 @@ const statementOf = (receiver: TsNode): TsNode | undefined => {
     // An entry of a registry of clients is the class the registry says it
     // holds: `this.queues[name].add(…)` on `queues: Record<QueueName, Queue>`
     // is a call on a `Queue` whether or not the package is installed (P267).
+    // A field read by a key, `Registry[KEY]` or `this['queue']`, is the field (P328).
+    const keyed = Node.isElementAccessExpression(current) ? fieldRead(current) : undefined;
+    if (keyed !== undefined) return statedBy(keyed);
     if (Node.isElementAccessExpression(current) || Node.isCallExpression(current)) return registryEntryOf(current);
     if (!Node.isIdentifier(current) && !Node.isPropertyAccessExpression(current)) return undefined;
     // A client constructed in one module of the repository and imported into
     // another is declared where it was constructed, and that module is the
     // repository's own, so the checker follows the import with nothing installed.
     const symbol = current.getSymbol();
-    const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
+    // A field read through what stands for its class under `any`, `R.queue`, is the field (P328).
+    const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0] ?? (Node.isPropertyAccessExpression(current) ? fieldRead(current) : undefined);
     return declaration === undefined ? undefined : statedBy(declaration);
   }
   return undefined;

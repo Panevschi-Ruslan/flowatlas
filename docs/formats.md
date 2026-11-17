@@ -102,7 +102,7 @@ On an `entry`:
 
 | key | holds |
 |---|---|
-| `servedAt` | where a deployment's API is served, a list of `{ host, base, api }`: the host with `*` for a label the platform assigns, the segments in front of every route (`'*'` for a stage chosen when the deployment is run), and the API by name. `chosenDefault` is that stage where nothing chooses it, or with `chosenIn` (`the workspace production`) the stage that choice deploys; `chosenHost` is the host where nothing chooses a region, or with `hostChosenBy` (`the workspace`) the custom domain where nothing chooses what names it; `under` is the base path a custom domain maps the API at, which this address does not write |
+| `servedAt` | where a deployment's API is served, a list of `{ host, base, api }`: the host with `*` for a label the platform assigns (`**` for one label or several, where a name that may hold dots is written in: a Terraform workspace's), the segments in front of every route (`'*'` for a stage chosen when the deployment is run), and the API by name. `chosenDefault` is that stage where nothing chooses it, or with `chosenIn` (`the workspace production`) the stage that choice deploys; `chosenHost` is the host where nothing chooses a region, or with `hostChosenBy` (`the workspace`) the custom domain where nothing chooses what names it; `under` is the base path a custom domain maps the API at, which this address does not write |
 | `stages` | the stages a Terraform API is deployed to; a stage the workspace names lists each workspace's |
 | `implementedBy` | the package whose code answers the way in: a gRPC health or reflection service handed to the server |
 | `protoFieldNames` | as on a request, for the service's contract |

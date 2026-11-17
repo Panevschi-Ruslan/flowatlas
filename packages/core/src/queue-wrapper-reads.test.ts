@@ -61,3 +61,37 @@ class Driver {
     expect(statedOrigin(returned(method))).toEqual({ package: '@acme/jobs', typeName: 'Queue' });
   });
 });
+
+describe('a field read through what stands for its class, or by a key, with nothing installed (P328)', () => {
+  const file = parse(`import { Queue } from '@acme/jobs';
+class Registry {
+  static mail: Queue;
+  static billing = new Queue('billing');
+  protected own = new Queue('own');
+  e() { return this['own']; }
+}
+const R: any = Registry;
+const KEY = 'billing';
+export const a = () => R.mail;
+export const b = () => (Registry as any).billing;
+export const c = () => Registry[KEY];
+const pick = (target: any) => target.mail;
+export const d = () => pick(Registry);
+export const other = () => R.missing;`);
+  const answered = (name: string) => {
+    const declaration = file.getVariableDeclaration(name);
+    const body = declaration?.getInitializerIfKindOrThrow(SyntaxKind.ArrowFunction).getBody();
+    if (body !== undefined) return body;
+    return file.getClassOrThrow('Registry').getMethodOrThrow(name).getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
+  };
+
+  it.each(['a', 'b', 'c', 'e'])('is the class the field states (%s)', (name) => {
+    expect(statedOrigin(answered(name))).toEqual({ package: '@acme/jobs', typeName: 'Queue' });
+  });
+
+  it('is the class through a parameter each caller hands the class, and nothing for a field it does not declare', () => {
+    const pick = file.getVariableDeclarationOrThrow('pick').getInitializerIfKindOrThrow(SyntaxKind.ArrowFunction).getBody();
+    expect(statedOrigin(pick)).toEqual({ package: '@acme/jobs', typeName: 'Queue' });
+    expect(statedOrigin(answered('other'))).toBeUndefined();
+  });
+});

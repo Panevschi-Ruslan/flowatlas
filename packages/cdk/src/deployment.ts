@@ -224,6 +224,19 @@ const TABLE_POLICY_WRITTEN_SINCE = '2.144.0';
 const BUS_POLICY_SINCE = '2.186.0';
 const EVENT_BUS_SID_FLAG = '@aws-cdk/aws-events:requireEventBusPolicySid';
 
+/**
+ * Why the statement id handed `grantPutEventsTo` may be none, where it may
+ * (P328): the bus's `addToResourcePolicy` throws on a statement with no id
+ * (`sid == null`), and takes any other - an empty text, a token - as it is.
+ * A value the files do not read (`process.env.SID`, a parameter no caller
+ * settles) may be either; a value another deployment publishes
+ * (`Fn.importValue`) is a token, an id all the same.
+ */
+const unsettledSid = (sid: Value): string | undefined => {
+  if (sid instanceof Imported || sid instanceof Embedded || !(sid instanceof Unread)) return undefined;
+  return `the bus's policy takes the grant only with a statement id, and the one it is handed is not read: ${sid.text}`;
+};
+
 /** The account a role is imported from, where its ARN is written out: `111122223333` of `arn:aws:iam::111122223333:role/x` (P316). */
 const importedAccount = (role: Construct): string | undefined => /^arn:[^:]+:iam::(\d{12}):/.exec(role.imported?.arn ?? '')?.[1];
 
@@ -872,8 +885,12 @@ export class AppDeployment {
     const asked = importOption(role, 'addGrantsToResources') === true;
     if (kind === 'bus') {
       const flag = this.context[EVENT_BUS_SID_FLAG];
-      if (method !== 'grantPutEventsTo' || !asked || args[1] === undefined || (flag !== true && flag !== 'true')) return 'dropped';
-      return this.#since(BUS_POLICY_SINCE, kind);
+      const sid = args[1];
+      if (method !== 'grantPutEventsTo' || !asked || sid === undefined || sid === null || (flag !== true && flag !== 'true')) return 'dropped';
+      const version = this.#since(BUS_POLICY_SINCE, kind);
+      if (version !== 'written') return version;
+      const unsettled = unsettledSid(sid);
+      return unsettled === undefined ? 'written' : { unread: unsettled };
     }
     if (!RESOURCE_POLICY_SINCE.has(kind)) return 'dropped';
     const since = kind === 'table' && prop(resource, 'resourcePolicy') !== undefined ? TABLE_POLICY_WRITTEN_SINCE : RESOURCE_POLICY_SINCE.get(kind);

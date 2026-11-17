@@ -14,6 +14,16 @@ describe('where an API is served (P284)', () => {
     expect(matchServedAt('a1b2c3xgatewayxregion-1.example.test', '/prod/orders', FIXED)).toBeUndefined();
   });
 
+  it('takes one label or several for each `**` of the host, as a name that may hold dots is written in (P328)', () => {
+    const wide: ServedAt = { host: '**-v2.orders.example.test', base: [], api: 'shop' };
+    expect(matchServedAt('staging-v2.orders.example.test', '/items', wide)?.path).toBe('/items');
+    expect(matchServedAt('eu.prod-v2.orders.example.test', '/items', wide)?.path).toBe('/items');
+    expect(matchServedAt('-v2.orders.example.test', '/items', wide)).toBeUndefined();
+    expect(matchServedAt('eu..prod-v2.orders.example.test', '/items', wide)).toBeUndefined();
+    expect(matchServedAt('eu.prod-v2.orders.example.test', '/items', { ...wide, host: '*-v2.orders.example.test' })).toBeUndefined();
+    expect(atChosenHost('eu.prod.orders.example.test', { host: 'x', base: [], api: 'shop', chosenHost: '**.orders.example.test' })).toBe(true);
+  });
+
   it('asks the base of the path: a written stage is that one, an open one any, none nothing', () => {
     expect(matchServedAt('a1.gateway.region-1.example.test', '/dev/orders', FIXED)).toBeUndefined();
     expect(matchServedAt('a1.gateway.region-1.example.test', '/dev/orders/1', OPEN)).toEqual({ served: OPEN, path: '/orders/1', written: ['dev'] });

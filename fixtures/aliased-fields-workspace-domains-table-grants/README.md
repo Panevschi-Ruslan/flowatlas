@@ -22,7 +22,7 @@ bus's own policy as the version the lockfile pins does. What P322 reads:
 3. **A domain the workspace names.** `gateway/infra/main.tf` maps the
    orders API onto `aws_apigatewayv2_domain_name.orders.domain_name`, which
    is `"${terraform.workspace}.orders.shop.example.test"`: the API is served
-   at `*.orders.shop.example.test`, `default.orders.shop.example.test` where
+   at `**.orders.shop.example.test`, `default.orders.shop.example.test` where
    no workspace is selected. The catalogue's mapping looks its domain up by
    the workspace: `sandbox.catalog.shop.example.test`, and
    `catalog.shop.example.test` in the workspace production. `web/js/shop.js`
