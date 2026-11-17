@@ -1,0 +1,9 @@
+{
+  "services": [
+    { "name": "jobs", "repo": "./jobs", "type": "express" },
+    { "name": "gateway", "repo": "./gateway", "type": "lambda" },
+    { "name": "web", "repo": "./web", "type": "browser" },
+    { "name": "stock", "repo": "./stock", "type": "lambda" }
+  ],
+  "output": ".flowatlas"
+}

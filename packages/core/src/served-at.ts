@@ -44,6 +44,12 @@ export interface ServedAt {
    */
   readonly chosenHost?: string;
   /**
+   * What chooses the host part `*` stands for in `host`, where it is not the
+   * region: `the workspace` for a custom domain a deployment's workspace names
+   * (P322), `chosenHost` then the domain where none is selected.
+   */
+  readonly hostChosenBy?: string;
+  /**
    * What the path every route of the API is drawn at starts with that this
    * place does not write (P298): `/v1` for the routes of an API mapped onto a
    * custom domain at the base path `v1`, read at the API's own address, which

@@ -47,6 +47,7 @@ import {
   type ServedAt,
   type Unresolved,
 } from '@flowatlas/core';
+import type { CdkLibrary } from './library.js';
 import { definitionOf } from './state-machine.js';
 import { Attribute, Built, CdkRef, Construct, Embedded, EXPORT_VALUE, HOLE, Imported, ObjectValue, principalHolders, textOf, Unread, type Added, type Site, type Value } from './values.js';
 
@@ -183,29 +184,54 @@ const managedPolicyGrants = (policy: Value, at: Site): DeployedGrant[] => {
 /** Whether a principal is a role the app imports rather than creates: `Role.fromRoleArn`, `Role.fromRoleName` (P306). */
 const isImportedRole = (holder: Construct): boolean => holder.type === 'aws-iam.Role' && holder.imported !== undefined;
 
-/**
- * Whether the app may add to what a principal is allowed (P306): a role it
- * imports with `mutable: false` takes nothing the app attaches - its
- * statements, policies and grants are dropped, as the CDK drops them.
- */
-const takesPolicies = (holder: Construct): boolean => {
-  if (!isImportedRole(holder)) return true;
+/** An option a role is imported with: `Role.fromRoleArn(scope, id, arn, { mutable: false })`. */
+const importOption = (holder: Construct, name: string): Value => {
   const options = holder.args[3];
-  return !(options instanceof ObjectValue && options.get('mutable') === false);
+  return options instanceof ObjectValue ? options.get(name) : undefined;
 };
 
 /**
  * The kinds whose grant the CDK writes into the resource's own policy where
- * the grantee is a principal of another account (P316): a queue's, a topic's
- * and a bucket's resource policy, and a function's permission. A bus, a
- * table, a stream and a state machine are granted on the principal alone
- * here.
+ * the grantee is a principal of another account, or a role that takes
+ * nothing yet asks for its grants to go on the resource
+ * (`addGrantsToResources: true`): `Grant.addToPrincipalOrResource` (P316,
+ * P322). A queue's, a topic's and a bucket's resource policy and a
+ * function's permission always; a stream's policy from `aws-cdk-lib`
+ * 2.180.0, its grants made that way; a table's from 2.222.0, and from 2.144.0
+ * where the table is created with a `resourcePolicy` - before 2.222.0 a
+ * statement added to a table created without one is not written. A state
+ * machine is granted on the principal alone.
  */
-const RESOURCE_POLICY_KINDS: ReadonlySet<DeployedKind> = new Set(['queue', 'topic', 'bucket', 'function']);
+const RESOURCE_POLICY_SINCE: ReadonlyMap<DeployedKind, string | undefined> = new Map<DeployedKind, string | undefined>([
+  ['queue', undefined],
+  ['topic', undefined],
+  ['bucket', undefined],
+  ['function', undefined],
+  ['stream', '2.180.0'],
+  ['table', '2.222.0'],
+]);
+
+/** The version from which a table created with its own `resourcePolicy` takes a grant's statement into it (P322). */
+const TABLE_POLICY_WRITTEN_SINCE = '2.144.0';
+
+/**
+ * The version from which `EventBus.grantPutEventsTo(grantee, sid)` writes a
+ * grant the principal does not take into the bus's policy, the feature flag
+ * `EVENT_BUS_SID_FLAG` on and the statement's id handed (P322). A role
+ * imported as one that takes nothing takes the grant in name only - it is
+ * dropped - unless it is imported with `addGrantsToResources: true`.
+ */
+const BUS_POLICY_SINCE = '2.186.0';
+const EVENT_BUS_SID_FLAG = '@aws-cdk/aws-events:requireEventBusPolicySid';
 
 /** The account a role is imported from, where its ARN is written out: `111122223333` of `arn:aws:iam::111122223333:role/x` (P316). */
 const importedAccount = (role: Construct): string | undefined => /^arn:[^:]+:iam::(\d{12}):/.exec(role.imported?.arn ?? '')?.[1];
 
+/** The account a stack is deployed to, as the app writes it (P316, P322): written out, not written - the one the deployment is run with - or a value read only once the app runs. */
+type StackAccount = { readonly written: string } | 'unwritten' | 'when-run';
+
+/** Where a grant to a role that takes nothing goes (P322): onto the resource's own policy, nowhere, or not settled by the files, and why. */
+type OnResource = 'written' | 'dropped' | { readonly unread: string };
 /**
  * What a role the app imports is allowed by the account (P306): every kind
  * left open, by a row naming the role, since the policies the account
@@ -269,6 +295,10 @@ export class AppDeployment {
     readonly repoDir: string,
     /** Absolute directory of the app: where `cdk.json` is, which relative paths are taken from. */
     readonly appDir: string,
+    /** The version of the CDK the app is built with, as the repository pins it (P322). */
+    readonly library: CdkLibrary = { atLeast: () => undefined, said: undefined, files: [] },
+    /** The context the app is run with: `cdk.json`'s, under the configured options - its feature flags among it (P322). */
+    readonly context: Readonly<Record<string, unknown>> = {},
   ) {}
 
   #ofType(...types: string[]): Construct[] {
@@ -711,8 +741,8 @@ export class AppDeployment {
     // A role the app imports is allowed what the account attaches to it, which is not read (P306); what the app
     // attaches to it is read, unless it is imported as one that takes nothing (`mutable: false`).
     for (const holder of principals) if (isImportedRole(holder)) out.push(...importedRoleGrants(holder));
-    const holders = principals.filter(takesPolicies);
-    const fixed = principals.filter((holder) => !takesPolicies(holder));
+    const holders = principals.filter((holder) => this.#takesPolicies(holder));
+    const fixed = principals.filter((holder) => !holders.includes(holder));
     const isFn = (grantee: Value): boolean => principalHolders(grantee).some((holder) => holders.includes(holder));
     for (const construct of this.constructs) {
       for (const [method, calls] of construct.added) {
@@ -721,13 +751,17 @@ export class AppDeployment {
           const grantee = call.args[0];
           if (grantee === undefined) continue;
           const kind = DECLARES.get(construct.type)?.kind;
-          // A grant to a role that takes nothing is still read where the CDK writes it
-          // into the resource's own policy instead: the role is of another account (P316).
-          const by = isFn(grantee)
-            ? method
-            : kind !== undefined && principalHolders(grantee).some((holder) => fixed.includes(holder) && this.#grantedOnResource(holder, construct, kind))
-              ? `${method}, on the ${kind}'s own policy`
-              : undefined;
+          // A grant to a role that takes nothing is still read where the CDK writes it into the
+          // resource's own policy instead: the role is of another account, or asks for it (P316, P322).
+          let by: string | undefined = isFn(grantee) ? method : undefined;
+          if (by === undefined && kind !== undefined) {
+            const ways = principalHolders(grantee)
+              .filter((holder) => fixed.includes(holder))
+              .map((holder) => this.#onResource(holder, construct, kind, method, call.args));
+            const unsettled = ways.find((way): way is { unread: string } => typeof way === 'object');
+            if (ways.includes('written')) by = `${method}, on the ${kind}'s own policy`;
+            else if (unsettled !== undefined) out.push({ kind, unread: unsettled.unread, by: method, ...call.site });
+          }
           if (by === undefined) continue;
           const found = this.deployedOf(construct);
           if (kind === undefined || found === undefined) continue;
@@ -777,28 +811,78 @@ export class AppDeployment {
   }
 
   /**
-   * Whether the CDK writes a grant of `resource` to an imported role into the
-   * resource's own policy (P316), as `Grant.addToPrincipalOrResource` does
-   * where the role's account is not the resource's stack's: the role's ARN
-   * names an account, the resource is one the app creates and of a kind with
-   * such a policy, and its stack's account is not that one - not written, or
-   * written as another. A stack whose account is a value read once the app
-   * runs (`process.env.CDK_DEFAULT_ACCOUNT`) may be the role's: not settled,
-   * and not read, the role's open row standing.
+   * Whether the app may add to what a principal is allowed (P306, P322): a
+   * role it imports takes nothing the app attaches - its statements,
+   * policies and grants are dropped, as the CDK drops them - where it is
+   * imported with `mutable: false`, or where its ARN names an account its
+   * stack is written to be another than (`Role.fromRoleArn` then makes it
+   * one that takes nothing of its own accord).
    */
-  #grantedOnResource(role: Construct, resource: Construct, kind: DeployedKind): boolean {
-    const account = importedAccount(role);
-    if (account === undefined || resource.imported !== undefined || !RESOURCE_POLICY_KINDS.has(kind)) return false;
+  #takesPolicies(holder: Construct): boolean {
+    if (!isImportedRole(holder)) return true;
+    if (importOption(holder, 'mutable') === false) return false;
+    const account = importedAccount(holder);
+    const stack = this.#accountOf(holder);
+    return account === undefined || typeof stack !== 'object' || stack.written === account;
+  }
+
+  /**
+   * The account the stack a construct is in is deployed to (P316): the
+   * nearest stack that writes an `env` - not written where none does, nor
+   * where it names no account; a value read only once the app runs
+   * (`process.env.CDK_DEFAULT_ACCOUNT`) where it is not text.
+   */
+  #accountOf(construct: Construct): StackAccount {
     const stacks = this.constructs
-      .filter((each) => resource.path.startsWith(`${each.path}/`) && each.props?.get('env') !== undefined)
+      .filter((each) => construct.path.startsWith(`${each.path}/`) && each.props?.get('env') !== undefined)
       .sort((a, b) => b.path.length - a.path.length);
     const env = stacks[0]?.props?.get('env');
-    if (env === undefined) return true;
-    if (!(env instanceof ObjectValue)) return false;
-    const stackAccount = env.get('account');
-    if (stackAccount === undefined) return true;
-    const written = textOf(stackAccount);
-    return written !== undefined && written !== account;
+    if (env === undefined) return 'unwritten';
+    if (!(env instanceof ObjectValue)) return 'when-run';
+    const account = env.get('account');
+    if (account === undefined) return 'unwritten';
+    const written = textOf(account);
+    return written === undefined ? 'when-run' : { written };
+  }
+
+  /** Whether the app is built with a CDK that writes a grant into a resource's own policy, from `since` (P322). */
+  #since(since: string, kind: DeployedKind): OnResource {
+    const at = this.library.atLeast(since);
+    if (at !== undefined) return at ? 'written' : 'dropped';
+    const pinned = this.library.said === undefined ? 'no file of the repository pins the version the app is built with' : `${this.library.said} does not settle which the app is built with`;
+    return { unread: `a grant to a role that takes nothing is written into the ${kind}'s own policy from aws-cdk-lib ${since}, and ${pinned}` };
+  }
+
+  /**
+   * Where the CDK puts a grant of `resource` to a role imported as one that
+   * takes nothing (P316, P322): into the resource's own policy where
+   * `Grant.addToPrincipalOrResource` does - the resource one the app creates,
+   * of a kind with such a policy in the version the app is built with, and
+   * the role either asking for it (`addGrantsToResources: true`) or of
+   * another account than the resource's stack, which is not written or
+   * written as another. A stack whose account is a value read once the app
+   * runs (`process.env.CDK_DEFAULT_ACCOUNT`) may be the role's: not settled,
+   * the role's open row standing. A bus takes `grantPutEventsTo` into its
+   * policy where the role asks for it, whatever its account, the
+   * statement's id handed and the feature flag on. A version the files do
+   * not settle leaves the grant unread, saying so.
+   */
+  #onResource(role: Construct, resource: Construct, kind: DeployedKind, method: string, args: readonly Value[]): OnResource {
+    if (resource.imported !== undefined) return 'dropped';
+    const asked = importOption(role, 'addGrantsToResources') === true;
+    if (kind === 'bus') {
+      const flag = this.context[EVENT_BUS_SID_FLAG];
+      if (method !== 'grantPutEventsTo' || !asked || args[1] === undefined || (flag !== true && flag !== 'true')) return 'dropped';
+      return this.#since(BUS_POLICY_SINCE, kind);
+    }
+    if (!RESOURCE_POLICY_SINCE.has(kind)) return 'dropped';
+    const since = kind === 'table' && prop(resource, 'resourcePolicy') !== undefined ? TABLE_POLICY_WRITTEN_SINCE : RESOURCE_POLICY_SINCE.get(kind);
+    if (!asked) {
+      const account = importedAccount(role);
+      const stack = this.#accountOf(resource);
+      if (account === undefined || stack === 'when-run' || (typeof stack === 'object' && stack.written === account)) return 'dropped';
+    }
+    return since === undefined ? 'written' : this.#since(since, kind);
   }
 
   /**

@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { cdkReader } from './index.js';
 
 /** What a CDK app grants a function (P272). */
-const stack = (body: string): Deployment => {
+const stack = (body: string, more: Record<string, string> = {}): Deployment => {
   const repoDir = mkdtempSync(join(tmpdir(), 'flowatlas-cdk-grants-'));
   const files: Record<string, string> = {
     'cdk.json': JSON.stringify({ app: 'npx ts-node bin/app.ts' }),
@@ -23,6 +23,7 @@ const stack = (body: string): Deployment => {
       '  }',
       '}',
     ].join('\n'),
+    ...more,
   };
   for (const [path, text] of Object.entries(files)) {
     mkdirSync(dirname(join(repoDir, path)), { recursive: true });
@@ -254,5 +255,79 @@ describe("a grant to a role imported as one that takes nothing, written into the
     new sqs.Queue(away, 'Restock', { queueName: 'stock-restock' }).grantSendMessages(role);
     ${MOVE}`);
     expect(grantsOf(other)).toEqual(["queue stock-restock grantSendMessages, on the queue's own policy"]);
+  });
+});
+
+describe("a grant of a bus, a table or a stream to a role that takes nothing, by the version of the CDK (P322)", () => {
+  const grantsOf = (deployment: Deployment): string[] =>
+    (deployment.functions[0]?.grants ?? [])
+      .filter((each) => each.unread === undefined || !each.unread.includes('the policies the account attaches'))
+      .map(({ kind, name, unread, by }) => `${kind} ${name ?? `open: ${unread ?? '?'}`} ${by}`);
+  const ROLE = (options: string): string => `const role = iam.Role.fromRoleArn(this, 'MoveRole', 'arn:aws:iam::111122223333:role/stock-mover', ${options});`;
+  const MOVE = "const move = new lambda.Function(this, 'Move', { functionName: 'stock-move', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset(path.join(__dirname, '..', 'src')), handler: 'move.handler', role });";
+  const TABLE_AND_STREAM = `new cdk.aws_dynamodb.Table(this, 'Ledger', { tableName: 'stock-ledger', partitionKey: { name: 'id', type: cdk.aws_dynamodb.AttributeType.STRING } }).grantWriteData(role);
+    new cdk.aws_kinesis.Stream(this, 'Moves', { streamName: 'stock-moves' }).grantWrite(role);`;
+  const pinned = (version: string): Record<string, string> => ({
+    'package-lock.json': JSON.stringify({ lockfileVersion: 3, packages: { '': {}, 'node_modules/aws-cdk-lib': { version } } }),
+  });
+  const asked = (version: string): Record<string, string> => ({ 'package.json': JSON.stringify({ dependencies: { 'aws-cdk-lib': version } }) });
+
+  it("reads a table's and a stream's grant on its own policy where the version installed writes it there, and none where it does not", () => {
+    const body = `${ROLE('{ mutable: false }')}\n    ${MOVE}\n    ${TABLE_AND_STREAM}`;
+    expect(grantsOf(stack(body, pinned('2.230.0')))).toEqual([
+      "table stock-ledger grantWriteData, on the table's own policy",
+      "stream stock-moves grantWrite, on the stream's own policy",
+    ]);
+    expect(grantsOf(stack(body, pinned('2.190.0')))).toEqual(["stream stock-moves grantWrite, on the stream's own policy"]);
+    expect(grantsOf(stack(body, asked('2.170.0')))).toEqual([]);
+    expect(grantsOf(stack(body, asked('~2.150.0')))).toEqual([]);
+  });
+
+  it("reads a table created with a resource policy's grant from 2.144.0, and leaves a range the version may fall either side of unread", () => {
+    const body = `${ROLE('{ mutable: false }')}\n    ${MOVE}
+    new cdk.aws_dynamodb.Table(this, 'Ledger', { tableName: 'stock-ledger', partitionKey: { name: 'id', type: cdk.aws_dynamodb.AttributeType.STRING }, resourcePolicy: new iam.PolicyDocument({ statements: [] }) }).grantWriteData(role);
+    new cdk.aws_kinesis.Stream(this, 'Moves', { streamName: 'stock-moves' }).grantWrite(role);`;
+    expect(grantsOf(stack(body, asked('^2.150.0')))).toEqual([
+      "table stock-ledger grantWriteData, on the table's own policy",
+      "stream open: a grant to a role that takes nothing is written into the stream's own policy from aws-cdk-lib 2.180.0, and aws-cdk-lib ^2.150.0 (package.json) does not settle which the app is built with grantWrite",
+    ]);
+    expect(grantsOf(stack(`${ROLE('{ mutable: false }')}\n    ${MOVE}\n    ${TABLE_AND_STREAM}`))).toEqual([
+      "table open: a grant to a role that takes nothing is written into the table's own policy from aws-cdk-lib 2.222.0, and no file of the repository pins the version the app is built with grantWriteData",
+      "stream open: a grant to a role that takes nothing is written into the stream's own policy from aws-cdk-lib 2.180.0, and no file of the repository pins the version the app is built with grantWrite",
+    ]);
+  });
+
+  it("reads a bus's grantPutEventsTo on its policy only where the role asks for its grants on the resource, a statement id is handed and the flag is on", () => {
+    const files = (flag: boolean): Record<string, string> => ({
+      'cdk.json': JSON.stringify({ app: 'npx ts-node bin/app.ts', context: { '@aws-cdk/aws-events:requireEventBusPolicySid': flag } }),
+      'pnpm-lock.yaml': "lockfileVersion: '9.0'\n\npackages:\n\n  aws-cdk-lib@2.190.0:\n    resolution: {integrity: sha512-x}\n",
+    });
+    const bus = (options: string, sid: string): string =>
+      `${ROLE(options)}\n    ${MOVE}\n    new cdk.aws_events.EventBus(this, 'Moves', { eventBusName: 'stock-moves' }).grantPutEventsTo(role${sid});`;
+    expect(grantsOf(stack(bus('{ mutable: false, addGrantsToResources: true }', ", 'StockMover'"), files(true)))).toEqual([
+      "bus stock-moves grantPutEventsTo, on the bus's own policy",
+    ]);
+    expect(grantsOf(stack(bus('{ mutable: false, addGrantsToResources: true }', ", 'StockMover'"), files(false)))).toEqual([]);
+    expect(grantsOf(stack(bus('{ mutable: false, addGrantsToResources: true }', ''), files(true)))).toEqual([]);
+    expect(grantsOf(stack(bus('{ mutable: false }', ", 'StockMover'"), files(true)))).toEqual([]);
+  });
+
+  it("puts a grant on the resource for a role asking for it in the stack's own account, and takes a role of another account than its stack's as one that takes nothing", () => {
+    const same = stack(`const here = new cdk.Stack(scope, 'Here', { env: { account: '111122223333' } });
+    const role = iam.Role.fromRoleArn(here, 'MoveRole', 'arn:aws:iam::111122223333:role/stock-mover', { mutable: false, addGrantsToResources: true });
+    new sqs.Queue(here, 'Restock', { queueName: 'stock-restock' }).grantSendMessages(role);
+    const move = new lambda.Function(here, 'Move', { functionName: 'stock-move', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset(path.join(__dirname, '..', 'src')), handler: 'move.handler', role });`);
+    expect(grantsOf(same)).toEqual(["queue stock-restock grantSendMessages, on the queue's own policy"]);
+    const away = stack(
+      `const away = new cdk.Stack(scope, 'Away', { env: { account: '999988887777' } });
+    const role = iam.Role.fromRoleArn(away, 'MoveRole', 'arn:aws:iam::111122223333:role/stock-mover');
+    const audit = new sqs.Queue(away, 'Audit', { queueName: 'stock-audit' });
+    role.addToPrincipalPolicy(new iam.PolicyStatement({ actions: ['sqs:SendMessage'], resources: [audit.queueArn] }));
+    new cdk.aws_dynamodb.Table(away, 'Ledger', { tableName: 'stock-ledger', partitionKey: { name: 'id', type: cdk.aws_dynamodb.AttributeType.STRING } }).grantWriteData(role);
+    new cdk.aws_events.EventBus(away, 'Moves', { eventBusName: 'stock-moves' }).grantPutEventsTo(role);
+    const move = new lambda.Function(away, 'Move', { functionName: 'stock-move', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset(path.join(__dirname, '..', 'src')), handler: 'move.handler', role });`,
+      pinned('2.230.0'),
+    );
+    expect(grantsOf(away)).toEqual(["table stock-ledger grantWriteData, on the table's own policy"]);
   });
 });

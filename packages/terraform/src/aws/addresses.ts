@@ -1,5 +1,5 @@
 import { executeApiServedAt } from '@flowatlas/aws';
-import { SERVED_AT_META, type ServedAt } from '@flowatlas/core';
+import { matchServedAt, SERVED_AT_META, type ServedAt } from '@flowatlas/core';
 import { evaluate, withNames, type Scope } from '../eval/evaluate.js';
 import { object, str, type Instance, type ModuleInstance, type Value } from '../eval/values.js';
 import { attributeOf, type Expression } from '../hcl/ast.js';
@@ -246,13 +246,77 @@ const workspaceNames = (instance: Instance, name: string): WorkspaceName[] => {
  * written for, as a stage resource's are read (P304, P308).
  */
 const mappedStages = (instance: Instance, name: string): string[] => {
-  const value = argument(instance, name);
-  const written = nameAt(value);
+  const written = nameAt(argument(instance, name));
   if (written !== undefined) return [written];
-  const target = referenced(value);
-  const namedBy = target === undefined ? undefined : NAMED_BY.get(target.type);
-  const [from, by] = target !== undefined && namedBy !== undefined ? [target, namedBy] : [instance, name];
+  const [from, by] = namedThrough(instance, name);
   return workspaceNames(from, by).map((each) => each.name);
+};
+
+/**
+ * The block and the argument a mapping's stage or domain is named by (P316,
+ * P322): the stage or domain resource it references - by its id, or by the
+ * very argument, `aws_apigatewayv2_domain_name.api.domain_name`, which
+ * evaluates to nothing where the workspace names it - else the mapping's own.
+ */
+const namedThrough = (instance: Instance, name: string): readonly [Instance, string] => {
+  let target = referenced(argument(instance, name));
+  if (target === undefined) {
+    const written = attributeOf(instance.block.body, name)?.expression;
+    if (written?.type === 'traversal' && written.source.type === 'variable' && NAMED_BY.has(written.source.name) && written.steps[0]?.kind === 'attr') {
+      const block = evaluate({ ...written, steps: written.steps.slice(0, 1) }, instance.module.scopeOf(instance));
+      if (block.kind === 'instance') target = block.instance;
+    }
+  }
+  const namedBy = target === undefined ? undefined : NAMED_BY.get(target.type);
+  return target !== undefined && namedBy !== undefined ? [target, namedBy] : [instance, name];
+};
+
+/** A custom domain a mapping maps its API onto, as a caller's host is matched against it. */
+interface MappedDomain {
+  /** The domain, or with `chosenHost` the pattern every workspace's is: `*.api.example.com`. */
+  readonly host: string;
+  /** The domain where no workspace is selected, where `host` is a pattern. */
+  readonly chosenHost?: string;
+  /** The workspace that maps it, where it is not the default one (P308). */
+  readonly chosenIn?: string;
+}
+
+/**
+ * A workspace no map is written for: what a value is in it says whether the
+ * workspace's own name is written into it (P322). Lower case and a DNS
+ * label, as a domain carries it.
+ */
+const ANY_WORKSPACE = 'flowatlas0any0workspace';
+
+/**
+ * The domains a mapping maps its API onto (P322): the name written, or the
+ * domain resource a reference names; where the workspace names it - in the
+ * mapping or in the domain it references - each name it takes in the default
+ * workspace and in each workspace a map it is looked up in is written for,
+ * another workspace's saying so, and where the workspace's own name is
+ * written into it (`"${terraform.workspace}.api.example.com"`) the pattern
+ * every workspace's is, with the default workspace's beside it. A name a
+ * lookup falls back to is any other workspace's.
+ */
+const mappedDomains = (instance: Instance, name: string): MappedDomain[] => {
+  const [from, by] = namedThrough(instance, name);
+  const named = workspaceNames(from, by);
+  if (named.length === 0) {
+    const written = nameAt(argument(instance, name));
+    return written === undefined ? [] : [{ host: written }];
+  }
+  const out: MappedDomain[] = named.map((each) => ({ host: each.name, ...(each.workspace === DEFAULT_WORKSPACE ? {} : { chosenIn: `the workspace ${each.workspace}` }) }));
+  const written = attributeOf(from.block.body, by);
+  const elsewhere = written === undefined ? undefined : textOf(inWorkspace(written.expression, from.module.scopeOf(from), ANY_WORKSPACE, 0));
+  if (elsewhere === undefined) return out;
+  if (!elsewhere.toLowerCase().includes(ANY_WORKSPACE)) {
+    return out.some((each) => each.host === elsewhere) ? out : [...out, { host: elsewhere, chosenIn: 'any other workspace' }];
+  }
+  const pattern = elsewhere.toLowerCase().split(ANY_WORKSPACE).join('*');
+  const byDefault = named.find((each) => each.workspace === DEFAULT_WORKSPACE)?.name;
+  const open: MappedDomain = { host: pattern, ...(byDefault === undefined ? {} : { chosenHost: byDefault }) };
+  // A workspace's domain the pattern does not cover - a map's own name for it - is said beside it.
+  return [open, ...out.filter((each) => matchServedAt(each.host, '', { host: pattern, base: [], api: '' }) === undefined)];
 };
 
 /** The region the AWS provider a block is created with is configured for, where the files settle it (P294). */
@@ -304,15 +368,14 @@ const servedOf = (api: Instance, reading: ResourceReading): ServedAt[] => {
  * where nothing maps it - the API's own, with the stages it is deployed to.
  */
 export const addressesOf = (api: Instance, reading: ResourceReading): ApiAddress[] => {
-  const byPrefix = new Map<string, { prefix: string | undefined; domains: string[]; stages: string[] }>();
+  const byPrefix = new Map<string, { prefix: string | undefined; domains: MappedDomain[]; stages: string[] }>();
   for (const mapping of MAPPINGS) {
     for (const instance of reading.ofType('managed', mapping.type)) {
       if (referenced(argument(instance, mapping.api)) !== api) continue;
       const prefix = prefixOf(argument(instance, mapping.basePath));
       const key = prefix ?? '\0';
       const found = byPrefix.get(key) ?? { prefix, domains: [], stages: [] };
-      const domain = nameAt(argument(instance, mapping.domain));
-      if (domain !== undefined) found.domains.push(domain);
+      found.domains.push(...mappedDomains(instance, mapping.domain));
       found.stages.push(...mappedStages(instance, mapping.stage));
       byPrefix.set(key, found);
     }
@@ -330,16 +393,25 @@ export const addressesOf = (api: Instance, reading: ResourceReading): ApiAddress
   const label = textOf(argument(api, 'name')) ?? api.address;
   const own = servedOf(api, reading);
   const addresses = [...byPrefix.values()].sort((a, b) => (a.prefix ?? '￿').localeCompare(b.prefix ?? '￿'));
-  return addresses.map(({ prefix, domains, stages }, index) => {
+  return addresses.map(({ prefix, domains: mapped, stages }, index) => {
+    const domains = [...new Map(mapped.map((each) => [each.host, each])).values()].sort((a, b) => a.host.localeCompare(b.host));
     const served: ServedAt[] = [
-      ...sorted(domains).map((domain): ServedAt => ({ host: domain, base: [], api: label })),
+      ...domains.map(
+        (domain): ServedAt => ({
+          host: domain.host,
+          base: [],
+          api: label,
+          ...(domain.chosenHost === undefined ? {} : { chosenHost: domain.chosenHost, hostChosenBy: 'the workspace' }),
+          ...(domain.chosenIn === undefined ? {} : { chosenIn: domain.chosenIn }),
+        }),
+      ),
       ...(index === 0 && prefix !== undefined ? own.map((each): ServedAt => (prefix === '' ? each : { ...each, under: prefix })) : []),
     ];
     return {
       prefix,
       meta: {
         basePath: prefix ?? null,
-        ...(domains.length === 0 ? {} : { domains: sorted(domains) }),
+        ...(domains.length === 0 ? {} : { domains: sorted(domains.map((each) => each.host)) }),
         ...(stages.length === 0 ? {} : { stages: sorted(stages) }),
         ...(served.length === 0 || prefix === undefined ? {} : { [SERVED_AT_META]: served }),
       },

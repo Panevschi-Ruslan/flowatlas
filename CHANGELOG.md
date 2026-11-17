@@ -1702,6 +1702,31 @@ only one of them moved.
   a written fallback such as `process.env.PORT ?? 3100`), the firm one is
   the port's service outright; a request to it was a `local-port-shared`
   row naming both.
+- **Fields written through an alias or in a subclass, domains a workspace
+  names, and grants of a bus, table or stream by the CDK's version (P322).**
+  A static field written through the class under `any` - `const R: any =
+  Registry; R.queue = ...`, `(Registry as any).queue`, a parameter handed
+  the class, `R['queue']` - now counts as one of its values, so a field
+  given another queue that way no longer reads as its declared one; a field
+  read in a class is also what each class extending it sets, unless that
+  class declares the reading method again without calling `super`. A
+  Terraform API mapping whose domain the workspace names is read per
+  workspace: each name a map gives (another workspace's said to be its), a
+  lookup's fallback as any other workspace's, and a domain the workspace is
+  written into (`"${terraform.workspace}.api.example.com"`) as the pattern
+  `*.api.example.com`, the default workspace's beside it - taken only for a
+  request with a route there - also through the domain resource's own
+  `domain_name`. A CDK grant of a table, a stream or a bus to a role that
+  takes nothing is read on the resource's own policy where the
+  `aws-cdk-lib` the repository pins (installed, locked, or a range every
+  version of which agrees) writes it there: a stream from 2.180.0, a table
+  from 2.222.0 (2.144.0 with a `resourcePolicy`), a bus's
+  `grantPutEventsTo` with a statement id from 2.186.0 under
+  `@aws-cdk/aws-events:requireEventBusPolicySid` for a role imported with
+  `addGrantsToResources: true`; a version left open is an unread grant
+  saying so. Such a role's grants of a queue, topic, bucket or function go
+  on the resource in its own account too, and a role imported from another
+  account than its stack's written one takes nothing, as the CDK has it.
 - **Fields written elsewhere, jobs caught at the queue's call, mapped stages
   and grants on a resource's own policy (P316).** A static field another
   module writes once (`Queues.mail = new Queue('mail')` in a setup file) is

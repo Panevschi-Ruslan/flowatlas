@@ -307,3 +307,65 @@ describe('where an API is served by its own address (P294)', () => {
     ]);
   });
 });
+
+describe('a custom domain the workspace names (P322)', () => {
+  const route = (api: string): string =>
+    `resource "aws_apigatewayv2_route" "r_${api}" {\n  api_id = aws_apigatewayv2_api.${api}.id\n  route_key = "GET /items"\n}`;
+  const http = (name: string): string => `resource "aws_apigatewayv2_api" "${name}" {\n  name = "${name}"\n  protocol_type = "HTTP"\n  disable_execute_api_endpoint = true\n}`;
+  const mapping = (api: string, domain: string): string =>
+    `resource "aws_apigatewayv2_api_mapping" "m_${api}" {\n  api_id = aws_apigatewayv2_api.${api}.id\n  domain_name = ${domain}\n  stage = "$default"\n}`;
+
+  it('opens a domain the workspace is written into, lists each one a map names, and reads one a domain resource names', () => {
+    const deployment = readFiles({
+      'main.tf': [
+        'provider "aws" {\n  region = "eu-west-1"\n}',
+        'variable "domains" {\n  default = {\n    default = "dev.shop.example"\n    production = "api.shop.example"\n  }\n}',
+        'locals {\n  host = lookup(var.domains, terraform.workspace, "sandbox.shop.example")\n}',
+        http('open'),
+        route('open'),
+        mapping('open', '"${terraform.workspace}.orders.shop.example"'),
+        http('keyed'),
+        route('keyed'),
+        mapping('keyed', 'var.domains[terraform.workspace]'),
+        http('fallback'),
+        route('fallback'),
+        mapping('fallback', 'local.host'),
+        http('through'),
+        route('through'),
+        'resource "aws_apigatewayv2_domain_name" "through" {\n  domain_name = "${terraform.workspace}-v2.shop.example"\n}',
+        mapping('through', 'aws_apigatewayv2_domain_name.through.domain_name'),
+        http('fixed'),
+        route('fixed'),
+        mapping('fixed', '"fixed.shop.example"'),
+      ].join('\n'),
+    });
+    const at = (api: string, ...hosts: Record<string, string>[]): unknown[] => [api, hosts.map((each) => ({ base: [], api, ...each }))];
+    expect(deployment.routes.map((each) => [each.api, each.meta?.['servedAt']])).toEqual([
+      at('open', { host: '*.orders.shop.example', chosenHost: 'default.orders.shop.example', hostChosenBy: 'the workspace' }),
+      at('keyed', { host: 'api.shop.example', chosenIn: 'the workspace production' }, { host: 'dev.shop.example' }),
+      at('fallback', { host: 'api.shop.example', chosenIn: 'the workspace production' }, { host: 'dev.shop.example' }, { host: 'sandbox.shop.example', chosenIn: 'any other workspace' }),
+      at('through', { host: '*-v2.shop.example', chosenHost: 'default-v2.shop.example', hostChosenBy: 'the workspace' }),
+      at('fixed', { host: 'fixed.shop.example' }),
+    ]);
+    expect(deployment.routes.map((each) => [each.api, each.meta?.['domains']])).toEqual([
+      ['open', ['*.orders.shop.example']],
+      ['keyed', ['api.shop.example', 'dev.shop.example']],
+      ['fallback', ['api.shop.example', 'dev.shop.example', 'sandbox.shop.example']],
+      ['through', ['*-v2.shop.example']],
+      ['fixed', ['fixed.shop.example']],
+    ]);
+  });
+
+  it('reads the stage a mapping names by the stage resource\'s own argument, the workspace naming it', () => {
+    const deployment = readFiles({
+      'main.tf': [
+        'variable "stage_names" {\n  default = {\n    default = "dev"\n    production = "live"\n  }\n}',
+        http('named'),
+        route('named'),
+        'resource "aws_apigatewayv2_stage" "named" {\n  api_id = aws_apigatewayv2_api.named.id\n  name = lookup(var.stage_names, terraform.workspace)\n}',
+        'resource "aws_apigatewayv2_api_mapping" "m_named" {\n  api_id = aws_apigatewayv2_api.named.id\n  domain_name = "named.shop.example"\n  stage = aws_apigatewayv2_stage.named.name\n}',
+      ].join('\n'),
+    });
+    expect(deployment.routes.map((each) => each.meta?.['stages'])).toEqual([['dev', 'live']]);
+  });
+});

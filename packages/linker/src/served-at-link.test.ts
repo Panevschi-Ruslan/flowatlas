@@ -118,6 +118,20 @@ describe('a browser request to an address where one API of the project is served
     expect(at('sandbox')).toContain('at whatever stage it is run with (sandbox where none is given), so the stage sandbox is taken as one of its');
   });
 
+  it('takes a domain the workspace names only for a request with a route there, and says what names it (P322)', () => {
+    const open: ServedAt = { host: '*.orders.shop.example', base: [], api: 'shop', chosenHost: 'default.orders.shop.example', hostChosenBy: 'the workspace' };
+    const live: ServedAt = { host: 'orders.shop.example', base: [], api: 'shop', chosenIn: 'the workspace production' };
+    const shopRoutes = [route('shop', 'GET', '/orders', [open, live])];
+    expect(resolveUiCall(uiCall('GET', '/orders', 'staging.orders.shop.example'), uiIndex({ shop: shopRoutes }))).toMatchObject({ kind: 'linked', targetService: 'shop' });
+    expect(resolveUiCall(uiCall('GET', '/forecast', 'staging.orders.shop.example'), uiIndex({ shop: shopRoutes }))).toMatchObject({ targetService: null });
+    const said = (host: string): string => {
+      const answer = apiServedAt('GET', host, '/orders', `https://${host}/orders`, ['shop'], () => shopRoutes);
+      return answer?.kind === 'one' ? servedAtFinding(answer.found).message : '';
+    };
+    expect(said('staging.orders.shop.example')).toContain('at whatever host the workspace names (default.orders.shop.example where none is given)');
+    expect(said('orders.shop.example')).toContain('the domain the workspace production maps it onto');
+  });
+
   it('asks the routes of an API mapped onto a domain for the path with the base path its own address does not write (P298)', () => {
     const mapped = [route('shop', 'POST', '/v1/orders', [{ host: 'api.shop.example', base: [], api: 'shop' }, { ...REST_PROD, under: '/v1' }])];
     expect(resolveUiCall(uiCall('POST', '/prod/orders'), uiIndex({ shop: mapped }))).toMatchObject({ kind: 'linked', via: 'served-at', entry: { id: mapped[0]?.id } });

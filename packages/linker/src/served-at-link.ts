@@ -134,7 +134,13 @@ export const servedAtFinding = (found: ServedApi): Finding => {
       (chosen
         ? `, at whatever stage it is run with (${chosenStage(found.served)}), so ${stage === '' ? 'the address' : `the stage ${stage}`} is taken as one of its`
         : '') +
-      (found.served.chosenHost === undefined ? '' : `, in whatever region it is deployed to (${found.served.chosenHost} where none is given)`) +
+      // A custom domain one workspace maps the API onto, not the one where none is selected (P322).
+      (!chosen && found.served.chosenIn !== undefined ? `, the domain ${found.served.chosenIn} maps it onto` : '') +
+      (found.served.chosenHost === undefined
+        ? ''
+        : found.served.hostChosenBy === undefined
+          ? `, in whatever region it is deployed to (${found.served.chosenHost} where none is given)`
+          : `, at whatever host ${found.served.hostChosenBy} names (${found.served.chosenHost} where none is given)`) +
       `, and the request as one for ${found.path} on it`,
     hint: 'Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.',
   };

@@ -326,6 +326,57 @@ class Mailer extends Base { open() { this.queue = new Queue('other'); } send(job
     expect(slots(callTo(reset, 'add'), MADE)).toEqual(['stopped at this.queue']);
   });
 
+  it('counts a static field written through the class under any - an alias, an assertion, a parameter (P322)', () => {
+    const MADE: NameLocator = { kind: 'receiver-constructed-path', class: 'Queue', path: [] };
+    const read = (setup: string): (string | undefined)[] => {
+      const project = new Project({ useInMemoryFileSystem: true });
+      project.createSourceFile('queues.ts', "export class Queues { static mail: Queue = new Queue('mail'); }");
+      project.createSourceFile('setup.ts', `import { Queues } from './queues';\n${setup}`);
+      const user = project.createSourceFile('user.ts', "import { Queues } from './queues';\nexport const welcome = () => Queues.mail.add('welcome');");
+      return slots(user.getDescendantsOfKind(SyntaxKind.CallExpression)[0] as CallExpression, MADE);
+    };
+    expect(read('export const nothing = 1;')).toEqual(["'mail'"]);
+    for (const setup of [
+      "const R: any = Queues;\nexport const reset = () => { R.mail = new Queue('other'); };",
+      "const R: any = Queues;\nconst again = R;\nexport const reset = () => { again['mail'] = new Queue('other'); };",
+      "let R: any;\nR = Queues;\nexport const reset = () => { R.mail = new Queue('other'); };",
+      "export const reset = () => { (Queues as any).mail = new Queue('other'); };",
+      "const fill = (target: any) => { target.mail = new Queue('other'); };\nexport const reset = () => fill(Queues);",
+      "const R: any = Queues;\nexport const reset = () => { R.mail += 1; };",
+    ]) {
+      expect(read(setup)).toEqual(['stopped at Queues.mail']);
+    }
+    // One write through an alias, and no initializer: that write is the value.
+    const project = new Project({ useInMemoryFileSystem: true });
+    project.createSourceFile('queues.ts', 'export class Queues { static mail: Queue; }');
+    project.createSourceFile('setup.ts', "import { Queues } from './queues';\nconst R: any = Queues;\nexport const setup = () => { R.mail = new Queue('aliased'); };");
+    const user = project.createSourceFile('user.ts', "import { Queues } from './queues';\nexport const welcome = () => Queues.mail.add('welcome');");
+    expect(slots(user.getDescendantsOfKind(SyntaxKind.CallExpression)[0] as CallExpression, MADE)).toEqual(["'aliased'"]);
+  });
+
+  it('counts what a class extending the reader sets, where its instances run the reading member (P322)', () => {
+    const MADE: NameLocator = { kind: 'receiver-constructed-path', class: 'Queue', path: [] };
+    const sets = parse(`class Mailer { protected queue = new Queue('base'); send(job: string) { return this.queue.add(job); } }
+class Urgent extends Mailer { open() { this.queue = new Queue('urgent'); } }`);
+    expect(slots(callTo(sets, 'add'), MADE)).toEqual(['stopped at this.queue']);
+    const deeper = parse(`class Base { protected queue: Queue; }
+class Mailer extends Base { send(job: string) { return this.queue.add(job); } }
+class Middle extends Mailer {}
+class Urgent extends Middle { queue = new Queue('urgent'); }
+class Other extends Base { open() { this.queue = new Queue('other'); } }`);
+    expect(slots(callTo(deeper, 'add'), MADE)).toEqual(["'urgent'"]);
+    const taken = parse(`class Mailer { protected queue = new Queue('base'); send(job: string) { return this.queue.add(job); } }
+class Urgent extends Mailer { constructor(protected queue: Queue) { super(); } }`);
+    expect(slots(callTo(taken, 'add'), MADE)).toEqual(['stopped at this.queue']);
+    // The class below declares the reading member again and never calls it: its writes are never read there.
+    const overridden = parse(`class Mailer { protected queue = new Queue('base'); send(job: string) { return this.queue.add(job); } }
+class Urgent extends Mailer { open() { this.queue = new Queue('urgent'); } send(job: string) { return this.queue.add(job, { lifo: true }); } }`);
+    expect(slots(callTo(overridden, 'add'), MADE)).toEqual(["'base'"]);
+    const calledBack = parse(`class Mailer { protected queue = new Queue('base'); send(job: string) { return this.queue.add(job); } }
+class Urgent extends Mailer { open() { this.queue = new Queue('urgent'); } send(job: string) { return super.send(job); } }`);
+    expect(slots(callTo(calledBack, 'add'), MADE)).toEqual(['stopped at this.queue']);
+  });
+
   it('reads each record a function may answer, awaited', () => {
     const file = parse(`async function build(kind: boolean) {
   if (kind) return { type: 'a' };

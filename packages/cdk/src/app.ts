@@ -4,6 +4,7 @@ import { toPosixPath, type Unresolved } from '@flowatlas/core';
 import { Project, type ClassDeclaration, type SourceFile } from 'ts-morph';
 import { AppDeployment, type DeploymentParts } from './deployment.js';
 import { Interpreter } from './interpret.js';
+import { cdkLibraryOf } from './library.js';
 import { cdkModuleOf } from './modules.js';
 import { Construct } from './values.js';
 
@@ -152,8 +153,10 @@ export const readApp = (parts: DeploymentParts, options: AppOptions): string[] =
     for (const cls of stacks) interpreter.instantiateAlone(cls, root);
   }
   rows.push(...interpreter.rows);
-  const deployment = new AppDeployment(parts, interpreter.constructs, repoDir, appDir);
+  // The version of the CDK and the feature flags decide where some grants are written (P322).
+  const library = cdkLibraryOf(appDir, repoDir);
+  const deployment = new AppDeployment(parts, interpreter.constructs, repoDir, appDir, library, { ...app.context, ...options.options });
   deployment.read();
   deployment.finish();
-  return [file, ...sources.map((source) => toPosixPath(relative(repoDir, source)))].filter((path) => existsSync(join(repoDir, path)));
+  return [file, ...sources.map((source) => toPosixPath(relative(repoDir, source))), ...library.files].filter((path) => existsSync(join(repoDir, path)));
 };
