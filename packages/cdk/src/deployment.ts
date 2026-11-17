@@ -234,6 +234,8 @@ const EVENT_BUS_SID_FLAG = '@aws-cdk/aws-events:requireEventBusPolicySid';
  */
 const unsettledSid = (sid: Value): string | undefined => {
   if (sid instanceof Imported || sid instanceof Embedded || !(sid instanceof Unread)) return undefined;
+  // A context value no file sets is given, or not, when the app is synthesized (P332).
+  if (sid.reason === 'context') return `the bus's policy takes the grant only with a statement id, and the one it is handed is ${sid.text}: given, the grant is written into the policy; left out, it is dropped`;
   return `the bus's policy takes the grant only with a statement id, and the one it is handed is not read: ${sid.text}`;
 };
 
@@ -704,7 +706,8 @@ export class AppDeployment {
     const environment: Record<string, DeployedSetting> = {};
     const written = prop(fn, 'environment');
     const pairs: [string, Value][] = [
-      ...(written instanceof ObjectValue ? [...written.entries] : []),
+      // A variable a context value no file sets gives is deployed as the run chooses (P332).
+      ...(written instanceof ObjectValue ? [...written.entries.keys()].map((variable): [string, Value] => [variable, written.handed(variable)]) : []),
       ...fn.addedBy('addEnvironment').flatMap(({ args }): [string, Value][] => (typeof args[0] === 'string' ? [[args[0], args[1]]] : [])),
     ];
     for (const [variable, value] of pairs.sort(([a], [b]) => a.localeCompare(b))) environment[variable] = this.#setting(value, fn.site, `the value of ${variable} ${fn.path} is deployed with`);

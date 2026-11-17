@@ -375,8 +375,8 @@ class Mailer extends Base { open() { this.queue = new Queue('other'); } send(job
     ]) {
       expect(read(user)).toEqual(["'mail'"]);
     }
-    // A parameter handed two classes, or something not a class, is not one field.
-    expect(read("const send = (target: any) => target.mail.add('welcome');\nexport const a = () => send(Queues);\nexport const b = () => send(Other);")).toEqual(['stopped at target.mail']);
+    // A parameter handed something not a class is not a field; one handed two classes is either's (P332).
+    expect(read("const send = (target: any) => target.mail.add('welcome');\nexport const a = () => send(Queues);\nexport const b = () => send(Other);")).toEqual(["'mail'", "'other'"]);
     expect(read("const send = (target: any) => target.mail.add('welcome');\nexport const a = () => send(Queues);\nexport const b = () => send({ mail: null });")).toEqual(['stopped at target.mail']);
     // A read through an alias sees every write, through an alias or not.
     expect(read("const R: any = Queues;\nexport const welcome = () => R.mail.add('welcome');", "export const reset = () => { Queues.mail = new Queue('reset'); };")).toEqual(['stopped at R.mail']);
@@ -396,6 +396,71 @@ class Mailer extends Base { open() { this.queue = new Queue('other'); } send(job
     expect(slots(callTo(parse("class Mailer { queue = new Queue('base'); send(job: string) { return this['queue'].add(job); } }"), 'add'), MADE)).toEqual(["'base'"]);
     // A static field written through `this` in a static member by a key.
     expect(slots(callTo(parse("class Queues { static mail = new Queue('mail'); static reset() { this['mail'] = new Queue('reset'); } }\nexport const welcome = () => Queues.mail.add('welcome');"), 'add'), MADE)).toEqual(['stopped at Queues.mail']);
+  });
+
+  it('counts each key Object.assign lays over this or over the class as a write of the field (P332)', () => {
+    const MADE: NameLocator = { kind: 'receiver-constructed-path', class: 'Queue', path: [] };
+    const reader = 'send(job: string) { return this.queue.add(job); }';
+    const read = (source: string): (string | undefined)[] => slots(callTo(parse(source), 'add'), MADE);
+    expect(read(`class Mailer { queue: Queue; constructor() { Object.assign(this, { queue: new Queue('assigned') }); } ${reader} }`)).toEqual(["'assigned'"]);
+    expect(read(`class Mailer { queue = new Queue('base'); open() { Object.assign(this, { queue: new Queue('other') }); } ${reader} }`)).toEqual(['stopped at this.queue']);
+    expect(read(`class Mailer { queue = new Queue('base'); open() { Object.assign(this, { other: 1 }, null); } ${reader} }`)).toEqual(["'base'"]);
+    // The last source that surely writes the key hides those before it.
+    expect(read(`const defaults = { queue: new Queue('first') };\nclass Mailer { queue: Queue; constructor() { Object.assign(this, defaults, { queue: new Queue('last') }); } ${reader} }`)).toEqual(["'last'"]);
+    // A source handed in is what each caller hands, each new for a constructor's.
+    expect(read(`class Mailer { queue: Queue; configure(options: { queue: Queue }) { Object.assign(this, options); } ${reader} }\nnew Mailer().configure({ queue: new Queue('configured') });`)).toEqual(["'configured'"]);
+    expect(read(`class Mailer { queue!: Queue; constructor(options: { queue: Queue }) { Object.assign(this, options); } ${reader} }\nnew Mailer({ queue: new Queue('built') });`)).toEqual(["'built'"]);
+    expect(read(`class Mailer { queue!: Queue; constructor(options: { queue: Queue }) { Object.assign(this, options); } ${reader} }\nnew Mailer({ queue: new Queue('a') });\nnew Mailer({ queue: new Queue('b') });`)).toEqual(['stopped at this.queue']);
+    expect(read(`class Mailer { queue!: Queue; constructor(queue: Queue) { Object.assign(this, { queue }); } ${reader} }\nnew Mailer(new Queue('kept'));`)).toEqual(['stopped at this.queue']);
+    // A source not read may write any field, as a write by a key not read may.
+    expect(read(`class Mailer { queue = new Queue('base'); open() { Object.assign(this, JSON.parse(text)); } ${reader} }`)).toEqual(['stopped at this.queue']);
+    expect(read(`class Mailer { queue = new Queue('base'); open(options: any) { Object.assign(this, options); } ${reader} }`)).toEqual(['stopped at this.queue']);
+    // A static field: through the class, what stands for it, and this in a static member.
+    for (const setup of [
+      "Object.assign(Queues, { mail: new Queue('assigned') });",
+      "const R: any = Queues;\nObject.assign(R, { mail: new Queue('assigned') });",
+      "const fill = (target: any) => Object.assign(target, { mail: new Queue('assigned') });\nfill(Queues);",
+    ]) {
+      expect(read(`class Queues { static mail: Queue; static audit = new Queue('audit'); }\n${setup}\nexport const welcome = () => Queues.mail.add('welcome');`)).toEqual(["'assigned'"]);
+    }
+    expect(read("class Queues { static mail: Queue; static setup() { Object.assign(this, { mail: new Queue('assigned') }); } }\nexport const welcome = () => Queues.mail.add('welcome');")).toEqual(["'assigned'"]);
+    expect(read("class Queues { static mail = new Queue('mail'); }\nObject.assign(Queues, { audit: 1 });\nexport const welcome = () => Queues.mail.add('welcome');")).toEqual(["'mail'"]);
+    expect(read("class Queues { static mail = new Queue('mail'); }\nObject.assign(Queues, loaded());\nexport const welcome = () => Queues.mail.add('welcome');")).toEqual(['stopped at Queues.mail']);
+    // The queue a field holds changed in place is not the field written.
+    expect(read("class Queues { static mail = new Queue('mail'); }\nObject.assign(Queues.mail, { mail: 1 });\nexport const welcome = () => Queues.mail.add('welcome');")).toEqual(["'mail'"]);
+  });
+
+  it('reads a read through a name that may stand for two classes as either class\'s own field, saying which (P332)', () => {
+    const MADE: NameLocator = { kind: 'receiver-constructed-path', class: 'Queue', path: [] };
+    const read = (extra: string): { text?: string; heldIn?: string }[] => {
+      const file = parse(`class Queues { static mail = new Queue('mail'); }
+class Archive { static mail = new Queue('archive'); }
+${extra}
+const send = (target: any) => target.mail.add('welcome');
+export const a = () => send(Queues);
+export const b = () => send(Archive);`);
+      return locatedSlots(callTo(file, 'add'), MADE).map((slot) => ({
+        ...(slot === undefined ? {} : { text: `${slot.reached ? '' : 'stopped at '}${slot.expression.getText()}` }),
+        ...(slot?.heldIn === undefined ? {} : { heldIn: slot.heldIn }),
+      }));
+    };
+    expect(read('')).toEqual([
+      { text: "'mail'", heldIn: 'Queues.mail' },
+      { text: "'archive'", heldIn: 'Archive.mail' },
+    ]);
+    // A field given two values is that field, not read further.
+    expect(read("export const reset = () => { Archive.mail = new Queue('again'); };")).toEqual([
+      { text: "'mail'", heldIn: 'Queues.mail' },
+      { text: 'stopped at mail', heldIn: 'Archive.mail' },
+    ]);
+    // Two classes sharing one field a base declares: that field, as before.
+    const shared = parse(`class Base { static mail = new Queue('base'); }
+class Queues extends Base {}
+class Archive extends Base {}
+const send = (target: any) => target.mail.add('welcome');
+export const a = () => send(Queues);
+export const b = () => send(Archive);`);
+    expect(slots(callTo(shared, 'add'), MADE)).toEqual(["'base'"]);
   });
 
   it('counts what a class extending the reader sets, where its instances run the reading member (P322)', () => {

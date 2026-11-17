@@ -95,3 +95,22 @@ export const other = () => R.missing;`);
     expect(statedOrigin(answered('other'))).toBeUndefined();
   });
 });
+
+describe('a field read through a name that may stand for two classes, with nothing installed (P332)', () => {
+  const file = parse(`import { Queue } from '@acme/jobs';
+import { Topic } from '@acme/topics';
+class Registry { static mail = new Queue('mail'); static news: Topic; }
+class Archive { static mail: Queue; static news: Queue; }
+const pick = (target: any) => target.mail;
+const other = (target: any) => target.news;
+export const a = () => pick(Registry);
+export const b = () => pick(Archive);
+export const c = () => other(Registry);
+export const d = () => other(Archive);`);
+  const body = (name: string) => file.getVariableDeclarationOrThrow(name).getInitializerIfKindOrThrow(SyntaxKind.ArrowFunction).getBody();
+
+  it('is the class every field states, and none where they state different ones', () => {
+    expect(statedOrigin(body('pick'))).toEqual({ package: '@acme/jobs', typeName: 'Queue' });
+    expect(statedOrigin(body('other'))).toBeUndefined();
+  });
+});

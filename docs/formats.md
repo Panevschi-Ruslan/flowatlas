@@ -97,6 +97,14 @@ in a browser), beside `url`, `path` and `host`:
 | `through` | on a `ui_api_call`, the function of the repository the request was read through, its node standing at the caller: a wrapper, or a function a client is handed to |
 | `protoFieldNames` | `proto` on a gRPC call whose client loads its contract keeping the contract's field names (`keepCase`) |
 
+### Publishes
+
+On a `producer`:
+
+| key | holds |
+|---|---|
+| `heldIn` | where the receiver may be the static field of either of several classes, each declaring its own: each field (`Queues.mail`) with the channels read out of it, none where its value is not read |
+
 ### Ways in
 
 On an `entry`:

@@ -214,6 +214,12 @@ export type LocatedSlot =
        * it stopped at - a parameter out to its callers - reads them there.
        */
       readonly rest?: readonly string[];
+      /**
+       * The field the value was read out of, where a name may stand for
+       * several classes each declaring the field of its own (P332):
+       * `Queues.mail`, one slot per class.
+       */
+      readonly heldIn?: string;
     }
   | undefined;
 
@@ -775,9 +781,72 @@ const fieldDeclared = (node: TsNode, object: TsNode, name: string): TsNode | und
     const member = memberAround(node);
     return member === undefined ? undefined : memberUp(member.getParent() as TsNode, name, inStaticMember(member));
   }
-  const fields = classesStoodFor(object)?.map((cls) => memberUp(cls, name, true));
-  const [first] = fields ?? [];
-  return first !== undefined && fields?.every((each) => each === first) === true ? first : undefined;
+  const fields = staticFieldsStoodFor(object, name);
+  return fields?.length === 1 ? fields[0] : undefined;
+};
+
+/**
+ * The static field `name` each class a value may stand for declares, or
+ * takes from a class it extends, each field once (P328, P332): one where the
+ * classes share it, several where each declares its own. `undefined` where
+ * the value is not known to stand for classes, or one of them has no such
+ * field.
+ */
+const staticFieldsStoodFor = (object: TsNode, name: string): PropertyDeclaration[] | undefined => {
+  const classes = classesStoodFor(object);
+  if (classes === undefined || classes.length === 0) return undefined;
+  const out: PropertyDeclaration[] = [];
+  for (const cls of classes) {
+    const field = memberUp(cls, name, true);
+    if (field === undefined || !Node.isPropertyDeclaration(field)) return undefined;
+    if (!out.includes(field)) out.push(field);
+  }
+  return out;
+};
+
+/** A field as the source names it, by its class: `Queues.mail` (P332). */
+const fieldNamed = (field: PropertyDeclaration): string => {
+  const cls = field.getParent();
+  const name = Node.isClassDeclaration(cls) || Node.isClassExpression(cls) ? cls.getName() : undefined;
+  return `${name ?? 'class'}.${field.getName()}`;
+};
+
+/**
+ * Each field a read of a static member may be, where the name it is read
+ * through may stand for several classes that each declare a field of that
+ * name (P332): `target.mail` of a function handed `Queues` by one caller and
+ * `Archive` by another is either class's `mail`. Each is read as the field
+ * of its own it is - its one value, or where it is given several or changed,
+ * the field itself, not read further - and says which class's it is.
+ */
+const fieldChoices = (node: TsNode): Followed[] | undefined => {
+  const access = accessed(node);
+  if (access === undefined || access.name === undefined) return undefined;
+  const object = peeled(access.object);
+  if (!Node.isIdentifier(object)) return undefined;
+  const fields = staticFieldsStoodFor(object, access.name);
+  if (fields === undefined || fields.length < 2) return undefined;
+  return fields.map((field) => {
+    const { values, changed } = staticWrites(field);
+    const [only, ...more] = values;
+    const value = !changed && only !== undefined && more.length === 0 ? only : field.getNameNode();
+    return { value, bound: NO_BINDINGS, heldIn: fieldNamed(field) };
+  });
+};
+
+/**
+ * Every field a member access may read (P328, P332): the one field, or each
+ * static field of the classes the object may stand for where each declares
+ * its own - what states the class of a receiver the checker sees only as
+ * `any`, which is that class where every field states the same one.
+ */
+export const fieldsRead = (node: TsNode): TsNode[] => {
+  const one = fieldRead(node);
+  if (one !== undefined) return [one];
+  const access = accessed(node);
+  if (access === undefined || access.name === undefined) return [];
+  const object = peeled(access.object);
+  return Node.isIdentifier(object) ? (staticFieldsStoodFor(object, access.name) ?? []) : [];
 };
 
 /**
@@ -794,13 +863,28 @@ export const fieldRead = (node: TsNode): TsNode | undefined => {
   return field !== undefined && (Node.isPropertyDeclaration(field) || Node.isParameterDeclaration(field)) ? field : undefined;
 };
 
+/** Whether a node is written in a member of a class extending `owner`, static or not as asked: where `this` is the class or one of its instances (P328). */
+const thisOfClass = (node: TsNode, owner: TsNode, isStatic: boolean): boolean => {
+  const member = memberAround(node);
+  return member !== undefined && derivesFrom(member.getParent(), owner) && inStaticMember(member) === isStatic;
+};
+
 /** Whether a node writes a member of `this` by a key not read, `this[key] = value`, in a member of a class extending `owner` (P328). */
 const unreadKeyWrite = (node: TsNode, owner: TsNode, isStatic: boolean): boolean => {
   const access = accessed(node);
   if (access === undefined || access.name !== undefined || !Node.isThisExpression(peeled(access.object))) return false;
-  const member = memberAround(node);
-  if (member === undefined || !derivesFrom(member.getParent(), owner) || inStaticMember(member) !== isStatic) return false;
-  return writeAt(node) !== undefined;
+  return thisOfClass(node, owner, isStatic) && writeAt(node) !== undefined;
+};
+
+/**
+ * What `Object.assign(this, ...sources)` in a member of a class extending
+ * `owner` gives the field `name` (P332): each key its sources write, nothing
+ * where none writes it. `undefined` where the node is no such `this`.
+ */
+const assignedThis = (node: TsNode, name: string, owner: TsNode, isStatic: boolean): Given | undefined => {
+  if (!Node.isThisExpression(node) || !thisOfClass(node, owner, isStatic)) return undefined;
+  const call = assignedOver(node);
+  return call === undefined ? undefined : laidOver(call.getArguments().slice(1), name, NO_BINDINGS, 0);
 };
 
 /** How a reference to a field is written to, where it is: given a value, or changed in place. */
@@ -879,12 +963,25 @@ const staticWrites = (declaration: PropertyDeclaration): FieldValues => {
     for (const access of aliasedAccesses(owner, name)) accesses.add(access);
     for (const cls of [owner, ...derivedOf(owner)]) {
       cls.forEachDescendant((each) => {
-        if (readerOf(each, name, owner, true) !== undefined) accesses.add(each);
+        // `Object.assign(this, { mail })` in a static member (P332).
+        const assigned = assignedThis(each, name, owner, true);
+        if (assigned !== undefined) {
+          values.push(...assigned.values);
+          changed ||= assigned.changed;
+        } else if (readerOf(each, name, owner, true) !== undefined) accesses.add(each);
         else if (unreadKeyWrite(each, owner, true)) changed = true;
       });
     }
   }
   for (const access of accesses) {
+    // `Object.assign(Queues, { mail })`, through the class or what stands for it: each key its sources write (P332).
+    const over = accessed(access) === undefined ? assignedOver(access) : undefined;
+    if (over !== undefined) {
+      const assigned = laidOver(over.getArguments().slice(1), declaration.getName(), NO_BINDINGS, 0);
+      values.push(...assigned.values);
+      changed ||= assigned.changed;
+      continue;
+    }
     const write = writeAt(access);
     // `R[key] = value` through what stands for the class: any of its fields (P328).
     if (write !== undefined && accessed(access)?.name === undefined) {
@@ -894,7 +991,8 @@ const staticWrites = (declaration: PropertyDeclaration): FieldValues => {
     if (write === 'changed') changed = true;
     else if (write !== undefined) values.push(write.value);
   }
-  const found = { values, changed };
+  // A write met twice - `this` in a static member is also a reference to the class - is one write.
+  const found = { values: [...new Set(values)], changed };
   STATIC_WRITES.set(declaration, found);
   return found;
 };
@@ -987,6 +1085,11 @@ const aliasedAccesses = (owner: ClassDeclaration | ClassExpression, name: string
         if (keyed === undefined || keyed === name) accesses.push(parent);
         continue;
       }
+      // `Object.assign(R, { queue })`, which writes each key its sources give (P332).
+      if (assignedOver(at) !== undefined) {
+        accesses.push(at);
+        continue;
+      }
       if (Node.isVariableDeclaration(parent) && parent.getInitializer() === at) follow(parent);
       else if (Node.isBinaryExpression(parent) && parent.getRight() === at && parent.getOperatorToken().getKind() === SyntaxKind.EqualsToken) {
         follow(declarationNamed(peeled(parent.getLeft())));
@@ -1017,6 +1120,13 @@ const instanceWrites = (name: string, owner: TsNode, initializer: TsNode | undef
     cls.forEachDescendant((each) => {
       // `this[key] = value` by a key not read may be to it (P328).
       if (unreadKeyWrite(each, owner, false)) changed = true;
+      // `Object.assign(this, options)`: each key its sources write (P332).
+      const assigned = assignedThis(each, name, owner, false);
+      if (assigned !== undefined) {
+        values.push(...assigned.values);
+        changed ||= assigned.changed;
+        return;
+      }
       if (readerOf(each, name, owner, false) === undefined) return;
       const write = writeAt(each);
       if (write === 'changed') changed = true;
@@ -1347,6 +1457,8 @@ interface Followed {
    * (P272): the walk stops at the element, and whoever asked follows each.
    */
   readonly choices?: readonly Followed[];
+  /** The field of one of several classes the value was read out of (P332): `Queues.mail`. */
+  readonly heldIn?: string;
 }
 
 /** How deep the walk goes into the values a value is made of before it gives up. */
@@ -1739,6 +1851,9 @@ const followValue = (node: TsNode, bound: Bindings = NO_BINDINGS, depth = 0): Fo
       current = constant;
       continue;
     }
+    // A static field of either of several classes a name may stand for: each one's (P332).
+    const fields = fieldChoices(current);
+    if (fields !== undefined) return { value: current, bound: held, choices: fields };
     // `const { toQueue } = this.plan(jobs)`: the key of what it was taken out
     // of, each record a function may answer read on its own (P298).
     const taken = destructuredValues(current, held, depth);
@@ -2058,7 +2173,7 @@ const constructedField = (made: NewExpression, key: string, bound: Bindings): Lo
 const stepInto = (expression: TsNode, step: string, bound: Bindings): LocatedSlot[] => {
   const followed = followValue(expression, bound);
   // An element of a list of several: one step into each (P272).
-  if (followed.choices !== undefined) return followed.choices.flatMap((choice) => stepInto(choice.value, step, choice.bound));
+  if (followed.choices !== undefined) return followed.choices.flatMap((choice) => fromField(stepInto(choice.value, step, choice.bound), choice.heldIn));
   const { value } = followed;
   // Where it stopped, with what the walk bound on the way there (P298): a
   // name a function the walk stepped into destructures is read on with its
@@ -2261,6 +2376,123 @@ const assignedProperty = (sources: readonly TsNode[], key: string, bound: Bindin
   }
   return undefined;
 };
+
+/** What the sources of an `Object.assign` give one key of its target (P332): each value, whether one is not read, and whether a value surely is given. */
+interface Given {
+  readonly values: readonly TsNode[];
+  readonly changed: boolean;
+  readonly surely: boolean;
+}
+
+const GIVES_NOTHING: Given = { values: [], changed: false, surely: false };
+const GIVES_UNREAD: Given = { values: [], changed: true, surely: false };
+
+/** One of several sources, as either may be: every value, not read where one is not, given surely where each gives one. */
+const eitherGiven = (each: readonly Given[]): Given => ({
+  values: each.flatMap((given) => given.values),
+  changed: each.some((given) => given.changed),
+  surely: each.length > 0 && each.every((given) => given.surely),
+});
+
+/** The `Object.assign` call a node is the target of, its first argument past parentheses and assertions (P332). */
+const assignedOver = (node: TsNode): CallExpression | undefined => {
+  const at = wrapped(node);
+  const call = at.getParent();
+  if (call === undefined || !Node.isCallExpression(call)) return undefined;
+  return assignedSources(call)?.[0] === at ? call : undefined;
+};
+
+/**
+ * What `Object.assign(target, ...sources)` lays over the target's key (P332):
+ * from the last source back, each value a source may write, stopping at one
+ * that surely writes it - so `Object.assign(this, defaults, { queue })` gives
+ * the field the literal's `queue` only.
+ */
+const laidOver = (sources: readonly TsNode[], key: string, bound: Bindings, depth: number): Given => {
+  const values: TsNode[] = [];
+  let changed = false;
+  for (let index = sources.length - 1; index >= 0; index -= 1) {
+    const source = sources[index];
+    if (source === undefined) continue;
+    const given = sourceGives(source, key, bound, depth);
+    values.push(...given.values);
+    changed ||= given.changed;
+    if (given.surely) return { values, changed, surely: true };
+  }
+  return { values, changed, surely: false };
+};
+
+/**
+ * What one source of `Object.assign` gives a key (P332): the value a record
+ * written out holds under it, nothing where it is left out or the source is
+ * nothing, what each caller hands a parameter - each `new` of the class, for
+ * one its constructor takes - and, for anything else, a value not read: a
+ * source not read may write any key, as a write by a key not read may.
+ */
+const sourceGives = (source: TsNode, key: string, bound: Bindings, depth: number): Given => {
+  if (Node.isSpreadElement(source) || depth > MOST_NESTED) return GIVES_UNREAD;
+  const followed = followValue(source, bound, depth + 1);
+  if (followed.choices !== undefined) return eitherGiven(followed.choices.map((choice) => sourceGives(choice.value, key, choice.bound, depth + 1)));
+  const value = peeled(followed.value);
+  if (isNothing(value)) return GIVES_NOTHING;
+  if (Node.isObjectLiteralExpression(value)) {
+    const slot = writtenProperty(value, key, followed.bound, depth + 1);
+    if (slot === undefined) return GIVES_NOTHING;
+    return slot.reached && slot.bound === undefined ? { values: [slot.expression], changed: false, surely: true } : GIVES_UNREAD;
+  }
+  const nested = assignedSources(value);
+  if (nested !== undefined) return laidOver(nested, key, followed.bound, depth + 1);
+  const declaration = declarationNamed(value);
+  if (declaration !== undefined && Node.isParameterDeclaration(declaration) && !followed.bound.has(declaration)) return handedGives(declaration, key, depth + 1);
+  return GIVES_UNREAD;
+};
+
+/** What every caller hands a parameter gives a key, as a source of `Object.assign` (P332): each `new` of the class, for a constructor's. */
+const handedGives = (parameter: ParameterDeclaration, key: string, depth: number): Given => {
+  const owner = parameter.getParent();
+  if (parameter.isRestParameter() || !Node.isParametered(owner)) return GIVES_UNREAD;
+  const index = owner.getParameters().indexOf(parameter);
+  let sites: (CallExpression | NewExpression)[] | undefined;
+  if (Node.isConstructorDeclaration(owner)) {
+    sites = constructionsOf(owner.getParent());
+  } else {
+    if (!callersMayWrite(parameter, key, depth)) return GIVES_NOTHING;
+    const callable = callableOf(parameter);
+    sites = callable === undefined ? undefined : callSitesOf(callable);
+  }
+  if (sites === undefined || sites.length === 0) return GIVES_UNREAD;
+  return eitherGiven(
+    sites.map((site) => {
+      const handed = site.getArguments();
+      if (handed.slice(0, index + 1).some((each) => Node.isSpreadElement(each))) return GIVES_UNREAD;
+      const argument = handed[index] ?? parameter.getInitializer();
+      return argument === undefined ? GIVES_NOTHING : sourceGives(argument, key, NO_BINDINGS, depth + 1);
+    }),
+  );
+};
+
+/**
+ * Every `new` of a class this program declares, by its name (P332):
+ * `undefined` for a class with no name, or one a class extends - whose
+ * constructor is also run by each `super(...)` - which is not followed.
+ */
+const constructionsOf = (cls: TsNode | undefined): NewExpression[] | undefined => {
+  if (cls === undefined || !Node.isClassDeclaration(cls) || derivedOf(cls).length > 0) return undefined;
+  const name = cls.getNameNode();
+  if (name === undefined) return undefined;
+  const out: NewExpression[] = [];
+  for (const reference of name.findReferencesAsNodes()) {
+    if (reference === name) continue;
+    const at = wrapped(reference);
+    const parent = at.getParent();
+    if (parent !== undefined && Node.isNewExpression(parent) && parent.getExpression() === at) out.push(parent);
+  }
+  return out;
+};
+
+/** Slots read out of a field of one of several classes, each saying which (P332). */
+const fromField = (slots: LocatedSlot[], field: string | undefined): LocatedSlot[] =>
+  field === undefined ? slots : slots.map((slot) => (slot === undefined ? slot : { ...slot, heldIn: field }));
 
 /**
  * Every place a path of properties reaches from one expression, in order.
@@ -2780,9 +3012,16 @@ const resolvers: LocatorResolvers = {
     const receiver = receiverOf(site);
     if (receiver === undefined) return [];
     const made = followValue(receiver, context.bound);
-    if (!Node.isNewExpression(made.value) || !constructs(made.value, locator.class)) return [stopped(receiver)];
-    const input = made.value.getArguments()[locator.index ?? 0];
-    return input === undefined ? [undefined] : walkPath(input, locator.path, made.bound);
+    const read = (instance: Followed, at: TsNode): LocatedSlot[] => {
+      if (!Node.isNewExpression(instance.value) || !constructs(instance.value, locator.class)) return [stopped(at)];
+      const input = instance.value.getArguments()[locator.index ?? 0];
+      return input === undefined ? [undefined] : walkPath(input, locator.path, instance.bound);
+    };
+    // A static field of either of several classes: each one's instance, saying which (P332).
+    if (made.choices !== undefined && made.choices.every((choice) => choice.heldIn !== undefined)) {
+      return made.choices.flatMap((choice) => fromField(read(followValue(choice.value, choice.bound), choice.value), choice.heldIn));
+    }
+    return read(made, receiver);
   },
   'receiver-registry-key': (site, locator) => registryKey(site, locator.class, locator.index ?? 0),
   'origin-call-argument': (site, locator) => {

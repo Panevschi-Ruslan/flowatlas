@@ -788,6 +788,12 @@ export const extractBrokers = (ctx: PassContext): void => {
     }
     const names = [...reached.keys()];
     const unread = elements.filter((element) => !isResolved(element.resolution));
+    // The channels read out of each field, where the receiver may be the
+    // static field of either of several classes (P332): none for a field
+    // whose value is not read.
+    const fields = elements.flatMap((element): [string, string[]][] =>
+      element.heldIn === undefined ? [] : [[element.heldIn, readable && isResolved(element.resolution) ? [...shapeChannelNames(element.resolution.names, shaping)] : []]],
+    );
     // Every name this call wrote belongs to the transport rather than to the
     // application, so there is nothing here to draw and nothing to report: the
     // library signalling to itself is not a publish.
@@ -880,6 +886,8 @@ export const extractBrokers = (ctx: PassContext): void => {
         // How a loop around it is read (P89): a batch, or a send with none.
         ...(pattern.batch === true ? { batch: true } : {}),
         ...(pattern.perItem === true ? { perItem: true } : {}),
+        // Which class's field each channel was read out of (P332).
+        ...(fields.length === 0 ? {} : { heldIn: Object.fromEntries(fields) }),
         // The functions of the repository's own it was handed out of (P267).
         ...(from === undefined ? {} : { through: [...from.through] }),
         // Which rule of the project's patterns drew it, when one did (P121).

@@ -1820,6 +1820,28 @@ only one of them moved.
   `grantPutEventsTo` handed a statement id the files do not read
   (`process.env.SID`) is an unread grant saying the bus's policy takes it
   only with an id; `null` is none, and a value another stack exports is one.
+- **Fields `Object.assign` writes, a field of either of two classes, and a
+  context value no file sets (P332).** `Object.assign(this, options)`,
+  `Object.assign(this, { queue })`, `Object.assign(Registry, { ... })` and
+  `Object.assign(this, ...)` in a static member now count as writes of each
+  field their sources give: a record written out gives its keys (the last
+  source that surely writes one hiding those before it), a parameter what
+  each caller hands it - each `new` of the class for a constructor's - and a
+  source not read (`JSON.parse(raw)`) may write any field, as a write by a
+  key not read may; a field so written was read as its declared value. A
+  read through a name that may stand for two classes, each declaring its
+  own static field of that name (`target.mail` of a function handed
+  `Queues` by one caller and `Archive` by another), is read as either
+  field, each value a candidate, the producer's `heldIn` naming the class's
+  field each channel came from, and the call is the library's where both
+  fields state its class; it was not read. A `tryGetContext` value no file
+  sets (cdk.json, cdk.context.json, the configured options), handed as an
+  argument to a library call - a bus's `grantPutEventsTo` statement id,
+  `addEnvironment` - or written in a function's environment, is a value
+  chosen when the app is synthesized (`-c key=...`) rather than nothing:
+  the bus grant is an unread grant saying it is written where the context
+  gives an id and dropped where none is, and the variable an unread setting
+  saying the same.
 - **A guess no longer shares a port with a firm one (P319).** Where one
   service is firmly at a port of this machine - the code writes the number,
   a loaded file or a setting file gives it, a container publishes it - and

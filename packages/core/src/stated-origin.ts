@@ -1,4 +1,4 @@
-import { fieldRead } from './adapters/locator.js';
+import { fieldRead, fieldsRead } from './adapters/locator.js';
 import { packageOfSpecifier } from './adapters/manifest.js';
 import { Node, SyntaxKind, type Node as TsNode, type PropertyDeclaration } from 'ts-morph';
 
@@ -253,7 +253,23 @@ const statementOf = (receiver: TsNode): TsNode | undefined => {
 
 export const statedOrigin = (receiver: TsNode): StatedOrigin | undefined => {
   const statement = statementOf(receiver);
-  if (statement === undefined) return undefined;
+  if (statement !== undefined) return originOf(statement);
+  // A read that may be the field of either of several classes, each declaring
+  // its own, states the class every one of those fields states (P332).
+  let read = receiver;
+  while (Node.isParenthesizedExpression(read) || Node.isNonNullExpression(read)) read = read.getExpression();
+  const fields = fieldsRead(read);
+  if (fields.length < 2) return undefined;
+  const origins = fields.map((field) => {
+    const stated = statedBy(field);
+    return stated === undefined ? undefined : originOf(stated);
+  });
+  const [first] = origins;
+  return first !== undefined && origins.every((each) => each?.package === first.package && each.typeName === first.typeName) ? first : undefined;
+};
+
+/** The class a statement names, as the package it is imported from exports it. */
+const originOf = (statement: TsNode): StatedOrigin | undefined => {
   const names = namesOf(statement);
   if (names === undefined) return undefined;
   const imported = importOf(names.root);

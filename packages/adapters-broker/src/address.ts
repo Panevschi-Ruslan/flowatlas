@@ -123,6 +123,12 @@ export interface AddressedElement {
    * (P272): what a grant of the function that runs the call bounds.
    */
   readonly grantable?: readonly GrantablePart[];
+  /**
+   * The field the address was read out of, where the receiver may be the
+   * static field of either of several classes, each declaring its own
+   * (P332): `Queues.mail`.
+   */
+  readonly heldIn?: string;
 }
 
 /**
@@ -399,6 +405,7 @@ export const readAddress = (
     const parameter = written === undefined || isResolved(resolution) ? undefined : parameterOf(written);
     const selector = isResolved(resolution) ? undefined : selectorAt(located.flat(), index);
     const grantable = isResolved(resolution) ? undefined : grantableOf(parts, readings);
+    const heldIn = located.flat().map((slots) => slotAt(slots, index)?.heldIn).find((each) => each !== undefined);
     return {
       resolution,
       ...(message === undefined ? {} : { payload: message }),
@@ -407,6 +414,7 @@ export const readAddress = (
       ...(written === undefined ? {} : { written: written.getText() }),
       ...(selector === undefined ? {} : { selector }),
       ...(grantable === undefined ? {} : { grantable }),
+      ...(heldIn === undefined ? {} : { heldIn }),
     };
   });
 };

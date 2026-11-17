@@ -326,6 +326,37 @@ describe("a grant of a bus, a table or a stream to a role that takes nothing, by
     expect(grantsOf(stack(bus("cdk.Fn.importValue('mover-sid')"), files))).toEqual(["bus stock-moves grantPutEventsTo, on the bus's own policy"]);
   });
 
+  it("leaves a bus's grant unread where its statement id is a context value no file sets, held or handed straight, and reads one a file sets (P332)", () => {
+    const files = (context: Record<string, unknown> = {}): Record<string, string> => ({
+      'cdk.json': JSON.stringify({ app: 'npx ts-node bin/app.ts', context: { '@aws-cdk/aws-events:requireEventBusPolicySid': true, ...context } }),
+      'package-lock.json': JSON.stringify({ lockfileVersion: 3, packages: { '': {}, 'node_modules/aws-cdk-lib': { version: '2.190.0' } } }),
+    });
+    const bus = (before: string, sid: string): string =>
+      `${ROLE('{ mutable: false, addGrantsToResources: true }')}\n    ${MOVE}\n    ${before}\n    new cdk.aws_events.EventBus(this, 'Moves', { eventBusName: 'stock-moves' }).grantPutEventsTo(role, ${sid});`;
+    const chosen = /^bus open: the bus's policy takes the grant only with a statement id, and the one it is handed is the context value moverSid, which no file sets: the deployment gives it when the app is synthesized \(-c moverSid=\.\.\.\) or leaves it out: given, the grant is written into the policy; left out, it is dropped grantPutEventsTo$/;
+    for (const [before, sid] of [
+      ['', "this.node.tryGetContext('moverSid')"],
+      ["const sid = this.node.tryGetContext('moverSid');", 'sid'],
+      ["const props = { sid: this.node.tryGetContext('moverSid') };", 'props.sid'],
+      ["const pick = (given: string) => given;", "pick(this.node.tryGetContext('moverSid'))"],
+    ]) {
+      const [read, ...more] = grantsOf(stack(bus(before as string, sid as string), files()));
+      expect(read).toMatch(chosen);
+      expect(more).toEqual([]);
+    }
+    expect(grantsOf(stack(bus('', "this.node.tryGetContext('moverSid')"), files({ moverSid: 'StockMover' })))).toEqual(["bus stock-moves grantPutEventsTo, on the bus's own policy"]);
+    expect(grantsOf(stack(bus('', "this.node.tryGetContext('moverSid') ?? 'StockMover'"), files()))).toEqual(["bus stock-moves grantPutEventsTo, on the bus's own policy"]);
+  });
+
+  it('reads a variable a context value no file sets gives as chosen when the app is run, written in the record or added (P332)', () => {
+    const deployment = stack(`const move = new lambda.Function(this, 'Move', { functionName: 'stock-move', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset('src'), handler: 'move.handler', environment: { STAGE: this.node.tryGetContext('stage'), REGION: this.node.tryGetContext('region') ?? 'eu-west-1' } });
+    move.addEnvironment('TIER', this.node.tryGetContext('tier'));`);
+    const environment = deployment.functions[0]?.environment ?? {};
+    expect(environment['STAGE']?.unread?.text).toBe('the context value stage, which no file sets: the deployment gives it when the app is synthesized (-c stage=...) or leaves it out');
+    expect(environment['TIER']?.unread?.text).toBe('the context value tier, which no file sets: the deployment gives it when the app is synthesized (-c tier=...) or leaves it out');
+    expect(environment['REGION']).toMatchObject({ text: 'eu-west-1' });
+  });
+
   it("puts a grant on the resource for a role asking for it in the stack's own account, and takes a role of another account than its stack's as one that takes nothing", () => {
     const same = stack(`const here = new cdk.Stack(scope, 'Here', { env: { account: '111122223333' } });
     const role = iam.Role.fromRoleArn(here, 'MoveRole', 'arn:aws:iam::111122223333:role/stock-mover', { mutable: false, addGrantsToResources: true });

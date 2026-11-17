@@ -51,6 +51,22 @@ export class Chosen {
 /** A value as it is used: a context value its plain value. */
 export const settle = (value: Value): Value => (value instanceof Chosen ? value.value : value);
 
+/**
+ * A context value no file sets, as what it is where it is handed on (P332):
+ * not nothing, but a value the deployment gives when the app is synthesized
+ * (`cdk synth -c <key>=...`) or leaves out - which only the run says.
+ */
+export const unsetContext = (key: string): Unread =>
+  new Unread(`the context value ${key}, which no file sets: the deployment gives it when the app is synthesized (-c ${key}=...) or leaves it out`, 'context');
+
+/**
+ * A value as it is handed to what is not the app's own - a method or a
+ * construct of the library, a function of Node's (P332): a context value its
+ * plain value, and one no file sets a value not read rather than nothing,
+ * so what it is handed to reads as chosen when the app is run.
+ */
+export const handedOn = (value: Value): Value => (value instanceof Chosen && value.value === undefined ? unsetContext(value.key) : settle(value));
+
 /** A value the files do not settle, and why, in one sentence. */
 export class Unread {
   constructor(
@@ -153,6 +169,13 @@ export class ObjectValue {
 
   get(name: string): Value {
     return this.entries.get(name);
+  }
+
+  /** An entry as it is handed on (P332): one a context value no file sets gave, that value not read. */
+  handed(name: string): Value {
+    const key = this.chosen.get(name);
+    const value = this.entries.get(name);
+    return key !== undefined && value === undefined ? unsetContext(key) : value;
   }
 }
 

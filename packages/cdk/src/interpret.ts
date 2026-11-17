@@ -20,6 +20,7 @@ import {
   PRINCIPAL_ATTRIBUTES,
   principalHolders,
   Scope,
+  handedOn,
   settle,
   textOf,
   toJson,
@@ -313,9 +314,13 @@ export class Interpreter {
     return value === undefined ? this.value(fallback, scope, frame) : value;
   }
 
-  /** What the arguments of a call are to anything but a function of the app's own: plain values (P304). */
+  /**
+   * What the arguments of a call are to anything but a function of the app's
+   * own: plain values (P304), a context value no file sets one not read, the
+   * deployment's to give when the app is synthesized (P332).
+   */
   #settled(args: readonly Value[]): Value[] {
-    return args.map(settle);
+    return args.map(handedOn);
   }
 
   // ---------------------------------------------------------- expressions
