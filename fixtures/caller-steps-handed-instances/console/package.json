@@ -1,0 +1,10 @@
+{
+  "name": "caller-steps-handed-instances-console",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-router-dom": "^6.28.0"
+  }
+}

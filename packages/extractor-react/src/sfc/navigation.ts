@@ -791,17 +791,15 @@ const endsInWrittenSegment = (before: string): boolean => {
   return before.startsWith('/') && /^[A-Za-z0-9][A-Za-z0-9._~-]*$/.test(last) && /[A-Za-z0-9]$/.test(last);
 };
 
-/** The props a framework's link takes its address in (`to`, `href`): a prop of a link of the application's own named so is one it is handed an address in (P320). */
-const ADDRESS_PROPS: ReadonlySet<string> = new Set(['href', ...LINK_COMPONENTS.map((link) => link.attribute)]);
-
 /**
  * Whether a prop of another name than the link's attribute, put after text
  * that does not end a segment, is the address its uses hand (P303, P314): no
  * use hands text that is not an address, and one at least hands an address -
  * or, where every value handed is not read, the text before it ends in a
  * segment that is all values (`/${locale}${to}`), so the prop can only be an
- * address; or the text before it ends in a segment written out whole and
- * the prop is named as a framework link's address (`` `/app${to}` ``, P320).
+ * address; or the text before it ends in a segment written out whole
+ * (`` `/app${to}` ``, P320) - whatever the prop is named, since it is what
+ * the wrapper puts into its link's address (`` `/area${path}` ``, P326).
  * Its values are then read at each use, and one not read is said there,
  * with the text in front as its prefix, never taken as the component's own
  * navigation.
@@ -810,13 +808,32 @@ const isHandedAddress = (fn: TsNode, prop: string, before: string): boolean => {
   if (before === '' || before.endsWith('/')) return false;
   const handed = handedToProp(fn, prop);
   if (handed.other > 0) return false;
-  // Every value not read, after a segment written out whole and in a prop named as a link's address (`/app${to}`): an address under it (P320).
-  return handed.addresses > 0 || (handed.unread > 0 && (endsInValueSegment(before) || (ADDRESS_PROPS.has(prop) && endsInWrittenSegment(before))));
+  // Every value not read, after a segment written out whole (`/app${to}`, `/area${path}`): an address under it (P320, P326).
+  return handed.addresses > 0 || (handed.unread > 0 && (endsInValueSegment(before) || endsInWrittenSegment(before)));
+};
+
+/**
+ * The value a link's address is written as in a wrapper, through the
+ * `const`s of the wrapper's own body holding it (`const address =
+ * `/console${props.target}`; <Link href={address}>`), so the prop is
+ * followed through to the link (P326).
+ */
+const throughOwnConsts = (fn: TsNode, value: TsNode): TsNode => {
+  let read = value;
+  for (let depth = 0; depth < 4 && Node.isIdentifier(read); depth += 1) {
+    const declaration = read.getSymbol()?.getDeclarations()[0];
+    if (declaration === undefined || !Node.isVariableDeclaration(declaration) || declaration.getFirstAncestor((each) => each === fn) === undefined) break;
+    const list = declaration.getParent();
+    const initializer = declaration.getInitializer();
+    if (initializer === undefined || !Node.isIdentifier(declaration.getNameNode()) || !Node.isVariableDeclarationList(list) || list.getDeclarationKind() !== 'const') break;
+    read = bare(initializer);
+  }
+  return read;
 };
 
 /** What a wrapper's inner link is handed: a prop as it is, put inside a template, or handed to a call among other values. */
 const wrappedOf = (fn: TsNode, value: TsNode, attribute: string): { readonly prop: string; readonly before: string; readonly after: string; readonly localized: boolean } | undefined => {
-  const read = bare(Node.isJsxExpression(value) ? (value.getExpression() ?? value) : value);
+  const read = throughOwnConsts(fn, bare(Node.isJsxExpression(value) ? (value.getExpression() ?? value) : value));
   const direct = propReadOf(fn, read);
   if (direct !== undefined) return { prop: direct, before: '', after: '', localized: false };
   // `` `/app${to}` ``, `'/app' + to`: the text around the prop.

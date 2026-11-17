@@ -203,6 +203,25 @@ only one of them moved.
   `prefix`, and the wrapper draws no navigation of its own. A new info
   `route-entries-unread` row says, at the route, how many entries of the
   list it is written over are not read and why.
+- **Views made by flatMap, Array.from or reduce, an instance reached
+  however it is handed, and a wrapper's prop of any name (P326).** A view
+  of a list's or a registry's entries made with `flatMap` (an object, a list
+  of objects, either side of a condition), `Array.from(list, fn)` or a
+  `reduce` from an empty list gathering objects (`[...all, { ... }]`,
+  `all.concat({ ... })`, `all.push({ ... })`) is read as a `map` to an
+  object over each item is, a report flat-mapped to two objects placing two
+  routes and an item handed on as it is (`page.hidden ? [] : [page]`) kept
+  as it is; one made otherwise is counted in `route-entries-unread` with
+  why.
+  An instance's registry field is followed through an import, a parameter
+  it is handed (`installPanel(panels, panel)`) and a field of another class
+  given it when made (`new PanelBook(panels)`, then
+  `this.registry.items.push(...)`), each call adding only where what it is
+  handed, or the instance it is made on, holds that instance. A link of the
+  application's own putting a prop of any name after a segment written out
+  whole (`` `/area${path}` ``), directly or through a `const` of its own
+  body, every use's value unread, is an address under that segment as a
+  `to` or `href` prop is.
 - **Settings chosen by a branch, and read inside a function handed nothing
   (P302).** A condition nobody settles whose branches read different
   settings, `isProd ? process.env.API_URL : process.env.DEV_API_URL`, written

@@ -1,5 +1,5 @@
 import { evaluateExpression } from '@flowatlas/core';
-import type { CallExpression, ClassDeclaration, MethodDeclaration, Node as TsNode, ObjectLiteralExpression, ParameterDeclaration, PropertyDeclaration, VariableDeclaration } from 'ts-morph';
+import type { CallExpression, ClassDeclaration, MethodDeclaration, NewExpression, Node as TsNode, ObjectLiteralExpression, ParameterDeclaration, PropertyDeclaration, VariableDeclaration } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { memberOf, reads, type Bindings } from './bound-entries.js';
 
@@ -133,7 +133,7 @@ interface Storing {
 }
 
 const parametersOf = (fn: TsNode): readonly ParameterDeclaration[] =>
-  Node.isFunctionDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) || Node.isMethodDeclaration(fn) ? fn.getParameters() : [];
+  Node.isFunctionDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) || Node.isMethodDeclaration(fn) || Node.isConstructorDeclaration(fn) ? fn.getParameters() : [];
 
 /** The parameter of a function a name reads, by its place. */
 const parameterIndex = (fn: TsNode, node: TsNode): number | undefined => {
@@ -247,18 +247,170 @@ const readKeyOf = (reader: TsNode, isStore: StoreTest): { readonly parameter: nu
   return found;
 };
 
-/** A class of the repository a receiver names, and the `const` holding an instance of it where it names one. */
-const registryClassOf = (receiver: TsNode): { readonly cls: ClassDeclaration; readonly instance?: TsNode } | undefined => {
-  if (!Node.isIdentifier(receiver)) return undefined;
-  const declaration = declarationOf(receiver);
+/**
+ * What a receiver may hold of a class of the repository (P326): the class
+ * itself, or an instance - the `const` holding a `new` of it, or a `new`
+ * written in place. One instance is the same wherever it is named.
+ */
+type Held = ClassDeclaration | VariableDeclaration | NewExpression;
+
+/** The class of the repository a `new` makes. */
+const classMade = (made: NewExpression): ClassDeclaration | undefined => {
+  const name = bare(made.getExpression());
+  const declaration = Node.isIdentifier(name) ? declarationOf(name) : undefined;
+  return declaration !== undefined && Node.isClassDeclaration(declaration) && !inLibrary(declaration) ? declaration : undefined;
+};
+
+/** The class a held value is, or is an instance of. */
+const classOfHeld = (held: Held): ClassDeclaration | undefined => {
+  if (Node.isClassDeclaration(held)) return held;
+  if (Node.isNewExpression(held)) return classMade(held);
+  const value = held.getInitializer();
+  const made = value === undefined ? undefined : bare(value);
+  return made !== undefined && Node.isNewExpression(made) ? classMade(made) : undefined;
+};
+
+/** The `new` an instance is made by. */
+const newOf = (held: Held): NewExpression | undefined => {
+  if (Node.isNewExpression(held)) return held;
+  if (!Node.isVariableDeclaration(held)) return undefined;
+  const value = held.getInitializer();
+  const made = value === undefined ? undefined : bare(value);
+  return made !== undefined && Node.isNewExpression(made) ? made : undefined;
+};
+
+const CALLS = new WeakMap<TsNode, readonly (CallExpression | NewExpression)[]>();
+
+/** Every call of a function of the repository, by its name through the checker's references; a constructor's are its class's `new`s (P326). */
+const callsOf = (fn: TsNode): readonly (CallExpression | NewExpression)[] => {
+  const known = CALLS.get(fn);
+  if (known !== undefined) return known;
+  const parent = fn.getParent();
+  const name = Node.isConstructorDeclaration(fn)
+    ? Node.isClassDeclaration(parent) ? parent.getNameNode() : undefined
+    : Node.isFunctionDeclaration(fn) || Node.isMethodDeclaration(fn)
+      ? fn.getNameNode()
+      : parent !== undefined && Node.isVariableDeclaration(parent)
+        ? parent.getNameNode()
+        : undefined;
+  let references: TsNode[] = [];
+  try {
+    references = name !== undefined && Node.isIdentifier(name) ? name.findReferencesAsNodes() : [];
+  } catch {
+    references = [];
+  }
+  const found: (CallExpression | NewExpression)[] = [];
+  for (const reference of references) {
+    if (inLibrary(reference)) continue;
+    const named = reference.getParent();
+    const callee = named !== undefined && Node.isPropertyAccessExpression(named) && named.getNameNode() === reference ? named : reference;
+    const call = callee.getParent();
+    if (call === undefined || !(Node.isCallExpression(call) || Node.isNewExpression(call)) || call.getExpression() !== callee) continue;
+    if (Node.isNewExpression(call) !== Node.isConstructorDeclaration(fn)) continue;
+    found.push(call);
+  }
+  CALLS.set(fn, found);
+  return found;
+};
+
+const HELD = new WeakMap<TsNode, readonly Held[] | null>();
+
+/**
+ * What a receiver holds (P326): a class or the `const` holding an instance
+ * (as before), through an import or another `const`, or a static field
+ * written with one; a parameter, what every
+ * call hands it there; a field of the class `this` is in - a parameter
+ * property or one its initializer or a `this.field = value` writes - what is
+ * written into it, a constructor's parameter what each `new` of the class
+ * hands, or only what `self`'s `new` hands where the instance is known.
+ * Nothing where any of these is not read.
+ */
+const heldBy = (receiver: TsNode, self?: Held, depth = 0): readonly Held[] | undefined => {
+  if (depth > 6) return undefined;
+  const value = bare(receiver);
+  if (Node.isNewExpression(value)) return classMade(value) === undefined ? undefined : [value];
+  // A name, a field off `this`, or a static field off its class (`Panels.shared`).
+  const declaration = Node.isIdentifier(value) || Node.isPropertyAccessExpression(value) ? declarationOf(value) : undefined;
   if (declaration === undefined || inLibrary(declaration)) return undefined;
-  if (Node.isClassDeclaration(declaration)) return { cls: declaration };
-  if (!Node.isVariableDeclaration(declaration)) return undefined;
-  const made = declaration.getInitializer();
-  const created = made === undefined ? undefined : bare(made);
-  if (created === undefined || !Node.isNewExpression(created)) return undefined;
-  const found = registryClassOf(created.getExpression());
-  return found === undefined || found.instance !== undefined ? undefined : { cls: found.cls, instance: declaration };
+  if (Node.isPropertyAccessExpression(value) && !Node.isThisExpression(bare(value.getExpression())) && !(Node.isPropertyDeclaration(declaration) && declaration.isStatic())) return undefined;
+  if (self === undefined) {
+    const known = HELD.get(declaration);
+    if (known !== undefined) return known ?? undefined;
+    HELD.set(declaration, null);
+  }
+  const found = heldIn(declaration, self, depth);
+  if (self === undefined) HELD.set(declaration, found ?? null);
+  return found;
+};
+
+/** What each value may hold, together; nothing where one is not read. */
+const heldByAll = (values: readonly (TsNode | undefined)[], self: Held | undefined, depth: number): readonly Held[] | undefined => {
+  const found = new Set<Held>();
+  for (const value of values) {
+    const each = value === undefined ? undefined : heldBy(value, self, depth + 1);
+    if (each === undefined) return undefined;
+    for (const held of each) found.add(held);
+  }
+  return found.size === 0 ? undefined : [...found];
+};
+
+const heldIn = (declaration: TsNode, self: Held | undefined, depth: number): readonly Held[] | undefined => {
+  if (Node.isClassDeclaration(declaration)) return [declaration];
+  if (Node.isVariableDeclaration(declaration)) {
+    const value = declaration.getInitializer();
+    const made = value === undefined ? undefined : bare(value);
+    if (made !== undefined && Node.isNewExpression(made)) return classMade(made) === undefined ? undefined : [declaration];
+    return made === undefined ? undefined : heldBy(made, self, depth + 1);
+  }
+  if (Node.isParameterDeclaration(declaration)) {
+    const fn = declaration.getParent();
+    const place = parametersOf(fn).indexOf(declaration);
+    if (Node.isConstructorDeclaration(fn)) {
+      // The instance known: what its own `new` hands; else what every `new` of the class does.
+      const made = self === undefined ? undefined : newOf(self);
+      const calls = made !== undefined && classMade(made) === fn.getParent() ? [made] : callsOf(fn);
+      return heldByAll(calls.map((call) => call.getArguments()[place]), undefined, depth);
+    }
+    if (place === -1 || declaration.getDotDotDotToken() !== undefined) return undefined;
+    return heldByAll(callsOf(fn).map((call) => call.getArguments()[place]), undefined, depth);
+  }
+  if (Node.isPropertyDeclaration(declaration) && !declaration.isStatic()) {
+    const cls = declaration.getParent();
+    if (!Node.isClassDeclaration(cls)) return undefined;
+    const written: TsNode[] = [];
+    const initializer = declaration.getInitializer();
+    if (initializer !== undefined) written.push(initializer);
+    for (const assigned of cls.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
+      const left = bare(assigned.getLeft());
+      if (assigned.getOperatorToken().getText() !== '=' || !Node.isPropertyAccessExpression(left) || !Node.isThisExpression(bare(left.getExpression()))) continue;
+      if (declarationOf(left) === declaration) written.push(assigned.getRight());
+    }
+    return written.length === 0 ? undefined : heldByAll(written, self, depth);
+  }
+  if (Node.isPropertyDeclaration(declaration)) {
+    const initializer = declaration.getInitializer();
+    return initializer === undefined ? undefined : heldBy(initializer, undefined, depth + 1);
+  }
+  return undefined;
+};
+
+/** Whether a receiver holds a given class or instance, among what it may hold (P326). */
+const holds = (receiver: TsNode, held: Held, self?: Held): boolean => heldBy(receiver, self)?.includes(held) === true;
+
+/**
+ * A class of the repository a receiver names, and the instance it holds
+ * where it holds one: a `const` holding a `new` of it (P297), or one reached
+ * through a parameter, a field of another class or an import (P326). A
+ * receiver that may hold several instances names none.
+ */
+const registryClassOf = (receiver: TsNode): { readonly cls: ClassDeclaration; readonly instance?: Held } | undefined => {
+  const held = heldBy(receiver);
+  const [first] = held ?? [];
+  if (held === undefined || first === undefined || new Set(held.map(classOfHeld)).size !== 1) return undefined;
+  const cls = classOfHeld(first);
+  if (cls === undefined) return undefined;
+  if (held.every((each) => Node.isClassDeclaration(each))) return { cls };
+  return held.length === 1 ? { cls, instance: first } : undefined;
 };
 
 /** Whether an expression is `this` or the class's own name: what a field of the class is read off. */
@@ -316,10 +468,15 @@ const ownFunctionOf = (callee: TsNode): { readonly fn: TsNode; readonly holder?:
     const fn = memberFunction(holder, name.getName());
     return fn === undefined ? undefined : { fn, holder };
   }
-  const owner = registryClassOf(receiver);
-  if (owner === undefined) return undefined;
-  const method = owner.instance === undefined ? owner.cls.getStaticMethod(name.getName()) : owner.cls.getInstanceMethod(name.getName());
-  return method === undefined || method.getBody() === undefined ? undefined : { fn: method, holder: owner.cls };
+  // The class, or instances of one class however many: a parameter handed several, a field (P326).
+  const held = heldBy(receiver);
+  const classes = new Set(held?.map(classOfHeld));
+  const [cls] = classes;
+  if (held === undefined || classes.size !== 1 || cls === undefined) return undefined;
+  const statics = held.every((each) => Node.isClassDeclaration(each));
+  if (!statics && held.some((each) => Node.isClassDeclaration(each))) return undefined;
+  const method = statics ? cls.getStaticMethod(name.getName()) : cls.getInstanceMethod(name.getName());
+  return method === undefined || method.getBody() === undefined ? undefined : { fn: method, holder: cls };
 };
 
 /** The functions written beside one at the top of its module, and those the object or the class holding it holds (P303, P320). */
@@ -426,9 +583,11 @@ const isStaticStore = (declaration: TsNode | undefined): declaration is Property
  * added to it outside any function, in any module. A class's static field is
  * followed the same way (`Registry.items.push(...)` in another module, a
  * static block of the class), and an instance's field where the instance is
- * one a `const` holds, named off that `const` (P320).
+ * one a `const` holds, named off that `const` (P320) or off anything holding
+ * it - a parameter it is handed, a field of another class given it, an
+ * import (P326).
  */
-const storeReach = (declaration: StoreDeclaration, instance?: TsNode): StoreReach => {
+const storeReach = (declaration: StoreDeclaration, instance?: Held): StoreReach => {
   const byInstance = REACHES.get(declaration) ?? new Map<TsNode, StoreReach>();
   REACHES.set(declaration, byInstance);
   const known = byInstance.get(instance ?? declaration);
@@ -445,7 +604,7 @@ const storeReach = (declaration: StoreDeclaration, instance?: TsNode): StoreReac
   const isStore: StoreTest = (root) => {
     if (!(Node.isIdentifier(root) || Node.isPropertyAccessExpression(root)) || declarationOf(root) !== declaration) return false;
     if (instance === undefined) return true;
-    return Node.isPropertyAccessExpression(root) && registryClassOf(bare(root.getExpression()))?.instance === instance;
+    return Node.isPropertyAccessExpression(root) && holds(root.getExpression(), instance);
   };
   const own = Node.isVariableDeclaration(declaration) ? declaration.getVariableStatement() : undefined;
   for (const reference of references) {
@@ -518,29 +677,176 @@ const handedBackBy = (fn: TsNode): TsNode[] => {
  * What a registry's reader hands back of its store (P314): its entries as
  * they are (`store`, `store.get(key)`, `[...store.values()]`,
  * `Object.values(store)`, a `filter` / `sort` / `slice` of them), each mapped
- * to an object written over the entry (`store.map((route) => ({ ...route,
- * path: base + route.path }))`), or something else made of them, which is not
- * read.
+ * to objects written over the entry (`store.map((route) => ({ ...route,
+ * path: base + route.path }))`, a `flatMap`, `Array.from(store, fn)` or a
+ * `reduce` gathering objects, P326), or something else made of them, which is
+ * not read.
  */
 type StoreView =
   | { readonly kind: 'entries' }
-  | { readonly kind: 'mapped'; readonly object: ObjectLiteralExpression; readonly parameter: ParameterDeclaration }
+  | { readonly kind: 'mapped'; readonly objects: readonly Written[]; readonly parameter: ParameterDeclaration }
   | { readonly kind: 'unread'; readonly why: string };
+
+/** What a step writes for an item: an object written over it, or the item itself where it is handed on as it is (its parameter, P326). */
+type Written = ObjectLiteralExpression | ParameterDeclaration;
 
 const ENTRIES: StoreView = { kind: 'entries' };
 
 /** The methods of a list a view of a store passes through keeping its entries as they are. */
 const VIEW_KEEPING: ReadonlySet<string> = new Set(['filter', 'find', 'slice', 'sort', 'reverse', 'toSorted', 'toReversed', 'concat', 'values', 'flat']);
 
-/** The object a function handed to `map` writes for each entry, and the entry's name: `(route) => ({ ...route, path })`. */
-const mappedBy = (handed: TsNode | undefined): StoreView => {
+/** Whether a node names a step's parameter: the item handed on as it is. */
+const isItem = (node: TsNode, item: ParameterDeclaration): boolean => Node.isIdentifier(node) && (node.getSymbol()?.getDeclarations() ?? []).includes(item as never);
+
+/**
+ * What a step hands back for one item (P326): an object written in place, or
+ * the item itself; a list of them, either side of a condition (`page.hidden ?
+ * [] : [page]`), none for an empty list.
+ */
+const objectsOf = (node: TsNode, item: ParameterDeclaration, depth = 0): Written[] | undefined => {
+  const value = bare(node);
+  if (Node.isObjectLiteralExpression(value)) return [value];
+  if (isItem(value, item)) return [item];
+  if (Node.isConditionalExpression(value) && depth < 4) {
+    const sides = [value.getWhenTrue(), value.getWhenFalse()].map((side) => objectsOf(side, item, depth + 1));
+    return sides.every((side) => side !== undefined) ? (sides as Written[][]).flat() : undefined;
+  }
+  if (!Node.isArrayLiteralExpression(value)) return undefined;
+  const found: Written[] = [];
+  for (const element of value.getElements()) {
+    const each = bare(element);
+    if (Node.isObjectLiteralExpression(each)) found.push(each);
+    else if (isItem(each, item)) found.push(item);
+    else return undefined;
+  }
+  return found;
+};
+
+/** The entries a view mapped over one entry is: each object bound over it, or the entry itself (P326). */
+const writtenOver = (view: { readonly objects: readonly Written[]; readonly parameter: ParameterDeclaration }, entry: ListEntry): ListEntry[] =>
+  view.objects.map((object) => (Node.isParameterDeclaration(object) ? entry : { object, bound: new Map([...(entry.bound ?? []), [view.parameter, entry.object]]) }));
+
+/** The steps a list is turned into objects per item by (P320, P326). */
+type Step = 'map' | 'flatMap' | 'reduce';
+
+const STEPS: ReadonlySet<string> = new Set<Step>(['map', 'flatMap', 'reduce']);
+
+const STEP_WORDS: Readonly<Record<Step, { readonly does: string; readonly done: string }>> = {
+  map: { does: 'maps each entry', done: 'mapped' },
+  flatMap: { does: 'flat-maps each entry', done: 'flat-mapped' },
+  reduce: { does: 'reduces the entries', done: 'reduced' },
+};
+
+/**
+ * The objects a function handed to a list's `map` or `flatMap` writes for
+ * each entry, and the entry's name: `(route) => ({ ...route, path })`; for
+ * `flatMap` a list of them too, either side of a condition, an empty list
+ * leaving the entry out (P326).
+ */
+const mappedBy = (handed: TsNode | undefined, step: 'map' | 'flatMap' = 'map'): StoreView => {
   const fn = handed === undefined ? undefined : bare(handed);
-  if (fn === undefined || !(Node.isArrowFunction(fn) || Node.isFunctionExpression(fn))) return { kind: 'unread', why: 'a function of its own maps each entry' };
+  if (fn === undefined || !(Node.isArrowFunction(fn) || Node.isFunctionExpression(fn))) return { kind: 'unread', why: `a function of its own ${STEP_WORDS[step].does}` };
   const [parameter] = fn.getParameters();
   const returned = handedBackBy(fn);
-  const object = returned.length === 1 ? bare(returned[0] as TsNode) : undefined;
-  if (parameter === undefined || !Node.isIdentifier(parameter.getNameNode()) || object === undefined || !Node.isObjectLiteralExpression(object)) return { kind: 'unread', why: 'each entry is mapped to something other than an object written over it' };
-  return { kind: 'mapped', object, parameter };
+  const notRead: StoreView = { kind: 'unread', why: `each entry is ${STEP_WORDS[step].done} to something other than ${step === 'map' ? 'an object' : 'objects'} written over it` };
+  if (parameter === undefined || !Node.isIdentifier(parameter.getNameNode()) || returned.length === 0) return notRead;
+  if (step === 'map') {
+    const object = returned.length === 1 ? bare(returned[0] as TsNode) : undefined;
+    return object !== undefined && Node.isObjectLiteralExpression(object) ? { kind: 'mapped', objects: [object], parameter } : notRead;
+  }
+  const objects: Written[] = [];
+  for (const each of returned) {
+    const found = objectsOf(each, parameter);
+    if (found === undefined) return notRead;
+    objects.push(...found);
+  }
+  return objects.length === 0 ? notRead : { kind: 'mapped', objects, parameter };
+};
+
+/**
+ * The objects a `reduce` gathers for each entry, starting from an empty list
+ * (P326): `(all, route) => [...all, { ...route, path }]`, `all.concat({ ...
+ * })`, or `all.push({ ... })` then `return all`, the entry the function's
+ * second parameter. Anything else gathered is not read, and why is said.
+ */
+const reducedBy = (handed: TsNode | undefined, start: TsNode | undefined): StoreView => {
+  const fn = handed === undefined ? undefined : bare(handed);
+  if (fn === undefined || !(Node.isArrowFunction(fn) || Node.isFunctionExpression(fn))) return { kind: 'unread', why: `a function of its own ${STEP_WORDS.reduce.does}` };
+  const initial = start === undefined ? undefined : bare(start);
+  if (initial === undefined || !Node.isArrayLiteralExpression(initial) || initial.getElements().length > 0) return { kind: 'unread', why: 'the reduce starts from something other than an empty list' };
+  const [gathered, parameter] = fn.getParameters();
+  const notRead: StoreView = { kind: 'unread', why: 'each entry is reduced to something other than objects written over it' };
+  if (gathered === undefined || parameter === undefined || !Node.isIdentifier(gathered.getNameNode()) || !Node.isIdentifier(parameter.getNameNode())) return notRead;
+  const isGathered = (node: TsNode): boolean => Node.isIdentifier(bare(node)) && (bare(node).getSymbol()?.getDeclarations() ?? []).includes(gathered as never);
+  const objects: Written[] = [];
+  // `all.concat(...)`, `all.push(...)`: each value handed objects written in place, or the entry itself.
+  const handedObjects = (call: TsNode): boolean => {
+    if (!Node.isCallExpression(call)) return false;
+    for (const argument of call.getArguments()) {
+      const found = objectsOf(argument, parameter);
+      if (found === undefined) return false;
+      objects.push(...found);
+    }
+    return true;
+  };
+  const gatheredCall = (node: TsNode, name: string): boolean => {
+    const callee = Node.isCallExpression(node) ? node.getExpression() : undefined;
+    return callee !== undefined && Node.isPropertyAccessExpression(callee) && callee.getName() === name && isGathered(callee.getExpression());
+  };
+  let read = true;
+  const body = fn.getBody();
+  if (Node.isBlock(body)) {
+    body.forEachDescendant((node, traversal) => {
+      if (isFunctionNode(node)) {
+        traversal.skip();
+        return;
+      }
+      if (gatheredCall(node, 'push') && !handedObjects(node)) read = false;
+    });
+  }
+  for (const returned of handedBackBy(fn)) {
+    const value = bare(returned);
+    if (isGathered(value)) continue;
+    if (gatheredCall(value, 'concat') && handedObjects(value)) continue;
+    if (Node.isArrayLiteralExpression(value)) {
+      const added = value.getElements().filter((element) => !(Node.isSpreadElement(element) && isGathered(element.getExpression())));
+      const found = added.map((element) => objectsOf(element, parameter));
+      if (found.every((each) => each !== undefined && each.length === 1)) {
+        objects.push(...(found as Written[][]).flat());
+        continue;
+      }
+    }
+    read = false;
+  }
+  return read && objects.length > 0 ? { kind: 'mapped', objects, parameter } : notRead;
+};
+
+/** The view a step of a list makes of its items, as read (P326). */
+const stepView = (step: Step, args: readonly TsNode[]): StoreView => (step === 'reduce' ? reducedBy(args[0], args[1]) : mappedBy(args[0], step));
+
+/** Whether a name is the runtime's own `Object` or `Array`, not one the repository declares. */
+const isGlobal = (name: TsNode, global: 'Object' | 'Array'): boolean => {
+  if (!Node.isIdentifier(name) || name.getText() !== global) return false;
+  const declaration = declarationOf(name);
+  return declaration === undefined || inLibrary(declaration);
+};
+
+/** The view a step makes of a store's view: of its entries as they are, read; of entries mapped already, not. */
+const thenStep = (inner: StoreView, step: Step, args: readonly TsNode[]): StoreView => {
+  if (inner.kind === 'unread') return inner;
+  return inner.kind === 'entries' ? stepView(step, args) : { kind: 'unread', why: 'its entries are mapped twice' };
+};
+
+/** The list a call steps over and the view it makes of its items: `list.map(fn)`, `list.flatMap(fn)`, `list.reduce(fn, [])`, `Array.from(list, fn)` (P320, P326). */
+const stepOf = (call: CallExpression): { readonly source: TsNode; readonly view: StoreView } | undefined => {
+  const callee = call.getExpression();
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const args = call.getArguments();
+  if (isGlobal(bare(callee.getExpression()), 'Array') && callee.getName() === 'from') {
+    const [source] = args;
+    return source === undefined ? undefined : { source, view: args.length < 2 ? ENTRIES : mappedBy(args[1]) };
+  }
+  return STEPS.has(callee.getName()) ? { source: callee.getExpression(), view: stepView(callee.getName() as Step, args) } : undefined;
 };
 
 /** The view of a store an expression of its reader is, or nothing where it reads no store. */
@@ -565,18 +871,18 @@ const viewIn = (node: TsNode, isStore: StoreTest, reader: TsNode, depth = 0): St
   const owner = bare(callee.getExpression());
   const name = callee.getName();
   // `Object.values(store)`, `Array.from(store.values(), fn)`: the entries, mapped where a function is handed.
-  const global = Node.isIdentifier(owner) && ['Object', 'Array'].includes(owner.getText()) ? declarationOf(owner) : null;
-  if (global !== null && (global === undefined || inLibrary(global))) {
+  if (isGlobal(owner, 'Object') || isGlobal(owner, 'Array')) {
     const inner = args[0] === undefined ? undefined : viewIn(args[0], isStore, reader, depth + 1);
     if (inner === undefined) return undefined;
     if (owner.getText() === 'Object' && name === 'values') return inner;
-    if (owner.getText() === 'Array' && name === 'from') return args.length < 2 ? inner : inner.kind === 'entries' ? mappedBy(args[1]) : { kind: 'unread', why: 'its entries are mapped twice' };
+    if (owner.getText() === 'Array' && name === 'from') return args.length < 2 ? inner : thenStep(inner, 'map', args.slice(1));
     return { kind: 'unread', why: `${owner.getText()}.${name}(...) is made of its entries` };
   }
   const inner = viewIn(owner, isStore, reader, depth + 1);
   if (inner === undefined) return undefined;
   if (VIEW_KEEPING.has(name)) return inner;
-  if (name === 'map') return inner.kind === 'entries' ? mappedBy(args[0]) : { kind: 'unread', why: 'its entries are mapped twice' };
+  // `map`, `flatMap`, `reduce` to objects written over each entry (P326).
+  if (STEPS.has(name)) return thenStep(inner, name as Step, args);
   return { kind: 'unread', why: `.${name}(...) is made of its entries` };
 };
 
@@ -587,7 +893,7 @@ const viewOf = (reader: TsNode, isStore: StoreTest): StoreView => {
   if (first === undefined) return ENTRIES;
   const unread = views.find((each) => each.kind === 'unread');
   if (unread !== undefined) return unread;
-  if (views.every((each) => each.kind === first.kind && (each.kind !== 'mapped' || (first.kind === 'mapped' && each.object === first.object)))) return first;
+  if (views.every((each) => each.kind === first.kind && (each.kind !== 'mapped' || (first.kind === 'mapped' && each.objects.length === first.objects.length && each.objects.every((object, at) => object === first.objects[at]))))) return first;
   return { kind: 'unread', why: 'its returns hand back different views of its entries' };
 };
 
@@ -627,6 +933,10 @@ interface Registry {
  * module, inside a function or outside any), an instance's where the
  * instance is one a `const` holds; each function outside the class naming it
  * is a function that may add to it, called by its name like the class's own.
+ * An instance's field is followed off anything holding the instance (P326):
+ * a parameter it is handed, a field of another class given it when made, an
+ * import; a call adds to it only where what it hands for the store, or the
+ * instance of the other class it is made on, holds the instance.
  */
 const classRegistry = (call: CallExpression): Registry | undefined => {
   const callee = call.getExpression();
@@ -654,32 +964,67 @@ const classRegistry = (call: CallExpression): Registry | undefined => {
     const called = cls.getMethods().find((each) => each.getName() === target.getName() && each.getBody() !== undefined);
     return called === undefined ? [] : [{ fn: called, isStore: adder.isStore }];
   };
-  const adders = new Map<TsNode, Storing>();
+  const adders = new Map<TsNode, Storing & { readonly storeParameter?: number }>();
   for (const method of cls.getMethods()) {
     if (method === reader || method.isStatic() !== (instance === undefined) || method.getBody() === undefined) continue;
     const stores = storing({ fn: method, isStore }, calls);
     if (stores !== undefined) adders.set(method, stores);
   }
-  // The functions outside the class naming a field: each one that adds to it is an adding function of the registry's (P320).
-  const outside = new Set<TsNode>();
+  // The functions outside the class naming a field: each one that adds to it is an adding function of the registry's (P320), with
+  // the other methods of a class one of them is written in, which may add through it (`this.keep(panel)`, P326).
+  const candidates = new Set<TsNode>();
   for (const fn of reaches.flatMap((reach) => reach.functions)) {
-    if (within(fn) || adders.has(fn)) continue;
-    const stores = storing({ fn, isStore }, () => []);
+    if (within(fn)) continue;
+    candidates.add(fn);
+    const other = holderOf(fn);
+    if (other !== undefined && Node.isClassDeclaration(other)) for (const method of other.getMethods()) if (method.getBody() !== undefined) candidates.add(method);
+  }
+  // `this.keep(panel)` in a method of another class: that class's own method.
+  const otherCalls = (node: TsNode, adder: Adder): Adder[] => {
+    const target = Node.isCallExpression(node) ? node.getExpression() : undefined;
+    const other = holderOf(adder.fn);
+    if (target === undefined || !Node.isPropertyAccessExpression(target) || !Node.isThisExpression(bare(target.getExpression())) || other === undefined || !Node.isClassDeclaration(other)) return [];
+    const called = memberFunction(other, target.getName());
+    return called === undefined ? [] : [{ fn: called, isStore: adder.isStore }];
+  };
+  /** The parameter of a function a store is reached off (`registry.items.push(panel)` in `installPanel(registry, panel)`), where it is (P326). */
+  const storeParameterOf = (fn: TsNode): number | undefined => {
+    let found: number | undefined;
+    fn.forEachDescendant((node, traversal) => {
+      if (!Node.isPropertyAccessExpression(node) || !isStore(node)) return;
+      found = parameterIndex(fn, bare(node.getExpression()));
+      if (found !== undefined) traversal.stop();
+    });
+    return found;
+  };
+  const outside = new Set<TsNode>();
+  for (const fn of candidates) {
+    if (adders.has(fn)) continue;
+    const storeParameter = instance === undefined ? undefined : storeParameterOf(fn);
+    const stores = storing({ fn, isStore, ...(storeParameter === undefined ? {} : { storeParameter }) }, otherCalls);
     if (stores === undefined) continue;
-    adders.set(fn, stores);
+    adders.set(fn, { ...stores, ...(storeParameter === undefined ? {} : { storeParameter }) });
     outside.add(fn);
   }
-  /** The class's own adding method a call names: on itself, on the class, or on the instance a `const` holds. */
+  /**
+   * Whether an instance of another class adds to this registry's instance:
+   * a field of it, written with what its own `new` hands, holds the
+   * instance (`new PanelBook(panels)`, `this.registry.items`, P326).
+   */
+  const reachesThrough = (other: ClassDeclaration, self: Held): boolean =>
+    instance !== undefined &&
+    other.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression).some((access) => {
+      const field = bare(access.getExpression());
+      return Node.isPropertyAccessExpression(field) && Node.isThisExpression(bare(field.getExpression())) && fields.has(access.getName()) && isStore(access) && holds(field, instance, self);
+    });
+  /** The class's own adding method a call names: on itself, on the class, or on anything holding the instance (P320, P326). */
   const ownAdder = (adding: CallExpression): TsNode | undefined => {
     const target = adding.getExpression();
     if (!Node.isPropertyAccessExpression(target)) return undefined;
     const receiver = bare(target.getExpression());
     if (Node.isThisExpression(receiver)) {
       if (!within(adding)) return undefined;
-    } else if (!(within(adding) && isOwner(receiver, cls))) {
-      const added = registryClassOf(receiver);
-      if (added === undefined || added.cls !== cls || added.instance !== instance) return undefined;
-    }
+    } else if (!(within(adding) && isOwner(receiver, cls)) && !holds(receiver, instance ?? cls)) return undefined;
     return [...adders.keys()].find((method) => !outside.has(method) && (method as MethodDeclaration).getName() === target.getName());
   };
   return {
@@ -694,7 +1039,21 @@ const classRegistry = (call: CallExpression): Registry | undefined => {
       return fn !== undefined && outside.has(fn) ? fn : undefined;
     },
     owns: (node) => within(node) || node.getFirstAncestor((each) => outside.has(each)) !== undefined,
-    sameRegistry: () => true,
+    // An instance's registry: a call adding through a parameter adds to it where it is handed the instance; one on an instance of
+    // another class, where that instance's field holds it (`installPanel(drafts, ...)`, a book made over another registry, P326).
+    sameRegistry: (adding, adder) => {
+      if (instance === undefined || !outside.has(adder)) return true;
+      const at = adders.get(adder)?.storeParameter;
+      if (at !== undefined) {
+        const handed = adding.getArguments()[at];
+        return handed !== undefined && holds(handed, instance);
+      }
+      const other = holderOf(adder);
+      const target = adding.getExpression();
+      if (other === undefined || !Node.isClassDeclaration(other) || !Node.isPropertyAccessExpression(target) || Node.isThisExpression(bare(target.getExpression()))) return true;
+      const selves = heldBy(target.getExpression());
+      return selves !== undefined && selves.some((self) => reachesThrough(other, self));
+    },
     written: [...[...adders.keys()].flatMap((method) => writtenIn(method, isStore)), ...reaches.flatMap((reach) => reach.added)],
   };
 };
@@ -1017,8 +1376,10 @@ const addedTo = (declaration: TsNode): TsNode[] => {
  * one back (`useMemo(() => [...])`, a computed value). A list's own `map` to
  * an object written over each item (`listPages().map((page) => ({ ...page,
  * path: `/app${page.path}` }))`) is that object per item, the item bound to
- * the function's parameter, as a registry's reader's view is read (P320). An
- * item written as anything else is counted as not read, and why is said.
+ * the function's parameter, as a registry's reader's view is read (P320); a
+ * `flatMap` to objects, `Array.from(list, fn)` and a `reduce` gathering
+ * objects into an empty list are read the same way (P326). An item written
+ * as anything else is counted as not read, and why is said.
  */
 export const listEntries = (expression: TsNode, outerDepth = 0): ListEntries | undefined => {
   const entries: ListEntry[] = [];
@@ -1108,19 +1469,23 @@ export const listEntries = (expression: TsNode, outerDepth = 0): ListEntries | u
       const from = entries.length;
       for (const each of registered.items) item(each, depth + 1);
       // Each entry mapped to an object written over it: that object, the entry bound to the function's parameter (P314).
-      if (view.kind === 'mapped') for (const entry of entries.splice(from)) push({ object: view.object, bound: new Map([...(entry.bound ?? []), [view.parameter, entry.object]]) });
+      if (view.kind === 'mapped') for (const entry of entries.splice(from)) for (const each of writtenOver(view, entry)) push(each);
       miss(registered.unread, 'an entry handed to the registry is not written as an object in place');
       return true;
     }
-    // A list's own `map` to an object written over each item: the object per item read, the item bound to the parameter (P320).
-    if (Node.isPropertyAccessExpression(callee) && callee.getName() === 'map') {
+    // A list's own `map`, `flatMap` or `reduce` to objects written over each item, or `Array.from(list, fn)`: the objects per item
+    // read, the item bound to the function's parameter (P320, P326).
+    const step = stepOf(value);
+    if (step !== undefined) {
       const from = entries.length;
       const before = { unread, why: [...why] };
-      if (list(callee.getExpression(), depth + 1)) {
-        const view = mappedBy(value.getArguments()[0]);
+      if (list(step.source, depth + 1)) {
+        const { view } = step;
         const items = entries.splice(from);
-        if (view.kind === 'mapped') for (const entry of items) push({ object: view.object, bound: new Map([...(entry.bound ?? []), [view.parameter, entry.object]]) });
-        else if (view.kind === 'unread') miss(items.length, `the list is mapped in a way not read: ${view.why}`);
+        if (view.kind === 'entries') for (const entry of items) push(entry);
+        else if (view.kind === 'mapped') for (const entry of items) for (const each of writtenOver(view, entry)) push(each);
+        // A `flatMap` handing back a list read otherwise (`[...route.children, route]`): that list per item, as before.
+        else if (!(Node.isPropertyAccessExpression(callee) && callee.getName() === 'flatMap' && handedLists(value, depth))) miss(items.length, `the list is mapped in a way not read: ${view.why}`);
         return true;
       }
       // Not a list read: what the inner reading counted is set aside, and the call is read as any other.
@@ -1137,7 +1502,12 @@ export const listEntries = (expression: TsNode, outerDepth = 0): ListEntries | u
     // A function of the repository that hands the list back, then a call handed one that does.
     const fn = calledFunction(callee);
     if (fn !== undefined && returnedBy(fn).map((returned) => list(returned, depth + 1)).some(Boolean)) return true;
-    for (const argument of value.getArguments()) {
+    return handedLists(value, depth);
+  };
+
+  /** Whether a function a call is handed hands back a list read: `useMemo(() => [...])`, a computed value. */
+  const handedLists = (call: CallExpression, depth: number): boolean => {
+    for (const argument of call.getArguments()) {
       const handed = bare(argument);
       if (!Node.isArrowFunction(handed) && !Node.isFunctionExpression(handed)) continue;
       if (returnedBy(handed).map((returned) => list(returned, depth + 1)).some(Boolean)) return true;

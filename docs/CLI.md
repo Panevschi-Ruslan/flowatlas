@@ -866,10 +866,15 @@ every `return`, a class's reader's too: the entries as they are (`store`,
 `store.get(key)`, `[...store.values()]`, `Object.values`, `Array.from`, a
 `filter`, `find`, `sort`, `slice`, `concat` or `flat` of them), or each mapped
 to an object written over the entry (`store.map((route) => ({ ...route, path:
-base + route.path }))`, `Array.from(store, fn)`), its path spelled from the
+base + route.path }))`, `Array.from(store, fn)`), or to objects written over it
+(P326: a `flatMap` handing back an object, a list of them or either side of a
+condition, and a `reduce` from an empty list gathering them, `[...all, { ...
+}]`, `all.concat({ ... })` or `all.push({ ... })`; the entry itself handed on,
+`page.hidden ? [] : [page]`, is the entry as it is), its path spelled from the
 entry's and the rest read through the spread; the entries of a view made any
-other way (a function of its own handed to `map`, `Object.entries`, `reduce`,
-two maps) are not read and count toward `unplaced`.
+other way (a function of its own handed to `map`, `flatMap` or `reduce`,
+`Object.entries`, a `reduce` from anything but an empty list, two maps) are
+not read and count toward `unplaced`.
 
 A class's field is followed the same way (P320): a static one wherever any
 module names it (`Registry.items.push({ path: '/x', ... })` outside the class,
@@ -879,16 +884,26 @@ adds to it is an adding function of the registry's, found by its calls. A
 static field read by name (`Shelf.entries`) is a store as a module's variable
 is, and the functions reading or adding to a store may be methods of a class
 of another module, called on the class (`Catalog.register(...)`) or on an
-instance a `const` holds (`book.add(...)`, through `this.keep(...)`). A view
-the caller makes of what a reader hands back is read as the reader's own view
-is: `const pages = listPages().filter(...).map((page) => ({ ...page, path:
-`/app${page.path}` }))` and then `pages.map((page) => <Route path={page.path}
-/>)` places each page at `/app` and its path. Where a `<Route>` written over a
+instance a `const` holds (`book.add(...)`, through `this.keep(...)`). An
+instance is the same however it is reached (P326): through an import, a
+parameter it is handed (`installPanel(panels, panel)` pushing onto
+`registry.items`), or a field of another class given it when made (`new
+PanelBook(panels)`, a parameter property or a field its constructor writes,
+then `this.registry.items.push(...)`, through `this.keep(...)` too); a call
+adds to it only where what it is handed, or the instance it is made on, holds
+that instance, so the same function or class over another instance adds
+nothing to it. A view the caller makes of what a reader hands back is read as
+the reader's own view is: `const pages = listPages().filter(...).map((page) =>
+({ ...page, path: `/app${page.path}` }))` and then `pages.map((page) => <Route
+path={page.path} />)` places each page at `/app` and its path, as do a
+`flatMap`, `Array.from(list, fn)` and a `reduce` gathering objects written over
+each item (P326). Where a `<Route>` written over a
 list stands for entries that are not read - an item not written as an object,
 a view or a `map` made otherwise, an entry whose path or screen is not read -
 an info `route-entries-unread` row at the route says how many and why
 (`meta.unread`, `meta.read`, `meta.why`), beside what the count makes a
-navigation landing nowhere say (`fixtures/registry-fields-caller-views`).
+navigation landing nowhere say (`fixtures/registry-fields-caller-views`,
+`fixtures/caller-steps-handed-instances`).
 
 A link component's address prop may be named apart from the link's attribute
 (P303, P314): `<DocLink page="/intro">` rendering `` <Link
@@ -899,9 +914,11 @@ value followed: a `const`, a function of the repository handing text back, an
 entry's member read over a list (`LINKS.map((item) => <DocLink
 page={item.path} />)`), one text per entry. Where every value handed is not
 read, it is the address only where the text before it ends in a segment of
-values alone (`` `/${locale}${to}` ``), or the prop is named as a framework
-link's address (`to`, `href`) and the text before it ends in a segment written
-out whole (`` `/app${to}` ``, P320), and each use then carries a
+values alone (`` `/${locale}${to}` ``), or in a segment written out whole
+(`` `/app${to}` ``, P320) - whatever the prop is named, since the wrapper puts
+it into its link's address (`` `/area${path}` ``, or through a `const` of the
+wrapper's own body, `` const address = `/console${props.target}` `` handed as
+`href={address}`, P326) - and each use then carries a
 `navigation-unresolved` `dynamic` row where the value is handed, the text in
 front written into the address it names and said in `meta.prefix`, never the
 component's own navigation. Text before the prop that ends a segment, or uses
