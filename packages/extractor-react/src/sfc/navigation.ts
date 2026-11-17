@@ -72,6 +72,13 @@ type PageLanding = {
   readonly localePrefix?: string;
   /** The link of the application's own that puts the locale in front (P297). */
   readonly localizedBy?: string;
+  /**
+   * A value not read, glued to the segment a wrapper writes before it
+   * (`` `/search${query}` ``), read as a query or a hash on that segment's
+   * page: `read` where a use hands one (`?q=...`), `guess` where no use's
+   * value is read (P333).
+   */
+  readonly query?: 'guess' | 'read';
 };
 
 /**
@@ -87,6 +94,14 @@ interface Via {
   readonly before: string;
   readonly after: string;
   readonly localized: boolean;
+  /**
+   * Where the text before the value ends a segment written out whole with no
+   * `/` after it (`` `/search${query}` ``), what the value may be past that
+   * segment (P333): `read` where a use hands a query or a hash (`?q=...`),
+   * so a value not read is one too; `guess` where no use's value is read, so
+   * it may be a query as well as a further segment.
+   */
+  readonly query?: 'guess' | 'read';
 }
 
 /** Where a navigation lands, as the router decides it. */
@@ -95,8 +110,12 @@ type Landing =
   /** Pages at one address, each placed under its own side of a condition nothing written decides (P291). */
   | { readonly kind: 'branches'; readonly landings: readonly PageLanding[] }
   | { readonly kind: 'external'; readonly written: string }
-  /** `prefix`: the text a link of the application's own puts in front of a value not read (P320). */
-  | { readonly kind: 'unresolved'; readonly why: 'missing' | 'dynamic' | 'ambiguous'; readonly written: string; readonly prefix?: string };
+  /**
+   * `prefix`: the text a link of the application's own puts in front of a
+   * value not read (P320); `query`: the value may be a query on the prefix's
+   * page too, drawn there as a guess (P333).
+   */
+  | { readonly kind: 'unresolved'; readonly why: 'missing' | 'dynamic' | 'ambiguous'; readonly written: string; readonly prefix?: string; readonly query?: 'guess' };
 
 /**
  * A navigation to a value not read: through a link of the application's own
@@ -107,6 +126,25 @@ const dynamicLanding = (to: TsNode, via?: Via): Landing => {
   const value = to.getText().replace(/\s+/g, ' ').slice(0, 60);
   if (via === undefined || via.localized || (via.before === '' && via.after === '')) return { kind: 'unresolved', why: 'dynamic', written: value };
   return { kind: 'unresolved', why: 'dynamic', written: `${via.before}\${${value}}${via.after}`, ...(via.before === '' ? {} : { prefix: via.before }) };
+};
+
+/**
+ * Where a value not read lands through a wrapper that glues it to a segment
+ * it writes out whole (`` `/search${query}` ``, P333): where a use hands a
+ * query or a hash, at that segment's page, firmly; where no use's value is
+ * read, it may be a query as well as a further segment, so at that page as a
+ * guess and the row naming the address under it besides. Anything else, the
+ * row alone.
+ */
+const unreadLandings = (pages: readonly Page[], to: TsNode, from: string, via?: Via): Landing[] => {
+  const row = dynamicLanding(to, via);
+  if (via?.query === undefined || via.localized || via.after !== '' || row.kind !== 'unresolved') return [row];
+  const landed = byPath(pages, via.before, from);
+  const query = via.query;
+  const mark = (each: PageLanding): PageLanding => ({ ...each, written: row.written, query });
+  const atPrefix: Landing[] = landed.kind === 'page' ? [mark(landed)] : landed.kind === 'branches' ? [{ kind: 'branches', landings: landed.landings.map(mark) }] : [];
+  if (query === 'read') return atPrefix.length > 0 ? atPrefix : [landed.kind === 'unresolved' ? { ...landed, written: row.written } : row];
+  return atPrefix.length > 0 ? [...atPrefix, { ...row, query: 'guess' }] : [row];
 };
 
 /**
@@ -128,7 +166,7 @@ const exclusive = (pages: readonly Page[]): boolean =>
 
 /** How sure a navigation's edge is: a branch nothing decides, or a prefix a middleware adds, is a guess (P288, P291). */
 export const navigationConfidence = (meta: Readonly<Record<string, unknown>>): 'heuristic' | 'static' =>
-  meta['branch'] === true || meta['localePrefix'] !== undefined ? 'heuristic' : 'static';
+  meta['branch'] === true || meta['localePrefix'] !== undefined || meta['query'] === 'guess' ? 'heuristic' : 'static';
 
 type DrawEdge = (from: IndexedFunction, to: IndexedFunction, file: string, line: number, meta: Record<string, unknown>) => void;
 
@@ -380,7 +418,9 @@ const landingsOf = (pages: readonly Page[], to: TsNode | undefined, options: TsN
     const read = name === undefined && pathname !== undefined && addressText(pathname) === undefined ? spelledPaths(pathname) : undefined;
     if (read !== undefined) return branchLandings(read.map((each) => ({ landing: pathLanding(pages, each.text, from, false, each.guessed === true, via), guessed: each.guessed === true })));
   }
-  return [landingOf(pages, to, options, from, via)];
+  const landing = landingOf(pages, to, options, from, via);
+  // A value not read through a wrapper putting text in front: it may be a query on the page there (P333).
+  return landing.kind === 'unresolved' && landing.why === 'dynamic' && landing.prefix !== undefined ? unreadLandings(pages, to, from, via) : [landing];
 };
 
 /**
@@ -404,7 +444,7 @@ const listedLandings = (pages: readonly Page[], to: TsNode, from: string, extern
     if (spelled === undefined) unread = true;
     else for (const each of spelled) landings.push(pathLanding(pages, each.text, from, external, each.guessed === true, via));
   }
-  if (unread) landings.push(dynamicLanding(to, via));
+  if (unread) landings.push(...unreadLandings(pages, to, from, via));
   return landings.length === 0 ? undefined : landings;
 };
 
@@ -733,6 +773,8 @@ const handedTexts = (value: TsNode): { readonly texts: readonly string[]; readon
 /** What the uses of a component hand a prop: how many texts are addresses (`/...`), how many are not, and how many values are not read (P314). */
 interface HandedProp {
   readonly addresses: number;
+  /** Texts that are a query or a hash (`?q=term`, `#top`), put after a segment (P333). */
+  readonly queries: number;
   readonly other: number;
   readonly unread: number;
 }
@@ -751,6 +793,7 @@ const handedToProp = (fn: TsNode, prop: string): HandedProp => {
   if (known !== undefined) return known;
   const name = componentNameNode(fn);
   let addresses = 0;
+  let queries = 0;
   let other = 0;
   let unread = 0;
   let references: TsNode[] = [];
@@ -770,12 +813,13 @@ const handedToProp = (fn: TsNode, prop: string): HandedProp => {
     unread += handed.unread;
     for (const text of handed.texts) {
       if (text.startsWith('/')) addresses += 1;
+      else if (text.startsWith('?') || text.startsWith('#')) queries += 1;
       // A text opening with a value read at run time says nothing of its shape.
       else if (text.startsWith('${')) unread += 1;
       else other += 1;
     }
   }
-  const found = { addresses, other, unread };
+  const found = { addresses, queries, other, unread };
   const byProp = ADDRESS_USES.get(fn) ?? new Map<string, HandedProp>();
   byProp.set(prop, found);
   ADDRESS_USES.set(fn, byProp);
@@ -802,14 +846,32 @@ const endsInWrittenSegment = (before: string): boolean => {
  * the wrapper puts into its link's address (`` `/area${path}` ``, P326).
  * Its values are then read at each use, and one not read is said there,
  * with the text in front as its prefix, never taken as the component's own
- * navigation.
+ * navigation. A use handing a query or a hash (`?q=term`) after a segment
+ * written out whole makes it one too: what it hands goes on that segment
+ * (P333).
  */
 const isHandedAddress = (fn: TsNode, prop: string, before: string): boolean => {
   if (before === '' || before.endsWith('/')) return false;
   const handed = handedToProp(fn, prop);
   if (handed.other > 0) return false;
+  if (handed.queries > 0) return endsInWrittenSegment(before);
   // Every value not read, after a segment written out whole (`/app${to}`, `/area${path}`): an address under it (P320, P326).
   return handed.addresses > 0 || (handed.unread > 0 && (endsInValueSegment(before) || endsInWrittenSegment(before)));
+};
+
+/**
+ * What a value a wrapper glues to a segment it writes out whole, with no `/`
+ * after it (`` `/search${query}` ``), may be (P333), told from what its uses
+ * hand, never from the prop's name: where one hands a query or a hash
+ * (`?q=term`), a query, so one not read lands at that segment's page; where
+ * one hands an address, a further segment; where none is read, either - a
+ * query landing at that page, or an address under it.
+ */
+const queryOf = (fn: TsNode, prop: string, before: string): 'guess' | 'read' | undefined => {
+  if (!endsInWrittenSegment(before)) return undefined;
+  const handed = handedToProp(fn, prop);
+  if (handed.queries > 0) return 'read';
+  return handed.addresses === 0 && handed.unread > 0 ? 'guess' : undefined;
 };
 
 /**
@@ -832,7 +894,11 @@ const throughOwnConsts = (fn: TsNode, value: TsNode): TsNode => {
 };
 
 /** What a wrapper's inner link is handed: a prop as it is, put inside a template, or handed to a call among other values. */
-const wrappedOf = (fn: TsNode, value: TsNode, attribute: string): { readonly prop: string; readonly before: string; readonly after: string; readonly localized: boolean } | undefined => {
+const wrappedOf = (
+  fn: TsNode,
+  value: TsNode,
+  attribute: string,
+): { readonly prop: string; readonly before: string; readonly after: string; readonly localized: boolean; readonly query?: 'guess' | 'read' } | undefined => {
   const read = throughOwnConsts(fn, bare(Node.isJsxExpression(value) ? (value.getExpression() ?? value) : value));
   const direct = propReadOf(fn, read);
   if (direct !== undefined) return { prop: direct, before: '', after: '', localized: false };
@@ -866,7 +932,9 @@ const wrappedOf = (fn: TsNode, value: TsNode, attribute: string): { readonly pro
       // component's own navigation, unless the prop is an address itself (P303, P314): it starts no segment of its own
       // (`/${locale}${to}`), and what every use hands it - as text or as a value followed - is an address.
       if (prop !== attribute && !isHandedAddress(fn, prop, before)) return undefined;
-      return { prop, before, after: pieces.slice(at + 1).map(text).join(''), localized: false };
+      const after = pieces.slice(at + 1).map(text).join('');
+      const query = after === '' ? queryOf(fn, prop, before) : undefined;
+      return { prop, before, after, localized: false, ...(query === undefined ? {} : { query }) };
     }
   }
   // `withLang(locale, href)`: the prop handed to a function with the locale; the function puts it in front.
@@ -909,6 +977,9 @@ const linkWrapperOf = (tag: TsNode, depth = 0): Wrapper | undefined => {
     const wrapped = initializer === undefined ? undefined : wrappedOf(fn, initializer, attribute);
     if (wrapped === undefined) return;
     const outer = nested?.via;
+    // Handed on as it is to a wrapper gluing it to a segment: what this wrapper's own uses hand says what it may be (P333).
+    const handedOn = outer?.query !== undefined && wrapped.before === '' && wrapped.after === '' && !wrapped.localized;
+    const query = handedOn ? queryOf(fn, wrapped.prop, outer.before) : wrapped.query;
     found = {
       attribute: wrapped.prop,
       via: {
@@ -916,6 +987,8 @@ const linkWrapperOf = (tag: TsNode, depth = 0): Wrapper | undefined => {
         before: `${outer?.before ?? ''}${wrapped.before}`,
         after: `${wrapped.after}${outer?.after ?? ''}`,
         localized: wrapped.localized || outer?.localized === true,
+        // What the value may be past the segment written before it, from this wrapper's uses (P333).
+        ...(query === undefined || (outer?.after ?? '') !== '' ? {} : { query }),
       },
     };
     traversal.stop();
@@ -992,7 +1065,9 @@ const navigationRow = (ctx: ReactExtractContext, file: string, line: number, sym
           ? `${file} navigates to ${landing.written}, which no page this reading placed shows; ${unplaced} route${unplaced === 1 ? '' : 's'} of the application ${unplaced === 1 ? 'is' : 'are'} written in a way not read, and it may be one of them`
           : why === 'ambiguous'
             ? `${file} navigates to ${landing.written}, which two pages of the application fit as well, so which one it shows is not said`
-            : landing.prefix !== undefined
+            : landing.prefix !== undefined && landing.query === 'guess'
+              ? `${file} navigates to ${landing.written}, written as code straight after ${landing.prefix}: as a query or a hash it lands on the page at ${landing.prefix}, drawn as a guess, and as an address under ${landing.prefix} which page it shows is not read`
+              : landing.prefix !== undefined
               ? `${file} navigates to an address under ${landing.prefix} whose rest is written as code (${landing.written}), so which page it shows is not read`
               : `${file} navigates to an address written as code (${landing.written}), so which page it shows is not read`,
     hint:
@@ -1003,7 +1078,7 @@ const navigationRow = (ctx: ReactExtractContext, file: string, line: number, sym
           : why === 'ambiguous'
             ? 'Rename one of the two pages, so one address is one page.'
             : 'Write the address as a literal or a template of one, or as `{ name: \'...\' }` with a literal name.',
-    meta: { cause: 'navigation-unresolved', why, navigates: landing.written, ...(landing.kind === 'unresolved' && landing.prefix !== undefined ? { prefix: landing.prefix } : {}) },
+    meta: { cause: 'navigation-unresolved', why, navigates: landing.written, ...(landing.kind === 'unresolved' && landing.prefix !== undefined ? { prefix: landing.prefix } : {}), ...(landing.kind === 'unresolved' && landing.query !== undefined ? { query: landing.query } : {}) },
   });
 };
 
@@ -1074,6 +1149,7 @@ export const drawNavigations = (
         ...(landing.by === 'name' ? { byName: true } : {}),
         ...(landing.guessed === true ? { branch: true } : {}),
         ...(landing.localePrefix === undefined ? {} : { localePrefix: landing.localePrefix }),
+        ...(landing.query === undefined ? {} : { query: landing.query }),
         ...extra,
       },
     });

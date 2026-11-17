@@ -285,6 +285,28 @@ only one of them moved.
   whole (`` `/area${path}` ``), directly or through a `const` of its own
   body, every use's value unread, is an address under that segment as a
   `to` or `href` prop is.
+- **Steps one over another, objects a reduce gathers, registries handed
+  through props and factories, and a query glued to a wrapper's segment
+  (P333).** A step over a view mapped already (`list.map(f).flatMap(g)`,
+  `map(f).map(g)`) is read step after step, in a caller's view and a
+  registry reader's; a `reduce` from an empty object writing objects under
+  keys (`{ ...all, [key]: { ... } }`, `all[key] = { ... }`,
+  `Object.assign(all, ...)`) and an object written in place are read
+  through `Object.values`, and through `Object.entries` where a step takes
+  each pair apart (`([, entry]) => ...`); pairs read otherwise are counted
+  in `route-entries-unread` with why. A registry's receiver is followed
+  through a destructured parameter or a component's props (`function
+  Routes({ registry })`, `props.registry`, `<Routes registry={panels} />`,
+  `install({ registry: panels }, ...)`) and through a factory function's
+  call (`const panels = makeRegistry()`), whether it hands back a `new` or
+  an object written in place keeping its store in a field or a variable of
+  its own, each instance read on its own. A value a link of the
+  application's own glues to a segment it writes out whole, with no `/`
+  between (`` `/search${query}` ``), lands on that segment's page firmly
+  where a use hands a query or a hash (`?q=shoes`); where no use's value is
+  read it lands there as a guess (`query: 'guess'`, heuristic) beside the
+  row naming the address under it; after a `/` (`` `/portal/${href}` ``)
+  it is the row alone.
 - **Settings chosen by a branch, and read inside a function handed nothing
   (P302).** A condition nobody settles whose branches read different
   settings, `isProd ? process.env.API_URL : process.env.DEV_API_URL`, written
