@@ -274,7 +274,45 @@ export interface SettingAddress {
    * serves the request rather than taking the first's.
    */
   either?: readonly string[];
+  /**
+   * The settings of `also` in the tiers they are read in, where a tier holds
+   * more than one (P325): `A || (isProd ? B : C)` reads `B` and `C` as one
+   * tier after `A`, each as much the base as the other where `A` is not set,
+   * rather than `B` before `C`. Absent, each setting of `also` outside the
+   * opening tier (`either`, else the key) is a tier of its own, in order.
+   */
+  alsoTiers?: readonly (readonly string[])[];
 }
+
+/** The settings an address is read from first: a condition's branches nobody settles, else its key (P309, P325). */
+const openingTier = (address: SettingAddress): readonly string[] => address.either ?? [address.key];
+
+/** The tiers an address is read from after its opening one, in order (P325). */
+const tiersAfter =(address: Pick<SettingAddress, 'key' | 'also' | 'either' | 'alsoTiers'>): readonly (readonly string[])[] => {
+  if (address.alsoTiers !== undefined) return address.alsoTiers;
+  const opening = address.either ?? [address.key];
+  return (address.also ?? []).filter((key) => !opening.includes(key)).map((key) => [key]);
+};
+
+/**
+ * Tiers after an opening one, each setting kept at the first tier it is read
+ * in, an empty tier dropped, and written out only where a tier holds more
+ * than one setting, since `also` alone says the rest (P325).
+ */
+const tiersWritten = (opening: readonly string[], tiers: readonly (readonly string[])[]): Pick<SettingAddress, 'alsoTiers'> => {
+  const seen = new Set(opening);
+  const kept: string[][] = [];
+  for (const tier of tiers) {
+    const fresh = [...new Set(tier)].filter((key) => !seen.has(key));
+    for (const key of fresh) seen.add(key);
+    if (fresh.length > 0) kept.push(fresh);
+  }
+  return kept.some((tier) => tier.length > 1) ? { alsoTiers: kept } : {};
+};
+
+/** Two lists of tiers read side by side, the first tier of each together, then the second (P325). */
+const sideBySide = (a: readonly (readonly string[])[], b: readonly (readonly string[])[]): (readonly string[])[] =>
+  Array.from({ length: Math.max(a.length, b.length) }, (_, index) => [...(a[index] ?? []), ...(b[index] ?? [])]);
 
 /**
  * What the trace knows about where it is.
@@ -911,7 +949,15 @@ const eitherAddress = (a: SettingAddress, b: SettingAddress, settled?: Truth): S
       : b.otherwise !== undefined
         ? { otherwise: b.otherwise, ...(b.otherwiseFile === undefined ? {} : { otherwiseFile: b.otherwiseFile }) }
         : {};
-  return { key: a.key, prefix, guessed: true, ...fallback, also, ...(settled === 'given' ? {} : { either }) };
+  // The tiers after the opening one (P325): where nobody chose a branch, each
+  // branch's later tiers side by side, `c ? (A || B) : (C || D)` reading `B`
+  // and `D` as one tier after `A` and `C`; where a caller's argument chose
+  // the first, the other branch is a tier after it, its own settings together.
+  const after =
+    settled === 'given'
+      ? tiersWritten([a.key], [...tiersAfter(a), openingTier(b), ...tiersAfter(b)])
+      : tiersWritten(either, sideBySide(tiersAfter(a), tiersAfter(b)));
+  return { key: a.key, prefix, guessed: true, ...fallback, also, ...(settled === 'given' ? {} : { either }), ...after };
 };
 
 /**
@@ -1315,6 +1361,8 @@ const chainOperands = (node: TsNode, operator: SyntaxKind): TsNode[] => {
 const chainAddress = (node: BinaryExpression, scope: Scope, budget: number): SettingAddress | null => {
   let first: SettingAddress | undefined;
   const also: string[] = [];
+  // Each later operand is a tier, a condition's branches one tier together (P325).
+  const tiers: (readonly string[])[] = [];
   let otherwise: { readonly value: string; readonly file: string } | undefined;
   for (const operand of chainOperands(node, node.getOperatorToken().getKind())) {
     const answer = answeredBy(operand, scope, budget - 1);
@@ -1336,6 +1384,7 @@ const chainAddress = (node: BinaryExpression, scope: Scope, budget: number): Set
     for (const key of [answer.address.key, ...(answer.address.also ?? [])]) {
       if (key !== first.key && !also.includes(key)) also.push(key);
     }
+    tiers.push(openingTier(answer.address), ...tiersAfter(answer.address));
     if (answer.address.otherwise !== undefined) {
       otherwise ??= { value: answer.address.otherwise, file: answer.address.otherwiseFile ?? operand.getSourceFile().getFilePath() };
       break;
@@ -1345,7 +1394,8 @@ const chainAddress = (node: BinaryExpression, scope: Scope, budget: number): Set
   const root = first;
   const allAlso = [...new Set([...(root.also ?? []), ...also])].filter((key) => key !== root.key);
   const fallback = root.otherwise === undefined && otherwise !== undefined ? { otherwise: otherwise.value, otherwiseFile: otherwise.file } : {};
-  return { ...root, ...(allAlso.length === 0 ? {} : { also: allAlso }), ...fallback };
+  const { alsoTiers: _rootTiers, ...rest } = root;
+  return { ...rest, ...(allAlso.length === 0 ? {} : { also: allAlso }), ...tiersWritten(openingTier(root), [...tiersAfter(root), ...tiers]), ...fallback };
 };
 
 /**
@@ -2168,6 +2218,8 @@ export interface SplitAddress {
   also?: readonly string[];
   /** The settings of a condition's branches nobody settles, as equal candidates (P309). */
   either?: readonly string[];
+  /** The settings of `also` in the tiers they are read in, where a tier holds more than one (P325). */
+  alsoTiers?: readonly (readonly string[])[];
   /** Literal text before and after the part the caller supplies. */
   before: string;
   after: string;
@@ -2494,6 +2546,7 @@ export const splitAtParameter = (
         ...(otherwise === undefined || rootedAt?.otherwiseFile === undefined ? {} : { otherwiseFile: rootedAt.otherwiseFile }),
         ...(rootedAt?.also === undefined ? {} : { also: rootedAt.also }),
         ...(rootedAt?.either === undefined ? {} : { either: rootedAt.either }),
+        ...(rootedAt?.alsoTiers === undefined ? {} : { alsoTiers: rootedAt.alsoTiers }),
         before: text,
         after: literal,
       };

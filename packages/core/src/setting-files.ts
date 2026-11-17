@@ -80,8 +80,19 @@ export interface ContainerRun {
   readonly names: readonly string[];
   readonly file: string;
   readonly ports: readonly PublishedPort[];
-  /** The port each setting is given in the container's environment: `PORT: 3000`. */
+  /**
+   * The port each setting is given in the container's environment: `PORT:
+   * 3000`. What the image's Dockerfile sets (`ENV`), under what each
+   * environment file the container is started with sets, a later file over
+   * an earlier, under what is written for the container itself (P325).
+   */
   readonly environment: Readonly<Record<string, number>>;
+  /**
+   * The file each setting of `environment` is from, where that is not
+   * `file`: an environment file the container is started with, or its
+   * image's Dockerfile (P325).
+   */
+  readonly environmentFiles?: Readonly<Record<string, string>>;
   /**
    * How the published port reaches the container, where it is not a
    * container's own mapping (P260): a port this machine forwards to a

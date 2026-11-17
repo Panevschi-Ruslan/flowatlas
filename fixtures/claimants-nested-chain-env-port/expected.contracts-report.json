@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 7,
-  "generatedAt": "2026-11-17T17:01:47.680Z",
+  "generatedAt": "2026-11-17T18:30:11.687Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -80,6 +80,30 @@
     },
     {
       "edge": {
+        "from": "http_out:jobs#src/calls.ts:29:38",
+        "to": "entry:api:http:GET:/items",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/calls.ts:29:38|http_calls|entry:api:http:GET:/items",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/calls.ts:itemsAtFallback declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/calls.ts:29:38",
+        "to": "entry:api:http:GET:/items",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/calls.ts:29:38|http_calls|entry:api:http:GET:/items",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "api#src/app.ts:GET /items@9 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
         "from": "http_out:jobs#src/calls.ts:32:31",
         "to": "entry:audit:http:GET:/audit/log",
         "type": "http_calls"
@@ -132,7 +156,7 @@
     "shared": 0,
     "identical": 0,
     "hash_differs": 0,
-    "unchecked": 10,
+    "unchecked": 12,
     "errors": 0,
     "warnings": 0,
     "infos": 0,

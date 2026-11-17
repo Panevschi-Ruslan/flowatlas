@@ -89,6 +89,7 @@ in a browser), beside `url`, `path` and `host`:
 | `baseUrlDefault`, `baseUrlDefaultFrom` | what the code falls back to where that setting is not given, and the module the fallback is written in where it is not the request's |
 | `baseUrlAlso` | the settings a chain of `\|\|` or `??` reads after `baseUrlEnv`, in order, or the settings of a condition's other branches |
 | `baseUrlEither` | the settings of a condition's branches nobody settles, the first branch's first, `baseUrlEnv` among them: each as much the base as another |
+| `baseUrlAlsoTiers` | the settings of `baseUrlAlso` in the tiers they are read in, written only where a tier holds more than one: `A \|\| (isProd ? B : C)` is `[["B", "C"]]` |
 | `baseUrlVariables` | on an `http_out`, for each setting of the chain or the branches that a settings factory builds from a variable of the environment, that variable: `{ "legacy.url": "LEGACY_URL" }` |
 | `baseUrl`, `baseUrlFrom` | the value the base was taken from and where it was found, written by the linker where a join rests on it; `baseUrlFrom` is `its name` where the setting's name decided |
 | `sameCall` | the id of the other half of one call both halves of a full-stack application read, reached from both sides or from neither; the linker joins the two to one target and a reader counts them once |

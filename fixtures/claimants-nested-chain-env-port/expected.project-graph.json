@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T17:01:47.045Z",
+  "builtAt": "2026-11-17T18:30:10.712Z",
   "services": [
     {
       "name": "jobs",
@@ -367,15 +367,6 @@
       }
     },
     {
-      "id": "external_api:localhost:3000",
-      "type": "external_api",
-      "label": "localhost:3000",
-      "repo": "jobs",
-      "meta": {
-        "host": "localhost:3000"
-      }
-    },
-    {
       "id": "http_out:jobs#src/calls.ts:11:35",
       "type": "http_out",
       "label": "GET /status",
@@ -489,7 +480,8 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
-        "host": "localhost:3000"
+        "host": "localhost:3000",
+        "targetService": "api"
       }
     },
     {
@@ -1203,16 +1195,21 @@
       "meta": {
         "via": "host",
         "targetService": "api",
-        "listensAt": "src/app.ts:13 (API_PORT from .env.development)"
+        "listensAt": "src/app.ts:13 (API_PORT from .env.development) (a file nothing is read loading)"
       }
     },
     {
       "from": "http_out:jobs#src/calls.ts:29:38",
-      "to": "external_api:localhost:3000",
-      "type": "calls",
-      "confidence": "static",
+      "to": "entry:api:http:GET:/items",
+      "type": "http_calls",
+      "confidence": "heuristic",
       "file": "src/calls.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "via": "host",
+        "targetService": "api",
+        "listensAt": "src/app.ts:13 (API_PORT)"
+      }
     },
     {
       "from": "http_out:jobs#src/calls.ts:32:31",

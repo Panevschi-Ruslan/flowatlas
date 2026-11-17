@@ -38,6 +38,8 @@ export interface UrlInfo {
   baseUrlAlso?: readonly string[];
   /** The settings of a condition's branches nobody settles, as equal candidates (P309). */
   baseUrlEither?: readonly string[];
+  /** The settings of `baseUrlAlso` in the tiers they are read in, where a tier holds more than one (P325). */
+  baseUrlAlsoTiers?: readonly (readonly string[])[];
   /** Host, when the address names one outright. */
   host: string | null;
   /**
@@ -48,14 +50,15 @@ export interface UrlInfo {
 }
 
 /** The setting an address is rooted at, with what the code falls back to and the settings read after it. */
-type Root = Pick<SettingAddress, 'key' | 'otherwise' | 'otherwiseFile' | 'also' | 'either'> & { readonly prefix?: string };
+type Root = Pick<SettingAddress, 'key' | 'otherwise' | 'otherwiseFile' | 'also' | 'either' | 'alsoTiers'> & { readonly prefix?: string };
 
 /** What a root says beyond its key, as an address carries it (P77, P296). */
-const extrasOf = (root: Omit<Root, 'key'>): Pick<UrlInfo, 'baseUrlDefault' | 'baseUrlDefaultFile' | 'baseUrlAlso' | 'baseUrlEither'> => ({
+const extrasOf = (root: Omit<Root, 'key'>): Pick<UrlInfo, 'baseUrlDefault' | 'baseUrlDefaultFile' | 'baseUrlAlso' | 'baseUrlEither' | 'baseUrlAlsoTiers'> => ({
   ...(root.otherwise === undefined ? {} : { baseUrlDefault: root.otherwise }),
   ...(root.otherwise === undefined || root.otherwiseFile === undefined ? {} : { baseUrlDefaultFile: root.otherwiseFile }),
   ...(root.also === undefined || root.also.length === 0 ? {} : { baseUrlAlso: root.also }),
   ...(root.either === undefined || root.either.length === 0 ? {} : { baseUrlEither: root.either }),
+  ...(root.alsoTiers === undefined || root.alsoTiers.length === 0 ? {} : { baseUrlAlsoTiers: root.alsoTiers }),
 });
 
 const EMPTY: UrlInfo = { url: null, path: null, baseUrlEnv: null, host: null };
@@ -384,7 +387,7 @@ export const composeAddress = (info: UrlInfo, split?: SplitAddress, argument?: T
   const env = split.baseUrlEnv ?? info.baseUrlEnv;
   const extras =
     split.baseUrlEnv === null
-      ? extrasOf({ otherwise: info.baseUrlDefault, otherwiseFile: info.baseUrlDefaultFile, also: info.baseUrlAlso, either: info.baseUrlEither })
+      ? extrasOf({ otherwise: info.baseUrlDefault, otherwiseFile: info.baseUrlDefaultFile, also: info.baseUrlAlso, either: info.baseUrlEither, alsoTiers: info.baseUrlAlsoTiers })
       : extrasOf(split);
   return {
     url: path === null ? info.url : `${env === null ? '' : `\${${env}}`}${path}`,

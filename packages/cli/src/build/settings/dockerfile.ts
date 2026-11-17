@@ -1,0 +1,155 @@
+import type { Written } from './dotenv.js';
+
+/**
+ * The environment a Dockerfile gives the containers its image runs (P325):
+ * every `ENV` of the stage built and of the stages it is built `FROM`, in the
+ * order they are written, a later one over an earlier.
+ *
+ * `ENV PORT=4000`, `ENV PORT 4000` (the older form, one setting to the end of
+ * the line), several `KEY=value` pairs on one line, quoted values, lines run
+ * on with a backslash. A value is read with the build's arguments and the
+ * settings before it put in: `$NAME`, `${NAME}`, `${NAME:-word}`,
+ * `${NAME:+word}`, an `ARG` taking what the build hands it (`args`) over its
+ * own default, a global `ARG` (before the first `FROM`) only where the stage
+ * names it again. A value with anything nobody settles in it is not read,
+ * and the setting is then unknown rather than the value before it.
+ *
+ * The stage built is the one `target` names, else the last. Nothing for a
+ * file with no `FROM`.
+ */
+export const dockerfileEnvironment = (text: string, options: { readonly target?: string; readonly args?: Readonly<Record<string, string>> } = {}): Written[] | undefined => {
+  const handed = options.args ?? {};
+  const globals = new Map<string, string | undefined>();
+  const stages: { readonly name?: string; readonly env: Map<string, string | undefined> }[] = [];
+  let args: Map<string, string | undefined> | undefined;
+  let env: Map<string, string | undefined> | undefined;
+  for (const line of instructions(text)) {
+    const match = /^(\w+)\s+([\s\S]*)$/.exec(line);
+    if (match === null) continue;
+    const word = (match[1] as string).toUpperCase();
+    const rest = (match[2] as string).trim();
+    if (word === 'FROM') {
+      const parts = rest.split(/\s+/).filter((part) => !part.startsWith('--'));
+      const base = parts[0]?.toLowerCase();
+      const name = parts.length >= 3 && parts[1]?.toLowerCase() === 'as' ? parts[2]?.toLowerCase() : undefined;
+      const from = stages.find((stage) => stage.name !== undefined && stage.name === base) ?? (base !== undefined && /^\d+$/.test(base) ? stages[Number(base)] : undefined);
+      env = new Map(from?.env ?? []);
+      args = new Map();
+      stages.push({ ...(name === undefined ? {} : { name }), env });
+      continue;
+    }
+    if (word === 'ARG') {
+      const scope = args ?? globals;
+      for (const [name, written] of pairs(rest, false)) {
+        // What the build hands it, else its own default, else a global's.
+        const own = written === undefined ? (args === undefined ? undefined : globals.get(name)) : expand(written, scope, env ?? new Map());
+        scope.set(name, handed[name] ?? own);
+      }
+      continue;
+    }
+    if (word === 'ENV' && env !== undefined && args !== undefined) {
+      const stageEnv = env;
+      const stageArgs = args;
+      const written = pairs(rest, true);
+      // Every value of one `ENV` is read against what stood before it.
+      const read = written.map(([name, raw]) => [name, raw === undefined ? undefined : expand(raw, stageArgs, stageEnv)] as const);
+      for (const [name, value] of read) stageEnv.set(name, value);
+    }
+  }
+  if (stages.length === 0) return undefined;
+  const target = options.target?.toLowerCase();
+  const built = (target === undefined ? undefined : stages.find((stage) => stage.name === target)) ?? stages[stages.length - 1];
+  return [...(built?.env ?? new Map<string, string | undefined>()).entries()].flatMap(([name, raw]) => (raw === undefined ? [] : [{ name, raw }]));
+};
+
+/** The file's instructions, one per entry: comments and blank lines left out, lines run on with a backslash joined. */
+const instructions = (text: string): string[] => {
+  const out: string[] = [];
+  let current = '';
+  for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('#')) continue;
+    const continued = /\\\s*$/.test(line);
+    current += `${continued ? line.replace(/\\\s*$/, '') : line} `;
+    if (continued) continue;
+    if (current.trim() !== '') out.push(current.trim());
+    current = '';
+  }
+  if (current.trim() !== '') out.push(current.trim());
+  return out;
+};
+
+/** The words of an instruction, quotes taken off and a backslash keeping the next character. */
+const words = (text: string): string[] => {
+  const out: string[] = [];
+  let word = '';
+  let quote: string | undefined;
+  let started = false;
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index] as string;
+    if (quote !== undefined) {
+      if (char === quote) quote = undefined;
+      else if (char === '\\' && quote === '"' && index + 1 < text.length) word += text[(index += 1)];
+      else word += char;
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+      started = true;
+    } else if (char === '\\' && index + 1 < text.length) {
+      word += text[(index += 1)];
+      started = true;
+    } else if (/\s/.test(char)) {
+      if (started) out.push(word);
+      word = '';
+      started = false;
+    } else {
+      word += char;
+      started = true;
+    }
+  }
+  if (started) out.push(word);
+  return out;
+};
+
+/**
+ * The settings an `ENV` or an `ARG` writes, in order: `KEY=value` pairs, or
+ * for `ENV` the older `KEY value` with the rest of the line the value; an
+ * `ARG` with no `=` names the argument and gives it nothing of its own.
+ */
+const pairs = (text: string, isEnv: boolean): [string, string | undefined][] => {
+  const all = words(text);
+  const first = all[0];
+  if (first === undefined) return [];
+  if (isEnv && !first.includes('=')) {
+    const trimmed = text.trim();
+    const at = trimmed.search(/\s/);
+    return [[first, at < 0 ? '' : words(trimmed.slice(at)).join(' ')]];
+  }
+  return all.flatMap((each): [string, string | undefined][] => {
+    const equals = each.indexOf('=');
+    if (equals === 0) return [];
+    return equals < 0 ? (isEnv ? [] : [[each, undefined] as [string, undefined]]) : [[each.slice(0, equals), each.slice(equals + 1)] as [string, string]];
+  });
+};
+
+/** A value with the arguments and settings before it put in, or nothing where one it names is not settled. */
+const expand = (raw: string, args: ReadonlyMap<string, string | undefined>, env: ReadonlyMap<string, string | undefined>): string | undefined => {
+  let unsettled = false;
+  const valueOf = (name: string): string | undefined => (env.has(name) ? env.get(name) : args.get(name));
+  const known = (name: string): boolean => (env.has(name) || args.has(name)) && valueOf(name) !== undefined;
+  const out = raw.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)(?::([-+])([^}]*))?\}|\$([A-Za-z_][A-Za-z0-9_]*)/g, (_match, braced: string | undefined, how: string | undefined, word: string | undefined, bare: string | undefined) => {
+    const name = (braced ?? bare) as string;
+    const value = valueOf(name);
+    if (how === '-') return known(name) && value !== '' ? (value as string) : (word ?? '');
+    if (how === '+') return known(name) && value !== '' ? (word ?? '') : '';
+    if (!known(name)) {
+      // An argument declared with no value and handed none is empty, as the build makes it.
+      if (args.has(name) && !env.has(name)) return '';
+      unsettled = true;
+      return '';
+    }
+    return value as string;
+  });
+  return unsettled ? undefined : out;
+};

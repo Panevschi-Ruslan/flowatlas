@@ -187,6 +187,19 @@ export const settingsAfter = (call: GraphNode): readonly string[] => {
 };
 
 /**
+ * The settings read after the opening tier in the tiers the reader groups
+ * them in, where it groups any (P325): `A || (isProd ? B : C)` is
+ * `[['B', 'C']]`, the condition's branches one tier after `A`. Nothing where
+ * the reader wrote no grouping, each later setting then a tier of its own.
+ */
+export const settingTiersAfter = (call: GraphNode): readonly (readonly string[])[] | undefined => {
+  const tiers = call.meta?.['baseUrlAlsoTiers'];
+  if (!Array.isArray(tiers)) return undefined;
+  const read = tiers.map((tier) => (Array.isArray(tier) ? tier.filter((each): each is string => typeof each === 'string') : [])).filter((tier) => tier.length > 0);
+  return read.length === 0 ? undefined : read;
+};
+
+/**
  * The settings of a condition's branches nobody settles, the first branch's
  * first (P309): `isProd ? process.env.A : process.env.B` is `['A', 'B']`,
  * each as much the request's base as the other.
@@ -242,6 +255,8 @@ export interface BranchClaim {
 export interface SettingCandidates {
   readonly order: 'either' | 'chain' | 'claimed';
   readonly tiers: readonly (readonly BranchClaim[])[];
+  /** The index of each later tier that holds a condition's branches, `A || (isProd ? B : C)` (P325). */
+  readonly conditions?: readonly number[];
 }
 
 const claimsOf = (call: GraphNode, settings: readonly string[], claimantsOf: (setting: string) => readonly string[], seen: ReadonlySet<string>): BranchClaim[] => {
@@ -270,24 +285,32 @@ export const settingCandidates = (call: GraphNode, claimantsOf: (setting: string
   const env = call.meta?.['baseUrlEnv'];
   const seen = new Set<string>();
   const tiers: BranchClaim[][] = [];
+  const conditions: number[] = [];
   const add = (settings: readonly string[]): boolean => {
     const tier = claimsOf(call, settings, claimantsOf, seen);
     if (tier.length === 0) return false;
     for (const claim of tier) seen.add(claim.service);
+    if (settings.length > 1 && tiers.length > 0) conditions.push(tiers.length);
     tiers.push(tier);
     return true;
   };
+  // The tiers after the opening one: as the reader groups them, a condition
+  // later in a chain one tier of its branches (P325); else each setting of
+  // the chain its own tier, in order.
+  const opening = either.length > 0 ? either : typeof env === 'string' ? [env] : [];
+  const later = settingTiersAfter(call) ?? settingsAfter(call).filter((setting) => !opening.includes(setting)).map((setting) => [setting]);
   let fromEither = false;
   if (either.length > 0) {
     fromEither = add(either);
     // `(isProd ? A : B) || C`: C is where the base is read where neither branch's setting is set.
-    for (const setting of settingsAfter(call)) if (!either.includes(setting)) add([setting]);
+    for (const tier of later) add(tier);
   } else if (typeof env === 'string') {
-    for (const setting of [env, ...settingsAfter(call)]) add([setting]);
+    add([env]);
+    for (const tier of later) add(tier);
   }
   if (seen.size <= 1) return undefined;
   const settings = new Set(tiers.flat().flatMap((claim) => claim.settings));
-  return { order: fromEither ? 'either' : settings.size === 1 ? 'claimed' : 'chain', tiers };
+  return { order: fromEither ? 'either' : settings.size === 1 ? 'claimed' : 'chain', tiers, ...(conditions.length === 0 ? {} : { conditions }) };
 };
 
 /**
@@ -306,13 +329,20 @@ export const branchSaid = (claim: BranchClaim): string => `${claim.settings.join
 
 /** The service a request's base was chosen as among its settings' claimants, or the several serving it. */
 export type SettingChoice<T> =
-  | { readonly kind: 'one'; readonly claim: BranchClaim; readonly found: T; readonly said: readonly string[]; readonly order: SettingCandidates['order'] }
+  | { readonly kind: 'one'; readonly claim: BranchClaim; readonly found: T; readonly said: readonly string[]; readonly order: ChoiceOrder }
   | {
       readonly kind: 'several';
       readonly serving: readonly { readonly claim: BranchClaim; readonly found: T }[];
       readonly said: readonly string[];
-      readonly order: SettingCandidates['order'];
+      readonly order: ChoiceOrder;
     };
+
+/**
+ * How the tier a choice was made in is read: the candidates' own order for
+ * the opening tier, a chain's for a later one, and `chain-either` for a later
+ * tier holding a condition's branches (P325).
+ */
+export type ChoiceOrder = SettingCandidates['order'] | 'chain-either';
 
 /**
  * The claimant serving the request among a request's base settings (P309,
@@ -334,7 +364,7 @@ export const chooseAmongSettings = <T>(candidates: SettingCandidates, ask: (serv
     });
     if (serving.length === 0) continue;
     if (index === 0 && tier.length === 1) return undefined;
-    const order = index === 0 ? candidates.order : 'chain';
+    const order = index === 0 ? candidates.order : candidates.conditions?.includes(index) === true ? 'chain-either' : 'chain';
     const [only] = serving;
     return only !== undefined && serving.length === 1 ? { kind: 'one', claim: only.claim, found: only.found, said, order } : { kind: 'several', serving, said, order };
   }
@@ -342,8 +372,14 @@ export const chooseAmongSettings = <T>(candidates: SettingCandidates, ask: (serv
 };
 
 /** How a row says the base was read from its settings: chosen by a condition, the first of a chain that is set, or one setting several claim. */
-export const howChosen = (order: SettingCandidates['order']): string =>
-  order === 'either' ? 'chosen by a condition nobody settles' : order === 'claimed' ? 'a setting several services claim' : 'read from the first of them that is set';
+export const howChosen = (order: ChoiceOrder): string =>
+  order === 'either'
+    ? 'chosen by a condition nobody settles'
+    : order === 'claimed'
+      ? 'a setting several services claim'
+      : order === 'chain-either'
+        ? 'read from the first of them that is set, a condition nobody settles choosing among the later ones'
+        : 'read from the first of them that is set';
 
 /** Every value the setting is found with, strongest first: the deployment's alone, where it says. */
 export const valuesOf = (input: BaseUrlInput): FoundValue[] => {

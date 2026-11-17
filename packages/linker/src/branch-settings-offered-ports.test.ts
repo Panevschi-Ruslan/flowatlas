@@ -184,13 +184,17 @@ describe("a code port's fallback, and the value an example environment file offe
   });
   const heard = (index: ReturnType<typeof portsListening>) =>
     [...index.byPort.entries()]
-      .map(([port, all]) => `${port} ${all.map((each) => `${each.service}${each.valueFrom === undefined ? '' : ` from ${each.valueFrom}`}${each.example === true ? ' example' : ''}`).join(', ')}`)
+      .map(([port, all]) => `${port} ${all.map((each) => `${each.service}${each.valueFrom === undefined ? '' : ` from ${each.valueFrom}`}${each.example === true ? ' example' : ''}${each.unloaded === true ? ' unloaded' : ''}`).join(', ')}`)
       .sort();
 
-  it("offers the example's value beside the fallback, and nothing a committed file nothing loads gives", () => {
+  it("offers the example's value beside the fallback, and a committed file's that nothing loads as a guess too", () => {
     const fallback = [{ port: 3000, file: 'src/main.ts', line: 4, setting: 'ORDERS_PORT' }];
     expect(heard(portsListening(nodes(fallback), settings([{ port: 4100, file: '.env.example', example: true }])))).toEqual(['3000 orders', '4100 orders from .env.example example']);
-    expect(heard(portsListening(nodes(fallback), settings([{ port: 4100, file: '.env' }])))).toEqual(['3000 orders']);
+    // P325: a file nothing is read loading offers its value; the fallback stays.
+    expect(heard(portsListening(nodes(fallback), settings([{ port: 4100, file: '.env' }])))).toEqual(['3000 orders', '4100 orders from .env unloaded']);
+    // A default moves for no file but an example's offer (P321).
+    const byDefault = [{ port: 3000, file: 'src/main.ts', line: 4, setting: 'ORDERS_PORT', default: true as const }];
+    expect(heard(portsListening(nodes(byDefault), settings([{ port: 4100, file: '.env' }])))).toEqual(['3000 orders']);
     // A port filled from a file the code loads is the file's, with nothing more offered.
     const filled = [{ port: 4200, file: 'src/main.ts', line: 4, setting: 'ORDERS_PORT', valueFrom: '.env' }];
     expect(heard(portsListening(nodes(filled), settings([{ port: 4100, file: '.env.example', example: true }])))).toEqual(['4200 orders from .env']);

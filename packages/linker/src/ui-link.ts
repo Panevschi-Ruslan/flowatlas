@@ -1,5 +1,5 @@
 import { normalizePath, wasRead, type Confidence, type GraphNode } from '@flowatlas/core';
-import { chooseAmongSettings, claimantsOfSetting, howChosen, settingCandidates, settingsAfter, type BaseUrlAnswer, type FoundValue, type SettingCandidates } from './base-url-value.js';
+import { chooseAmongSettings, claimantsOfSetting, howChosen, settingCandidates, settingsAfter, type BaseUrlAnswer, type FoundValue, type ChoiceOrder } from './base-url-value.js';
 import { localGraphqlEndpoint, sendsOperation, unservedFinding } from './graphql-value.js';
 import { MARKER_FINDINGS, pathOfValue, unreadRouteFinding, type Finding } from './http-link.js';
 import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
@@ -151,7 +151,7 @@ interface Details {
     /** The settings of a condition's branches nobody settles, or of a chain, the candidates claim, as `ORDERS_URL (orders)` (P309, P313). */
     branches?: readonly string[];
     /** How the base is read from those settings (P313). */
-    order?: SettingCandidates['order'];
+    order?: ChoiceOrder;
   };
 }
 

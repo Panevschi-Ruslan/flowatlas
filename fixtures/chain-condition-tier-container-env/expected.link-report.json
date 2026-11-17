@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-17T18:30:04.785Z",
+  "configHash": "4af818eb3b2d",
+  "services": [
+    {
+      "name": "archive",
+      "repo": "./archive",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2029,
+      "packages": {
+        "name": "chain-condition-tier-container-env-archive",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2021,
+      "packages": {
+        "name": "chain-condition-tier-container-env-billing",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "east",
+      "repo": "./east",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2080,
+      "packages": {
+        "name": "chain-condition-tier-container-env-east",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2016,
+      "packages": {
+        "name": "chain-condition-tier-container-env-inventory",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 23,
+      "edges": 18,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 2121,
+      "packages": {
+        "name": "chain-condition-tier-container-env-jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "primary",
+      "repo": "./primary",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2069,
+      "packages": {
+        "name": "chain-condition-tier-container-env-primary",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "west",
+      "repo": "./west",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2121,
+      "packages": {
+        "name": "chain-condition-tier-container-env-west",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 7,
+    "linked": 6,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 1,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 7,
+    "called": 5,
+    "uncalled": [
+      "entry:east:http:GET:/regions",
+      "entry:west:http:GET:/regions"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "jobs",
+      "file": "src/calls.ts",
+      "line": 8,
+      "reason": "ambiguous-route-target",
+      "message": "the request's base is one of PRIMARY_URL (primary) and EAST_URL (east) and WEST_URL (west) and ARCHIVE_URL (archive), read from the first of them that is set, a condition nobody settles choosing among the later ones, and east and west each serve GET /regions",
+      "hint": "Read the base from one setting, or annotate the call with @CallsService naming the service it reaches.",
+      "symbol": "http_out:jobs#src/calls.ts:8:30"
+    }
+  ],
+  "totals": {
+    "nodes": 40,
+    "edges": 28,
+    "types": 2,
+    "missed": 3,
+    "sites": 3,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 3
+  }
+}

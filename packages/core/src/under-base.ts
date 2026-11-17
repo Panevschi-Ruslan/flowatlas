@@ -27,6 +27,8 @@ export interface ReadAddress {
   baseUrlAlso?: readonly string[];
   /** The settings of a condition's branches nobody settles, as equal candidates (P309). */
   baseUrlEither?: readonly string[];
+  /** The settings of `baseUrlAlso` in the tiers they are read in, where a tier holds more than one (P325). */
+  baseUrlAlsoTiers?: readonly (readonly string[])[];
   /** Host, when the address names one outright. */
   host: string | null;
   /** How the address was arrived at, for the reader of the node. */
@@ -88,7 +90,7 @@ export const underBase = <Address extends ReadAddress>(base: ReadAddress | undef
   const written = address.url ?? address.path;
   const joint = written.startsWith('/') ? written : `/${written}`;
   // The fallback is the setting's, so it is the base's where the base names the setting.
-  const { baseUrlDefault: _own, baseUrlDefaultFile: _ownFile, baseUrlAlso: _ownAlso, baseUrlEither: _ownEither, ...rest } = address;
+  const { baseUrlDefault: _own, baseUrlDefaultFile: _ownFile, baseUrlAlso: _ownAlso, baseUrlEither: _ownEither, baseUrlAlsoTiers: _ownTiers, ...rest } = address;
   return {
     ...(rest as Address),
     url: `${(base.url ?? '').replace(/\/+$/, '')}${joint}`,
@@ -98,6 +100,7 @@ export const underBase = <Address extends ReadAddress>(base: ReadAddress | undef
     ...(base.baseUrlEnv === null || base.baseUrlDefault === undefined || base.baseUrlDefaultFile === undefined ? {} : { baseUrlDefaultFile: base.baseUrlDefaultFile }),
     ...(base.baseUrlEnv === null || base.baseUrlAlso === undefined ? {} : { baseUrlAlso: base.baseUrlAlso }),
     ...(base.baseUrlEnv === null || base.baseUrlEither === undefined ? {} : { baseUrlEither: base.baseUrlEither }),
+    ...(base.baseUrlEnv === null || base.baseUrlAlsoTiers === undefined ? {} : { baseUrlAlsoTiers: base.baseUrlAlsoTiers }),
     host: base.host,
     // How the *address* was arrived at, and an address rooted at a settings key
     // is that whichever end of it the key came from.

@@ -25,13 +25,34 @@ export interface DockerRun {
   readonly names: readonly string[];
   readonly mappings: readonly Mapping[];
   readonly environment: ReadonlyArray<{ readonly name: string; readonly raw: string }>;
+  /** The environment files it is started with (`--env-file`), as written, in order (P325). */
+  readonly envFiles: readonly string[];
+  /** The image it runs, as written: `orders:latest`. */
+  readonly image?: string;
+}
+
+/**
+ * An image a command builds with `docker build` (P325): the names it tags it
+ * with (`-t`), without their tags; the Dockerfile (`-f`), as written; the
+ * directory it is built from; the stage it builds (`--target`); and the
+ * arguments it hands the build (`--build-arg NAME=value`).
+ */
+export interface DockerBuild {
+  readonly names: readonly string[];
+  readonly dockerfile?: string;
+  readonly context: string;
+  readonly target?: string;
+  readonly args: Readonly<Record<string, string>>;
 }
 
 /** The words of a command, as the shared reader splits them, and where it is written. */
 export type CommandAt = Pick<Command, 'words' | 'line' | 'file'> & Partial<Pick<Command, 'dirs' | 'env'>>;
 
-/** Where a `docker run` is written, beside what it runs. */
-export type DockerRunAt = DockerRun & { readonly file: string };
+/** Where a `docker run` is written, beside what it runs, and the directories it may run in. */
+export type DockerRunAt = DockerRun & { readonly file: string; readonly dirs?: readonly string[] };
+
+/** Where a `docker build` is written, and the directories it may run in. */
+export type DockerBuildAt = DockerBuild & { readonly file: string; readonly dirs?: readonly string[] };
 
 const port = (value: string | undefined): number | undefined => {
   const number = Number(value);
@@ -40,6 +61,12 @@ const port = (value: string | undefined): number | undefined => {
 
 /** Options of `docker run` that take a value, so the image is the first word that is neither. */
 const VALUED = /^(?:-[pelvwuh]|--(?:publish|env|env-file|label|volume|workdir|user|hostname|name|network|entrypoint|mount|platform|restart|memory|cpus))$/;
+
+/** Options of `docker build` that take a value. */
+const BUILD_VALUED = /^(?:-[tf]|--(?:tag|file|target|build-arg|platform|label|network|secret|ssh|cache-from|cache-to|output|progress|iidfile|add-host|build-context|shm-size|ulimit|memory|cpu-shares|isolation|cgroup-parent))$/;
+
+/** An image's name as a run and a build both write it: without its registry and tag, lower case. */
+export const imageName = (image: string): string => (image.split('/').pop() ?? image).split(':')[0]?.toLowerCase() ?? '';
 
 /** A word that is a program, written bare or with its directory: `kubectl`, `bin/helm`. */
 const isProgram = (word: string | undefined, program: string): boolean => word === program || (word ?? '').endsWith(`/${program}`);
@@ -60,6 +87,7 @@ const runOf = (words: readonly string[], line: number): DockerRun | undefined =>
   if (run < 0) return undefined;
   const mappings: Mapping[] = [];
   const environment: Array<{ name: string; raw: string }> = [];
+  const envFiles: string[] = [];
   let name: string | undefined;
   let image: string | undefined;
   for (let index = run + 1; index < words.length; index += 1) {
@@ -75,6 +103,8 @@ const runOf = (words: readonly string[], line: number): DockerRun | undefined =>
     } else if (flag === '-e' || flag === '--env') {
       const equals = (value ?? '').indexOf('=');
       if (equals > 0) environment.push({ name: (value as string).slice(0, equals), raw: (value as string).slice(equals + 1) });
+    } else if (flag === '--env-file') {
+      if (value !== undefined && value !== '' && !value.includes('$')) envFiles.push(value);
     } else if (flag === '--name') name = value;
     else if (!valued && !word.startsWith('-')) {
       image = word;
@@ -84,7 +114,45 @@ const runOf = (words: readonly string[], line: number): DockerRun | undefined =>
   const fromImage = image?.split('/').pop()?.split(':')[0];
   const called = name ?? fromImage;
   if (called === undefined || called === '' || called.includes('$')) return undefined;
-  return { name: called, names: name === undefined || name.includes('$') ? [] : [name.toLowerCase()], mappings, environment };
+  return {
+    name: called,
+    names: name === undefined || name.includes('$') ? [] : [name.toLowerCase()],
+    mappings,
+    environment,
+    envFiles,
+    ...(image === undefined || image.includes('$') ? {} : { image }),
+  };
+};
+
+/** The `docker build` a command is, if it is one, with a directory to build from that the files settle. */
+const buildOf = (words: readonly string[]): DockerBuild | undefined => {
+  const at = words.findIndex((word, index) => word === 'build' && (isProgram(words[index - 1], 'docker') || (words[index - 1] === 'buildx' && isProgram(words[index - 2], 'docker'))));
+  if (at < 0) return undefined;
+  const names: string[] = [];
+  const args: Record<string, string> = {};
+  let dockerfile: string | undefined;
+  let target: string | undefined;
+  let context: string | undefined;
+  for (let index = at + 1; index < words.length; index += 1) {
+    const word = words[index] as string;
+    const [flag, inline] = splitFlag(word);
+    const valued = BUILD_VALUED.test(flag);
+    const value = valued ? (inline ?? words[(index += 1)]) : undefined;
+    if (value !== undefined && value.includes('$')) continue;
+    if (flag === '-t' || flag === '--tag') {
+      if (value !== undefined) names.push(imageName(value));
+    } else if (flag === '-f' || flag === '--file') dockerfile = value;
+    else if (flag === '--target') target = value;
+    else if (flag === '--build-arg') {
+      const equals = (value ?? '').indexOf('=');
+      if (equals > 0) args[(value as string).slice(0, equals)] = (value as string).slice(equals + 1);
+    } else if (!valued && !word.startsWith('-')) {
+      context = word;
+      break;
+    }
+  }
+  if (context === undefined || context.includes('$') || context.includes('://') || names.length === 0) return undefined;
+  return { names, ...(dockerfile === undefined ? {} : { dockerfile }), context, ...(target === undefined ? {} : { target }), args };
 };
 
 /** Whether a command is written in a pipeline: a GitHub workflow or a GitLab CI file. */
@@ -101,7 +169,19 @@ export const dockerRunsOf = (commands: readonly CommandAt[]): DockerRunAt[] =>
   commands.flatMap((command) => {
     if (isPipeline(command.file)) return [];
     const run = runOf(command.words, command.line);
-    return run === undefined ? [] : [{ ...run, file: command.file }];
+    return run === undefined ? [] : [{ ...run, file: command.file, ...(command.dirs === undefined ? {} : { dirs: command.dirs }) }];
+  });
+
+/**
+ * Every `docker build` the commands of a repository write that tags its
+ * image (P325), so a `docker run` of that image is read with the
+ * environment its Dockerfile gives. A pipeline's is read too: the image it
+ * builds is the one a developer pulls and runs.
+ */
+export const dockerBuildsOf = (commands: readonly CommandAt[]): DockerBuildAt[] =>
+  commands.flatMap((command) => {
+    const build = buildOf(command.words);
+    return build === undefined ? [] : [{ ...build, file: command.file, ...(command.dirs === undefined ? {} : { dirs: command.dirs }) }];
   });
 
 /**

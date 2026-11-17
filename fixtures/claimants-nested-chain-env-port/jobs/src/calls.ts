@@ -22,10 +22,10 @@ export const products = () => fetch(`${shelfBase()}/products`).then((res) => res
 /** Only the service of the setting read after the condition serves it: joined there, as a guess. */
 export const exportsList = () => fetch(`${shelfBase()}/exports`).then((res) => res.json());
 
-/** The API where its development environment file places it. */
+/** The API where its development environment file, which nothing loads, offers it. */
 export const items = () => fetch('http://localhost:4000/items').then((res) => res.json());
 
-/** The API's fallback port, where no run with the file listens. */
+/** The API's fallback port, where a run without the file listens. */
 export const itemsAtFallback = () => fetch('http://localhost:3000/items').then((res) => res.json());
 
 /** The port the audit service listens on, which the reports service only falls back to. */

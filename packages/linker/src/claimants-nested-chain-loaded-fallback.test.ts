@@ -2,7 +2,7 @@ import { NO_SETTINGS, SCHEMA_VERSION, parseConfig, type GraphNode, type RepoGrap
 import { describe, expect, it } from 'vitest';
 import { chooseAmongSettings, settingCandidates } from './base-url-value.js';
 import { linkGraphs } from './link.js';
-import { atLocalPort, portsListening, type Listening, type PortIndex } from './local-port.js';
+import { atLocalPort, portsListening, whereListening, type Listening, type PortIndex } from './local-port.js';
 import { servesRequest } from './request-served.js';
 
 const FIXED = '2026-01-01T00:00:00.000Z';
@@ -151,12 +151,34 @@ describe('a written fallback port whose setting an environment file gives (P319)
     new Map([['repo:api', { id: 'repo:api', type: 'repo', label: 'api', repo: 'api', meta: { listen: [{ port: 3000, file: 'src/main.ts', line: 9, setting: 'PORT', ...port }] } }]]);
   const given = (...values: { port: number; file: string; example?: true }[]): Record<string, RepoSettings> => ({ api: { ...NO_SETTINGS, ports: { PORT: values } } });
 
-  it("listens at the file's port, firm, and not at the fallback", () => {
+  // P325: a file nothing is read loading offers its value, a guess beside the
+  // fallback; a file the code loads fills the port itself, firm (below).
+  it("offers the file's port beside the fallback where nothing is read loading the file, both guesses", () => {
     const { byPort } = portsListening(node({}), given({ port: 4000, file: '.env' }));
+    expect(byPort.get(3000)).toEqual([{ service: 'api', file: 'src/main.ts', line: 9, setting: 'PORT' }]);
+    expect(byPort.get(4000)).toEqual([{ service: 'api', file: 'src/main.ts', line: 9, setting: 'PORT', valueFrom: '.env', unloaded: true }]);
+    expect(whereListening(byPort.get(4000)?.[0] as Listening)).toBe('src/main.ts:9 (PORT from .env) (a file nothing is read loading)');
+    const index: PortIndex = { configured: new Map(), all: new Map(), listening: byPort };
+    expect(atLocalPort(`http:${SLASHES}localhost:4000/x`, index)).toMatchObject({ kind: 'service', service: 'api', sure: false });
+    expect(atLocalPort(`${LOCAL}/x`, index)).toMatchObject({ kind: 'service', service: 'api', sure: false });
+    // A firm word at the offered port takes it, the offer dropped.
+    const firm = new Map(byPort);
+    firm.set(4000, [...(byPort.get(4000) ?? []), { service: 'shop', file: 'src/server.ts', line: 4 }]);
+    expect(atLocalPort(`http:${SLASHES}localhost:4000/x`, { ...index, listening: firm })).toMatchObject({ kind: 'service', service: 'shop', sure: true });
+  });
+
+  it('offers the port a setting file gives a fallback named PORT, where the files place the service there too', () => {
+    const { byPort } = portsListening(node({}), given({ port: 4000, file: '.env' }));
+    const index: PortIndex = { configured: new Map(), all: new Map([['localhost:4000', ['api']]]), listening: byPort };
+    expect(atLocalPort(`http:${SLASHES}localhost:4000/x`, index)).toMatchObject({ kind: 'service', service: 'api', sure: false });
+  });
+
+  it("is the file's port, firm, where the code is read loading the file", () => {
+    const { byPort } = portsListening(node({ port: 4000, valueFrom: '.env' }), given({ port: 4000, file: '.env' }));
     expect(byPort.get(3000)).toBeUndefined();
     expect(byPort.get(4000)).toEqual([{ service: 'api', file: 'src/main.ts', line: 9, setting: 'PORT', valueFrom: '.env' }]);
     const index: PortIndex = { configured: new Map(), all: new Map(), listening: byPort };
-    expect(atLocalPort(`http:${SLASHES}localhost:4000/x`, index)).toMatchObject({ kind: 'service', service: 'api' });
+    expect(atLocalPort(`http:${SLASHES}localhost:4000/x`, index)).toMatchObject({ kind: 'service', service: 'api', sure: false });
     expect(atLocalPort(`${LOCAL}/x`, index)).toBeUndefined();
   });
 

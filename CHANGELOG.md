@@ -93,6 +93,28 @@ only one of them moved.
   own environment file gives the setting (`API_PORT=4000` in
   `.env.development`), is heard at the file's port, firm, and no longer at
   the fallback; an example file's value is offered beside the fallback.
+- **A condition later in a chain, and a container's port from its env
+  files and its image (P325).** `A || (isProd ? B : C)` reads `B` and `C`
+  as one tier after `A`, each claimant asked alike: one serving the request
+  is the join, a guess; both serving it is an `ambiguous-route-target` row
+  ("a condition nobody settles choosing among the later ones") where `B`'s
+  service used to win for being written first. Readers write the grouping
+  as `baseUrlAlsoTiers` beside `baseUrlAlso` wherever a tier holds more than
+  one setting; branches that each run on to a chain read their later
+  settings side by side. A container's environment is its image's
+  Dockerfile (`ENV` of the stage built - compose's `build.target`, else the
+  last - and the stages it is built from, with `ARG` defaults and
+  `build.args` or `--build-arg` put in), under each `env_file:` in order, a
+  later file over an earlier, under `environment:`; a `docker run`'s is the
+  image a project command builds with `docker build -t`, under each
+  `--env-file`, under `-e`. A port a non-secret setting is given in an env
+  file the container is started with is read whatever the file is called,
+  `.env` included, though nothing else of such a file is. So a code fallback,
+  `process.env.PORT ?? 3000`, inside a container is where those files put
+  it, firm, `listensAt` naming the file (`inventory/.env (inventory)`); the
+  service's own files on the machine stay the machine's. A `${PORT}` a
+  compose file writes is filled from the `.env` beside it, as compose does,
+  for ports only.
 - **Plain scripts (P310, P311).** An object's methods, a prototype's
   members, members inside a wrapper run at once, `window.x`,
   `module.exports` and `exports.m`, and getters and setters are functions of
@@ -1746,6 +1768,19 @@ only one of them moved.
   a written fallback such as `process.env.PORT ?? 3100`), the firm one is
   the port's service outright; a request to it was a `local-port-shared`
   row naming both.
+- **A file nothing loads offers a fallback port rather than moving it
+  (P325).** P319 moved a written fallback, `process.env.API_PORT ?? 3000`,
+  firmly to the value any committed environment file of the service gives,
+  while P321 said a file nothing loads moves nothing; the two disagreed.
+  Now a file the code is read loading (dotenv, `--env-file`, a framework's
+  loader, a container's env file or image) places the port firmly, as it
+  did; a file nothing is read loading offers its value as a guess beside
+  the fallback, which stays a guess too, each asked whether it serves the
+  request (`listensAt` says "a file nothing is read loading"), as an
+  example file's offer is. A `PORT=` such a file gives no longer places the
+  service firmly where its code reads the setting with a fallback
+  (`claimants-nested-chain-env-port` snapshot: `localhost:3000/items`
+  joins `api` at its fallback, `localhost:4000/items` as an offer).
 - **Fields written through an alias or in a subclass, domains a workspace
   names, and grants of a bus, table or stream by the CDK's version (P322).**
   A static field written through the class under `any` - `const R: any =

@@ -231,6 +231,7 @@ describe('what a project’s files say its settings are', () => {
           { published: 3101, container: 3100, file: 'docker-compose.yml', line: 7 },
         ],
         environment: { PORT: 3000, ADMIN_PORT: 3100 },
+        environmentFiles: { ADMIN_PORT: 'orders/docker/.env.example' },
       },
     ]);
     expect(read['orders']?.hosts.filter((alias) => alias.mapped !== undefined).map((alias) => `${alias.host} ${alias.mapped?.side}`)).toEqual([

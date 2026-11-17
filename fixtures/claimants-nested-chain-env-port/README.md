@@ -28,13 +28,15 @@ read after it, as in a plain chain.
 ## A fallback port a file gives another value
 
 `api` listens on `process.env.API_PORT ?? 3000`, and its `.env.development`
-sets `API_PORT=4000`. The service is heard at 4000, `listensAt` naming the
-file; a run with the file never listens on 3000.
+sets `API_PORT=4000`. Nothing in `api`'s code or scripts is read loading the
+file, so its value is offered beside the fallback, both guesses, each asked
+whether it serves the request (P325; P319 had placed the service at 4000
+firmly and dropped the fallback).
 
 | Request | Joins |
 |---|---|
-| `GET http://localhost:4000/items` | api `GET /items`, `heuristic`, `listensAt: src/app.ts:13 (API_PORT from .env.development)` (before P319: a third party, nothing heard at 4000) |
-| `GET http://localhost:3000/items` | a third party: nothing listens at 3000 (before P319: api, the fallback a guess) |
+| `GET http://localhost:4000/items` | api `GET /items`, `heuristic`, `listensAt: src/app.ts:13 (API_PORT from .env.development) (a file nothing is read loading)` (before P319: a third party, nothing heard at 4000) |
+| `GET http://localhost:3000/items` | api `GET /items`, `heuristic`, `listensAt: src/app.ts:13 (API_PORT)`, the fallback a guess (P325; under P319 a third party) |
 
 ## A firm port and a guess at the same number
 
@@ -48,5 +50,5 @@ not given, and nothing gives it. The written port is the port's outright.
 ## Expected
 
 ```
-calls out: 8 total, 5 linked, 1 third party, 1 unknown env, 1 ambiguous
+calls out: 8 total, 6 linked, 1 unknown env, 1 ambiguous
 ```

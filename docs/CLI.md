@@ -5153,8 +5153,12 @@ claimant's answer. A condition's branches are asked together, every
 claimant of every branch's setting at once, a setting several services claim
 naming each: one serving the request is the join, a guess with
 `meta.chosenAmong`, several the row (chosen by a condition nobody settles), none
-the first branch's claimant. A key alone that two services claim still
-resolves to neither (`fixtures/settings-chains-paired-calls`,
+the first branch's claimant. A condition later in a chain, `A || (isProd ? B
+: C)`, is one tier of its branches after `A`, written `baseUrlAlsoTiers`:
+both branches' claimants are asked alike, and both serving the request is
+the row (P325, `fixtures/chain-condition-tier-container-env`). A key alone
+that two services claim still resolves to neither
+(`fixtures/settings-chains-paired-calls`,
 `fixtures/settings-branches-helpers`, `fixtures/branch-settings-offered-ports`,
 `fixtures/chain-candidates-written-fallback`).
 
@@ -6210,8 +6214,8 @@ repository decides it, not only on the line that starts the server:
 | A port handed through code | `start(3001)` where `start = (port) => app.listen(port)`, `bootstrap({ port: 3002 })`, `(options) => app.listen(options.port)`, through up to three functions, each call its own port with `handed` naming it; a parameter's default (`start(port = 3001)`, `startAdmin({ port = 3201 } = {})`) for each caller that hands none, or where nobody calls the function (P315) |
 | A settings object | `app.listen(config.port)` where a literal object in any file of the repository writes `port` (a fallback read with its setting); NestJS's `config.get('app.port')` through `registerAs('app', …)` or a `ConfigModule.forRoot({ load })` factory; convict's `config.get('port')` through the schema's `default` and `env`; a configuration a merge helper of the repository's own lays over defaults another module keeps (`const { port } = mergeConfig(given).apiOptions`) is the last of the objects it lays over each other that writes the key at its whole path - the object literals its body names, then the call's arguments - and one a setter merges into a module variable that a getter returns (`setConfig(given)` before `getConfig().apiOptions.port`) is what each call of the setter made before the read hands, laid over the variable's first value, either way with `merged` naming the merge, a guess (P305, P315); a function of the repository's own is what its `return`s answer, its parameters the call's arguments (P315). Defaults loaded by an import of a path decided at run time (`import(path.join(__dirname, 'defaults'))`) leave the port unread, with an info `listen-port-unread` row at the line that starts the server naming the load. A configuration changed in place is read where it is changed (P327): `Object.assign(config, { port })`, `Object.assign(config.server, overrides)`, `config.port = 4000`, `config.server.port = 4000` and `Object.assign(this, options)` in a constructor; of the writes made in the read's own block before it, the last one is what it holds; a source not read (`Object.assign(config, loadOverrides())`) keeps the value from before it as a guess, with an info `listen-port-guessed` row. A class's field is read per instance: `one.load(...)` is laid over what `one` reads and not what `two` does, a constructor's write is read for the instance's own `new`, and a field read through `this` in a method is read once per call of the method (`panel.start()` reads `panel`'s port, and an instance never started is not a port) |
 | A setting alone | `app.listen(process.env.AUDIT_PORT)` is kept as `{ setting, file, line }`, and the service's own example environment file fills it (`AUDIT_PORT=3006`), whatever the setting is called; a value only an example or template file gives is offered rather than given, a guess (P309) |
-| A container | a compose service's `ports` (`"3001:3000"`, `"127.0.0.1:3001:3000/tcp"`, `{ published, target }`), `environment` and `env_file`; `docker run -p 3009:3000 --name n -e PORT=3000` in a `package.json` script of the service |
-| An environment file the server loads | a port read from a setting (`app.listen(process.env.PORT ?? 3000)`) where the code loads a file before it listens - dotenv (`import 'dotenv/config'`, `dotenv.config({ path })`), NestJS's `ConfigModule.forRoot({ envFilePath })` (`.env` unless `ignoreEnvFile`), `process.loadEnvFile(path)` - or its script runs it with `--env-file`, `dotenv -e`, `env-cmd -f` or `bun`: the first committed loaded file that sets the setting gives the port, `valueFrom` naming it, the code's fallback giving way (P315). A path not written as a literal names no file, and a server whose code loads nothing keeps its fallback whatever its `.env` says. `process.loadEnvFile(a)` called again with `b` (or `loadEnvFile` imported from `node:process`) keeps `a`'s value: as Node documents it, each call sets only what the environment does not hold yet (P327) |
+| A container | a compose service's `ports` (`"3001:3000"`, `"127.0.0.1:3001:3000/tcp"`, `{ published, target }`), `environment` and `env_file`; `docker run -p 3009:3000 --name n -e PORT=3000` in a `package.json` script of the service. The container's environment is its image's Dockerfile (`ENV` of the stage built, compose's `build.target` else the last, with what the stages it is built from set, `ARG` defaults and `build.args` or `--build-arg` put in; a `docker run`'s image where a command of the project builds it with `docker build -t`), under each `env_file:` or `--env-file` in order, a later over an earlier, under `environment:` or `-e`; a port a setting whose name is no secret's is given in an env file the container is started with is read whatever the file is called, nothing else of a `.env` being read. A `${PORT}` the compose file writes is filled from the `.env` beside it, ports only (P325) |
+| An environment file the server loads | a port read from a setting (`app.listen(process.env.PORT ?? 3000)`) where the code loads a file before it listens - dotenv (`import 'dotenv/config'`, `dotenv.config({ path })`), NestJS's `ConfigModule.forRoot({ envFilePath })` (`.env` unless `ignoreEnvFile`), `process.loadEnvFile(path)` - or its script runs it with `--env-file`, `dotenv -e`, `env-cmd -f` or `bun`: the first committed loaded file that sets the setting gives the port, `valueFrom` naming it, the code's fallback giving way (P315). A path not written as a literal names no file, and a server whose code loads nothing keeps its fallback, a guess, with the value a committed environment file of its own gives the setting offered beside it as another guess (P325). `process.loadEnvFile(a)` called again with `b` (or `loadEnvFile` imported from `node:process`) keeps `a`'s value: as Node documents it, each call sets only what the environment does not hold yet (P327) |
 | A framework that starts the server itself | `fastify start`: `-p`, then `FASTIFY_PORT`, then `PORT`, each from the command's own environment or the `.env` fastify-cli loads from the directory it runs in (with dotenv up to fastify-cli 7, with `process.loadEnvFile()` from 8, neither over a set variable), else 3000 as a default; a `FASTIFY_PORT` the `.env` gives wins over a `PORT` the command gives (P321, P327). Strapi: the `port` of `config/server.*` under `config/env/production/server.*` where that file writes one (production being the build read), `env.int('PORT', 1337)` moved by the `.env` or `ENV_PATH` Strapi loads, 1337 where no file writes one; another environment's override that moves the port is an info `framework-environment-differs` row (P321, P327). Gatsby's `gatsby develop` and `gatsby serve` (P321) |
 
 A container mapping is reconciled with the code: the port the service listens
@@ -6226,7 +6230,11 @@ settings' hosts say which side each came from (`mapped.side`). A mapping whose
 container side the code does not listen on is the note `published-port-unheard`
 at the mapping's line, naming where the code listens there - the port the
 container's environment gives the setting the code reads where it gives one,
-not the code's fallback (P283) - and the request is still joined by the file. A front
+not the code's fallback (P283) - and the request is still joined by the file.
+That environment is the container's own: a value it gives the setting is
+firm, `listensAt` naming the env file or Dockerfile it is from, and the
+service's own environment files on the machine are not the container's
+(P325). A front
 end's dev server whose proxy is not read forwards what it does not serve, so a
 request to its port that its service has no route for is decided by the next
 way. `fixtures/port-sources-joins` shows each case.
@@ -6241,7 +6249,9 @@ the value only an example or template environment file offers - `PORT=` in
 port read through a merge helper or a held configuration (`merged`, P305), and
 the fallback the code writes for a setting nothing on this machine gives,
 `process.env.PORT ?? 3000`, which is what the code assumes rather than where a
-run is placed (P313). One service heard twice at a port keeps its firmest
+run is placed (P313), with each value a committed environment file nothing is
+read loading gives that setting offered beside it, "a file nothing is read
+loading", as an example's is (P325). One service heard twice at a port keeps its firmest
 word, so a published port is not lost behind the fallback it publishes. Where
 anyone is placed at the port firmly, a default yields to it, and the other
 guesses still stand beside it, two services being `local-port-shared`. Where

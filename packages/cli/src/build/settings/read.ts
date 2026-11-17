@@ -34,7 +34,8 @@ import {
   type Manifests,
 } from './cluster.js';
 import { commandsAround, type Command } from '@flowatlas/serverless';
-import { dockerRunsOf, readHelmfileRuns, readHelmInstalls, readKustomizeApplies, readPortForwards, type PortForward } from './docker-run.js';
+import { dockerBuildsOf, dockerRunsOf, imageName, readHelmfileRuns, readHelmInstalls, readKustomizeApplies, readPortForwards, type PortForward } from './docker-run.js';
+import { dockerfileEnvironment } from './dockerfile.js';
 import { helmfilesAt, helmfilesIn, readHelmfile } from './helmfile.js';
 import { namesInEnvFile, readEnvFile, type Written } from './dotenv.js';
 import { angularEnvironmentsOf } from './angular-environments.js';
@@ -145,15 +146,24 @@ const read = (path: string): string | undefined => {
 /**
  * The values of an environment file, or its names, by what the policy allows
  * of it. A file a container is started with gives that container's
- * environment its ports (`container`), and no port of this machine's.
+ * environment its ports (`container`), and no port of this machine's: the
+ * container is started with the file whatever it is called, so the port a
+ * setting whose name is no secret's is given there is read even where the
+ * file's other values are kept unread (P325).
  */
 const readEnv = (into: Gathered, path: string, file: string, container?: Record<string, number>): void => {
   const reading = envFileReading(basename(path));
-  if (reading === undefined) return;
+  if (reading === undefined && container === undefined) return;
   const text = read(path);
   if (text === undefined) return;
-  if (reading === 'names') {
-    for (const name of namesInEnvFile(text)) into.namedOnly.set(name, [...(into.namedOnly.get(name) ?? []), file]);
+  if (reading !== 'values') {
+    if (reading === 'names') for (const name of namesInEnvFile(text)) into.namedOnly.set(name, [...(into.namedOnly.get(name) ?? []), file]);
+    if (container !== undefined) {
+      for (const written of readEnvFile(text)) {
+        const port = portSetting(written);
+        if (port !== undefined) container[written.name] = port;
+      }
+    }
     return;
   }
   const environment = envFileEnvironment(basename(path));
@@ -162,7 +172,7 @@ const readEnv = (into: Gathered, path: string, file: string, container?: Record<
   for (const written of readEnvFile(text)) {
     const { name, raw } = written;
     const port = portSetting(written);
-    if (port !== undefined && container !== undefined) container[name] ??= port;
+    if (port !== undefined && container !== undefined) container[name] = port;
     if (port !== undefined && container === undefined) {
       if (PORT_SETTINGS.has(name)) addPort(into, port, file, example);
       // Any setting's port, for the code that reads it alone (P254).
@@ -198,13 +208,95 @@ const readWorkspaceEnv = (into: Gathered, dir: string): void => {
 };
 
 /**
+ * A container's environment as it is put together (P325): layers written
+ * one over another, each setting naming the file its port is from where
+ * that is not the file that starts the container.
+ */
+const containerEnvironment = (): {
+  readonly layer: (ports: Readonly<Record<string, number>>, from?: string) => void;
+  readonly done: () => Pick<ContainerRun, 'environment' | 'environmentFiles'>;
+} => {
+  const environment: Record<string, number> = {};
+  const environmentFiles: Record<string, string> = {};
+  return {
+    layer: (ports, from) => {
+      for (const [name, port] of Object.entries(ports)) {
+        environment[name] = port;
+        if (from === undefined) delete environmentFiles[name];
+        else environmentFiles[name] = from;
+      }
+    },
+    done: () => ({ environment, ...(Object.keys(environmentFiles).length === 0 ? {} : { environmentFiles }) }),
+  };
+};
+
+/** How an image is built: its Dockerfile, read from disk or written inline, the stage built and the arguments handed it (P325). */
+interface ImageBuild {
+  /** The Dockerfile's path, absolute, where it is a file. */
+  readonly path?: string;
+  readonly inline?: string;
+  readonly target?: string;
+  readonly args: Readonly<Record<string, string>>;
+}
+
+/** The ports an image's Dockerfile gives a setting (P325), nothing where it cannot be read. */
+const imagePorts = (build: ImageBuild): Record<string, number> | undefined => {
+  const text = build.inline ?? (build.path === undefined ? undefined : read(build.path));
+  if (text === undefined) return undefined;
+  const written = dockerfileEnvironment(text, { ...(build.target === undefined ? {} : { target: build.target }), args: build.args });
+  return written === undefined ? undefined : environmentPorts(written);
+};
+
+/** A path as a row names it: from the service's directory where it is inside it, else from the project's. */
+const labelOf = (path: string, dir: string, rootDir: string): string =>
+  (isWithin(dir, path) ? relative(dir, path) : relative(rootDir, path)).split(sep).join('/') || basename(path);
+
+/** An image a command builds, by the names it is tagged with (P325). */
+interface BuiltImage extends ImageBuild {
+  readonly names: readonly string[];
+}
+
+/** Every image the commands of the project build with `docker build -t` (P325), its Dockerfile where the files settle it. */
+const builtImages = (scripts: readonly Commands[], rootDir: string): BuiltImage[] =>
+  scripts.flatMap((each) =>
+    dockerBuildsOf(each.commands).flatMap((build) => {
+      // A command after a `cd` nobody settles runs nowhere the files say.
+      if (build.dirs !== undefined && build.dirs.length === 0) return [];
+      const dir = resolve(each.base, build.dirs?.[0] ?? '.');
+      const path = build.dockerfile === undefined ? join(resolve(dir, build.context), 'Dockerfile') : resolve(dir, build.dockerfile);
+      // A file outside the directories this project reads is somebody else's.
+      if (![each.base, rootDir].some((within) => isWithin(within, path))) return [];
+      return [{ names: build.names, path, ...(build.target === undefined ? {} : { target: build.target }), args: build.args }];
+    }),
+  );
+
+/**
  * The containers the commands of a repository start with `docker run`: its
  * `package.json` scripts (P254), its shell scripts and Makefiles (P257), read
- * by the one command reader (P263).
+ * by the one command reader (P263). The environment is the image's, where a
+ * command of the project builds it from a Dockerfile, under each
+ * `--env-file`, under each `-e` (P325).
  */
-const readRuns = (into: Gathered, commands: readonly Command[]): void => {
+const readRuns = (into: Gathered, commands: readonly Command[], base: string, rootDir: string, images: readonly BuiltImage[]): void => {
   for (const run of dockerRunsOf(commands)) {
-    addContainer(into, { name: run.name, names: run.names, file: run.file, ports: portsOf(run.mappings, run.file), environment: environmentPorts(run.environment) });
+    const environment = containerEnvironment();
+    const built = run.image === undefined ? undefined : images.find((image) => image.names.includes(imageName(run.image as string)));
+    const fromImage = built === undefined ? undefined : imagePorts(built);
+    if (built?.path !== undefined && fromImage !== undefined) environment.layer(fromImage, labelOf(built.path, base, rootDir));
+    if (run.dirs === undefined || run.dirs.length > 0) {
+      const dir = resolve(base, run.dirs?.[0] ?? '.');
+      for (const written of run.envFiles) {
+        const path = resolve(dir, written);
+        // A file outside the directories this project reads is somebody else's.
+        if (![base, rootDir].some((each) => isWithin(each, path))) continue;
+        const ports: Record<string, number> = {};
+        const label = labelOf(path, base, rootDir);
+        readEnv(into, path, label, ports);
+        environment.layer(ports, label);
+      }
+    }
+    environment.layer(environmentPorts(run.environment));
+    addContainer(into, { name: run.name, names: run.names, file: run.file, ports: portsOf(run.mappings, run.file), ...environment.done() });
   }
 };
 
@@ -260,6 +352,41 @@ interface ComposeFile {
   /** The service whose repository holds it, when one does. */
   readonly owner?: string;
 }
+
+/**
+ * What compose interpolates a file with from the `.env` beside it (P325):
+ * compose loads that file itself, so a `${PORT}` the file writes is the port
+ * it sets. Only the ports of settings whose names are no secret's: the file
+ * holds what a run is really given, of which nothing else is read (P77).
+ */
+const composeVariables = (dir: string): Record<string, string> => {
+  const text = read(join(dir, '.env'));
+  const out: Record<string, string> = {};
+  if (text === undefined) return out;
+  for (const written of readEnvFile(text)) {
+    const port = portSetting(written);
+    if (port !== undefined) out[written.name] = String(port);
+  }
+  return out;
+};
+
+/**
+ * The ports the Dockerfile a compose file builds a container's image from
+ * gives a setting (P325): `build.dockerfile` from the context, else the
+ * context's `Dockerfile`, or `dockerfile_inline`; the stage `build.target`
+ * names and the `build.args`. Labelled as the compose file's environment
+ * files are, from its directory.
+ */
+const composeImage = (container: ComposeService, file: ComposeFile): { readonly ports: Record<string, number>; readonly label: string } | undefined => {
+  const image = container.image;
+  if (image === undefined) return undefined;
+  const context = resolve(file.dir, container.context ?? '.');
+  const path = image.inline === undefined ? resolve(context, image.dockerfile ?? 'Dockerfile') : undefined;
+  if (path !== undefined && !isWithin(file.dir, path) && !isWithin(context, path)) return undefined;
+  const ports = imagePorts({ ...(path === undefined ? {} : { path }), ...(image.inline === undefined ? {} : { inline: image.inline }), ...(image.target === undefined ? {} : { target: image.target }), args: image.args });
+  if (ports === undefined) return undefined;
+  return { ports, label: path === undefined ? `${file.label} (dockerfile_inline)` : relative(file.dir, path).split(sep).join('/') || basename(path) };
+};
 
 const filesAt = (dir: string): string[] => {
   try {
@@ -610,7 +737,7 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
       composeFiles.push({
         dir,
         label: label(name),
-        services: readComposeFile(text),
+        services: readComposeFile(text, composeVariables(dir)),
         ...(environment === undefined ? {} : { environment }),
         ...(owner === undefined ? {} : { owner }),
       });
@@ -628,6 +755,7 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
   const helmfiles = scripts.map((each) => ({ owner: each.owner, ...helmfileInstalls(each, input.rootDir) }));
   const installs = [...scripts.flatMap((each) => chartInstalls(each, input.rootDir)), ...helmfiles.flatMap((each) => each.installs)];
   const forwards = scripts.flatMap((each) => readPortForwards(each.commands));
+  const images = builtImages(scripts, input.rootDir);
   const choice: ManifestChoice = {
     ...(input.environment === undefined ? {} : { environment: environmentName(input.environment) }),
     ...(input.overlays === undefined ? {} : { overlays: input.overlays.map((each) => resolve(each)) }),
@@ -654,7 +782,7 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
       }
     }
     readWorkspaceEnv(into, service.dir);
-    readRuns(into, scripts.find((each) => each.owner === service.name)?.commands ?? []);
+    readRuns(into, scripts.find((each) => each.owner === service.name)?.commands ?? [], service.dir, input.rootDir, images);
     manifests.push({ read: readManifestsUnder(service.dir, new Set(), choice), owner: service.name });
     composeAt(service.dir, (name) => name, service.name);
   }
@@ -711,16 +839,31 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
       if (service === undefined) continue;
       const into = byService.get(service) as Gathered;
       for (const host of [container.name, ...container.aliases]) into.hosts.push({ host: host.toLowerCase(), file: file.label });
+      // The container's environment (P325): its image's Dockerfile, under
+      // each `env_file:` in order, a later file over an earlier as compose
+      // reads them, under `environment:`, written over the files' values.
+      const environment = containerEnvironment();
+      const fromImage = container.image === undefined ? undefined : composeImage(container, file);
+      if (fromImage !== undefined) environment.layer(fromImage.ports, fromImage.label);
+      for (const written of container.envFiles) {
+        const path = isAbsolute(written) ? written : join(file.dir, written);
+        // A file outside the directories this project reads is somebody else's.
+        if (![file.dir, input.rootDir].some((dir) => isWithin(dir, path))) continue;
+        const ports: Record<string, number> = {};
+        const label = relative(file.dir, path).split(sep).join('/') || basename(path);
+        readEnv(into, path, label, ports);
+        environment.layer(ports, label);
+      }
+      environment.layer(environmentPorts(container.environment));
       // A published port with the port inside the container it reaches is a
       // mapping, both of whose sides are hosts (P254); one written alone is
       // still this machine's.
-      const environment = environmentPorts(container.environment);
       addContainer(into, {
         name: container.name,
         names: [container.name, ...container.aliases].map((name) => name.toLowerCase()),
         file: file.label,
         ports: portsOf(container.mappings, file.label),
-        environment,
+        ...environment.done(),
       });
       for (const port of container.published) addPort(into, port, file.label);
       for (const { name, raw } of container.environment) {
@@ -732,13 +875,6 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
           within: container.name,
           ...(file.environment === undefined ? {} : { environment: file.environment }),
         });
-      }
-      for (const written of container.envFiles) {
-        const path = isAbsolute(written) ? written : join(file.dir, written);
-        // A file outside the directories this project reads is somebody else's.
-        if (![file.dir, input.rootDir].some((dir) => isWithin(dir, path))) continue;
-        // `environment:` is written over the file's values, as compose does.
-        readEnv(into, path, relative(file.dir, path).split(sep).join('/') || basename(path), environment);
       }
     }
   }

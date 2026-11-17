@@ -9,7 +9,7 @@ import {
   type RouteResult,
 } from './route-match.js';
 import { chooseByApiName } from './api-choice.js';
-import { chooseAmongSettings, claimantsOfSetting, howChosen, settingCandidates, settingsAfter, whereFound, type BaseUrlAnswer, type FoundValue, type SettingCandidates } from './base-url-value.js';
+import { chooseAmongSettings, claimantsOfSetting, howChosen, settingCandidates, settingsAfter, whereFound, type BaseUrlAnswer, type FoundValue, type ChoiceOrder } from './base-url-value.js';
 import { localGraphqlEndpoint, sendsOperation, undecidedFinding, unservedFinding } from './graphql-value.js';
 import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
 import { defaultPortOf, forwardedAgain, proxyChainFinding, PROXY_HOPS, type Forward } from './proxy-forward.js';
@@ -125,7 +125,7 @@ interface Details {
    * later settings, are claimed by several services, and more than one
    * serves the request (P309, P313).
    */
-  branchesServed: { method: string; path: string; branches: readonly string[]; services: readonly string[]; order?: SettingCandidates['order'] };
+  branchesServed: { method: string; path: string; branches: readonly string[]; services: readonly string[]; order?: ChoiceOrder };
   /** Two or more services listen on the port an address on this machine names (P250). */
   portShared: { port: number; said: readonly string[]; services: readonly string[] };
   /** A host on a network names the service at a port it is not reached at there (P257). */
@@ -259,7 +259,7 @@ const FINDINGS: { [K in OutcomeKind]: ((detail: Details[K]) => Finding) | null }
  * Why a request whose base is one of a condition's settings, or of a chain's
  * (P313), claimed by several services that each serve it, is not joined (P309).
  */
-export const branchesServedFinding = (method: string, path: string, branches: readonly string[], services: readonly string[], order: SettingCandidates['order'] = 'either'): Finding => ({
+export const branchesServedFinding = (method: string, path: string, branches: readonly string[], services: readonly string[], order: ChoiceOrder = 'either'): Finding => ({
   reason: 'ambiguous-route-target',
   message: `the request's base is one of ${branches.join(' and ')}, ${howChosen(order)}, and ${services.join(' and ')} each serve ${method} ${path}`,
   hint: 'Read the base from one setting, or annotate the call with @CallsService naming the service it reaches.',

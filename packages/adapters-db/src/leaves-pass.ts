@@ -2078,6 +2078,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         ...(defaultFrom === undefined ? {} : { baseUrlDefaultFrom: defaultFrom }),
         ...(info.baseUrlEnv === null || info.baseUrlAlso === undefined ? {} : { baseUrlAlso: info.baseUrlAlso }),
         ...(info.baseUrlEnv === null || info.baseUrlEither === undefined ? {} : { baseUrlEither: info.baseUrlEither }),
+        ...(info.baseUrlEnv === null || info.baseUrlAlsoTiers === undefined ? {} : { baseUrlAlsoTiers: info.baseUrlAlsoTiers }),
         responseType,
         bodyType,
         ...(bodyType === null ? {} : { bodyFrom }),

@@ -610,6 +610,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         ...defaultFromOf(address, site.file),
         ...(address.baseUrlEnv === null || address.baseUrlAlso === undefined ? {} : { baseUrlAlso: address.baseUrlAlso }),
         ...(address.baseUrlEnv === null || address.baseUrlEither === undefined ? {} : { baseUrlEither: address.baseUrlEither }),
+        ...(address.baseUrlEnv === null || address.baseUrlAlsoTiers === undefined ? {} : { baseUrlAlsoTiers: address.baseUrlAlsoTiers }),
         responseType: typeOfResponse(network),
         bodyType: body.type,
         ...(body.type === null ? {} : { bodyFrom: 'literal' }),

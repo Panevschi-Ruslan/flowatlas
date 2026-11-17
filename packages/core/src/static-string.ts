@@ -26,6 +26,8 @@ export interface StaticString {
   also?: readonly string[];
   /** The settings of a condition's branches nobody settles it opens with, as equal candidates (P309). */
   either?: readonly string[];
+  /** The settings of `also` in the tiers they are read in, where a tier holds more than one (P325). */
+  alsoTiers?: readonly (readonly string[])[];
 }
 
 /**
@@ -48,6 +50,8 @@ export interface SettingBehind {
   also?: readonly string[];
   /** The settings of a condition's branches nobody settles, as equal candidates (P309). */
   either?: readonly string[];
+  /** The settings of `also` in the tiers they are read in, where a tier holds more than one (P325). */
+  alsoTiers?: readonly (readonly string[])[];
 }
 
 export interface StaticStringOptions {
@@ -267,6 +271,7 @@ const fromSpans = (head: string, all: readonly Span[], options: StaticStringOpti
   let fallbackFile: string | undefined;
   let also: readonly string[] | undefined;
   let either: readonly string[] | undefined;
+  let alsoTiers: readonly (readonly string[])[] | undefined;
 
   let end = all.length;
   // Trailing holes that are only ever a query string or nothing add nothing to
@@ -300,6 +305,7 @@ const fromSpans = (head: string, all: readonly Span[], options: StaticStringOpti
       fallbackFile = root?.otherwise === undefined ? undefined : root.otherwiseFile;
       also = root?.also;
       either = root?.either;
+      alsoTiers = root?.alsoTiers;
       value = (root?.prefix ?? '') + tail;
       continue;
     }
@@ -325,6 +331,7 @@ const fromSpans = (head: string, all: readonly Span[], options: StaticStringOpti
     ...(fallbackFile === undefined ? {} : { fallbackFile }),
     ...(also === undefined || also.length === 0 ? {} : { also }),
     ...(either === undefined || either.length === 0 ? {} : { either }),
+    ...(alsoTiers === undefined || alsoTiers.length === 0 ? {} : { alsoTiers }),
   };
 };
 
