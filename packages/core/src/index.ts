@@ -484,8 +484,11 @@ export {
   workspaceRootsAbove,
   widenServiceExtent,
   scanCeilingOf,
+  boundWalksAt,
+  readingCeilingOf,
 } from './workspace.js';
-export { checkoutTopOf, forgetCheckouts, isNoRepositoryDir, mayClimbTo, pathsOf, upwardCeilingOf } from './upward-walk.js';
+export { checkoutTopOf, forgetCheckouts, isNoRepositoryDir, mayClimbTo, pathsOf, scanRootOf, upwardCeilingOf } from './upward-walk.js';
+export { boundedInstalls } from './bounded-installs.js';
 export type { PathExists } from './upward-walk.js';
 export type { ExtentPackage, WorkspacePackage } from './workspace.js';
 export { applicationLibraryDirs, readServiceManifest, workspaceApplicationOf } from './workspace-application.js';

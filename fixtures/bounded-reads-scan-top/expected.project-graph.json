@@ -1,0 +1,567 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T12:17:58.582Z",
+  "services": [
+    {
+      "name": "ledger",
+      "repo": "./services/ledger",
+      "type": "grpc",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "till",
+      "repo": "./services/till",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:ledger:rpc:grpc:books.LedgerService/Balance",
+      "type": "entry",
+      "label": "grpc books.LedgerService/Balance",
+      "repo": "ledger",
+      "file": "index.js",
+      "line": 22,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:books.LedgerService/Balance",
+        "call": "unary",
+        "service": "books.LedgerService",
+        "method": "Balance",
+        "request": "BalanceRequest",
+        "response": "BalanceReply",
+        "contract": "../../proto/ledger.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:ledger#.books.BalanceRequest"
+            }
+          ],
+          "returns": "type:ledger#.books.BalanceReply"
+        },
+        "adapter": "grpc-server",
+        "registration": "addService",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:ledger:rpc:grpc:books.LedgerService/Record",
+      "type": "entry",
+      "label": "grpc books.LedgerService/Record",
+      "repo": "ledger",
+      "file": "index.js",
+      "line": 22,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:books.LedgerService/Record",
+        "call": "unary",
+        "service": "books.LedgerService",
+        "method": "Record",
+        "request": "RecordRequest",
+        "response": "RecordReply",
+        "contract": "../../proto/ledger.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:ledger#.books.RecordRequest"
+            }
+          ],
+          "returns": "type:ledger#.books.RecordReply"
+        },
+        "adapter": "grpc-server",
+        "registration": "addService",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:till:http:GET:/balance/:param",
+      "type": "entry",
+      "label": "GET /balance/:param",
+      "repo": "till",
+      "file": "src/server.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/balance/:param",
+        "rawPath": "/balance/:account",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:till:http:POST:/sales",
+      "type": "entry",
+      "label": "POST /sales",
+      "repo": "till",
+      "file": "src/server.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/sales",
+        "rawPath": "/sales",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "http_out:till#src/server.ts:15:3",
+      "type": "http_out",
+      "label": "grpc books.LedgerService/Record",
+      "repo": "till",
+      "file": "src/server.ts",
+      "line": 15,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "grpc:books.LedgerService/Record",
+        "call": "unary",
+        "operation": "record",
+        "client": "grpc",
+        "service": "books.LedgerService",
+        "method": "Record",
+        "contract": "../../proto/ledger.proto",
+        "link": {
+          "protocol": "grpc",
+          "baseUrlEnv": "LEDGER_ADDR"
+        },
+        "inputKeys": [
+          "account",
+          "amount"
+        ],
+        "inputType": "{account:any;amount:number}",
+        "targetService": "ledger"
+      }
+    },
+    {
+      "id": "http_out:till#src/server.ts:21:3",
+      "type": "http_out",
+      "label": "grpc books.LedgerService/Balance",
+      "repo": "till",
+      "file": "src/server.ts",
+      "line": 21,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "grpc:books.LedgerService/Balance",
+        "call": "unary",
+        "operation": "balance",
+        "client": "grpc",
+        "service": "books.LedgerService",
+        "method": "Balance",
+        "contract": "../../proto/ledger.proto",
+        "link": {
+          "protocol": "grpc",
+          "baseUrlEnv": "LEDGER_ADDR"
+        },
+        "inputKeys": [
+          "account"
+        ],
+        "inputType": "{account:any}",
+        "targetService": "ledger"
+      }
+    },
+    {
+      "id": "ledger#index.js:balance",
+      "type": "function",
+      "label": "balance",
+      "repo": "ledger",
+      "file": "index.js",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "call",
+              "type": "any"
+            },
+            {
+              "name": "callback",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ledger#index.js:record",
+      "type": "function",
+      "label": "record",
+      "repo": "ledger",
+      "file": "index.js",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "call",
+              "type": "any"
+            },
+            {
+              "name": "callback",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:ledger",
+      "type": "repo",
+      "label": "ledger",
+      "repo": "ledger",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "grpc-server"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:till",
+      "type": "repo",
+      "label": "till",
+      "repo": "till",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes",
+            "grpc-server"
+          ]
+        },
+        "listen": [
+          {
+            "port": 8080,
+            "file": "src/server.ts",
+            "line": 26
+          }
+        ]
+      }
+    },
+    {
+      "id": "till#src/server.ts:GET /balance/:account@20",
+      "type": "function",
+      "label": "GET /balance/:account@20",
+      "repo": "till",
+      "file": "src/server.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "till#src/server.ts:POST /sales@13",
+      "type": "function",
+      "label": "POST /sales@13",
+      "repo": "till",
+      "file": "src/server.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "till#src/server.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "till",
+      "file": "src/server.ts",
+      "line": 11,
+      "kind": "function"
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:ledger:rpc:grpc:books.LedgerService/Balance",
+      "to": "ledger#index.js:balance",
+      "type": "handles",
+      "confidence": "static",
+      "file": "index.js",
+      "line": 11
+    },
+    {
+      "from": "entry:ledger:rpc:grpc:books.LedgerService/Record",
+      "to": "ledger#index.js:record",
+      "type": "handles",
+      "confidence": "static",
+      "file": "index.js",
+      "line": 6
+    },
+    {
+      "from": "entry:till:http:GET:/balance/:param",
+      "to": "till#src/server.ts:GET /balance/:account@20",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 20,
+      "meta": {
+        "requestRead": true,
+        "params": "{account:string}"
+      }
+    },
+    {
+      "from": "entry:till:http:GET:/balance/:param",
+      "to": "till#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 11,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:till:http:POST:/sales",
+      "to": "till#src/server.ts:POST /sales@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:till:http:POST:/sales",
+      "to": "till#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 11,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "http_out:till#src/server.ts:15:3",
+      "to": "entry:ledger:rpc:grpc:books.LedgerService/Record",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 15,
+      "params": [
+        "{account:any;amount:number}"
+      ],
+      "meta": {
+        "via": "link-url",
+        "targetService": "ledger"
+      }
+    },
+    {
+      "from": "http_out:till#src/server.ts:21:3",
+      "to": "entry:ledger:rpc:grpc:books.LedgerService/Balance",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 21,
+      "params": [
+        "{account:any}"
+      ],
+      "meta": {
+        "via": "link-url",
+        "targetService": "ledger"
+      }
+    },
+    {
+      "from": "till#src/server.ts:GET /balance/:account@20",
+      "to": "http_out:till#src/server.ts:21:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 21
+    },
+    {
+      "from": "till#src/server.ts:POST /sales@13",
+      "to": "http_out:till#src/server.ts:15:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 15
+    }
+  ],
+  "types": {
+    "type:ledger#.books.BalanceReply": {
+      "name": "books.BalanceReply",
+      "kind": "object",
+      "declaredIn": "ledger#../../proto/ledger.proto",
+      "structuralHash": "2104d189e178e77e",
+      "fields": [
+        {
+          "name": "amount",
+          "type": "number | string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoForm": "library"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "books.BalanceReply"
+      }
+    },
+    "type:ledger#.books.BalanceRequest": {
+      "name": "books.BalanceRequest",
+      "kind": "object",
+      "declaredIn": "ledger#../../proto/ledger.proto",
+      "structuralHash": "c7688e06da674c59",
+      "fields": [
+        {
+          "name": "account",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "books.BalanceRequest"
+      }
+    },
+    "type:ledger#.books.RecordReply": {
+      "name": "books.RecordReply",
+      "kind": "object",
+      "declaredIn": "ledger#../../proto/ledger.proto",
+      "structuralHash": "65edecf63110e5d4",
+      "fields": [
+        {
+          "name": "entryId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "entry_id"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "books.RecordReply"
+      }
+    },
+    "type:ledger#.books.RecordRequest": {
+      "name": "books.RecordRequest",
+      "kind": "object",
+      "declaredIn": "ledger#../../proto/ledger.proto",
+      "structuralHash": "e194a8330b25b842",
+      "fields": [
+        {
+          "name": "account",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        },
+        {
+          "name": "amount",
+          "type": "number | string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoForm": "library"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "books.RecordRequest"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/server.ts",
+      "line": 16,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 4,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "POST /sales@13 -> res.sendStatus",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 4,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 16,
+                "symbol": "POST /sales@13 -> res.sendStatus"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 16,
+                "symbol": "POST /sales@13 -> res.json"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 22,
+                "symbol": "GET /balance/:account@20 -> res.sendStatus"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "till"
+    }
+  ]
+}

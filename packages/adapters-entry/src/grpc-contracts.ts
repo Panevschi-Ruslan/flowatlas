@@ -1,5 +1,5 @@
 import { basename, dirname, isAbsolute, join, relative } from 'node:path';
-import { isNoRepositoryDir, parseProto, protoTypes, sameMethodName, toPosixPath, type ProtoFile, type ProtoMethod, type ProtoService, type ProtoTypes } from '@flowatlas/core';
+import { isNoRepositoryDir, mayClimbTo, parseProto, protoTypes, sameMethodName, toPosixPath, type ProtoFile, type ProtoMethod, type ProtoService, type ProtoTypes, upwardCeilingOf } from '@flowatlas/core';
 import type { FileSystemHost } from 'ts-morph';
 
 /**
@@ -13,8 +13,9 @@ import type { FileSystemHost } from 'ts-morph';
  * that loads `demo.proto` names a file its own directory does not hold. So
  * the files are looked for in the whole repository the service is in: from
  * the service's directory up to the directory that holds `.git` or the
- * project's configuration, whichever is nearer, and every directory below
- * that except a dependency's or a hidden one.
+ * project's configuration, whichever is nearer - outside a checkout never
+ * above the directory the run was asked to read (P340) - and every directory
+ * below that except a dependency's or a hidden one.
  *
  * That is a reading of a statement, not of a service: a contract declares
  * what a service *would* answer, and is drawn as a way in only where code
@@ -83,12 +84,17 @@ const exists = (fs: FileSystemHost, path: string): boolean => {
   }
 };
 
-/** The top of the repository a directory is in, or the directory itself where none is marked. */
+/** The top of the repository a directory is in, else of what the run was asked to read, else the directory itself. */
 const searchRootOf = (fs: FileSystemHost, dir: string): string => {
+  // Never above the checkout the service is in, nor, in none, above the
+  // directory the run was asked to read (P340); the home directory is no
+  // repository's (P334): a checkout kept there (its files under version
+  // control) would have the search read all of it.
+  const ceiling = upwardCeilingOf(dir, (path) => exists(fs, path));
   let at = dir;
   for (let depth = 0; depth < MAX_ASCENT; depth += 1) {
-    // The home directory is no repository's (P334): a checkout kept there (its
-    // files under version control) would have the search read all of it.
+    // Past the directory the run was asked to read, that directory is the top.
+    if (ceiling !== undefined && !mayClimbTo(at, ceiling)) return ceiling;
     if (isNoRepositoryDir(at) && dirname(at) !== at) break;
     if (exists(fs, join(at, '.git')) || exists(fs, join(at, PROJECT_MARK))) return at;
     const parent = dirname(at);

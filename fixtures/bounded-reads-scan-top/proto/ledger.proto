@@ -1,0 +1,14 @@
+// The contract kept once at the top of the project, above every service.
+syntax = "proto3";
+
+package books;
+
+service LedgerService {
+  rpc Record (RecordRequest) returns (RecordReply) {}
+  rpc Balance (BalanceRequest) returns (BalanceReply) {}
+}
+
+message RecordRequest { string account = 1; int64 amount = 2; }
+message RecordReply { string entry_id = 1; }
+message BalanceRequest { string account = 1; }
+message BalanceReply { int64 amount = 1; }

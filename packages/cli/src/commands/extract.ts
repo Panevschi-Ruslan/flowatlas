@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
 import {
   AdapterRegistry,
+  boundWalksAt,
   CONFIG_FILENAME,
   createLogger,
   DEFAULT_OUTPUT,
@@ -277,6 +278,15 @@ export const runExtract = async (
   const configPath =
     options.config ?? (existsSync(ownConfig) ? ownConfig : findConfig(process.cwd()));
   const { repo, service, config, configDir } = resolveService(rootDir, configPath);
+  // A walk up in a directory of no checkout stops at what this reading was
+  // asked to read (P340): the repository, and where a configuration names it
+  // as a service, the configuration's directory and every service's, as the
+  // build bounds them.
+  const configured =
+    service === undefined || config === undefined || configDir === undefined
+      ? []
+      : [configDir, ...config.services.map((each) => (isAbsolute(each.repo) ? each.repo : resolve(configDir, each.repo)))];
+  boundWalksAt([...configured, rootDir]);
 
   const registry = createRegistry();
   const logger = createLogger(options.verbose === true ? 'debug' : 'warn');

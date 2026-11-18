@@ -1587,15 +1587,19 @@ is in, a tsconfig's relative `extends`, a workspace application's manifest, a
 Prisma schema, a gRPC contract's search top, the checkout a build is stamped
 with - stops at the top of the checkout it starts in, the nearest `.git` (a
 gRPC contract's search top at this configuration's directory too, where that
-comes first); and none reads in the home directory or at the file system's
-root. The version of the CDK an app is built with is looked for from the
-app's directory up to the service's repository and on to the outermost
-workspace above it that declares it a member (P348), as the readers above
-are. Finding this configuration from where a command runs is not such a
-walk: it climbs until it finds one. A linter
-configuration's `extends` by a path climbing out of the repository is not
-followed. The TypeScript checker's own module resolution still looks for
-`node_modules` and `@types` above a repository, as the compiler does.
+comes first), or in a directory of no checkout at the outermost directory the
+build was asked to read (its configuration's, a service's, each widened to the
+workspace that declares it, P340); and none reads in the home directory or at
+the file system's root. The version of the CDK an app is built with is looked
+for from the app's directory up to the service's repository and on to the
+outermost workspace above it that declares it a member (P348), as the readers
+above are. Finding this configuration from where a command runs is not such a
+walk: it climbs until it finds one. A linter configuration's `extends` by a
+path climbing out of the repository is not followed. The TypeScript checker's
+module resolution finds no `node_modules` or `@types` above the top of the
+checkout a service is in (outside any checkout, above what the build reads,
+else above the service's root and its workspace, P340); an install inside the
+repository resolves as the compiler resolves it.
 
 Everything else it keeps is in the same directory, and nothing is written into
 the repositories it reads:

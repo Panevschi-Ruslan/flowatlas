@@ -80,16 +80,49 @@ export const checkoutTopOf = (dir: string, exists: PathExists = onDisk): string 
 };
 
 /**
+ * The directories a run was asked to read (P340): the root of its
+ * configuration and every service's, each widened to the outermost workspace
+ * that declares it as a member. Set once per build or reading
+ * (`boundWalksAt` in `workspace.ts`), none outside one.
+ */
+const scanRoots: string[] = [];
+
+/** Sets the directories a run was asked to read, replacing any set before (P340). */
+export const setScanRoots = (roots: readonly string[]): void => {
+  scanRoots.splice(0, scanRoots.length, ...[...new Set(roots.map(resolve))]);
+};
+
+/**
+ * The outermost directory a run was asked to read that holds `dir`, when one
+ * does (P340): the bound of a walk in a directory of no checkout.
+ */
+export const scanRootOf = (dir: string): string | undefined => {
+  const own = resolve(dir);
+  let found: string | undefined;
+  for (const root of scanRoots) {
+    if (!isWithinDir(own, root)) continue;
+    if (found === undefined || isWithinDir(found, root)) found = root;
+  }
+  return found;
+};
+
+/**
  * The highest directory a walk up from `start` may read where the reading was
  * given no root of its own (P334): the top of the checkout `start` is in.
- * Nothing where it is in none: such a walk still never reads in the home
- * directory or at the root of the file system ({@link mayClimbTo}).
+ * Where it is in none, the outermost directory the run was asked to read that
+ * holds it (P340, {@link scanRootOf}). Nothing where there is neither: such a
+ * walk still never reads in the home directory or at the root of the file
+ * system ({@link mayClimbTo}).
  */
-export const upwardCeilingOf = (start: string, exists: PathExists = onDisk): string | undefined => checkoutTopOf(start, exists);
+export const upwardCeilingOf = (start: string, exists: PathExists = onDisk): string | undefined =>
+  checkoutTopOf(start, exists) ?? scanRootOf(start);
 
 /** Whether a walk bounded by `ceiling` may read in `dir` (P334). */
 export const mayClimbTo = (dir: string, ceiling: string | undefined): boolean =>
   ceiling === undefined ? !isNoRepositoryDir(dir) : isWithinDir(resolve(dir), ceiling);
 
 /** Forgets the checkouts this process found, for a test that makes one. */
-export const forgetCheckouts = (): void => checkouts.clear();
+export const forgetCheckouts = (): void => {
+  checkouts.clear();
+  scanRoots.length = 0;
+};

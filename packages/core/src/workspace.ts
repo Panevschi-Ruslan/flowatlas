@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { isBelowDir, isWithinDir, toPosixPath } from './ids.js';
 import { readPackageJson, type PackageJson } from './package-json.js';
-import { mayClimbTo, pathsOf, upwardCeilingOf } from './upward-walk.js';
+import { mayClimbTo, pathsOf, setScanRoots, upwardCeilingOf } from './upward-walk.js';
 import { applicationLibraryDirs, forgetWorkspaceApplications } from './workspace-application.js';
 
 /**
@@ -336,6 +336,28 @@ export const workspaceRootsAbove = (dir: string): readonly string[] => {
  * monorepo finds what the workspace installs - else `root` itself.
  */
 export const scanCeilingOf = (root: string): string => workspaceRootsAbove(root).at(-1) ?? pathsOf(root).resolve(root);
+
+/**
+ * Bounds every walk of this run in a directory of no checkout (P340): by the
+ * outermost of the directories it was asked to read that holds the walk's
+ * start - the root of its configuration, a service's root - each widened to
+ * the outermost workspace declaring it, never above it. A walk in a checkout
+ * stays bounded by the checkout's top (P334). Replaces what an earlier build
+ * of the same process set; an empty list sets none.
+ */
+export const boundWalksAt = (roots: readonly string[]): void => {
+  setScanRoots([]);
+  setScanRoots(roots.map((root) => scanCeilingOf(root)));
+};
+
+/**
+ * The highest directory a reading given `root` may read above it where it
+ * looks the way the compiler looks for `node_modules`, or for what a
+ * repository keeps at its top (P340): the top of the checkout it is in, else
+ * the outermost directory the run was asked to read that holds it, else the
+ * root widened to the workspace declaring it ({@link scanCeilingOf}).
+ */
+export const readingCeilingOf = (root: string): string => upwardCeilingOf(root) ?? scanCeilingOf(root);
 
 /**
  * The workspace `dir` is a package of, when it is a package of one.

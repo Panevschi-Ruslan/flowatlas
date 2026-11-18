@@ -1,3 +1,4 @@
+import { boundWalksAt } from '@flowatlas/core';
 import { Project } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 import { besidePath, isGeneratedPrismaClient, parsePrismaSchema, prismaTableOf } from './prisma-schema.js';
@@ -46,6 +47,23 @@ describe('what a Prisma schema states', () => {
     expect(isGeneratedPrismaClient(file, '/repo/src/generated/client/index')).toBe(true);
     expect(isGeneratedPrismaClient(file, '/repo/src/generated/clientele')).toBe(false);
     expect(prismaTableOf(file, 'user')).toBe('users');
+  });
+
+  it('reads no schema above what the run was asked to read outside a checkout, and the checkout top inside one (P340)', () => {
+    const tableIn = (files: Record<string, string>): string | undefined => {
+      const project = new Project({ useInMemoryFileSystem: true });
+      for (const [path, text] of Object.entries(files)) project.getFileSystem().writeFileSync(path, text);
+      return prismaTableOf(project.createSourceFile('/work/shop/src/db.ts', 'export {};'), 'user');
+    };
+    const loose = { '/work/prisma/schema.prisma': SCHEMA };
+    try {
+      expect(tableIn(loose)).toBe('users');
+      boundWalksAt(['/work/shop']);
+      expect(tableIn(loose)).toBeUndefined();
+      expect(tableIn({ ...loose, '/work/.git/HEAD': '' })).toBe('users');
+    } finally {
+      boundWalksAt([]);
+    }
   });
 
   it('answers nothing where no schema is readable, so the call keeps its own word', () => {

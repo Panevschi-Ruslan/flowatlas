@@ -1,0 +1,106 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-18T12:18:02.415Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:till#src/server.ts:15:3",
+        "to": "entry:ledger:rpc:grpc:books.LedgerService/Record",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:till#src/server.ts:15:3|hits|entry:ledger:rpc:grpc:books.LedgerService/Record",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "till",
+        "typeId": "{account:any;amount:number}",
+        "symbol": "till#src/server.ts:POST /sales@13",
+        "writes": [
+          "account",
+          "amount"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "ledger",
+        "typeId": "type:ledger#.books.RecordRequest",
+        "symbol": "ledger#index.js:record"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:account",
+        "proto-presence:account",
+        "proto-presence:amount"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:till#src/server.ts:21:3",
+        "to": "entry:ledger:rpc:grpc:books.LedgerService/Balance",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:till#src/server.ts:21:3|hits|entry:ledger:rpc:grpc:books.LedgerService/Balance",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "till",
+        "typeId": "{account:any}",
+        "symbol": "till#src/server.ts:GET /balance/:account@20",
+        "writes": [
+          "account"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "ledger",
+        "typeId": "type:ledger#.books.BalanceRequest",
+        "symbol": "ledger#index.js:balance"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:account",
+        "proto-presence:account"
+      ]
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:till#src/server.ts:15:3",
+        "to": "entry:ledger:rpc:grpc:books.LedgerService/Record",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:till#src/server.ts:15:3|hits|entry:ledger:rpc:grpc:books.LedgerService/Record",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:ledger:rpc:grpc:books.LedgerService/Record answers reaches its caller through a callback or a stream whose answer the code does not type, so nothing at the call states it",
+      "hint": "Type the answer where it is read - the callback's parameter, or the client generated from the contract - so what the method answers is compared with what the caller reads."
+    },
+    {
+      "edge": {
+        "from": "http_out:till#src/server.ts:21:3",
+        "to": "entry:ledger:rpc:grpc:books.LedgerService/Balance",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:till#src/server.ts:21:3|hits|entry:ledger:rpc:grpc:books.LedgerService/Balance",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:ledger:rpc:grpc:books.LedgerService/Balance answers reaches its caller through a callback or a stream whose answer the code does not type, so nothing at the call states it",
+      "hint": "Type the answer where it is read - the callback's parameter, or the client generated from the contract - so what the method answers is compared with what the caller reads."
+    }
+  ],
+  "summary": {
+    "edges": 2,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 2,
+    "unchecked": 2,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

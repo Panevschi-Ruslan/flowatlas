@@ -30,7 +30,9 @@ import {
 import { isTestDirectory, isTestName } from './test-files.js';
 import { findTsconfig } from './tsconfig-file.js';
 import { mayClimbTo, upwardCeilingOf } from './upward-walk.js';
+import { boundedInstalls } from './bounded-installs.js';
 import {
+  readingCeilingOf,
   serviceExtent,
   serviceSourceDirs,
   widenServiceExtent,
@@ -1065,7 +1067,10 @@ export const createProject = (options: CreateProjectOptions): Project => {
       ...extraPaths,
       ...(scripts ? { allowJs: true, checkJs: false } : {}),
     },
-    ...(mounts.length === 0 ? {} : { fileSystem: mountedFileSystem(mounts) }),
+    // An install above the repository is not the repository's (P340): the
+    // compiler looks for `node_modules` and `@types` in every directory up to
+    // the file system's root, and finds none above the checkout here.
+    fileSystem: boundedInstalls(readingCeilingOf(rootDir), mounts.length === 0 ? undefined : mountedFileSystem(mounts)),
     // Only inside a workspace, or where a package's source stands in. A service
     // with no package of its own to alias, none to import by name and no source
     // read in place of an install, which is every service outside a workspace,

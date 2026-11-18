@@ -1,4 +1,5 @@
 import {
+  boundWalksAt,
   GraphBuilder,
   TypeCollector,
   noAdapters,
@@ -105,6 +106,26 @@ describe('gRPC contracts (P274)', () => {
     expect(contracts.file('../proto/shop.proto', '/svc')?.path).toBe('/proto/shop.proto');
     expect(contracts.pathOf(contracts.all[0]!)).toBe('../proto/shop.proto');
     expect(contracts.byShortName('CartService').map((each) => each.service.fullName)).toEqual(['shop.CartService']);
+  });
+
+  it('searches no higher than what the run was asked to read outside a checkout, and from the checkout top inside one (P340)', () => {
+    const decoy = SHOP.replace('package shop;', 'package decoy;');
+    const contractPaths = (files: Record<string, string>, dir: string): string[] => {
+      const project = new Project({ useInMemoryFileSystem: true });
+      for (const [path, text] of Object.entries(files)) project.getFileSystem().writeFileSync(path, text);
+      return contractsOf(project.getFileSystem(), dir).all.map((contract) => contract.path);
+    };
+    const loose = { '/work/flowatlas.config.json': '{}', '/work/proto/decoy.proto': decoy, '/work/shop/proto/shop.proto': SHOP, '/work/shop/api/a.ts': '' };
+    try {
+      // Given nothing, the nearest mark, as before.
+      expect(contractPaths(loose, '/work/shop/api')).toEqual(['/work/proto/decoy.proto', '/work/shop/proto/shop.proto']);
+      boundWalksAt(['/work/shop']);
+      expect(contractPaths(loose, '/work/shop/api')).toEqual(['/work/shop/proto/shop.proto']);
+      // A contract kept at the top of the checkout the service is in is still read.
+      expect(contractPaths({ ...loose, '/work/.git/HEAD': '' }, '/work/shop/api')).toEqual(['/work/proto/decoy.proto', '/work/shop/proto/shop.proto']);
+    } finally {
+      boundWalksAt([]);
+    }
   });
 });
 

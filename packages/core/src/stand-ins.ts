@@ -405,7 +405,7 @@ export const mountOfPath = (table: MountTable, asked: string): Mount | undefined
 let realHost: FileSystemHost | undefined;
 
 /** The real file system, as the parser's own host reads it. */
-const realFileSystem = (): FileSystemHost => {
+export const realFileSystem = (): FileSystemHost => {
   realHost ??= new Project({ skipLoadingLibFiles: true }).getFileSystem();
   return realHost;
 };

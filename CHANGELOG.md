@@ -1976,6 +1976,22 @@ only one of them moved.
   contract is searched from, the checkout a build is stamped with - stops at
   the top of the checkout it starts in, and none reads in the home
   directory.
+- **TypeScript resolves no import from an install above the repository, and
+  a walk outside a checkout stops at what the run reads (P340).** The
+  compiler looked for `node_modules` and `@types` in every directory up to
+  the file system's root, so a package installed above the repository could
+  resolve an import and lend its types. An install whose directory is above
+  the top of the checkout a service is in - outside any checkout, above the
+  directories the build was asked to read, else above the service's root
+  widened to its workspace - now does not exist for the compiler; installs
+  inside the repository resolve as before. The same applies to the
+  programs a CDK app and a `serverless.ts` are read with. A walk in a
+  directory of no checkout - the workspace roots above a package, the
+  package a file is in, a Prisma schema, the top a gRPC contract is searched
+  from - stops at the outermost directory the build was asked to read (the
+  configuration's, a service's, each widened to the workspace that declares
+  it) instead of the home directory; inside a checkout it still stops at the
+  checkout's top, where a shared contract or schema is kept.
 - **fastify-cli's port order, checked against its source (P327).** `fastify
   start` loads `.env` with dotenv up to fastify-cli 7 and with Node's
   `process.loadEnvFile()` from 8, neither over a set variable, so a

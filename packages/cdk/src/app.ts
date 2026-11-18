@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
-import { toPosixPath, type Unresolved } from '@flowatlas/core';
+import { boundedInstalls, readingCeilingOf, toPosixPath, type Unresolved } from '@flowatlas/core';
 import { Project, type ClassDeclaration, type SourceFile } from 'ts-morph';
 import { AppDeployment, type DeploymentParts } from './deployment.js';
 import { Interpreter } from './interpret.js';
@@ -110,7 +110,12 @@ export const readApp = (parts: DeploymentParts, options: AppOptions): string[] =
     rows.push({ file, line: 1, reason: 'infra-file-unparsed', message: `${file} is not JSON`, hint: 'Nothing of this app is read.' });
     return [];
   }
-  const project = new Project({ compilerOptions: { allowJs: false, noEmit: true, skipLibCheck: true, strict: false }, skipAddingFilesFromTsConfig: true });
+  // No install above the repository is read (P340).
+  const project = new Project({
+    compilerOptions: { allowJs: false, noEmit: true, skipLibCheck: true, strict: false },
+    skipAddingFilesFromTsConfig: true,
+    fileSystem: boundedInstalls(readingCeilingOf(repoDir)),
+  });
   const sources = sourcesOf(appDir);
   for (const source of sources) project.addSourceFileAtPath(source);
   const interpreter = new Interpreter({ repoDir, context: { ...app.context, ...options.options }, fixed: new Set(Object.keys(options.options ?? {})) });

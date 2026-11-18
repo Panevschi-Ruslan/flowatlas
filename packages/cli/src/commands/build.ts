@@ -23,6 +23,7 @@ import {
   forgetPackageAliases,
   forgetPackageIndexes,
   forgetWorkspaces,
+  boundWalksAt,
   hashShapeFile,
   STAND_INS_FILENAME,
   standInsFingerprintOfBuild,
@@ -1097,6 +1098,9 @@ const buildHoldingLock = async (options: BuildOptions): Promise<BuildResult> => 
   forgetPackageIndexes();
   forgetPackageAliases();
   forgetWorkspaces();
+  // A walk up in a directory of no checkout stops at what this build was
+  // asked to read (P340): the configuration's directory and every service's.
+  boundWalksAt([loaded.rootDir, ...loaded.config.services.map((service) => loaded.repoDir(service))]);
   const standIns = standInsOfBuild(loaded.config, loaded.rootDir);
   const shapeHashes = new Map<string, string>();
   const hashOf = (file: string): string => {
