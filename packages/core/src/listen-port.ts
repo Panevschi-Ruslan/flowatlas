@@ -1074,7 +1074,8 @@ const madeBeforeIn = (write: TsNode, at: TsNode): boolean =>
  * the read's own block before it is one of its function's in turn, that call
  * is where the write is made - the last write before the read, cutting the
  * values before it as a write written there would - its function's parameters
- * that call's arguments. Otherwise the write is a value the key may hold, as
+ * that call's arguments, and each function further out it was cut through
+ * bound to the call it was reached by in turn (P345). Otherwise the write is a value the key may hold, as
  * before.
  */
 const placedWrites = (write: BinaryExpression, literal: TsNode, at: TsNode): Written[] => {
@@ -1085,10 +1086,11 @@ const placedWrites = (write: BinaryExpression, literal: TsNode, at: TsNode): Wri
   const placed: Written[] = [];
   for (const chain of chains) {
     let made: TsNode = write;
-    for (const step of chain) {
+    for (const [index, step] of chain.entries()) {
       if (!surelyMadeIn(made, step.fn)) break;
       if (madeBeforeIn(step.call, at)) {
-        placed.push({ value: write.getRight(), write: step.call, bound: chain[0] as Handing });
+        // Each function further out the write was cut through is bound to the call it was reached by (P345).
+        placed.push({ value: write.getRight(), write: step.call, bound: chain[0] as Handing, ...(index === 0 ? {} : { outer: chain.slice(1, index + 1) }) });
         break;
       }
       made = step.call;
@@ -1359,6 +1361,8 @@ interface Written {
   readonly under?: readonly string[];
   /** The call a function assigning into its parameter was handed the holder's object by: its parameters are that call's arguments (P329). */
   readonly bound?: Handing;
+  /** The calls of the functions further out a write was cut through, each function's parameters its call's arguments (P345). */
+  readonly outer?: readonly Handing[];
 }
 
 /**
@@ -1379,7 +1383,8 @@ const writtenValuesAt = (
 ): Values => {
   const reads = written.map((each) => {
     const path = [...(each.under ?? []), ...keys];
-    const under = each.bound === undefined ? own : { ...own, bound: new Map([...own.bound, [each.bound.fn, each.bound.call]]) };
+    const handings = each.bound === undefined ? [] : [each.bound, ...(each.outer ?? [])];
+    const under = handings.length === 0 ? own : { ...own, bound: new Map([...own.bound, ...handings.map((handing): [TsNode, Invocation] => [handing.fn, handing.call])]) };
     const read = valuesAt(each.value, path, depth + 1, under);
     const found = each.bound === undefined ? read : { found: marked(read.found, { handedAt: each.bound.call }), open: read.open };
     return { ...each, read: found, clear: each.write === undefined || readable(each.value, read, path) };

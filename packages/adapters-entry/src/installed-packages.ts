@@ -70,6 +70,107 @@ const installedAt = (repoDir: string, top: string, name: string): PackageAt | un
   }
 };
 
+/**
+ * What a lockfile states of a package it pins (P345): the keywords and the
+ * peer dependencies its entry writes, where it writes them - npm's
+ * `package-lock.json` (its `packages` entry, `keywords` and
+ * `peerDependencies`), pnpm's `pnpm-lock.yaml` and yarn's `yarn.lock` (the
+ * entry's `peerDependencies`). Read without the package being installed.
+ */
+export interface LockedPackage {
+  readonly lockfile: string;
+  readonly keywords: readonly string[];
+  readonly peers: readonly string[];
+}
+
+const LOCKFILES = ['package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml', 'yarn.lock'] as const;
+
+const textAt = (path: string): string | undefined => {
+  try {
+    return readFileSync(path, 'utf8');
+  } catch {
+    return undefined;
+  }
+};
+
+const stringsOf = (value: unknown): string[] => (Array.isArray(value) ? value.filter((each): each is string => typeof each === 'string') : []);
+
+/** The entry of npm's lockfile for a package: the nearest `node_modules/<name>` of its `packages`. */
+const npmLocked = (text: string, name: string): Omit<LockedPackage, 'lockfile'> | undefined => {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+  const packages = typeof parsed === 'object' && parsed !== null ? (parsed as { packages?: unknown }).packages : undefined;
+  if (typeof packages !== 'object' || packages === null) return undefined;
+  const entry = (packages as Record<string, unknown>)[`node_modules/${name}`];
+  if (typeof entry !== 'object' || entry === null) return undefined;
+  const { keywords, peerDependencies } = entry as { keywords?: unknown; peerDependencies?: unknown };
+  return { keywords: stringsOf(keywords), peers: typeof peerDependencies === 'object' && peerDependencies !== null ? Object.keys(peerDependencies) : [] };
+};
+
+const unquoted = (text: string): string => text.trim().replace(/^['"]|['"]$/g, '');
+
+/**
+ * The entry of a YAML-shaped lockfile for a package (pnpm's, yarn's): the
+ * block under the first key naming it at `indent` - `name@1.0.0:`,
+ * `/name@1.0.0:`, `/name/1.0.0:`, `"name@npm:^1.0.0, name@^1.0.0":` - and the
+ * keys of its `peerDependencies`.
+ */
+const yamlLocked = (text: string, name: string, indent: number): Omit<LockedPackage, 'lockfile'> | undefined => {
+  const lines = text.split(/\r?\n/);
+  const pad = ' '.repeat(indent);
+  const names = (key: string): boolean =>
+    key.split(',').some((each) => {
+      const descriptor = unquoted(each).replace(/^\//, '');
+      return descriptor.startsWith(`${name}@`) || descriptor.startsWith(`${name}/`);
+    });
+  const start = lines.findIndex((line) => line.startsWith(pad) && !line.startsWith(`${pad} `) && line.trimEnd().endsWith(':') && names(line.trim().slice(0, -1)));
+  if (start < 0) return undefined;
+  const peers: string[] = [];
+  let peerIndent: number | undefined;
+  for (const line of lines.slice(start + 1)) {
+    if (line.trim() === '') continue;
+    const depth = line.length - line.trimStart().length;
+    if (depth <= indent) break;
+    if (peerIndent !== undefined && depth > peerIndent) {
+      const key = /^\s*(['"]?[^'":]+['"]?)\s*:/.exec(line)?.[1];
+      if (key !== undefined) peers.push(unquoted(key));
+      continue;
+    }
+    peerIndent = line.trim() === 'peerDependencies:' ? depth : undefined;
+  }
+  return { keywords: [], peers };
+};
+
+/**
+ * {@link LockedPackage} of a package for an application in `repoDir`, from the
+ * nearest lockfile from the application up to the topmost workspace that holds
+ * it (P345). Undefined where no lockfile there pins it.
+ */
+export const lockedPackageFinder = (repoDir: string): ((name: string) => LockedPackage | undefined) => {
+  const roots = [...(workspaceGlobs(repoDir).length > 0 ? [repoDir] : []), ...workspaceRootsAbove(repoDir)];
+  const top = resolve(roots[roots.length - 1] ?? repoDir);
+  const found: { readonly path: string; readonly text: string }[] = [];
+  for (let at = resolve(repoDir); ; at = dirname(at)) {
+    for (const lockfile of LOCKFILES) {
+      const path = join(at, lockfile);
+      const text = existsSync(path) ? textAt(path) : undefined;
+      if (text !== undefined) found.push({ path, text });
+    }
+    if (at === top || dirname(at) === at) break;
+  }
+  return (name) => {
+    for (const { path, text } of found) {
+      const entry = path.endsWith('.json') ? npmLocked(text, name) : path.endsWith('pnpm-lock.yaml') ? yamlLocked(text, name, 2) : yamlLocked(text, name, 0);
+      if (entry !== undefined) return { lockfile: path, ...entry };
+    }
+    return undefined;
+  };
+};
+
 /** The package a directory holds, read from its `package.json`, or undefined where it has none. */
 export const packageAtDir = (dir: string): PackageAt | undefined => {
   const manifest = manifestAt(dir);

@@ -646,6 +646,23 @@ describe('a port held where P315 left it unread: callbacks, properties, locals a
     ).toEqual(['src/a.ts:5 3310', 'src/a.ts:5 4310', 'src/b.ts:4 3311', 'src/b.ts:4 4311']);
   });
 
+  it('binds an outer parameter the written value names to the call a write was cut at (P345)', () => {
+    expect(
+      read({
+        '/src/a.ts': [
+          'export interface Config { port?: number }',
+          'const config: Config = {};',
+          'function apply(target: Config, port: number) { target.port = port; }',
+          'function boot(settings: Config, port: number) { apply(settings, port); }',
+          'function main(settings: Config, port: number) { boot(settings, port); }',
+          'main(config, 4401);',
+          'app.listen(config.port);',
+          'function other() { boot({}, 4498); main({}, 4499); }',
+        ].join('\n'),
+      }),
+    ).toEqual(['src/a.ts:7 4401 handed at src/a.ts:6']);
+  });
+
   it('reads a field per instance a receiver is handed through more than one level of parameters (P335)', () => {
     const server = ['export class Server {', '  private port: number;', '  constructor(port: number) { this.port = port; }', '  start() { app.listen(this.port); }', '}'].join('\n');
     expect(

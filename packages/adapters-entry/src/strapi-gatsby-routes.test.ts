@@ -366,7 +366,239 @@ describe("Strapi's routes registered in code, installed plugins and extensions o
     );
     expect(read.unresolved.map((row) => `${row.reason} ${row.message}`)).toEqual([
       "route-registry-unread The routes of the Strapi plugin computed are not read: config/plugins resolves it from pluginPath('x') not written as a path.",
-      'route-registry-unread The routes of src/plugins/built/strapi-server.js are not read: its server entry does not export an object, nor a function returning one, that is read.',
+      "route-registry-unread The routes of src/plugins/built/strapi-server.js are not read: its server entry hands what require('./dist/server') loads at line 1, which is no file there.",
+    ]);
+  });
+});
+
+describe("Strapi plugins shipped only bundled, plugins not installed, controllers written whole (P345)", () => {
+  /** A rollup CommonJS build: lazy `requireX()` wrappers in a chunk, the entry handing `getDefaultExportFromCjs(requireServer())` on. */
+  const rollup = {
+    'node_modules/strapi-plugin-tags/package.json': JSON.stringify({
+      name: 'strapi-plugin-tags',
+      exports: { './strapi-server': { require: './dist/server/index.js' } },
+      strapi: { kind: 'plugin', name: 'tags' },
+    }),
+    'node_modules/strapi-plugin-tags/dist/server/index.js': [
+      "'use strict';",
+      "var server = require('./server.js');",
+      'var index = /*@__PURE__*/server.getDefaultExportFromCjs(server.requireServer());',
+      'module.exports = index;',
+    ].join('\n'),
+    'node_modules/strapi-plugin-tags/dist/server/server.js': [
+      "'use strict';",
+      "function getDefaultExportFromCjs (x) { return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x; }",
+      'var admin;',
+      'var hasRequiredAdmin;',
+      'function requireAdmin () {',
+      '  if (hasRequiredAdmin) return admin;',
+      '  hasRequiredAdmin = 1;',
+      "  admin = { type: 'admin', routes: [{ method: 'GET', path: '/settings', handler: 'settings.get' }] };",
+      '  return admin;',
+      '}',
+      'var contentApi = {};',
+      'var hasRequiredContentApi;',
+      'function requireContentApi () {',
+      '  if (hasRequiredContentApi) return contentApi;',
+      '  hasRequiredContentApi = 1;',
+      "  contentApi.type = 'content-api';",
+      "  contentApi.routes = [{ method: 'GET', path: '/tags', handler: 'tag.find' }, { method: 'POST', path: '/tags', handler: 'tag.create' }];",
+      '  return contentApi;',
+      '}',
+      'var routes;',
+      'var hasRequiredRoutes;',
+      'function requireRoutes () {',
+      '  if (hasRequiredRoutes) return routes;',
+      '  hasRequiredRoutes = 1;',
+      "  routes = { admin: requireAdmin(), 'content-api': requireContentApi() };",
+      '  return routes;',
+      '}',
+      'var server;',
+      'var hasRequiredServer;',
+      'function requireServer () {',
+      '  if (hasRequiredServer) return server;',
+      '  hasRequiredServer = 1;',
+      '  server = () => ({ routes: requireRoutes(), controllers: {} });',
+      '  return server;',
+      '}',
+      'exports.getDefaultExportFromCjs = getDefaultExportFromCjs;',
+      'exports.requireServer = requireServer;',
+    ].join('\n'),
+  };
+
+  /** An esbuild CommonJS build: `__commonJS` module factories, one writing its exports key by key. */
+  const esbuildCommonJs = {
+    'node_modules/@shop/strapi-plugin-reports/package.json': JSON.stringify({ name: '@shop/strapi-plugin-reports', main: './strapi-server.js', strapi: { kind: 'plugin', name: 'reports' } }),
+    'node_modules/@shop/strapi-plugin-reports/strapi-server.js': [
+      '"use strict";',
+      'var __getOwnPropNames = Object.getOwnPropertyNames;',
+      'var __commonJS = (cb, mod) => function __require() {',
+      '  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;',
+      '};',
+      'var require_list = __commonJS({',
+      '  "server/routes/list.js"(exports2, module2) {',
+      '    module2.exports = [{ method: "GET", path: "/reports", handler: "report.find" }];',
+      '  }',
+      '});',
+      'var require_routes = __commonJS({',
+      '  "server/routes/index.js"(exports2) {',
+      '    exports2["content-api"] = { type: "content-api", routes: require_list() };',
+      '  }',
+      '});',
+      'var require_server = __commonJS({',
+      '  "server/index.js"(exports2, module2) {',
+      '    module2.exports = { routes: require_routes(), controllers: {} };',
+      '  }',
+      '});',
+      'module.exports = require_server();',
+    ].join('\n'),
+  };
+
+  /** An esbuild build of ES modules: `__esm` initializers and `__export` into the module's exports. */
+  const esbuildEsm = {
+    'node_modules/strapi-plugin-feeds/package.json': JSON.stringify({ name: 'strapi-plugin-feeds', strapi: { kind: 'plugin', name: 'feeds' } }),
+    'node_modules/strapi-plugin-feeds/strapi-server.js': [
+      '"use strict";',
+      'var __defProp = Object.defineProperty;',
+      'var __getOwnPropNames = Object.getOwnPropertyNames;',
+      'var __esm = (fn, res) => function __init() { return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res; };',
+      'var __export = (target, all) => { for (var name in all) __defProp(target, name, { get: all[name], enumerable: true }); };',
+      'var __toCommonJS = (mod) => mod;',
+      'var routes_default;',
+      'var init_routes = __esm({',
+      '  "server/src/routes/index.ts"() {',
+      '    routes_default = { "content-api": { type: "content-api", routes: [{ method: "GET", path: "/feeds", handler: "feed.find" }] } };',
+      '  }',
+      '});',
+      'var index_exports = {};',
+      '__export(index_exports, { default: () => index_default });',
+      'module.exports = __toCommonJS(index_exports);',
+      'init_routes();',
+      'var index_default = { routes: routes_default, controllers: {} };',
+    ].join('\n'),
+  };
+
+  it("reads an installed plugin shipped only as a rollup or an esbuild bundle through the bundler's module wrappers", () => {
+    const read = extract(
+      strapiServerAdapter,
+      {},
+      { ...rollup, ...esbuildCommonJs, ...esbuildEsm },
+      { dependencies: { 'strapi-plugin-tags': '1.0.0', '@shop/strapi-plugin-reports': '1.0.0', 'strapi-plugin-feeds': '1.0.0' } },
+    );
+    expect(routes(read)).toEqual([
+      'GET /api/feeds/feeds -> (package)',
+      'GET /api/reports/reports -> (package)',
+      'GET /api/tags/tags -> (package)',
+      'GET /tags/settings -> (package)',
+      'POST /api/tags/tags -> (package)',
+    ]);
+    expect(read.entries.find((entry) => entry.label === 'GET /api/tags/tags')?.meta?.['declaredIn']).toBe('node_modules/strapi-plugin-tags/dist/server/server.js');
+    expect(read.unresolved).toEqual([]);
+  });
+
+  it('says how far a bundle it cannot read was followed, and where it stopped', () => {
+    const read = extract(
+      strapiServerAdapter,
+      {},
+      {
+        'node_modules/strapi-plugin-packed/package.json': JSON.stringify({ name: 'strapi-plugin-packed', strapi: { kind: 'plugin', name: 'packed' } }),
+        'node_modules/strapi-plugin-packed/strapi-server.js': [
+          'var __webpack_modules__ = {};',
+          'function __webpack_require__(id) { var module = { exports: {} }; __webpack_modules__[id](module, module.exports, __webpack_require__); return module.exports; }',
+          'module.exports = __webpack_require__(12);',
+        ].join('\n'),
+      },
+      { dependencies: { 'strapi-plugin-packed': '1.0.0' } },
+    );
+    expect(read.entries).toEqual([]);
+    expect(read.unresolved.map((row) => `${row.reason} ${row.file} ${row.message}`)).toEqual([
+      "route-registry-unread node_modules/strapi-plugin-packed/strapi-server.js The routes of node_modules/strapi-plugin-packed/strapi-server.js are not read: its server entry hands {} at line 2, a bundled build whose module wrappers were followed as far as they are read, which is not an object of the server's keys nor a function returning one.",
+    ]);
+  });
+
+  it('gives a dependency not installed that the repository says is a Strapi plugin a row, by its name or its lockfile entry', () => {
+    const read = extract(
+      strapiServerAdapter,
+      {},
+      {
+        'config/plugins.js': "module.exports = {\n  notes: { enabled: false },\n  'users-permissions': { config: { jwt: { expiresIn: '7d' } } },\n};\n",
+        'package-lock.json': JSON.stringify({
+          lockfileVersion: 3,
+          packages: {
+            '': { dependencies: {} },
+            'node_modules/tagger-kit': { version: '1.0.0', peerDependencies: { '@strapi/strapi': '^5.0.0' } },
+            'node_modules/left-pad': { version: '1.3.0' },
+          },
+        }),
+      },
+      {
+        dependencies: {
+          '@strapi/strapi': '5.0.0',
+          '@strapi/plugin-users-permissions': '5.0.0',
+          '@acme/strapi-plugin-badges': '1.0.0',
+          'strapi-plugin-notes': '1.0.0',
+          'tagger-kit': '1.0.0',
+          'left-pad': '1.3.0',
+        },
+      },
+    );
+    expect(read.unresolved.map((row) => `${row.reason} ${row.file} ${row.symbol} ${row.message}`)).toEqual([
+      'route-registry-unread package.json badges The routes of the Strapi plugin badges are not read: it is the dependency @acme/strapi-plugin-badges, a Strapi plugin by its name, which is not installed in the repository, so its package\'s server is not there to read.',
+      'route-registry-unread package.json tagger-kit The routes of the Strapi plugin tagger-kit are not read: it is the dependency tagger-kit, a Strapi plugin by its package-lock.json entry\'s peer dependency on @strapi/strapi, which is not installed in the repository, so its package\'s server is not there to read.',
+      'route-registry-unread package.json users-permissions The routes of the Strapi plugin users-permissions are not read: it is the dependency @strapi/plugin-users-permissions, a Strapi plugin by its name, which is not installed in the repository, so its package\'s server is not there to read.',
+    ]);
+  });
+
+  it("reads a controller an extension writes whole as the actions it answers, the plugin's own beside them where it spreads them", () => {
+    const read = extract(
+      strapiServerAdapter,
+      {
+        'src/plugins/reviews/strapi-server.js': [
+          'module.exports = {',
+          '  routes: [',
+          "    { method: 'GET', path: '/list', handler: 'review.list' },",
+          "    { method: 'DELETE', path: '/:id', handler: 'review.remove' },",
+          "    { method: 'POST', path: '/flag', handler: 'flag.mark' },",
+          "    { method: 'DELETE', path: '/flag', handler: 'flag.clear' },",
+          '  ],',
+          '  controllers: {',
+          '    review: { list: async (ctx) => {}, remove: async (ctx) => {} },',
+          '    flag: { mark: async (ctx) => {}, clear: async (ctx) => {} },',
+          '  },',
+          '};',
+        ].join('\n'),
+        'src/extensions/reviews/strapi-server.js': [
+          'module.exports = (plugin) => {',
+          '  const original = plugin.controllers.review;',
+          '  plugin.controllers.review = (opts) => ({',
+          '    ...original(opts),',
+          '    list: async (ctx) => { ctx.body = []; },',
+          '  });',
+          '  plugin.controllers.flag = { mark: async (ctx) => { ctx.body = {}; } };',
+          '  return plugin;',
+          '};',
+        ].join('\n'),
+        'src/extensions/tags/strapi-server.js': [
+          'module.exports = (plugin) => {',
+          '  plugin.controllers.tag = ({ strapi }) => ({ ...plugin.controllers.tag({ strapi }), create: async (ctx) => { ctx.body = {}; } });',
+          '  return plugin;',
+          '};',
+        ].join('\n'),
+      },
+      { 'config/plugins.js': "module.exports = {\n  reviews: { enabled: true, resolve: './src/plugins/reviews' },\n};\n", ...rollup },
+      { dependencies: { 'strapi-plugin-tags': '1.0.0' } },
+    );
+    expect(routes(read)).toEqual([
+      'DELETE /reviews/:id -> src/plugins/reviews/strapi-server.js:9',
+      'DELETE /reviews/flag -> (unread)',
+      'GET /api/tags/tags -> (package)',
+      'GET /reviews/list -> src/extensions/reviews/strapi-server.js:5',
+      'GET /tags/settings -> (package)',
+      'POST /api/tags/tags -> src/extensions/tags/strapi-server.js:2',
+      'POST /reviews/flag -> src/extensions/reviews/strapi-server.js:7',
+    ]);
+    expect(read.unresolved.map((row) => `${row.reason} ${row.symbol} ${row.message}`)).toEqual([
+      "route-handler-unread flag.clear The handler of DELETE /reviews/flag, flag.clear, is an action of a controller src/extensions/reviews/strapi-server.js writes whole, which neither writes that action nor spreads the plugin's own controller into it, so nothing is read to answer the route.",
     ]);
   });
 });
