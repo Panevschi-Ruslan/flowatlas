@@ -984,7 +984,7 @@ describe('a method called through a receiver the checker types as nothing (P336)
     const file = project.createSourceFile(
       'a.jsx',
       [
-        "import { memo } from 'react';",
+        "import { memo } from 'ui-kit';",
         'function withOptions(options, Component) { return Component; }',
         'class Reader { health() { return 1; } }',
         'class Other { health() { return 2; } }',
