@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T21:21:50.809Z",
+  "builtAt": "2026-11-18T12:43:02.153Z",
   "services": [
     {
       "name": "wiki",
@@ -1476,6 +1476,20 @@
                 "meta": {
                   "navigates": "/search",
                   "route": "/:param/search"
+                }
+              }
+            ],
+            "differing": [
+              {
+                "sites": 1,
+                "first": {
+                  "file": "src/components/Nav.tsx",
+                  "line": 15,
+                  "symbol": "Nav navigates to /posts/page/${page + 1}",
+                  "meta": {
+                    "navigates": "/posts/page/${page + 1}",
+                    "route": "/:param/posts/page/:param"
+                  }
                 }
               }
             ]

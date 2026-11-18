@@ -927,10 +927,20 @@ under (`[team.slug]`, `all[task.path] = ...`) - so `` ([slug, page]) => ({
 ...page, path: `/pages/${slug}` }) `` spells each page's path. A route or a
 link written straight over `Object.entries(...)` reads the pairs the same
 way: `path={path}` with the key bound, `<Screen />` the entry, and
-`([path, { Screen }])` a key of the entry. The entries of a view made any
-other way (a function of its own handed to `map`, `flatMap` or `reduce`, a
-`reduce` from anything else, pairs taken apart otherwise) are not read and
-count toward `unplaced`.
+`([path, { Screen }])` a key of the entry. A step takes a pair's entry, or a
+list's item, apart with an object pattern too (P344): `` ([slug, { Screen,
+base = '/docs' }]) => ({ path: `${base}/${slug}`, element: <Screen /> }) ``
+reads each name as the entry's own value under it, a nested pattern
+(`{ meta: { Screen } }`) in turn and a default where the entry writes none,
+and `({ to, Screen }) => ...` over a list the same. `Object.keys(...)` is a
+list of the keys the entries are kept under, a step reading each as its
+parameter and the entry looked up by it (`this.tools[name]`), and
+`Object.entries` or `Object.keys` over a list written in place - or a `const`
+holding one - keeps each item under its place (`Object.entries([Welcome,
+Finish])` binds `0` and `1`, up to the first spread). The entries of a view
+made any other way (a function of its own handed to `map`, `flatMap` or
+`reduce`, a `reduce` from anything else, pairs taken apart otherwise) are
+not read and count toward `unplaced`.
 
 A class's field is followed the same way (P320): a static one wherever any
 module names it (`Registry.items.push({ path: '/x', ... })` outside the class,
@@ -966,7 +976,20 @@ holds only what its class or factory writes, a field's array written in
 place and a constructor's writes included, and where that is nothing the
 `route-entries-unread` row says so in `meta.notes`; a singleton a function
 makes on first use (`dock ??= new DockRegistry()`, a static field written
-alike) is the one instance every call hands back (P338). A view the caller makes of what a reader hands back is read as
+alike) is the one instance every call hands back (P338). A receiver that
+may hold more than twelve instances is read as the first twelve, the others
+counted as unread entries with why (P344). A registry's own keyed store is
+read with its keys (P344): an entry an adding function writes straight
+under a key (`this.pages[name] = entry`, `this.panels.set(path, Screen)`) is
+kept under the key each call hands for it, a key the function writes
+itself (`this.pages['home'] = entry`) or a key of the entry
+(`this.pages[entry.slug] = entry`), and a field or variable written as an
+object in place (`pages = { overview: {...} }`) starts with its entries
+under their keys; read back through `Object.entries(this.pages)`, a `Map`'s
+`entries()` or keys, a step's key name spells each, an entry written as a
+component under a key being read as a pair's entry, and a reader looking an
+entry up by a parameter (`return this.pages[name]`) finds the one whose
+call wrote that key. A view the caller makes of what a reader hands back is read as
 the reader's own view is: `const pages = listPages().filter(...).map((page) =>
 ({ ...page, path: `/app${page.path}` }))` and then `pages.map((page) => <Route
 path={page.path} />)` places each page at `/app` and its path, as do a

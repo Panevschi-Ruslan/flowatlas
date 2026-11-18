@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { EDGE_END_MISSING_REASON, GraphBuilder } from './builder.js';
+import { causePartsOf } from './cant-follow.js';
 import { DanglingEdgeError, DuplicateTypeError } from './errors.js';
 import type { GraphEdge } from './model/edges.js';
 import type { GraphNode } from './model/nodes.js';
@@ -210,6 +211,38 @@ describe('GraphBuilder', () => {
     same.addUnresolved({ file: 'src/a.ts', line: 1, reason: 'unread', level: 'info', meta: { prefix: '/portal/' } });
     same.addUnresolved({ file: 'src/b.ts', line: 2, reason: 'unread', level: 'info', meta: { prefix: '/portal/' } });
     expect(same.build().unresolved[0]?.meta).toEqual({ prefix: '/portal/' });
+  });
+
+  it('says each value only places past the samples write, once, with how many write it and the first (P344)', () => {
+    const b = builder();
+    const row = (file: string, prefix: string): void => {
+      b.addUnresolved({ file, line: 1, reason: 'unread', level: 'info', symbol: `${file} ${prefix}`, meta: { cause: 'unread', why: 'dynamic', prefix } });
+    };
+    row('src/a.ts', '/portal/');
+    row('src/b.ts', '/search');
+    row('src/c.ts', '/portal/');
+    // A fourth place writing a sample's value adds nothing; the fifth and the seventh write one value none does, the sixth another.
+    row('src/d.ts', '/search');
+    row('src/e.ts', '/admin/');
+    row('src/f.ts', '/help/');
+    row('src/g.ts', '/admin/');
+    const [folded] = b.build().unresolved;
+    expect(folded?.sites).toBe(7);
+    const [part] = folded?.meta?.['causes'] as Array<{ readonly samples: unknown[]; readonly differing?: unknown }>;
+    expect(part?.samples).toHaveLength(3);
+    expect(part?.differing).toEqual([
+      { sites: 2, first: { file: 'src/e.ts', line: 1, symbol: 'src/e.ts /admin/', meta: { prefix: '/admin/' } } },
+      { sites: 1, first: { file: 'src/f.ts', line: 1, symbol: 'src/f.ts /help/', meta: { prefix: '/help/' } } },
+    ]);
+    // Read back from the row, the part keeps it.
+    expect(causePartsOf(folded as never)[0]?.differing).toEqual(part?.differing);
+    // Places past the samples writing only what a sample writes add nothing.
+    const quiet = builder();
+    for (const [file, prefix] of [['src/a.ts', '/a/'], ['src/b.ts', '/b/'], ['src/c.ts', '/a/'], ['src/d.ts', '/b/']] as const) {
+      quiet.addUnresolved({ file, line: 1, reason: 'unread', level: 'info', meta: { cause: 'unread', prefix } });
+    }
+    const [none] = quiet.build().unresolved[0]?.meta?.['causes'] as Array<{ readonly differing?: unknown }>;
+    expect(none).not.toHaveProperty('differing');
   });
 
   it('keeps a row that counts its own sites, one per thing it describes', () => {

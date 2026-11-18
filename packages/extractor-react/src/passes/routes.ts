@@ -5,7 +5,7 @@ import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { componentIn } from '../util/component.js';
-import { boundNode, boundRead, namedDeclarations, type Bindings } from '../util/bound-entries.js';
+import { boundRead, standsFor, type Bindings } from '../util/bound-entries.js';
 import { entriesOf, listedBindings, listedEntries, listedKey, listedValue, type Listed } from '../util/list-entries.js';
 import { beforeQuery, holdsHole, spelledPaths } from '../util/path-text.js';
 import { definePass } from './types.js';
@@ -75,9 +75,12 @@ const withOptionals = (path: string): string[] => {
 export const routeScreenOf = (ctx: ReactExtractContext, value: TsNode | undefined, bound?: Bindings): IndexedFunction | undefined => {
   if (value === undefined) return undefined;
   // A member of an element the entry is written over (`plugin.value.component.Component`): the element's own value (P297).
-  const inner = Node.isJsxExpression(value) ? (value.getExpression() ?? value) : value;
-  // A name standing for an entry written as other than an object (`Screen` of `([path, Screen]) => ...` over `{ start: Start }`): that entry (P338).
-  const stands = Node.isIdentifier(inner) ? boundNode(bound, namedDeclarations(inner)) : undefined;
+  const written = Node.isJsxExpression(value) ? (value.getExpression() ?? value) : value;
+  // An element written with a bound name as its tag (`element: <Screen />` in a step taking the entry apart, P344): the tag.
+  const inner = Node.isJsxSelfClosingElement(written) ? written.getTagNameNode() : Node.isJsxElement(written) ? written.getOpeningElement().getTagNameNode() : written;
+  // A name standing for an entry written as other than an object (`Screen` of `([path, Screen]) => ...` over `{ start: Start }`), or
+  // an entry looked up by its key (`SCREENS[name]`), or a value a pattern takes out of an entry: that node (P338, P344).
+  const stands = standsFor(bound, inner);
   if (stands !== undefined) return componentIn(ctx, stands);
   const read = boundRead(inner, bound);
   if (read === 'absent') return undefined;

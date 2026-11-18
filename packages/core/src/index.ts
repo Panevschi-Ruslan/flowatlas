@@ -1068,6 +1068,7 @@ export type {
   CantFollowSample,
   CausePart,
   CauseSample,
+  DifferingValue,
 } from './cant-follow.js';
 export {
   causeOfParameterType,

@@ -55,6 +55,21 @@ export interface CausePart {
    * repository as it finds the first three. Written only where there is one.
    */
   files?: string[];
+  /**
+   * What the places past the samples write that none of the samples does
+   * (P344), for the keys the folded rows write differently: each distinct
+   * value once, with how many places write it and the first of them, its
+   * own values in its `meta` - so no place's value is said only by its own
+   * unfolded reading, and places that write one value are one item. Written
+   * only where there is one.
+   */
+  differing?: DifferingValue[];
+}
+
+/** One value places past a cause's samples write that none of the samples does, how many write it, and the first (P344). */
+export interface DifferingValue {
+  sites: number;
+  first: CauseSample;
 }
 
 /** The `meta` a row carries for its cause. */
@@ -108,6 +123,18 @@ const samplesOf = (value: unknown): CauseSample[] =>
       })
     : [];
 
+/** The values a part's places past its samples write that none of them does, as read back from a row (P344). */
+const differingOf = (value: unknown): { differing?: DifferingValue[] } => {
+  if (!Array.isArray(value)) return {};
+  const read = value.flatMap((item): DifferingValue[] => {
+    const each = item as { sites?: unknown; first?: unknown } | null;
+    if (each === null || typeof each !== 'object' || typeof each.sites !== 'number') return [];
+    const [first] = samplesOf([each.first]);
+    return first === undefined ? [] : [{ sites: each.sites, first }];
+  });
+  return read.length === 0 ? {} : { differing: read };
+};
+
 /** What a row stands for, cause by cause. A row of one place is one part. */
 export const causePartsOf = (row: {
   reason: string;
@@ -128,6 +155,7 @@ export const causePartsOf = (row: {
         sites: part.sites,
         samples: samplesOf(part.samples),
         ...(Array.isArray(part.files) ? { files: part.files.filter((file): file is string => typeof file === 'string') } : {}),
+        ...differingOf(part.differing),
       }];
     });
     if (parts.length > 0) return parts;
@@ -157,6 +185,8 @@ export class CauseTally {
   readonly #parts = new Map<string, CausePart>();
   /** The meta of the row each sample was taken from, for what the fold cannot say for all (P338). */
   readonly #metaOf = new Map<CauseSample, Record<string, unknown>>();
+  /** Each place past a part's samples, with its row's meta, so a value none of the samples writes is still said (P344). */
+  readonly #later = new Map<string, Array<{ readonly sample: CauseSample; readonly meta: Record<string, unknown> }>>();
   #recorded = false;
 
   add(row: Unresolved): void {
@@ -166,11 +196,18 @@ export class CauseTally {
     const part = this.#parts.get(key) ?? { ...own, sites: 0, samples: [] };
     this.#parts.set(key, part);
     part.sites += row.sites ?? 1;
+    const sample: CauseSample = { file: row.file, line: row.line, ...(row.symbol === undefined ? {} : { symbol: row.symbol }) };
     if (part.samples.length < CAUSE_SAMPLES) {
-      const sample: CauseSample = { file: row.file, line: row.line, ...(row.symbol === undefined ? {} : { symbol: row.symbol }) };
       part.samples.push(sample);
       if (row.meta !== undefined) this.#metaOf.set(sample, row.meta);
-    } else if (row.file !== '' && !part.samples.some((sample) => sample.file === row.file) && !(part.files ?? []).includes(row.file)) {
+      return;
+    }
+    if (row.meta !== undefined) {
+      const later = this.#later.get(key) ?? [];
+      this.#later.set(key, later);
+      later.push({ sample, meta: row.meta });
+    }
+    if (row.file !== '' && !part.samples.some((each) => each.file === row.file) && !(part.files ?? []).includes(row.file)) {
       // A place past the samples is still in a file somebody reads by (P255).
       part.files = [...(part.files ?? []), row.file];
     }
@@ -187,13 +224,34 @@ export class CauseTally {
    * `own` names - those the rows folded together write differently (P338).
    */
   parts(own: ReadonlySet<string> = new Set()): CausePart[] {
-    const withOwn = (sample: CauseSample): CauseSample => {
-      const meta = this.#metaOf.get(sample);
+    const ownOf = (sample: CauseSample, meta: Record<string, unknown> | undefined): CauseSample => {
       const kept = meta === undefined ? [] : [...own].filter((key) => meta[key] !== undefined).map((key) => [key, meta[key]] as const);
       return kept.length === 0 ? sample : { ...sample, meta: Object.fromEntries(kept) };
     };
-    return [...this.#parts.values()]
-      .map((part) => ({ ...part, samples: part.samples.map(withOwn) }))
+    const written = (meta: Record<string, unknown> | undefined, key: string): string => JSON.stringify(meta?.[key]) ?? '';
+    /**
+     * What the places past a part's samples write, for the keys the rows
+     * write differently, that none of the samples does (P344): each distinct
+     * value once - all those keys' values together - with how many places
+     * write it and the first, in the order the places were folded.
+     */
+    const differing = (key: string, part: CausePart): Pick<CausePart, 'differing'> => {
+      if (own.size === 0) return {};
+      const names = [...own];
+      const valueOf = (meta: Record<string, unknown> | undefined): string => names.map((name) => written(meta, name)).join('\u0000');
+      const sampled = new Set(part.samples.map((sample) => valueOf(this.#metaOf.get(sample))));
+      const found = new Map<string, DifferingValue>();
+      for (const { sample, meta } of this.#later.get(key) ?? []) {
+        const value = valueOf(meta);
+        if (sampled.has(value)) continue;
+        const known = found.get(value);
+        if (known !== undefined) known.sites += 1;
+        else found.set(value, { sites: 1, first: ownOf(sample, meta) });
+      }
+      return found.size === 0 ? {} : { differing: [...found.values()] };
+    };
+    return [...this.#parts.entries()]
+      .map(([key, part]) => ({ ...part, samples: part.samples.map((sample) => ownOf(sample, this.#metaOf.get(sample))), ...differing(key, part) }))
       .map((part) => (part.files === undefined ? part : { ...part, files: [...part.files].sort(cmp) })).sort(
       (a, b) => b.sites - a.sites || cmp(a.cause, b.cause) || cmp(a.package ?? '', b.package ?? ''),
     );

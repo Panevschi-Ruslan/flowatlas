@@ -451,6 +451,24 @@ only one of them moved.
   every row folded into it says: two navigations under different prefixes
   no longer show the first one's prefix for both, each place listed in
   `meta.causes` carrying its own (`samples[i].meta`).
+- **A registry's keyed store, entries taken apart by a pattern, a list's
+  places, every value a fold drops, and receivers of many instances
+  (P344).** An entry an adding function writes straight under a key
+  (`this.pages[name] = entry`, `this.panels.set(path, Screen)`, a key the
+  function writes itself or a key of the entry) is kept under the key each
+  call hands, and a store written as an object in place starts with its
+  entries under their keys; read back through `Object.entries`, a `Map`'s
+  `entries()`, or `Object.keys` and a `keys()` with the entry looked up by
+  its key (`this.tools[name]`), each step's key name spells its path, and a
+  reader looking a list up by a parameter (`this.areas[area]`) finds the
+  one written under it. A step taking a pair's entry or a list's item apart
+  with an object pattern - nested, with defaults - reads each name as the
+  entry's own value. `Object.entries` and `Object.keys` over a list written
+  in place bind each item's place (`0`, `1`). A folded row lists, per cause,
+  each value the places past its three samples write that none of them
+  does, with how many write it and the first (`differing`). A receiver that
+  may hold more than twelve instances reads the first twelve and counts the
+  others in its `route-entries-unread` row.
 - **Settings chosen by a branch, and read inside a function handed nothing
   (P302).** A condition nobody settles whose branches read different
   settings, `isProd ? process.env.API_URL : process.env.DEV_API_URL`, written
