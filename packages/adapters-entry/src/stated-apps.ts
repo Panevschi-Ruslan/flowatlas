@@ -416,8 +416,12 @@ export const statedApp = (expr: TsNode, dialect: RouteDialect): AppType | undefi
  *   says answer with the application (`express().disable('x-powered-by')`,
  *   `Router().get(…).post(…)`), or a name holding one of those.
  * - **The name.** A variable holding that value and only it: a `const`, or a
- *   `let` or `var` nothing in its file assigns again. A property, a parameter
- *   or a destructured name is somebody's account of where the value went.
+ *   `let` or `var` nothing in its file assigns again; a field of the instance
+ *   (`readonly app = express()`) nothing but its own class's constructor
+ *   writes, every value it is given made directly; a parameter whose default
+ *   is made directly and that every caller of its function hands nothing
+ *   (P350). A static field, a parameter a caller may hand something, or a
+ *   destructured name is somebody's account of where the value went.
  */
 export const madeDirectly = (expr: TsNode, dialect: RouteDialect): boolean =>
   directly(expr, dialect, 0);
@@ -436,8 +440,18 @@ const directly = (expr: TsNode, dialect: RouteDialect, depth: number): boolean =
       directly(callee.getExpression(), dialect, depth + 1)
     );
   }
+  // `this.app`, a field of the instance (P350).
+  if (Node.isPropertyAccessExpression(node) && Node.isThisExpression(node.getExpression())) {
+    const declaration = appDeclaration(node);
+    if (declaration !== undefined && Node.isPropertyDeclaration(declaration)) return fieldMadeDirectly(declaration, dialect, depth);
+    if (declaration !== undefined && Node.isParameterDeclaration(declaration) && declaration.isParameterProperty()) {
+      return parameterMadeDirectly(declaration, dialect, depth) && !writtenOutside(declaration);
+    }
+    return false;
+  }
   if (!Node.isIdentifier(node)) return false;
   const declaration = appDeclaration(node);
+  if (declaration !== undefined && Node.isParameterDeclaration(declaration)) return parameterMadeDirectly(declaration, dialect, depth);
   if (declaration === undefined || !Node.isVariableDeclaration(declaration)) return false;
   if (!Node.isIdentifier(declaration.getNameNode()) || reassigned(declaration)) return false;
   const value = declaration.getInitializer();
@@ -492,4 +506,182 @@ const reassigned = (declaration: TsNode): boolean => {
     );
   writtenAgain.set(declaration, found);
   return found;
+};
+
+/** The member a write to a field is in: the constructor, another member, or none of the class. */
+const memberOf = (node: TsNode): TsNode | undefined =>
+  node.getFirstAncestor(
+    (each) =>
+      Node.isConstructorDeclaration(each) ||
+      Node.isMethodDeclaration(each) ||
+      Node.isGetAccessorDeclaration(each) ||
+      Node.isSetAccessorDeclaration(each) ||
+      Node.isPropertyDeclaration(each) ||
+      Node.isClassStaticBlockDeclaration(each),
+  );
+
+/** A field or a parameter property: what has a name. */
+type Named = TsNode & { getName(): string };
+
+/** The writes to a field anywhere in the project, `<x>.app = …` and `<x>['app'] = …`, by its name. */
+const fieldWrites = (field: Named): TsNode[] => {
+  const name = field.getName();
+  const found: TsNode[] = [];
+  for (const file of field.getSourceFile().getProject().getSourceFiles()) {
+    if (!file.getFullText().includes(name)) continue;
+    for (const access of file.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)) {
+      if (access.getName() === name && isWritten(access)) found.push(access);
+    }
+    for (const access of file.getDescendantsOfKind(SyntaxKind.ElementAccessExpression)) {
+      const key = access.getArgumentExpression();
+      if (key !== undefined && (Node.isStringLiteral(key) || Node.isNoSubstitutionTemplateLiteral(key)) && key.getLiteralValue() === name && isWritten(access)) found.push(access);
+    }
+  }
+  return found;
+};
+
+const fieldWritesOf = new WeakMap<TsNode, readonly TsNode[]>();
+
+/** The writes to a field, remembered per field. */
+const writesOf = (field: Named): readonly TsNode[] => {
+  const known = fieldWritesOf.get(field);
+  if (known !== undefined) return known;
+  const found = fieldWrites(field);
+  fieldWritesOf.set(field, found);
+  return found;
+};
+
+/** The class a field or a parameter property belongs to. */
+const classOf = (field: TsNode): TsNode | undefined => field.getFirstAncestor((each) => Node.isClassDeclaration(each) || Node.isClassExpression(each));
+
+/** Whether a write is `this.<field> = …` in the constructor of the field's own class. */
+const inOwnConstructor = (write: TsNode, owner: TsNode | undefined): boolean => {
+  const member = memberOf(write);
+  if (member === undefined || !Node.isConstructorDeclaration(member) || member.getParent() !== owner) return false;
+  const receiver = Node.isPropertyAccessExpression(write) || Node.isElementAccessExpression(write) ? write.getExpression() : undefined;
+  return receiver !== undefined && Node.isThisExpression(receiver);
+};
+
+/**
+ * Whether a field, or a parameter property, is written anywhere but in its
+ * own class's constructor (P350): another member of the class, a subclass,
+ * code holding an instance. Found by the name, wherever it is written - with
+ * nothing installed a receiver's type is nobody's - so a write to a field of
+ * the same name elsewhere counts too, the safe way.
+ */
+const writtenOutside = (field: Named): boolean => {
+  const owner = classOf(field);
+  return writesOf(field).some((write) => !inOwnConstructor(write, owner));
+};
+
+/**
+ * Whether a field holds what a maker made, as surely as a `const` (P350):
+ * `readonly app = express()`, `private router = Router()`, or a field the
+ * constructor gives one - every value it is given, by its initialiser and by
+ * its own class's constructor, made directly, and it is written nowhere else.
+ * A static field is the class's, written wherever the class is reachable, and
+ * stays an account of the value.
+ */
+const fieldMadeDirectly = (field: TsNode, dialect: RouteDialect, depth: number): boolean => {
+  if (!Node.isPropertyDeclaration(field) || field.isStatic() || writtenOutside(field)) return false;
+  const values: TsNode[] = [];
+  const initializer = field.getInitializer();
+  if (initializer !== undefined) values.push(initializer);
+  for (const write of writesOf(field)) {
+    const assignment = write.getParent();
+    if (assignment === undefined || !Node.isBinaryExpression(assignment) || assignment.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) return false;
+    values.push(assignment.getRight());
+  }
+  return values.length > 0 && values.every((value) => directly(value, dialect, depth + 1));
+};
+
+/** The name a function is called by: its own, the variable holding it, its class's for a constructor. */
+const calledAs = (fn: TsNode): TsNode | undefined => {
+  if (Node.isFunctionDeclaration(fn) || Node.isMethodDeclaration(fn)) return fn.getNameNode();
+  if (Node.isConstructorDeclaration(fn)) {
+    const owner = fn.getParent();
+    return Node.isClassDeclaration(owner) ? owner.getNameNode() : undefined;
+  }
+  if (Node.isArrowFunction(fn) || Node.isFunctionExpression(fn)) {
+    const holder = fn.getParent();
+    return holder !== undefined && Node.isVariableDeclaration(holder) && holder.getInitializer() === fn && Node.isIdentifier(holder.getNameNode()) ? holder.getNameNode() : undefined;
+  }
+  return undefined;
+};
+
+/** Whether the arguments of a call hand the parameter at `index` nothing: none written, `undefined`, `void 0`. */
+const handsNothing = (args: readonly TsNode[], index: number): boolean => {
+  if (args.slice(0, index + 1).some((arg) => Node.isSpreadElement(arg))) return false;
+  const arg = args[index];
+  if (arg === undefined) return true;
+  const value = unwrap(arg);
+  return (Node.isIdentifier(value) && value.getText() === 'undefined') || (Node.isVoidExpression(value) && Node.isNumericLiteral(value.getExpression()));
+};
+
+const callersHandNothing = new WeakMap<TsNode, Map<number, boolean>>();
+
+/** The kinds of a use of a name that hand it on or name a type, and so call nothing. */
+const notAUse = (parent: TsNode): boolean =>
+  Node.isImportSpecifier(parent) ||
+  Node.isExportSpecifier(parent) ||
+  Node.isImportClause(parent) ||
+  Node.isNamespaceImport(parent) ||
+  Node.isExportAssignment(parent) ||
+  Node.isTypeReference(parent) ||
+  Node.isTypeQuery(parent) ||
+  Node.isQualifiedName(parent);
+
+/**
+ * Whether every place a function is used calls it handing the parameter at
+ * `index` nothing (P350), and there is at least one: a call by its name, a
+ * method's call on anything by its name, a `new` of a constructor's class. An
+ * import or an export hands it on and is not a use; a type naming the class
+ * is none either. Anything else - passed as a value, called through
+ * `super(…)`, a spread - may hand it anything, and is no.
+ */
+const everyCallerHandsNothing = (fn: TsNode, index: number): boolean => {
+  const known = callersHandNothing.get(fn)?.get(index);
+  if (known !== undefined) return known;
+  const name = calledAs(fn);
+  let calls = 0;
+  let ok = name !== undefined && Node.isIdentifier(name);
+  if (name !== undefined && Node.isIdentifier(name)) {
+    for (const ref of name.findReferencesAsNodes()) {
+      if (ref === name) continue;
+      const parent = ref.getParent();
+      if (parent === undefined || notAUse(parent)) continue;
+      const callee = Node.isPropertyAccessExpression(parent) && parent.getNameNode() === ref ? parent : ref;
+      const call = callee.getParent();
+      const isCall = call !== undefined && (Node.isCallExpression(call) || (Node.isNewExpression(call) && Node.isConstructorDeclaration(fn))) && call.getExpression() === callee;
+      if (!isCall || !handsNothing(call.getArguments(), index)) {
+        ok = false;
+        break;
+      }
+      calls += 1;
+    }
+  }
+  const answer = ok && calls > 0;
+  callersHandNothing.set(fn, (callersHandNothing.get(fn) ?? new Map<number, boolean>()).set(index, answer));
+  return answer;
+};
+
+/**
+ * Whether a parameter holds what a maker made, as surely as a `const`
+ * (P350): its default is a maker's call, nothing in its function gives it
+ * another value, and every caller of the function hands it nothing, so the
+ * default is the value every time. A caller that may hand it something
+ * leaves it an account of the value.
+ */
+const parameterMadeDirectly = (parameter: TsNode, dialect: RouteDialect, depth: number): boolean => {
+  if (!Node.isParameterDeclaration(parameter) || parameter.isRestParameter() || !Node.isIdentifier(parameter.getNameNode())) return false;
+  const value = parameter.getInitializer();
+  if (value === undefined || !directly(value, dialect, depth + 1)) return false;
+  const fn = parameter.getParent();
+  const symbol = parameter.getNameNode().getSymbol();
+  const written = fn
+    .getDescendantsOfKind(SyntaxKind.Identifier)
+    .some((identifier) => identifier.getText() === parameter.getName() && isWritten(identifier) && identifier.getSymbol() === symbol);
+  if (written) return false;
+  const index = Node.isIndexSignatureDeclaration(fn) ? -1 : fn.getParameters().indexOf(parameter);
+  return index >= 0 && everyCallerHandsNothing(fn, index);
 };

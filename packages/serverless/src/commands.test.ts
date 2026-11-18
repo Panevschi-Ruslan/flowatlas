@@ -97,3 +97,58 @@ describe("a Makefile's own variables, the environment of its recipes (P343)", ()
     expect(envOf({ Makefile: ['export PORT = 4000', 'up:', '\tPORT=4100 npm start', '\tnpm start'].join('\n') })).toEqual({ 'up:3:npm start': 'PORT=4100', 'up:4:npm start': 'PORT=4000' });
   });
 });
+
+describe('an included Makefile and the targets that build another (P350)', () => {
+  const envOf = (files: Record<string, string>): Record<string, string> =>
+    Object.fromEntries(
+      commandsAround(repository(files), '.').map((command) => [
+        `${command.file}:${command.line} ${command.label}: ${command.words.join(' ')}`,
+        Object.entries(command.env)
+          .map(([name, value]) => `${name}=${typeof value === 'string' ? value : `?${value.text}`}`)
+          .sort()
+          .join(' '),
+      ]),
+    );
+
+  it("reads an included file's recipes with the including Makefile's variables, and not again on its own", () => {
+    expect(
+      envOf({
+        Makefile: ['export PORT := 4300', 'include mk/*.mk', 'include extra.mk'].join('\n'),
+        'mk/serve.mk': 'serve:\n\tnpm start\n',
+        'extra.mk': 'export HOST = $(PORT).local\nworker:\n\tnode worker.js --port $(PORT)\n',
+      }),
+    ).toEqual({
+      'mk/serve.mk:2 serve: npm start': 'HOST=4300.local PORT=4300',
+      'extra.mk:3 worker: node worker.js --port 4300': 'HOST=4300.local PORT=4300',
+    });
+  });
+
+  it("hands a target's variables to its prerequisites, the nearer target's over the farther's, a private one kept", () => {
+    expect(
+      envOf({
+        Makefile: [
+          'export PORT = 4000',
+          'dev: export PORT = 4100',
+          'dev: private export DEBUG = 1',
+          'all: export PORT = 4200',
+          'all: export LOG = info',
+          'all: dev',
+          'dev: serve',
+          'serve:',
+          '\tnpm start',
+        ].join('\n'),
+      }),
+    ).toEqual({
+      'Makefile:9 serve: npm start': 'PORT=4000',
+      'Makefile:9 dev: npm start': 'PORT=4100',
+      'Makefile:9 all: npm start': 'LOG=info PORT=4100',
+    });
+  });
+
+  it('reads the same line once for a target that gives it nothing new', () => {
+    expect(Object.keys(envOf({ Makefile: ['export PORT = 4000', 'all: build serve', 'build:', '\tnpm run build', 'serve:', '\tnpm start'].join('\n') }))).toEqual([
+      'Makefile:4 build: npm run build',
+      'Makefile:6 serve: npm start',
+    ]);
+  });
+});

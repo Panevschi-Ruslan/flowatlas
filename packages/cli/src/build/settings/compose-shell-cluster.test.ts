@@ -75,6 +75,15 @@ describe("a command's own shell (P337)", () => {
     expect(runs(['npm', 'run', 'api'])).toEqual({ kind: 'script', name: 'api' });
     expect(runs(['yarn', 'api'])).toEqual({ kind: 'script', name: 'api' });
     expect(runs(['npm', 'api'])).toBeUndefined();
+    // In another package of the workspace (P350).
+    expect(runs(['pnpm', '--filter', '@shop/api', 'dev'])).toEqual({ kind: 'script', name: 'dev', workspace: { selectors: ['@shop/api'] } });
+    expect(runs(['pnpm', '--filter=@shop/api', 'run', 'dev', '--port', '3000'])).toEqual({ kind: 'script', name: 'dev', workspace: { selectors: ['@shop/api'] } });
+    expect(runs(['pnpm', '-C', 'apps/api', 'start'])).toEqual({ kind: 'script', name: 'start', workspace: { selectors: [], dir: 'apps/api' } });
+    expect(runs(['npm', 'run', 'dev', '-w', '@shop/api'])).toEqual({ kind: 'script', name: 'dev', workspace: { selectors: ['@shop/api'] } });
+    expect(runs(['npm', 'start', '--workspace=@shop/api'])).toEqual({ kind: 'script', name: 'start', workspace: { selectors: ['@shop/api'] } });
+    expect(runs(['yarn', 'workspace', '@shop/api', 'dev'])).toEqual({ kind: 'script', name: 'dev', workspace: { selectors: ['@shop/api'] } });
+    expect(runs(['bun', '--filter', '@shop/api', 'dev'])).toEqual({ kind: 'script', name: 'dev', workspace: { selectors: ['@shop/api'] } });
+    expect(runs(['npm', '--silent', 'run', 'dev'])).toEqual({ kind: 'known' });
     expect(runs(['pnpm', 'publish'])).toBeUndefined();
     expect(runs(['$SERVER'])).toBeUndefined();
   });

@@ -429,6 +429,68 @@ describe('which loaded file wins, as each loader orders them (P321)', () => {
   });
 });
 
+describe("Bun's mode however it is given, and a server several scripts start each its own way (P350)", () => {
+  const serve = { 'src/index.ts': 'Bun.serve({ fetch: app.fetch });' };
+  const files = { '.env': 'PORT=4999\n', '.env.development': 'PORT=4050\n', '.env.production': 'PORT=4051\n' };
+  const scripts = (named: Record<string, string>): string => JSON.stringify({ scripts: named }, null, 2);
+  const run = (more: Record<string, string>): string[] => listening([honoRoutesAdapter], serve, { ...files, ...more });
+
+  it('reads a mode exported earlier in the script, written after cross-env or env, or handed down by the script that runs it', () => {
+    expect(run({ 'package.json': scripts({ start: 'export NODE_ENV=production && bun src/index.ts' }) })).toEqual(['src/index.ts:1 4051[PORT] from .env.production']);
+    expect(run({ 'package.json': scripts({ start: 'cross-env NODE_ENV=production bun src/index.ts' }) })).toEqual(['src/index.ts:1 4051[PORT] from .env.production']);
+    expect(run({ 'package.json': scripts({ start: 'env BUN_ENV=production bun src/index.ts' }) })).toEqual(['src/index.ts:1 4051[PORT] from .env.production']);
+    expect(run({ 'package.json': scripts({ start: 'NODE_ENV=production npm run serve', serve: 'bun src/index.ts' }) })).toEqual([
+      'src/index.ts:1 4050[PORT] from .env.development',
+      'src/index.ts:1 4051[PORT] from .env.production',
+    ]);
+  });
+
+  it('reads a name set with no export as the shell keeps it: its own, not the program it runs', () => {
+    expect(run({ 'package.json': scripts({ start: 'NODE_ENV=production; bun src/index.ts' }) })).toEqual(['src/index.ts:1 4050[PORT] from .env.development']);
+    expect(run({ 'package.json': scripts({ start: 'NODE_ENV=production; export NODE_ENV; bun src/index.ts' }) })).toEqual(['src/index.ts:1 4051[PORT] from .env.production']);
+  });
+
+  it('gives each script its own reading where they start the server in different modes', () => {
+    expect(run({ 'package.json': scripts({ dev: 'bun --watch src/index.ts', start: 'NODE_ENV=production bun src/index.ts' }) })).toEqual([
+      'src/index.ts:1 4050[PORT] from .env.development',
+      'src/index.ts:1 4051[PORT] from .env.production',
+    ]);
+    // Two modes whose files give one port are one reading.
+    expect(run({ 'package.json': scripts({ dev: 'bun src/index.ts', start: 'NODE_ENV=production bun src/index.ts' }), '.env.production': 'PORT=4050\n' })).toEqual([
+      'src/index.ts:1 4050[PORT] from .env.development',
+    ]);
+  });
+
+  it("reads the mode a Dockerfile's ENV or a compose service's environment runs the script under", () => {
+    const pkg = scripts({ start: 'bun src/index.ts' });
+    expect(run({ 'package.json': pkg, Dockerfile: 'FROM oven/bun:1\nENV NODE_ENV=production\nCMD ["bun", "run", "start"]\n' })).toEqual([
+      'src/index.ts:1 4050[PORT] from .env.development',
+      'src/index.ts:1 4051[PORT] from .env.production',
+    ]);
+    expect(
+      run({
+        'package.json': pkg,
+        Dockerfile: 'FROM oven/bun:1\nCMD bun src/index.ts\n',
+        'compose.yaml': 'services:\n  shop:\n    build: .\n    environment:\n      BUN_ENV: production\n',
+      }),
+    ).toEqual(['src/index.ts:1 4050[PORT] from .env.development', 'src/index.ts:1 4051[PORT] from .env.production']);
+    // A value compose fills in when it runs is not read.
+    expect(run({ 'package.json': pkg, 'compose.yaml': 'services:\n  shop:\n    build: .\n    command: bun src/index.ts\n    environment:\n      - NODE_ENV=${MODE}\n' })).toEqual([
+      'src/index.ts:1 4050[PORT] from .env.development',
+    ]);
+  });
+
+  it("loads none of Bun's own files where bunfig.toml writes env = false, but still the --env-file named", () => {
+    expect(run({ 'package.json': scripts({ start: 'bun src/index.ts' }), 'bunfig.toml': 'env = false\n\n[install]\nexact = true\n' })).toEqual(['src/index.ts:1 3000 default']);
+    expect(run({ 'bunfig.toml': 'env = false\n' })).toEqual(['src/index.ts:1 3000 default']);
+    expect(run({ 'package.json': scripts({ start: 'bun --env-file .env.ci src/index.ts' }), 'bunfig.toml': 'env = false\n', '.env.ci': 'PORT=4052\n' })).toEqual([
+      'src/index.ts:1 4052[PORT] from .env.ci',
+    ]);
+    // Under a table it is another setting.
+    expect(run({ 'package.json': scripts({ start: 'bun src/index.ts' }), 'bunfig.toml': '[test]\nenv = false\n' })).toEqual(['src/index.ts:1 4050[PORT] from .env.development']);
+  });
+});
+
 describe('where fastify-cli and Strapi start a server the code does not (P321)', () => {
   it("reads fastify start's -p, the FASTIFY_PORT or PORT its command or its .env gives, and its 3000", () => {
     const pkg = (start: string): string => JSON.stringify({ scripts: { start } }, null, 2);

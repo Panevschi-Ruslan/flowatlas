@@ -221,3 +221,45 @@ describe("a port a Secret gives, by name and source only (P343)", () => {
     for (const value of ['9477', '9488', '9499', 'OTQ3Nw', 'OTQ4OA', 'hunter2']) expect(text).not.toContain(value);
   });
 });
+
+describe('a script run in another package of the workspace, and an included Makefile (P350)', () => {
+  const services = (dir: string, ...names: string[]) => names.map((name) => ({ name, dir: join(dir, name) }));
+
+  it("follows pnpm's --filter and -F, -C, npm's --workspace and yarn's workspace to that package's script", () => {
+    const dir = project({
+      'package.json': JSON.stringify({ name: 'shop', private: true, workspaces: ['orders', 'billing', 'stock', 'ledger', 'audit'] }),
+      'scripts/up.sh': lines(
+        'export PORT=4710',
+        'pnpm --filter @shop/orders dev',
+        'export PORT=4720',
+        'pnpm -F ./billing serve:api',
+        'export PORT=4730',
+        'npm run start -w @shop/stock',
+        'export PORT=4740',
+        'yarn workspace @shop/ledger run api',
+        'export PORT=4750',
+        'pnpm -C audit api',
+      ),
+      'orders/package.json': JSON.stringify({ name: '@shop/orders', scripts: { dev: 'tsx watch src/main.ts' } }),
+      'billing/package.json': JSON.stringify({ name: '@shop/billing', scripts: { 'serve:api': 'node src/main.js' } }),
+      'stock/package.json': JSON.stringify({ name: '@shop/stock', scripts: { start: 'node src/main.js' } }),
+      'ledger/package.json': JSON.stringify({ name: '@shop/ledger', scripts: { api: 'tsx src/main.ts' } }),
+      'audit/package.json': JSON.stringify({ name: '@shop/audit', scripts: { api: 'node src/main.js' } }),
+    });
+    const read = readProjectSettings({ services: services(dir, 'orders', 'billing', 'stock', 'ledger', 'audit'), rootDir: dir });
+    expect(['orders', 'billing', 'stock', 'ledger', 'audit'].map((name) => read[name]?.ports?.['PORT']?.map((each) => each.port))).toEqual([[4710], [4720], [4730], [4740], [4750]]);
+  });
+
+  it("reads the server an included Makefile's recipe starts with the including file's exports and its goal's", () => {
+    const dir = project({
+      Makefile: lines('export PORT := 4800', 'include mk/*.mk', 'dev: export PORT = 4810', 'dev: orders'),
+      'mk/orders.mk': lines('orders:', '\tcd orders && npm start'),
+      'orders/package.json': JSON.stringify({ name: 'orders', scripts: { start: 'node src/main.js' } }),
+    });
+    const read = readProjectSettings({ services: services(dir, 'orders'), rootDir: dir });
+    expect(read['orders']?.ports?.['PORT']).toEqual([
+      { port: 4800, file: 'mk/orders.mk', started: true },
+      { port: 4810, file: 'mk/orders.mk', started: true },
+    ]);
+  });
+});

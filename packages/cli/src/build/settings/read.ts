@@ -20,6 +20,7 @@ import {
   type ServiceBinding,
   type SettingValue,
   type Unresolved,
+  workspacePackages,
   workspaceRootOf,
 } from '@flowatlas/core';
 import { composeIncludes, readComposeFile, type ComposeLoader, type ComposeService, type Mapping } from './compose.js';
@@ -37,7 +38,7 @@ import {
   type Manifests,
 } from './cluster.js';
 import { commandsAround, commandsOfPackageScript, commandsOfShellScript, type Command } from '@flowatlas/serverless';
-import { composeRunsOf, dockerBuildsOf, dockerRunsOf, imageName, serverStartsOf, type ComposeRunAt, type ServerStart, readHelmfileRuns, readHelmInstalls, readKustomizeApplies, readPortForwards, type PortForward } from './docker-run.js';
+import { composeRunsOf, dockerBuildsOf, dockerRunsOf, imageName, isStartingScript, serverStartsOf, type WorkspaceSelection, type ComposeRunAt, type ServerStart, readHelmfileRuns, readHelmInstalls, readKustomizeApplies, readPortForwards, type PortForward } from './docker-run.js';
 import { dockerfileEnvironment } from './dockerfile.js';
 import { readSkaffoldFile } from './skaffold.js';
 import { helmfilesAt, helmfilesIn, readHelmfile } from './helmfile.js';
@@ -554,6 +555,21 @@ const readStarts = (each: Commands, services: SettingsInput['services'], byServi
         continue;
       }
       if (depth >= START_DEPTH) continue;
+      if (runs.kind === 'script' && runs.workspace !== undefined) {
+        // A script of another package of the workspace, or of the directory named (P350).
+        for (const dir of selectedPackages(runs.workspace, runsIn, services, rootDir)) {
+          if (!within(dir)) continue;
+          // `start`, `dev`, `serve` start that package's server, as they do run where it is (`known`).
+          const service = isStartingScript(runs.name) ? services.find((one) => realOf(one.dir) === realOf(dir)) : undefined;
+          if (service !== undefined) {
+            give(service, from, start.environment);
+            continue;
+          }
+          const nested = commandsOfPackageScript(each.base, relative(each.base, dir).split(sep).join('/') || '.', runs.name, start.environment);
+          if (nested.length > 0) follow(nested, from, depth + 1);
+        }
+        continue;
+      }
       if (runs.kind === 'script') {
         // A script of the package.json where it runs, its commands handed the environment.
         const dir = runsIn.find((at) => within(at) && existsSync(join(at, 'package.json')));
@@ -589,6 +605,51 @@ const readStarts = (each: Commands, services: SettingsInput['services'], byServi
     }
   };
   follow(each.commands, undefined, 0);
+};
+
+/** A selector of pnpm's or Bun's `--filter` as a pattern over a package's name: `@shop/*`. */
+const selectorPattern = (selector: string): RegExp => new RegExp(`^${selector.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')}$`);
+
+/**
+ * The directories of the packages a package manager is told to run a script
+ * in (P350), absolute: by name among the packages of the workspace the
+ * command runs in and of the project, and the services; by a path written
+ * from where it runs (`./apps/api`, `{./apps/api}`, the directory `-C`
+ * names). pnpm's `...` around a name (its dependents or dependencies as well)
+ * and `^` are taken off, so the named package is read and those around it
+ * are not; an exclusion (`!name`) selects nothing.
+ */
+const selectedPackages = (selection: WorkspaceSelection, runsIn: readonly string[], services: SettingsInput['services'], rootDir: string): string[] => {
+  const where = runsIn[0] ?? rootDir;
+  // A path from the first directory the command may run in where it names a package.
+  const pathed = (path: string): string[] => {
+    const candidates = (runsIn.length === 0 ? [rootDir] : runsIn).map((dir) => resolve(dir, path));
+    return [candidates.find((dir) => existsSync(join(dir, 'package.json'))) ?? (candidates[0] as string)];
+  };
+  if (selection.dir !== undefined) return selection.dir.includes('$') ? [] : pathed(selection.dir);
+  const roots = [...new Set([where, workspaceRootOf(where), rootDir, workspaceRootOf(rootDir)].filter((each): each is string => each !== undefined))];
+  const named = new Map<string, string>();
+  for (const root of roots) for (const pkg of workspacePackages(root)) if (!named.has(pkg.name)) named.set(pkg.name, pkg.dir);
+  for (const service of services) {
+    try {
+      const name = (JSON.parse(read(join(service.dir, 'package.json')) ?? 'null') as { name?: unknown } | null)?.name;
+      if (typeof name === 'string' && !named.has(name)) named.set(name, service.dir);
+    } catch {
+      // A manifest that does not parse names no package.
+    }
+  }
+  const found: string[] = [];
+  for (const written of selection.selectors) {
+    const selector = written.replace(/^\{(.*)\}$/, '$1').replace(/^\.\.\.(?=[^/])|\.\.\.$/g, '').replace(/^\^/, '');
+    if (selector === '' || selector.startsWith('!') || selector.includes('$') || selector.startsWith('[')) continue;
+    if (selector.startsWith('.')) {
+      found.push(...pathed(selector));
+      continue;
+    }
+    const pattern = selectorPattern(selector);
+    for (const [name, dir] of named) if (pattern.test(name)) found.push(dir);
+  }
+  return [...new Set(found)];
 };
 
 /** How deep a script, a shell script or a program another starts is followed (P343). */

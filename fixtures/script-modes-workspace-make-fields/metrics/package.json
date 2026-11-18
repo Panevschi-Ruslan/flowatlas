@@ -1,0 +1,11 @@
+{
+  "name": "metrics",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "bun src/index.ts"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  }
+}

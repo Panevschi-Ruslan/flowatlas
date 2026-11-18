@@ -1,0 +1,50 @@
+{
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "express"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "express"
+    },
+    {
+      "name": "reports",
+      "repo": "./reports",
+      "type": "express"
+    },
+    {
+      "name": "metrics",
+      "repo": "./metrics",
+      "type": "express"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express"
+    },
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "express"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express"
+    }
+  ],
+  "output": ".flowatlas"
+}

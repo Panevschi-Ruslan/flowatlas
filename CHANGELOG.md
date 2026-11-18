@@ -2232,6 +2232,33 @@ only one of them moved.
   read, but `published-port-unheard` now names the Secret, its key and the
   manifest that writes it, and a Secret's values are no longer decoded or
   kept at all (a kustomize `secretGenerator` keeps its keys only).
+- **An included Makefile, a script run in another package, Bun's mode
+  however it is given, and an application held by a field (P350).** A
+  `*.mk` another Makefile `include`s (a wildcard too) is read as part of
+  that Makefile, its recipes with the includer's variables and run from the
+  includer's directory, and no longer again on its own; a target's variables
+  are in effect for its prerequisites, as make documents (`make dev`
+  building `serve` with `dev`'s `PORT`), a nearer target's over a farther's,
+  a `private` one kept. `pnpm --filter <pkg> <script>` and `-F`, `pnpm -C
+  <dir>`, `npm run x -w <pkg>` / `--workspace`, `yarn workspace <pkg>
+  <script>` and `bun --filter` are followed to that package's script, so the
+  port a script exports before them reaches the server there; `env X=v` and
+  `cross-env X=v` before a command are its environment. Bun's mode is read
+  from the command's environment however it is given: exported earlier in
+  the script (`export NODE_ENV=production && bun ...`), after `cross-env` or
+  `env`, handed down by the script that runs another (`NODE_ENV=production
+  npm run serve`), or given by the container that runs it - a Dockerfile's
+  `ENV` under its `CMD`/`ENTRYPOINT`, a compose service's `environment`,
+  `command` and `entrypoint` for one built from the repository; a name set
+  with no `export` (`NODE_ENV=production; bun ...`) is the shell's own and
+  reaches no program. `bunfig.toml`'s `env = false` drops Bun's own files
+  (an `--env-file` still loads). A server several scripts or containers
+  start with different files is read once per start, a port each, where it
+  was the first script's files merged before. A field holding what the
+  framework's own maker made (`private readonly app = express()`) that
+  nothing but its own class's constructor writes, and a parameter whose
+  default is a maker and that every caller hands nothing, are lifted like a
+  `const` (P346): their routes are no longer `heuristic`.
 - **Fields written through an alias or in a subclass, domains a workspace
   names, and grants of a bus, table or stream by the CDK's version (P322).**
   A static field written through the class under `any` - `const R: any =

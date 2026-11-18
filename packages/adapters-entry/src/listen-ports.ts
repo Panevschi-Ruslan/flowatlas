@@ -1,10 +1,11 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import {
   NotLiteral,
   configValueAt,
   isEnvironmentName,
   isTestFile,
+  isWithinDir,
   listenAt,
   listenCallsIn,
   listensIn,
@@ -14,11 +15,13 @@ import {
   portIn,
   portUnreadRow,
   readConfigLiteral,
+  readingCeilingOf,
   type ExtractContext,
   type ListenAt,
   type ListenPort,
   type PortUnread,
 } from '@flowatlas/core';
+import { dockerfileCommand, dockerfileEnvironment, readServiceYaml } from '@flowatlas/serverless';
 import { Node, SyntaxKind, ts, type SourceFile } from 'ts-morph';
 import { isPackageSpecifier, packageDirOf, packageFileOf, packageOfSpecifier } from './installed-packages.js';
 import { settingsReading } from './listen-settings.js';
@@ -47,10 +50,10 @@ import { repoSources } from './shared.js';
  * repository builds its settings with (P254).
  */
 export const listensByCall = (ctx: ExtractContext): ListenPort[] => {
-  const files = loadedEnvFiles(ctx);
+  const loads = envLoads(ctx);
   return listenCallsIn(repoSources(ctx), settingsReading(ctx), (unread) => ctx.builder.addUnresolved(portUnreadRow(unread, ctx.repoDir)))
     .map((port) => placedPort(port, ctx.repoDir))
-    .map((port) => filledFromEnv(port, ctx.repoDir, files));
+    .flatMap((port) => filledFromEnvReadings(port, ctx.repoDir, loads));
 };
 
 /**
@@ -79,21 +82,49 @@ export const listensByCall = (ctx: ExtractContext): ListenPort[] => {
  * Node's `process.loadEnvFile(a)` called again with `b` keeps `a`'s, each
  * call setting only what the environment does not hold yet (P327);
  * Bun's as {@link bunEnvFiles} says, for the `bun <file>` a script runs, by
- * the `NODE_ENV` and `--env-file` of that command (P348); a server the code
+ * the `NODE_ENV` and `--env-file` of that command (P348) - its mode however
+ * its environment is given, exported earlier in the script, by `cross-env`,
+ * by a script that runs it, by the container that runs it (P350), and none
+ * of Bun's own where `bunfig.toml` writes `env = false`; a server the code
  * starts with `Bun.serve` that no script runs is taken to be started with a
  * bare `bun <file>`.
  */
-export const loadedEnvFiles = (ctx: ExtractContext): string[] => {
-  // The files a `dotenv.config({ override: true })` loads, the ones before the code runs, the code's own.
+export const loadedEnvFiles = (ctx: ExtractContext): string[] => envLoads(ctx).merged;
+
+/**
+ * The environment files each way the repository starts its server loads,
+ * the one whose value wins first (P350): one list for each script command,
+ * and each container command, that loads files before what it runs - Bun's
+ * own by the mode its environment gives it, `--env-file`, dotenv-cli,
+ * env-cmd - with the files the code itself loads after them; and Bun's bare
+ * `bun <file>` where the code serves with `Bun.serve` and nothing runs it.
+ * A server several of them start with different files listens where each
+ * says ({@link filledFromEnvReadings}), as a framework's server started by
+ * several scripts does.
+ */
+export const loadedEnvReadings = (ctx: ExtractContext): readonly (readonly string[])[] => envLoads(ctx).readings;
+
+/** What {@link loadedEnvFiles} and {@link loadedEnvReadings} answer, read once. */
+interface EnvLoads {
+  /** Every file of every start, as one list, the first start's first (P315). */
+  readonly merged: string[];
+  /** Each start's own list (P350). */
+  readonly readings: string[][];
+}
+
+const envLoadsOf = new WeakMap<ExtractContext, EnvLoads>();
+
+const envLoads = (ctx: ExtractContext): EnvLoads => {
+  const known = envLoadsOf.get(ctx);
+  if (known !== undefined) return known;
+  // The files a `dotenv.config({ override: true })` loads, and the code's own.
   const overriding: string[] = [];
-  const before: string[] = [];
   const code: string[] = [];
   const add = (into: string[], named: readonly string[] | undefined, otherwise: readonly string[]): void => {
     for (const file of named ?? otherwise) into.push(file.replace(/^\.\//, ''));
   };
-  // Whether the code starts a server with `Bun.serve`, and whether a script runs a file with `bun`.
+  // Whether the code starts a server with `Bun.serve`.
   let servesWithBun = false;
-  let runByBun = false;
   for (const sourceFile of repoSources(ctx)) {
     if (isTestFile(normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir))) continue;
     const text = sourceFile.getFullText();
@@ -122,9 +153,12 @@ export const loadedEnvFiles = (ctx: ExtractContext): string[] => {
       }
     }
   }
-  for (const each of scriptCommands(ctx.repoDir, SCRIPT_LOADS_ENV)) {
-    if (/\b(?:jest|vitest|mocha|playwright|cypress)\b/.test(each.command)) continue;
-    const command = each.command;
+  // `env = false` in `bunfig.toml`: Bun loads none of its own files (P350).
+  const bunLoadsOwn = !bunfigDisablesEnv(ctx.repoDir);
+  // What one start loads before what it runs, and whether it runs a file with Bun.
+  const loadsOf = (run: EnvRun): { files: string[]; bun: boolean } => {
+    const command = run.command;
+    const before: string[] = [];
     const bun = BUN_RUNS_FILE.test(command);
     // Node's, Deno's and Bun's `--env-file`, repeated: the last one wins, and
     // of Bun's `--env-file=a,b` the last one too (it loads them from the end).
@@ -143,16 +177,251 @@ export const loadedEnvFiles = (ctx: ExtractContext): string[] => {
       const named = /(?:^|\s)(?:-f|--file)\s+(\S+)/.exec(command)?.[1];
       add(before, named === undefined ? undefined : [named], ['.env']);
     }
-    if (bun) {
-      runByBun = true;
-      // `--env-file` replaces Bun's own files, and `--no-env-file` drops them.
-      const mode = /(?:^|\s)BUN_ENV=['"]?(\w+)/.exec(command)?.[1] ?? /(?:^|\s)NODE_ENV=['"]?(\w+)/.exec(command)?.[1];
-      if (flagged.length === 0 && !/(?:^|\s)--no-env-file\b/.test(command)) add(before, undefined, bunEnvFiles(mode));
-    }
-  }
+    // `--env-file` replaces Bun's own files, and `--no-env-file` and `bunfig.toml`'s `env = false` drop them;
+    // its mode is the one the command's environment gives, however it is given (P350).
+    if (bun && bunLoadsOwn && flagged.length === 0 && !/(?:^|\s)--no-env-file\b/.test(command)) add(before, undefined, bunEnvFiles(run.env['BUN_ENV'] ?? run.env['NODE_ENV']));
+    return { files: before, bun };
+  };
+  const scripts = packageScripts(ctx.repoDir);
+  const fromScripts = Object.values(scripts).flatMap((script) => runsOfScript(script, {}, scripts, 0));
+  const runs = [...fromScripts, ...containerRuns(ctx.repoDir, scripts)].filter((run) => SCRIPT_LOADS_ENV.test(run.command) && !NOT_A_SERVER.test(run.command));
+  const read = runs.map((run) => ({ run, ...loadsOf(run) }));
+  const runByBun = read.some((each) => each.bun);
+  const unique = (files: readonly string[]): string[] => [...new Set(files.map((file) => file.replace(/^['"]|['"]$/g, '')))];
+  const before = read.filter((each) => fromScripts.includes(each.run)).flatMap((each) => each.files);
   // A server `Bun.serve` starts that no script runs: Bun's own files, as a bare `bun <file>` loads them.
-  if (servesWithBun && !runByBun) add(before, undefined, bunEnvFiles());
-  return [...new Set([...overriding, ...before, ...code].map((file) => file.replace(/^['"]|['"]$/g, '')))];
+  const bare = servesWithBun && !runByBun && bunLoadsOwn ? [...bunEnvFiles()] : [];
+  const merged = unique([...overriding, ...before, ...bare, ...code]);
+  const readings = read.filter((each) => each.files.length > 0).map((each) => unique([...overriding, ...each.files, ...code]));
+  if (servesWithBun && !runByBun) readings.push(unique([...overriding, ...bare, ...code]));
+  const distinct = [...new Map(readings.map((files) => [files.join('\0'), files])).values()];
+  const loads = { merged, readings: distinct };
+  envLoadsOf.set(ctx, loads);
+  return loads;
+};
+
+/** The commands that run no server, whose files are no server's: a test runner's, a browser test's. */
+const NOT_A_SERVER = /\b(?:jest|vitest|mocha|playwright|cypress)\b/;
+
+/**
+ * One command a script or a container runs (P350), and its environment as
+ * the shell hands it over: what an earlier part of the script exports
+ * (`export NODE_ENV=production && bun src/index.ts`), what is written before
+ * the program (`NODE_ENV=production bun ...`, `cross-env NODE_ENV=production
+ * bun ...`, `env NODE_ENV=production bun ...`), and what the script or the
+ * container running it hands down. A name set with no `export`
+ * (`NODE_ENV=production; bun ...`) is the shell's own and reaches no
+ * program, unless the environment already holds it.
+ */
+interface EnvRun {
+  readonly command: string;
+  readonly env: Readonly<Record<string, string>>;
+}
+
+/** An assignment as the shell writes one: `NAME=value`. */
+const SHELL_ASSIGNMENT = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/s;
+
+/** Programs that run the rest of their words with the assignments written first as their environment. */
+const ENV_SETTERS = new Set(['env', 'cross-env', 'cross-env-shell']);
+
+/** How deep a script another script runs is followed. */
+const SCRIPT_DEPTH = 4;
+
+/** The scripts of the repository's own `package.json`, by name. */
+const packageScripts = (repoDir: string): Record<string, string> => {
+  try {
+    const scripts = (JSON.parse(readFileSync(join(repoDir, 'package.json'), 'utf8')) as { scripts?: unknown }).scripts;
+    if (typeof scripts !== 'object' || scripts === null) return {};
+    return Object.fromEntries(Object.entries(scripts).filter((entry): entry is [string, string] => typeof entry[1] === 'string'));
+  } catch {
+    return {};
+  }
+};
+
+/** A command split into words as a shell splits it, quotes taken off. */
+const shellWords = (command: string): string[] => [...command.matchAll(/"((?:[^"\\]|\\.)*)"|'([^']*)'|(\S+)/g)].map((match) => match[1] ?? match[2] ?? match[3] ?? '');
+
+/**
+ * The script of the same `package.json` a command runs, if it runs one:
+ * `npm run serve`, `npm start`, `pnpm serve`, `yarn serve`, `bun run serve`,
+ * `bun serve` - the name only where the manifest writes such a script, and
+ * not where the command is told to run it in another package.
+ */
+const scriptRunBy = (words: readonly string[], scripts: Readonly<Record<string, string>>): string | undefined => {
+  const program = words[0];
+  if (program === undefined || !['npm', 'pnpm', 'yarn', 'bun'].includes(program)) return undefined;
+  if (words.some((word) => /^(?:-w|--workspace|--workspaces|-ws|--filter|-F|-C|--dir|--prefix|-r|--recursive)(?:=|$)/.test(word))) return undefined;
+  const plain = words.slice(1).filter((word) => !word.startsWith('-'));
+  const named = plain[0] === 'run' || plain[0] === 'run-script' ? plain[1] : plain[0];
+  if (named === undefined || scripts[named] === undefined) return undefined;
+  // `npm` runs a script by its name alone only for its own `start`.
+  if (program === 'npm' && plain[0] !== 'run' && plain[0] !== 'run-script' && named !== 'start') return undefined;
+  return named;
+};
+
+/** The commands of one script as its shell runs them (P350), a script it runs read in its place. */
+const runsOfScript = (text: string, handed: Readonly<Record<string, string>>, scripts: Readonly<Record<string, string>>, depth: number): EnvRun[] => {
+  const exported: Record<string, string> = { ...handed };
+  const local: Record<string, string> = {};
+  const found: EnvRun[] = [];
+  for (const part of text.split(/&&|\|\||;|\||\n/)) {
+    const words = shellWords(part.trim());
+    if (words.length === 0) continue;
+    if (words[0] === 'export') {
+      for (const word of words.slice(1)) {
+        const assignment = SHELL_ASSIGNMENT.exec(word);
+        if (assignment !== null) exported[assignment[1] as string] = assignment[2] as string;
+        else if (local[word] !== undefined) exported[word] = local[word] as string;
+      }
+      continue;
+    }
+    const inline: Record<string, string> = {};
+    let at = 0;
+    const take = (): void => {
+      for (let assignment = SHELL_ASSIGNMENT.exec(words[at] ?? ''); assignment !== null; assignment = SHELL_ASSIGNMENT.exec(words[at] ?? '')) {
+        inline[assignment[1] as string] = assignment[2] as string;
+        at += 1;
+      }
+    };
+    take();
+    if (at === words.length) {
+      // Assignments alone: the shell's own, a name the environment holds changed in it.
+      for (const [name, value] of Object.entries(inline)) {
+        if (name in exported) exported[name] = value;
+        else local[name] = value;
+      }
+      continue;
+    }
+    while (ENV_SETTERS.has(words[at] as string) && SHELL_ASSIGNMENT.test(words[at + 1] ?? '')) {
+      at += 1;
+      take();
+    }
+    const env = { ...exported, ...inline };
+    const named = depth < SCRIPT_DEPTH ? scriptRunBy(words.slice(at), scripts) : undefined;
+    if (named !== undefined) {
+      found.push(...runsOfScript(scripts[named] as string, env, scripts, depth + 1));
+      continue;
+    }
+    found.push({ command: part.trim(), env });
+  }
+  return found;
+};
+
+/** Whether `bunfig.toml` turns off the files Bun loads of its own (`env = false` at its top, P350). */
+const bunfigDisablesEnv = (repoDir: string): boolean => {
+  let text: string;
+  try {
+    text = readFileSync(join(repoDir, 'bunfig.toml'), 'utf8');
+  } catch {
+    return false;
+  }
+  for (const line of text.split(/\r?\n/)) {
+    if (/^\s*\[/.test(line)) return false;
+    if (/^\s*env\s*=\s*false\s*(?:#.*)?$/.test(line)) return true;
+  }
+  return false;
+};
+
+/** The names compose looks for a file under, the override laid over the file. */
+const COMPOSE_NAMES = [
+  ['compose.yaml', 'compose.override.yaml'],
+  ['compose.yml', 'compose.override.yml'],
+  ['docker-compose.yaml', 'docker-compose.override.yaml'],
+  ['docker-compose.yml', 'docker-compose.override.yml'],
+] as const;
+
+/** The text of a file, or nothing where it cannot be read. */
+const fileText = (path: string): string | undefined => {
+  try {
+    return readFileSync(path, 'utf8');
+  } catch {
+    return undefined;
+  }
+};
+
+/** The environment a compose service writes, by name: the literal values, a value compose fills in or none at all left out. */
+const composeEnvironment = (written: unknown): Record<string, string> => {
+  const out: Record<string, string> = {};
+  const set = (name: string, value: unknown): void => {
+    const text = typeof value === 'string' ? value : typeof value === 'number' || typeof value === 'boolean' ? String(value) : undefined;
+    if (text !== undefined && !text.includes('$')) out[name] = text;
+  };
+  if (Array.isArray(written)) {
+    for (const entry of written) {
+      if (typeof entry !== 'string') continue;
+      const equals = entry.indexOf('=');
+      if (equals > 0) set(entry.slice(0, equals), entry.slice(equals + 1));
+    }
+  } else if (isPlainRecord(written)) for (const [name, value] of Object.entries(written)) set(name, value);
+  return out;
+};
+
+const isPlainRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** A compose `command` or `entrypoint` as words: a list as written, a string as the shell splits it. */
+const composeWords = (written: unknown): string[] | undefined =>
+  Array.isArray(written) ? (written.every((each) => typeof each === 'string') ? (written as string[]) : undefined) : typeof written === 'string' ? shellWords(written) : undefined;
+
+/**
+ * The commands the containers built from the repository run (P350), each
+ * with the environment the container gives it: each service of a compose
+ * file in the repository or above it, up to the top of its checkout, built
+ * from the repository - its Dockerfile's `ENV`, `CMD` and `ENTRYPOINT`, under
+ * the service's own `environment`, `command` and `entrypoint`; where no
+ * compose service is, the repository's own `Dockerfile`, run as it is. A value compose
+ * fills in when it runs is not read. A container that runs a script runs it
+ * with that environment: `CMD ["npm", "start"]` under `ENV NODE_ENV=production`.
+ */
+const containerRuns = (repoDir: string, scripts: Readonly<Record<string, string>>): EnvRun[] => {
+  const containers: { env: Record<string, string>; words: string[] }[] = [];
+  const imageOf = (dockerfile: string, target?: string): { env: Record<string, string>; words?: string[] } | undefined => {
+    const text = fileText(dockerfile);
+    if (text === undefined) return undefined;
+    const options = target === undefined ? {} : { target };
+    const env = Object.fromEntries((dockerfileEnvironment(text, options) ?? []).map((each) => [each.name, each.raw]));
+    const words = dockerfileCommand(text, options);
+    return { env, ...(words === undefined ? {} : { words }) };
+  };
+  const ceiling = readingCeilingOf(repoDir);
+  for (let dir = resolve(repoDir); ; dir = dirname(dir)) {
+    for (const [name, override] of COMPOSE_NAMES) {
+      const services = new Map<string, Record<string, unknown>>();
+      for (const file of [name, override]) {
+        const text = fileText(join(dir, file));
+        if (text === undefined) continue;
+        let document: unknown;
+        try {
+          document = readServiceYaml(text).value;
+        } catch {
+          continue;
+        }
+        const written = isPlainRecord(document) && isPlainRecord(document['services']) ? document['services'] : {};
+        for (const [service, value] of Object.entries(written)) if (isPlainRecord(value)) services.set(service, { ...(services.get(service) ?? {}), ...value });
+      }
+      for (const service of services.values()) {
+        const build = service['build'];
+        const context = typeof build === 'string' ? build : isPlainRecord(build) && typeof build['context'] === 'string' ? build['context'] : undefined;
+        if (context === undefined || context.includes('$') || resolve(dir, context) !== resolve(repoDir)) continue;
+        const dockerfile = isPlainRecord(build) && typeof build['dockerfile'] === 'string' ? build['dockerfile'] : 'Dockerfile';
+        const target = isPlainRecord(build) && typeof build['target'] === 'string' ? build['target'] : undefined;
+        const image = imageOf(resolve(repoDir, dockerfile), target);
+        const entrypoint = composeWords(service['entrypoint']);
+        const command = composeWords(service['command']);
+        const words = entrypoint !== undefined ? [...entrypoint, ...(command ?? [])] : (command ?? image?.words);
+        if (words === undefined) continue;
+        containers.push({ env: { ...(image?.env ?? {}), ...composeEnvironment(service['environment']) }, words });
+      }
+    }
+    if (dirname(dir) === dir || !isWithinDir(dirname(dir), ceiling)) break;
+  }
+  // The repository's own Dockerfile, run as it is, where no compose service runs what it builds.
+  const own = containers.length === 0 ? imageOf(join(repoDir, 'Dockerfile')) : undefined;
+  if (own?.words !== undefined) containers.push({ env: own.env, words: own.words });
+  return containers.flatMap(({ env, words }) => {
+    // `sh -c "..."`: the script the shell is handed.
+    const script = /^(?:\/bin\/)?(?:ba)?sh$/.test(words[0] ?? '') && words[1] === '-c' && words[2] !== undefined ? words[2] : words.map((word) => (/\s/.test(word) ? `'${word}'` : word)).join(' ');
+    return runsOfScript(script, env, scripts, 0);
+  });
 };
 
 /** The script commands that load an environment file before what they run (P315). */
@@ -269,6 +538,27 @@ export const filledFromEnv = (port: ListenPort, repoDir: string, files: readonly
   return port;
 };
 
+/**
+ * A port the code reads from a setting, by every way the server is started
+ * (P350): where each start's files ({@link loadedEnvReadings}) give it the
+ * same port, that one, as the first start's files give it; where no start
+ * loads a file, what the code loads ({@link loadedEnvFiles}); where they give
+ * different ones - `bun src/index.ts` for development and
+ * `NODE_ENV=production bun src/index.ts` for production - each, since the
+ * server listens there when started that way.
+ */
+export const filledFromEnvReadings = (port: ListenPort, repoDir: string, loads: { readonly merged: readonly string[]; readonly readings: readonly (readonly string[])[] }, settings?: readonly string[]): ListenPort[] => {
+  const each = loads.readings.map((files) => filledFromEnv(port, repoDir, files, settings));
+  // The first start's reading of each port.
+  const byPort = new Map<string, ListenPort>();
+  for (const read of each) {
+    const key = `${read.port ?? ''}\0${read.default === true}`;
+    if (!byPort.has(key)) byPort.set(key, read);
+  }
+  const distinct = [...byPort.values()];
+  return distinct.length > 0 ? distinct : [filledFromEnv(port, repoDir, loads.merged, settings)];
+};
+
 /** Where a runtime's or a library's own server function starts, and the port it listens on when none is written. */
 interface ServeShape {
   /** Whether a call starts one. */
@@ -329,7 +619,7 @@ const exportedServerIn = (sourceFile: SourceFile): ListenAt | undefined => {
 
 /** Every port a Hono application's server listens on, beside the generic reading. */
 export const honoListens = (ctx: ExtractContext): ListenPort[] => {
-  const files = loadedEnvFiles(ctx);
+  const loads = envLoads(ctx);
   const found: ListenAt[] = [];
   // A runtime's own default, moved by the environment file the runtime loads (P315).
   const runtimeDefaults: ListenPort[] = [];
@@ -351,7 +641,7 @@ export const honoListens = (ctx: ExtractContext): ListenPort[] => {
         const read = listenAt({ port: shape.otherwise }, call, { default: true });
         if (read === undefined) continue;
         if (shape.fromEnv === undefined) found.push(read);
-        else runtimeDefaults.push(filledFromEnv(placedPort(read, ctx.repoDir), ctx.repoDir, files, shape.fromEnv.settings));
+        else runtimeDefaults.push(...filledFromEnvReadings(placedPort(read, ctx.repoDir), ctx.repoDir, loads, shape.fromEnv.settings));
         continue;
       }
       found.push(...listensIn(options, call, { reading, unread }));
@@ -359,7 +649,7 @@ export const honoListens = (ctx: ExtractContext): ListenPort[] => {
     const exported = exportedServerIn(sourceFile);
     if (exported !== undefined) found.push(exported);
   }
-  return [...listensByCall(ctx), ...found.map((port) => filledFromEnv(placedPort(port, ctx.repoDir), ctx.repoDir, files)), ...runtimeDefaults];
+  return [...listensByCall(ctx), ...found.flatMap((port) => filledFromEnvReadings(placedPort(port, ctx.repoDir), ctx.repoDir, loads)), ...runtimeDefaults];
 };
 
 /** The line of a file's text an offset is on. */

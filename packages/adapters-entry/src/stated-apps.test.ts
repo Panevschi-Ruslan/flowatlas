@@ -280,7 +280,9 @@ describe('an application made by the framework\'s own maker, called right there 
        export function setup({ router }: { router: express.Router }) {
          router.get('/destructured', (_q, s) => s.send(''));
        }
-       class Server { readonly http = express(); start() { this.http.get('/property', (_q, s) => s.send('')); } }`,
+       class Server { http = express(); start() { this.http.get('/property', (_q, s) => s.send('')); } }
+       export const server = new Server();
+       server.http = Router();`,
     );
     expect(confidences(entries)).toEqual({
       'GET /local-class': 'heuristic',
@@ -344,5 +346,66 @@ describe('an application made by the framework\'s own maker, called right there 
        api.get('/four', (c) => c.text('4'));`,
     );
     expect(confidences(hono)).toEqual({ 'GET /h/three': 'sure', 'GET /h/api/four': 'sure' });
+  });
+});
+
+describe('a field and a parameter default holding what a maker made (P350)', () => {
+  it('lifts a field no code but its own constructor writes, and keeps one written elsewhere heuristic', () => {
+    const entries = read(
+      expressRoutesAdapter,
+      `import express, { Router } from 'express';
+       class Server {
+         readonly app = express();
+         private router = Router();
+         private admin = Router();
+         private moved = Router();
+         static shared = Router();
+         constructor(flag: boolean) {
+           if (flag) this.admin = express.Router();
+         }
+         start() {
+           this.router.get('/field', (_q, s) => s.send(''));
+           this.admin.get('/constructed', (_q, s) => s.send(''));
+           this.moved.get('/moved', (_q, s) => s.send(''));
+           this.app.use('/api', this.router);
+           this.reset();
+         }
+         reset() { this.moved = Router(); }
+       }
+       class Other { handler = Router(); constructor() { this.handler = makeRouter(); } go() { this.handler.get('/made', (_q, s) => s.send('')); } }
+       const makeRouter = () => Router();`,
+    );
+    expect(confidences(entries)).toEqual({
+      'GET /api/field': 'sure',
+      'GET /constructed': 'sure',
+      'GET /moved': 'heuristic',
+      'GET /made': 'heuristic',
+    });
+  });
+
+  it("lifts a parameter's default where every caller hands it nothing, and not where one may hand it something", () => {
+    const entries = read(
+      expressRoutesAdapter,
+      `import express, { Router } from 'express';
+       function mount(router = Router()) { router.get('/defaulted', (_q, s) => s.send('')); return router; }
+       mount();
+       mount(undefined);
+       const install = (router = Router()) => { router.get('/handed', (_q, s) => s.send('')); };
+       install();
+       install(Router());
+       function never(router = Router()) { router.get('/uncalled', (_q, s) => s.send('')); }
+       function passed(router = Router()) { router.get('/passed', (_q, s) => s.send('')); }
+       [1].forEach(() => passed());
+       const later = passed;
+       class Api { constructor(private readonly http = express()) { this.http.get('/property', (_q, s) => s.send('')); } }
+       new Api();`,
+    );
+    expect(confidences(entries)).toEqual({
+      'GET /defaulted': 'sure',
+      'GET /handed': 'heuristic',
+      'GET /uncalled': 'heuristic',
+      'GET /passed': 'heuristic',
+      'GET /property': 'sure',
+    });
   });
 });

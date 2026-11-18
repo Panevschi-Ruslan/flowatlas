@@ -338,7 +338,20 @@ export interface ServerStart {
 export type StartedProgram =
   | { readonly kind: 'known'; readonly file?: string }
   | { readonly kind: 'program'; readonly program: string }
-  | { readonly kind: 'script'; readonly name: string };
+  | { readonly kind: 'script'; readonly name: string; readonly workspace?: WorkspaceSelection };
+
+/**
+ * The packages of a workspace a package manager is told to run a script in
+ * (P350), instead of the one where it runs: pnpm's `--filter` / `-F`
+ * selectors (`@shop/api`, `@shop/*`, `./apps/api`, `{./apps/api}`, a name
+ * with pnpm's `...` taken off), npm's `--workspace` / `-w`, yarn's
+ * `workspace <name>`, Bun's `--filter`; or the directory it is told to run in
+ * (pnpm's `-C` / `--dir`, npm's `--prefix`), as written.
+ */
+export interface WorkspaceSelection {
+  readonly selectors: readonly string[];
+  readonly dir?: string;
+}
 
 /** Runtimes that run a file of the repository's own as its server. */
 const RUNTIMES = new Set(['node', 'nodemon', 'ts-node', 'ts-node-dev', 'tsx', 'bun', 'deno']);
@@ -360,6 +373,9 @@ const FRAMEWORK_STARTS: Readonly<Record<string, ReadonlySet<string> | 'any'>> = 
 
 /** The scripts a package manager runs that start the server. */
 const STARTING_SCRIPT = /^(?:start|dev|serve)(?::[\w-]+)?$/;
+
+/** Whether a script's name is one that starts the server (P350). */
+export const isStartingScript = (name: string): boolean => STARTING_SCRIPT.test(name);
 
 /** A runtime's options that take a value, so the file it runs is the first word that is neither. */
 const RUNTIME_VALUED = /^(?:-r|--require|--import|--loader|--experimental-loader|--env-file|--conditions|-C|--tsconfig|--project|-P|--inspect-port|--watch-path|--ignore|-w)$/;
@@ -387,6 +403,49 @@ const PROGRAM_WORD = /^(?:\.{0,2}\/)?[\w@.-]+(?:\/[\w@.-]+)*$/;
 /** Package managers' own commands, which run no script and no program of the project's. */
 const MANAGER_COMMANDS = new Set([...NOT_A_START, 'publish', 'pack', 'link', 'outdated', 'audit', 'version', 'why', 'list', 'ls', 'config', 'cache', 'dlx', 'create', 'init', 'login', 'logout', 'prune', 'rebuild', 'store', 'update', 'workspace', 'workspaces', 'up', 'run-script']);
 
+/** A package manager's options that take a value, the workspace selecting ones read (P350). */
+const MANAGER_VALUED = /^(?:--filter|-F|-C|--dir|-w|--workspace|--prefix|--loglevel|--reporter|--registry|--cwd|--filter-prod|--test-pattern)$/;
+
+/**
+ * A package manager's words after its program (P350): the words that are no
+ * option, nor an option's value, up to a `--`; and the workspace packages or
+ * the directory it is told to run in, where it is told. yarn's
+ * `workspace <name> <script>` is read as the selection of `<name>`.
+ */
+const managerWords = (program: string, words: readonly string[]): { positional: string[]; selection?: WorkspaceSelection } => {
+  const positional: string[] = [];
+  const selectors: string[] = [];
+  let dir: string | undefined;
+  for (let index = 0; index < words.length; index += 1) {
+    const word = words[index] as string;
+    if (word === '--') {
+      positional.push(...words.slice(index + 1));
+      break;
+    }
+    // Once the script is named, what follows is its own - but npm reads its own options up to a `--`.
+    const named = positional.length > 0 && !['run', 'run-script', 'workspace'].includes(positional[0] as string) ? 1 : 2;
+    if (program !== 'npm' && positional.length >= named) {
+      positional.push(word);
+      continue;
+    }
+    const [flag, inline] = word.startsWith('--') ? splitFlag(word) : [word, undefined];
+    if (!flag.startsWith('-')) {
+      positional.push(word);
+      continue;
+    }
+    const value = MANAGER_VALUED.test(flag) ? (inline ?? words[(index += 1)]) : inline;
+    if (value === undefined) continue;
+    if (flag === '--filter' || flag === '-F' || flag === '-w' || flag === '--workspace') selectors.push(value);
+    else if (flag === '-C' || flag === '--dir' || flag === '--prefix' || flag === '--cwd') dir = value;
+  }
+  if (program === 'yarn' && positional[0] === 'workspace' && positional[1] !== undefined) {
+    selectors.push(positional[1]);
+    positional.splice(0, 2);
+  }
+  const selection = selectors.length > 0 || dir !== undefined ? { selectors, ...(dir === undefined ? {} : { dir }) } : undefined;
+  return { positional, ...(selection === undefined ? {} : { selection }) };
+};
+
 /** What a command's words run, where it may start a server of the repository (P337, P343). */
 const startedProgram = (words: readonly string[]): StartedProgram | undefined => {
   let at = 0;
@@ -394,19 +453,29 @@ const startedProgram = (words: readonly string[]): StartedProgram | undefined =>
   const word = words[at] ?? '';
   const program = word.split('/').pop() ?? '';
   const verb = words[at + 1];
-  if (RUNTIMES.has(program)) {
+  // `bun --filter api dev` runs a package's script, as pnpm's `--filter` does (P350).
+  const bunFiltered = program === 'bun' && words.slice(at + 1).some((each) => /^--filter(?:=|$)/.test(each));
+  if (RUNTIMES.has(program) && !bunFiltered) {
     if (verb === undefined || NOT_A_START.has(verb)) return undefined;
     const file = runtimeFile(words.slice(at + 1));
     return { kind: 'known', ...(file === undefined || isFilledInWord(file) ? {} : { file }) };
   }
-  if (program === 'npm' || program === 'pnpm' || program === 'yarn') {
+  if (program === 'npm' || program === 'pnpm' || program === 'yarn' || bunFiltered) {
+    const { positional, selection } = managerWords(program, words.slice(at + 1));
+    const first = positional[0];
     // `npm exec x`, `pnpm exec x`: a program of a package's `bin`.
-    if (verb === 'exec') return words[at + 2] === undefined || !PROGRAM_WORD.test(words[at + 2] as string) ? undefined : { kind: 'program', program: words[at + 2] as string };
-    const named = verb === 'run' || verb === 'run-script' ? words[at + 2] : verb;
+    if (first === 'exec') return positional[1] === undefined || !PROGRAM_WORD.test(positional[1]) ? undefined : { kind: 'program', program: positional[1] };
+    const named = first === 'run' || first === 'run-script' ? positional[1] : first;
     if (named === undefined) return undefined;
+    if (selection !== undefined) {
+      // In another package: its script of that name, which the reader looks up there (P350).
+      if ((program === 'npm' && first !== 'run' && first !== 'run-script' && named !== 'start' && named !== 'restart') || MANAGER_COMMANDS.has(named) || named.startsWith('-')) return undefined;
+      return { kind: 'script', name: named, workspace: selection };
+    }
+    if (program === 'bun') return undefined;
     if (STARTING_SCRIPT.test(named)) return { kind: 'known' };
     // `npm` runs a script only with `run`; pnpm and yarn run one by its name.
-    if ((program === 'npm' && verb !== 'run' && verb !== 'run-script') || MANAGER_COMMANDS.has(named) || named.startsWith('-')) return undefined;
+    if ((program === 'npm' && first !== 'run' && first !== 'run-script') || MANAGER_COMMANDS.has(named) || named.startsWith('-')) return undefined;
     return { kind: 'script', name: named };
   }
   const verbs = FRAMEWORK_STARTS[program];
