@@ -5,8 +5,8 @@ import type { Hono } from 'hono';
  *
  * Whoever calls this decides where these are served, and this repository does
  * move applications around — `basePath` in one place, `route` in another — so
- * the address cannot be told from here. The refusal is the point: `/daily` on
- * its own would be a path this service does not serve.
+ * the address is told from the callers: the one there hands the root
+ * application, so `/daily` is served at the root (P354).
  */
 export const registerReports = (app: Hono): void => {
   app.get('/daily', (c) => c.text('daily'));
