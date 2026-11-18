@@ -2363,6 +2363,30 @@ only one of them moved.
   nothing but its own class's constructor writes, and a parameter whose
   default is a maker and that every caller hands nothing, are lifted like a
   `const` (P346): their routes are no longer `heuristic`.
+- **A Makefile's goal, conditionals and patterns, compose's interpolation
+  for Bun's mode, Bun run as `node`, and a listen through a workspace
+  package (P356).** A Makefile is read for each goal a recipe runs for, with
+  `$(MAKECMDGOALS)` holding that goal; `ifeq`/`ifneq` (`(a,b)` and quoted
+  forms), `ifdef`/`ifndef` and `else if...` are settled where the files
+  settle their operands - make's `strip`, `filter`, `filter-out`,
+  `findstring`, `firstword`, `lastword`, `words` and `subst` read - and one
+  that hangs on a variable only the environment or the command line gives,
+  or on `$(shell ...)`, has each branch read, a port read under it an info
+  `make-conditional-unsettled` row; a pattern's variables (`%-dev: PORT =
+  4000`) apply to every target it matches, a target's own and a shorter
+  stem's winning, and pass to prerequisites as a target's do; each target
+  of `a b:` runs its recipe. A compose value Bun's mode is read from is
+  interpolated as the Compose specification has it (`${VAR}`, `${VAR:-x}`,
+  `${VAR-x}`, `${VAR:+x}`, `$$`) from the project's `.env`, a name written
+  with no value takes the `.env`'s, and a service's `env_file` gives its
+  mode; one only the shell running compose gives is read as Bun's
+  development mode and said in an info `run-mode-unsettled` row. A `node`
+  that is Bun - under `bun --bun run`, or in an image that links or copies
+  Bun to `node` - loads Bun's files; one in an image built on Bun's own,
+  which is not read, is read as Node and said in a `run-mode-unsettled` row.
+  A program whose listen is reached through a package's name
+  (`require('@shop/server')`) is followed to that workspace package's
+  entry, its build mapped to its `src` as an uninstalled import is.
 - **Fields written through an alias or in a subclass, domains a workspace
   names, and grants of a bus, table or stream by the CDK's version (P322).**
   A static field written through the class under `any` - `const R: any =

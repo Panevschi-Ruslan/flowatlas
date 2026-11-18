@@ -46,7 +46,7 @@ export interface DockerBuild {
 }
 
 /** The words of a command, as the shared reader splits them, and where it is written. */
-export type CommandAt = Pick<Command, 'words' | 'line' | 'file'> & Partial<Pick<Command, 'dirs' | 'env'>>;
+export type CommandAt = Pick<Command, 'words' | 'line' | 'file'> & Partial<Pick<Command, 'dirs' | 'env' | 'assumed'>>;
 
 /** Where a `docker run` is written, beside what it runs, and the directories it may run in. */
 export type DockerRunAt = DockerRun & { readonly file: string; readonly dirs?: readonly string[] };
@@ -325,6 +325,8 @@ export interface ServerStart {
   readonly environment: Readonly<Record<string, string>>;
   /** What it runs (P343). */
   readonly runs: StartedProgram;
+  /** The Makefile conditionals the files do not settle that it is read under (P356). */
+  readonly assumed?: readonly string[];
 }
 
 /**
@@ -503,7 +505,7 @@ export const serverStartsOf = (commands: readonly CommandAt[]): ServerStart[] =>
     if (runs === undefined) return [];
     const environment = shellVariables(command.env);
     if (Object.keys(environment).length === 0) return [];
-    return [{ file: command.file, line: command.line, ...(command.dirs === undefined ? {} : { dirs: command.dirs }), environment, runs }];
+    return [{ file: command.file, line: command.line, ...(command.dirs === undefined ? {} : { dirs: command.dirs }), environment, runs, ...(command.assumed === undefined || command.assumed.length === 0 ? {} : { assumed: command.assumed }) }];
   });
 
 /**

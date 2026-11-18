@@ -107,6 +107,10 @@ const NOTES: readonly string[] = [
   'container-image-unread',
   // A program of the project's own a script starts with a port, whose file is not in the repository (P343)
   'server-start-unread',
+  // A port a Makefile's recipe starts a server with under a conditional the files do not settle, each branch read (P356)
+  'make-conditional-unsettled',
+  // A server's environment files read for a mode, or a runtime, the files do not settle (P356)
+  'run-mode-unsettled',
   // A server's port read only as a guess, where a write or a file not read may move it (P321)
   'listen-port-guessed',
   // A request a server's proxy forwards to a host no service of the project is reached at (P257)

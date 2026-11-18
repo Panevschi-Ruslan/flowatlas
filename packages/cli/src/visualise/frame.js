@@ -289,6 +289,8 @@ export const PAGE_WORDS = Object.freeze({
     'published-port-unheard': 'published port nothing listens on',
     'container-image-unread': "container image's environment not read",
     'server-start-unread': 'started program not in the repository',
+    'make-conditional-unsettled': 'port read in one branch of a Makefile condition',
+    'run-mode-unsettled': "server's mode or runtime not settled",
     'proxy-rule-unread': 'proxy rule not read',
     'proxy-chain-unfollowed': 'proxies forward too far or in a circle',
     'manifest-unread': 'cluster manifest not read',

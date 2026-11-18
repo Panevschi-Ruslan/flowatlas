@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { commandsAround } from './commands.js';
+import { dockerfileNodeIsBun } from './dockerfile.js';
 
 let root: string | undefined;
 afterEach(() => {
@@ -150,5 +151,122 @@ describe('an included Makefile and the targets that build another (P350)', () =>
       'Makefile:4 build: npm run build',
       'Makefile:6 serve: npm start',
     ]);
+  });
+});
+
+describe("a Makefile's goal, conditionals and pattern variables (P356)", () => {
+  const read = (files: Record<string, string>): string[] =>
+    commandsAround(repository(files), '.').map((command) =>
+      [
+        `${command.file}:${command.line} ${command.label}: ${command.words.join(' ')} -`,
+        ...Object.entries(command.env)
+          .map(([name, value]) => `${name}=${typeof value === 'string' ? value : `?${value.text}`}`)
+          .sort(),
+        ...(command.assumed ?? []).map((each) => `under ${each}`),
+      ].join(' '),
+    );
+
+  it('settles a conditional on the goal asked, each goal read with $(MAKECMDGOALS) holding it', () => {
+    expect(
+      read({
+        Makefile: [
+          'ifeq ($(MAKECMDGOALS),dev)',
+          'export PORT = 4100',
+          'else ifneq ($(filter prod%,$(MAKECMDGOALS)),)',
+          'export PORT = 80',
+          'else',
+          'export PORT = 4000',
+          'endif',
+          'dev prod-api serve:',
+          '\tbun src/index.ts --name $(MAKECMDGOALS)',
+        ].join('\n'),
+      }),
+    ).toEqual([
+      'Makefile:9 dev: bun src/index.ts --name dev - PORT=4100',
+      'Makefile:9 prod-api: bun src/index.ts --name prod-api - PORT=80',
+      'Makefile:9 serve: bun src/index.ts --name serve - PORT=4000',
+    ]);
+  });
+
+  it('settles ifdef, ifndef and ifeq on what the Makefile sets, and reads both branches of one it does not, saying so', () => {
+    expect(
+      read({
+        Makefile: [
+          'MODE := production',
+          'ifdef MODE',
+          'export NODE_ENV = $(MODE)',
+          'endif',
+          'ifndef MODE',
+          'export NODE_ENV = never',
+          'endif',
+          "ifeq '$(MODE)' \"production\"",
+          'export PORT = 8080',
+          'endif',
+          'ifeq ($(CI),true)',
+          'export LOG = quiet',
+          'else',
+          'export LOG = loud',
+          'endif',
+          'serve:',
+          '\tnode server.js',
+        ].join('\n'),
+      }),
+    ).toEqual([
+      'Makefile:17 serve: node server.js - LOG=quiet NODE_ENV=production PORT=8080 under ifeq ($(CI),true) (Makefile:11)',
+      'Makefile:17 serve: node server.js - LOG=loud NODE_ENV=production PORT=8080 under ifeq ($(CI),true) (Makefile:11)',
+    ]);
+  });
+
+  it('reads a recipe line under an unsettled conditional in each branch it is in', () => {
+    expect(read({ Makefile: ['serve:', 'ifdef DEBUG', '\tnode --inspect server.js', 'else', '\tnode server.js', 'endif'].join('\n') })).toEqual([
+      'Makefile:3 serve: node --inspect server.js - under ifdef DEBUG (Makefile:2)',
+      'Makefile:5 serve: node server.js - under ifdef DEBUG (Makefile:2)',
+    ]);
+  });
+
+  it('leaves a command no conditional touches unmarked, and a value $(shell) decides unsettled', () => {
+    expect(
+      read({
+        Makefile: ['ifeq ($(shell uname),Darwin)', 'OPEN = open', 'endif', 'export PORT = 4000', 'serve:', '\tnode server.js'].join('\n'),
+      }),
+    ).toEqual(['Makefile:6 serve: node server.js - PORT=4000']);
+  });
+
+  it("applies a pattern's variables to the targets it matches, a target's own and a shorter stem's over the others", () => {
+    expect(
+      read({
+        Makefile: [
+          '%-dev: export NODE_ENV = development',
+          '%-dev: export PORT = 4000',
+          'a%: export PORT = 4100',
+          'api-dev: export LOG = debug',
+          'web-dev: export PORT = 4200',
+          'api-dev web-dev api-prod:',
+          '\tnode server.js',
+        ].join('\n'),
+      }),
+    ).toEqual([
+      'Makefile:7 api-dev: node server.js - LOG=debug NODE_ENV=development PORT=4000',
+      'Makefile:7 web-dev: node server.js - NODE_ENV=development PORT=4200',
+      'Makefile:7 api-prod: node server.js - PORT=4100',
+    ]);
+  });
+
+  it("hands a pattern's variables on to the prerequisites of a target it matches", () => {
+    expect(read({ Makefile: ['%-dev: export PORT = 4300', 'api-dev: serve', 'serve:', '\tnode server.js'].join('\n') })).toEqual([
+      'Makefile:4 serve: node server.js -',
+      'Makefile:4 api-dev: node server.js - PORT=4300',
+    ]);
+  });
+});
+
+describe("whether an image's node is Bun (P356)", () => {
+  it('says yes where a stage links or copies Bun to node, maybe on an image of Bun, and nothing on another', () => {
+    expect(dockerfileNodeIsBun('FROM debian:12\nRUN apt-get update && ln -s /usr/local/bin/bun /usr/local/bin/node\n')).toBe('yes');
+    expect(dockerfileNodeIsBun('FROM oven/bun:1 AS base\nRUN ln -sf $(which bun) /usr/bin/node\nFROM base\nCMD ["node", "index.js"]\n')).toBe('yes');
+    expect(dockerfileNodeIsBun('FROM debian:12\nCOPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/node\n')).toBe('yes');
+    expect(dockerfileNodeIsBun('FROM oven/bun:1-slim\nCMD ["node", "index.js"]\n')).toBe('maybe');
+    expect(dockerfileNodeIsBun('FROM oven/bun:1 AS build\nRUN bun install\nFROM node:22\nCMD ["node", "index.js"]\n')).toBeUndefined();
+    expect(dockerfileNodeIsBun('FROM node:22\nRUN ln -s /usr/local/bin/node /usr/local/bin/nodejs\n')).toBeUndefined();
   });
 });

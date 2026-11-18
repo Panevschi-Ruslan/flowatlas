@@ -3,6 +3,7 @@ import { basename, dirname, join, resolve } from 'node:path';
 import {
   NotLiteral,
   configValueAt,
+  interpolationValue,
   isEnvironmentName,
   isTestFile,
   isWithinDir,
@@ -21,7 +22,7 @@ import {
   type ListenPort,
   type PortUnread,
 } from '@flowatlas/core';
-import { dockerfileCommand, dockerfileEnvironment, readServiceYaml } from '@flowatlas/serverless';
+import { dockerfileCommand, dockerfileEnvironment, dockerfileNodeIsBun, readServiceYaml } from '@flowatlas/serverless';
 import { Node, SyntaxKind, ts, type SourceFile } from 'ts-morph';
 import { isPackageSpecifier, packageDirOf, packageFileOf, packageOfSpecifier } from './installed-packages.js';
 import { settingsReading } from './listen-settings.js';
@@ -159,7 +160,8 @@ const envLoads = (ctx: ExtractContext): EnvLoads => {
   const loadsOf = (run: EnvRun): { files: string[]; bun: boolean } => {
     const command = run.command;
     const before: string[] = [];
-    const bun = BUN_RUNS_FILE.test(command);
+    // A `node` that is Bun (`bun --bun`, an image that puts Bun there) loads Bun's files (P356).
+    const bun = BUN_RUNS_FILE.test(command) || (run.nodeIsBun === 'yes' && NODE_RUNS_FILE.test(command));
     // Node's, Deno's and Bun's `--env-file`, repeated: the last one wins, and
     // of Bun's `--env-file=a,b` the last one too (it loads them from the end).
     const flagged: string[] = [];
@@ -179,12 +181,43 @@ const envLoads = (ctx: ExtractContext): EnvLoads => {
     }
     // `--env-file` replaces Bun's own files, and `--no-env-file` and `bunfig.toml`'s `env = false` drop them;
     // its mode is the one the command's environment gives, however it is given (P350).
-    if (bun && bunLoadsOwn && flagged.length === 0 && !/(?:^|\s)--no-env-file\b/.test(command)) add(before, undefined, bunEnvFiles(run.env['BUN_ENV'] ?? run.env['NODE_ENV']));
+    const ownFiles = bunLoadsOwn && flagged.length === 0 && !/(?:^|\s)--no-env-file\b/.test(command);
+    if (bun && ownFiles) {
+      const { mode, unsettled } = modeOf(run);
+      add(before, undefined, bunEnvFiles(mode));
+      // A mode only the shell running compose gives, where the mode changes which files there are (P356).
+      if (unsettled !== undefined && modeMatters(ctx.repoDir)) {
+        say(unsettled.file, unsettled.line, `${unsettled.written} gives Bun's mode only where the shell running compose sets it: the project's .env gives it no value and it has no default, so ${command} is read loading the files of the mode Bun takes with none, ${bunEnvFiles(mode).join(', ')}`);
+      }
+    }
+    // A `node` that may be Bun, in an image built on Bun's own (P356): read as Node, said so where Bun would load files.
+    if (!bun && run.nodeIsBun === 'maybe' && NODE_RUNS_FILE.test(command) && bunLoadsOwn && run.dockerfile !== undefined) {
+      const files = bunEnvFiles(modeOf(run).mode).filter((file) => existsSync(join(ctx.repoDir, file)));
+      if (files.length > 0) {
+        say(run.dockerfile.file, run.dockerfile.line, `${command} runs in an image built on Bun's, whose node may be Bun, which would load ${files.join(', ')} first; the image's own files are not read, so it is read as Node, which loads none of them`);
+      }
+    }
     return { files: before, bun };
+  };
+  // Each row said once (P356).
+  const said = new Set<string>();
+  const say = (file: string, line: number, message: string): void => {
+    if (said.has(message)) return;
+    said.add(message);
+    ctx.builder.addUnresolved({
+      file,
+      line,
+      reason: 'run-mode-unsettled',
+      level: 'info',
+      message,
+      hint: "Give the value in the compose project's .env or as a default (${MODE:-production}), or run the server as bun, or on a Node image, so the runtime is plain.",
+    });
   };
   const scripts = packageScripts(ctx.repoDir);
   const fromScripts = Object.values(scripts).flatMap((script) => runsOfScript(script, {}, scripts, 0));
-  const runs = [...fromScripts, ...containerRuns(ctx.repoDir, scripts)].filter((run) => SCRIPT_LOADS_ENV.test(run.command) && !NOT_A_SERVER.test(run.command));
+  const runs = [...fromScripts, ...containerRuns(ctx.repoDir, scripts)].filter(
+    (run) => (SCRIPT_LOADS_ENV.test(run.command) || (run.nodeIsBun !== undefined && NODE_RUNS_FILE.test(run.command))) && !NOT_A_SERVER.test(run.command),
+  );
   const read = runs.map((run) => ({ run, ...loadsOf(run) }));
   const runByBun = read.some((each) => each.bun);
   const unique = (files: readonly string[]): string[] => [...new Set(files.map((file) => file.replace(/^['"]|['"]$/g, '')))];
@@ -213,9 +246,23 @@ const NOT_A_SERVER = /\b(?:jest|vitest|mocha|playwright|cypress)\b/;
  * (`NODE_ENV=production; bun ...`) is the shell's own and reaches no
  * program, unless the environment already holds it.
  */
-interface EnvRun {
+interface EnvRun extends RunContext {
   readonly command: string;
   readonly env: Readonly<Record<string, string>>;
+}
+
+/**
+ * What a command is run under beside its environment (P356): whether the
+ * `node` it runs is Bun - `yes` where `bun --bun` runs the script that runs
+ * it, or the image it runs in puts Bun there; `maybe` where the image is
+ * built on Bun's own, whose files are not read - and the names of its
+ * environment only the shell running compose gives, each with where and how
+ * it is written, and where the image's Dockerfile is.
+ */
+interface RunContext {
+  readonly nodeIsBun?: 'yes' | 'maybe';
+  readonly unsettled?: Readonly<Record<string, { readonly file: string; readonly line: number; readonly written: string }>>;
+  readonly dockerfile?: { readonly file: string; readonly line: number };
 }
 
 /** An assignment as the shell writes one: `NAME=value`. */
@@ -259,8 +306,22 @@ const scriptRunBy = (words: readonly string[], scripts: Readonly<Record<string, 
   return named;
 };
 
-/** The commands of one script as its shell runs them (P350), a script it runs read in its place. */
-const runsOfScript = (text: string, handed: Readonly<Record<string, string>>, scripts: Readonly<Record<string, string>>, depth: number): EnvRun[] => {
+/** Whether a `bun` command runs what it runs with Bun's runtime in Node's place (`bun --bun run dev`, `bun run --bun dev`): the flag before the script's name (P356). */
+const runsBunAsNode = (words: readonly string[]): boolean => {
+  if (words[0] !== 'bun') return false;
+  for (const word of words.slice(1)) {
+    if (word === '--bun') return true;
+    if (!word.startsWith('-') && word !== 'run') return false;
+  }
+  return false;
+};
+
+/**
+ * The commands of one script as its shell runs them (P350), a script it runs
+ * read in its place; `context` what it is run under (P356), a script `bun
+ * --bun` runs having Bun for its `node`, as Bun documents the flag.
+ */
+const runsOfScript = (text: string, handed: Readonly<Record<string, string>>, scripts: Readonly<Record<string, string>>, depth: number, context: RunContext = {}): EnvRun[] => {
   const exported: Record<string, string> = { ...handed };
   const local: Record<string, string> = {};
   const found: EnvRun[] = [];
@@ -297,12 +358,15 @@ const runsOfScript = (text: string, handed: Readonly<Record<string, string>>, sc
       take();
     }
     const env = { ...exported, ...inline };
+    // A name the command's own shell sets is settled, whatever compose left to the shell running it.
+    const unsettled = context.unsettled === undefined ? undefined : Object.fromEntries(Object.entries(context.unsettled).filter(([name]) => env[name] === undefined));
+    const under: RunContext = { ...context, ...(unsettled === undefined ? {} : { unsettled }) };
     const named = depth < SCRIPT_DEPTH ? scriptRunBy(words.slice(at), scripts) : undefined;
     if (named !== undefined) {
-      found.push(...runsOfScript(scripts[named] as string, env, scripts, depth + 1));
+      found.push(...runsOfScript(scripts[named] as string, env, scripts, depth + 1, runsBunAsNode(words.slice(at)) ? { ...under, nodeIsBun: 'yes' } : under));
       continue;
     }
-    found.push({ command: part.trim(), env });
+    found.push({ command: part.trim(), env, ...under });
   }
   return found;
 };
@@ -339,20 +403,149 @@ const fileText = (path: string): string | undefined => {
   }
 };
 
-/** The environment a compose service writes, by name: the literal values, a value compose fills in or none at all left out. */
-const composeEnvironment = (written: unknown): Record<string, string> => {
+/** The names Bun's mode is read from, the first one set winning (P348). */
+const MODE_NAMES = ['BUN_ENV', 'NODE_ENV'] as const;
+
+/**
+ * The settings an environment file writes, by name, as the dotenv format
+ * writes them: `KEY=value`, `export KEY=value`, a value in quotes, a comment
+ * after an unquoted value. Nothing is expanded.
+ */
+const envFileSettings = (text: string): Record<string, string> => {
   const out: Record<string, string> = {};
-  const set = (name: string, value: unknown): void => {
+  for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim().replace(/^export\s+/, '');
+    if (trimmed === '' || trimmed.startsWith('#')) continue;
+    const equals = trimmed.indexOf('=');
+    if (equals <= 0) continue;
+    const name = trimmed.slice(0, equals).trim();
+    if (!/^[A-Za-z_][A-Za-z0-9_.-]*$/.test(name)) continue;
+    const written = trimmed.slice(equals + 1).trim();
+    const quoted = /^(['"`])(.*)\1$/.exec(written);
+    out[name] = quoted === null ? written.replace(/(?:^|\s+)#.*$/, '').trim() : (quoted[2] ?? '');
+  }
+  return out;
+};
+
+/**
+ * What compose interpolates a file with where nothing is handed to it
+ * (P356): the `.env` of the project's directory, the directory of the
+ * compose file, as the Compose specification has it ("Interpolation"). Only
+ * what the graph may keep of a value is lent (`interpolationValue`): a
+ * secret's value is never read into a mode.
+ */
+const composeVariables = (dir: string): Record<string, string> => {
+  const text = fileText(join(dir, '.env'));
+  if (text === undefined) return {};
+  const out: Record<string, string> = {};
+  for (const [name, raw] of Object.entries(envFileSettings(text))) {
+    const value = raw === '' ? '' : interpolationValue(name, raw);
+    if (value !== undefined) out[name] = value;
+  }
+  return out;
+};
+
+/**
+ * A value as compose interpolates it (P356), by the Compose specification:
+ * `${VAR}` and `$VAR` the variable's value; `${VAR:-default}` the default
+ * where the variable is unset or empty, `${VAR-default}` where it is unset;
+ * `${VAR:+word}` and `${VAR+word}` the word where it is set (and not empty);
+ * `${VAR:?error}` and `${VAR?error}` the value; `$$` one `$`; an inner
+ * placeholder in a default read first. `variables` is what the project's
+ * `.env` gives: a variable it does not give is the shell's, which nobody here
+ * knows, so a value that needs one with no default is `undefined`.
+ */
+const composeInterpolated = (raw: string, variables: Readonly<Record<string, string>>): string | undefined => {
+  let unsettled = false;
+  const pass = (text: string): string =>
+    text.replace(/\$\$|\$\{([^{}]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g, (match, braced: string | undefined, bare: string | undefined) => {
+      if (match === '$$') return '\u0000';
+      const [, name = bare ?? '', how, word = ''] = braced === undefined ? [] : (/^([A-Za-z_][A-Za-z0-9_]*)(?:(:?[-?+])([\s\S]*))?$/.exec(braced) ?? []);
+      if (name === '') {
+        unsettled = true;
+        return '';
+      }
+      const given = variables[name];
+      const set = given !== undefined;
+      const filled = set && given !== '';
+      if (how === ':-') return filled ? given : word;
+      if (how === '-') return set ? given : word;
+      if (how === ':+') return filled ? word : '';
+      if (how === '+') return set ? word : '';
+      if (how === ':?' ? filled : set) return given as string;
+      unsettled = true;
+      return '';
+    });
+  let out = raw;
+  for (let depth = 0; depth < 4 && /\$\{|\$[A-Za-z_]/.test(out); depth += 1) out = pass(out);
+  return unsettled ? undefined : out.replace(/\u0000/g, '$');
+};
+
+/** Where a name of a container's environment is left to the shell running compose (P356). */
+type Unsettled = NonNullable<RunContext['unsettled']>;
+
+/**
+ * The environment a compose service writes, by name (P356): each value as
+ * compose interpolates it with its project's variables, a name written with
+ * no value (`- NODE_ENV`, `NODE_ENV:`) given what those variables give it;
+ * where only the shell running compose gives a value, the name is left out
+ * and said in `unsettled`, with where it is written (`at`, a line of the
+ * compose file by the entry's key or index); a value interpolated so is
+ * empty in the container, over the image's (`cleared`), a name with no value
+ * unset, so the image's stands.
+ */
+const composeEnvironment = (
+  written: unknown,
+  variables: Readonly<Record<string, string>>,
+  at: (key: string | number) => number,
+  file: string,
+): { env: Record<string, string>; unsettled: Unsettled; cleared: string[] } => {
+  const env: Record<string, string> = {};
+  const unsettled: Record<string, Unsettled[string]> = {};
+  const cleared: string[] = [];
+  const set = (name: string, value: unknown, key: string | number): void => {
     const text = typeof value === 'string' ? value : typeof value === 'number' || typeof value === 'boolean' ? String(value) : undefined;
-    if (text !== undefined && !text.includes('$')) out[name] = text;
+    const filled = text === undefined ? variables[name] : composeInterpolated(text, variables);
+    if (filled !== undefined) env[name] = filled;
+    else {
+      // Spelled as the file writes it: a list's `NAME=value`, a mapping's `NAME: value`.
+      unsettled[name] = { file, line: at(key), written: text === undefined ? `${name} with no value` : typeof key === 'number' ? `${name}=${text}` : `${name}: ${text}` };
+      // A value interpolated from nothing is empty, over what the image gives; a name with no value is left unset.
+      if (text !== undefined) cleared.push(name);
+    }
   };
   if (Array.isArray(written)) {
-    for (const entry of written) {
-      if (typeof entry !== 'string') continue;
+    written.forEach((entry, index) => {
+      if (typeof entry !== 'string') return;
       const equals = entry.indexOf('=');
-      if (equals > 0) set(entry.slice(0, equals), entry.slice(equals + 1));
+      if (equals > 0) set(entry.slice(0, equals), entry.slice(equals + 1), index);
+      else if (/^[A-Za-z_][A-Za-z0-9_.-]*$/.test(entry.trim())) set(entry.trim(), undefined, index);
+    });
+  } else if (isPlainRecord(written)) for (const [name, value] of Object.entries(written)) set(name, value ?? undefined, name);
+  return { env, unsettled, cleared };
+};
+
+/**
+ * The modes a compose service's `env_file` gives (P356): each file, a later
+ * one over an earlier, read for {@link MODE_NAMES} alone - what Bun's mode
+ * needs, a file's other values being none of this - its path interpolated as
+ * compose interpolates it, relative to the compose file. A file compose may
+ * go without (`required: false`) that is not there gives nothing.
+ */
+const composeEnvFileModes = (written: unknown, dir: string, variables: Readonly<Record<string, string>>): Record<string, string> => {
+  const items = Array.isArray(written) ? written : written === undefined ? [] : [written];
+  const out: Record<string, string> = {};
+  for (const item of items) {
+    const path = typeof item === 'string' ? item : isPlainRecord(item) && typeof item['path'] === 'string' ? item['path'] : undefined;
+    const filled = path === undefined ? undefined : composeInterpolated(path, variables);
+    const text = filled === undefined ? undefined : fileText(resolve(dir, filled));
+    if (text === undefined) continue;
+    const settings = envFileSettings(text);
+    for (const name of MODE_NAMES) {
+      const value = settings[name];
+      if (value !== undefined && !value.includes('$')) out[name] = value;
     }
-  } else if (isPlainRecord(written)) for (const [name, value] of Object.entries(written)) set(name, value);
+  }
   return out;
 };
 
@@ -367,38 +560,59 @@ const composeWords = (written: unknown): string[] | undefined =>
  * with the environment the container gives it: each service of a compose
  * file in the repository or above it, up to the top of its checkout, built
  * from the repository - its Dockerfile's `ENV`, `CMD` and `ENTRYPOINT`, under
- * the service's own `environment`, `command` and `entrypoint`; where no
- * compose service is, the repository's own `Dockerfile`, run as it is. A value compose
- * fills in when it runs is not read. A container that runs a script runs it
- * with that environment: `CMD ["npm", "start"]` under `ENV NODE_ENV=production`.
+ * the service's `env_file` and its own `environment`, `command` and
+ * `entrypoint`; where no compose service is, the repository's own
+ * `Dockerfile`, run as it is. A container that runs a script runs it with
+ * that environment: `CMD ["npm", "start"]` under `ENV NODE_ENV=production`.
+ *
+ * A value compose interpolates (`NODE_ENV: ${MODE}`, `${MODE:-production}`)
+ * is read from the project's `.env` or its default (P356); one only the
+ * shell running compose gives is said in the run's `unsettled`. And whether
+ * the image's `node` is Bun ({@link dockerfileNodeIsBun}).
  */
 const containerRuns = (repoDir: string, scripts: Readonly<Record<string, string>>): EnvRun[] => {
-  const containers: { env: Record<string, string>; words: string[] }[] = [];
-  const imageOf = (dockerfile: string, target?: string): { env: Record<string, string>; words?: string[] } | undefined => {
+  const containers: { env: Record<string, string>; words: string[]; context: RunContext }[] = [];
+  const imageOf = (dockerfile: string, target?: string): { env: Record<string, string>; words?: string[]; context: RunContext } | undefined => {
     const text = fileText(dockerfile);
     if (text === undefined) return undefined;
     const options = target === undefined ? {} : { target };
     const env = Object.fromEntries((dockerfileEnvironment(text, options) ?? []).map((each) => [each.name, each.raw]));
     const words = dockerfileCommand(text, options);
-    return { env, ...(words === undefined ? {} : { words }) };
+    const nodeIsBun = dockerfileNodeIsBun(text, options);
+    // Where a row about the image's runtime points: the line it is built `FROM` an image of Bun's, else the first line.
+    const from = text.split(/\r?\n/).findIndex((line) => /^\s*FROM\s+(?:--\S+\s+)*\S*bun(?:[:@\s]|$)/i.test(line));
+    const context: RunContext = {
+      ...(nodeIsBun === undefined ? {} : { nodeIsBun }),
+      dockerfile: { file: normalizeFilePath(dockerfile, repoDir), line: from < 0 ? 1 : from + 1 },
+    };
+    return { env, ...(words === undefined ? {} : { words }), context };
   };
   const ceiling = readingCeilingOf(repoDir);
   for (let dir = resolve(repoDir); ; dir = dirname(dir)) {
     for (const [name, override] of COMPOSE_NAMES) {
       const services = new Map<string, Record<string, unknown>>();
+      // The file, and its document, that last wrote each service's environment, for where a row points.
+      const environmentAt = new Map<string, { file: string; at: (path: readonly (string | number)[]) => { line: number } | undefined }>();
       for (const file of [name, override]) {
         const text = fileText(join(dir, file));
         if (text === undefined) continue;
-        let document: unknown;
+        let document: ReturnType<typeof readServiceYaml>;
         try {
-          document = readServiceYaml(text).value;
+          document = readServiceYaml(text);
         } catch {
           continue;
         }
-        const written = isPlainRecord(document) && isPlainRecord(document['services']) ? document['services'] : {};
-        for (const [service, value] of Object.entries(written)) if (isPlainRecord(value)) services.set(service, { ...(services.get(service) ?? {}), ...value });
+        const value = document.value;
+        const written = isPlainRecord(value) && isPlainRecord(value['services']) ? value['services'] : {};
+        for (const [service, each] of Object.entries(written)) {
+          if (!isPlainRecord(each)) continue;
+          services.set(service, { ...(services.get(service) ?? {}), ...each });
+          if (each['environment'] !== undefined) environmentAt.set(service, { file: normalizeFilePath(join(dir, file), repoDir), at: document.at });
+        }
       }
-      for (const service of services.values()) {
+      if (services.size === 0) continue;
+      const variables = composeVariables(dir);
+      for (const [serviceName, service] of services) {
         const build = service['build'];
         const context = typeof build === 'string' ? build : isPlainRecord(build) && typeof build['context'] === 'string' ? build['context'] : undefined;
         if (context === undefined || context.includes('$') || resolve(dir, context) !== resolve(repoDir)) continue;
@@ -409,18 +623,24 @@ const containerRuns = (repoDir: string, scripts: Readonly<Record<string, string>
         const command = composeWords(service['command']);
         const words = entrypoint !== undefined ? [...entrypoint, ...(command ?? [])] : (command ?? image?.words);
         if (words === undefined) continue;
-        containers.push({ env: { ...(image?.env ?? {}), ...composeEnvironment(service['environment']) }, words });
+        const where = environmentAt.get(serviceName);
+        const environment = composeEnvironment(service['environment'], variables, (key) => where?.at(['services', serviceName, 'environment', key])?.line ?? 1, where?.file ?? '');
+        const env: Record<string, string> = { ...(image?.env ?? {}), ...composeEnvFileModes(service['env_file'], dir, variables), ...environment.env };
+        for (const unset of environment.cleared) delete env[unset];
+        // A name the environment leaves to the shell, unless the image or an `env_file` gives it anyway.
+        const unsettled = Object.fromEntries(Object.entries(environment.unsettled).filter(([unset]) => env[unset] === undefined));
+        containers.push({ env, words, context: { ...(image?.context ?? {}), ...(Object.keys(unsettled).length === 0 ? {} : { unsettled }) } });
       }
     }
     if (dirname(dir) === dir || !isWithinDir(dirname(dir), ceiling)) break;
   }
   // The repository's own Dockerfile, run as it is, where no compose service runs what it builds.
   const own = containers.length === 0 ? imageOf(join(repoDir, 'Dockerfile')) : undefined;
-  if (own?.words !== undefined) containers.push({ env: own.env, words: own.words });
-  return containers.flatMap(({ env, words }) => {
+  if (own?.words !== undefined) containers.push({ env: own.env, words: own.words, context: own.context });
+  return containers.flatMap(({ env, words, context }) => {
     // `sh -c "..."`: the script the shell is handed.
     const script = /^(?:\/bin\/)?(?:ba)?sh$/.test(words[0] ?? '') && words[1] === '-c' && words[2] !== undefined ? words[2] : words.map((word) => (/\s/.test(word) ? `'${word}'` : word)).join(' ');
-    return runsOfScript(script, env, scripts, 0);
+    return runsOfScript(script, env, scripts, 0, context);
   });
 };
 
@@ -429,6 +649,29 @@ const SCRIPT_LOADS_ENV = /--env-file|(?:^|\s)dotenv(?:-cli)?\s|(?:^|\s)env-cmd\s
 
 /** A command that runs a file with Bun, its flags (`--watch`, `--env-file .env.ci`) before the file (P348). */
 const BUN_RUNS_FILE = /(?:^|\s)bun\s+(?:run\s+)?(?:--?[\w-]+(?:=\S+|\s+[^\s-]\S*)?\s+)*[\w./-]+\.[cm]?[jt]sx?(?:\s|$)/;
+
+/** A command that runs a file with the program named `node` (`node dist/server.js`, `/usr/local/bin/node --watch src/index.js`), which may be Bun (P356). */
+const NODE_RUNS_FILE = /(?:^|\s)(?:\S*\/)?node\s+(?:--?[\w-]+(?:=\S+|\s+[^\s-]\S*)?\s+)*[\w./-]+\.[cm]?[jt]sx?(?:\s|$)/;
+
+/**
+ * Bun's mode for a run (P348, P356): the first of `BUN_ENV`, `NODE_ENV` its
+ * environment gives; where the first one it does not give is one only the
+ * shell running compose gives, that is said (`unsettled`), the mode being
+ * the one Bun takes with none.
+ */
+const modeOf = (run: EnvRun): { mode?: string; unsettled?: NonNullable<RunContext['unsettled']>[string] } => {
+  for (const name of MODE_NAMES) {
+    const mode = run.env[name];
+    if (mode !== undefined) return { mode };
+    const unsettled = run.unsettled?.[name];
+    if (unsettled !== undefined) return { unsettled };
+  }
+  return {};
+};
+
+/** Whether Bun's mode changes which of its files a repository has: some mode's files there that another's are not (P356). */
+const modeMatters = (repoDir: string): boolean =>
+  new Set(['development', 'production', 'test'].map((mode) => bunEnvFiles(mode).filter((file) => existsSync(join(repoDir, file))).join('\0'))).size > 1;
 
 /**
  * The files Bun loads before it runs a file, the one whose value wins first

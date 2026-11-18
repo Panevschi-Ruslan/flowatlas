@@ -263,3 +263,49 @@ describe('a script run in another package of the workspace, and an included Make
     ]);
   });
 });
+
+describe("a program listening through a workspace package, and a Makefile's goals and conditionals (P356)", () => {
+  const services = (dir: string, ...names: string[]) => names.map((name) => ({ name, dir: join(dir, name) }));
+
+  it("follows a program's import of a workspace package to the source the workspace links, its build mapped to its src", () => {
+    const dir = project({
+      'package.json': JSON.stringify({ name: 'shop', private: true, workspaces: ['orders', 'packages/*'] }),
+      'scripts/up.sh': lines('export PORT=4910', 'node orders/bin/start.js'),
+      'orders/package.json': JSON.stringify({ name: '@shop/orders' }),
+      'orders/bin/start.js': "require('@shop/server');\n",
+      'packages/server/package.json': JSON.stringify({ name: '@shop/server', main: 'dist/index.js' }),
+      'packages/server/src/index.ts': "import { createApp } from './app';\ncreateApp().listen(process.env.PORT);\n",
+      'scripts/other.sh': lines('export PORT=4920', 'node orders/bin/other.js'),
+      'orders/bin/other.js': "import 'left-pad';\n",
+    });
+    const read = readProjectSettings({ services: [...services(dir, 'orders'), { name: 'server', dir: join(dir, 'packages/server') }], rootDir: dir });
+    expect(read['server']?.ports?.['PORT']).toEqual([{ port: 4910, file: 'scripts/up.sh', started: true }]);
+    // A package the workspace does not hold is an install's, not followed: the program's own service is given the port.
+    expect(read['orders']?.ports?.['PORT']).toEqual([{ port: 4920, file: 'scripts/other.sh', started: true }]);
+  });
+
+  it('gives each goal the port its conditionals settle, and says a port read under one the files do not settle', () => {
+    const dir = project({
+      Makefile: lines(
+        'ifeq ($(MAKECMDGOALS),dev)',
+        'export PORT = 4930',
+        'else',
+        'export PORT = 4931',
+        'endif',
+        'ifdef CI',
+        'export ADMIN_PORT = 4932',
+        'endif',
+        'dev serve:',
+        '\tcd orders && npm start',
+      ),
+      'orders/package.json': JSON.stringify({ name: 'orders', scripts: { start: 'node src/main.js' } }),
+    });
+    const read = readProjectSettings({ services: services(dir, 'orders'), rootDir: dir });
+    expect(read['orders']?.ports?.['PORT']?.map((each) => each.port)).toEqual([4930, 4931]);
+    expect(read['orders']?.ports?.['ADMIN_PORT']?.map((each) => each.port)).toEqual([4932]);
+    expect(read['orders']?.rows?.map((row) => `${row.reason} ${row.message}`)).toEqual([
+      'make-conditional-unsettled Makefile:10 starts orders with PORT=4930, ADMIN_PORT=4932 under ifdef CI (Makefile:6), which the files do not settle: each branch is read, and this is the port one of them gives',
+      'make-conditional-unsettled Makefile:10 starts orders with PORT=4931, ADMIN_PORT=4932 under ifdef CI (Makefile:6), which the files do not settle: each branch is read, and this is the port one of them gives',
+    ]);
+  });
+});

@@ -129,6 +129,62 @@ export const dockerfileCommand = (text: string, options: { readonly target?: str
   return built.cmd;
 };
 
+/** Whether a path is Bun's program: `/usr/local/bin/bun`, `bun`. */
+const isBunPath = (path: string): boolean => /(?:^|\/)bun$/.test(path);
+
+/** Whether a path is where a program named `node` is put: `/usr/local/bin/node`, `/usr/bin/node`. */
+const isNodePath = (path: string): boolean => /(?:^|\/)node$/.test(path);
+
+/** An image whose name says it is Bun's own (`oven/bun`, `oven/bun:1-slim`, `bun@sha256:...`). */
+const BUN_IMAGE = /(?:^|\/)bun(?:[:@]|$)/;
+
+/**
+ * Whether the program named `node` in an image is Bun (P356): `yes` where the
+ * stage built (`target`, else the last), or one it is built over, puts Bun
+ * there - `RUN ln -s /usr/local/bin/bun /usr/local/bin/node`, `ln -sf
+ * $(which bun) /usr/bin/node`, `COPY --from=oven/bun /usr/local/bin/bun
+ * /usr/local/bin/node`; `maybe` where it is built on an image of Bun's own,
+ * whose files are not read, so whether its `node` is Bun is not known; and
+ * nothing where neither is written, `node` being Node.
+ */
+export const dockerfileNodeIsBun = (text: string, options: { readonly target?: string } = {}): 'yes' | 'maybe' | undefined => {
+  const stages: { readonly name?: string; node?: 'yes' | 'maybe' }[] = [];
+  let stage: (typeof stages)[number] | undefined;
+  for (const line of instructions(text)) {
+    const match = /^(\w+)\s+([\s\S]*)$/.exec(line);
+    if (match === null) continue;
+    const word = (match[1] as string).toUpperCase();
+    const rest = (match[2] as string).trim();
+    if (word === 'FROM') {
+      const parts = rest.split(/\s+/).filter((part) => !part.startsWith('--'));
+      const base = parts[0]?.toLowerCase() ?? '';
+      const name = parts.length >= 3 && parts[1]?.toLowerCase() === 'as' ? parts[2]?.toLowerCase() : undefined;
+      const from = stages.find((each) => each.name !== undefined && each.name === base) ?? (/^\d+$/.test(base) ? stages[Number(base)] : undefined);
+      const node = from !== undefined ? from.node : BUN_IMAGE.test(base) ? 'maybe' : undefined;
+      stage = { ...(name === undefined ? {} : { name }), ...(node === undefined ? {} : { node }) };
+      stages.push(stage);
+      continue;
+    }
+    if (stage === undefined) continue;
+    if (word === 'RUN') {
+      // `ln -s <bun> <node>`, each command of the line on its own.
+      for (const part of rest.split(/&&|;|\|\|/)) {
+        // `$(which bun)`, `` `command -v bun` ``: Bun's path, as one word.
+        const each = words(part.trim().replace(/\$\((?:which|command\s+-v)\s+bun\)|`(?:which|command\s+-v)\s+bun`/g, 'bun'));
+        if (each[0] !== 'ln' || !each.some((flag) => /^-[a-zA-Z]*s/.test(flag))) continue;
+        const paths = each.slice(1).filter((path) => !path.startsWith('-'));
+        if (paths.length === 2 && isBunPath(paths[0] as string) && isNodePath(paths[1] as string)) stage.node = 'yes';
+      }
+    } else if (word === 'COPY' || word === 'ADD') {
+      const paths = words(rest).filter((path) => !path.startsWith('--'));
+      if (paths.length === 2 && isBunPath(paths[0] as string) && isNodePath(paths[1] as string)) stage.node = 'yes';
+    }
+  }
+  const target = options.target?.toLowerCase();
+  const built = (target === undefined ? undefined : stages.find((each) => each.name === target)) ?? stages[stages.length - 1];
+  return built?.node;
+};
+
 /** The file's instructions, one per entry: comments and blank lines left out, lines run on with a backslash joined. */
 const instructions = (text: string): string[] => {
   const out: string[] = [];

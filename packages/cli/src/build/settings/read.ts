@@ -22,6 +22,8 @@ import {
   type Unresolved,
   workspacePackages,
   workspaceRootOf,
+  packageSpecifierParts,
+  workspaceMemberEntries,
 } from '@flowatlas/core';
 import { composeIncludes, readComposeFile, type ComposeLoader, type ComposeService, type Mapping } from './compose.js';
 import { readWorkerJson, readWorkerToml, readServerlessFile, type DeploymentSettings } from './deployed.js';
@@ -498,22 +500,42 @@ const COMPOSE_INCLUDE_DEPTH = 8;
  */
 const readStarts = (each: Commands, services: SettingsInput['services'], byService: ReadonlyMap<string, Gathered>, rootDir: string): void => {
   const bins = binsOf(services, rootDir);
+  // The packages of the workspace by name, for a program that listens through one (P356), read once when asked.
+  let named: Map<string, string> | undefined;
+  const packages = (): Map<string, string> => (named ??= packagesByName([each.base, rootDir], services));
   // The service whose directory holds a path, the deepest one.
   const holding = (path: string): SettingsInput['services'][number] | undefined => {
     const real = realOf(path);
     return services.filter((one) => realOf(one.dir) === real || isWithin(realOf(one.dir), real)).sort((a, b) => realOf(b.dir).length - realOf(a.dir).length)[0];
   };
-  const give = (service: SettingsInput['services'][number], origin: { file: string }, environment: Readonly<Record<string, string>>): void => {
+  const give = (service: SettingsInput['services'][number], origin: { file: string; line?: number }, environment: Readonly<Record<string, string>>, assumed: readonly string[] = []): void => {
     const into = byService.get(service.name);
     if (into === undefined) return;
     const file = labelOf(resolve(each.base, origin.file), service.dir, rootDir);
+    const given: string[] = [];
     for (const [name, raw] of Object.entries(environment)) {
       const port = portSetting({ name, raw });
       if (port === undefined) continue;
+      given.push(`${name}=${raw}`);
       const list = into.ports.get(name) ?? [];
       if (!list.some((seen) => seen.port === port && seen.file === file && seen.started === true)) list.push({ port, file, started: true });
       into.ports.set(name, list);
     }
+    // A port read under a Makefile conditional the files do not settle (P356): one reading of several, said so.
+    if (assumed.length === 0 || given.length === 0) return;
+    const line = origin.line ?? 1;
+    const message = `${file}:${line} starts ${service.name} with ${given.join(', ')} under ${assumed.join(', ')}, which the files do not settle: each branch is read, and this is the port one of them gives`;
+    if (into.rows.some((seen) => seen.reason === 'make-conditional-unsettled' && seen.message === message)) return;
+    into.rows.push({
+      service: service.name,
+      file,
+      line,
+      reason: 'make-conditional-unsettled',
+      level: 'info',
+      message,
+      hint: 'Set the variable the conditional tests in the Makefile, or give the port outside the conditional.',
+      symbol: `${file}:${line}`,
+    });
   };
   const within = (path: string): boolean => [each.base, rootDir].some((dir) => realOf(dir) === realOf(path) || isWithin(dir, path));
   // A program of the project's own that is not in the repository - a
@@ -549,9 +571,9 @@ const readStarts = (each: Commands, services: SettingsInput['services'], byServi
       if (runs.kind === 'known') {
         // The service whose code the file it runs is, or that code listens in, else the one it runs in (P343).
         const path = runs.file === undefined ? undefined : runsIn.map((dir) => moduleFile(resolve(dir, runs.file as string))).find((found) => found !== undefined && within(found));
-        const listening = path === undefined ? undefined : listeningFile(path);
+        const listening = path === undefined ? undefined : listeningFile(path, packages());
         const service = (listening === undefined ? undefined : holding(listening)) ?? (path === undefined ? undefined : holding(path)) ?? byDirs();
-        if (service !== undefined) give(service, from, start.environment);
+        if (service !== undefined) give(service, from, start.environment, from.assumed);
         continue;
       }
       if (depth >= START_DEPTH) continue;
@@ -562,7 +584,7 @@ const readStarts = (each: Commands, services: SettingsInput['services'], byServi
           // `start`, `dev`, `serve` start that package's server, as they do run where it is (`known`).
           const service = isStartingScript(runs.name) ? services.find((one) => realOf(one.dir) === realOf(dir)) : undefined;
           if (service !== undefined) {
-            give(service, from, start.environment);
+            give(service, from, start.environment, from.assumed);
             continue;
           }
           const nested = commandsOfPackageScript(each.base, relative(each.base, dir).split(sep).join('/') || '.', runs.name, start.environment);
@@ -598,10 +620,10 @@ const readStarts = (each: Commands, services: SettingsInput['services'], byServi
         follow(commandsOfShellScript(each.base, relative(each.base, path).split(sep).join('/'), start.environment, dirs), from, depth + 1);
         continue;
       }
-      const listening = listeningFile(path);
+      const listening = listeningFile(path, packages());
       if (listening === undefined) continue;
       const service = holding(listening) ?? holding(path);
-      if (service !== undefined) give(service, from, start.environment);
+      if (service !== undefined) give(service, from, start.environment, from.assumed);
     }
   };
   follow(each.commands, undefined, 0);
@@ -619,15 +641,14 @@ const selectorPattern = (selector: string): RegExp => new RegExp(`^${selector.re
  * and `^` are taken off, so the named package is read and those around it
  * are not; an exclusion (`!name`) selects nothing.
  */
-const selectedPackages = (selection: WorkspaceSelection, runsIn: readonly string[], services: SettingsInput['services'], rootDir: string): string[] => {
-  const where = runsIn[0] ?? rootDir;
-  // A path from the first directory the command may run in where it names a package.
-  const pathed = (path: string): string[] => {
-    const candidates = (runsIn.length === 0 ? [rootDir] : runsIn).map((dir) => resolve(dir, path));
-    return [candidates.find((dir) => existsSync(join(dir, 'package.json'))) ?? (candidates[0] as string)];
-  };
-  if (selection.dir !== undefined) return selection.dir.includes('$') ? [] : pathed(selection.dir);
-  const roots = [...new Set([where, workspaceRootOf(where), rootDir, workspaceRootOf(rootDir)].filter((each): each is string => each !== undefined))];
+/**
+ * The packages of the workspace a set of directories are in, and of the
+ * services, by the name each manifest gives (P350, P356): those of each
+ * directory's own workspace and of the workspace it is a member of, the
+ * nearest first, then each service's own package.
+ */
+const packagesByName = (dirs: readonly string[], services: SettingsInput['services']): Map<string, string> => {
+  const roots = [...new Set(dirs.flatMap((dir) => [dir, workspaceRootOf(dir)]).filter((each): each is string => each !== undefined))];
   const named = new Map<string, string>();
   for (const root of roots) for (const pkg of workspacePackages(root)) if (!named.has(pkg.name)) named.set(pkg.name, pkg.dir);
   for (const service of services) {
@@ -638,6 +659,18 @@ const selectedPackages = (selection: WorkspaceSelection, runsIn: readonly string
       // A manifest that does not parse names no package.
     }
   }
+  return named;
+};
+
+const selectedPackages = (selection: WorkspaceSelection, runsIn: readonly string[], services: SettingsInput['services'], rootDir: string): string[] => {
+  const where = runsIn[0] ?? rootDir;
+  // A path from the first directory the command may run in where it names a package.
+  const pathed = (path: string): string[] => {
+    const candidates = (runsIn.length === 0 ? [rootDir] : runsIn).map((dir) => resolve(dir, path));
+    return [candidates.find((dir) => existsSync(join(dir, 'package.json'))) ?? (candidates[0] as string)];
+  };
+  if (selection.dir !== undefined) return selection.dir.includes('$') ? [] : pathed(selection.dir);
+  const named = packagesByName([where, rootDir], services);
   const found: string[] = [];
   for (const written of selection.selectors) {
     const selector = written.replace(/^\{(.*)\}$/, '$1').replace(/^\.\.\.(?=[^/])|\.\.\.$/g, '').replace(/^\^/, '');
@@ -681,16 +714,34 @@ const isShellScript = (path: string): boolean => /\.(?:sh|bash)$/.test(path) || 
  * The file of a program's code that listens (P343): the file itself, or a
  * module it imports by a relative path, and on, as far as the files go.
  * Nothing where none is read listening.
+ *
+ * A module imported by a package's name (`require('@shop/server')`, P356)
+ * is followed where `packages` names a package of the workspace by it: to
+ * the file the workspace's link enters it through, its manifest's
+ * `exports`, `module` or `main`, else the source that is built from
+ * ({@link workspaceMemberEntries}), as an import of a workspace member is
+ * resolved where nothing is installed. A package the workspace does not
+ * hold is an install's, and not followed.
  */
-const listeningFile = (path: string, seen: Set<string> = new Set()): string | undefined => {
+const listeningFile = (path: string, packages: ReadonlyMap<string, string> = new Map(), seen: Set<string> = new Set()): string | undefined => {
   if (seen.has(path) || seen.size >= 64) return undefined;
   seen.add(path);
   const text = read(path);
   if (text === undefined) return undefined;
   if (LISTENS.test(text)) return path;
-  for (const match of text.matchAll(/(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|\bimport\s+)['"](\.{1,2}\/[^'"]+)['"]/g)) {
-    const found = moduleFile(resolve(dirname(path), match[1] as string));
-    const listening = found === undefined ? undefined : listeningFile(found, seen);
+  for (const match of text.matchAll(/(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|\bimport\s+)['"]([^'"\s]+)['"]/g)) {
+    const specifier = match[1] as string;
+    let found: string | undefined;
+    if (/^\.{1,2}\//.test(specifier)) found = moduleFile(resolve(dirname(path), specifier));
+    else {
+      const parts = packageSpecifierParts(specifier);
+      const dir = parts === undefined ? undefined : packages.get(parts.name);
+      if (parts === undefined || dir === undefined) continue;
+      found = workspaceMemberEntries(dir, parts.subpath)
+        .map((entry) => moduleFile(entry))
+        .find((file) => file !== undefined && !/\.d\.[cm]?ts$/.test(file));
+    }
+    const listening = found === undefined ? undefined : listeningFile(found, packages, seen);
     if (listening !== undefined) return listening;
   }
   return undefined;

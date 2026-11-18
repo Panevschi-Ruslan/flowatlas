@@ -511,6 +511,8 @@ export {
   sourceRootsOf,
   TSCONFIG_CANDIDATES,
   UNREADABLE_FILE_REASON,
+  packageSpecifierParts,
+  workspaceMemberEntries,
 } from './project.js';
 export type {
   CreateProjectOptions,

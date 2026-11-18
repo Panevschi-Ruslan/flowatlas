@@ -1583,11 +1583,13 @@ Known gaps in what it can read:
   not; and a module loaded through `require()` is not in the order.
 - A port a cluster `Secret` gives is not known, by policy, so the request
   gets a row rather than a join. A program's listen is found in its file and
-  the files it imports by a relative path, so one listening through a
-  package's import is not followed, and one a build writes is a row. Make's
-  `$(MAKECMDGOALS)`, `ifeq` and pattern-specific variables are not read, nor
-  a compose value interpolated from the shell (`NODE_ENV: ${MODE}`) or an
-  `env_file` for Bun's mode, nor Bun run as `node`.
+  the files it imports by a relative path or by the name of a package of the
+  workspace; one a build writes is a row. A Makefile conditional on a
+  variable only the environment gives has both branches read, and a compose
+  value only the shell gives (`NODE_ENV: ${MODE}` with no `.env` value) is
+  read as Bun's default mode; each is a row. A `node` in an image built on
+  Bun's own is read as Node, with a row, since the image's files are not
+  read.
 - In a linter plugin's `configs`, a key written before a spread of another
   module's object is taken to be the spread's. Inside a checkout, a look up
   the directories still climbs to the checkout's top when the run was given

@@ -659,3 +659,73 @@ describe('the configuration a command names and the environment a start script s
     ]);
   });
 });
+
+describe("Bun's mode as compose interpolates it, a service's env_file, and Bun run as node (P356)", () => {
+  const serve = { 'src/index.ts': 'Bun.serve({ fetch: app.fetch });' };
+  const files = { '.env': 'PORT=4999\n', '.env.development': 'PORT=4050\n', '.env.production': 'PORT=4051\n' };
+  const scripts = (named: Record<string, string>): string => JSON.stringify({ scripts: named }, null, 2);
+  const run = (more: Record<string, string>, rows?: string[]): string[] => listening([honoRoutesAdapter], serve, { ...files, ...more }, rows);
+  const compose = (...environment: string[]): string => ['services:', '  shop:', '    build: .', '    command: bun src/index.ts', ...environment].join('\n');
+
+  it("reads a value compose interpolates from the project's .env, or from its default", () => {
+    expect(run({ 'compose.yaml': compose('    environment:', '      NODE_ENV: ${MODE}'), '.env': 'PORT=4999\nMODE=production\n' })).toEqual([
+      'src/index.ts:1 4051[PORT] from .env.production',
+    ]);
+    expect(run({ 'compose.yaml': compose('    environment:', '      - NODE_ENV=${MODE:-production}') })).toEqual(['src/index.ts:1 4051[PORT] from .env.production']);
+    expect(run({ 'compose.yaml': compose('    environment:', '      NODE_ENV: ${MODE-production}') })).toEqual(['src/index.ts:1 4051[PORT] from .env.production']);
+    // `${MODE-x}` keeps a value the .env sets empty; `${MODE:-x}` does not.
+    expect(run({ 'compose.yaml': compose('    environment:', '      NODE_ENV: ${MODE-production}'), '.env': 'PORT=4999\nMODE=\n' })).toEqual([
+      'src/index.ts:1 4050[PORT] from .env.development',
+    ]);
+    expect(run({ 'compose.yaml': compose('    environment:', '      NODE_ENV: ${MODE:-production}'), '.env': 'PORT=4999\nMODE=\n' })).toEqual([
+      'src/index.ts:1 4051[PORT] from .env.production',
+    ]);
+    // A name written with no value takes what the .env gives it.
+    expect(run({ 'compose.yaml': compose('    environment:', '      - NODE_ENV'), '.env': 'PORT=4999\nNODE_ENV=production\n' })).toEqual([
+      'src/index.ts:1 4051[PORT] from .env.production',
+    ]);
+  });
+
+  it('reads a value only the shell running compose gives as Bun reads none, and says so', () => {
+    const rows: string[] = [];
+    expect(run({ 'compose.yaml': compose('    environment:', '      NODE_ENV: ${MODE}') }, rows)).toEqual(['src/index.ts:1 4050[PORT] from .env.development']);
+    expect(rows).toEqual([
+      "run-mode-unsettled NODE_ENV: ${MODE} gives Bun's mode only where the shell running compose sets it: the project's .env gives it no value and it has no default, so bun src/index.ts is read loading the files of the mode Bun takes with none, .env.development.local, .env.local, .env.development, .env",
+    ]);
+    // Where every mode finds the same files, the mode changes nothing and nothing is said.
+    const quiet: string[] = [];
+    listening([honoRoutesAdapter], serve, { '.env': 'PORT=4999\n', 'compose.yaml': compose('    environment:', '      NODE_ENV: ${MODE}') }, quiet);
+    expect(quiet).toEqual([]);
+  });
+
+  it("reads Bun's mode from a service's env_file, under its environment", () => {
+    expect(run({ 'compose.yaml': compose('    env_file: deploy/shop.env'), 'deploy/shop.env': 'NODE_ENV=production\nAPI_TOKEN=abc\n' })).toEqual([
+      'src/index.ts:1 4051[PORT] from .env.production',
+    ]);
+    expect(run({ 'compose.yaml': compose('    env_file:', '      - path: deploy/shop.env', '        required: false', '    environment:', '      NODE_ENV: development'), 'deploy/shop.env': 'NODE_ENV=production\n' })).toEqual([
+      'src/index.ts:1 4050[PORT] from .env.development',
+    ]);
+  });
+
+  it("loads Bun's files for a node that bun --bun runs, or an image puts Bun in place of", () => {
+    expect(run({ 'package.json': scripts({ dev: 'bun --bun run serve', serve: 'NODE_ENV=production node src/index.js' }) })).toEqual([
+      'src/index.ts:1 4051[PORT] from .env.production',
+    ]);
+    expect(run({ 'package.json': scripts({ start: 'node src/index.js' }), Dockerfile: 'FROM debian:12\nCOPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/node\nENV NODE_ENV=production\nCMD ["npm", "start"]\n' })).toEqual([
+      'src/index.ts:1 4051[PORT] from .env.production',
+    ]);
+    expect(run({ Dockerfile: 'FROM oven/bun:1-slim\nRUN ln -sf $(which bun) /usr/local/bin/node\nENV NODE_ENV=production\nCMD node src/index.js\n' })).toEqual([
+      'src/index.ts:1 4051[PORT] from .env.production',
+    ]);
+    // A plain node loads none: the server is read as Bun's bare start.
+    expect(run({ 'package.json': scripts({ start: 'NODE_ENV=production node src/index.js' }) })).toEqual(['src/index.ts:1 4050[PORT] from .env.development']);
+  });
+
+  it("reads a node in an image built on Bun's as Node, saying Bun would load its files", () => {
+    const rows: string[] = [];
+    listening([honoRoutesAdapter], { 'src/index.ts': 'Bun.serve({ fetch: app.fetch, port: Number(process.env.PORT ?? 3000) });' }, { ...files, Dockerfile: 'FROM oven/bun:1\nCMD ["node", "src/index.js"]\n' }, rows);
+    expect(rows).toEqual([
+      "run-mode-unsettled node src/index.js runs in an image built on Bun's, whose node may be Bun, which would load .env.development, .env first; the image's own files are not read, so it is read as Node, which loads none of them",
+    ]);
+  });
+});

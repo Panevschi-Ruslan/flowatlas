@@ -29,7 +29,7 @@ import {
 } from './stand-ins.js';
 import { isTestDirectory, isTestName } from './test-files.js';
 import { findTsconfig } from './tsconfig-file.js';
-import { mayClimbTo, upwardCeilingOf } from './upward-walk.js';
+import { mayClimbTo, pathsOf, upwardCeilingOf } from './upward-walk.js';
 import { boundedInstalls } from './bounded-installs.js';
 import {
   readingCeilingOf,
@@ -721,6 +721,31 @@ const sourceTargets = (targets: readonly string[], subpath: string): string[] =>
   const fallbacks = subpath === '.' ? ['./src/index', './index'] : [`./src/${subpath.slice(2)}`, subpath];
   return [...new Set([...targets, ...rebuilt, ...fallbacks])];
 };
+
+/**
+ * The paths a package of the workspace, at `dir`, is entered through for one
+ * of its subpaths (`.` for the package itself), absolute, the likeliest
+ * first (P356): what its manifest names - its `exports` map, else its
+ * `module` and `main` - and then the source each is built from, as
+ * {@link sourceTargets} has it, the way a bare import of a workspace member
+ * is resolved where nothing is installed. Only paths inside the package and
+ * under no `node_modules`; a declaration file (`.d.ts`) names no code and is
+ * left out. Whether each is a file is the caller's to ask, with the
+ * extensions its runtime tries.
+ */
+export const workspaceMemberEntries = (dir: string, subpath: string): string[] => {
+  const paths = pathsOf(dir);
+  const manifest = readPackageJson(dir) ?? {};
+  const targets = manifestTargets(manifest, subpath).filter((target) => !/\.d\.[cm]?ts$/.test(target));
+  return sourceTargets(targets, subpath).flatMap((target) => {
+    const path = paths.resolve(dir, target);
+    const segments = paths.relative(dir, path).split(/[\\/]/);
+    return segments[0] === '..' || segments.includes('node_modules') ? [] : [path];
+  });
+};
+
+/** A bare specifier split into the package it names and its subpath inside it (`.` for the package itself), or nothing for a relative or absolute path (P356). */
+export const packageSpecifierParts = (specifier: string): { name: string; subpath: string } | undefined => splitSpecifier(specifier);
 
 /** The compiler options a root is read with, for asking what resolves before anything is mounted. */
 const compilerOptionsAt = (configPath: string | undefined): ts.CompilerOptions => {
