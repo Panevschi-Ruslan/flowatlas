@@ -1985,6 +1985,29 @@ export const returnedBy = (fn: TsNode): TsNode[] | undefined => {
 };
 
 /**
+ * Whether a value is a rest that surely lacks a member (P353): `rest` of
+ * `({ client, ...rest })` is the props less `client`, so `rest.client`, a
+ * `client` taken out of it and what `<Feed {...rest} />` hands `client` are
+ * nothing, not what the props hold. A rest is what it is taken from less the
+ * members named beside it; one beside it by a key not read may be any, so
+ * the rest is not said to lack it.
+ */
+export const restLacks = (value: TsNode, member: string): boolean => {
+  const target = unwrap(value);
+  if (!Node.isIdentifier(target)) return false;
+  const declaration = target.getSymbol()?.getDeclarations()[0];
+  if (declaration === undefined || !Node.isBindingElement(declaration) || declaration.getDotDotDotToken() === undefined) return false;
+  const pattern = declaration.getParent();
+  if (!Node.isObjectBindingPattern(pattern)) return false;
+  return pattern.getElements().some((element) => {
+    if (element === declaration) return false;
+    const key = element.getPropertyNameNode() ?? element.getNameNode();
+    if (Node.isIdentifier(key)) return key.getText() === member;
+    return (Node.isStringLiteral(key) || Node.isNoSubstitutionTemplateLiteral(key)) && key.getLiteralText() === member;
+  });
+};
+
+/**
  * Where a destructured name is taken from (P342): the parameter or the
  * variable whose pattern it is written in, and the members and elements down
  * to it - `{ deps: { client } }` is `client` of `deps` of the parameter. A
@@ -2149,23 +2172,49 @@ const tagsWrittenIn = (file: SourceFile): ReadonlySet<string> => {
 const MOST_WRAPPERS = 4;
 
 /**
+ * The function written in place a value is or wraps (P349, P353): the value
+ * itself, or - through up to {@link MOST_WRAPPERS} calls - the first
+ * argument of each call that is such a function or a call wrapping one:
+ * `memo(function Feed(props) {...})`, `memo(forwardRef((props, ref) => ...))`,
+ * and a wrapper taking its options first, `withOptions({ name }, (props) =>
+ * ...)`. A function written after the one found - `memo`'s comparator - is
+ * never it.
+ */
+export const componentWrittenIn = (value: TsNode, depth = 0): TsNode | undefined => {
+  let at = value;
+  while (Node.isParenthesizedExpression(at) || Node.isAsExpression(at) || Node.isSatisfiesExpression(at)) at = at.getExpression();
+  if (Node.isArrowFunction(at) || Node.isFunctionExpression(at)) return at;
+  if (depth >= MOST_WRAPPERS || !Node.isCallExpression(at)) return undefined;
+  for (const argument of at.getArguments()) {
+    const found = componentWrittenIn(argument, depth + 1);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+};
+
+/**
  * The `const` holding a function written in place, directly or through the
- * calls it is the first argument of (P349): `const Feed = (props) => ...`,
+ * calls it is written in (P349, P353): `const Feed = (props) => ...`,
  * `const Feed = memo(function Feed(props) {...})`, `ui.memo(...)`,
- * `memo(forwardRef((props, ref) => ...))` - what a tag names the component
- * by. Nothing where it is held some other way.
+ * `memo(forwardRef((props, ref) => ...))`, `withOptions({ name }, (props) =>
+ * ...)` - what a tag names the component by, where the function is the one
+ * {@link componentWrittenIn} finds in what the `const` holds. Nothing where
+ * it is held some other way.
  */
 export const componentHeldBy = (fn: TsNode): VariableDeclaration | undefined => {
   let at: TsNode = fn;
   for (let depth = 0; depth <= MOST_WRAPPERS; depth += 1) {
     const holder = at.getParent();
     if (holder === undefined) return undefined;
-    if (Node.isVariableDeclaration(holder)) return holder.getInitializer() === at ? holder : undefined;
+    if (Node.isVariableDeclaration(holder)) {
+      const held = holder.getInitializer();
+      return held === at && componentWrittenIn(held) === fn ? holder : undefined;
+    }
     if (Node.isParenthesizedExpression(holder) || Node.isAsExpression(holder) || Node.isSatisfiesExpression(holder)) {
       at = holder;
       continue;
     }
-    if (!Node.isCallExpression(holder) || holder.getArguments()[0] !== at) return undefined;
+    if (!Node.isCallExpression(holder) || !holder.getArguments().some((each) => each === at)) return undefined;
     at = holder;
   }
   return undefined;
@@ -2329,6 +2378,8 @@ const untypedValues = (receiver: TsNode): (TsNode | undefined)[] => {
       out.push(undefined);
       continue;
     }
+    // A member a rest surely lacks, named beside it, is nothing the rest holds (P353).
+    if (part !== undefined && restLacks(value, part)) continue;
     const symbol = value.getSymbol();
     const declaration = (symbol?.isAlias() === true ? symbol.getAliasedSymbol() : symbol)?.getDeclarations()[0];
     if (declaration !== undefined && Node.isFunctionDeclaration(declaration)) {

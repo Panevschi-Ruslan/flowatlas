@@ -1,4 +1,4 @@
-import { forEachCall } from '@flowatlas/core';
+import { forEachCall, type OutsideWrite } from '@flowatlas/core';
 import type { ClassDeclaration, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { BASE_FIELDS, localClient, VERB_CALLS, type InstanceRuns, type RequestClient } from '../clients.js';
@@ -65,6 +65,31 @@ export interface ClassReading {
   writtenOutside?(cls: ClassDeclaration, field: string): { readonly values: readonly TsNode[]; readonly changed: boolean };
   /** Said where the base a field holds is written outside the class and could not be read as one (P349). */
   baseUnread?(cls: ClassDeclaration, field: string, why: string): void;
+  /**
+   * Each write of a field from outside its classes, with the value it is
+   * made on (P353): core's reading, handed in as `writtenOutside` is. Where
+   * it and {@link instancesOn} are handed in, instances given different bases
+   * are each read with their own.
+   */
+  writesOutside?(cls: ClassDeclaration, field: string): readonly OutsideWrite[];
+  /** The instances (`new` of the class) a value a write is made on may hold, or nothing where one it may hold is not read (P353). */
+  instancesOn?(on: TsNode): readonly TsNode[] | undefined;
+}
+
+/**
+ * A base the instances of a class are each given their own of, outside it
+ * (P353): `account.base = '/account'` on one instance, `configure(levels)`
+ * on another. Read per instance, as an installed client's base is read
+ * where each instance is made: see {@link instanceBaseOf}.
+ */
+export interface InstanceBases {
+  /** The class first in the chain: the one the client is read as. */
+  readonly owner: ClassDeclaration;
+  /** The class the field is read in. */
+  readonly cls: ClassDeclaration;
+  readonly field: string;
+  /** The class's own base, where it gives the field one and not only a value that holds nothing yet. */
+  readonly own?: ApiUrl;
 }
 
 /**
@@ -81,7 +106,13 @@ export interface ReachedBase {
 /** What reading a local class made of it. */
 export type LocalClientReading =
   /** The class is a client, and these are the verbs it answers to. */
-  | { readonly kind: 'client'; readonly client: RequestClient; readonly via: 'declared' | 'recognised' }
+  | {
+      readonly kind: 'client';
+      readonly client: RequestClient;
+      readonly via: 'declared' | 'recognised';
+      /** Where its instances are each given a base of their own outside it (P353): the base is each instance's, not the class's. */
+      readonly instanceBases?: InstanceBases;
+    }
   /**
    * The class is spelled like a client and could not be proved to be one.
    *
@@ -185,7 +216,7 @@ const reachesNetwork = (
  * readers take: a field is read through an access to it, and an access is also
  * the evidence that the class does something with what it holds.
  */
-const baseOf = (chain: readonly ClassDeclaration[], reading: ClassReading): ApiUrl | undefined => {
+const baseOf = (chain: readonly ClassDeclaration[], reading: ClassReading): ApiUrl | InstanceBases | undefined => {
   // One walk for all of the names: the class carrying every request of an
   // application is the largest declaration in the repository, and it is walked
   // once per candidate name otherwise.
@@ -201,6 +232,7 @@ const baseOf = (chain: readonly ClassDeclaration[], reading: ClassReading): ApiU
     const at = found.get(name);
     if (at === undefined) continue;
     const address = writtenBase(chain, at.cls, name, reading.address(at.access), reading);
+    if (address !== undefined && 'field' in address) return address;
     if (address !== undefined && isSomewhere(address)) return address;
   }
   return undefined;
@@ -226,6 +258,9 @@ const ownValues = (chain: readonly ClassDeclaration[], field: string): TsNode[] 
     return [...(initializer === undefined ? [] : [initializer]), ...writes];
   });
 
+/** Whether instances given different bases outside a class can be told apart, each read with its own (P353). */
+const splits = (reading: ClassReading): boolean => reading.writesOutside !== undefined && reading.instancesOn !== undefined;
+
 /**
  * The base a field holds, with what is written on the class's instances from
  * outside it (P349): `api.base = 'https://shop.example/api'` after `new
@@ -233,30 +268,61 @@ const ownValues = (chain: readonly ClassDeclaration[], field: string): TsNode[] 
  * nothing. Where the class gives the field nothing of its own but a value
  * that holds nothing yet (`this.base = ''`), the writes outside are its
  * value; otherwise they are values beside the class's own. One base where
- * every value read is that base; none where they disagree or one is not
- * read, which is said.
+ * every value read is that base. Where they disagree, or one is not read,
+ * each instance is read with the writes made on it (P353), see
+ * {@link instanceBaseOf}; where instances cannot be told apart, no base, which is said.
  */
-const writtenBase = (chain: readonly ClassDeclaration[], cls: ClassDeclaration, field: string, own: ApiUrl, reading: ClassReading): ApiUrl | undefined => {
+const writtenBase = (chain: readonly ClassDeclaration[], cls: ClassDeclaration, field: string, own: ApiUrl, reading: ClassReading): ApiUrl | InstanceBases | undefined => {
   const outside = reading.writtenOutside?.(cls, field);
   if (outside === undefined || (outside.values.length === 0 && !outside.changed)) return own;
   const owner = chain[0] ?? cls;
+  const placeholder = ownValues(chain, field).every(holdsNothing);
+  const split = (): InstanceBases => ({ owner, cls, field, ...(placeholder || !isSomewhere(own) ? {} : { own }) });
   if (outside.changed) {
+    if (splits(reading)) return split();
     reading.baseUnread?.(owner, field, `is changed in place outside ${owner.getName() ?? 'the class'}`);
     return undefined;
   }
-  const placeholder = ownValues(chain, field).every(holdsNothing);
   const addresses = [...(placeholder ? [] : [own]), ...outside.values.filter((value) => !holdsNothing(value)).map((value) => reading.address(value))];
   if (addresses.some((address) => !isSomewhere(address))) {
+    if (splits(reading)) return split();
     reading.baseUnread?.(owner, field, `is given a value that could not be read as an address outside ${owner.getName() ?? 'the class'}`);
     return undefined;
   }
   const [first] = addresses;
   if (first === undefined) return own;
   if (addresses.some((address) => address.url !== first.url)) {
+    if (splits(reading)) return split();
     reading.baseUnread?.(owner, field, `is given ${new Set(addresses.map((address) => address.url)).size} different bases, written outside ${owner.getName() ?? 'the class'} on its instances`);
     return undefined;
   }
   return first;
+};
+
+/**
+ * The base one instance of a class holds, where the class's instances are
+ * each given their own outside it (P353): the class's own, beside each write
+ * made on a value that may hold this instance - `account.base = ...` where
+ * `account` is this `new`, `configure(levels)` writing `client.base` where
+ * `levels` is - and each write made on a value whose instances are not read,
+ * which may be this one. One base where all of those agree; nothing where
+ * none gives one; else why not, to be said where the instance is made.
+ */
+export const instanceBaseOf = (bases: InstanceBases, made: TsNode, reading: Pick<ClassReading, 'writesOutside' | 'instancesOn' | 'address'>): { readonly base?: ApiUrl; readonly unread?: string } => {
+  const name = bases.owner.getName() ?? 'the class';
+  const writes = (reading.writesOutside?.(bases.cls, bases.field) ?? []).filter((write) => {
+    const held = reading.instancesOn?.(write.on);
+    return held === undefined || held.includes(made);
+  });
+  if (writes.some((write) => write.changed)) return { unread: `${bases.field} is changed in place outside ${name}, on a value that may hold this instance` };
+  const addresses = [...(bases.own === undefined ? [] : [bases.own]), ...writes.flatMap((write) => write.values).filter((value) => !holdsNothing(value)).map((value) => reading.address(value))];
+  if (addresses.some((address) => !isSomewhere(address))) return { unread: `${bases.field} is given a value that could not be read as an address outside ${name}, on a value that may hold this instance` };
+  const [first] = addresses;
+  if (first === undefined) return {};
+  if (addresses.some((address) => address.url !== first.url)) {
+    return { unread: `${bases.field} is given ${new Set(addresses.map((address) => address.url)).size} different bases outside ${name}, on values that may hold this instance` };
+  }
+  return { base: first };
 };
 
 /**
@@ -282,14 +348,20 @@ const runsKey = (runs: InstanceRuns | undefined): string => {
   return '';
 };
 
-/** The client a class is read as, with the base it holds or the one the instance it writes through is made with. */
-const clientOfClass = (typeName: string, verbs: readonly string[], chain: readonly ClassDeclaration[], reading: ClassReading): RequestClient => {
+/**
+ * The client a class is read as, with the base it holds or the one the
+ * instance it writes through is made with; and where its instances are each
+ * given their own outside it, that (P353), each instance's base read where
+ * a request is made through it.
+ */
+const clientOfClass = (typeName: string, verbs: readonly string[], chain: readonly ClassDeclaration[], reading: ClassReading): { client: RequestClient; instanceBases?: InstanceBases } => {
   const own = baseOf(chain, reading);
   const reached = reachedBaseOf(chain, reading);
-  if (own === undefined) return localClient(typeName, verbs, reached?.base, reached?.runs);
+  if (own !== undefined && 'field' in own) return { client: localClient(typeName, verbs, reached?.base, reached?.runs), instanceBases: own };
+  if (own === undefined) return { client: localClient(typeName, verbs, reached?.base, reached?.runs) };
   // A base of the class's own goes into the address the instance sees, which
   // the instance's rewrite is then put to at each call (P293).
-  return localClient(typeName, verbs, own, reached?.runs === undefined ? undefined : { ...reached.runs, beneath: { base: reached.base } });
+  return { client: localClient(typeName, verbs, own, reached?.runs === undefined ? undefined : { ...reached.runs, beneath: { base: reached.base } }) };
 };
 
 /** Every class in an extends chain, the one written first. */
@@ -347,11 +419,7 @@ export const localClientOf = (
     // the configuration a line that changed nothing; every verb is the honest
     // reading of "this class is the client".
     const answered = verbs.size > 0 ? [...verbs.keys()] : Object.keys(VERB_CALLS);
-    return {
-      kind: 'client',
-      client: clientOfClass(typeName, answered, chain, reading),
-      via: 'declared',
-    };
+    return { kind: 'client', ...clientOfClass(typeName, answered, chain, reading), via: 'declared' };
   }
 
   if (verbs.size === 0) return undefined;
@@ -365,11 +433,7 @@ export const localClientOf = (
     .filter(([name, body]) => reachesNetwork(body, members, reading, new Set([name]), 0))
     .map(([name]) => name);
   if (proved.length > 0) {
-    return {
-      kind: 'client',
-      client: clientOfClass(typeName, proved, chain, reading),
-      via: 'recognised',
-    };
+    return { kind: 'client', ...clientOfClass(typeName, proved, chain, reading), via: 'recognised' };
   }
 
   // A class declaring the verbs of a client, whose verbs this reader could not

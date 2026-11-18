@@ -2,7 +2,7 @@ import type { ClassDeclaration, Expression, MethodDeclaration, ObjectLiteralExpr
 import { Node, SyntaxKind } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
 import type { ModuleInfo, ModuleKind, ProviderRegistration } from '../modules-index.js';
-import { getDecorator, importOf, lineOf, whyNoClass } from '@flowatlas/core';
+import { calledFunction, getDecorator, importOf, lineOf, whyNoClass } from '@flowatlas/core';
 import { NEST_COMMON } from '../index-classes.js';
 import { isDynamicModuleExpression, resolveClassExpression, unwrapClassExpression } from '../util/resolve-class.js';
 import { tokenOf, tokensProvidedBy } from './module-tokens.js';
@@ -132,13 +132,17 @@ const literalOf = (node: Node, depth = 0): Literal | undefined => {
   return undefined;
 };
 
-/** The expression a function of this repository answers with, where it is one: its only `return`, or its body. */
+/**
+ * The expression a function of this repository answers with, where it is
+ * one: its only `return`, or its body. The function a name declares or
+ * holds, or one reached through an object (P353): `Providers.all()`, a
+ * static method, or `registry.make()`, an object's method or a function it
+ * holds.
+ */
 const answerOf = (callee: Node): Node | undefined => {
-  const symbol = callee.getSymbol();
-  const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
-  if (declaration === undefined || declaration.getSourceFile().isInNodeModules() || declaration.getSourceFile().isDeclarationFile()) return undefined;
-  const fn = Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : declaration;
-  if (fn === undefined || !(Node.isFunctionDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn))) return undefined;
+  const fn = calledFunction(callee);
+  if (fn === undefined || fn.getSourceFile().isInNodeModules() || fn.getSourceFile().isDeclarationFile()) return undefined;
+  if (!(Node.isFunctionDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) || Node.isMethodDeclaration(fn))) return undefined;
   const body = fn.getBody();
   if (body === undefined) return undefined;
   if (!Node.isBlock(body)) return body;
@@ -252,7 +256,7 @@ const listElements = (expr: Node, depth = 0): { items: Expression[]; unread: Nod
   // `providers: [...moreProviders()]`: the list a function of this repository answers with (P349).
   if (depth < FOLLOW_LIMIT && Node.isCallExpression(value) && !isDynamicModuleExpression(value)) {
     const callee = value.getExpression();
-    const answer = Node.isIdentifier(callee) ? answerOf(callee) : undefined;
+    const answer = Node.isIdentifier(callee) || Node.isPropertyAccessExpression(callee) ? answerOf(callee) : undefined;
     const answered = answer === undefined ? undefined : listElements(answer, depth + 1);
     // A part of what it answers not read is said at the call, where the list names it.
     if (answered !== undefined) return answered.unread.length === 0 ? answered : { items: answered.items, unread: [value] };

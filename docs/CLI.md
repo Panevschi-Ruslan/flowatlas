@@ -6160,9 +6160,14 @@ answers to all seven. Requests carry `client` set to the class name and
 happened. The base such a class keeps in a field (`this.base`) is read with
 the writes on its instances outside the class too - `client.base = …`,
 `Object.assign(client, …)`, over a value typed or typed as nothing - a field
-the class only sets to nothing taking theirs; instances given different
-bases, or one not read, are an `api-client-base-unread` row at the class
-(P349, `fixtures/wrapped-spread-providers-tops`).
+the class only sets to nothing taking theirs (P349,
+`fixtures/wrapped-spread-providers-tops`). Instances given different bases
+are read per instance, as an installed client's are (P353): each request on
+an instance is under the base the writes made on it give it, a receiver
+handed several instances is each caller's that hands one, and an instance
+whose base is not read, or a receiver whose instance could not be followed
+to where it is made, is an `api-client-base-unread` row
+(`fixtures/rest-props-inplace-components-instance-bases`).
 
 Where a verb is called on a class of yours that could not be read as a client
 *and* the call writes an address — a path with a leading slash, or a URL — one
@@ -6293,10 +6298,12 @@ Next.js client code, Vue, Nuxt and Svelte alike:
   function rendering each element under the base of the client it hands. A
   component a module keeps unexported under a capitalised name, wrapped in
   `memo(...)`, `React.memo(...)`, `forwardRef(...)` or
-  `memo(forwardRef(...))`, is a component too. A prop handed through a
-  spread is followed where what is spread is read - a rest of the props
-  (`{ title, ...rest }`), the props whole (an attribute written after the
-  spread winning), an object written in place - and one not read is an
+  `memo(forwardRef(...))`, or written in place after a wrapper's options
+  (`withOptions({ name }, (props) => ...)`, P353), is a component too. A
+  prop handed through a spread is followed where what is spread is read - a
+  rest of the props (`{ title, ...rest }`, less the members named beside it,
+  P353), the props whole (an attribute written after the spread winning), an
+  object written in place - and one not read is an
   `api-client-base-unread` row at the request (`meta.spread`). A class a
   NestJS module lists as a provider (`providers: [Poller]`, `{ provide:
   Reader, useClass: StockReader }`) is the instance the injector makes, each
@@ -6305,8 +6312,10 @@ Next.js client code, Vue, Nuxt and Svelte alike:
   class listed or `useClass`), a parameter handed on to `super(...)`
   followed up to the field it fills; the Nest reader draws a call on a
   `useValue: new X()` token to `X` and reads a provider list a function
-  answers with (`fixtures/framework-made-receiver-parts`,
-  `fixtures/wrapped-spread-providers-tops`).
+  answers with, one reached through an object (`Providers.all()`,
+  `registry.make()`) included (P353) (`fixtures/framework-made-receiver-parts`,
+  `fixtures/wrapped-spread-providers-tops`,
+  `fixtures/rest-props-inplace-components-instance-bases`).
 
 An Angular interceptor that puts a base in front of every request,
 `req.clone({ url: environment.apiUrl + req.url })` or the same as a template, is

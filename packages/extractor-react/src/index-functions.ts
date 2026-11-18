@@ -1,5 +1,5 @@
 import { builtExportFunctions } from '@flowatlas/adapters-entry';
-import { makeSymbolId, moduleFunctions, normalizeFilePath, type NamedFunction, startLineOf } from '@flowatlas/core';
+import { componentWrittenIn, makeSymbolId, moduleFunctions, normalizeFilePath, type NamedFunction, startLineOf } from '@flowatlas/core';
 import type { Node as TsNode, Project, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { scriptMembers, scriptTop, type ScriptMember } from './script-members.js';
@@ -419,28 +419,6 @@ const defaultExportFunction = (sourceFile: SourceFile, file: string): NamedFunct
  * neither can claim a function the other does not have (R74).
  */
 
-/** How many calls deep a component written in place is looked for inside the calls wrapping it (P349). */
-const MOST_WRAPPERS = 4;
-
-/**
- * The function written in place a value wraps (P349): the first argument of
- * each call it is, down to a function - `memo(function Feed(props) {...})`,
- * `React.memo((props) => ...)`, `memo(forwardRef((props, ref) => ...))`,
- * `observer(...)`, a higher-order component of the repository's own.
- */
-const wrappedFunction = (value: TsNode): TsNode | undefined => {
-  let at: TsNode = value;
-  for (let depth = 0; depth <= MOST_WRAPPERS; depth += 1) {
-    while (Node.isParenthesizedExpression(at) || Node.isAsExpression(at) || Node.isSatisfiesExpression(at)) at = at.getExpression();
-    if (Node.isArrowFunction(at) || Node.isFunctionExpression(at)) return depth === 0 ? undefined : at;
-    if (!Node.isCallExpression(at)) return undefined;
-    const [first] = at.getArguments();
-    if (first === undefined) return undefined;
-    at = first;
-  }
-  return undefined;
-};
-
 /**
  * The components a module keeps under a name it does not export, wrapped in
  * a call (P349): `const Feed = memo(function Feed(props) {...})`. An export
@@ -457,7 +435,8 @@ const wrappedComponents = (sourceFile: SourceFile, known: ReadonlySet<TsNode>): 
     const name = declaration.getName();
     const value = declaration.getInitializer();
     if (!COMPONENT_NAME.test(name) || value === undefined || !Node.isCallExpression(value)) continue;
-    const inner = wrappedFunction(value);
+    // The function written in place it wraps, among the arguments of each call, the options a wrapper takes first passed over (P349, P353).
+    const inner = componentWrittenIn(value);
     if (inner === undefined || !(Node.isArrowFunction(inner) || Node.isFunctionExpression(inner))) continue;
     const fn: NamedFunction = { name, declaration, body: value, line: startLineOf(declaration) };
     if (returnsMarkup({ ...fn, body: inner.getBody() })) found.push(fn);

@@ -189,3 +189,33 @@ describe('components wrapped in calls, props handed through a spread, providers 
     expect(placed(graph)).toEqual(['Catalog.onModuleInit localhost:4600 /catalog', 'Made.onModuleInit localhost:4600 /made', 'Stock.onModuleInit localhost:4700 /stock']);
   });
 });
+
+describe('components a wrapper takes after its options, and a rest of props (P353)', () => {
+  it("reads a component written in place after a wrapper's options, and a rest as the props less the members named beside it", () => {
+    const graph = read(
+      {
+        '/src/pages.jsx': [
+          ...CLIENTS,
+          "import { memo, useEffect } from 'react';",
+          'function withOptions(options, Component) { return Component; }',
+          "const Board = withOptions({ name: 'board' }, function Board({ client }) { useEffect(() => { client.get('/board'); }, []); return <i />; });",
+          "const Chart = withOptions({ name: 'chart' }, memo((props) => { useEffect(() => { props.client.get('/chart'); }, []); return <i />; }));",
+          "function Badge({ client }) { useEffect(() => { if (client) client.get('/badge'); }, []); return <i />; }",
+          // `rest` lacks `client`, named beside it: `Badge` is handed none by this element.
+          'function Frame({ client, title, ...rest }) { return <section><h1>{title}</h1><Badge {...rest} /></section>; }',
+          'export function CatalogPage() { return <div><Board client={catalogApi} /><Chart client={catalogApi} /><Frame title="a" client={catalogApi} /></div>; }',
+          'export function StockPage() { return <div><Board client={stockApi} /><Chart client={stockApi} /><Badge client={stockApi} /></div>; }',
+        ].join('\n'),
+      },
+      { react: '^19.0.0', axios: '^1.0.0' },
+    );
+    expect(placed(graph)).toEqual([
+      'Badge localhost:4700 /badge',
+      'CatalogPage localhost:4600 /board',
+      'CatalogPage localhost:4600 /chart',
+      'StockPage localhost:4700 /board',
+      'StockPage localhost:4700 /chart',
+    ]);
+    expect(graph.unresolved.filter((row) => row.reason === 'api-client-base-unread')).toEqual([]);
+  });
+});

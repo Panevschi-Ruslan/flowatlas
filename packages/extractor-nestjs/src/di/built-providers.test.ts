@@ -62,4 +62,47 @@ export class ReadersModule {}
     const unread = graph.unresolved.filter((row) => row.reason === 'module-providers-unread').map((row) => row.symbol);
     expect(unread).toEqual(['ReadersModule providers loaded()']);
   });
+
+  it('reads a list a function reached through an object answers with: a static method, an object method and a function it holds (P353)', async () => {
+    const graph = await read({
+      'src/readers.module.ts': `
+import { Inject, Injectable, Module } from '@nestjs/common';
+export class Reader { read(path: string) { return path; } }
+@Injectable()
+export class Levels {
+  constructor(@Inject('LEVELS') private readonly reader) {}
+  run() { return this.reader.read('/levels'); }
+}
+@Injectable()
+export class Mirror {
+  constructor(@Inject('MIRROR') private readonly reader) {}
+  run() { return this.reader.read('/mirror'); }
+}
+@Injectable()
+export class Summary {
+  constructor(@Inject('SUMMARY') private readonly reader) {}
+  run() { return this.reader.read('/summary'); }
+}
+export class Providers {
+  static all() {
+    return [Levels, { provide: 'LEVELS', useValue: new Reader() }];
+  }
+}
+const registry = {
+  mirror: () => [Mirror, { provide: 'MIRROR', useValue: new Reader() }],
+  summary() {
+    return [Summary, { provide: 'SUMMARY', useValue: new Reader() }];
+  },
+  later: () => Array.from(new Set<unknown>()),
+};
+@Module({ providers: [...Providers.all(), ...registry.mirror(), ...registry.summary(), ...registry.later()] })
+export class ReadersModule {}
+`,
+    });
+    expect(calls(graph)).toEqual(['Levels.run -> Reader.read', 'Mirror.run -> Reader.read', 'Summary.run -> Reader.read']);
+    expect(graph.unresolved.filter((row) => row.reason === 'call-through-token')).toEqual([]);
+    // A list the function builds at run time stays said, at the call.
+    const unread = graph.unresolved.filter((row) => row.reason === 'module-providers-unread').map((row) => row.symbol);
+    expect(unread).toEqual(['ReadersModule providers registry.later()']);
+  });
 });

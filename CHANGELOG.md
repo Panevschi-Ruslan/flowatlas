@@ -451,6 +451,23 @@ only one of them moved.
   constructor (`Pulse.constructor`) it runs. A linter plugin's `configs`
   built by a function it declares, and a configuration written through
   `module.exports.configs.x` or `exports.configs.x`, are read.
+- **A local client's base per instance, a rest of props less its siblings,
+  components after a wrapper's options, providers built through an object
+  (P353).** A client class of the repository's own whose instances are given
+  different bases outside it is read per instance, as an installed client's
+  are: each request on an instance is under the base the writes made on it
+  give it (`client.base = …`, `configure(client)`, `Object.assign(client, …)`),
+  a receiver handed several instances is each caller's that hands one, and a
+  receiver whose instance is not read, or an instance whose base is not, is
+  an `api-client-base-unread` row. A rest of a component's props
+  (`({ client, ...rest })`) is the props less the members named beside it,
+  so `rest.client`, a `client` taken out of it and what `<Feed {...rest} />`
+  hands `client` are nothing. A component written in place after a
+  wrapper's options (`withOptions({ name }, (props) => …)`) is a component;
+  a function written after it, as `memo`'s comparator, is not. A provider
+  list a function reached through an object builds - `Providers.all()`, a
+  static method, an object's method or a function it holds - is read by
+  core's search for a method's calls and by the Nest reader.
 - **A pair's key, an entry handed beside its store, a receiver of several
   instances, and an instance made where it is read (P338).** The key of a
   `[key, entry]` pair is bound to the key its entry is kept under - a

@@ -23,6 +23,7 @@ import {
   describedRequestsAt,
   evaluateExpression,
   fieldWrittenOutside,
+  fieldWritesOutside,
   PLATFORM_FETCH,
   PLATFORM_HEADERS,
   PLATFORM_QUERY,
@@ -47,13 +48,14 @@ import {
   REQUEST_CLIENTS,
   VERB_CALLS,
   type CallShape,
+  type ClientFactory,
   type RequestClient,
 } from '../clients.js';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { clientInstances, isBarePageGlobal, undeclaredPageGlobal, type ClientInstance } from '../util/client-instance.js';
 import { classMethods, enclosingIndexed, requestsOf, type ReadRequest, type RequestSite } from '../util/forward.js';
-import { localClientOf, type LocalClientReading } from '../util/local-client.js';
+import { instanceBaseOf, localClientOf, type ClassReading, type LocalClientReading } from '../util/local-client.js';
 import { linterGlobals, pageLoadedPackages } from '../util/page-globals.js';
 import { basedBy, rewriteFor, unreadOpening } from '../util/request-rewrite.js';
 import { placedOut, receiverValues, valuesAlong } from '../util/receiver-values.js';
@@ -532,6 +534,13 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
   };
 
   const record = (found: FoundCall, request: ReadRequest, handedIn?: string | null): void => {
+    // An instance of a class of the repository's own carries its base on its client, and runs what the class runs (P353).
+    if (found.instance !== undefined && localInstances.has(found.instance)) {
+      reportUnreadBase(found.instance);
+      const { instance: _instance, ...rest } = found;
+      record(rest, request, handedIn);
+      return;
+    }
     const { call: network, client, shape } = found;
     const { site } = request;
     if (found.instance !== undefined) reportUnreadBase(found.instance);
@@ -1034,7 +1043,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
   /** The client instances a value may hold, each said to be handed at `at`, or where it is made. */
   const instancesHeld = (value: TsNode, at?: TsNode): NonNullable<FoundCall['held']> =>
     instancesBy(value).flatMap((each) => {
-      const instance = holdsNothing(each) ? undefined : instances.of(each);
+      const instance = holdsNothing(each) ? undefined : (instances.of(each) ?? localInstanceOf(each));
       return instance === undefined ? [] : [{ instance, at: at ?? each }];
     });
 
@@ -1110,12 +1119,23 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    * and the walk over its members is the expensive part of this pass.
    */
   const readings = new Map<ClassDeclaration, LocalClientReading>();
+  /** The instances a value may hold: each `new` it is given (P353). */
+  const madeBy = receiverValues((value) => Node.isNewExpression(value));
+  const classReading: Pick<ClassReading, 'writesOutside' | 'instancesOn' | 'address'> = {
+    address: (node) => analyzeClientBase(node, { sharedPackages: ctx.config.sharedPackages }),
+    // Each write of a base outside the class, and the instances the value it is made on may hold (P353).
+    writesOutside: (owner, field) => fieldWritesOutside(owner, field),
+    instancesOn: (on) => {
+      const made = madeBy(on);
+      return made.length > 0 && made.every((each) => Node.isNewExpression(each)) ? made : undefined;
+    },
+  };
   const readingOf = (cls: ClassDeclaration): LocalClientReading => {
     if (readings.has(cls)) return readings.get(cls);
     const reading = localClientOf(cls, {
+      ...classReading,
       reaches: (body) => describedCallsIn(body).length > 0,
       declared: ctx.config.adapters.frontend.localClientClasses,
-      address: (node) => analyzeClientBase(node, { sharedPackages: ctx.config.sharedPackages }),
       // A base written on the class's instances from outside it (P349).
       writtenOutside: (owner, field) => fieldWrittenOutside(owner, field),
       baseUnread: (owner, field, why) => {
@@ -1145,6 +1165,73 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     });
     readings.set(cls, reading);
     return reading;
+  };
+
+  /** The instances of classes of the repository's own whose instances are each given their own base (P353). */
+  const localInstances = new WeakSet<ClientInstance>();
+  const localMade = new Map<TsNode, ClientInstance | undefined>();
+  const localFactories = new Map<ClassDeclaration, ClientFactory>();
+
+  /**
+   * The instance a `new` of a class of the repository's own makes, where the
+   * class's instances are each given their own base outside it (P353): read
+   * as an installed client's instance is, with the base the writes made on it
+   * give it, so a request through it is under that base and one through
+   * instances given different bases is each caller's that hands one. Only a
+   * class already read is asked, so reading a class never asks it again.
+   */
+  const localInstanceOf = (value: TsNode): ClientInstance | undefined => {
+    if (!Node.isNewExpression(value)) return undefined;
+    if (localMade.has(value)) return localMade.get(value);
+    const cls = localClassOf(value);
+    const reading = cls === undefined ? undefined : readings.get(cls);
+    if (cls === undefined || reading?.kind !== 'client' || reading.instanceBases === undefined) return undefined;
+    let factory = localFactories.get(cls);
+    if (factory === undefined) {
+      factory = { client: reading.client, modules: [], methods: [], baseKey: reading.instanceBases.field, verbs: reading.client.receiver?.verbs ?? {} };
+      localFactories.set(cls, factory);
+    }
+    const { base, unread } = instanceBaseOf(reading.instanceBases, value, classReading);
+    const instance: ClientInstance = { factory, ...(base === undefined ? {} : { base }), ...(unread === undefined ? {} : { unread: { at: value, why: unread } }) };
+    localInstances.add(instance);
+    localMade.set(value, instance);
+    return instance;
+  };
+
+  /**
+   * A request through a class whose instances are each given their own base
+   * outside it (P353): under the base of the instance the receiver holds,
+   * where every value it may hold is one and they agree; one per caller
+   * handing each where they do not, as an installed client's instances are
+   * (P312); the path alone where a value it may hold is not read, which is
+   * said.
+   */
+  const localInstanceCall = (found: FoundCall, receiver: TsNode, name: string): FoundCall => {
+    const handed: { instance: ClientInstance; at: TsNode }[] = [];
+    let unknown = false;
+    for (const value of madeBy(receiver)) {
+      if (holdsNothing(value)) continue;
+      const instance = localInstanceOf(value);
+      if (instance === undefined) unknown = true;
+      else handed.push({ instance, at: value });
+    }
+    if (unknown || handed.length === 0) {
+      const at = siteOf(found.call);
+      ctx.report({
+        file: ctx.fileOf(found.call),
+        line: at.line,
+        reason: 'api-client-base-unread',
+        hint: `${name}'s instances are each given their own base outside the class, and which instance this receiver holds could not be followed to where it is made, so the request is recorded under the path it writes. Hand the receiver an instance made where this reader can follow it, or give the class one base.`,
+        symbol: found.call.getText().slice(0, 80),
+      });
+      return found;
+    }
+    const agreed = agreedInstance(handed.map((each) => each.instance));
+    if (agreed !== undefined) {
+      reportUnreadBase(agreed);
+      return { ...found, client: clientOf(agreed) };
+    }
+    return { ...found, held: handed };
   };
 
   /** A class read as a client of the repository's own: its methods are no caller a request is followed out through (P293). */
@@ -1239,9 +1326,10 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       return undefined;
     }
     const shape = Object.hasOwn(reading.client.receiver?.verbs ?? {}, verb) ? reading.client.receiver?.verbs[verb] : undefined;
-    return shape === undefined
-      ? undefined
-      : { call: node, client: reading.client, shape, local: reading.via };
+    if (shape === undefined) return undefined;
+    const found: FoundCall = { call: node, client: reading.client, shape, local: reading.via };
+    // Instances each given their own base outside the class: the instance's (P353).
+    return reading.instanceBases === undefined ? found : localInstanceCall(found, callee, cls.getName() ?? 'The class');
   };
 
   /**

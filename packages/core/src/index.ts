@@ -428,6 +428,7 @@ export {
   EVERY_KEY,
   constructedNames,
   fieldWrittenOutside,
+  fieldWritesOutside,
   listOfElement,
   locatedExpressions,
   locatedSlots,
@@ -444,6 +445,7 @@ export type {
   LocatorContext,
   LocatorSite,
   NameLocator,
+  OutsideWrite,
   ValueOrigin,
 } from './adapters/locator.js';
 export type { FrontendAdapter, FrontendExtractOptions } from './adapters/frontend.js';
@@ -672,7 +674,7 @@ export type { DecoratorMatch } from './decorators.js';
 export { resolveConstructorInjection, resolveFieldInjection } from './di/constructor.js';
 export { resolveClassOfExpression, resolveClassOfType } from './di/class-ref.js';
 export { providerIndex, sameToken } from './di/providers.js';
-export { classOfListing, injectedInto, injectorMakes, providerListingsOf } from './di/injected.js';
+export { calledFunction, classOfListing, injectedInto, injectorMakes, providerListingsOf } from './di/injected.js';
 export type { ProviderIndex, WrittenProvider } from './di/providers.js';
 export type { ClassRef } from './di/class-ref.js';
 export {
@@ -749,7 +751,9 @@ export {
   returnedExpression,
   returnedBy,
   destructuredFrom,
+  restLacks,
   componentHeldBy,
+  componentWrittenIn,
   elementsOfTag,
   untypedHoldsInstanceOf,
   rootSettingAddress,

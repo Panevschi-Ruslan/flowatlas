@@ -78,17 +78,45 @@ const entriesOf = (written: TsNode, depth: number, seen: Set<TsNode>): TsNode[] 
     return initializer === undefined ? [] : entriesOf(initializer, depth + 1, seen);
   }
   if (Node.isCallExpression(target)) {
-    const callee = unwrap(target.getExpression());
-    let fn: TsNode | undefined = Node.isArrowFunction(callee) || Node.isFunctionExpression(callee) ? callee : undefined;
-    if (fn === undefined && (Node.isIdentifier(callee) || Node.isPropertyAccessExpression(callee))) {
-      const declaration = declarationOf(Node.isPropertyAccessExpression(callee) ? callee.getNameNode() : callee);
-      const initializer = declaration !== undefined && Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : undefined;
-      fn = initializer === undefined ? declaration : unwrap(initializer);
-    }
-    const returned = fn === undefined || fn.getSourceFile().isDeclarationFile() ? undefined : returnedBy(fn);
+    const fn = calledFunction(target.getExpression());
+    const returned = fn === undefined || fn.getSourceFile().isDeclarationFile() || fn.getSourceFile().isInNodeModules() ? undefined : returnedBy(fn);
     return (returned ?? []).flatMap((each) => entriesOf(each, depth + 1, seen));
   }
   return [];
+};
+
+/**
+ * The function a callee names, written here (P349, P353): one written in
+ * place, one a name declares or holds, and one reached through an object -
+ * `Providers.all()`, a static method or a field holding a function, and
+ * `registry.make()`, an object's method or a property, a shorthand naming a
+ * function among them.
+ */
+export const calledFunction = (callee: TsNode): TsNode | undefined => {
+  let at = unwrap(callee);
+  for (let depth = 0; depth < MOST_LIST_STEPS; depth += 1) {
+    if (Node.isArrowFunction(at) || Node.isFunctionExpression(at) || Node.isFunctionDeclaration(at) || Node.isMethodDeclaration(at)) return at;
+    let declaration: TsNode | undefined;
+    if (Node.isIdentifier(at)) declaration = declarationOf(at);
+    else if (Node.isPropertyAccessExpression(at)) declaration = declarationOf(at.getNameNode());
+    else return undefined;
+    if (declaration === undefined) return undefined;
+    if (Node.isShorthandPropertyAssignment(declaration)) {
+      // `{ all }`: the function the name it is written with stands for.
+      const symbol = declaration.getValueSymbol();
+      declaration = (symbol?.isAlias() === true ? symbol.getAliasedSymbol() : symbol)?.getDeclarations()[0];
+      if (declaration === undefined) return undefined;
+    }
+    if (Node.isVariableDeclaration(declaration) || Node.isPropertyAssignment(declaration) || Node.isPropertyDeclaration(declaration)) {
+      const held = declaration.getInitializer();
+      if (held === undefined) return undefined;
+      at = unwrap(held);
+      continue;
+    }
+    if (Node.isFunctionDeclaration(declaration) || Node.isMethodDeclaration(declaration)) return declaration;
+    return undefined;
+  }
+  return undefined;
 };
 
 /** The providers each file lists, found once per file. */

@@ -88,9 +88,12 @@ a default are left, and a port only defaults place joins nobody.
 bases are handed to one receiver outside any function, or where a framework
 calls the method making the request on an instance no code read hands it; at
 a request whose receiver is a prop some element hands through a spread not
-read (`meta.spread`: the spread's file and line); and at a class of the
+read (`meta.spread`: the spread's file and line); at a class of the
 repository's own whose base field is given different bases, or one not read,
-on its instances outside the class.
+on its instances outside the class, where its instances cannot be told
+apart; and, where they can (P353), at the line making an instance whose own
+base is not read, and at a request whose receiver holds an instance of such a
+class that could not be followed to where it is made.
 `route-registry-unread` is also said for a Strapi plugin a key of
 `config/plugins` enables that is installed nowhere in the repository - one
 row under the key, naming the dependency not installed it resolves to or is

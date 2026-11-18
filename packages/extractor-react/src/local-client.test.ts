@@ -239,7 +239,7 @@ describe('the base a client of one own holds', () => {
         "function setup(m) { m.base = 'https://stock.example/v1'; }",
         'export const stock = new Stock();',
         'setup(stock);',
-        // Two instances given two bases: no one base, said.
+        // Two instances given two bases: each its own (P353).
         'export class Split { constructor() { this.base = null; } get(path) { return fetch(this.base + path); } }',
         "export const one = new Split(); one.base = 'https://one.example';",
         "export const two = new Split(); Object.assign(two, { base: 'https://two.example' });",
@@ -263,15 +263,53 @@ describe('the base a client of one own holds', () => {
       `,
     });
     expect(requests(graph).map((node) => node.meta?.['url']).sort()).toEqual([
-      '/split',
       'https://kept.example/kept',
+      'https://one.example/split',
       'https://shop.example/api/orders',
       'https://stock.example/v1/levels',
       'https://typed.example/v2/items',
     ]);
+    expect(graph.unresolved.filter((row) => row.reason === 'api-client-base-unread')).toEqual([]);
+  });
+
+  it("is each instance's own where its instances are given different bases outside the class (P353)", () => {
+    const graph = read({
+      '/src/api.js': [
+        "export class Api { constructor() { this.base = ''; } get(path) { return fetch(this.base + path); } }",
+        "export const shop = new Api(); shop.base = 'https://shop.example/api';",
+        "function configure(client) { client.base = 'https://stock.example/v1'; }",
+        'export const stock = new Api(); configure(stock);',
+        "export const orders = new Api(); Object.assign(orders, { base: 'https://orders.example' });",
+        // A base not read on one instance: said where it is made, the others kept.
+        'export const odd = new Api(); odd.base = window.location.origin + readBase();',
+        // Handed by two callers: each caller's request under the base of what it hands.
+        "export function loadSummary(client) { return client.get('/summary'); }",
+        // Handed nothing read: which instance is not told, said at the request.
+        "/** @param {Api} client */ export function loadAny(client) { return client.get('/any'); }",
+      ].join('\n'),
+      '/src/Panel.tsx': `
+        import { shop, stock, orders, odd, loadSummary } from './api';
+        export const Panel = () => {
+          const load = () => { shop.get('/orders'); stock.get('/levels'); orders.get('/recent'); odd.get('/odd'); };
+          return <button onClick={load} />;
+        };
+        export const ShopSummary = () => { loadSummary(shop); return null; };
+        export const StockSummary = () => { loadSummary(stock); return null; };
+      `,
+    });
+    const placed = requests(graph).map((node) => `${node.meta?.['url']}`).sort();
+    expect(placed).toEqual([
+      '/any',
+      '/odd',
+      'https://orders.example/recent',
+      'https://shop.example/api/orders',
+      'https://shop.example/api/summary',
+      'https://stock.example/v1/levels',
+      'https://stock.example/v1/summary',
+    ]);
     const rows = graph.unresolved.filter((row) => row.reason === 'api-client-base-unread');
-    expect(rows.map((row) => [row.file, row.symbol])).toEqual([['src/api.js', 'Split.base']]);
-    expect(rows[0]?.hint).toContain('2 different bases');
+    expect(rows.map((row) => row.symbol).sort()).toEqual(["client.get('/any')", 'new Api()']);
+    expect(rows.find((row) => row.symbol === 'new Api()')?.hint).toContain('could not be read as an address');
   });
 
   it('is part of every address written through it', () => {

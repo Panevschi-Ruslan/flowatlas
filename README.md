@@ -1557,13 +1557,12 @@ Known gaps in what it can read:
   deliberately not followed, because reading the wrong branch would invent an
   edge.
 - A channel whose name only exists as run-time data on both sides.
-- A class of the repository's own read for a client's base where its
-  instances are given different bases outside it: that is one reading of the
-  class, said in a row, not split per instance as an installed client's
-  instances are. A rest of a component's props stands for the whole props
-  for a member named beside it; a component written in place in a call it is
-  not the first argument of is not read as one; and a provider list built by
-  a function reached through an object (`Providers.all()`) is not read.
+- A class of the repository's own read for a client's base whose instances
+  are given different bases outside it is split per instance only where the
+  value each write is made on can be followed to the `new` it holds; a write
+  on a value that cannot be may be any instance's, and the disagreement it
+  makes is a row. A rest of props beside a member written by a computed key
+  is not said to lack any member.
 - An application the framework's own maker makes is as sure as a typed one
   only where nothing else can change what holds it; held by a property
   anything may write or a parameter some caller may fill, it stays

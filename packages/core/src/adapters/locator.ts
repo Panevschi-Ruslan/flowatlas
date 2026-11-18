@@ -1160,8 +1160,6 @@ const instanceWrites = (name: string, owner: TsNode, initializer: TsNode | undef
   return { values, changed };
 };
 
-/** What each instance field met is given from outside its classes, worked out once: finding it asks for every reference to the field. */
-const OUTSIDE_WRITES = new WeakMap<TsNode, FieldValues>();
 
 /** The `Object.assign(target, ...)` calls of each file met whose target is not `this`, found once per file (P336). */
 const ASSIGNS = new WeakMap<SourceFile, CallExpression[]>();
@@ -1231,46 +1229,65 @@ const instanceOf = (value: TsNode, owner: TsNode): boolean => {
  * read, so each is a value the field may hold beside the rest.
  */
 const outsideWrites = (owner: TsNode, name: string): FieldValues => {
+  const writes = outsideWritesOn(owner, name);
+  return { values: writes.flatMap((each) => each.values), changed: writes.some((each) => each.changed) };
+};
+
+/** One write of an instance field from outside its classes, with the value it is made on (P353). */
+export interface OutsideWrite {
+  /** What the write is made on: `client` of `client.base = ...`, the target of `Object.assign(client, ...)`. */
+  readonly on: TsNode;
+  /** The values it gives the field. */
+  readonly values: readonly TsNode[];
+  /** Whether it changes the field in place, or by a key not read. */
+  readonly changed: boolean;
+}
+
+/** What each instance field met is given from outside its classes, write by write, worked out once: finding it asks for every reference to the field. */
+const OUTSIDE_WRITES = new WeakMap<TsNode, readonly OutsideWrite[]>();
+
+/** Every write of an instance field from outside its classes, each with what it is made on (see {@link outsideWrites}). */
+const outsideWritesOn = (owner: TsNode, name: string): readonly OutsideWrite[] => {
   const field = memberUp(owner, name, false) ?? thisWriteDeclaring(owner, name);
-  if (field === undefined || !(Node.isPropertyDeclaration(field) || Node.isParameterDeclaration(field) || Node.isPropertyAccessExpression(field))) return { values: [], changed: false };
+  if (field === undefined || !(Node.isPropertyDeclaration(field) || Node.isParameterDeclaration(field) || Node.isPropertyAccessExpression(field))) return [];
   const known = OUTSIDE_WRITES.get(field);
   if (known !== undefined) return known;
   // A source read on the way that reads this field again finds nothing more.
-  OUTSIDE_WRITES.set(field, { values: [], changed: false });
+  OUTSIDE_WRITES.set(field, []);
   const holder = Node.isParameterDeclaration(field) ? field.getParent()?.getParent() : Node.isPropertyAccessExpression(field) ? memberAround(field)?.getParent() : field.getParent();
-  const values: TsNode[] = [];
-  let changed = false;
+  const found: OutsideWrite[] = [];
+  const written = (on: TsNode, access: TsNode): void => {
+    const write = writeAt(access);
+    if (write === 'changed') found.push({ on, values: [], changed: true });
+    else if (write !== undefined) found.push({ on, values: [write.value], changed: false });
+  };
   const nameNode = field.getNameNode();
   for (const reference of Node.isIdentifier(nameNode) ? nameNode.findReferencesAsNodes() : []) {
     if (reference === nameNode) continue;
     const access = reference.getParent();
     if (access === undefined) continue;
     const isAccess = (Node.isPropertyAccessExpression(access) && access.getNameNode() === reference) || (Node.isElementAccessExpression(access) && access.getArgumentExpression() === reference);
+    if (!isAccess) continue;
     // A write through `this` is a member's own, read where its class is.
-    if (!isAccess || Node.isThisExpression(peeled((access as PropertyAccessExpression).getExpression()))) continue;
-    const write = writeAt(access);
-    if (write === 'changed') changed = true;
-    else if (write !== undefined) values.push(write.value);
+    const object = (access as PropertyAccessExpression).getExpression();
+    if (Node.isThisExpression(peeled(object))) continue;
+    written(object, access);
   }
   if (holder !== undefined) {
     // `m.queue = ...` on a value typed as nothing, which no reference links to the field, where it may hold an instance (P342).
     for (const access of untypedWritesOf(holder, name)) {
       const object = (access as PropertyAccessExpression).getExpression();
       if (!untypedHoldsInstanceOf(object, holder)) continue;
-      const write = writeAt(access);
-      if (write === 'changed') changed = true;
-      else if (write !== undefined) values.push(write.value);
+      written(object, access);
     }
     for (const call of assignsOverValues(holder)) {
       const [target, ...sources] = call.getArguments();
       // A target typed as nothing, a parameter `setup(m)` among them, by what it is handed (P342).
       if (target === undefined || !(instanceOf(target, holder) || untypedHoldsInstanceOf(target, holder))) continue;
       const given = laidOver(sources, name, NO_BINDINGS, 0);
-      values.push(...given.values);
-      changed ||= given.changed;
+      if (given.values.length > 0 || given.changed) found.push({ on: target, values: given.values, changed: given.changed });
     }
   }
-  const found = { values, changed };
   OUTSIDE_WRITES.set(field, found);
   return found;
 };
@@ -1308,6 +1325,16 @@ const thisWriteDeclaring = (owner: TsNode, name: string): TsNode | undefined => 
  * member's `this.<name> =` declares. `changed` where one is changed in place.
  */
 export const fieldWrittenOutside = (cls: TsNode, name: string): { readonly values: readonly TsNode[]; readonly changed: boolean } => outsideWrites(cls, name);
+
+/**
+ * Each write of an instance field of a class from outside the members of its
+ * classes, with the value it is made on (P353): `account.base = ...` is made
+ * on `account`, `configure(levels)` writing `client.base` on `client`,
+ * `Object.assign(api, { base })` on `api`. What that value holds tells which
+ * instance the write gives its value to, so instances given different values
+ * are each read with their own.
+ */
+export const fieldWritesOutside = (cls: TsNode, name: string): readonly OutsideWrite[] => outsideWritesOn(cls, name);
 
 /** The name a class member is called by, where it is a method, an accessor or a field: what a class extending it overrides. */
 const memberName = (member: TsNode | undefined): string | undefined =>

@@ -4,6 +4,8 @@ import { UNREAD_SPAN } from './ids.js';
 import { resolveStaticString, settingKeyIn } from './static-string.js';
 import {
   callSitesOf,
+  componentHeldBy,
+  componentWrittenIn,
   dispatchOf,
   constantMethodResult,
   constantPropertyValue,
@@ -975,6 +977,75 @@ describe('a method called through a receiver the checker types as nothing (P336)
     expect(sites('Keeper')).toEqual(['this.keeper.health() runs']);
     // A token nothing provides hands nothing read: no call of any class.
     expect(sites('Other')).toEqual([]);
+  });
+
+  it('reads a component a wrapper takes after its options, and a rest of props as the props less the members named beside it (P353)', () => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true, checkJs: false, jsx: 1 } });
+    const file = project.createSourceFile(
+      'a.jsx',
+      [
+        "import { memo } from 'react';",
+        'function withOptions(options, Component) { return Component; }',
+        'class Reader { health() { return 1; } }',
+        'class Other { health() { return 2; } }',
+        'const Board = withOptions({ name: "board" }, function Board({ reader }) { reader.health(); return null; });',
+        'const Chart = withOptions({ name: "chart" }, memo((props) => { props.reader.health(); return null; }));',
+        // A comparator written after the component is no component.
+        'const Row = memo((props) => null, (before, after) => { after.probe.health(); return true; });',
+        'function Badge({ probe }) { if (probe) probe.health(); return null; }',
+        'function Frame({ probe, reader, ...rest }) { rest.probe.health(); const { probe: kept } = rest; kept.health(); return <Badge {...rest} />; }',
+        'export const page = () => <div><Board reader={new Reader()} /><Chart reader={new Reader()} /><Row probe={new Other()} /><Frame probe={new Other()} reader={new Reader()} /></div>;',
+      ].join('\n'),
+    );
+    const sites = (owner: string): string[] => {
+      const method = file.getClassOrThrow(owner).getMethodOrThrow('health');
+      return callSitesOf(method).map((call) => `${call.getText()} ${dispatchOf(call, method)}`).sort();
+    };
+    expect(sites('Reader')).toEqual(['props.reader.health() runs', 'reader.health() runs']);
+    // `rest` lacks `probe`: neither `rest.probe`, `kept` nor `Badge`'s `probe` from the spread holds the instance `Frame` is handed, and the comparator is handed nothing read.
+    expect(sites('Other')).toEqual([]);
+    const declaration = file.getVariableDeclarationOrThrow('Board');
+    const fn = componentWrittenIn(declaration.getInitializerOrThrow());
+    expect(fn?.getKind()).toBe(SyntaxKind.FunctionExpression);
+    expect(fn === undefined ? undefined : componentHeldBy(fn)).toBe(declaration);
+    const comparator = file.getVariableDeclarationOrThrow('Row').getInitializerIfKindOrThrow(SyntaxKind.CallExpression).getArguments()[1];
+    expect(comparator === undefined ? undefined : componentHeldBy(comparator)).toBeUndefined();
+  });
+
+  it('reads a provider list a function reached through an object builds (P353)', () => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true, checkJs: false, experimentalDecorators: true } });
+    project.createSourceFile(
+      'shared.js',
+      [
+        'export class Reader { health() { return 1; } }',
+        'export class Mirror { health() { return 2; } }',
+        'export class Keeper { health() { return 3; } }',
+        'export class Spare { health() { return 4; } }',
+        "export class Providers { static all() { return [{ provide: 'READER', useValue: new Reader() }]; } }",
+        "function spare() { return [{ provide: 'SPARE', useValue: new Spare() }]; }",
+        "export const registry = { mirror: () => [{ provide: 'MIRROR', useValue: new Mirror() }], keeper() { return [{ provide: 'KEEP', useClass: Keeper }]; }, spare };",
+      ].join('\n'),
+    );
+    project.createSourceFile(
+      'jobs.js',
+      [
+        "import { Inject, Injectable, Module } from '@nestjs/common';",
+        "import { Providers, registry } from './shared';",
+        '@Injectable()',
+        "export class Watch { constructor(@Inject('READER') reader, @Inject('MIRROR') mirror, @Inject('KEEP') keeper, @Inject('SPARE') spare) { this.reader = reader; this.mirror = mirror; this.keeper = keeper; this.spare = spare; }",
+        '  run() { this.reader.health(); this.mirror.health(); this.spare.health(); return this.keeper.health(); } }',
+        '@Module({ providers: [...Providers.all(), ...registry.mirror(), ...registry.keeper(), ...registry.spare(), Watch] })',
+        'export class JobsModule {}',
+      ].join('\n'),
+    );
+    const sites = (owner: string): string[] => {
+      const method = project.getSourceFileOrThrow('shared.js').getClassOrThrow(owner).getMethodOrThrow('health');
+      return callSitesOf(method).map((call) => `${call.getText()} ${dispatchOf(call, method)}`).sort();
+    };
+    expect(sites('Reader')).toEqual(['this.reader.health() runs']);
+    expect(sites('Mirror')).toEqual(['this.mirror.health() runs']);
+    expect(sites('Keeper')).toEqual(['this.keeper.health() runs']);
+    expect(sites('Spare')).toEqual(['this.spare.health() runs']);
   });
 });
 

@@ -1,4 +1,4 @@
-import { argumentAlong, callSitesOf, classOfListing, decoratorModule, destructuredFrom, elementsOfTag, handedByEachCall, returnedBy } from '@flowatlas/core';
+import { argumentAlong, callSitesOf, classOfListing, decoratorModule, destructuredFrom, elementsOfTag, handedByEachCall, restLacks, returnedBy } from '@flowatlas/core';
 import type { CallExpression, ClassDeclaration, MethodDeclaration, NewExpression, Node as TsNode, ParameterDeclaration, PropertyDeclaration } from 'ts-morph';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 import { attributeReading, attributesOf, attributeValues, classMadeByFramework, frameworkMade, injectedInto, isTagInstance, propsHandedTo, type SpreadReader } from './framework-made.js';
@@ -174,6 +174,8 @@ export const receiverValues = (isLeaf: (value: TsNode) => boolean) => {
     // `options.client`: the member of every object the name may hold - an
     // object written in place, or an instance a `new` makes (P324).
     if (Node.isPropertyAccessExpression(target) && target.getExpression().getKind() !== SyntaxKind.ThisKeyword) {
+      // `rest.client` where `client` is named beside the rest: nothing (P353).
+      if (restLacks(target.getExpression(), target.getName())) return [];
       const objects = valuesOf(target.getExpression(), depth + 1, seen);
       const members = objects.map((object) => memberWritten(object, target.getName()));
       if (objects.length === 0 || members.some((member) => member === undefined)) return [target];
@@ -182,6 +184,10 @@ export const receiverValues = (isLeaf: (value: TsNode) => boolean) => {
     // An element of a list, what a function returns, a destructured name (P342).
     const held = heldIn(target);
     if (held !== undefined) {
+      // `const { client } = rest` where `client` is named beside the rest: nothing (P353).
+      const [from] = held.from;
+      const [first] = held.parts;
+      if (held.from.length === 1 && from !== undefined && first !== undefined && restLacks(from, first)) return [];
       let current = held.from.flatMap((each) => valuesOf(each, depth + 1, seen));
       if (current.length === 0) return [target];
       for (const part of held.parts) {
@@ -256,6 +262,8 @@ const SPREADING = new Set<TsNode>();
  */
 const readSpread: SpreadReader = (spread, member) => {
   if (!Node.isJsxSpreadAttribute(spread) || SPREADING.has(spread)) return undefined;
+  // A rest less the member, named beside it, surely does not hand it (P353).
+  if (restLacks(spread.getExpression(), member)) return [];
   SPREADING.add(spread);
   try {
     const objects = plainValues(spread.getExpression());
