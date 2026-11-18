@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
 import {
   interpolationValue,
@@ -16,6 +16,7 @@ import {
   type RepoSettings,
   type RoutedName,
   type RoutedPort,
+  type SecretSource,
   type ServiceBinding,
   type SettingValue,
   type Unresolved,
@@ -35,8 +36,8 @@ import {
   type ManifestWorkload,
   type Manifests,
 } from './cluster.js';
-import { commandsAround, type Command } from '@flowatlas/serverless';
-import { composeRunsOf, dockerBuildsOf, dockerRunsOf, imageName, serverStartsOf, type ComposeRunAt, readHelmfileRuns, readHelmInstalls, readKustomizeApplies, readPortForwards, type PortForward } from './docker-run.js';
+import { commandsAround, commandsOfPackageScript, commandsOfShellScript, type Command } from '@flowatlas/serverless';
+import { composeRunsOf, dockerBuildsOf, dockerRunsOf, imageName, serverStartsOf, type ComposeRunAt, type ServerStart, readHelmfileRuns, readHelmInstalls, readKustomizeApplies, readPortForwards, type PortForward } from './docker-run.js';
 import { dockerfileEnvironment } from './dockerfile.js';
 import { readSkaffoldFile } from './skaffold.js';
 import { helmfilesAt, helmfilesIn, readHelmfile } from './helmfile.js';
@@ -225,34 +226,41 @@ const readWorkspaceEnv = (into: Gathered, dir: string): void => {
 const containerEnvironment = (): {
   readonly layer: (ports: Readonly<Record<string, number>>, from?: string | Readonly<Record<string, string>>) => void;
   /** Settings a `Secret` gives, over every layer before: given, their values never read (P337). */
-  readonly secret: (names: readonly string[]) => void;
-  readonly done: () => Pick<ContainerRun, 'environment' | 'environmentFiles' | 'environmentSecret'>;
+  readonly secret: (names: readonly string[], sources?: Readonly<Record<string, SecretSource>>) => void;
+  readonly done: () => Pick<ContainerRun, 'environment' | 'environmentFiles' | 'environmentSecret' | 'environmentSecretFrom'>;
 } => {
   const environment: Record<string, number> = {};
   const environmentFiles: Record<string, string> = {};
   const secret = new Set<string>();
+  // Which Secret and key each is from, said so a reader knows where to look (P343).
+  const secretFrom: Record<string, SecretSource> = {};
   return {
     layer: (ports, from) => {
       for (const [name, port] of Object.entries(ports)) {
         environment[name] = port;
         secret.delete(name);
+        delete secretFrom[name];
         // One file for the layer, or each setting's own (P337).
         const file = typeof from === 'string' ? from : from?.[name];
         if (file === undefined) delete environmentFiles[name];
         else environmentFiles[name] = file;
       }
     },
-    secret: (names) => {
+    secret: (names, sources) => {
       for (const name of names) {
         delete environment[name];
         delete environmentFiles[name];
         secret.add(name);
+        const source = sources?.[name];
+        if (source === undefined) delete secretFrom[name];
+        else secretFrom[name] = source;
       }
     },
     done: () => ({
       environment,
       ...(Object.keys(environmentFiles).length === 0 ? {} : { environmentFiles }),
       ...(secret.size === 0 ? {} : { environmentSecret: [...secret].sort() }),
+      ...(Object.keys(secretFrom).length === 0 ? {} : { environmentSecretFrom: Object.fromEntries(Object.entries(secretFrom).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) }),
     }),
   };
 };
@@ -488,22 +496,164 @@ const COMPOSE_INCLUDE_DEPTH = 8;
  * in it.
  */
 const readStarts = (each: Commands, services: SettingsInput['services'], byService: ReadonlyMap<string, Gathered>, rootDir: string): void => {
-  for (const start of serverStartsOf(each.commands)) {
-    // A command after a `cd` nobody settles runs nowhere the files say.
-    if (start.dirs !== undefined && start.dirs.length === 0) continue;
-    const runs = (start.dirs ?? ['.']).map((dir) => realOf(resolve(each.base, dir)));
-    const service = runs.map((dir) => services.find((one) => realOf(one.dir) === dir)).find((found) => found !== undefined);
-    const into = service === undefined ? undefined : byService.get(service.name);
-    if (service === undefined || into === undefined) continue;
-    const file = labelOf(resolve(each.base, start.file), service.dir, rootDir);
-    for (const [name, raw] of Object.entries(start.environment)) {
+  const bins = binsOf(services, rootDir);
+  // The service whose directory holds a path, the deepest one.
+  const holding = (path: string): SettingsInput['services'][number] | undefined => {
+    const real = realOf(path);
+    return services.filter((one) => realOf(one.dir) === real || isWithin(realOf(one.dir), real)).sort((a, b) => realOf(b.dir).length - realOf(a.dir).length)[0];
+  };
+  const give = (service: SettingsInput['services'][number], origin: { file: string }, environment: Readonly<Record<string, string>>): void => {
+    const into = byService.get(service.name);
+    if (into === undefined) return;
+    const file = labelOf(resolve(each.base, origin.file), service.dir, rootDir);
+    for (const [name, raw] of Object.entries(environment)) {
       const port = portSetting({ name, raw });
       if (port === undefined) continue;
       const list = into.ports.get(name) ?? [];
       if (!list.some((seen) => seen.port === port && seen.file === file && seen.started === true)) list.push({ port, file, started: true });
       into.ports.set(name, list);
     }
+  };
+  const within = (path: string): boolean => [each.base, rootDir].some((dir) => realOf(dir) === realOf(path) || isWithin(dir, path));
+  // A program of the project's own that is not in the repository - a
+  // package's `bin` that points at what a build writes, a path to a build's
+  // output - started with a port: said, as its port is not read (P343).
+  const unreadRow = (service: SettingsInput['services'][number] | undefined, origin: ServerStart, program: string, path: string, environment: Readonly<Record<string, string>>): void => {
+    const into = service === undefined ? undefined : byService.get(service.name);
+    const ports = Object.entries(environment).flatMap(([name, raw]) => (portSetting({ name, raw }) === undefined ? [] : [`${name}=${raw}`]));
+    if (service === undefined || into === undefined || ports.length === 0) return;
+    const file = labelOf(resolve(each.base, origin.file), rootDir, rootDir);
+    if (into.rows.some((seen) => seen.file === file && seen.line === origin.line && seen.reason === 'server-start-unread')) return;
+    const missing = labelOf(path, rootDir, rootDir);
+    into.rows.push({
+      service: service.name,
+      file,
+      line: origin.line,
+      reason: 'server-start-unread',
+      level: 'info',
+      message: `${file}:${origin.line} starts ${program} with ${ports.join(', ')}, but ${missing} is not in the repository (what a build writes is not read), so where ${service.name} listens when started that way is not known`,
+      hint: `Start the server from its source (node, tsx) in the script, or give ${service.name} the port in a file its code loads.`,
+      symbol: `${file}:${origin.line}`,
+    });
+  };
+  const follow = (commands: readonly Command[], origin: ServerStart | undefined, depth: number): void => {
+    for (const start of serverStartsOf(commands)) {
+      const from = origin ?? start;
+      // A command after a `cd` nobody settles runs nowhere the files say.
+      if (start.dirs !== undefined && start.dirs.length === 0) continue;
+      const runsIn = (start.dirs ?? ['.']).map((dir) => resolve(each.base, dir));
+      const byDirs = (): SettingsInput['services'][number] | undefined =>
+        runsIn.map((dir) => services.find((one) => realOf(one.dir) === realOf(dir))).find((found) => found !== undefined);
+      const { runs } = start;
+      if (runs.kind === 'known') {
+        // The service whose code the file it runs is, or that code listens in, else the one it runs in (P343).
+        const path = runs.file === undefined ? undefined : runsIn.map((dir) => moduleFile(resolve(dir, runs.file as string))).find((found) => found !== undefined && within(found));
+        const listening = path === undefined ? undefined : listeningFile(path);
+        const service = (listening === undefined ? undefined : holding(listening)) ?? (path === undefined ? undefined : holding(path)) ?? byDirs();
+        if (service !== undefined) give(service, from, start.environment);
+        continue;
+      }
+      if (depth >= START_DEPTH) continue;
+      if (runs.kind === 'script') {
+        // A script of the package.json where it runs, its commands handed the environment.
+        const dir = runsIn.find((at) => within(at) && existsSync(join(at, 'package.json')));
+        const nested = dir === undefined ? [] : commandsOfPackageScript(each.base, relative(each.base, dir).split(sep).join('/') || '.', runs.name, start.environment);
+        if (nested.length > 0) {
+          follow(nested, from, depth + 1);
+          continue;
+        }
+      }
+      const name = runs.kind === 'script' ? runs.name : runs.program;
+      // A path names a file where the command runs; a bare name, a package's `bin`.
+      const isPath = name.includes('/');
+      if (isPath && /(?:^|\/)node_modules\//.test(name)) continue;
+      // The first directory it may run in that has the file, else the first it may run in at all.
+      const candidates = isPath ? runsIn.map((dir) => resolve(dir, name)).filter((found) => within(found)) : [];
+      const path = isPath ? (candidates.find((found) => existsSync(found)) ?? candidates[0]) : bins.get(name);
+      if (path === undefined) continue;
+      if (!existsSync(path)) {
+        unreadRow(isPath ? byDirs() : holding(path), from, name, path, start.environment);
+        continue;
+      }
+      if (isShellScript(path)) {
+        // A shell script runs where it is started from, handed the environment, under what it exports itself.
+        if (!isWithin(each.base, path)) continue;
+        const dirs = (start.dirs ?? ['.']).map((dir) => posix.normalize(dir));
+        follow(commandsOfShellScript(each.base, relative(each.base, path).split(sep).join('/'), start.environment, dirs), from, depth + 1);
+        continue;
+      }
+      const listening = listeningFile(path);
+      if (listening === undefined) continue;
+      const service = holding(listening) ?? holding(path);
+      if (service !== undefined) give(service, from, start.environment);
+    }
+  };
+  follow(each.commands, undefined, 0);
+};
+
+/** How deep a script, a shell script or a program another starts is followed (P343). */
+const START_DEPTH = 4;
+
+/** What a server's code is read listening by: `app.listen(`, `server.listen(`, `createServer(`, `Bun.serve(`, `serve({`. */
+const LISTENS = /\.listen\s*\(|\bcreateServer\s*\(|\b(?:Bun|Deno)\.serve\s*\(|\bserve\s*\(\s*\{/;
+
+/** The extensions a module written without its own is looked for under. */
+const MODULE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs', '.jsx'];
+
+/** The file a module path names, as a runtime or a bundler resolves it: as written, with an extension, its `.ts` for a `.js`, its `index`. */
+const moduleFile = (path: string): string | undefined => {
+  const bare = path.replace(/\.[cm]?jsx?$/, '');
+  const candidates = [path, ...MODULE_EXTENSIONS.map((ext) => `${bare}${ext}`), ...MODULE_EXTENSIONS.map((ext) => join(path, `index${ext}`))];
+  return candidates.find((each) => {
+    try {
+      return statSync(each).isFile();
+    } catch {
+      return false;
+    }
+  });
+};
+
+/** Whether a file is a shell script: by its name, or its `#!` line. */
+const isShellScript = (path: string): boolean => /\.(?:sh|bash)$/.test(path) || /^#!\s*\S*\/(?:env\s+)?(?:ba|z|da)?sh\b/.test(read(path)?.slice(0, 80) ?? '');
+
+/**
+ * The file of a program's code that listens (P343): the file itself, or a
+ * module it imports by a relative path, and on, as far as the files go.
+ * Nothing where none is read listening.
+ */
+const listeningFile = (path: string, seen: Set<string> = new Set()): string | undefined => {
+  if (seen.has(path) || seen.size >= 64) return undefined;
+  seen.add(path);
+  const text = read(path);
+  if (text === undefined) return undefined;
+  if (LISTENS.test(text)) return path;
+  for (const match of text.matchAll(/(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|\bimport\s+)['"](\.{1,2}\/[^'"]+)['"]/g)) {
+    const found = moduleFile(resolve(dirname(path), match[1] as string));
+    const listening = found === undefined ? undefined : listeningFile(found, seen);
+    if (listening !== undefined) return listening;
   }
+  return undefined;
+};
+
+/**
+ * The programs the project's packages give by name (P343): each `bin` of the
+ * `package.json` of every service and of the project, a single path under
+ * the package's own name less its scope.
+ */
+const binsOf = (services: SettingsInput['services'], rootDir: string): Map<string, string> => {
+  const out = new Map<string, string>();
+  for (const dir of [...services.map((service) => service.dir), rootDir]) {
+    let manifest: { name?: unknown; bin?: unknown };
+    try {
+      manifest = JSON.parse(read(join(dir, 'package.json')) ?? 'null') ?? {};
+    } catch {
+      continue;
+    }
+    const bin = manifest.bin;
+    const named: Array<[string, unknown]> = typeof bin === 'string' ? (typeof manifest.name === 'string' ? [[manifest.name.split('/').pop() as string, bin]] : []) : typeof bin === 'object' && bin !== null ? Object.entries(bin) : [];
+    for (const [name, path] of named) if (typeof path === 'string' && !out.has(name)) out.set(name, resolve(dir, path));
+  }
+  return out;
 };
 
 const DEFAULT_COMPOSE = new Set(['compose.yaml', 'compose.yml', 'docker-compose.yaml', 'docker-compose.yml', 'compose.override.yaml', 'compose.override.yml', 'docker-compose.override.yaml', 'docker-compose.override.yml']);
@@ -625,11 +775,13 @@ const isWithin = (dir: string, path: string): boolean => {
   return rel !== '' && rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel);
 };
 
+/** A path as the disk spells it; one that is not there, under the real spelling of the nearest directory that is (P343). */
 const realOf = (path: string): string => {
   try {
     return realpathSync(path);
   } catch {
-    return resolve(path);
+    const up = dirname(resolve(path));
+    return up === resolve(path) ? resolve(path) : join(realOf(up), basename(path));
   }
 };
 
@@ -690,7 +842,7 @@ interface Running {
  * (P331): the Dockerfile of its image where the project builds it, under what
  * the manifest writes, or why the image's is not read.
  */
-type ContainerEnvironmentOf = (container: ManifestContainer | undefined, service: string) => Pick<RoutedName, 'environment' | 'environmentFiles' | 'imageUnread' | 'environmentSecret'>;
+type ContainerEnvironmentOf = (container: ManifestContainer | undefined, service: string) => Pick<RoutedName, 'environment' | 'environmentFiles' | 'imageUnread' | 'environmentSecret' | 'environmentSecretFrom'>;
 
 /** The environment as the manifest alone writes it, where no image is read. */
 const manifestEnvironment: ContainerEnvironmentOf = (container) => {
@@ -707,7 +859,7 @@ const manifestEnvironment: ContainerEnvironmentOf = (container) => {
  * `envFrom` under `env`, as the cluster gives a pod them.
  */
 const layerManifest = (environment: ReturnType<typeof containerEnvironment>, container: ManifestContainer | undefined): void => {
-  environment.secret(container?.secretSettings ?? []);
+  environment.secret(container?.secretSettings ?? [], container?.secretSources);
   environment.layer(environmentPorts(container?.environment ?? []), container?.environmentFiles ?? {});
 };
 
@@ -932,11 +1084,12 @@ const manifestRow = (row: ManifestRow, service: string, file: string): Unresolve
 });
 
 /** A routed name's containers' environment, as a container forwarded to them has it (P331). */
-const routedEnvironment = (routed: RoutedName): Pick<ContainerRun, 'environment' | 'environmentFiles' | 'imageUnread' | 'environmentSecret'> => ({
+const routedEnvironment = (routed: RoutedName): Pick<ContainerRun, 'environment' | 'environmentFiles' | 'imageUnread' | 'environmentSecret' | 'environmentSecretFrom'> => ({
   environment: routed.environment,
   ...(routed.environmentFiles === undefined ? {} : { environmentFiles: routed.environmentFiles }),
   ...(routed.imageUnread === undefined ? {} : { imageUnread: routed.imageUnread }),
   ...(routed.environmentSecret === undefined ? {} : { environmentSecret: routed.environmentSecret }),
+  ...(routed.environmentSecretFrom === undefined ? {} : { environmentSecretFrom: routed.environmentSecretFrom }),
 });
 
 /**
@@ -1013,17 +1166,25 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
       ...(file.owner === undefined ? {} : { owner: file.owner }),
     });
     if (seen.size >= COMPOSE_INCLUDE_DEPTH) return;
-    const from = dirname(file.path);
+    // As compose resolves an `include:` (P343, compose-go's loader): its
+    // paths, `project_directory` and `env_file` from the including project's
+    // directory; its project directory the first path's directory where none
+    // is written; its variables its `env_file`s, else the `.env` of its
+    // project directory, as defaults only - the including project's
+    // environment (its shell, its `.env` or `--env-file`s) is kept over them.
+    const from = file.dir;
+    const labelFrom = dirname(file.path);
     for (const include of composeIncludes(text)) {
-      const project = include.projectDirectory === undefined ? undefined : resolve(from, include.projectDirectory);
-      const own = include.envFiles.length === 0 ? undefined : variablesOfFiles(include.envFiles.map((each) => resolve(from, each)), [file.within, input.rootDir]);
+      const first = include.paths[0];
+      if (first === undefined) continue;
+      const dir = include.projectDirectory === undefined ? dirname(resolve(from, first)) : resolve(from, include.projectDirectory);
+      const own = include.envFiles.length === 0 ? (variablesIn(join(dir, '.env')) ?? {}) : variablesOfFiles(include.envFiles.map((each) => resolve(from, each)), [file.within, input.rootDir]);
       for (const written of include.paths) {
         const path = resolve(from, written);
         // A file outside the directories this project reads is somebody else's, and a file is included once.
         if (![file.within, input.rootDir].some((each) => isWithin(each, path)) || seen.has(realOf(path))) continue;
-        const dir = project ?? dirname(path);
-        const label = posix.normalize(posix.join(posix.dirname(file.label), relative(from, path).split(sep).join('/')));
-        composeRead({ path, dir, label, within: file.within, ...(file.owner === undefined ? {} : { owner: file.owner }) }, { ...(own ?? dotEnvVariables(dir, [file.within, input.rootDir])), ...variables }, new Set([...seen, realOf(path)]));
+        const label = posix.normalize(posix.join(posix.dirname(file.label), relative(labelFrom, path).split(sep).join('/')));
+        composeRead({ path, dir, label, within: file.within, ...(file.owner === undefined ? {} : { owner: file.owner }) }, { ...own, ...variables }, new Set([...seen, realOf(path)]));
       }
     }
   };

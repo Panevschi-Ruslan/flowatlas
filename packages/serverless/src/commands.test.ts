@@ -40,3 +40,60 @@ describe('the commands a repository writes, read once for every reader (P263)', 
     expect(said({ 'deploy.sh': 'cd "$DEPLOY_DIR"\nkubectl apply -k overlays/production\n' })).toEqual(['deploy.sh:2 [] kubectl apply -k overlays/production']);
   });
 });
+
+describe("a Makefile's own variables, the environment of its recipes (P343)", () => {
+  const envOf = (files: Record<string, string>): Record<string, string> =>
+    Object.fromEntries(
+      commandsAround(repository(files), '.').map((command) => [
+        `${command.label}:${command.line}:${command.words.join(' ')}`,
+        Object.entries(command.env)
+          .map(([name, value]) => `${name}=${typeof value === 'string' ? value : `?${value.text}`}`)
+          .sort()
+          .join(' '),
+      ]),
+    );
+
+  it('gives every recipe what the file exports, at its final value, and a target its own', () => {
+    expect(
+      envOf({
+        Makefile: [
+          'BASE = 45',
+          'export PORT := $(BASE)00',
+          'ADMIN_PORT = 4501',
+          'export ADMIN_PORT',
+          'LOCAL_ONLY = 1',
+          'export LATE = early',
+          'LATE = late',
+          'serve: export PORT = 4700',
+          'worker: METRICS_PORT = 9100',
+          'serve:',
+          '\tnpm start',
+          'worker:',
+          '\tnode worker.js --port $(METRICS_PORT) $$DATA_DIR',
+        ].join('\n'),
+      }),
+    ).toEqual({
+      'serve:11:npm start': 'ADMIN_PORT=4501 LATE=late PORT=4700',
+      // A target's variable it does not export is make's, filled into the line, not the shell's.
+      'worker:13:node worker.js --port 9100 $DATA_DIR': 'ADMIN_PORT=4501 LATE=late PORT=4500',
+    });
+  });
+
+  it('exports every variable after a bare export, less what it unexports, and reads an included file', () => {
+    expect(
+      envOf({
+        Makefile: ['include ports.mk', 'export', 'unexport SECRET_NAME', 'SECRET_NAME = x', 'up:', '\tnpm run dev'].join('\n'),
+        'ports.mk': 'PORT ?= 4800\nPORT ?= 4900\n',
+      }),
+    ).toEqual({ 'up:6:npm run dev': 'PORT=4800' });
+  });
+
+  it('says a value the shell or an unset variable fills is not known', () => {
+    const env = envOf({ Makefile: ['export PORT != echo 4000', 'export HOST = $(HOSTNAME)', 'up:', '\tnpm start'].join('\n') });
+    expect(env['up:4:npm start']).toMatch(/^HOST=\?it is \$\(HOSTNAME\) on the command.* PORT=\?PORT is what the shell prints for echo 4000 in the Makefile$/);
+  });
+
+  it("leaves a recipe line's own variables to that line, over the file's", () => {
+    expect(envOf({ Makefile: ['export PORT = 4000', 'up:', '\tPORT=4100 npm start', '\tnpm start'].join('\n') })).toEqual({ 'up:3:npm start': 'PORT=4100', 'up:4:npm start': 'PORT=4000' });
+  });
+});

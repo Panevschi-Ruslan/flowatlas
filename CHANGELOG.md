@@ -2110,6 +2110,31 @@ only one of them moved.
   source states (R142), and the edge is no surer than its route; the port
   was firm all along (`unloaded-env-image-environment` now ships the
   framework's stub, as other port fixtures do, and joins `static`).
+- **A container's or a script's environment, as far as P337 left it
+  (P343).** A compose `environment:` entry written with no value (`- PORT`,
+  `PORT:`, a `build.args` entry alike) takes what compose's own variables
+  give that name - the shell, the `.env`, the `--env-file`s or
+  `COMPOSE_ENV_FILES` - and stays unset where nothing does. An `include:` is
+  resolved as compose-go resolves it: its path, `project_directory` and
+  `env_file` from the including project's directory, its project directory
+  the first path's directory, and its own `env_file` or `.env` giving only
+  what the including project's environment does not (the documented
+  precedence: the local project's environment wins). A Makefile's own
+  `export PORT := 4700`, `PORT = 4700` with `export PORT`, a bare `export`,
+  `.EXPORT_ALL_VARIABLES`, `unexport`, `include`d files and a target's
+  `ledger: export PORT = 4710` are the environment of its recipes, and make
+  fills its own `$(VAR)` into a recipe line before the shell reads it. A
+  script's export now reaches a program of the project's own: a `bin` of a
+  service's `package.json`, a path such as `./bin/server` (a shell script
+  followed into its commands), a `package.json` script the start list does
+  not know (`npm run api`), and the file a runtime is handed (`node
+  ./scripts/serve.js`), each read as started where the file - or a module
+  it imports by a relative path - listens, at the service that holds that
+  file; a `bin` pointing at what a build writes, started with a port, is an
+  info `server-start-unread` row. A port a `Secret` gives is still never
+  read, but `published-port-unheard` now names the Secret, its key and the
+  manifest that writes it, and a Secret's values are no longer decoded or
+  kept at all (a kustomize `secretGenerator` keeps its keys only).
 - **Fields written through an alias or in a subclass, domains a workspace
   names, and grants of a bus, table or stream by the CDK's version (P322).**
   A static field written through the class under `any` - `const R: any =

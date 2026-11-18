@@ -124,4 +124,13 @@ describe('a setting a Secret gives a container (P337)', () => {
       "k8s/ledger.yaml routes ledger:80 to port 3000 of ledger's containers, but ledger's code reads its port from PORT (src/app.ts:9), which a Secret gives, and a secret's value is never read",
     );
   });
+
+  it('says which Secret and key the port is from, and where the Secret is written, where that is read (P343)', () => {
+    const named = { ...routed, environmentSecretFrom: { PORT: { secret: 'ledger-ports', key: 'http', file: 'k8s/ledger-ports.yaml' } } };
+    expect(portsListening(nodes, { ledger: { ...NO_SETTINGS, routes: [named] } }).rows[0]?.message).toBe(
+      "k8s/ledger.yaml routes ledger:80 to port 3000 of ledger's containers, but ledger's code reads its port from PORT (src/app.ts:9), which the Secret ledger-ports (its key http, k8s/ledger-ports.yaml) gives, and a secret's value is never read",
+    );
+    const elsewhere = { ...routed, environmentSecretFrom: { PORT: { secret: 'made-elsewhere', key: 'http' } } };
+    expect(portsListening(nodes, { ledger: { ...NO_SETTINGS, routes: [elsewhere] } }).rows[0]?.message).toContain('which the Secret made-elsewhere (its key http, a Secret no manifest read writes) gives');
+  });
 });

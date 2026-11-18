@@ -9,6 +9,7 @@ import {
   type PortValue,
   type RepoSettings,
   type RoutedName,
+  type SecretSource,
   type Unresolved,
 } from '@flowatlas/core';
 import { GRAPHQL_META } from '@flowatlas/graphql';
@@ -307,7 +308,7 @@ const insideContainer = (
 };
 
 /** Where a service's code says it listens, for the row about a mapping that misses it. */
-const portsSaid = (service: string, ports: readonly ListenPort[], environment: Readonly<Record<string, number>> = {}, secret: readonly string[] = []): string => {
+const portsSaid = (service: string, ports: readonly ListenPort[], environment: Readonly<Record<string, number>> = {}, secret: readonly string[] = [], secretFrom: Readonly<Record<string, SecretSource>> = {}): string => {
   // A port the container's environment gives the setting the code reads is
   // the one it listens on there, whatever the code's own fallback (P283).
   const givenOf = (port: ListenPort): number | undefined => (port.setting === undefined ? undefined : environment[port.setting]);
@@ -323,11 +324,17 @@ const portsSaid = (service: string, ports: readonly ListenPort[], environment: R
   ];
   const isSecret = (port: ListenPort): boolean => port.setting !== undefined && secret.includes(port.setting);
   const alone = [...new Set(ports.flatMap((port) => (port.port === undefined && port.setting !== undefined && givenOf(port) === undefined && !isSecret(port) ? [`${port.setting} (${port.file}:${port.line})`] : [])))];
-  const hidden = [...new Set(ports.flatMap((port) => (isSecret(port) ? [`${port.setting} (${port.file}:${port.line})`] : [])))];
+  // Which Secret and key gives each, and where that Secret is written, so a reader knows where to look (P343).
+  const sourceOf = (setting: string): string => {
+    const source = secretFrom[setting];
+    if (source === undefined) return 'a Secret';
+    return `the Secret ${source.secret} (its key ${source.key}${source.file === undefined ? ', a Secret no manifest read writes' : `, ${source.file}`})`;
+  };
+  const hidden = [...new Set(ports.flatMap((port) => (isSecret(port) ? [`${port.setting} (${port.file}:${port.line}), which ${sourceOf(port.setting as string)} gives`] : [])))];
   const said = [
     ...(numbered.length === 0 ? [] : [`listens on ${numbered.join(', ')}`]),
     ...(alone.length === 0 ? [] : [`reads its port from ${alone.join(', ')}, which the container's environment does not give`]),
-    ...(hidden.length === 0 ? [] : [`reads its port from ${hidden.join(', ')}, which a Secret gives, and a secret's value is never read`]),
+    ...(hidden.length === 0 ? [] : [`reads its port from ${hidden.join('; ')}, and a secret's value is never read`]),
   ];
   return said.length === 0 ? `nothing in ${service}'s code is read listening on a port` : `${service}'s code ${said.join(' and ')}`;
 };
@@ -339,7 +346,7 @@ const unroutedRow = (service: string, routed: RoutedName, port: RoutedName['port
   line: port.line,
   reason: 'published-port-unheard',
   level: 'info',
-  message: `${port.file} routes ${routed.name}:${port.port} to port ${port.target} of ${service}'s containers, but ${portsSaid(service, ports, routed.environment, routed.environmentSecret)}`,
+  message: `${port.file} routes ${routed.name}:${port.port} to port ${port.target} of ${service}'s containers, but ${portsSaid(service, ports, routed.environment, routed.environmentSecret, routed.environmentSecretFrom)}`,
   hint: `Route the name to the port the server listens on (targetPort), or check that the containers' environment gives the server ${port.target}. A request to ${routed.name}:${port.port} is still joined to ${service} by the file.`,
   symbol: `${routed.name}:${port.port}:${port.target}`,
   meta: { routed: port.port, container: port.target, listens: [...new Set(ports.flatMap((each) => (each.port === undefined ? [] : [each.port])))].sort((a, b) => a - b) },
@@ -355,7 +362,7 @@ const unroutedRow = (service: string, routed: RoutedName, port: RoutedName['port
  */
 const imageUnreadRow = (
   service: string,
-  container: Pick<ContainerRun, 'name' | 'file' | 'environment' | 'imageUnread' | 'environmentSecret'> & { readonly line: number },
+  container: Pick<ContainerRun, 'name' | 'file' | 'environment' | 'imageUnread' | 'environmentSecret' | 'environmentSecretFrom'> & { readonly line: number },
   ports: readonly ListenPort[],
 ): Unresolved | undefined => {
   const unread = container.imageUnread;
@@ -396,7 +403,7 @@ const unheardRow = (service: string, container: ContainerRun, mapping: Container
     line: mapping.line,
     reason: 'published-port-unheard',
     level: 'info',
-    message: `${publishing(container, mapping, service)}, but ${portsSaid(service, ports, container.environment, container.environmentSecret)}`,
+    message: `${publishing(container, mapping, service)}, but ${portsSaid(service, ports, container.environment, container.environmentSecret, container.environmentSecretFrom)}`,
     hint: `Map the published port to the port the server listens on (${mapping.published}:<that port>), or check that the container's environment gives the server ${mapping.container}. A request to localhost:${mapping.published} is still joined to ${service} by the file.`,
     symbol: `${container.name}:${mapping.published}:${mapping.container}`,
     meta: { published: mapping.published, container: mapping.container, listens: [...new Set(ports.flatMap((port) => (port.port === undefined ? [] : [port.port])))].sort((a, b) => a - b) },

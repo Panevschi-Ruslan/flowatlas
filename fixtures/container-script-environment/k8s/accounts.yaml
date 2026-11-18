@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: accounts
+spec:
+  selector:
+    matchLabels:
+      app: accounts
+  template:
+    metadata:
+      labels:
+        app: accounts
+    spec:
+      containers:
+        - name: accounts
+          image: accounts
+          env:
+            - name: PORT
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-ports
+                  key: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: accounts
+spec:
+  selector:
+    app: accounts
+  ports:
+    - port: 80
+      targetPort: 7100

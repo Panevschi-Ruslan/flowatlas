@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
-import { readYaml, type PositionedDocument } from '@flowatlas/core';
+import { readYaml, type PositionedDocument, type SecretSource } from '@flowatlas/core';
 import { interpolated } from './compose.js';
 import type { Written } from './dotenv.js';
 import { definesOf, mergedValues, renderings, setValue, UNREAD_MARK, type ChartContext, type Rendered } from './helm.js';
@@ -54,6 +54,8 @@ export interface ManifestContainer {
   readonly environmentFiles?: Readonly<Record<string, string>>;
   /** The settings a `Secret` gives it, by name only: a secret's value is never read (P337). */
   readonly secretSettings?: readonly string[];
+  /** Where each of `secretSettings` is from: the Secret, its key, and the file that writes it where one read does (P343). */
+  readonly secretSources?: Readonly<Record<string, SecretSource>>;
   /**
    * The image as written, where its name is a template value the chart's
    * values or the files do not settle (P337): `{{ … }}:1.2`, with each
@@ -280,7 +282,11 @@ const resourceOf = (value: Located, file: string): Resource => {
 const resourcesOf = (source: string, file: string, lineOf?: (line: number) => number): Resource[] =>
   documentsOf(source, file, lineOf).flatMap((value) => (isRecord(value) ? [resourceOf(value as Located, file)] : []));
 
-/** The values a `ConfigMap` or a `Secret` holds, each with the file that writes it (P263). */
+/**
+ * The values a `ConfigMap` holds, each with the file that writes it (P263),
+ * and the keys a `Secret` holds, each with its file and an empty value: a
+ * secret's value is never read, not even decoded (P337, P343).
+ */
 interface ConfigValues {
   readonly values: ReadonlyMap<string, { readonly raw: string; readonly file: string }>;
 }
@@ -305,14 +311,12 @@ const configsOf = (resources: readonly Resource[]): Configs => {
       for (const [key, value] of Object.entries(data)) {
         const written = text(value);
         if (written === undefined) continue;
-        // A secret's data is written in base64.
-        const raw = kind === 'Secret' && !(data as KeyedData)[KEYS_AT] ? Buffer.from(written, 'base64').toString('utf8') : written;
-        values.set(key, { raw, file: fileOf(data, key) });
+        values.set(key, { raw: kind === 'Secret' ? '' : written, file: fileOf(data, key) });
       }
     }
     const plain = resource.value['stringData'];
     if (kind === 'Secret' && isRecord(plain)) {
-      for (const [key, value] of Object.entries(plain)) if (text(value) !== undefined) values.set(key, { raw: text(value) as string, file: fileOf(plain, key) });
+      for (const [key, value] of Object.entries(plain)) if (text(value) !== undefined) values.set(key, { raw: '', file: fileOf(plain, key) });
     }
     const metadata = isRecord(resource.value['metadata']) ? resource.value['metadata'] : {};
     const namespace = text(metadata['namespace']);
@@ -331,8 +335,8 @@ const configsOf = (resources: readonly Resource[]): Configs => {
  * `prefix`), as the cluster gives a pod them (P263). Each said at the file
  * that writes it.
  */
-const environmentOf = (container: Record<string, unknown>, namespace: string | undefined, configs: Configs): Array<Written & { file: string; secret?: true }> => {
-  const out = new Map<string, Written & { file: string; secret?: true }>();
+const environmentOf = (container: Record<string, unknown>, namespace: string | undefined, configs: Configs): Array<Written & { file: string; secret?: SecretSource }> => {
+  const out = new Map<string, Written & { file: string; secret?: SecretSource }>();
   for (const source of (Array.isArray(container['envFrom']) ? container['envFrom'] : []).filter(isRecord)) {
     const ref = isRecord(source['configMapRef']) ? (['ConfigMap', source['configMapRef']] as const) : isRecord(source['secretRef']) ? (['Secret', source['secretRef']] as const) : undefined;
     const name = ref === undefined ? undefined : text(ref[1]['name']);
@@ -340,7 +344,7 @@ const environmentOf = (container: Record<string, unknown>, namespace: string | u
     const prefix = text(source['prefix']) ?? '';
     // A secret gives its keys by name only: its values are never read (P337).
     for (const [key, { raw, file }] of configs(ref[0], name, namespace)?.values ?? []) {
-      out.set(`${prefix}${key}`, ref[0] === 'Secret' ? { name: `${prefix}${key}`, raw: '', file, secret: true } : { name: `${prefix}${key}`, raw, file });
+      out.set(`${prefix}${key}`, ref[0] === 'Secret' ? { name: `${prefix}${key}`, raw: '', file, secret: { secret: name, key, ...(file === '' ? {} : { file }) } } : { name: `${prefix}${key}`, raw, file });
     }
   }
   for (const each of (Array.isArray(container['env']) ? container['env'] : []).filter(isRecord)) {
@@ -349,8 +353,13 @@ const environmentOf = (container: Record<string, unknown>, namespace: string | u
     const from = isRecord(each['valueFrom']) ? each['valueFrom'] : undefined;
     const ref = from === undefined ? undefined : isRecord(from['configMapKeyRef']) ? (['ConfigMap', from['configMapKeyRef']] as const) : isRecord(from['secretKeyRef']) ? (['Secret', from['secretKeyRef']] as const) : undefined;
     if (ref?.[0] === 'Secret') {
-      // The setting is the secret's, whatever it holds, and that is never read (P337).
-      out.set(key, { name: key, raw: '', file: whereOf(each)?.file ?? '', secret: true });
+      // The setting is the secret's, whatever it holds, and that is never read
+      // (P337); which Secret and key it is, and where that Secret is written
+      // where the manifests hold it, is said (P343).
+      const secret = text(ref[1]['name']) ?? '';
+      const wanted = text(ref[1]['key']) ?? key;
+      const found = secret === '' ? undefined : configs('Secret', secret, namespace)?.values.get(wanted);
+      out.set(key, { name: key, raw: '', file: whereOf(each)?.file ?? '', secret: { secret, key: wanted, ...(found === undefined || found.file === '' ? {} : { file: found.file }) } });
       continue;
     }
     if (ref !== undefined) {
@@ -391,9 +400,11 @@ const containersOf = (spec: unknown, namespace?: string, configs: Configs = () =
       return port === undefined ? [] : [{ port, ...(named === undefined ? {} : { name: named }) }];
     });
     const all = environmentOf(container, namespace, configs);
-    const given = all.filter((each) => each.secret !== true);
+    const given = all.filter((each) => each.secret === undefined);
     const environment = given.map(({ name: key, raw }): Written => ({ name: key, raw }));
-    const secretSettings = all.filter((each) => each.secret === true).map((each) => each.name);
+    const secrets = all.filter((each) => each.secret !== undefined);
+    const secretSettings = secrets.map((each) => each.name);
+    const secretSources = Object.fromEntries(secrets.map((each) => [each.name, each.secret as SecretSource]));
     // Where the environment is said to be written: where its first port is, else where its first value is.
     const environmentFile = (given.find((each) => /^\d+$/.test(each.raw) && each.file !== '') ?? given.find((each) => each.file !== ''))?.file;
     // A setting written in another file than that one, a config map's own, is said there (P337).
@@ -406,7 +417,7 @@ const containersOf = (spec: unknown, namespace?: string, configs: Configs = () =
       environment,
       ...(environmentFile === undefined ? {} : { environmentFile }),
       ...(Object.keys(environmentFiles).length === 0 ? {} : { environmentFiles }),
-      ...(secretSettings.length === 0 ? {} : { secretSettings }),
+      ...(secretSettings.length === 0 ? {} : { secretSettings, secretSources }),
     };
   });
 };
@@ -1389,7 +1400,8 @@ class Builder {
       const written = text(literal);
       const equals = written?.indexOf('=') ?? -1;
       if (written === undefined || equals <= 0) continue;
-      data[written.slice(0, equals)] = written.slice(equals + 1).replace(/^(['"])(.*)\1$/, '$2');
+      // A secret's value is never kept, only its key (P343).
+      data[written.slice(0, equals)] = kind === 'Secret' ? '' : written.slice(equals + 1).replace(/^(['"])(.*)\1$/, '$2');
       keysAt[written.slice(0, equals)] = where;
     }
     const files = [...(Array.isArray(entry['envs']) ? entry['envs'] : []), ...(text(entry['env']) === undefined ? [] : [entry['env']])];
@@ -1400,7 +1412,7 @@ class Builder {
       source.split('\n').forEach((line, index) => {
         const assignment = /^\s*([A-Za-z_][\w.-]*)\s*=(.*)$/.exec(line);
         if (assignment === null || /^\s*#/.test(line)) return;
-        data[assignment[1] as string] = (assignment[2] as string).trim().replace(/^(['"])(.*)\1$/, '$2');
+        data[assignment[1] as string] = kind === 'Secret' ? '' : (assignment[2] as string).trim().replace(/^(['"])(.*)\1$/, '$2');
         keysAt[assignment[1] as string] = { file: this.label(path), line: index + 1 };
       });
     }
@@ -1410,7 +1422,8 @@ class Builder {
       const equals = named.indexOf('=');
       const file = equals > 0 ? named.slice(equals + 1) : named;
       const path = resolve(dir, file);
-      const source = readText(path);
+      // A secret's file is never read, only found (P343).
+      const source = kind === 'Secret' ? (existsSync(path) ? '' : undefined) : readText(path);
       if (source === undefined) continue;
       const key = equals > 0 ? named.slice(0, equals) : basename(path);
       data[key] = source;

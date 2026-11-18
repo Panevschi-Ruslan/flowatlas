@@ -156,17 +156,177 @@ const MAKEFILES = /^(?:Makefile|makefile|GNUmakefile|.+\.mk)$/;
 /** The recipes of every Makefile of a directory, each line where it is written. */
 const makeRecipes = (repoDir: string, dir: string): Command[] => filesIn(repoDir, dir).filter((file) => MAKEFILES.test(posix.basename(file))).flatMap((file) => recipesOf(repoDir, file));
 
-/** The recipes of one Makefile. */
+/** How deep a Makefile's `include` is followed, and a variable's value expanded. */
+const MAKE_DEPTH = 8;
+
+/** A Makefile's variable assignment, as make writes one: `[export] [override] NAME op value`. */
+const MAKE_ASSIGNMENT = /^(?:(export)\s+)?(?:override\s+)?([A-Za-z_][A-Za-z0-9_.-]*)\s*(::?=|:::=|\?=|\+=|!=|=)\s*(.*)$/;
+
+/** A variable of a Makefile: its value as written (`=`, expanded when used) or already expanded (`:=`), or a shell's (`!=`) that is not known. */
+interface MakeVariable {
+  readonly value: string;
+  readonly simple: boolean;
+  readonly shell?: true;
+}
+
+/**
+ * What a Makefile says its variables are (P343): each assignment, in order,
+ * the files it `include`s read where they are written; the names it exports
+ * (`export NAME = v`, `export NAME`, every one after a bare `export` or
+ * `.EXPORT_ALL_VARIABLES:`), less those it `unexport`s; and each target's own
+ * (`serve: export PORT = 4500`).
+ */
+interface MakeVariables {
+  readonly values: Map<string, MakeVariable>;
+  readonly exported: Set<string>;
+  readonly unexported: Set<string>;
+  exportAll: boolean;
+  /** Each target's own variables, and whether each is exported. */
+  readonly targets: Map<string, Map<string, MakeVariable & { readonly exported: boolean }>>;
+}
+
+/** A value with make's own references in it filled from its variables: `$(PORT)`, `${PORT}`, `$$` as one `$`; a reference to a variable it does not set left as written. */
+const makeExpand = (text: string, lookup: (name: string) => MakeVariable | undefined, depth = 0): string =>
+  text.replace(/\$\$|\$\(([A-Za-z_][A-Za-z0-9_.-]*)\)|\$\{([A-Za-z_][A-Za-z0-9_.-]*)\}/g, (match, paren: string | undefined, brace: string | undefined) => {
+    if (match === '$$') return '$';
+    const found = lookup(paren ?? brace ?? '');
+    if (found === undefined || found.shell === true || depth >= MAKE_DEPTH) return match;
+    return found.simple ? found.value : makeExpand(found.value, lookup, depth + 1);
+  });
+
+/** A value written after an assignment, its comment taken off. */
+const makeValue = (written: string): string => written.replace(/(^|[^\\])#.*$/, '$1').trim();
+
+/** One assignment, onto a set of variables, as make makes it. */
+const assign = (into: Map<string, MakeVariable>, name: string, op: string, written: string, lookup: (name: string) => MakeVariable | undefined): void => {
+  const value = makeValue(written);
+  const before = into.get(name);
+  if (op === '?=') {
+    if (before === undefined) into.set(name, { value, simple: false });
+  } else if (op === '+=') {
+    if (before === undefined) into.set(name, { value, simple: false });
+    else into.set(name, { ...before, value: `${before.value} ${before.simple ? makeExpand(value, lookup) : value}`.trim() });
+  } else if (op === '!=') into.set(name, { value, simple: true, shell: true });
+  else if (op === '=') into.set(name, { value, simple: false });
+  else into.set(name, { value: makeExpand(value, lookup), simple: true });
+};
+
+/** Reads a Makefile's variables, and those of the files it includes, into `into` (P343). */
+const readMakeVariables = (repoDir: string, makefile: string, into: MakeVariables, depth = 0): void => {
+  const make = textAt(repoDir, makefile);
+  if (make === undefined) return;
+  const lookup = (name: string): MakeVariable | undefined => into.values.get(name);
+  const lines = make.split('\n');
+  let defining = false;
+  for (let index = 0; index < lines.length; index += 1) {
+    let raw = lines[index] as string;
+    if (defining) {
+      if (/^\s*endef\b/.test(raw)) defining = false;
+      continue;
+    }
+    // A recipe line is the shell's, not make's.
+    if (raw.startsWith('\t') || /^\s*#/.test(raw)) continue;
+    while (/\\\s*$/.test(raw) && index + 1 < lines.length) {
+      index += 1;
+      raw = `${raw.replace(/\\\s*$/, ' ')}${(lines[index] as string).trim()}`;
+    }
+    const line = raw.trim();
+    if (/^(?:export\s+)?define\b/.test(line)) {
+      defining = true;
+      continue;
+    }
+    const included = /^(?:-include|sinclude|include)\s+(.+)$/.exec(line);
+    if (included !== null) {
+      if (depth >= MAKE_DEPTH) continue;
+      for (const word of makeExpand(makeValue(included[1] as string), lookup).split(/\s+/)) {
+        if (word === '' || isFilledIn(word) || word.startsWith('/')) continue;
+        readMakeVariables(repoDir, under(posix.dirname(makefile), word), into, depth + 1);
+      }
+      continue;
+    }
+    if (line === 'export') {
+      into.exportAll = true;
+      continue;
+    }
+    if (/^\.EXPORT_ALL_VARIABLES\s*:/.test(line)) {
+      into.exportAll = true;
+      continue;
+    }
+    const names = /^(export|unexport)\s+([A-Za-z_][A-Za-z0-9_.\-\s]*)$/.exec(line);
+    if (names !== null) {
+      for (const name of (names[2] as string).split(/\s+/).filter((each) => each !== '')) {
+        if (names[1] === 'export') {
+          into.exported.add(name);
+          into.unexported.delete(name);
+        } else {
+          into.unexported.add(name);
+          into.exported.delete(name);
+        }
+      }
+      continue;
+    }
+    const assignment = MAKE_ASSIGNMENT.exec(line);
+    if (assignment !== null) {
+      const [, exported, name, op, value] = assignment as unknown as [string, string | undefined, string, string, string];
+      assign(into.values, name, op, value, lookup);
+      if (exported !== undefined) {
+        into.exported.add(name);
+        into.unexported.delete(name);
+      }
+      continue;
+    }
+    // A target's own variable: `serve: export PORT = 4500`, `a b: PORT := 1`.
+    const rule = /^([^:=#]+?)\s*:(?![:=])\s*(.*)$/.exec(line);
+    const own = rule === null ? null : MAKE_ASSIGNMENT.exec((rule[2] as string).replace(/^override\s+/, ''));
+    if (rule !== null && own !== null) {
+      const [, exported, name, op, value] = own as unknown as [string, string | undefined, string, string, string];
+      for (const target of (rule[1] as string).split(/\s+/).filter((each) => each !== '')) {
+        const vars = into.targets.get(target) ?? new Map<string, MakeVariable & { exported: boolean }>();
+        const scratch = new Map<string, MakeVariable>(vars);
+        // `+=` on a target appends to the file's own value.
+        const global = lookup(name);
+        if (op === '+=' && !scratch.has(name) && global !== undefined) scratch.set(name, global);
+        assign(scratch, name, op, value, (each) => vars.get(each) ?? lookup(each));
+        vars.set(name, { ...(scratch.get(name) as MakeVariable), exported: exported !== undefined || vars.get(name)?.exported === true });
+        into.targets.set(target, vars);
+      }
+    }
+  }
+};
+
+/**
+ * The environment a Makefile gives a target's recipe (P343): every variable
+ * it exports, at its final value as make has read the whole file, the
+ * target's own variables over them - those it exports, and those whose name
+ * the file exports anyway. A value make fills from the shell (`!=`,
+ * `$(shell ...)`) or from a variable it does not set is said so where used.
+ */
+const recipeEnvironment = (variables: MakeVariables, target: string): { env: Record<string, DeployedValue>; lookup: (name: string) => MakeVariable | undefined } => {
+  const own = variables.targets.get(target);
+  const lookup = (name: string): MakeVariable | undefined => own?.get(name) ?? variables.values.get(name);
+  const exports = (name: string): boolean => !variables.unexported.has(name) && (variables.exported.has(name) || (variables.exportAll && /^[A-Za-z_][A-Za-z0-9_]*$/.test(name)));
+  const env: Record<string, DeployedValue> = {};
+  const give = (name: string, variable: MakeVariable): void => {
+    env[name] = variable.shell === true ? new Unread(`${name} is what the shell prints for ${variable.value} in the Makefile`) : commandValue(variable.simple ? variable.value : makeExpand(variable.value, lookup));
+  };
+  for (const [name, variable] of variables.values) if (exports(name)) give(name, variable);
+  for (const [name, variable] of own ?? []) if (variable.exported || exports(name)) give(name, variable);
+  return { env, lookup };
+};
+
+/** The recipes of one Makefile, each with the environment the Makefile gives it (P343). */
 const recipesOf = (repoDir: string, makefile: string): Command[] => {
   const make = textAt(repoDir, makefile);
   if (make === undefined) return [];
+  const variables: MakeVariables = { values: new Map(), exported: new Set(), unexported: new Set(), exportAll: false, targets: new Map() };
+  readMakeVariables(repoDir, makefile, variables);
   const found: Command[] = [];
   let target = '';
   const lines = make.split('\n');
   for (let index = 0; index < lines.length; index += 1) {
     const raw = lines[index] as string;
-    const rule = /^([A-Za-z0-9_.\-/]+)\s*:(?!=)/.exec(raw);
-    if (rule !== null) target = rule[1] as string;
+    const rule = /^([A-Za-z0-9_.\-/]+)(?:\s+[A-Za-z0-9_.\-/]+)*\s*:(?![:=])/.exec(raw);
+    if (rule !== null && !MAKE_ASSIGNMENT.test(raw.trim())) target = rule[1] as string;
     if (!raw.startsWith('\t')) continue;
     // A recipe line ending in a backslash goes on on the next, as the shell is handed it.
     const start = index;
@@ -175,17 +335,52 @@ const recipesOf = (repoDir: string, makefile: string): Command[] => {
       index += 1;
       written = `${written.replace(/\\\s*$/, ' ')}${(lines[index] as string).trim()}`;
     }
-    found.push(...commandsOfScript(written.replace(/^[@-]+/, ''), { file: makefile, line: start + 1, label: target }, [posix.dirname(makefile)], {}));
+    // Make fills its own variables in before the shell is handed the line.
+    const { env, lookup } = recipeEnvironment(variables, target);
+    found.push(...commandsOfScript(makeExpand(written.replace(/^[@-]+/, ''), lookup), { file: makefile, line: start + 1, label: target }, [posix.dirname(makefile)], env));
   }
   return found;
 };
 
 /** A shell script's commands: run from its own directory or from the repository's. */
-const shellScript = (repoDir: string, file: string): Command[] => {
+const shellScript = (repoDir: string, file: string, env: Readonly<Record<string, DeployedValue>> = {}): Command[] => {
   const text = textAt(repoDir, file);
   if (text === undefined) return [];
   const own = posix.dirname(file);
-  return commandsOfScript(text, { file, line: 1, label: posix.basename(file) }, own === '.' ? ['.'] : [own, '.'], {}, own);
+  return commandsOfScript(text, { file, line: 1, label: posix.basename(file) }, own === '.' ? ['.'] : [own, '.'], env, own);
+};
+
+/**
+ * The commands of a shell script another command of the project runs
+ * (`./bin/server`, P343), with the environment that command hands it, under
+ * what the script itself exports; `dirs` where the command runs it from.
+ */
+export const commandsOfShellScript = (repoDir: string, file: string, env: Readonly<Record<string, DeployedValue>>, dirs?: readonly string[]): Command[] => {
+  const text = textAt(repoDir, file);
+  if (text === undefined) return [];
+  const own = posix.dirname(file);
+  return commandsOfScript(text, { file, line: 1, label: posix.basename(file) }, dirs ?? (own === '.' ? ['.'] : [own, '.']), env, own);
+};
+
+/**
+ * The commands of one `package.json` script a command of the project runs
+ * (`npm run api`, P343), with the environment that command hands it; nothing
+ * where the manifest writes no such script.
+ */
+export const commandsOfPackageScript = (repoDir: string, dir: string, name: string, env: Readonly<Record<string, DeployedValue>>): Command[] => {
+  const manifest = under(dir, 'package.json');
+  const json = textAt(repoDir, manifest);
+  if (json === undefined) return [];
+  let scripts: unknown;
+  try {
+    scripts = (JSON.parse(json) as { scripts?: unknown }).scripts;
+  } catch {
+    return [];
+  }
+  const script = isRecord(scripts) ? scripts[name] : undefined;
+  if (typeof script !== 'string') return [];
+  const at = json.indexOf(JSON.stringify(name));
+  return commandsOfScript(script, { file: manifest, line: at < 0 ? 1 : json.slice(0, at).split('\n').length, label: name }, [dir], env);
 };
 
 /** The environment a pipeline writes: literal values, and what it fills in when it runs said as such. */

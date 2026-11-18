@@ -323,7 +323,22 @@ export interface ServerStart {
   readonly dirs?: readonly string[];
   /** What the shell gives it as text, by name. */
   readonly environment: Readonly<Record<string, string>>;
+  /** What it runs (P343). */
+  readonly runs: StartedProgram;
 }
+
+/**
+ * What a command that may start a server runs (P343): a runtime or a
+ * framework the start list knows (`known`), with the file a runtime is handed
+ * (`node ./scripts/serve.js`, `tsx watch src/server.ts`); a program it does
+ * not know (`program`), by the word that runs it - a path (`./bin/server`)
+ * or a name a package's `bin` may give; or a script of a `package.json` it
+ * does not know (`script`, `npm run api`), which may be a `bin` too.
+ */
+export type StartedProgram =
+  | { readonly kind: 'known'; readonly file?: string }
+  | { readonly kind: 'program'; readonly program: string }
+  | { readonly kind: 'script'; readonly name: string };
 
 /** Runtimes that run a file of the repository's own as its server. */
 const RUNTIMES = new Set(['node', 'nodemon', 'ts-node', 'ts-node-dev', 'tsx', 'bun', 'deno']);
@@ -346,34 +361,80 @@ const FRAMEWORK_STARTS: Readonly<Record<string, ReadonlySet<string> | 'any'>> = 
 /** The scripts a package manager runs that start the server. */
 const STARTING_SCRIPT = /^(?:start|dev|serve)(?::[\w-]+)?$/;
 
-/** Whether a command's words start a server of the repository. */
-const startsServer = (words: readonly string[]): boolean => {
-  let at = 0;
-  while (['exec', 'npx', 'pnpx', 'bunx', 'nohup', 'time'].includes(words[at] ?? '')) at += 1;
-  const program = (words[at] ?? '').split('/').pop() ?? '';
-  const verb = words[at + 1];
-  if (RUNTIMES.has(program)) return verb !== undefined && !NOT_A_START.has(verb);
-  if (program === 'npm' || program === 'pnpm' || program === 'yarn') {
-    const script = verb === 'run' || verb === 'run-script' ? words[at + 2] : verb;
-    return script !== undefined && STARTING_SCRIPT.test(script);
+/** A runtime's options that take a value, so the file it runs is the first word that is neither. */
+const RUNTIME_VALUED = /^(?:-r|--require|--import|--loader|--experimental-loader|--env-file|--conditions|-C|--tsconfig|--project|-P|--inspect-port|--watch-path|--ignore|-w)$/;
+
+/** Verbs a runtime is given before the file it runs: `tsx watch`, `bun run`, `deno run`. */
+const RUNTIME_VERBS = new Set(['watch', 'run', 'serve']);
+
+/** The file a runtime is handed, as written: the first word after it that is no option, nor an option's value. */
+const runtimeFile = (words: readonly string[]): string | undefined => {
+  for (let index = 0; index < words.length; index += 1) {
+    const [flag, inline] = splitFlag(words[index] as string);
+    if (flag.startsWith('-')) {
+      if (inline === undefined && RUNTIME_VALUED.test(flag)) index += 1;
+      continue;
+    }
+    if (index === 0 && RUNTIME_VERBS.has(flag)) continue;
+    return flag;
   }
-  const verbs = FRAMEWORK_STARTS[program];
-  return verbs === 'any' || (verbs !== undefined && verb !== undefined && verbs.has(verb));
+  return undefined;
 };
 
+/** A word that may name a program: a path, or a name a package's `bin` gives. */
+const PROGRAM_WORD = /^(?:\.{0,2}\/)?[\w@.-]+(?:\/[\w@.-]+)*$/;
+
+/** Package managers' own commands, which run no script and no program of the project's. */
+const MANAGER_COMMANDS = new Set([...NOT_A_START, 'publish', 'pack', 'link', 'outdated', 'audit', 'version', 'why', 'list', 'ls', 'config', 'cache', 'dlx', 'create', 'init', 'login', 'logout', 'prune', 'rebuild', 'store', 'update', 'workspace', 'workspaces', 'up', 'run-script']);
+
+/** What a command's words run, where it may start a server of the repository (P337, P343). */
+const startedProgram = (words: readonly string[]): StartedProgram | undefined => {
+  let at = 0;
+  while (['exec', 'npx', 'pnpx', 'bunx', 'nohup', 'time', 'env'].includes(words[at] ?? '')) at += 1;
+  const word = words[at] ?? '';
+  const program = word.split('/').pop() ?? '';
+  const verb = words[at + 1];
+  if (RUNTIMES.has(program)) {
+    if (verb === undefined || NOT_A_START.has(verb)) return undefined;
+    const file = runtimeFile(words.slice(at + 1));
+    return { kind: 'known', ...(file === undefined || isFilledInWord(file) ? {} : { file }) };
+  }
+  if (program === 'npm' || program === 'pnpm' || program === 'yarn') {
+    // `npm exec x`, `pnpm exec x`: a program of a package's `bin`.
+    if (verb === 'exec') return words[at + 2] === undefined || !PROGRAM_WORD.test(words[at + 2] as string) ? undefined : { kind: 'program', program: words[at + 2] as string };
+    const named = verb === 'run' || verb === 'run-script' ? words[at + 2] : verb;
+    if (named === undefined) return undefined;
+    if (STARTING_SCRIPT.test(named)) return { kind: 'known' };
+    // `npm` runs a script only with `run`; pnpm and yarn run one by its name.
+    if ((program === 'npm' && verb !== 'run' && verb !== 'run-script') || MANAGER_COMMANDS.has(named) || named.startsWith('-')) return undefined;
+    return { kind: 'script', name: named };
+  }
+  const verbs = FRAMEWORK_STARTS[program];
+  if (verbs === 'any' || (verbs !== undefined && verb !== undefined && verbs.has(verb))) return { kind: 'known' };
+  if (verbs !== undefined || !PROGRAM_WORD.test(word)) return undefined;
+  return { kind: 'program', program: word };
+};
+
+/** Whether a word holds something the shell fills in. */
+const isFilledInWord = (word: string): boolean => /[$`]/.test(word);
+
 /**
- * Every command of a repository that starts a server with a variable its own
- * shell gives it (P337): `export PORT=4000` earlier in a script, then `npm
- * start`; `PORT=4000 node dist/main.js`. Only within one script, and only
- * after the export, as the command reader keeps the environment. A
- * pipeline's is not read: it runs on the pipeline's machine.
+ * Every command of a repository that may start a server with a variable its
+ * own shell gives it (P337): `export PORT=4000` earlier in a script, then
+ * `npm start`; `PORT=4000 node dist/main.js`. Only within one script, and
+ * only after the export, as the command reader keeps the environment. A
+ * pipeline's is not read: it runs on the pipeline's machine. A program or a
+ * script the start list does not know is kept with what it runs (P343), for
+ * the reader to follow to a file of the repository whose code listens.
  */
 export const serverStartsOf = (commands: readonly CommandAt[]): ServerStart[] =>
   commands.flatMap((command) => {
-    if (isPipeline(command.file) || !startsServer(command.words)) return [];
+    if (isPipeline(command.file)) return [];
+    const runs = startedProgram(command.words);
+    if (runs === undefined) return [];
     const environment = shellVariables(command.env);
     if (Object.keys(environment).length === 0) return [];
-    return [{ file: command.file, line: command.line, ...(command.dirs === undefined ? {} : { dirs: command.dirs }), environment }];
+    return [{ file: command.file, line: command.line, ...(command.dirs === undefined ? {} : { dirs: command.dirs }), environment, runs }];
   });
 
 /**

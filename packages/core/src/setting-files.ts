@@ -118,6 +118,23 @@ export interface ContainerRun {
    * reads its port from, where it listens there is not known.
    */
   readonly environmentSecret?: readonly string[];
+  /** Where each setting of `environmentSecret` is from: the Secret and its key (P343). */
+  readonly environmentSecretFrom?: Readonly<Record<string, SecretSource>>;
+}
+
+/**
+ * Where a setting a `Secret` gives a container is from (P343): the Secret's
+ * name and the key whose value the setting is, and the file that writes the
+ * Secret where the manifests read hold it - so a row can say where to look,
+ * the value itself never being read.
+ */
+export interface SecretSource {
+  /** The Secret's name: `ledger-secrets`. */
+  readonly secret: string;
+  /** Its key the setting takes: `ADMIN_PORT`, or `port` of a `secretKeyRef`. */
+  readonly key: string;
+  /** The manifest that writes the Secret, where one read does. */
+  readonly file?: string;
 }
 
 /**
@@ -186,6 +203,8 @@ export interface RoutedName {
   readonly imageUnread?: ImageUnread;
   /** The settings a `Secret` gives the containers, by name only (P337). */
   readonly environmentSecret?: readonly string[];
+  /** Where each setting of `environmentSecret` is from: the Secret and its key (P343). */
+  readonly environmentSecretFrom?: Readonly<Record<string, SecretSource>>;
 }
 
 /** A port one of a service's own files gives a setting, on the machine a developer runs it on (P254). */

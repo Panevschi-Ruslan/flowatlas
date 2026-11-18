@@ -105,6 +105,8 @@ const NOTES: readonly string[] = [
   'published-port-unheard',
   // A container's image whose environment is not read, where the port its service listens on hangs on it (P331)
   'container-image-unread',
+  // A program of the project's own a script starts with a port, whose file is not in the repository (P343)
+  'server-start-unread',
   // A server's port read only as a guess, where a write or a file not read may move it (P321)
   'listen-port-guessed',
   // A request a server's proxy forwards to a host no service of the project is reached at (P257)

@@ -63,6 +63,21 @@ describe("a command's own shell (P337)", () => {
     expect(starts(['npm', 'start'], '.github/workflows/ci.yml')).toBe(0);
     expect(serverStartsOf([{ file: 'run.sh', line: 1, words: ['npm', 'start'], env: {} }])).toEqual([]);
   });
+
+  it('keeps what a command runs: the file a runtime is handed, a program or a script the start list does not know (P343)', () => {
+    const env = { PORT: '4600' };
+    const runs = (words: string[]) => serverStartsOf([{ file: 'run.sh', line: 1, words, env }])[0]?.runs;
+    expect(runs(['node', '--env-file', '.env', './scripts/serve.js'])).toEqual({ kind: 'known', file: './scripts/serve.js' });
+    expect(runs(['tsx', 'watch', '--tsconfig', 'tsconfig.json', 'src/server.ts'])).toEqual({ kind: 'known', file: 'src/server.ts' });
+    expect(runs(['npm', 'start'])).toEqual({ kind: 'known' });
+    expect(runs(['./bin/server', '--verbose'])).toEqual({ kind: 'program', program: './bin/server' });
+    expect(runs(['pnpm', 'exec', 'shop-api'])).toEqual({ kind: 'program', program: 'shop-api' });
+    expect(runs(['npm', 'run', 'api'])).toEqual({ kind: 'script', name: 'api' });
+    expect(runs(['yarn', 'api'])).toEqual({ kind: 'script', name: 'api' });
+    expect(runs(['npm', 'api'])).toBeUndefined();
+    expect(runs(['pnpm', 'publish'])).toBeUndefined();
+    expect(runs(['$SERVER'])).toBeUndefined();
+  });
 });
 
 describe('compose run by a script with its shell, COMPOSE_ENV_FILES and the .env (P337)', () => {

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: accounts-ports
+data:
+  http: NzEwMA==
+stringData:
+  token: fixture-secret-never-read

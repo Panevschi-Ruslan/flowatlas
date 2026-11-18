@@ -71,7 +71,13 @@ export const interpolated = (raw: string, variables: Readonly<Record<string, str
   return unsettled ? undefined : out;
 };
 
-/** `KEY=value` items, or a mapping of them. */
+/**
+ * `KEY=value` items, or a mapping of them. A setting written with no value -
+ * `- PORT`, `PORT:` - is given what compose's own variables give that name
+ * (P343): the shell it is run in and the `.env` (or the `--env-file`s,
+ * `COMPOSE_ENV_FILES`) it interpolates with, as compose resolves it; one
+ * nothing gives is left unset, as compose leaves it.
+ */
 const environmentOf = (value: unknown, variables: Readonly<Record<string, string>> = {}): Written[] => {
   const out: Written[] = [];
   const push = (name: string, raw: string | undefined): void => {
@@ -79,15 +85,24 @@ const environmentOf = (value: unknown, variables: Readonly<Record<string, string
     const settled = interpolated(raw, variables);
     if (settled !== undefined && settled !== '') out.push({ name, raw: settled });
   };
+  // Taken as it is given, not interpolated again.
+  const lookedUp = (name: string): void => {
+    const given = variables[name];
+    if (given !== undefined && given !== '') out.push({ name, raw: given });
+  };
   if (Array.isArray(value)) {
     for (const item of value) {
       const text = scalar(item);
       if (text === undefined) continue;
       const equals = text.indexOf('=');
       if (equals > 0) push(text.slice(0, equals).trim(), text.slice(equals + 1));
+      else if (/^[A-Za-z_][A-Za-z0-9_.-]*$/.test(text.trim())) lookedUp(text.trim());
     }
   } else if (isRecord(value)) {
-    for (const [name, raw] of Object.entries(value)) push(name, scalar(raw));
+    for (const [name, raw] of Object.entries(value)) {
+      if (raw === null || raw === undefined) lookedUp(name);
+      else push(name, scalar(raw));
+    }
   }
   return out;
 };
