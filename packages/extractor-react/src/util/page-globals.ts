@@ -168,6 +168,14 @@ interface Reference {
   /** The one export a module is read for (P334): `import { base } from './shared.js'` reads `base` alone. */
   readonly exported?: string;
   /**
+   * The members taken off the export, or off the module where no export is
+   * named (P341): `lib.configs.browser` is the module `lib` names, read for
+   * its `configs.browser` alone.
+   */
+  readonly path?: readonly string[];
+  /** The text the configuration names it by, said where it cannot be followed (P341). */
+  readonly named?: string;
+  /**
    * A plugin's configuration by its name (P334): `plugin:shop/recommended` in a
    * cascading `extends` (`flat` false), `'shop/recommended'` in a flat
    * object's `extends` (`flat` true), read from the plugin's `configs`.
@@ -186,6 +194,26 @@ interface ConfigReading {
   readonly root: boolean;
   readonly references: readonly Reference[];
   readonly ignored: readonly string[];
+  /**
+   * What the configuration names that cannot be followed where it is written
+   * (P341): a configuration taken off a name nothing imports or requires
+   * (`[lib.configs.browser]` with `lib` a global).
+   */
+  readonly unknown?: readonly Unfollowed[];
+  /** Why the value asked of the file (an export, a member, a plugin's configuration) was not found in it (P341). */
+  readonly missed?: string;
+}
+
+/**
+ * A configuration a linter's configuration names and that was not followed
+ * (P341), said in the row of a client's global nothing declares: what names
+ * it, by what, and why it was not read.
+ */
+interface Unfollowed {
+  readonly file: string;
+  readonly named: string;
+  readonly why: string;
+  readonly scopes: readonly Scope[];
 }
 
 /** What one directory's configuration says, with what it names read into it (P323). */
@@ -194,6 +222,7 @@ interface LinterConfig {
   readonly declared: readonly Declared[];
   readonly root: boolean;
   readonly ignored: readonly Glob[];
+  readonly unfollowed: readonly Unfollowed[];
 }
 
 /** A pattern with its `{a,b}` alternatives spelled out, the way the linter's glob reads them. */
@@ -256,37 +285,91 @@ const globalsIn = (value: ts.Expression, names: Set<string>): void => {
 const scopeOf = (files: readonly string[], excluded: readonly string[], flat: boolean): Scope => ({ files: globsOf(files), excluded: globsOf(excluded), byName: !flat });
 
 /**
- * A module a configuration takes a name in from, and the one export it takes
- * (P334): none for the whole module, which is what its default export is read
- * as.
+ * A module a configuration takes a name in from, the one export it takes
+ * (P334) - none for the whole module, which is what its default export is
+ * read as - and the members taken off that (P341): `lib.configs.browser` is
+ * `lib`'s module and `configs`, `browser`.
  */
 interface Imported {
   readonly from: string;
   readonly exported?: string;
+  readonly path?: readonly string[];
 }
 
 /** Whether a value read out of a configuration is a module it takes in rather than an expression it writes. */
 const isImported = (value: ts.Expression | Imported): value is Imported => !('kind' in value);
 
+/** The members a module's value is taken by, its export first: `default` where it names none. */
+const membersOf = (module: Imported): string[] => [module.exported ?? 'default', ...(module.path ?? [])];
+
+/** A module with members taken off it (P341): the first its export (`default` the module), the rest a path into that. */
+const takenFrom = (from: string, members: readonly string[]): Imported => {
+  const [first, ...rest] = members;
+  const taken: Imported = first === undefined || first === 'default' ? { from } : { from, exported: first };
+  return rest.length === 0 ? taken : { ...taken, path: rest };
+};
+
 /** The export an import or a re-export takes: none for a default, which is the module. */
-const takenExport = (from: string, name: string): Imported => (name === 'default' ? { from } : { from, exported: name });
+const takenExport = (from: string, name: string): Imported => takenFrom(from, [name]);
+
+/** A module's value with more members taken off it (P341). */
+const deeper = (module: Imported, members: readonly string[]): Imported => (members.length === 0 ? module : takenFrom(module.from, [...membersOf(module), ...members]));
+
+/** An expression with what only wraps it taken off: parentheses, a type said of it, an `await`. */
+const unwrapped = (node: ts.Expression): ts.Expression => {
+  let at = node;
+  while (ts.isParenthesizedExpression(at) || ts.isAsExpression(at) || ts.isSatisfiesExpression(at) || ts.isNonNullExpression(at) || ts.isAwaitExpression(at)) at = at.expression;
+  return at;
+};
+
+/** The member a property access, or an element access by a string, takes. */
+const memberName = (node: ts.Node): string | undefined => {
+  if (ts.isPropertyAccessExpression(node)) return node.name.text;
+  if (!ts.isElementAccessExpression(node)) return undefined;
+  const key = node.argumentExpression;
+  return ts.isStringLiteral(key) || ts.isNoSubstitutionTemplateLiteral(key) ? key.text : undefined;
+};
+
+/** What an expression takes members off, and the members (P341): `lib.configs['browser']` is `lib` and `configs`, `browser`. */
+const chainOf = (node: ts.Expression): { readonly base: ts.Expression; readonly members: readonly string[] } => {
+  const members: string[] = [];
+  let at = unwrapped(node);
+  for (let name = memberName(at); name !== undefined; name = memberName(at)) {
+    members.unshift(name);
+    at = unwrapped((at as ts.PropertyAccessExpression | ts.ElementAccessExpression).expression);
+  }
+  return { base: at, members };
+};
+
+/** Whether a node only wraps the expression it holds: parentheses, a type said of it, an `await`. */
+const wraps = (node: ts.Node): boolean =>
+  ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isSatisfiesExpression(node) || ts.isNonNullExpression(node) || ts.isAwaitExpression(node);
+
+/** The outermost of the members taken off a node, and of what only wraps them: `(lib.configs).browser` for `lib`. */
+const chainTop = (node: ts.Node): ts.Node => {
+  let at = node;
+  for (let parent = at.parent; parent !== undefined; parent = at.parent) {
+    const takes = (ts.isPropertyAccessExpression(parent) || ts.isElementAccessExpression(parent)) && parent.expression === at && memberName(parent) !== undefined;
+    if (!takes && !wraps(parent)) return at;
+    at = parent;
+  }
+  return at;
+};
 
 /**
- * The module a `require('x')` names, read through a member taken off it:
- * `require('x').base` takes `base` alone (P334), `require('x').default` the
- * module.
+ * The module a `require('x')` or an `import('x')` names, read through the
+ * members taken off it: `require('x').base` takes `base` alone (P334),
+ * `require('x').default` the module, `require('x').configs.browser` the
+ * `browser` of its `configs` (P341).
  */
-const requiredIn = (node: ts.Node): Imported | undefined => {
-  let at = node;
-  let member: string | undefined;
-  while (ts.isPropertyAccessExpression(at)) {
-    member = at.name.text;
-    at = at.expression;
-  }
-  if (!ts.isCallExpression(at) || !ts.isIdentifier(at.expression) || at.expression.text !== 'require') return undefined;
-  const [specifier] = at.arguments;
-  if (specifier === undefined || !ts.isStringLiteral(specifier)) return undefined;
-  return member === undefined ? { from: specifier.text } : takenExport(specifier.text, member);
+const requiredIn = (node: ts.Expression): Imported | undefined => {
+  const { base, members } = chainOf(node);
+  if (!ts.isCallExpression(base)) return undefined;
+  const callee = base.expression;
+  if (!(ts.isIdentifier(callee) && callee.text === 'require') && callee.kind !== ts.SyntaxKind.ImportKeyword) return undefined;
+  const [specifier] = base.arguments;
+  if (specifier === undefined || !(ts.isStringLiteral(specifier) || ts.isNoSubstitutionTemplateLiteral(specifier))) return undefined;
+  return takenFrom(specifier.text, members);
 };
 
 /**
@@ -294,7 +377,10 @@ const requiredIn = (node: ts.Node): Imported | undefined => {
  * each names and the export it takes (P323, P334): `import base from
  * './base.js'` and `import * as shared from 'x'` the whole module, `import {
  * browser } from 'x'` its `browser` alone; `const base = require('./base')`,
- * and the names destructured out of a `require` each its own export.
+ * and the names destructured out of a `require` each its own export. A name
+ * kept for members taken off one of those (P341) - `const browser =
+ * lib.configs.browser`, `const { configs } = require('x')`, `const lib =
+ * await import('x')` - is that module's, read for those members.
  */
 const importedNames = (source: ts.SourceFile): ReadonlyMap<string, Imported> => {
   const names = new Map<string, Imported>();
@@ -310,14 +396,21 @@ const importedNames = (source: ts.SourceFile): ReadonlyMap<string, Imported> => 
     }
     if (!ts.isVariableStatement(statement)) continue;
     for (const declaration of statement.declarationList.declarations) {
-      const required = declaration.initializer === undefined ? undefined : requiredIn(declaration.initializer);
-      if (required === undefined) continue;
-      if (ts.isIdentifier(declaration.name)) names.set(declaration.name.text, required);
+      const written = declaration.initializer;
+      if (written === undefined) continue;
+      let module = requiredIn(written);
+      if (module === undefined) {
+        const { base, members } = chainOf(written);
+        const root = ts.isIdentifier(base) ? names.get(base.text) : undefined;
+        module = root === undefined ? undefined : deeper(root, members);
+      }
+      if (module === undefined) continue;
+      if (ts.isIdentifier(declaration.name)) names.set(declaration.name.text, module);
       else if (ts.isObjectBindingPattern(declaration.name)) {
         for (const element of declaration.name.elements) {
           if (!ts.isIdentifier(element.name)) continue;
           const taken = element.propertyName === undefined ? element.name.text : keyOf(element.propertyName);
-          names.set(element.name.text, required.exported === undefined && taken !== undefined ? takenExport(required.from, taken) : { from: required.from });
+          names.set(element.name.text, taken === undefined ? module : deeper(module, [taken]));
         }
       }
     }
@@ -393,23 +486,129 @@ const exportedValue = (source: ts.SourceFile, name: string): ts.Expression | Imp
   return undefined;
 };
 
+/** Whether a call is `Object.assign(…)`. */
+const isObjectAssign = (node: ts.Node): node is ts.CallExpression =>
+  ts.isCallExpression(node) &&
+  ts.isPropertyAccessExpression(node.expression) &&
+  node.expression.name.text === 'assign' &&
+  ts.isIdentifier(node.expression.expression) &&
+  node.expression.expression.text === 'Object';
+
 /**
- * What an expression of a module stands for (P334): the expression a name of
- * the module holds, followed a few names deep, or the module and export a
- * name it takes in, or a `require`, names.
+ * A write a module makes to the members of a name it keeps (P341):
+ * `plugin.configs.browser = { … }`, `plugin.configs = { … }`,
+ * `Object.assign(plugin.configs, { … })` - the values written, the last
+ * one first, since a later key wins.
  */
-const valueOf = (source: ts.SourceFile, start: ts.Expression | Imported | undefined, imported: ReadonlyMap<string, Imported>): ts.Expression | Imported | undefined => {
-  let at = start;
-  for (let hop = 0; hop < 6; hop += 1) {
-    if (at === undefined || isImported(at)) return at;
-    let node: ts.Expression = at;
-    while (ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isSatisfiesExpression(node)) node = node.expression;
-    const required = requiredIn(node);
-    if (required !== undefined) return required;
-    if (!ts.isIdentifier(node)) return node;
-    at = imported.get(node.text) ?? localValue(source, node.text);
+interface MemberWrite {
+  readonly root: string;
+  readonly members: readonly string[];
+  readonly values: readonly ts.Expression[];
+}
+
+const writesIn = new WeakMap<ts.SourceFile, readonly MemberWrite[]>();
+
+/** Every write a module makes to the members of a name, in the order it writes them (P341). */
+const memberWrites = (source: ts.SourceFile): readonly MemberWrite[] => {
+  const known = writesIn.get(source);
+  if (known !== undefined) return known;
+  const writes: MemberWrite[] = [];
+  const target = (node: ts.Expression): { root: string; members: readonly string[] } | undefined => {
+    const { base, members } = chainOf(node);
+    return ts.isIdentifier(base) ? { root: base.text, members } : undefined;
+  };
+  const visit = (node: ts.Node): void => {
+    if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+      const at = target(node.left);
+      if (at !== undefined && at.members.length > 0) writes.push({ ...at, values: [node.right] });
+    } else if (isObjectAssign(node)) {
+      const [first, ...rest] = node.arguments;
+      const at = first === undefined ? undefined : target(first);
+      if (at !== undefined && rest.length > 0) writes.push({ ...at, values: [...rest].reverse() });
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  writesIn.set(source, writes);
+  return writes;
+};
+
+/** How many names and members one value of a module is followed through at most. */
+const MEMBER_HOPS = 16;
+
+/**
+ * What an expression of a module stands for with members taken off it (P334,
+ * P341): the expression a name of the module holds, or the last value the
+ * module writes to that member of it (`plugin.configs.browser = …`,
+ * `Object.assign(plugin.configs, …)`); a key of an object written in place,
+ * or of an object it spreads (`{ ...base, recommended: … }`), the last
+ * writing it winning, or of an object `Object.assign` builds; the module and
+ * export a name it takes in, or a `require`, names, with the members left to
+ * take off it there. Nothing where a step is written some other way (a call
+ * building the value, a member nothing writes).
+ */
+const memberValue = (
+  source: ts.SourceFile,
+  start: ts.Expression | Imported | undefined,
+  path: readonly string[],
+  imported: ReadonlyMap<string, Imported>,
+  hops = 0,
+): ts.Expression | Imported | undefined => {
+  if (start === undefined || hops > MEMBER_HOPS) return undefined;
+  if (isImported(start)) return deeper(start, path);
+  const required = requiredIn(start);
+  if (required !== undefined) return deeper(required, path);
+  const { base, members } = chainOf(start);
+  const wanted = [...members, ...path];
+  if (ts.isIdentifier(base)) {
+    let written: ts.Expression | Imported | undefined;
+    for (const write of memberWrites(source)) {
+      if (write.root !== base.text || write.members.length > wanted.length || write.members.some((member, at) => wanted[at] !== member)) continue;
+      const rest = wanted.slice(write.members.length);
+      for (const value of write.values) {
+        const found = memberValue(source, value, rest, imported, hops + 1);
+        if (found === undefined) continue;
+        written = found;
+        break;
+      }
+    }
+    if (written !== undefined) return written;
+    const held = imported.get(base.text) ?? localValue(source, base.text);
+    return held === undefined ? undefined : memberValue(source, held, wanted, imported, hops + 1);
+  }
+  if (wanted.length === 0) return base;
+  const [key, ...rest] = wanted;
+  if (ts.isObjectLiteralExpression(base)) {
+    for (const property of [...base.properties].reverse()) {
+      if (ts.isPropertyAssignment(property) && keyOf(property.name) === key) return memberValue(source, property.initializer, rest, imported, hops + 1);
+      if (ts.isShorthandPropertyAssignment(property) && property.name.text === key) return memberValue(source, property.name, rest, imported, hops + 1);
+      if (ts.isSpreadAssignment(property)) {
+        const found = memberValue(source, property.expression, wanted, imported, hops + 1);
+        if (found !== undefined) return found;
+      }
+    }
+    return undefined;
+  }
+  if (isObjectAssign(base)) {
+    for (const argument of [...base.arguments].reverse()) {
+      const found = memberValue(source, argument, wanted, imported, hops + 1);
+      if (found !== undefined) return found;
+    }
   }
   return undefined;
+};
+
+/**
+ * A module's value by the members another takes off it (P341): off the
+ * export named, else off the module - its default export, or the named
+ * export the first member is, the way `import * as lib` reads `lib.configs`.
+ */
+const moduleMember = (source: ts.SourceFile, imported: ReadonlyMap<string, Imported>, exported: string | undefined, path: readonly string[]): ts.Expression | Imported | undefined => {
+  if (exported !== undefined) return memberValue(source, exportedValue(source, exported), path, imported);
+  const whole = memberValue(source, exportedValue(source, 'default'), path, imported);
+  if (whole !== undefined || path.length === 0) return whole;
+  const [first, ...rest] = path;
+  return memberValue(source, exportedValue(source, first as string), rest, imported);
 };
 
 /**
@@ -427,16 +626,22 @@ const readAsValue = (name: ts.Identifier): boolean => {
   ) {
     return false;
   }
-  let top: ts.Node = name;
-  while (ts.isPropertyAccessExpression(top.parent) && top.parent.expression === top) top = top.parent;
+  const top = chainTop(name);
   return !(ts.isCallExpression(top.parent) && top.parent.expression === top);
 };
 
-/** Whether a `require` call, or a member taken off it, is what a declaration holds: read where the name it is kept under is. */
-const declaredFrom = (call: ts.Node): boolean => {
-  let top = call;
-  while (ts.isPropertyAccessExpression(top.parent) && top.parent.expression === top) top = top.parent;
-  return ts.isVariableDeclaration(top.parent);
+/**
+ * Whether a module taken in, or members taken off it, is what a declaration
+ * at the top of the configuration holds, which keeps it under a name
+ * ({@link importedNames}): read where that name is.
+ */
+const declaredFrom = (node: ts.Node): boolean => {
+  const holder = chainTop(node).parent;
+  if (holder === undefined || !ts.isVariableDeclaration(holder)) return false;
+  const statement = holder.parent.parent;
+  if (!ts.isVariableStatement(statement) || !ts.isSourceFile(statement.parent)) return false;
+  // An exported name is read where it is written, as a module read whole is.
+  return !(ts.getModifiers(statement) ?? []).some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword);
 };
 
 /** Whether an object of a flat configuration writes `ignores` and nothing else but a name: the files no object is for (P323). */
@@ -475,7 +680,7 @@ const pluginPackage = (name: string): string => {
 const extendsReference = (specifier: string, scopes: readonly Scope[]): Reference => {
   const plugin = /^plugin:(.+)\/([^/]+)$/.exec(specifier);
   if (plugin === null) return { specifier, kind: 'extends', scopes };
-  return { specifier: pluginPackage(plugin[1] as string), kind: 'plugin', scopes, config: { name: plugin[2] as string, flat: false } };
+  return { specifier: pluginPackage(plugin[1] as string), kind: 'plugin', scopes, config: { name: plugin[2] as string, flat: false }, named: specifier };
 };
 
 /** The plugins a flat object hands over by namespace, and the module each is (P334): `plugins: { shop: shopPlugin }`. */
@@ -502,19 +707,29 @@ const pluginsOf = (value: ts.Expression | undefined, imported: ReadonlyMap<strin
 const flatExtendsReference = (text: string, plugins: ReadonlyMap<string, string>, scopes: readonly Scope[]): Reference | undefined => {
   const namespace = [...plugins.keys()].filter((key) => text.startsWith(`${key}/`)).sort((a, b) => b.length - a.length)[0];
   if (namespace !== undefined) {
-    return { specifier: plugins.get(namespace) as string, kind: 'plugin', scopes, config: { name: text.slice(namespace.length + 1), flat: true } };
+    return { specifier: plugins.get(namespace) as string, kind: 'plugin', scopes, config: { name: text.slice(namespace.length + 1), flat: true }, named: text };
   }
   const slash = text.lastIndexOf('/');
   if (slash <= 0) return undefined;
-  return { specifier: pluginPackage(text.slice(0, slash)), kind: 'plugin', scopes, config: { name: text.slice(slash + 1), flat: true } };
+  return { specifier: pluginPackage(text.slice(0, slash)), kind: 'plugin', scopes, config: { name: text.slice(slash + 1), flat: true }, named: text };
 };
 
 const NOTHING_READ: ConfigReading = { declared: [], root: false, references: [], ignored: [] };
 
+/** A reference to a module taken in, read for the export and the members taken off it (P334, P341). */
+const moduleReference = (module: Imported, kind: Reference['kind'], scopes: readonly Scope[], named?: string): Reference => ({
+  specifier: module.from,
+  kind,
+  scopes,
+  ...(module.exported === undefined ? {} : { exported: module.exported }),
+  ...(module.path === undefined ? {} : { path: module.path }),
+  ...(named === undefined ? {} : { named }),
+});
+
 /** A configuration that is a module another names, read from that module (P334). */
 const readingOfModule = (module: Imported, flat: boolean): ConfigReading => ({
   ...NOTHING_READ,
-  references: [{ specifier: module.from, kind: flat ? 'module' : 'extends', scopes: [], ...(module.exported === undefined ? {} : { exported: module.exported }) }],
+  references: [moduleReference(module, flat ? 'module' : 'extends', [])],
 });
 
 /**
@@ -533,6 +748,7 @@ const readConfigNode = (start: ts.Node, imported: ReadonlyMap<string, Imported>,
   const declared: Declared[] = [];
   const references: Reference[] = [];
   const ignored: string[] = [];
+  const unknown: Unfollowed[] = [];
   let root = false;
   const visit = (node: ts.Node, within: boolean, scopes: readonly Scope[]): void => {
     if (within && ts.isObjectLiteralExpression(node)) {
@@ -590,50 +806,107 @@ const readConfigNode = (start: ts.Node, imported: ReadonlyMap<string, Imported>,
       if (key === 'extends' && !flat) for (const specifier of writtenStrings(node.initializer)) references.push(extendsReference(specifier, scopes));
     }
     if (within && !json) {
-      const from = ts.isIdentifier(node) ? (readAsValue(node) ? imported.get(node.text) : undefined) : ts.isCallExpression(node) && !declaredFrom(node) ? requiredIn(node) : undefined;
-      if (from !== undefined) references.push({ specifier: from.from, kind: 'module', scopes, ...(from.exported === undefined ? {} : { exported: from.exported }) });
+      let from: Imported | undefined;
+      let top: ts.Node = node;
+      if (ts.isIdentifier(node) && readAsValue(node)) {
+        top = chainTop(node);
+        const { members } = chainOf(top as ts.Expression);
+        const held = imported.get(node.text);
+        // Members taken off a name kept at the top are read where the name is (P341).
+        if (held !== undefined && !declaredFrom(node)) from = deeper(held, members);
+        else if (held === undefined && members.length > 0 && holdsConfiguration(top) && !namesDeclared(node.getSourceFile()).has(node.text)) {
+          unknown.push({ file: '', named: top.getText().slice(0, 80), why: `${node.text} is neither imported nor required`, scopes });
+        }
+      } else if (ts.isCallExpression(node) && !declaredFrom(node)) {
+        top = chainTop(node);
+        from = requiredIn(top as ts.Expression);
+      }
+      if (from !== undefined) references.push(moduleReference(from, 'module', scopes, top.getText().slice(0, 80)));
     }
     ts.forEachChild(node, (child) => visit(child, within, scopes));
   };
   visit(start, within, []);
-  return { declared, root, references, ignored };
+  return { declared, root, references, ignored, unknown };
+};
+
+/**
+ * Whether an expression stands where a flat configuration takes a
+ * configuration (P341): an entry of a list (the configuration's own, an
+ * `extends`), an object spread in, or the value a module exports.
+ */
+const holdsConfiguration = (node: ts.Node): boolean => {
+  const parent = node.parent;
+  return parent !== undefined && (ts.isArrayLiteralExpression(parent) || ts.isSpreadElement(parent) || ts.isSpreadAssignment(parent) || ts.isExportAssignment(parent));
+};
+
+const namesIn = new WeakMap<ts.SourceFile, ReadonlySet<string>>();
+
+/** Every name a module declares anywhere: its variables, functions, classes, parameters and imports. */
+const namesDeclared = (source: ts.SourceFile): ReadonlySet<string> => {
+  const known = namesIn.get(source);
+  if (known !== undefined) return known;
+  const names = new Set<string>();
+  const visit = (node: ts.Node): void => {
+    if (
+      (ts.isVariableDeclaration(node) || ts.isBindingElement(node) || ts.isParameter(node) || ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) ||
+        ts.isImportClause(node) || ts.isImportSpecifier(node) || ts.isNamespaceImport(node)) &&
+      node.name !== undefined &&
+      ts.isIdentifier(node.name)
+    ) {
+      names.add(node.name.text);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  namesIn.set(source, names);
+  return names;
 };
 
 /**
  * What a configuration written as a script or as JSON says ({@link
  * readConfigNode}): the whole of it, or the one export another configuration
- * takes from it (P334) - the whole where the module writes that export in a
- * way not read.
+ * takes from it (P334) and the members taken off that (P341) - the whole
+ * where the module writes them in a way not read, said as missed.
  */
-const scriptConfig = (text: string, json: boolean, manifest: boolean, flat: boolean, exported?: string): ConfigReading => {
+const scriptConfig = (text: string, json: boolean, manifest: boolean, flat: boolean, exported?: string, path: readonly string[] = []): ConfigReading => {
   const source = ts.createSourceFile('config.js', json ? `(${text})` : text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   const imported = json ? new Map<string, Imported>() : importedNames(source);
-  if (exported !== undefined && !json && !manifest) {
-    const value = valueOf(source, exportedValue(source, exported), imported);
-    if (value !== undefined) return isImported(value) ? readingOfModule(value, flat) : readConfigNode(value, imported, true, false, flat);
+  if ((exported !== undefined || path.length > 0) && !manifest) {
+    const statement = source.statements[0];
+    // A JSON file is its one value: what is taken off it is a key of that.
+    const value = json
+      ? statement !== undefined && ts.isExpressionStatement(statement) ? memberValue(source, statement.expression, exported === undefined ? path : [exported, ...path], imported) : undefined
+      : moduleMember(source, imported, exported, path);
+    if (value !== undefined) return isImported(value) ? readingOfModule(value, flat) : readConfigNode(value, imported, true, json, flat);
+    const whole = readConfigNode(source, imported, true, json, flat);
+    return { ...whole, missed: `${[exported ?? 'default', ...path].join('.')} is written in a way not read, so the whole module was read` };
   }
   return readConfigNode(source, imported, !manifest, json, flat);
 };
 
 /**
  * The configuration a plugin's module keeps by a name (P334): the entry of a
- * `configs` object it writes - `{ configs: { browser: { … } } }`,
+ * `configs` object it exports - `{ configs: { browser: { … } } }`,
  * `plugin.configs = { … }` - followed through the names and the modules it is
- * kept under.
+ * kept under, and built from others (P341): `configs: { ...base, browser }`,
+ * `Object.assign(plugin.configs, { browser })`, `plugin.configs.browser =
+ * { … }`, the last write winning. Where the plugin's export cannot be
+ * followed (a call builds it), the first `configs` the module writes
+ * anywhere that keeps the name.
  */
 const pluginConfigValue = (source: ts.SourceFile, name: string, imported: ReadonlyMap<string, Imported>): ts.Expression | Imported | undefined => {
+  const exported = moduleMember(source, imported, undefined, ['configs', name]);
+  if (exported !== undefined) return exported;
   let found: ts.Expression | Imported | undefined;
   const take = (configs: ts.Expression): void => {
-    const object = valueOf(source, configs, imported);
-    if (object === undefined || isImported(object) || !ts.isObjectLiteralExpression(object)) return;
-    const value = propertyValue(object, name);
-    if (value !== undefined) found = valueOf(source, value, imported);
+    found = memberValue(source, configs, [name], imported);
   };
   const visit = (node: ts.Node): void => {
     if (found !== undefined) return;
     if (ts.isPropertyAssignment(node) && keyOf(node.name) === 'configs') take(node.initializer);
     else if (ts.isShorthandPropertyAssignment(node) && node.name.text === 'configs') take(node.name);
-    else if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken && ts.isPropertyAccessExpression(node.left) && node.left.name.text === 'configs') take(node.right);
+    else if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken && memberName(node.left) === 'configs') take(node.left);
+    else if (isObjectAssign(node) && node.arguments[0] !== undefined && memberName(node.arguments[0]) === 'configs') take(node.arguments[0]);
     ts.forEachChild(node, visit);
   };
   visit(source);
@@ -645,7 +918,7 @@ const pluginConfig = (text: string, name: string, flat: boolean): ConfigReading 
   const source = ts.createSourceFile('plugin.js', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   const imported = importedNames(source);
   const value = pluginConfigValue(source, name, imported);
-  if (value === undefined) return NOTHING_READ;
+  if (value === undefined) return { ...NOTHING_READ, missed: `the plugin keeps no configs.${name} written in a way read` };
   return isImported(value) ? readingOfModule(value, flat) : readConfigNode(value, imported, true, false, flat);
 };
 
@@ -695,10 +968,10 @@ const textAt = (fs: FileSystemHost, path: string): string | undefined => {
 };
 
 /** What a configuration file says, read by its kind: YAML, JSON (`.eslintrc` included), a manifest's `eslintConfig`, or a script. */
-const configText = (path: string, text: string, flat: boolean, exported?: string): ConfigReading => {
+const configText = (path: string, text: string, flat: boolean, exported?: string, members: readonly string[] = []): ConfigReading => {
   const name = basename(path);
   if (/\.ya?ml$/.test(name)) return yamlConfig(text);
-  return scriptConfig(text, name === '.eslintrc' || name.endsWith('.json'), name === 'package.json', flat, exported);
+  return scriptConfig(text, name === '.eslintrc' || name.endsWith('.json'), name === 'package.json', flat, exported, members);
 };
 
 /** How many configurations named by others one directory's reading follows, and how deep. */
@@ -792,60 +1065,95 @@ const shareableName = (specifier: string): string => {
 };
 
 /**
+ * Where a configuration's reference leads (P341): the file to read, or why
+ * none is read; nothing for the linter's own configurations
+ * (`eslint:recommended`) and the platform's modules, none of which a
+ * client's globals are read from.
+ */
+type Lead = { readonly file: string } | { readonly why: string } | undefined;
+
+/**
  * The file a configuration names from a directory, where it can be found: a
  * path from that directory, or an installed package, inside the repository
- * (`ceiling`, P334): a path leading out of it is not read. The linter's own
- * configurations (`eslint:recommended`) are none a client's globals are read
- * from.
+ * (`ceiling`, P334): a path leading out of it is not read.
  */
-const referencedFile = (fs: FileSystemHost, from: string, reference: Reference, ceiling: string): string | undefined => {
-  const found = referencedPath(fs, from, reference, ceiling);
-  return found !== undefined && isWithinDir(found, ceiling) ? found : undefined;
-};
-
-/** Where a configuration's reference leads, inside the repository or not. */
-const referencedPath = (fs: FileSystemHost, from: string, reference: Reference, ceiling: string): string | undefined => {
+const referencedFile = (fs: FileSystemHost, from: string, reference: Reference, ceiling: string): Lead => {
   const { specifier, kind } = reference;
   const endings = kind === 'extends' ? EXTENDS_ENDINGS : MODULE_ENDINGS;
-  if (specifier.startsWith('.') || isAbsolute(specifier)) return firstFile(fs, isAbsolute(specifier) ? specifier : join(from, specifier), endings);
+  if (specifier.startsWith('.') || isAbsolute(specifier)) {
+    const found = firstFile(fs, isAbsolute(specifier) ? specifier : join(from, specifier), endings);
+    if (found === undefined) return { why: 'no such file' };
+    return isWithinDir(found, ceiling) ? { file: found } : { why: 'outside the repository' };
+  }
   if (kind === 'extends' && /^(?:eslint|plugin):/.test(specifier)) return undefined;
   if (kind !== 'extends' && UNREAD_MODULES.test(specifier)) return undefined;
   const { name, subpath } = packageOf(kind === 'extends' ? shareableName(specifier) : specifier);
-  return installedFile(fs, from, name, subpath, endings, ceiling);
+  const found = installedFile(fs, from, name, subpath, endings, ceiling);
+  return found === undefined ? { why: `${name} is not installed inside the repository` } : { file: found };
+};
+
+/** The text a reference is said by where it is not followed (P341). */
+const namedBy = (reference: Reference): string => {
+  if (reference.named !== undefined) return reference.named;
+  if (reference.config !== undefined) return `${reference.specifier} configs.${reference.config.name}`;
+  const members = [...(reference.exported === undefined ? [] : [reference.exported]), ...(reference.path ?? [])];
+  return members.length === 0 ? reference.specifier : `${reference.specifier} ${members.join('.')}`;
 };
 
 /**
  * One configuration with every configuration it names read into it (P323):
  * the globals each declares under the scopes it is named in and its own, and
  * a flat module's ignores for every object. A file is read once, and so many
- * and so deep at most.
+ * and so deep at most. What is named and not followed - not found, outside
+ * the repository, past those limits, or a value its file writes in a way not
+ * read - is kept with why, under the scopes it is named in (P341).
  */
 const withReferences = (fs: FileSystemHost, path: string, reading: ConfigReading, ceiling: string): Omit<LinterConfig, 'dir' | 'root'> => {
   const declared = [...reading.declared];
   const ignored = [...reading.ignored];
-  // A file is read once for each export and each plugin's configuration taken from it.
+  const unfollowed: Unfollowed[] = (reading.unknown ?? []).map((each) => ({ ...each, file: path }));
+  // A file is read once for each export, members and plugin's configuration taken from it.
   const seen = new Set<string>([path]);
   let reads = 0;
-  const follow = (references: readonly Reference[], from: string, depth: number): void => {
+  const follow = (references: readonly Reference[], from: string, namedIn: string, depth: number): void => {
     for (const reference of references) {
-      if (depth >= REFERENCE_DEPTH || reads >= REFERENCE_READS) return;
-      const file = referencedFile(fs, from, reference, ceiling);
-      if (file === undefined) continue;
-      const key = reference.config !== undefined ? `${file}#configs.${reference.config.name}` : reference.exported !== undefined ? `${file}#${reference.exported}` : file;
+      const missed = (why: string): void => {
+        unfollowed.push({ file: namedIn, named: namedBy(reference), why, scopes: reference.scopes });
+      };
+      if (depth >= REFERENCE_DEPTH || reads >= REFERENCE_READS) {
+        if (referencedFile(fs, from, reference, ceiling) !== undefined) missed('past how many configurations are followed');
+        continue;
+      }
+      const lead = referencedFile(fs, from, reference, ceiling);
+      if (lead === undefined) continue;
+      if ('why' in lead) {
+        missed(lead.why);
+        continue;
+      }
+      const { file } = lead;
+      const members = [...(reference.exported === undefined ? [] : [reference.exported]), ...(reference.path ?? [])];
+      const key = reference.config !== undefined ? `${file}#configs.${reference.config.name}` : members.length > 0 ? `${file}#${members.join('.')}` : file;
       if (seen.has(key)) continue;
       seen.add(key);
       reads += 1;
       const text = textAt(fs, file);
-      if (text === undefined || text.length > REFERENCE_SIZE) continue;
+      if (text === undefined || text.length > REFERENCE_SIZE) {
+        missed(text === undefined ? 'unreadable' : 'too large to be a configuration');
+        continue;
+      }
       const inner =
-        reference.config !== undefined ? pluginConfig(text, reference.config.name, reference.config.flat) : configText(file, text, reference.kind === 'module', reference.exported);
+        reference.config !== undefined
+          ? pluginConfig(text, reference.config.name, reference.config.flat)
+          : configText(file, text, reference.kind === 'module', reference.exported, reference.path);
+      if (inner.missed !== undefined) missed(inner.missed);
       for (const each of inner.declared) declared.push({ names: each.names, scopes: [...reference.scopes, ...each.scopes] });
+      for (const each of inner.unknown ?? []) unfollowed.push({ ...each, file, scopes: [...reference.scopes, ...each.scopes] });
       if (reference.scopes.length === 0) ignored.push(...inner.ignored);
-      follow(inner.references.map((each) => ({ ...each, scopes: [...reference.scopes, ...each.scopes] })), dirname(file), depth + 1);
+      follow(inner.references.map((each) => ({ ...each, scopes: [...reference.scopes, ...each.scopes] })), dirname(file), file, depth + 1);
     }
   };
-  follow(reading.references, dirname(path), 0);
-  return { declared, ignored: globsOf(ignored.map((pattern) => pattern.replace(/\/+$/, ''))) };
+  follow(reading.references, dirname(path), path, 0);
+  return { declared, ignored: globsOf(ignored.map((pattern) => pattern.replace(/\/+$/, ''))), unfollowed };
 };
 
 /**
@@ -911,7 +1219,17 @@ const readCeiling = (root: string): string => {
  * alone leaves the files it names unlinted, declaring nothing. Read through
  * the project's own file system, lazily and once per directory.
  */
-export const linterGlobals = (fs: FileSystemHost, repoDir: string): ((file: SourceFile) => ReadonlySet<string>) => {
+/**
+ * What the linter's configuration declares for a script, and what it names
+ * for the script that was not followed (P341), each said as `file: named
+ * (why)` with the file relative to the repository's root.
+ */
+export interface LinterGlobals {
+  (file: SourceFile): ReadonlySet<string>;
+  unfollowed(file: SourceFile): readonly string[];
+}
+
+export const linterGlobals = (fs: FileSystemHost, repoDir: string): LinterGlobals => {
   const root = repoDir.length > 1 ? repoDir.replace(/[\\/]+$/, '') : repoDir;
   const inside = (dir: string): boolean => dir === root || dir.startsWith(root.endsWith('/') ? root : `${root}/`);
   // What a configuration names is looked for inside the repository alone (P334):
@@ -930,18 +1248,23 @@ export const linterGlobals = (fs: FileSystemHost, repoDir: string): ((file: Sour
     byDirectory.set(dir, all);
     return all;
   };
+  // The configurations a script is linted under, each with the script's path relative to it.
+  const linting = (file: SourceFile): { config: LinterConfig; relative: string }[] => {
+    const path = file.getFilePath();
+    const dir = dirname(path);
+    return (inside(dir) ? configured(dir) : NO_CONFIGS).flatMap((config) => {
+      const relative = path.slice(config.dir === '/' ? 1 : config.dir.length + 1);
+      // A file the flat configuration ignores for every object is not linted, and declares nothing (P323).
+      return isIgnored(config, relative) ? [] : [{ config, relative }];
+    });
+  };
   const byFile = new WeakMap<SourceFile, ReadonlySet<string>>();
-  return (file) => {
+  const declaredFor = (file: SourceFile): ReadonlySet<string> => {
     const known = byFile.get(file);
     if (known !== undefined) return known;
     const comment = declaredGlobals(file);
-    const path = file.getFilePath();
-    const dir = dirname(path);
     const names = new Set(comment);
-    for (const config of inside(dir) ? configured(dir) : NO_CONFIGS) {
-      const relative = path.slice(config.dir === '/' ? 1 : config.dir.length + 1);
-      // A file the flat configuration ignores for every object is not linted, and declares nothing (P323).
-      if (isIgnored(config, relative)) continue;
+    for (const { config, relative } of linting(file)) {
       for (const declared of config.declared) {
         if (declared.scopes.every((scope) => inScope(scope, relative))) for (const name of declared.names) names.add(name);
       }
@@ -950,4 +1273,19 @@ export const linterGlobals = (fs: FileSystemHost, repoDir: string): ((file: Sour
     byFile.set(file, all);
     return all;
   };
+  const shown = (path: string): string => {
+    if (inside(path)) return path.slice(root === '/' ? 1 : root.length + 1);
+    const top = ceilingOf();
+    return isWithinDir(path, top) ? path.slice(top.length + 1) : basename(path);
+  };
+  const unfollowed = (file: SourceFile): readonly string[] => {
+    const said = new Set<string>();
+    for (const { config, relative } of linting(file)) {
+      for (const each of config.unfollowed) {
+        if (each.scopes.every((scope) => inScope(scope, relative))) said.add(`${shown(each.file)}: ${each.named} (${each.why})`);
+      }
+    }
+    return [...said];
+  };
+  return Object.assign(declaredFor, { unfollowed });
 };

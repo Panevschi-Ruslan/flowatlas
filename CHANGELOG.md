@@ -244,6 +244,24 @@ only one of them moved.
   configuration imports by name (`import { base } from './shared.js'`, `const
   { base } = require(…)`, `require(…).base`) reads that export alone,
   followed through a re-export and a local name.
+- **Plugins' configurations built from others, configurations named by
+  members, and script tops that only build (P341).** A plugin's `configs`
+  spread from another object (`configs: { ...base.configs, … }`), built by
+  `Object.assign` (into `plugin.configs` or from several objects) or
+  written after the plugin is (`plugin.configs.browser = { … }`, the last
+  write winning) are read with the globals they declare. A flat
+  configuration's entry or `extends` naming a configuration by members
+  taken off a module (`lib.configs.browser`, `require('x').configs['browser']`,
+  `const { configs } = require('x')`, `await import('x')`, a namespace
+  import) reads those members alone, wherever the root is imported or
+  required. What a linter configuration names and could not follow - not
+  installed inside the repository, a name nothing imports, a plugin keeping
+  no such configuration, members written in a way not read - is said in the
+  `api-client-global-undeclared` row of a script under it
+  (`meta.unfollowedConfigs`). The top of a plain script that only `new`s a
+  constructor or builds an object holding a handler nothing keeps as a
+  function of its own (`new Router({ '/items': function () { … } })`) is a
+  function of its own too, and the handler's requests are drawn from it.
 - **Receivers handed on, bases per caller and values after a host (P312).**
   A request object handed through functions is followed one call at a time
   to where each sends it; instances with different bases handed to one

@@ -1169,6 +1169,97 @@ describe('plain browser code (P284)', () => {
     expect(graph.nodes.filter((node) => node.label === 'quiet.js:top')).toEqual([]);
   });
 
+  it("reads a plugin's configs built by a spread, Object.assign or a member written later, and says one it cannot follow (P341)", () => {
+    const script = "function items() { return axios.get('https://api.example.test/items'); }\n";
+    const graphOf = (pages: Record<string, string>): RepoGraph => read({ '/js/shop.js': script }, pages);
+    const urls = (pages: Record<string, string>): unknown[] => requests(graphOf(pages)).map((node) => node.meta?.['url']);
+    const items = ['https://api.example.test/items'];
+    const extendsBrowser = { '/.eslintrc.json': '{ "extends": ["plugin:shop/browser"] }' };
+    const extendsNode = { '/.eslintrc.json': '{ "extends": ["plugin:shop/node"] }' };
+    const plugin = (text: string, more: Record<string, string> = {}): Record<string, string> => ({ '/node_modules/eslint-plugin-shop/index.js': text, ...more });
+    const browser = "{ globals: { axios: 'readonly' } }";
+    // Spread from another module's `configs`, and a key written beside it.
+    const spread = plugin("const base = require('./base');\nmodule.exports = { configs: { ...base.configs, node: { env: { node: true } } } };\n", {
+      '/node_modules/eslint-plugin-shop/base.js': `module.exports = { configs: { browser: ${browser} } };\n`,
+    });
+    expect(urls({ ...extendsBrowser, ...spread })).toEqual(items);
+    expect(urls({ ...extendsNode, ...spread })).toEqual([]);
+    // `Object.assign` into the plugin's `configs`, or building them; a member written after the plugin is.
+    expect(urls({ ...extendsBrowser, ...plugin(`const plugin = { configs: {} };\nObject.assign(plugin.configs, { browser: ${browser} });\nmodule.exports = plugin;\n`) })).toEqual(items);
+    expect(urls({ ...extendsBrowser, ...plugin(`const shared = { browser: ${browser} };\nmodule.exports = { configs: Object.assign({}, shared, { node: {} }) };\n`) })).toEqual(items);
+    expect(urls({ ...extendsBrowser, ...plugin(`const plugin = { configs: {} };\nplugin.configs.browser = ${browser};\nexport default plugin;\n`) })).toEqual(items);
+    expect(urls({ ...extendsNode, ...plugin(`const plugin = { configs: {} };\nplugin.configs.browser = ${browser};\nexport default plugin;\n`) })).toEqual([]);
+    // A later write wins over the key first written.
+    expect(urls({ ...extendsBrowser, ...plugin(`const plugin = { configs: { browser: ${browser} } };\nplugin.configs.browser = { globals: {} };\nmodule.exports = plugin;\n`) })).toEqual([]);
+    // Built by a call: not followed, and the row of the global says what was not.
+    const unread = graphOf({ ...extendsBrowser, ...plugin('module.exports = { configs: makeConfigs() };\n') });
+    expect(requests(unread)).toEqual([]);
+    const row = unread.unresolved.find((each) => each.reason === 'api-client-global-undeclared');
+    expect(row?.meta?.['unfollowedConfigs']).toEqual(['.eslintrc.json: plugin:shop/browser (the plugin keeps no configs.browser written in a way read)']);
+    expect(row?.message).toContain('not followed');
+  });
+
+  it('follows a flat configuration entry named by members taken off a module imported or required, and says one it cannot follow (P341)', () => {
+    const script = "function items() { return axios.get('https://api.example.test/items'); }\n";
+    const graphOf = (pages: Record<string, string>): RepoGraph => read({ '/js/shop.js': script }, pages);
+    const urls = (pages: Record<string, string>): unknown[] => requests(graphOf(pages)).map((node) => node.meta?.['url']);
+    const items = ['https://api.example.test/items'];
+    const installed = {
+      '/node_modules/shop-lint/index.js':
+        "module.exports = { configs: { browser: { languageOptions: { globals: { axios: 'readonly' } } }, node: { languageOptions: { globals: { process: 'readonly' } } } } };\n",
+    };
+    const flat = (text: string): Record<string, string> => ({ '/eslint.config.js': text, ...installed });
+    // Imported, required, by a key, inline, destructured, kept under a name, loaded by import(): the members alone are read.
+    expect(urls(flat("import lib from 'shop-lint';\nexport default [lib.configs.browser];\n"))).toEqual(items);
+    expect(urls(flat("import lib from 'shop-lint';\nexport default [lib.configs.node];\n"))).toEqual([]);
+    expect(urls(flat("const lib = require('shop-lint');\nmodule.exports = [lib.configs['browser']];\n"))).toEqual(items);
+    expect(urls(flat("module.exports = [require('shop-lint').configs.browser];\n"))).toEqual(items);
+    expect(urls(flat("module.exports = [require('shop-lint').configs.node];\n"))).toEqual([]);
+    expect(urls(flat("const { configs } = require('shop-lint');\nmodule.exports = [configs.browser];\n"))).toEqual(items);
+    expect(urls(flat("import lib from 'shop-lint';\nconst browser = lib.configs.browser;\nexport default [browser];\n"))).toEqual(items);
+    expect(urls(flat("const lib = await import('shop-lint');\nexport default [lib.configs.browser];\n"))).toEqual(items);
+    // In an object's `extends`, under the files it names.
+    expect(urls(flat("import lib from 'shop-lint';\nexport default [{ files: ['js/**'], extends: [lib.configs.browser] }];\n"))).toEqual(items);
+    expect(urls(flat("import lib from 'shop-lint';\nexport default [{ files: ['test/**'], extends: [lib.configs.browser] }];\n"))).toEqual([]);
+    // A namespace import reads a named export by the first member.
+    expect(
+      urls({
+        '/eslint.config.js': "import * as lib from './lint/shared.js';\nexport default [lib.configs.browser];\n",
+        '/lint/shared.js': "export const configs = { browser: { languageOptions: { globals: { axios: 'readonly' } } } };\n",
+      }),
+    ).toEqual(items);
+    // Not installed, and a name nothing imports: each said in the row of the global.
+    const said = (pages: Record<string, string>): unknown =>
+      graphOf(pages).unresolved.find((each) => each.reason === 'api-client-global-undeclared')?.meta?.['unfollowedConfigs'];
+    expect(said({ '/eslint.config.js': "import lib from 'shop-lint';\nexport default [lib.configs.browser];\n" })).toEqual([
+      'eslint.config.js: lib.configs.browser (shop-lint is not installed inside the repository)',
+    ]);
+    expect(said({ '/eslint.config.js': 'export default [shopLint.configs.browser];\n' })).toEqual(['eslint.config.js: shopLint.configs.browser (shopLint is neither imported nor required)']);
+    // A member the module writes in a way not read: the whole module read, and said.
+    expect(said({ '/eslint.config.js': "import lib from 'shop-lint';\nexport default [lib.configs.browser];\n", '/node_modules/shop-lint/index.js': 'module.exports = build();\n' })).toEqual([
+      'eslint.config.js: lib.configs.browser (default.configs.browser is written in a way not read, so the whole module was read)',
+    ]);
+    // Under other files: nothing said for this script.
+    expect(said({ '/eslint.config.js': "import lib from 'shop-lint';\nexport default [{ files: ['test/**'], extends: [lib.configs.browser] }];\n" })).toBeUndefined();
+  });
+
+  it('reads the top of a script that only news a constructor or builds an object holding a handler as a function of its own (P341)', () => {
+    const graph = read({
+      '/js/router.js': [
+        "const router = new Router({ routes: { '/items': function () { return fetch('https://api.example.test/items'); } } });",
+        "function later() { return fetch('https://api.example.test/later'); }",
+      ].join('\n'),
+      '/js/app.js': "window.app = { routes: [{ path: '/', enter: () => fetch('https://api.example.test/enter') }] };\n",
+      '/js/widget.js': "new Widget('#box', { onClick: function () { return fetch('https://api.example.test/clicked', { method: 'POST' }); } });\n",
+      // An object whose functions are its members, kept as functions of their own: no top.
+      '/js/members.js': "window.shop = { load() { return fetch('https://api.example.test/load'); } };\nconst LIMIT = { size: 10 };\n",
+    });
+    const { found } = drawn(graph);
+    expect(found).toEqual(['app.js:top GET /enter', 'later GET /later', 'router.js:top GET /items', 'shop.load GET /load', 'widget.js:top POST /clicked']);
+    const tops = graph.nodes.filter((node) => node.type === 'function' && String(node.label).endsWith(':top')).map((node) => node.label);
+    expect(tops.sort()).toEqual(['app.js:top', 'router.js:top', 'widget.js:top']);
+  });
+
   it("asks a client's global called directly, or a wrapper's parameter called as one, for a declaration as its members are (P334)", () => {
     const graph = read({
       '/js/bare.js': [

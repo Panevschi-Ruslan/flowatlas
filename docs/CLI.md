@@ -241,11 +241,13 @@ name, the name it is kept under (`shop` for `var shop = (function () { …
 })()`), else `wrapper` - so a request, a call or a click handler written at its
 top, outside any function it keeps, is drawn from it. So is the top of a
 script itself where it writes a call outside every function, wrapper and
-load handler: a function of its own named after its file (`boot.js:top`), a
-request or a handler written there drawn from it and a call there joined
-(`fixtures/script-members`, `fixtures/script-wrappers`,
+load handler, or only `new`s a constructor or builds an object holding a
+handler nothing keeps as a function of its own (`new Router({ '/items':
+function () { … } })`, P341): a function of its own named after its file
+(`boot.js:top`), a request or a handler written there drawn from it and a
+call there joined (`fixtures/script-members`, `fixtures/script-wrappers`,
 `fixtures/script-ready-handlers`, `fixtures/script-load-events`,
-`fixtures/script-tops-plugin-configs`).
+`fixtures/script-tops-plugin-configs`, `fixtures/script-tops-built-configs`).
 
 A client with a browser build needs no import or install where a page of the
 repository loads it by a script tag - a folder of the package's name or a file
@@ -265,10 +267,14 @@ named in: a cascading `extends` - a file by its path, or a shareable
 configuration installed under `node_modules` by its short name (`shop` is
 `eslint-config-shop`, `@acme/web` is `@acme/eslint-config-web`), or a plugin's
 configuration (`plugin:shop/browser` is `configs.browser` of
-`eslint-plugin-shop`), the linter's own not read - and a module a flat
-configuration takes in by a name it imports or requires and reads as a value
-(`...shared`, `[base, { … }]`, `tseslint.config(base, …)`; a named import,
-`import { base } from …`, reading that export alone), and a plugin's
+`eslint-plugin-shop`, its `configs` spread from another object, built by
+`Object.assign` or written after the plugin is, the last write winning,
+P341), the linter's own not read - and a module a flat configuration takes
+in by a name it imports or requires and reads as a value (`...shared`,
+`[base, { … }]`, `tseslint.config(base, …)`; a named import, `import { base
+} from …`, reading that export alone, and members taken off the module,
+`lib.configs.browser` or `require('x').configs.browser`, those members
+alone, P341), and a plugin's
 configuration a flat object's `extends` names by text (`'shop/browser'`, the
 plugin its `plugins` hands under `shop`); a plugin, a parser or a processor
 merely handed over is no configuration. Each is a file or an installed
@@ -294,7 +300,11 @@ spelling (`axios.get(url)`, `ky.post(url)`, `$.ajax(…)`, `ky(url)`, or a
 wrapper's parameter handed it and called, `(function (load) { load(url);
 })(unfetch)`) with nothing saying the page has it - no import, no script tag, no comment, no linter global, and
 nothing in the repository declaring the name - is not read as a request, and
-an `api-client-global-undeclared` row says so at the call.
+an `api-client-global-undeclared` row says so at the call, naming in
+`meta.unfollowedConfigs` what the script's linter configuration names and
+could not follow (not installed inside the repository, a name nothing
+imports, a plugin keeping no such configuration, members written in a way not
+read; P341).
 
 **A repository that is a server and a browser in one directory declares the
 server.** Set `type` to `nestjs`, `express`, `fastify`, `koa` or `nextjs` — not to

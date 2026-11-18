@@ -474,7 +474,14 @@ export const buildReactFunctionIndex = (
     // The top of a script that writes a call outside every function it keeps,
     // itself a function (P334): every function of the file not written inside
     // another is left to itself, as a wrapper's are.
-    const top = scriptTop(sourceFile);
+    // A function written in place at the top that nothing keeps as its own -
+    // a handler handed to a constructor or kept in an object - is the top's (P341).
+    const keptNodes = new Set<TsNode>();
+    for (const fn of [...found, ...reading.members.map((member) => member.fn)]) keptNodes.add(fn.declaration).add(fn.body);
+    const kept = (node: TsNode): boolean =>
+      keptNodes.has(node) || index.get(node) !== undefined || (node.getParent() !== undefined && index.get(node.getParent() as TsNode) !== undefined) ||
+      ((Node.isFunctionExpression(node) || Node.isArrowFunction(node) || Node.isMethodDeclaration(node)) && keptNodes.has(node.getBody() as TsNode));
+    const top = scriptTop(sourceFile, kept);
     if (top === undefined || skip(top) || index.byId(makeSymbolId(repo, file, top.name)) !== undefined) continue;
     const topIndexed: IndexedFunction = { id: makeSymbolId(repo, file, top.name), name: top.name, role: 'plain', file, line: top.line, fn: top };
     index.addMember({ fn: top, owners: [], also: [], globals: [] }, topIndexed);

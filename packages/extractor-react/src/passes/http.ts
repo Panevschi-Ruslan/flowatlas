@@ -1244,16 +1244,23 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       : factory.called !== undefined && node.getArguments().length > 0;
     if (!requested) return;
     saidUndeclared.add(node);
+    // What the script's linter configuration names and was not followed, which may be what declares it (P341).
+    const unfollowed = declared.unfollowed(node.getSourceFile());
     ctx.report({
       file: ctx.fileOf(node),
       line: siteOf(node).line,
       reason: 'api-client-global-undeclared',
-      message: `${callee.getText().slice(0, 60)}(…) calls ${name}, the global ${factory.client.name}'s browser build leaves, and nothing says the page has it, so it is not read as a request`,
+      message:
+        `${callee.getText().slice(0, 60)}(…) calls ${name}, the global ${factory.client.name}'s browser build leaves, and nothing says the page has it, so it is not read as a request` +
+        (unfollowed.length === 0 ? '' : `; the linter configuration names what was not followed: ${unfollowed.join('; ')}`),
       hint:
         `Nothing imports ${name}, loads ${factory.modules.join(' or ')} by a script tag of a page, or declares the global - a /* global ${name} */ comment, ` +
-        'or the globals of the linter configuration the script is under. Load the client by a script tag, import it, or declare the global, and the call is read as its request.',
+        'or the globals of the linter configuration the script is under. Load the client by a script tag, import it, or declare the global, and the call is read as its request.' +
+        (unfollowed.length === 0
+          ? ''
+          : ' A configuration the linter configuration names was not followed and may be what declares it: install it inside the repository, or name it by a path, an import or members that are read.'),
       symbol: node.getText().slice(0, 80),
-      meta: { cause: 'api-client-global-undeclared', client: factory.client.name, global: name },
+      meta: { cause: 'api-client-global-undeclared', client: factory.client.name, global: name, ...(unfollowed.length === 0 ? {} : { unfollowedConfigs: unfollowed }) },
     });
   };
 

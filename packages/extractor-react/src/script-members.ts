@@ -516,8 +516,15 @@ const isDeferred = (node: TsNode): boolean =>
   Node.isClassDeclaration(node) ||
   Node.isClassExpression(node);
 
-/** The first call a statement makes where it is written, outside every function and class it writes. */
-const callWrittenIn = (statement: Statement): TsNode | undefined => {
+/**
+ * The first node of a statement that runs where it is written (P334, P341):
+ * a call or a `new` outside every function and class it writes, or a
+ * function it builds in place that nothing keeps as a function of its own -
+ * a handler handed to a constructor (`new Router({ '/items': function () {
+ * … } })`) or kept in an object (`window.app = { routes: { … } }`), which the
+ * top answers for. A function kept as its own (`kept`) is left to itself.
+ */
+const runWrittenIn = (statement: Statement, kept: (node: TsNode) => boolean): TsNode | undefined => {
   let found: TsNode | undefined;
   statement.forEachDescendant((node, traversal) => {
     if (found !== undefined) {
@@ -525,10 +532,11 @@ const callWrittenIn = (statement: Statement): TsNode | undefined => {
       return;
     }
     if (isDeferred(node)) {
+      if ((Node.isFunctionExpression(node) || Node.isArrowFunction(node) || Node.isMethodDeclaration(node)) && !kept(node)) found = node;
       traversal.skip();
       return;
     }
-    if (Node.isCallExpression(node)) found = node;
+    if (Node.isCallExpression(node) || Node.isNewExpression(node)) found = node;
   });
   return found;
 };
@@ -537,13 +545,16 @@ const callWrittenIn = (statement: Statement): TsNode | undefined => {
  * The top of a script as a function of its own (P334), where it writes a
  * call outside every function it keeps: `fetch('/items')`, `init()`,
  * `$('#buy').on('click', function () { … })` written at the top of the
- * script, as a wrapper's top is (P323). Named after the file, `boot.js:top`,
- * the way a wrapper is named after what it is kept under, and starting where
- * the first such call is. A wrapper run at once, a handler the page runs once
- * it has loaded, and a prototype's members are functions of their own
- * already and make no top.
+ * script, as a wrapper's top is (P323). Also where it only `new`s a
+ * constructor or builds an object holding a handler nothing keeps as a
+ * function of its own (P341): `new Router({ '/items': function () { … } })`,
+ * whose handler's calls are drawn from the top. Named after the file,
+ * `boot.js:top`, the way a wrapper is named after what it is kept under,
+ * and starting where the first such node is. A wrapper run at once, a
+ * handler the page runs once it has loaded, and a prototype's members are
+ * functions of their own already and make no top.
  */
-export const scriptTop = (sourceFile: SourceFile): NamedFunction | undefined => {
+export const scriptTop = (sourceFile: SourceFile, kept: (node: TsNode) => boolean = () => false): NamedFunction | undefined => {
   for (const statement of sourceFile.getStatements()) {
     if (isDeferred(statement)) continue;
     if (Node.isExpressionStatement(statement)) {
@@ -556,8 +567,8 @@ export const scriptTop = (sourceFile: SourceFile): NamedFunction | undefined => 
     })) {
       continue;
     }
-    const call = callWrittenIn(statement);
-    if (call !== undefined) return { name: `${sourceFile.getBaseName()}:top`, declaration: sourceFile, body: sourceFile, line: startLineOf(call) };
+    const run = runWrittenIn(statement, kept);
+    if (run !== undefined) return { name: `${sourceFile.getBaseName()}:top`, declaration: sourceFile, body: sourceFile, line: startLineOf(run) };
   }
   return undefined;
 };
