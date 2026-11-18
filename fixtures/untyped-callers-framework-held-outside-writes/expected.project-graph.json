@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T13:16:26.147Z",
+  "builtAt": "2026-11-18T17:20:53.725Z",
   "services": [
     {
       "name": "web",
@@ -941,7 +941,7 @@
       "meta": {
         "signature": {
           "params": [],
-          "returns": "type:@flowatlas/fixtures#Ticker"
+          "returns": "type:web#Ticker"
         }
       }
     },
@@ -955,7 +955,7 @@
       "meta": {
         "signature": {
           "params": [],
-          "returns": "type:@flowatlas/fixtures#RecentFeed"
+          "returns": "type:web#RecentFeed"
         }
       }
     },
@@ -969,7 +969,7 @@
       "meta": {
         "signature": {
           "params": [],
-          "returns": "type:@flowatlas/fixtures#RecentFeed"
+          "returns": "type:web#RecentFeed"
         }
       }
     },
@@ -983,7 +983,7 @@
       "meta": {
         "signature": {
           "params": [],
-          "returns": "type:@flowatlas/fixtures#Ticker"
+          "returns": "type:web#Ticker"
         }
       }
     },
@@ -1583,24 +1583,2498 @@
     }
   ],
   "types": {
-    "type:@flowatlas/fixtures#RecentFeed": {
+    "type:web#RecentFeed": {
       "name": "RecentFeed",
-      "kind": "external",
-      "declaredIn": "@flowatlas/fixtures",
-      "structuralHash": "af5b93c700c9d84a",
+      "kind": "object",
+      "declaredIn": "web#js/elements.js",
+      "structuralHash": "b77eca2943c31cb6",
+      "fields": [
+        {
+          "name": "accessKey",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "accessKeyLabel",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "autocapitalize",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "autocorrect",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "dir",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "draggable",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "hidden",
+          "type": "'until-found'|false|true",
+          "optional": false
+        },
+        {
+          "name": "inert",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "innerText",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "lang",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "offsetHeight",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "offsetLeft",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "offsetParent",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "offsetTop",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "offsetWidth",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "outerText",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "popover",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "spellcheck",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "translate",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "writingSuggestions",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "attributes",
+          "type": "NamedNodeMap",
+          "optional": false
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "clientHeight",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "clientLeft",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "clientTop",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "clientWidth",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "currentCSSZoom",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "customElementRegistry",
+          "type": "CustomElementRegistry|null",
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "innerHTML",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "localName",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "namespaceURI",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "onfullscreenchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onfullscreenerror",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "outerHTML",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "ownerDocument",
+          "type": "Document",
+          "optional": false
+        },
+        {
+          "name": "prefix",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "scrollHeight",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "scrollLeft",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "scrollTop",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "scrollWidth",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "shadowRoot",
+          "type": "ShadowRoot|null",
+          "optional": false
+        },
+        {
+          "name": "slot",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "tagName",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "baseURI",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "childNodes",
+          "type": "NodeListOf<ChildNode>",
+          "optional": false
+        },
+        {
+          "name": "firstChild",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "isConnected",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "lastChild",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "nextSibling",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "nodeName",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "nodeType",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "nodeValue",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "parentElement",
+          "type": "HTMLElement|null",
+          "optional": false
+        },
+        {
+          "name": "parentNode",
+          "type": "ParentNode|null",
+          "optional": false
+        },
+        {
+          "name": "previousSibling",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "ELEMENT_NODE",
+          "type": "1",
+          "optional": false
+        },
+        {
+          "name": "ATTRIBUTE_NODE",
+          "type": "2",
+          "optional": false
+        },
+        {
+          "name": "TEXT_NODE",
+          "type": "3",
+          "optional": false
+        },
+        {
+          "name": "CDATA_SECTION_NODE",
+          "type": "4",
+          "optional": false
+        },
+        {
+          "name": "ENTITY_REFERENCE_NODE",
+          "type": "5",
+          "optional": false
+        },
+        {
+          "name": "ENTITY_NODE",
+          "type": "6",
+          "optional": false
+        },
+        {
+          "name": "PROCESSING_INSTRUCTION_NODE",
+          "type": "7",
+          "optional": false
+        },
+        {
+          "name": "COMMENT_NODE",
+          "type": "8",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_NODE",
+          "type": "9",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_TYPE_NODE",
+          "type": "10",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_FRAGMENT_NODE",
+          "type": "11",
+          "optional": false
+        },
+        {
+          "name": "NOTATION_NODE",
+          "type": "12",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_DISCONNECTED",
+          "type": "1",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_PRECEDING",
+          "type": "2",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_FOLLOWING",
+          "type": "4",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_CONTAINS",
+          "type": "8",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_CONTAINED_BY",
+          "type": "16",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC",
+          "type": "32",
+          "optional": false
+        },
+        {
+          "name": "ariaActiveDescendantElement",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "ariaAtomic",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaAutoComplete",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaBrailleLabel",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaBrailleRoleDescription",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaBusy",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaChecked",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColCount",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColIndex",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColIndexText",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColSpan",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaControlsElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaCurrent",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDescribedByElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDescription",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDetailsElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDisabled",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaErrorMessageElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaExpanded",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaFlowToElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaHasPopup",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaHidden",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaInvalid",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaKeyShortcuts",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLabel",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLabelledByElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLevel",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLive",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaModal",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaMultiLine",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaMultiSelectable",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaOrientation",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaOwnsElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaPlaceholder",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaPosInSet",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaPressed",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaReadOnly",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRelevant",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRequired",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRoleDescription",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowCount",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowIndex",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowIndexText",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowSpan",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaSelected",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaSetSize",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaSort",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueMax",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueMin",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueNow",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueText",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "role",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "nextElementSibling",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "previousElementSibling",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "childElementCount",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "children",
+          "type": "HTMLCollection",
+          "optional": false
+        },
+        {
+          "name": "firstElementChild",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "lastElementChild",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "assignedSlot",
+          "type": "HTMLSlotElement|null",
+          "optional": false
+        },
+        {
+          "name": "attributeStyleMap",
+          "type": "StylePropertyMap",
+          "optional": false
+        },
+        {
+          "name": "contentEditable",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "enterKeyHint",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "inputMode",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "isContentEditable",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "onabort",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationcancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationiteration",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onauxclick",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onbeforeinput",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onbeforematch",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onbeforetoggle",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onblur",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncanplay",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncanplaythrough",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onclick",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onclose",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncommand",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncontextlost",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncontextmenu",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncontextrestored",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncopy",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncuechange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncut",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondblclick",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondrag",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragenter",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragleave",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragover",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondrop",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondurationchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onemptied",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onended",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onerror",
+          "type": "OnErrorEventHandlerNonNull",
+          "optional": false
+        },
+        {
+          "name": "onfocus",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onformdata",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ongotpointercapture",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oninput",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oninvalid",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onkeydown",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onkeypress",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onkeyup",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onload",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onloadeddata",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onloadedmetadata",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onloadstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onlostpointercapture",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmousedown",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseenter",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseleave",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmousemove",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseout",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseover",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseup",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpaste",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpause",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onplay",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onplaying",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointercancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerdown",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerenter",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerleave",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointermove",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerout",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerover",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerrawupdate",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerup",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onprogress",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onratechange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onreset",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onresize",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onscroll",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onscrollend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onsecuritypolicyviolation",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onseeked",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onseeking",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onselect",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onselectionchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onselectstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onslotchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onstalled",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onsubmit",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onsuspend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontimeupdate",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontoggle",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontouchcancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontouchend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontouchmove",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontouchstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontransitioncancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontransitionend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontransitionrun",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontransitionstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onvolumechange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwaiting",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkitanimationend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkitanimationiteration",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkitanimationstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkittransitionend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwheel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "autofocus",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "dataset",
+          "type": "DOMStringMap",
+          "optional": false
+        },
+        {
+          "name": "nonce",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "tabIndex",
+          "type": "number",
+          "optional": false
+        }
+      ],
       "meta": {
-        "declKind": "external",
-        "package": "@flowatlas/fixtures"
+        "declKind": "class",
+        "exported": false,
+        "extends": [
+          "HTMLElement<this>"
+        ]
       }
     },
-    "type:@flowatlas/fixtures#Ticker": {
+    "type:web#Ticker": {
       "name": "Ticker",
-      "kind": "external",
-      "declaredIn": "@flowatlas/fixtures",
-      "structuralHash": "a2635e5292f7ff5e",
+      "kind": "object",
+      "declaredIn": "web#js/elements.js",
+      "structuralHash": "b77eca2943c31cb6",
+      "fields": [
+        {
+          "name": "accessKey",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "accessKeyLabel",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "autocapitalize",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "autocorrect",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "dir",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "draggable",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "hidden",
+          "type": "'until-found'|false|true",
+          "optional": false
+        },
+        {
+          "name": "inert",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "innerText",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "lang",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "offsetHeight",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "offsetLeft",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "offsetParent",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "offsetTop",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "offsetWidth",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "outerText",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "popover",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "spellcheck",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "translate",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "writingSuggestions",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "attributes",
+          "type": "NamedNodeMap",
+          "optional": false
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "clientHeight",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "clientLeft",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "clientTop",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "clientWidth",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "currentCSSZoom",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "customElementRegistry",
+          "type": "CustomElementRegistry|null",
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "innerHTML",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "localName",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "namespaceURI",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "onfullscreenchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onfullscreenerror",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "outerHTML",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "ownerDocument",
+          "type": "Document",
+          "optional": false
+        },
+        {
+          "name": "prefix",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "scrollHeight",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "scrollLeft",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "scrollTop",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "scrollWidth",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "shadowRoot",
+          "type": "ShadowRoot|null",
+          "optional": false
+        },
+        {
+          "name": "slot",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "tagName",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "baseURI",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "childNodes",
+          "type": "NodeListOf<ChildNode>",
+          "optional": false
+        },
+        {
+          "name": "firstChild",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "isConnected",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "lastChild",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "nextSibling",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "nodeName",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "nodeType",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "nodeValue",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "parentElement",
+          "type": "HTMLElement|null",
+          "optional": false
+        },
+        {
+          "name": "parentNode",
+          "type": "ParentNode|null",
+          "optional": false
+        },
+        {
+          "name": "previousSibling",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "ELEMENT_NODE",
+          "type": "1",
+          "optional": false
+        },
+        {
+          "name": "ATTRIBUTE_NODE",
+          "type": "2",
+          "optional": false
+        },
+        {
+          "name": "TEXT_NODE",
+          "type": "3",
+          "optional": false
+        },
+        {
+          "name": "CDATA_SECTION_NODE",
+          "type": "4",
+          "optional": false
+        },
+        {
+          "name": "ENTITY_REFERENCE_NODE",
+          "type": "5",
+          "optional": false
+        },
+        {
+          "name": "ENTITY_NODE",
+          "type": "6",
+          "optional": false
+        },
+        {
+          "name": "PROCESSING_INSTRUCTION_NODE",
+          "type": "7",
+          "optional": false
+        },
+        {
+          "name": "COMMENT_NODE",
+          "type": "8",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_NODE",
+          "type": "9",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_TYPE_NODE",
+          "type": "10",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_FRAGMENT_NODE",
+          "type": "11",
+          "optional": false
+        },
+        {
+          "name": "NOTATION_NODE",
+          "type": "12",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_DISCONNECTED",
+          "type": "1",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_PRECEDING",
+          "type": "2",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_FOLLOWING",
+          "type": "4",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_CONTAINS",
+          "type": "8",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_CONTAINED_BY",
+          "type": "16",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC",
+          "type": "32",
+          "optional": false
+        },
+        {
+          "name": "ariaActiveDescendantElement",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "ariaAtomic",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaAutoComplete",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaBrailleLabel",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaBrailleRoleDescription",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaBusy",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaChecked",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColCount",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColIndex",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColIndexText",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColSpan",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaControlsElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaCurrent",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDescribedByElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDescription",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDetailsElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDisabled",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaErrorMessageElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaExpanded",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaFlowToElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaHasPopup",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaHidden",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaInvalid",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaKeyShortcuts",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLabel",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLabelledByElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLevel",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLive",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaModal",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaMultiLine",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaMultiSelectable",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaOrientation",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaOwnsElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaPlaceholder",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaPosInSet",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaPressed",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaReadOnly",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRelevant",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRequired",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRoleDescription",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowCount",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowIndex",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowIndexText",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowSpan",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaSelected",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaSetSize",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaSort",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueMax",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueMin",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueNow",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueText",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "role",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "nextElementSibling",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "previousElementSibling",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "childElementCount",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "children",
+          "type": "HTMLCollection",
+          "optional": false
+        },
+        {
+          "name": "firstElementChild",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "lastElementChild",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "assignedSlot",
+          "type": "HTMLSlotElement|null",
+          "optional": false
+        },
+        {
+          "name": "attributeStyleMap",
+          "type": "StylePropertyMap",
+          "optional": false
+        },
+        {
+          "name": "contentEditable",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "enterKeyHint",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "inputMode",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "isContentEditable",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "onabort",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationcancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationiteration",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onauxclick",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onbeforeinput",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onbeforematch",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onbeforetoggle",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onblur",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncanplay",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncanplaythrough",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onclick",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onclose",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncommand",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncontextlost",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncontextmenu",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncontextrestored",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncopy",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncuechange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncut",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondblclick",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondrag",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragenter",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragleave",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragover",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondrop",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondurationchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onemptied",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onended",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onerror",
+          "type": "OnErrorEventHandlerNonNull",
+          "optional": false
+        },
+        {
+          "name": "onfocus",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onformdata",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ongotpointercapture",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oninput",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oninvalid",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onkeydown",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onkeypress",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onkeyup",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onload",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onloadeddata",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onloadedmetadata",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onloadstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onlostpointercapture",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmousedown",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseenter",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseleave",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmousemove",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseout",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseover",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseup",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpaste",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpause",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onplay",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onplaying",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointercancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerdown",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerenter",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerleave",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointermove",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerout",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerover",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerrawupdate",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerup",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onprogress",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onratechange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onreset",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onresize",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onscroll",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onscrollend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onsecuritypolicyviolation",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onseeked",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onseeking",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onselect",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onselectionchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onselectstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onslotchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onstalled",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onsubmit",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onsuspend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontimeupdate",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontoggle",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontouchcancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontouchend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontouchmove",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontouchstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontransitioncancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontransitionend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontransitionrun",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontransitionstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onvolumechange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwaiting",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkitanimationend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkitanimationiteration",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkitanimationstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkittransitionend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwheel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "autofocus",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "dataset",
+          "type": "DOMStringMap",
+          "optional": false
+        },
+        {
+          "name": "nonce",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "tabIndex",
+          "type": "number",
+          "optional": false
+        }
+      ],
       "meta": {
-        "declKind": "external",
-        "package": "@flowatlas/fixtures"
+        "declKind": "class",
+        "exported": false,
+        "extends": [
+          "HTMLElement<this>"
+        ]
       }
     }
   },
@@ -1722,6 +4196,16 @@
         ]
       },
       "service": "stock"
+    },
+    {
+      "file": "js/elements.js",
+      "line": 13,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "sites": 2,
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "this",
+      "service": "web"
     },
     {
       "file": "js/elements.js",

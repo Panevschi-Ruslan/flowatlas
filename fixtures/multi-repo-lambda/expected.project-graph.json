@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-12T18:51:37.426Z",
+  "builtAt": "2026-11-18T17:16:51.768Z",
   "services": [
     {
       "name": "platform",
@@ -465,7 +465,7 @@
               "type": "string"
             }
           ],
-          "returns": "type:@flowatlas/fixtures#Loan|undefined"
+          "returns": "type:loans#Loan|undefined"
         }
       }
     },
@@ -484,7 +484,7 @@
               "type": "string"
             }
           ],
-          "returns": "type:@flowatlas/fixtures#Loan[]"
+          "returns": "type:loans#Loan[]"
         }
       }
     },
@@ -500,10 +500,10 @@
           "params": [
             {
               "name": "loan",
-              "type": "type:@flowatlas/fixtures#Loan"
+              "type": "type:loans#Loan"
             }
           ],
-          "returns": "type:@flowatlas/fixtures#Loan"
+          "returns": "type:loans#Loan"
         }
       }
     },
@@ -723,7 +723,7 @@
       "to": "loans#functions/create-loan/index.ts:createLoan",
       "type": "handles",
       "confidence": "static",
-      "returns": "type:@flowatlas/fixtures#Loan",
+      "returns": "type:loans#Loan",
       "file": "functions/create-loan/index.ts",
       "line": 11,
       "meta": {
@@ -856,9 +856,9 @@
       "type": "calls",
       "confidence": "static",
       "params": [
-        "type:@flowatlas/fixtures#Loan"
+        "type:loans#Loan"
       ],
-      "returns": "type:@flowatlas/fixtures#Loan",
+      "returns": "type:loans#Loan",
       "file": "functions/create-loan/index.ts",
       "line": 13
     },
@@ -883,7 +883,7 @@
       "params": [
         "string"
       ],
-      "returns": "type:@flowatlas/fixtures#Loan|undefined",
+      "returns": "type:loans#Loan|undefined",
       "file": "functions/get-loan/index.ts",
       "line": 5
     },
@@ -895,22 +895,12 @@
       "params": [
         "string"
       ],
-      "returns": "type:@flowatlas/fixtures#Loan[]",
+      "returns": "type:loans#Loan[]",
       "file": "functions/list-borrower-loans/index.ts",
       "line": 5
     }
   ],
   "types": {
-    "type:@flowatlas/fixtures#Loan": {
-      "name": "Loan",
-      "kind": "external",
-      "declaredIn": "@flowatlas/fixtures",
-      "structuralHash": "23b3bf1dc666e869",
-      "meta": {
-        "declKind": "external",
-        "package": "@flowatlas/fixtures"
-      }
-    },
     "type:@types/aws-lambda#APIGatewayProxyEvent": {
       "name": "APIGatewayProxyEvent",
       "kind": "external",
@@ -949,6 +939,38 @@
         },
         {
           "name": "isbn",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:loans#Loan": {
+      "name": "Loan",
+      "kind": "object",
+      "declaredIn": "loans#shared/loans-table.ts",
+      "structuralHash": "bc3ee3324cb89af0",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "dueOn",
           "type": "string",
           "optional": false
         }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-16T23:28:04.615Z",
+  "builtAt": "2026-11-18T17:15:14.044Z",
   "configHash": "37634076a802",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./api",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 40,
-      "edges": 39,
+      "nodes": 42,
+      "edges": 40,
       "types": 4,
-      "unresolved": 4,
-      "durationMs": 731,
+      "unresolved": 2,
+      "durationMs": 948,
       "packages": {
         "name": "api",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 9,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 577,
+      "durationMs": 722,
       "packages": {
         "name": "web",
         "runtime": [
@@ -69,7 +69,7 @@
     "noProducers": []
   },
   "routes": {
-    "total": 13,
+    "total": 14,
     "called": 2,
     "uncalled": [
       "entry:api:http:ALL:/api/*",
@@ -77,6 +77,7 @@
       "entry:api:http:GET:/api/admin/events",
       "entry:api:http:GET:/api/admin/orders/:param",
       "entry:api:http:GET:/api/depots/:param/stock-stream",
+      "entry:api:http:GET:/daily",
       "entry:api:http:GET:/health",
       "entry:api:http:POST:/api/admin/notes",
       "entry:api:http:POST:/api/depots/:param/orders/:param/cancel",
@@ -92,13 +93,13 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 53,
-    "edges": 50,
+    "nodes": 55,
+    "edges": 51,
     "types": 4,
-    "missed": 4,
-    "sites": 4,
+    "missed": 2,
+    "sites": 2,
     "notes": 0,
     "findings": 0,
-    "unresolved": 4
+    "unresolved": 2
   }
 }

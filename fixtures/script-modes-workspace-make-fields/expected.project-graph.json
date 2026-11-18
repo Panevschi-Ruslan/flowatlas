@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T13:12:43.049Z",
+  "builtAt": "2026-11-18T17:19:47.092Z",
   "services": [
     {
       "name": "shop",
@@ -243,8 +243,7 @@
         "adapter": "express-routes",
         "registration": "this.drafts.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -298,8 +297,7 @@
         "adapter": "express-routes",
         "registration": "router.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -1381,7 +1379,7 @@
       "from": "http_out:jobs#src/sync.ts:29:29",
       "to": "entry:catalog:http:GET:/api/drafts",
       "type": "http_calls",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/sync.ts",
       "line": 29,
       "meta": {

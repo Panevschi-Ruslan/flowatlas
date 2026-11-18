@@ -130,7 +130,7 @@ steps with a recording of each.
 - test code left out, and every test directory named so you can see it
 
 Every shape above is held by a fixture: a small repository written to prove it,
-compared on every push. There are 318 of them, and
+compared on every push. There are 323 of them, and
 [the fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
 lists them all, generated from their READMEs.
 
