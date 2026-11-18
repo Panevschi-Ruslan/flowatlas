@@ -77,7 +77,20 @@ const textOf = (node: TsNode | undefined): string | undefined => {
  * rolldown's `__commonJSMin((exports, module) => { ... })`. A module's
  * exports are what the body writes into its parameters.
  */
-const moduleFactories = new WeakSet<TsNode>();
+const moduleFactories = new WeakMap<TsNode, { readonly exports?: string; readonly module?: string }>();
+
+/** The names a module factory is handed its exports and its module under: esbuild's `(exports, module)`, webpack's `(module, exports, require)` (P351). */
+const factoryNames = (factory: TsNode, order: 'esbuild' | 'webpack'): { readonly exports?: string; readonly module?: string } => {
+  const names = (Node.isMethodDeclaration(factory) || Node.isArrowFunction(factory) || Node.isFunctionExpression(factory) ? factory.getParameters() : []).map((each) => each.getName());
+  const [exportsName, moduleName] = order === 'esbuild' ? names : [names[1], names[0]];
+  return { ...(exportsName === undefined ? {} : { exports: exportsName }), ...(moduleName === undefined ? {} : { module: moduleName }) };
+};
+
+/** Whether a write's target is a module factory's exports: its exports parameter, or `module.exports`. */
+const isFactoryExports = (factory: TsNode): ((target: TsNode) => boolean) => {
+  const names = moduleFactories.get(factory) ?? {};
+  return (target) => (names.exports !== undefined && target.getText() === names.exports) || (names.module !== undefined && target.getText() === `${names.module}.exports`);
+};
 
 /** Whether a call is a bundler's CommonJS module wrapper, by the names esbuild and rolldown give it. */
 const isCommonJsWrapper = (node: TsNode | undefined): node is CallExpression =>
@@ -166,7 +179,8 @@ const fileWritesOf = (sourceFile: SourceFile): FileWrites => {
     const callee = node.getExpression().getText();
     const [target, second, third] = node.getArguments();
     if (target === undefined) continue;
-    if (callee === '__export' && second !== undefined && Node.isObjectLiteralExpression(second)) {
+    // esbuild's `__export(target, { key: () => value })`, and webpack's `__webpack_require__.d(exports, { key: () => value })` (P351).
+    if ((callee === '__export' || callee === '__webpack_require__.d') && second !== undefined && Node.isObjectLiteralExpression(second)) {
       for (const property of second.getProperties()) {
         const value = Node.isPropertyAssignment(property) ? gotten(property.getInitializer()) : Node.isMethodDeclaration(property) ? gotten(property) : undefined;
         if (value !== undefined && (Node.isPropertyAssignment(property) || Node.isMethodDeclaration(property))) keys.push({ target, key: property.getName().replace(/^['"]|['"]$/g, ''), value });
@@ -210,10 +224,7 @@ const propertyOf = (object: TsNode | undefined, key: string): TsNode | undefined
     const value = declared !== undefined && Node.isVariableDeclaration(declared) ? declared.getInitializer() : declared;
     return keyWritten(object, key, isFileExports) ?? (value !== undefined && (Node.isExpression(value) || Node.isFunctionDeclaration(value)) ? value : undefined);
   }
-  if (moduleFactories.has(object)) {
-    const [exportsName, moduleName] = (Node.isMethodDeclaration(object) || Node.isArrowFunction(object) || Node.isFunctionExpression(object) ? object.getParameters() : []).map((each) => each.getName());
-    return keyWritten(object.getSourceFile(), key, (target) => target.getText() === exportsName || target.getText() === `${moduleName}.exports`, object);
-  }
+  if (moduleFactories.has(object)) return keyWritten(object.getSourceFile(), key, isFactoryExports(object), object);
   if (!Node.isObjectLiteralExpression(object)) return undefined;
   // A key written as a string, `'can-edit': canEdit`, by its value.
   const property =
@@ -246,10 +257,7 @@ const entriesOf = (object: TsNode): readonly (readonly [string | undefined, TsNo
     });
   };
   if (Node.isSourceFile(object)) return written(isFileExports);
-  if (moduleFactories.has(object)) {
-    const [exportsName, moduleName] = (Node.isMethodDeclaration(object) || Node.isArrowFunction(object) || Node.isFunctionExpression(object) ? object.getParameters() : []).map((each) => each.getName());
-    return written((target) => target.getText() === exportsName || target.getText() === `${moduleName}.exports`, object);
-  }
+  if (moduleFactories.has(object)) return written(isFactoryExports(object), object);
   if (!Node.isObjectLiteralExpression(object)) return [];
   const own = object.getProperties().map((property): [string | undefined, TsNode | undefined] => {
     const each = Node.isPropertyAssignment(property) ? property.getInitializer() : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : undefined;
@@ -276,11 +284,112 @@ const writesExports = (sourceFile: SourceFile): boolean => fileWritesOf(sourceFi
 const wrappedModuleValue = (wrapper: CallExpression, depth: number): TsNode | undefined => {
   const factory = factoryOf(wrapper);
   if (factory === undefined || !(Node.isMethodDeclaration(factory) || Node.isArrowFunction(factory) || Node.isFunctionExpression(factory))) return undefined;
-  const moduleName = factory.getParameters()[1]?.getName();
-  const whole = moduleName === undefined ? undefined : keyWritten(factory.getSourceFile(), 'exports', (target) => target.getText() === moduleName, factory);
+  return factoryValue(factory, 'esbuild', depth);
+};
+
+/**
+ * What a module factory makes its module's value (P345, P351): what it
+ * writes into `module.exports` whole, the last such write, or the factory
+ * itself where it writes the exports key by key.
+ */
+const factoryValue = (factory: TsNode, order: 'esbuild' | 'webpack', depth: number): TsNode | undefined => {
+  const names = factoryNames(factory, order);
+  const whole = names.module === undefined ? undefined : keyWritten(factory.getSourceFile(), 'exports', (target) => target.getText() === names.module, factory);
   if (whole !== undefined) return resolved(whole, depth + 1);
-  moduleFactories.add(factory);
+  moduleFactories.set(factory, names);
   return factory;
+};
+
+/** Whether a call is webpack's module loader, `__webpack_require__(id)` - not one of its helpers (`__webpack_require__.d`). */
+const isWebpackRequire = (node: TsNode): node is CallExpression => Node.isCallExpression(node) && node.getExpression().getText() === '__webpack_require__' && node.getArguments().length === 1;
+
+/** The id a webpack loader's call names: `"./server/index.js"`, `12`, the entry's `__webpack_require__.s = id`. */
+const webpackIdOf = (call: CallExpression): string | undefined => {
+  let argument = unwrapValue(call.getArguments()[0] as TsNode);
+  if (Node.isBinaryExpression(argument) && argument.getOperatorToken().getKind() === SyntaxKind.EqualsToken) argument = unwrapValue(argument.getRight());
+  if (Node.isNumericLiteral(argument)) return String(Number(argument.getLiteralValue()));
+  return textOf(argument);
+};
+
+/**
+ * The table of modules a webpack bundle's loader reads (P351): the object or
+ * the array `__webpack_modules__` holds, or - as webpack 4 writes it - the
+ * one handed to the bootstrap function whose parameter the loader indexes
+ * (`modules[moduleId].call(...)`).
+ */
+const webpackTableOf = (sourceFile: SourceFile): TsNode | undefined => {
+  const loader = sourceFile.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).find((each) => each.getName() === '__webpack_require__');
+  // The table the loader calls a module's factory out of: `__webpack_modules__[moduleId](...)`, `modules[moduleId].call(...)` - not its cache.
+  const indexed = loader?.getDescendantsOfKind(SyntaxKind.ElementAccessExpression).find((access) => {
+    if (!Node.isIdentifier(unwrapValue(access.getExpression()))) return false;
+    const parent = access.getParentWhile((node) => Node.isParenthesizedExpression(node)) ?? access;
+    const above = parent.getParent();
+    if (above !== undefined && Node.isCallExpression(above) && above.getExpression() === parent) return true;
+    const called = above !== undefined && Node.isPropertyAccessExpression(above) && ['call', 'apply'].includes(above.getName()) ? above.getParent() : undefined;
+    return called !== undefined && Node.isCallExpression(called);
+  });
+  const table = indexed === undefined ? undefined : unwrapValue(indexed.getExpression());
+  const declaration = table === undefined ? undefined : table.getSymbol()?.getDeclarations()[0];
+  if (declaration !== undefined && Node.isVariableDeclaration(declaration)) {
+    const initializer = declaration.getInitializer();
+    return initializer === undefined ? undefined : unwrapValue(initializer);
+  }
+  if (declaration === undefined || !Node.isParameterDeclaration(declaration)) {
+    const named = sourceFile.getDescendantsOfKind(SyntaxKind.VariableDeclaration).find((each) => each.getName() === '__webpack_modules__')?.getInitializer();
+    return named === undefined ? undefined : unwrapValue(named);
+  }
+  // `(function (modules) { ... })({ ... })`: the argument handed for the parameter.
+  const bootstrap = declaration.getParent();
+  const place = Node.isFunctionExpression(bootstrap) || Node.isArrowFunction(bootstrap) ? bootstrap.getParameters().indexOf(declaration) : -1;
+  let call: TsNode | undefined = bootstrap.getParent();
+  while (call !== undefined && Node.isParenthesizedExpression(call)) call = call.getParent();
+  const handed = place >= 0 && call !== undefined && Node.isCallExpression(call) ? call.getArguments()[place] : undefined;
+  return handed === undefined ? undefined : unwrapValue(handed);
+};
+
+/** A key of a table of modules as text: a name, a string, a number. */
+const tableKeyOf = (name: TsNode): string =>
+  Node.isStringLiteral(name) || Node.isNoSubstitutionTemplateLiteral(name) ? name.getLiteralValue() : Node.isNumericLiteral(name) ? String(Number(name.getLiteralValue())) : name.getText();
+
+/** The factory a webpack bundle keeps a module in, by its id: a key of the table, or a place of it written as an array. */
+const webpackFactoryOf = (call: CallExpression): TsNode | undefined => {
+  const id = webpackIdOf(call);
+  const table = webpackTableOf(call.getSourceFile());
+  if (id === undefined || table === undefined) return undefined;
+  let found: TsNode | undefined;
+  if (Node.isArrayLiteralExpression(table)) found = String(Number(id)) === id ? table.getElements()[Number(id)] : undefined;
+  else if (Node.isObjectLiteralExpression(table)) {
+    for (const property of table.getProperties()) {
+      if (!Node.isPropertyAssignment(property) && !Node.isMethodDeclaration(property)) continue;
+      if (tableKeyOf(property.getNameNode()) !== id) continue;
+      found = Node.isMethodDeclaration(property) ? property : property.getInitializer();
+    }
+  }
+  const factory = found === undefined ? undefined : unwrapValue(found);
+  return factory !== undefined && (Node.isArrowFunction(factory) || Node.isFunctionExpression(factory) || Node.isMethodDeclaration(factory)) ? factory : undefined;
+};
+
+/** The value of the module a webpack loader's call loads (P351): what its factory writes into `module.exports`, or the keys it defines on its exports. */
+const webpackModuleValue = (call: CallExpression, depth: number): TsNode | undefined => {
+  const factory = webpackFactoryOf(call);
+  return factory === undefined ? undefined : factoryValue(factory, 'webpack', depth);
+};
+
+/**
+ * The module a webpack default getter hands (P351): `var x_default =
+ * __webpack_require__.n(x)` makes `x_default()` the module's `default`
+ * where it writes one, the module itself otherwise.
+ */
+const webpackDefaultOf = (call: CallExpression, depth: number): TsNode | undefined => {
+  if (call.getArguments().length !== 0) return undefined;
+  const callee = unwrapValue(call.getExpression());
+  const declaration = Node.isIdentifier(callee) ? callee.getSymbol()?.getDeclarations()[0] : undefined;
+  const getter = declaration !== undefined && Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : undefined;
+  const made = getter === undefined ? undefined : unwrapValue(getter);
+  if (made === undefined || !Node.isCallExpression(made) || made.getExpression().getText() !== '__webpack_require__.n') return undefined;
+  const module = resolved(made.getArguments()[0], depth + 1);
+  const defaulted = module !== undefined && isObjectLike(module) ? propertyOf(module, 'default') : undefined;
+  return defaulted === undefined ? module : resolved(defaulted, depth + 1);
 };
 
 /**
@@ -327,6 +436,19 @@ const resolved = (node: TsNode | undefined, depth = 0): TsNode | undefined => {
   }
   // A bundler's or a compiler's interop hands the module's value through (P345).
   if (isInterop(value)) return resolved(value.getArguments()[0], depth + 1);
+  // `__webpack_require__(id)`: the module the bundle's table keeps under the id; `x_default()` of `__webpack_require__.n(x)` its default (P351).
+  if (isWebpackRequire(value)) return webpackModuleValue(value, depth + 1) ?? value;
+  if (Node.isCallExpression(value)) {
+    const defaulted = webpackDefaultOf(value, depth + 1);
+    if (defaulted !== undefined) return defaulted;
+  }
+  // `x["default"]`, as webpack reads a module's key: the key of what the object is (P351).
+  if (Node.isElementAccessExpression(value)) {
+    const key = textOf(value.getArgumentExpression());
+    const owner = key === undefined ? undefined : resolved(value.getExpression(), depth + 1);
+    const property = key === undefined ? undefined : propertyOf(owner, key);
+    return property === undefined ? value : resolved(property, depth + 1);
+  }
   if (Node.isPropertyAccessExpression(value)) {
     // `require('./server').routes`, `server.routes`: the key of what the object is.
     const owner = resolved(value.getExpression(), depth + 1);
@@ -379,11 +501,27 @@ const moduleValue = (sourceFile: SourceFile, depth = 0): TsNode | undefined => {
   if (assignment !== undefined) return resolved(assignment.getExpression(), depth + 1);
   const declared = sourceFile.getDefaultExportSymbol()?.getDeclarations()[0];
   if (declared !== undefined && Node.isFunctionDeclaration(declared)) return declared;
-  for (const statement of sourceFile.getStatements()) {
+  const assigned = moduleExportsAssigned(sourceFile.getStatements());
+  return assigned === undefined ? undefined : resolved(assigned, depth + 1);
+};
+
+/**
+ * What statements assign to `module.exports`, at the top of a module or in a
+ * function the module calls in place there - a bundle's bootstrap, `(() => {
+ * ... module.exports = __webpack_exports__; })()` (P351).
+ */
+const moduleExportsAssigned = (statements: readonly TsNode[], depth = 0): TsNode | undefined => {
+  for (const statement of statements) {
     if (!Node.isExpressionStatement(statement)) continue;
-    const expression = statement.getExpression();
-    if (Node.isBinaryExpression(expression) && expression.getOperatorToken().getKind() === SyntaxKind.EqualsToken && expression.getLeft().getText() === 'module.exports') {
-      return resolved(expression.getRight(), depth + 1);
+    const expression = unwrapValue(statement.getExpression());
+    if (Node.isBinaryExpression(expression) && expression.getOperatorToken().getKind() === SyntaxKind.EqualsToken && expression.getLeft().getText() === 'module.exports') return expression.getRight();
+    // `(() => { ... })()`, `(function () { ... })()`, `!function () { ... }()`.
+    const call = Node.isPrefixUnaryExpression(expression) ? unwrapValue(expression.getOperand()) : expression;
+    const fn = Node.isCallExpression(call) ? unwrapValue(call.getExpression()) : undefined;
+    const body = fn !== undefined && (Node.isArrowFunction(fn) || Node.isFunctionExpression(fn)) ? fn.getBody() : undefined;
+    if (depth < 2 && body !== undefined && Node.isBlock(body)) {
+      const inner = moduleExportsAssigned(body.getStatements(), depth + 1);
+      if (inner !== undefined) return inner;
     }
   }
   return undefined;
@@ -746,6 +884,84 @@ const notInstalledPlugin = (pkg: string, lockedOf: (name: string) => LockedPacka
   return { pkg, name: pkg.replace(/^@[^/]+\//, ''), by: keyword ? `by the keywords of its ${lockfile} entry` : `by its ${lockfile} entry's peer dependency on @strapi/strapi` };
 };
 
+/** How a key of `config/plugins` names a dependency not installed (P351): by resolving its package, by a name alike, or as one of the dependencies no key names. */
+interface KeyTold {
+  readonly how: 'resolve' | 'name' | 'candidate';
+  readonly plugins: readonly NotInstalledPlugin[];
+}
+
+/** A plugin's name as a key and a package may each spell it: `colorPicker`, `color-picker`, `color_picker` alike. */
+const spelledAlike = (name: string): string => name.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+/**
+ * The dependencies not installed that the keys of `config/plugins` name
+ * otherwise than by the convention a package's name follows (P351), each
+ * taken out of `missing`, so a plugin is said once, in its key's row: a key
+ * resolving a package by its name (`resolve: 'strapi-plugin-x'`); a key
+ * resolving a directory that a dependency's `file:` or `link:` version
+ * names, or whose manifest's name is the dependency's - that key's own
+ * plugin, read there, with no row; a key spelled alike (`colorPicker` and
+ * `color-picker`); and, for a key enabling a plugin no package installed is
+ * named after, the dependencies not installed that no key names, which may
+ * be it.
+ */
+const toldByKeys = (
+  ctx: ExtractContext,
+  declarations: Readonly<Record<string, unknown>>,
+  missing: Map<string, NotInstalledPlugin>,
+  dirOf: (resolve: unknown) => string | undefined,
+  packageDirOf: (name: string) => PackageAt | undefined,
+  installed: ReadonlySet<string>,
+): ReadonlyMap<string, KeyTold> => {
+  const told = new Map<string, KeyTold>();
+  const specs: Readonly<Record<string, unknown>> = ctx.pkg.dependencies ?? {};
+  const take = (plugin: NotInstalledPlugin): void => {
+    for (const [name, each] of missing) if (each === plugin) missing.delete(name);
+  };
+  const samePath = (a: string, b: string): boolean => toPosixPath(resolvePath(a)).replace(/\/$/, '') === toPosixPath(resolvePath(b)).replace(/\/$/, '');
+  const unnamed: string[] = [];
+  for (const [key, declaration] of Object.entries(declarations)) {
+    if (INTERNAL_PLUGINS.has(key) || declaration === false) continue;
+    const resolve = typeof declaration === 'boolean' ? undefined : configValueAt(declaration, 'resolve');
+    if (typeof resolve === 'string' && !/^[.]{0,2}\//.test(resolve) && packageDirOf(resolve) === undefined) {
+      const plugin = [...missing.values()].find((each) => each.pkg === resolve) ?? { pkg: resolve, name: key, by: '' };
+      take(plugin);
+      told.set(key, { how: 'resolve', plugins: [plugin] });
+      continue;
+    }
+    const dir = resolve === undefined ? undefined : dirOf(resolve);
+    if (dir !== undefined) {
+      const own = packageAtDir(dir)?.manifest['name'];
+      for (const plugin of [...missing.values()]) {
+        const spec = specs[plugin.pkg];
+        const linked = typeof spec === 'string' ? /^(?:file|link|portal):(.+)$/.exec(spec)?.[1] : undefined;
+        if (plugin.pkg === own || (linked !== undefined && samePath(resolvePath(ctx.repoDir, linked), dir))) take(plugin);
+      }
+      continue;
+    }
+    if (resolve !== undefined || missing.has(key) || installed.has(key)) continue;
+    if (!isRecord(declaration) && declaration !== true) continue;
+    if (isRecord(declaration) && configValueAt(declaration, 'enabled') === false) {
+      // A key turning off a plugin spelled alike turns that one off.
+      const alike = [...missing.values()].find((each) => spelledAlike(each.name) === spelledAlike(key) || spelledAlike(each.pkg.replace(/^@[^/]+\//, '')) === spelledAlike(key));
+      if (alike !== undefined) take(alike);
+      continue;
+    }
+    const alike = [...missing.values()].find((each) => spelledAlike(each.name) === spelledAlike(key) || spelledAlike(each.pkg.replace(/^@[^/]+\//, '')) === spelledAlike(key));
+    if (alike !== undefined) {
+      take(alike);
+      told.set(key, { how: 'name', plugins: [alike] });
+    } else unnamed.push(key);
+  }
+  // A key no package is named after, beside dependencies not installed no key names: one row for the key, naming them (P351).
+  const left = [...missing.values()];
+  if (unnamed.length > 0 && left.length > 0) {
+    for (const key of unnamed) told.set(key, { how: 'candidate', plugins: left });
+    for (const plugin of left) take(plugin);
+  }
+  return told;
+};
+
 /** What `exports['./strapi-server']` writes under one condition, a path. */
 const strapiServerExport = (at: PackageAt, condition: string): string | undefined => {
   const exportsField = at.manifest['exports'];
@@ -883,6 +1099,7 @@ const pluginsOf = (ctx: ExtractContext): { readonly plugins: readonly Plugin[]; 
     return pkg?.dir ?? resolvePath(ctx.repoDir, resolve);
   };
   const declaredDirs = new Set(Object.values(declarations).flatMap((each) => dirOf(configValueAt(each, 'resolve')) ?? []));
+  const told = toldByKeys(ctx, declarations, missing, dirOf, packageDirOf, new Set(dependencies.keys()));
   const plugins: Plugin[] = [];
   const unread: PluginUnread[] = [];
   for (const name of [...new Set([...Object.keys(declarations), ...dependencies.keys(), ...missing.keys()])].sort()) {
@@ -893,22 +1110,36 @@ const pluginsOf = (ctx: ExtractContext): { readonly plugins: readonly Plugin[]; 
     // A dependency whose directory a key resolves to is that key's plugin, not one of its own.
     const dependency = dependencies.get(name);
     const unused = dependency !== undefined && !declaredDirs.has(dependency.at.dir) ? dependency : undefined;
-    const notInstalled = resolve === undefined ? missing.get(name) : undefined;
-    const dir = dirOf(resolve);
+    // A dependency not installed the key names by another name than its package's convention, by its package or its name (P351).
+    const keyTold = told.get(name);
+    const resolvesMissing = keyTold?.how === 'resolve' ? keyTold.plugins[0] : undefined;
+    const notInstalled = resolve === undefined ? (missing.get(name) ?? (keyTold?.how === 'name' ? keyTold.plugins[0] : undefined)) : undefined;
+    const dir = resolvesMissing === undefined ? dirOf(resolve) : undefined;
     // Undefined `enabled` is filled from the dependency of that name, the only place one is written for it.
     const enabled = written === undefined ? unused !== undefined || notInstalled !== undefined : written !== false;
     if (!enabled) continue;
+    if (resolvesMissing !== undefined) {
+      const which = resolvesMissing.by === '' ? 'which' : `a Strapi plugin ${resolvesMissing.by}, which`;
+      unread.push({ name, file: configFile, why: `config/plugins resolves it from the package ${resolvesMissing.pkg}, ${which} is not installed in the repository, so its package's server is not there to read` });
+      continue;
+    }
     if (resolve !== undefined && dir === undefined) {
       unread.push({ name, file: configFile, why: `config/plugins resolves it from ${resolve instanceof NotLiteral ? resolve.text : 'a value'} not written as a path` });
       continue;
     }
     const root = dir ?? unused?.at.dir;
     if (root === undefined && notInstalled !== undefined) {
-      unread.push({ name, file: 'package.json', why: `it is the dependency ${notInstalled.pkg}, a Strapi plugin ${notInstalled.by}, which is not installed in the repository, so its package's server is not there to read` });
+      const keyed = notInstalled.name === name ? '' : ` (config/plugins keys it as ${name})`;
+      unread.push({ name, file: keyed === '' ? 'package.json' : configFile, why: `it is the dependency ${notInstalled.pkg}${keyed}, a Strapi plugin ${notInstalled.by}, which is not installed in the repository, so its package's server is not there to read` });
       continue;
     }
     if (root === undefined) {
-      unread.push({ name, file: configFile, why: 'config/plugins enables it, and no package of that name is installed in the repository' });
+      const candidates = keyTold?.how === 'candidate' ? keyTold.plugins : [];
+      const may =
+        candidates.length === 0
+          ? ''
+          : `; ${candidates.length === 1 ? 'the dependency' : 'the dependencies'} ${candidates.map((each) => `${each.pkg} (a Strapi plugin ${each.by})`).join(', ')}, not installed and named by no key, may be it under another name`;
+      unread.push({ name, file: configFile, why: `config/plugins enables it, and no package of that name is installed in the repository${may}` });
       continue;
     }
     const at = dir === undefined ? unused?.at : packageAtDir(dir);
@@ -1036,7 +1267,10 @@ interface Extension {
 /** One write an extension makes onto a plugin's controllers (P335, P345). */
 interface ControllerWrite {
   readonly file: string;
-  readonly controller: string;
+  /** The controller written; none where the extension writes `plugin.controllers` itself, a fresh object every controller it does not write is dropped from (P351). */
+  readonly controller?: string;
+  /** Where the plugin's controllers are written whole, the controllers the object holds, each written after it (P351). */
+  readonly holds?: readonly string[];
   /** The action written, `plugin.controllers.auth.session = fn`; none where the controller is written whole, `plugin.controllers.auth = ...`. */
   readonly action?: string;
   readonly value: TsNode;
@@ -1053,16 +1287,63 @@ interface ControllerWrite {
 const spreadsOriginal = (value: TsNode, handed: string, controller: string): boolean => {
   const object = objectOf(value);
   if (object === undefined || !Node.isObjectLiteralExpression(object)) return false;
-  const isOriginal = (node: TsNode, depth = 0): boolean => {
-    const bare = unwrapValue(node);
-    const target = Node.isCallExpression(bare) ? unwrapValue(bare.getExpression()) : bare;
-    const keys = accessKeys(target);
-    if (keys !== undefined && keys.length === 3 && keys[0] === handed && keys[1] === 'controllers' && keys[2] === controller) return true;
-    const declaration = Node.isIdentifier(target) ? target.getSymbol()?.getDeclarations()[0] : undefined;
-    const initializer = declaration !== undefined && Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : undefined;
-    return initializer !== undefined && depth < FOLLOW_DEPTH && isOriginal(initializer, depth + 1);
-  };
-  return object.getProperties().some((each) => Node.isSpreadAssignment(each) && isOriginal(each.getExpression()));
+  return object.getProperties().some((each) => Node.isSpreadAssignment(each) && isPluginOwn(each.getExpression(), [handed, 'controllers', controller]));
+};
+
+/** Whether a controller written whole keeps the plugin's own actions it does not write: the plugin's own itself (`beta: plugin.controllers.beta`, P351), or an object spreading it. */
+const keepsOriginal = (value: TsNode, handed: string, controller: string): boolean => isPluginOwn(value, [handed, 'controllers', controller]) || spreadsOriginal(value, handed, controller);
+
+
+/**
+ * Whether an expression is the plugin's own value at a path of keys (P345,
+ * P351): `plugin.controllers.auth`, `plugin.controllers.auth(opts)`, or the
+ * same through a name holding it (`const original = plugin.controllers`).
+ */
+const isPluginOwn = (node: TsNode, path: readonly string[]): boolean => {
+  const bare = unwrapValue(node);
+  const keys = heldKeys(Node.isCallExpression(bare) ? unwrapValue(bare.getExpression()) : bare);
+  return keys !== undefined && keys.length === path.length && keys.every((key, at) => key === path[at]);
+};
+
+/** The keys of an access as {@link accessKeys} reads them, a name it starts at read as the access it is a `const` of (`own.alpha` of `const own = plugin.controllers`, P351). */
+const heldKeys = (node: TsNode, depth = 0): string[] | undefined => {
+  const keys = accessKeys(node);
+  if (keys === undefined || depth >= FOLLOW_DEPTH) return keys;
+  let root = unwrapValue(node);
+  while (Node.isPropertyAccessExpression(root) || Node.isElementAccessExpression(root)) root = unwrapValue(root.getExpression());
+  const declaration = Node.isIdentifier(root) ? root.getSymbol()?.getDeclarations()[0] : undefined;
+  const initializer = declaration !== undefined && Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : undefined;
+  const held = initializer === undefined ? undefined : heldKeys(initializer, depth + 1);
+  return held === undefined ? keys : [...held, ...keys.slice(1)];
+};
+
+/**
+ * The writes an object written over a plugin's controllers makes (P351):
+ * each controller it writes, by its key, whole - spreading the plugin's own
+ * where it does - and whether it spreads the plugin's controllers, keeping
+ * every one it does not write, or another object not read, which may.
+ */
+const controllersWritten = (value: TsNode, handed: string, file: string): { readonly writes: readonly ControllerWrite[]; readonly keeps: boolean } => {
+  const object = objectOf(value);
+  if (object === undefined || !Node.isObjectLiteralExpression(object)) return { writes: [], keeps: true };
+  const writes: ControllerWrite[] = [];
+  let keeps = false;
+  for (const property of object.getProperties()) {
+    if (Node.isSpreadAssignment(property)) {
+      if (isPluginOwn(property.getExpression(), [handed, 'controllers'])) keeps = true;
+      else {
+        const inner = controllersWritten(property.getExpression(), handed, file);
+        writes.push(...inner.writes);
+        if (inner.keeps) keeps = true;
+      }
+      continue;
+    }
+    const written = Node.isPropertyAssignment(property) ? property.getInitializer() : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isMethodDeclaration(property) ? property : undefined;
+    if (written === undefined || !(Node.isPropertyAssignment(property) || Node.isShorthandPropertyAssignment(property) || Node.isMethodDeclaration(property))) continue;
+    const controller = property.getName().replace(/^['"]|['"]$/g, '');
+    writes.push({ file, controller, value: written, ...(keepsOriginal(written, handed, controller) ? { spreads: true as const } : {}) });
+  }
+  return { writes, keeps };
 };
 
 /**
@@ -1102,16 +1383,42 @@ const extensionOf = (sourceFile: SourceFile, plugin: string, file: string): Exte
       else pushed.push({ ...(router === undefined ? {} : { router }), route });
     }
   }
-  for (const write of sourceFile.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
-    if (write.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) continue;
-    const keys = accessKeys(write.getLeft());
-    if (keys === undefined || keys[0] !== handed) continue;
+  // The writes in the order they are written: `=` and `Object.assign(...)` alike (P351).
+  const writes = sourceFile.getDescendants().flatMap((node): { readonly keys: readonly string[]; readonly value: TsNode; readonly assigned?: true; readonly left: TsNode }[] => {
+    if (Node.isBinaryExpression(node) && node.getOperatorToken().getKind() === SyntaxKind.EqualsToken) {
+      const keys = accessKeys(node.getLeft());
+      return keys === undefined ? [] : [{ keys, value: node.getRight(), left: node.getLeft() }];
+    }
+    // `Object.assign(plugin.controllers, { auth })`, `Object.assign(plugin.controllers.auth, { session })`: each key written over what is there.
+    if (!Node.isCallExpression(node) || node.getExpression().getText() !== 'Object.assign') return [];
+    const [target, ...sources] = node.getArguments();
+    const keys = target === undefined ? undefined : accessKeys(target);
+    if (keys === undefined || target === undefined) return [];
+    return sources.flatMap((source) => {
+      const object = objectOf(source);
+      if (object === undefined || !Node.isObjectLiteralExpression(object)) return [];
+      return object.getProperties().flatMap((property) => {
+        const value = Node.isPropertyAssignment(property) ? property.getInitializer() : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isMethodDeclaration(property) ? property : undefined;
+        if (value === undefined || !(Node.isPropertyAssignment(property) || Node.isShorthandPropertyAssignment(property) || Node.isMethodDeclaration(property))) return [];
+        return [{ keys: [...keys, property.getName().replace(/^['"]|['"]$/g, '')], value, assigned: true as const, left: target }];
+      });
+    });
+  });
+  for (const write of writes) {
+    const { keys } = write;
+    if (keys[0] !== handed) continue;
     const controller = keys[2];
-    if (keys[1] === 'controllers' && keys.length === 4 && controller !== undefined) controllers.push({ file, controller, action: keys[3] as string, value: write.getRight() });
+    if (keys[1] === 'controllers' && keys.length === 4 && controller !== undefined) controllers.push({ file, controller, action: keys[3] as string, value: write.value });
     // A controller written whole is the actions it answers, the original's where it spreads them (P345).
     else if (keys[1] === 'controllers' && keys.length === 3 && controller !== undefined) {
-      controllers.push({ file, controller, value: write.getRight(), ...(spreadsOriginal(write.getRight(), handed, controller) ? { spreads: true as const } : {}) });
-    } else if (keys[1] === 'routes') unread.push(`its write of ${write.getLeft().getText()}`);
+      controllers.push({ file, controller, value: write.value, ...(keepsOriginal(write.value, handed, controller) ? { spreads: true as const } : {}) });
+    } else if (keys[1] === 'controllers' && keys.length === 2) {
+      // `plugin.controllers = { ...plugin.controllers, auth }` or a fresh object: each controller it writes, and the others kept where it
+      // spreads the plugin's, dropped where it does not (P351).
+      const whole = controllersWritten(write.value, handed, file);
+      if (!whole.keeps) controllers.push({ file, value: write.value, holds: whole.writes.flatMap((each) => (each.controller === undefined ? [] : [each.controller])) });
+      controllers.push(...whole.writes);
+    } else if (keys[1] === 'routes') unread.push(`its write of ${write.assigned === true ? `${write.left.getText()}.${keys[keys.length - 1]}` : write.left.getText()}`);
   }
   return { plugin, file, pushed, said, unread, controllers };
 };
@@ -1300,9 +1607,11 @@ export const strapiServerAdapter: EntryAdapter = {
      * controller written whole that writes the action; a controller written
      * whole that neither writes it nor spreads the original's leaves it
      * answered by nothing (`gone`); one that spreads the original's hands it
-     * down to the writes before and the plugin's own.
+     * down to the writes before and the plugin's own. `plugin.controllers`
+     * written itself (P351) writes each controller it holds whole; one it
+     * does not hold is dropped, unless it spreads the plugin's.
      */
-    type Answer = { readonly kind: 'action'; readonly value: TsNode } | { readonly kind: 'whole'; readonly controller: Controller } | { readonly kind: 'gone'; readonly file: string };
+    type Answer = { readonly kind: 'action'; readonly value: TsNode } | { readonly kind: 'whole'; readonly controller: Controller } | { readonly kind: 'gone'; readonly file: string; readonly whole?: true };
     const extensionAnswer = (plugin: string, handlerName: string): Answer | undefined => {
       const dot = handlerName.lastIndexOf('.');
       const controller = handlerName.slice(0, dot);
@@ -1310,6 +1619,11 @@ export const strapiServerAdapter: EntryAdapter = {
       const writes = overrides.get(plugin) ?? [];
       for (let index = writes.length - 1; index >= 0; index -= 1) {
         const write = writes[index] as ControllerWrite;
+        // `plugin.controllers` written as a fresh object not writing this controller: dropped (P351).
+        if (write.controller === undefined) {
+          if (write.holds?.includes(controller) === true) continue;
+          return { kind: 'gone', file: write.file, whole: true };
+        }
         if (write.controller !== controller) continue;
         if (write.action !== undefined) {
           if (write.action === action) return { kind: 'action', value: write.value };
@@ -1355,8 +1669,8 @@ export const strapiServerAdapter: EntryAdapter = {
       let handler: EntryHandler | undefined;
       let handlerVia: 'function' | 'inline' | 'framework' | 'package' | 'unread' = 'unread';
       let named: string | undefined;
-      /** The extension that writes the route's controller whole without its action (P345). */
-      let gone: string | undefined;
+      /** The extension that writes the route's controller whole without its action (P345), or the plugin's controllers without it (P351). */
+      let gone: { readonly file: string; readonly whole?: true } | undefined;
       if (typeof route.handler === 'string') {
         named = route.handler;
         const dot = route.handler.lastIndexOf('.');
@@ -1366,7 +1680,7 @@ export const strapiServerAdapter: EntryAdapter = {
         const answer = ofPlugin === undefined ? undefined : extensionAnswer(ofPlugin.plugin.name, ofPlugin.action);
         if (answer?.kind === 'action') handler = handlerOfNode(answer.value, route.handler);
         else if (answer?.kind === 'whole') handler = actionHandler(answer.controller, action, route.handler, ctx);
-        else if (answer?.kind === 'gone') gone = answer.file;
+        else if (answer?.kind === 'gone') gone = answer;
         else if (ofPlugin?.plugin.installed !== undefined) handlerVia = 'package';
         else {
           const controller = controllerFor(owner, route.handler.slice(0, dot));
@@ -1386,8 +1700,14 @@ export const strapiServerAdapter: EntryAdapter = {
           file,
           line: route.at.getSourceFile().isInNodeModules() ? 1 : startLineOf(route.at),
           reason: 'route-handler-unread',
-          message: `The handler of ${label}, ${named ?? label}, is an action of a controller ${gone} writes whole, which neither writes that action nor spreads the plugin's own controller into it, so nothing is read to answer the route.`,
-          hint: "Write the action in the controller the extension writes, or spread the plugin's own into it: { ...original(opts), <action>: ... }.",
+          message:
+            gone.whole === true
+              ? `The handler of ${label}, ${named ?? label}, is an action of a controller ${gone.file} drops: it writes the plugin's controllers as an object that neither holds that controller nor spreads the plugin's own, so nothing is read to answer the route.`
+              : `The handler of ${label}, ${named ?? label}, is an action of a controller ${gone.file} writes whole, which neither writes that action nor spreads the plugin's own controller into it, so nothing is read to answer the route.`,
+          hint:
+            gone.whole === true
+              ? "Keep the plugin's controllers in the object the extension writes: { ...plugin.controllers, <controller>: ... }."
+              : "Write the action in the controller the extension writes, or spread the plugin's own into it: { ...original(opts), <action>: ... }.",
           symbol: named ?? label,
           adapter: ADAPTER,
         });

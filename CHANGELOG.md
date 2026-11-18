@@ -469,6 +469,29 @@ only one of them moved.
   does, with how many write it and the first (`differing`). A receiver that
   may hold more than twelve instances reads the first twelve and counts the
   others in its `route-entries-unread` row.
+- **Routes over keys, deeper patterns, places of lists put together,
+  objects written per call, webpack-built Strapi plugins (P351).** A route
+  or a link written straight over `Object.keys(...)` (`path={path}`,
+  `` path={`/tools/${name}`} ``, `element={PAGES[path]}`) is one per key;
+  a route-level pattern nested deeper than one key of a pair's entry or a
+  list's item (`([slug, { meta: { Screen } }])`) is read, and a template or
+  a sum reading a mapped item's key or member is read per entry.
+  `Object.entries` over a list a spread, a `concat`, a `map` or a function
+  of the repository puts together from lists whose order is known keeps
+  each item under its place; past a list read otherwise the places are
+  said not known in the `route-entries-unread` row. An object an adding
+  function writes into its store from its parameters (`this.pages[name] =
+  { Screen }`) is one entry per call, read with that call's arguments under
+  the key it hands. An installed Strapi plugin shipped as a webpack bundle
+  is read through its table of modules (`__webpack_modules__`, webpack 4's
+  bootstrap array, `__webpack_require__.d` and `.n`); a dependency not
+  installed that a key of `config/plugins` names otherwise - resolving its
+  package, a `file:` directory, a name spelled alike - is one row under the
+  key, and a key naming no package says which dependencies not installed it
+  may be. An extension writing `plugin.controllers` itself (a fresh object,
+  one spreading the plugin's, `Object.assign`) answers with the controllers
+  it writes, the plugin's where it keeps them, and a `route-handler-unread`
+  row for each route whose controller it drops.
 - **Settings chosen by a branch, and read inside a function handed nothing
   (P302).** A condition nobody settles whose branches read different
   settings, `isProd ? process.env.API_URL : process.env.DEV_API_URL`, written

@@ -1,0 +1,1836 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T13:10:41.522Z",
+  "services": [
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "cms",
+      "repo": "./cms",
+      "type": "strapi",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "poller",
+      "repo": "./poller",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "cms#src/extensions/boards/strapi-server.ts:card.find@8",
+      "type": "function",
+      "label": "card.find@8",
+      "repo": "cms",
+      "file": "src/extensions/boards/strapi-server.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cms#src/extensions/boards/strapi-server.ts:tag.find@16",
+      "type": "function",
+      "label": "tag.find@16",
+      "repo": "cms",
+      "file": "src/extensions/boards/strapi-server.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cms#src/extensions/polls/strapi-server.ts:card.find@5",
+      "type": "function",
+      "label": "card.find@5",
+      "repo": "cms",
+      "file": "src/extensions/polls/strapi-server.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cms#src/plugins/boards/strapi-server.ts:card.create@18",
+      "type": "function",
+      "label": "card.create@18",
+      "repo": "cms",
+      "file": "src/plugins/boards/strapi-server.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cms#src/plugins/boards/strapi-server.ts:lane.find@23",
+      "type": "function",
+      "label": "lane.find@23",
+      "repo": "cms",
+      "file": "src/plugins/boards/strapi-server.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cms#src/plugins/local-notes/strapi-server.ts:note.find@5",
+      "type": "function",
+      "label": "note.find@5",
+      "repo": "cms",
+      "file": "src/plugins/local-notes/strapi-server.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cms#src/plugins/polls/strapi-server.ts:lane.find@23",
+      "type": "function",
+      "label": "lane.find@23",
+      "repo": "cms",
+      "file": "src/plugins/polls/strapi-server.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "console#src/App.tsx:App",
+      "type": "ui_component",
+      "label": "App",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:About",
+      "type": "ui_component",
+      "label": "About",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 3,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/about"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Billing",
+      "type": "ui_component",
+      "label": "Billing",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 9,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/sections/billing"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Finish",
+      "type": "ui_component",
+      "label": "Finish",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 12,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/flow/1 /wizard/2"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Hats",
+      "type": "ui_component",
+      "label": "Hats",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 15,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/catalog/hats"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Home",
+      "type": "ui_component",
+      "label": "Home",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/home"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Importer",
+      "type": "ui_component",
+      "label": "Importer",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/tools/import"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Pricing",
+      "type": "ui_component",
+      "label": "Pricing",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/areas/pricing"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Profile",
+      "type": "ui_component",
+      "label": "Profile",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 11,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/stages/1 /wizard/1"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Review",
+      "type": "ui_component",
+      "label": "Review",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 13,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/stages/2"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Scarves",
+      "type": "ui_component",
+      "label": "Scarves",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 16,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/shelves/scarves"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Search",
+      "type": "ui_component",
+      "label": "Search",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/tour/0"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Shoes",
+      "type": "ui_component",
+      "label": "Shoes",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 14,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/catalog/shoes"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Support",
+      "type": "ui_component",
+      "label": "Support",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/tour/1"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Team",
+      "type": "ui_component",
+      "label": "Team",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 8,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/team"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Welcome",
+      "type": "ui_component",
+      "label": "Welcome",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/flow/0 /late/0 /stages/0 /wizard/0"
+      }
+    },
+    {
+      "id": "console#src/lib/catalog.ts:shelfRoutes",
+      "type": "function",
+      "label": "shelfRoutes",
+      "repo": "console",
+      "file": "src/lib/catalog.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#CatalogRoute[]"
+        }
+      }
+    },
+    {
+      "id": "console#src/lib/tables.tsx:tourSteps",
+      "type": "function",
+      "label": "tourSteps",
+      "repo": "console",
+      "file": "src/lib/tables.tsx",
+      "line": 64,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#Step[]"
+        }
+      }
+    },
+    {
+      "id": "entry:cms:http:DELETE:/api/pins/pins/:param",
+      "type": "entry",
+      "label": "DELETE /api/pins/pins/:id",
+      "repo": "cms",
+      "file": "package.json",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/api/pins/pins/:id",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "pins",
+        "package": "strapi-plugin-pins",
+        "declaredIn": "node_modules/strapi-plugin-pins/strapi-server.js",
+        "handlerVia": "package",
+        "handlerName": "pin.remove",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/boards/cards",
+      "type": "entry",
+      "label": "GET /api/boards/cards",
+      "repo": "cms",
+      "file": "src/plugins/boards/strapi-server.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/boards/cards",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "boards",
+        "handlerVia": "inline",
+        "handlerName": "card.find",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/boards/lanes",
+      "type": "entry",
+      "label": "GET /api/boards/lanes",
+      "repo": "cms",
+      "file": "src/plugins/boards/strapi-server.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/boards/lanes",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "boards",
+        "handlerVia": "inline",
+        "handlerName": "lane.find",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/boards/tags",
+      "type": "entry",
+      "label": "GET /api/boards/tags",
+      "repo": "cms",
+      "file": "src/plugins/boards/strapi-server.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/boards/tags",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "boards",
+        "handlerVia": "inline",
+        "handlerName": "tag.find",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/maps/maps",
+      "type": "entry",
+      "label": "GET /api/maps/maps",
+      "repo": "cms",
+      "file": "package.json",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/maps/maps",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "maps",
+        "package": "strapi-plugin-maps",
+        "declaredIn": "node_modules/strapi-plugin-maps/dist/server.js",
+        "handlerVia": "package",
+        "handlerName": "map.find",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/notes/notes",
+      "type": "entry",
+      "label": "GET /api/notes/notes",
+      "repo": "cms",
+      "file": "src/plugins/local-notes/strapi-server.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/notes/notes",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "notes",
+        "handlerVia": "inline",
+        "handlerName": "note.find",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/pins/pins",
+      "type": "entry",
+      "label": "GET /api/pins/pins",
+      "repo": "cms",
+      "file": "package.json",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/pins/pins",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "pins",
+        "package": "strapi-plugin-pins",
+        "declaredIn": "node_modules/strapi-plugin-pins/strapi-server.js",
+        "handlerVia": "package",
+        "handlerName": "pin.find",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/polls/cards",
+      "type": "entry",
+      "label": "GET /api/polls/cards",
+      "repo": "cms",
+      "file": "src/plugins/polls/strapi-server.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/polls/cards",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "polls",
+        "handlerVia": "inline",
+        "handlerName": "card.find",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/polls/lanes",
+      "type": "entry",
+      "label": "GET /api/polls/lanes",
+      "repo": "cms",
+      "file": "src/plugins/polls/strapi-server.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/polls/lanes",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "polls",
+        "handlerVia": "inline",
+        "handlerName": "lane.find",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/polls/tags",
+      "type": "entry",
+      "label": "GET /api/polls/tags",
+      "repo": "cms",
+      "file": "src/plugins/polls/strapi-server.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/polls/tags",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "polls",
+        "handlerVia": "unread",
+        "handlerName": "tag.find",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:POST:/api/boards/cards",
+      "type": "entry",
+      "label": "POST /api/boards/cards",
+      "repo": "cms",
+      "file": "src/plugins/boards/strapi-server.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/boards/cards",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "boards",
+        "handlerVia": "inline",
+        "handlerName": "card.create",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:POST:/api/polls/cards",
+      "type": "entry",
+      "label": "POST /api/polls/cards",
+      "repo": "cms",
+      "file": "src/plugins/polls/strapi-server.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/polls/cards",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "polls",
+        "handlerVia": "unread",
+        "handlerName": "card.create",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:PUT:/pins/settings",
+      "type": "entry",
+      "label": "PUT /pins/settings",
+      "repo": "cms",
+      "file": "package.json",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/pins/settings",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "pins",
+        "package": "strapi-plugin-pins",
+        "declaredIn": "node_modules/strapi-plugin-pins/strapi-server.js",
+        "handlerVia": "package",
+        "handlerName": "settings.set",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:11:28",
+      "type": "http_out",
+      "label": "GET /api/notes/notes",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 11,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4710/api/notes/notes",
+        "path": "/api/notes/notes",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4710",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:14:28",
+      "type": "http_out",
+      "label": "GET /api/boards/cards",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 14,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4710/api/boards/cards",
+        "path": "/api/boards/cards",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4710",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:15:43",
+      "type": "http_out",
+      "label": "POST /api/boards/cards",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 15,
+      "meta": {
+        "method": "POST",
+        "url": "http://localhost:4710/api/boards/cards",
+        "path": "/api/boards/cards",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "unknown",
+        "bodyFrom": "value",
+        "host": "localhost:4710",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:16:28",
+      "type": "http_out",
+      "label": "GET /api/boards/lanes",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 16,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4710/api/boards/lanes",
+        "path": "/api/boards/lanes",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4710",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:19:28",
+      "type": "http_out",
+      "label": "GET /api/polls/cards",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 19,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4710/api/polls/cards",
+        "path": "/api/polls/cards",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4710",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:20:32",
+      "type": "http_out",
+      "label": "GET /api/polls/lanes",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 20,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4710/api/polls/lanes",
+        "path": "/api/polls/lanes",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4710",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:21:31",
+      "type": "http_out",
+      "label": "GET /api/polls/tags",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 21,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4710/api/polls/tags",
+        "path": "/api/polls/tags",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4710",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:22:43",
+      "type": "http_out",
+      "label": "POST /api/polls/cards",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 22,
+      "meta": {
+        "method": "POST",
+        "url": "http://localhost:4710/api/polls/cards",
+        "path": "/api/polls/cards",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "unknown",
+        "bodyFrom": "value",
+        "host": "localhost:4710",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:23:32",
+      "type": "http_out",
+      "label": "GET /api/boards/tags",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 23,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4710/api/boards/tags",
+        "path": "/api/boards/tags",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4710",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:4:27",
+      "type": "http_out",
+      "label": "GET /api/pins/pins",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 4,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4710/api/pins/pins",
+        "path": "/api/pins/pins",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4710",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:5:38",
+      "type": "http_out",
+      "label": "DELETE /api/pins/pins/:param",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 5,
+      "meta": {
+        "method": "DELETE",
+        "url": "http://localhost:4710/api/pins/pins/${…}",
+        "path": "/api/pins/pins/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4710",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:8:27",
+      "type": "http_out",
+      "label": "GET /api/maps/maps",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4710/api/maps/maps",
+        "path": "/api/maps/maps",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4710",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:addCard",
+      "type": "function",
+      "label": "addCard",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:addPoll",
+      "type": "function",
+      "label": "addPoll",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:boardTags",
+      "type": "function",
+      "label": "boardTags",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:cards",
+      "type": "function",
+      "label": "cards",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:lanes",
+      "type": "function",
+      "label": "lanes",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:maps",
+      "type": "function",
+      "label": "maps",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:notes",
+      "type": "function",
+      "label": "notes",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:pins",
+      "type": "function",
+      "label": "pins",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:pollLanes",
+      "type": "function",
+      "label": "pollLanes",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:pollTags",
+      "type": "function",
+      "label": "pollTags",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:polls",
+      "type": "function",
+      "label": "polls",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:unpin",
+      "type": "function",
+      "label": "unpin",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "repo:cms",
+      "type": "repo",
+      "label": "cms",
+      "repo": "cms",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "strapi-server"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4710,
+            "file": "config/server.ts",
+            "line": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:console",
+      "type": "repo",
+      "label": "console",
+      "repo": "console",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "functions": 21,
+          "components": 16,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:poller",
+      "type": "repo",
+      "label": "poller",
+      "repo": "poller",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/features/screens.tsx:About",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/App.tsx",
+      "line": 12,
+      "meta": {
+        "navigates": "/about",
+        "route": "/about",
+        "page": "src/features/screens.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/features/screens.tsx:Home",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/App.tsx",
+      "line": 12,
+      "meta": {
+        "navigates": "/home",
+        "route": "/home",
+        "page": "src/features/screens.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/catalog.ts:shelfRoutes",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#CatalogRoute[]",
+      "file": "src/App.tsx",
+      "line": 55
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/tables.tsx:tourSteps",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#Step[]",
+      "file": "src/App.tsx",
+      "line": 45
+    },
+    {
+      "from": "entry:cms:http:GET:/api/boards/cards",
+      "to": "cms#src/extensions/boards/strapi-server.ts:card.find@8",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{cards:undefined[]}",
+      "file": "src/extensions/boards/strapi-server.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:GET:/api/boards/lanes",
+      "to": "cms#src/plugins/boards/strapi-server.ts:lane.find@23",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/plugins/boards/strapi-server.ts",
+      "line": 23,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:GET:/api/boards/tags",
+      "to": "cms#src/extensions/boards/strapi-server.ts:tag.find@16",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{tags:undefined[]}",
+      "file": "src/extensions/boards/strapi-server.ts",
+      "line": 16,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:GET:/api/notes/notes",
+      "to": "cms#src/plugins/local-notes/strapi-server.ts:note.find@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/plugins/local-notes/strapi-server.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:GET:/api/polls/cards",
+      "to": "cms#src/extensions/polls/strapi-server.ts:card.find@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{polls:undefined[]}",
+      "file": "src/extensions/polls/strapi-server.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:GET:/api/polls/lanes",
+      "to": "cms#src/plugins/polls/strapi-server.ts:lane.find@23",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/plugins/polls/strapi-server.ts",
+      "line": 23,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:POST:/api/boards/cards",
+      "to": "cms#src/plugins/boards/strapi-server.ts:card.create@18",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/plugins/boards/strapi-server.ts",
+      "line": 18,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:11:28",
+      "to": "entry:cms:http:GET:/api/notes/notes",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 11,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:14:28",
+      "to": "entry:cms:http:GET:/api/boards/cards",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 14,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:15:43",
+      "to": "entry:cms:http:POST:/api/boards/cards",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 15,
+      "params": [
+        "unknown"
+      ],
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:16:28",
+      "to": "entry:cms:http:GET:/api/boards/lanes",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 16,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:19:28",
+      "to": "entry:cms:http:GET:/api/polls/cards",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 19,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:20:32",
+      "to": "entry:cms:http:GET:/api/polls/lanes",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 20,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:21:31",
+      "to": "entry:cms:http:GET:/api/polls/tags",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 21,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:22:43",
+      "to": "entry:cms:http:POST:/api/polls/cards",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 22,
+      "params": [
+        "unknown"
+      ],
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:23:32",
+      "to": "entry:cms:http:GET:/api/boards/tags",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 23,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:4:27",
+      "to": "entry:cms:http:GET:/api/pins/pins",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 4,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:5:38",
+      "to": "entry:cms:http:DELETE:/api/pins/pins/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 5,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:8:27",
+      "to": "entry:cms:http:GET:/api/maps/maps",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 8,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "poller#src/poll.ts:addCard",
+      "to": "http_out:poller#src/poll.ts:15:43",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 15
+    },
+    {
+      "from": "poller#src/poll.ts:addPoll",
+      "to": "http_out:poller#src/poll.ts:22:43",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 22
+    },
+    {
+      "from": "poller#src/poll.ts:boardTags",
+      "to": "http_out:poller#src/poll.ts:23:32",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 23
+    },
+    {
+      "from": "poller#src/poll.ts:cards",
+      "to": "http_out:poller#src/poll.ts:14:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 14
+    },
+    {
+      "from": "poller#src/poll.ts:lanes",
+      "to": "http_out:poller#src/poll.ts:16:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 16
+    },
+    {
+      "from": "poller#src/poll.ts:maps",
+      "to": "http_out:poller#src/poll.ts:8:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 8
+    },
+    {
+      "from": "poller#src/poll.ts:notes",
+      "to": "http_out:poller#src/poll.ts:11:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 11
+    },
+    {
+      "from": "poller#src/poll.ts:pins",
+      "to": "http_out:poller#src/poll.ts:4:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 4
+    },
+    {
+      "from": "poller#src/poll.ts:pollLanes",
+      "to": "http_out:poller#src/poll.ts:20:32",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 20
+    },
+    {
+      "from": "poller#src/poll.ts:pollTags",
+      "to": "http_out:poller#src/poll.ts:21:31",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 21
+    },
+    {
+      "from": "poller#src/poll.ts:polls",
+      "to": "http_out:poller#src/poll.ts:19:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 19
+    },
+    {
+      "from": "poller#src/poll.ts:unpin",
+      "to": "http_out:poller#src/poll.ts:5:38",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 5
+    }
+  ],
+  "types": {
+    "type:console#CatalogRoute": {
+      "name": "CatalogRoute",
+      "kind": "object",
+      "declaredIn": "console#src/lib/catalog.ts",
+      "structuralHash": "42dddeeb16fddd2a",
+      "fields": [
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "Screen",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:console#Step": {
+      "name": "Step",
+      "kind": "object",
+      "declaredIn": "console#src/lib/tables.tsx",
+      "structuralHash": "cd75cd9761e64b6e",
+      "fields": [
+        {
+          "name": "Screen",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "config/plugins.ts",
+      "line": 1,
+      "reason": "route-registry-unread",
+      "message": "The routes of the Strapi plugin color-kit are not read: config/plugins resolves it from the package strapi-plugin-colors, a Strapi plugin by its name, which is not installed in the repository, so its package's server is not there to read.",
+      "hint": "Install the dependencies where the map is built, or resolve the plugin from a directory of the repository with a path written as a literal.",
+      "symbol": "color-kit",
+      "adapter": "strapi-server",
+      "service": "cms"
+    },
+    {
+      "file": "config/plugins.ts",
+      "line": 1,
+      "reason": "route-registry-unread",
+      "message": "The routes of the Strapi plugin mapView are not read: it is the dependency strapi-plugin-map-view (config/plugins keys it as mapView), a Strapi plugin by its name, which is not installed in the repository, so its package's server is not there to read.",
+      "hint": "Install the dependencies where the map is built, or resolve the plugin from a directory of the repository with a path written as a literal.",
+      "symbol": "mapView",
+      "adapter": "strapi-server",
+      "service": "cms"
+    },
+    {
+      "file": "config/plugins.ts",
+      "line": 1,
+      "reason": "route-registry-unread",
+      "message": "The routes of the Strapi plugin pdf-export are not read: config/plugins enables it, and no package of that name is installed in the repository; the dependency @studio/strapi-plugin-printer (a Strapi plugin by its name), not installed and named by no key, may be it under another name.",
+      "hint": "Install the dependencies where the map is built, or resolve the plugin from a directory of the repository with a path written as a literal.",
+      "symbol": "pdf-export",
+      "adapter": "strapi-server",
+      "service": "cms"
+    },
+    {
+      "file": "src/plugins/polls/strapi-server.ts",
+      "line": 7,
+      "reason": "route-handler-unread",
+      "message": "The handler of POST /api/polls/cards, card.create, is an action of a controller src/extensions/polls/strapi-server.ts writes whole, which neither writes that action nor spreads the plugin's own controller into it, so nothing is read to answer the route.",
+      "hint": "Write the action in the controller the extension writes, or spread the plugin's own into it: { ...original(opts), <action>: ... }.",
+      "symbol": "card.create",
+      "adapter": "strapi-server",
+      "service": "cms"
+    },
+    {
+      "file": "src/plugins/polls/strapi-server.ts",
+      "line": 9,
+      "reason": "route-handler-unread",
+      "message": "The handler of GET /api/polls/tags, tag.find, is an action of a controller src/extensions/polls/strapi-server.ts drops: it writes the plugin's controllers as an object that neither holds that controller nor spreads the plugin's own, so nothing is read to answer the route.",
+      "hint": "Keep the plugin's controllers in the object the extension writes: { ...plugin.controllers, <controller>: ... }.",
+      "symbol": "tag.find",
+      "adapter": "strapi-server",
+      "service": "cms"
+    },
+    {
+      "file": "src/App.tsx",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/App.tsx",
+      "line": 49,
+      "reason": "route-entries-unread",
+      "level": "info",
+      "message": "1 entry of Object.entries(LATE), which a route of src/App.tsx is written over, is not read, so the screen it places is not placed (...remote spreads a list not read; the places of some items of LATE are not known: they follow a list read otherwise, or are pushed onto it); 1 is read and placed",
+      "hint": "Write the entries as objects in place - in the list, or handed to the functions adding to a registry - with the path as text and the screen as a component of the repository, and map them, where they are mapped, to an object written over each.",
+      "symbol": "routes over Object.entries(LATE)",
+      "meta": {
+        "cause": "route-entries-unread",
+        "list": "Object.entries(LATE)",
+        "unread": 1,
+        "read": 1,
+        "why": [
+          "...remote spreads a list not read",
+          "the places of some items of LATE are not known: they follow a list read otherwise, or are pushed onto it"
+        ]
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 11,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 14,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 16,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/lib/catalog.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ComponentType",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/lib/tables.tsx",
+      "line": 19,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ComponentType",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "console"
+    },
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "poller"
+    }
+  ]
+}

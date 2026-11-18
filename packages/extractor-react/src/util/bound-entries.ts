@@ -188,7 +188,19 @@ export const boundRead = (expression: TsNode, bindings: Bindings | undefined): B
       for (const key of rest) value = value !== null && typeof value === 'object' ? (value as Record<string, unknown>)[key] : undefined;
       return value === undefined ? 'absent' : { found: { value }, rest: [] };
     }
-    const node = bare(found.node);
+    let node = bare(found.node);
+    // A name the entry's object reads that is bound itself - a parameter of the adding function the object is written in, bound to
+    // what each call hands (P351): what it stands for.
+    if (Node.isIdentifier(node)) {
+      const declarations = namedDeclarations(node);
+      const object = boundObject(bindings, declarations);
+      const other = object === undefined ? boundNode(bindings, declarations) : undefined;
+      if (object !== undefined) node = object;
+      else if (other !== undefined) {
+        node = bare(other);
+        if (rest.length === 0 || !Node.isObjectLiteralExpression(node)) return { found: { node: other }, rest };
+      }
+    }
     if (rest.length > 0 && Node.isObjectLiteralExpression(node)) {
       current = node;
       continue;
@@ -200,7 +212,7 @@ export const boundRead = (expression: TsNode, bindings: Bindings | undefined): B
         continue;
       }
     }
-    return { found, rest };
+    return { found: node === bare(found.node) ? found : { node }, rest };
   }
   return undefined;
 };

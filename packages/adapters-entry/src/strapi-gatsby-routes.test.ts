@@ -601,6 +601,172 @@ describe("Strapi plugins shipped only bundled, plugins not installed, controller
       "route-handler-unread flag.clear The handler of DELETE /reviews/flag, flag.clear, is an action of a controller src/extensions/reviews/strapi-server.js writes whole, which neither writes that action nor spreads the plugin's own controller into it, so nothing is read to answer the route.",
     ]);
   });
+
+  /** A webpack 5 build: `__webpack_modules__` keyed by path, CommonJS and ES modules, the entry inlined in the bootstrap. */
+  const webpack = {
+    'node_modules/strapi-plugin-pins/package.json': JSON.stringify({ name: 'strapi-plugin-pins', strapi: { kind: 'plugin', name: 'pins' } }),
+    'node_modules/strapi-plugin-pins/strapi-server.js': [
+      '/******/ (() => { // webpackBootstrap',
+      '/******/ \tvar __webpack_modules__ = ({',
+      '"./server/routes/content-api.js":',
+      '((module) => {',
+      'module.exports = { type: "content-api", routes: [{ method: "GET", path: "/pins", handler: "pin.find" }] };',
+      '}),',
+      '"./server/routes/index.js":',
+      '((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {',
+      '"use strict";',
+      '__webpack_require__.r(__webpack_exports__);',
+      '__webpack_require__.d(__webpack_exports__, { "default": () => (__WEBPACK_DEFAULT_EXPORT__) });',
+      'var _content_api__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./server/routes/content-api.js");',
+      'var _content_api__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_content_api__WEBPACK_IMPORTED_MODULE_0__);',
+      'const __WEBPACK_DEFAULT_EXPORT__ = ({ "content-api": _content_api__WEBPACK_IMPORTED_MODULE_0___default(), admin: { type: "admin", routes: [{ method: "PUT", path: "/settings", handler: "settings.set" }] } });',
+      '})',
+      '/******/ \t});',
+      '/******/ \tvar __webpack_module_cache__ = {};',
+      '/******/ \tfunction __webpack_require__(moduleId) {',
+      '/******/ \t\tvar cachedModule = __webpack_module_cache__[moduleId];',
+      '/******/ \t\tif (cachedModule !== undefined) return cachedModule.exports;',
+      '/******/ \t\tvar module = __webpack_module_cache__[moduleId] = { exports: {} };',
+      '/******/ \t\t__webpack_modules__[moduleId](module, module.exports, __webpack_require__);',
+      '/******/ \t\treturn module.exports;',
+      '/******/ \t}',
+      'var __webpack_exports__ = {};',
+      '(() => {',
+      '"use strict";',
+      '__webpack_require__.r(__webpack_exports__);',
+      '__webpack_require__.d(__webpack_exports__, { "default": () => (__WEBPACK_DEFAULT_EXPORT__) });',
+      'var _routes__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./server/routes/index.js");',
+      'const __WEBPACK_DEFAULT_EXPORT__ = ({ routes: _routes__WEBPACK_IMPORTED_MODULE_0__["default"], controllers: {} });',
+      '})();',
+      'module.exports = __webpack_exports__;',
+      '/******/ })();',
+    ].join('\n'),
+  };
+
+  /** A webpack 4 build: the modules an array handed to the bootstrap function, each loaded by its place. */
+  const webpack4 = {
+    'node_modules/strapi-plugin-maps/package.json': JSON.stringify({ name: 'strapi-plugin-maps', strapi: { kind: 'plugin', name: 'maps' } }),
+    'node_modules/strapi-plugin-maps/strapi-server.js': [
+      'module.exports = (function (modules) {',
+      '  var installedModules = {};',
+      '  function __webpack_require__(moduleId) {',
+      '    var module = installedModules[moduleId] = { i: moduleId, l: false, exports: {} };',
+      '    modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);',
+      '    return module.exports;',
+      '  }',
+      '  return __webpack_require__(__webpack_require__.s = 1);',
+      '})([',
+      '  function (module, exports) {',
+      '    exports.routes = [{ method: "GET", path: "/maps", handler: "map.find" }];',
+      '    exports.type = "content-api";',
+      '  },',
+      '  function (module, exports, __webpack_require__) {',
+      '    module.exports = { routes: { "content-api": __webpack_require__(0) }, controllers: {} };',
+      '  },',
+      ']);',
+    ].join('\n'),
+  };
+
+  it("reads an installed plugin shipped as a webpack bundle through its table of modules (P351)", () => {
+    const read = extract(strapiServerAdapter, {}, { ...webpack, ...webpack4 }, { dependencies: { 'strapi-plugin-pins': '1.0.0', 'strapi-plugin-maps': '1.0.0' } });
+    expect(read.unresolved).toEqual([]);
+    expect(routes(read)).toEqual(['GET /api/maps/maps -> (package)', 'GET /api/pins/pins -> (package)', 'PUT /pins/settings -> (package)']);
+  });
+
+  it('merges a dependency not installed into the key of config/plugins that names it otherwise (P351)', () => {
+    const read = extract(
+      strapiServerAdapter,
+      {
+        'src/plugins/local-notes/strapi-server.js': "module.exports = { routes: [{ method: 'GET', path: '/notes', handler: 'note.find' }], controllers: { note: { find: async (ctx) => {} } } };",
+      },
+      {
+        'config/plugins.js': [
+          'module.exports = {',
+          "  'color-kit': { enabled: true, resolve: 'strapi-plugin-colors' },",
+          "  notes: { enabled: true, resolve: './src/plugins/local-notes' },",
+          '  mapView: { enabled: true },',
+          "  'pdf-export': { enabled: true },",
+          '};',
+        ].join('\n'),
+        'src/plugins/local-notes/package.json': JSON.stringify({ name: '@shop/strapi-plugin-notes' }),
+      },
+      {
+        dependencies: {
+          'strapi-plugin-colors': '1.0.0',
+          '@shop/strapi-plugin-notes': 'file:./src/plugins/local-notes',
+          'strapi-plugin-map-view': '1.0.0',
+          '@acme/strapi-plugin-printer': '1.0.0',
+        },
+      },
+    );
+    expect(routes(read)).toEqual(['GET /notes/notes -> src/plugins/local-notes/strapi-server.js:1']);
+    expect(read.unresolved.map((row) => `${row.file} ${row.symbol} ${row.message}`)).toEqual([
+      "config/plugins.js color-kit The routes of the Strapi plugin color-kit are not read: config/plugins resolves it from the package strapi-plugin-colors, a Strapi plugin by its name, which is not installed in the repository, so its package's server is not there to read.",
+      "config/plugins.js mapView The routes of the Strapi plugin mapView are not read: it is the dependency strapi-plugin-map-view (config/plugins keys it as mapView), a Strapi plugin by its name, which is not installed in the repository, so its package's server is not there to read.",
+      'config/plugins.js pdf-export The routes of the Strapi plugin pdf-export are not read: config/plugins enables it, and no package of that name is installed in the repository; the dependency @acme/strapi-plugin-printer (a Strapi plugin by its name), not installed and named by no key, may be it under another name.',
+    ]);
+  });
+
+  it("reads an extension writing the plugin's controllers whole, keeping the plugin's where it spreads them and dropping them where not (P351)", () => {
+    const plugin = (name: string): string =>
+      [
+        'module.exports = {',
+        '  routes: [',
+        `    { method: 'GET', path: '/a', handler: 'alpha.list' },`,
+        `    { method: 'POST', path: '/a', handler: 'alpha.make' },`,
+        `    { method: 'GET', path: '/b', handler: 'beta.list' },`,
+        `    { method: 'GET', path: '/c', handler: 'gamma.list' },`,
+        '  ],',
+        '  controllers: {',
+        `    alpha: { list: async (ctx) => { ctx.body = '${name}'; }, make: async (ctx) => {} },`,
+        '    beta: { list: async (ctx) => {} },',
+        '    gamma: { list: async (ctx) => {} },',
+        '  },',
+        '};',
+      ].join('\n');
+    const read = extract(
+      strapiServerAdapter,
+      {
+        'src/plugins/kept/strapi-server.js': plugin('kept'),
+        'src/plugins/fresh/strapi-server.js': plugin('fresh'),
+        'src/extensions/kept/strapi-server.js': [
+          'module.exports = (plugin) => {',
+          '  const own = plugin.controllers;',
+          '  plugin.controllers = {',
+          '    ...own,',
+          '    alpha: (opts) => ({ ...own.alpha, list: async (ctx) => { ctx.body = []; } }),',
+          '  };',
+          '  Object.assign(plugin.controllers, { gamma: { list: async (ctx) => { ctx.body = 1; } } });',
+          '  return plugin;',
+          '};',
+        ].join('\n'),
+        'src/extensions/fresh/strapi-server.js': [
+          'module.exports = (plugin) => {',
+          '  plugin.controllers = {',
+          '    alpha: { list: async (ctx) => { ctx.body = []; } },',
+          '    beta: plugin.controllers.beta,',
+          '  };',
+          '  return plugin;',
+          '};',
+        ].join('\n'),
+      },
+      { 'config/plugins.js': "module.exports = {\n  kept: { enabled: true, resolve: './src/plugins/kept' },\n  fresh: { enabled: true, resolve: './src/plugins/fresh' },\n};\n" },
+    );
+    expect(routes(read)).toEqual([
+      'GET /fresh/a -> src/extensions/fresh/strapi-server.js:3',
+      'GET /fresh/b -> src/plugins/fresh/strapi-server.js:10',
+      'GET /fresh/c -> (unread)',
+      'GET /kept/a -> src/extensions/kept/strapi-server.js:5',
+      'GET /kept/b -> src/plugins/kept/strapi-server.js:10',
+      'GET /kept/c -> src/extensions/kept/strapi-server.js:7',
+      'POST /fresh/a -> (unread)',
+      'POST /kept/a -> src/plugins/kept/strapi-server.js:9',
+    ]);
+    expect(read.unresolved.map((row) => `${row.symbol} ${row.message}`)).toEqual([
+      "alpha.make The handler of POST /fresh/a, alpha.make, is an action of a controller src/extensions/fresh/strapi-server.js writes whole, which neither writes that action nor spreads the plugin's own controller into it, so nothing is read to answer the route.",
+      "gamma.list The handler of GET /fresh/c, gamma.list, is an action of a controller src/extensions/fresh/strapi-server.js drops: it writes the plugin's controllers as an object that neither holds that controller nor spreads the plugin's own, so nothing is read to answer the route.",
+    ]);
+  });
 });
 
 describe('Gatsby functions of local plugins, and under the path prefix (P329)', () => {
