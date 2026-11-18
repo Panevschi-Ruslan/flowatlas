@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:24:10.559Z",
+  "builtAt": "2026-11-18T13:15:42.446Z",
   "services": [
     {
       "name": "web",
@@ -546,7 +546,7 @@
           "files": 4,
           "filesRead": 4,
           "filesUnreadable": 0,
-          "functions": 7,
+          "functions": 9,
           "components": 0,
           "hooks": 0,
           "skippedExternalCalls": {}
@@ -676,12 +676,28 @@
       }
     },
     {
+      "id": "web#js/catalog.js:ProductList.constructor",
+      "type": "function",
+      "label": "ProductList.constructor",
+      "repo": "web",
+      "file": "js/catalog.js",
+      "line": 9
+    },
+    {
       "id": "web#js/catalog.js:ProductList.products",
       "type": "function",
       "label": "ProductList.products",
       "repo": "web",
       "file": "js/catalog.js",
       "line": 13
+    },
+    {
+      "id": "web#js/catalog.js:catalog.js:top",
+      "type": "function",
+      "label": "catalog.js:top",
+      "repo": "web",
+      "file": "js/catalog.js",
+      "line": 18
     },
     {
       "id": "web#js/requests.js:addNote",
@@ -794,6 +810,14 @@
       }
     },
     {
+      "id": "web#js/uploader.js:StatusPoller.constructor",
+      "type": "function",
+      "label": "StatusPoller.constructor",
+      "repo": "web",
+      "file": "js/uploader.js",
+      "line": 17
+    },
+    {
       "id": "web#js/uploader.js:StatusPoller.poll",
       "type": "function",
       "label": "StatusPoller.poll",
@@ -808,6 +832,14 @@
       "repo": "web",
       "file": "js/uploader.js",
       "line": 5
+    },
+    {
+      "id": "web#js/uploader.js:uploader.js:top",
+      "type": "function",
+      "label": "uploader.js:top",
+      "repo": "web",
+      "file": "js/uploader.js",
+      "line": 27
     }
   ],
   "edges": [
@@ -1173,6 +1205,14 @@
       "line": 14
     },
     {
+      "from": "web#js/catalog.js:catalog.js:top",
+      "to": "web#js/catalog.js:ProductList.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/catalog.js",
+      "line": 18
+    },
+    {
       "from": "web#js/requests.js:addNote",
       "to": "web#js/requests.js:start",
       "type": "calls",
@@ -1241,6 +1281,14 @@
       "confidence": "static",
       "file": "js/uploader.js",
       "line": 7
+    },
+    {
+      "from": "web#js/uploader.js:uploader.js:top",
+      "to": "web#js/uploader.js:StatusPoller.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/uploader.js",
+      "line": 27
     }
   ],
   "types": {},

@@ -1,7 +1,7 @@
-import { argumentAlong, callSitesOf, decoratorModule, destructuredFrom, elementsOfTag, handedByEachCall, returnedBy } from '@flowatlas/core';
+import { argumentAlong, callSitesOf, classOfListing, decoratorModule, destructuredFrom, elementsOfTag, handedByEachCall, returnedBy } from '@flowatlas/core';
 import type { CallExpression, ClassDeclaration, MethodDeclaration, NewExpression, Node as TsNode, ParameterDeclaration, PropertyDeclaration } from 'ts-morph';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
-import { attributesOf, attributeValues, classMadeByFramework, frameworkMade, injectedInto, isTagInstance, propsHandedTo } from './framework-made.js';
+import { attributeReading, attributesOf, attributeValues, classMadeByFramework, frameworkMade, injectedInto, isTagInstance, propsHandedTo, type SpreadReader } from './framework-made.js';
 
 /**
  * What a request's receiver may hold, where the compiler does not say (P301).
@@ -218,7 +218,7 @@ export const receiverValues = (isLeaf: (value: TsNode) => boolean) => {
  */
 const memberWritten = (object: TsNode, member: string): TsNode[] | undefined => {
   // The props an element hands its component, and each of them (P342).
-  if (object.getKind() === SyntaxKind.JsxAttributes) return attributeValues(object, member);
+  if (object.getKind() === SyntaxKind.JsxAttributes) return attributeValues(object, member, readSpread);
   if (isTagInstance(object) && member === 'props') {
     const attributes = attributesOf(object);
     return attributes === undefined ? undefined : [attributes];
@@ -240,6 +240,48 @@ const memberWritten = (object: TsNode, member: string): TsNode[] | undefined => 
   // A method of the instance's class, called for what it returns (P342).
   const method = owner?.getMethod(member);
   return method === undefined ? undefined : [method];
+};
+
+/** The spread attributes being read, so a component spreading its props into an element of itself is not read round. */
+const SPREADING = new Set<TsNode>();
+
+/**
+ * What a spread attribute hands one prop (P349): `<Feed {...rest} />`,
+ * `rest` taken out of the props of the component it is written in, is
+ * what each element written with that component hands it; `<Feed
+ * {...{ client }} />` the object's member. `[]` where what it spreads holds
+ * no such member - an element not handing it, an object not writing it -
+ * and nothing where any value it may hold is not read: a parameter nobody
+ * hands anything, a value from somewhere this does not follow.
+ */
+const readSpread: SpreadReader = (spread, member) => {
+  if (!Node.isJsxSpreadAttribute(spread) || SPREADING.has(spread)) return undefined;
+  SPREADING.add(spread);
+  try {
+    const objects = plainValues(spread.getExpression());
+    if (objects.length === 0) return undefined;
+    const out: TsNode[] = [];
+    for (const object of objects) {
+      if (object.getKind() === SyntaxKind.JsxAttributes) {
+        const { values, bare } = attributeReading(object, member, readSpread);
+        if (bare) return undefined;
+        out.push(...values);
+        continue;
+      }
+      if (!Node.isObjectLiteralExpression(object)) return undefined;
+      if (object.getProperty(member) === undefined) {
+        // An object spreading another may carry it.
+        if (object.getProperties().some((each) => Node.isSpreadAssignment(each))) return undefined;
+        continue;
+      }
+      const written = memberWritten(object, member);
+      if (written === undefined) return undefined;
+      out.push(...written);
+    }
+    return out;
+  } finally {
+    SPREADING.delete(spread);
+  }
 };
 
 /** The part of a value that is an element of a list (P342). */
@@ -336,20 +378,23 @@ const heldIn = (target: TsNode): HeldIn | undefined => {
   }
   let root: TsNode | undefined = declaration;
   let parts: string[] = [];
+  // A rest, `{ title, ...rest }`, is what it is taken out of with no part read (P349).
+  let destructured = false;
   if (declaration !== undefined && Node.isBindingElement(declaration)) {
     const from = destructuredFrom(declaration);
     if (from === undefined || from.parts.length > MOST_PARTS) return undefined;
     root = from.root;
     parts = from.parts;
+    destructured = true;
   }
   if (root === undefined) return undefined;
   if (Node.isVariableDeclaration(root)) {
     const statement = root.getParent()?.getParent();
     if (statement !== undefined && Node.isForOfStatement(statement)) return { from: [statement.getExpression()], parts: [ELEMENT, ...parts], handed: false };
     const written = root.getInitializer();
-    return parts.length === 0 || written === undefined ? undefined : { from: [written], parts, handed: false };
+    return !destructured || written === undefined ? undefined : { from: [written], parts, handed: false };
   }
-  if (!Node.isParameterDeclaration(root) || parts.length === 0) return undefined;
+  if (!Node.isParameterDeclaration(root) || !destructured) return undefined;
   const list = walkedList(root);
   if (list !== undefined) return { from: [list], parts: [ELEMENT, ...parts], handed: false };
   return { from: handedTo(root), parts, handed: true };
@@ -858,7 +903,10 @@ export const placedOut = (receiver: TsNode, calls: readonly CallExpression[] = [
           if (stopped !== undefined) stopped.framework = framework;
           return undefined;
         }
-        return everyPlaced(held, (made) => out(made, [], made, depth + 1));
+        // An element is written in the component that renders it, which is
+        // the request's; a module's listing calls nothing, wherever the list
+        // is built (P349): the request stays where it is placed so far.
+        return everyPlaced(held, (made) => out(made, [], classOfListing(made) === undefined ? made : at, depth + 1));
       }
       return everyPlaced(sites, (site) => {
         const called = site.getExpression();

@@ -15,7 +15,8 @@ that answers them; and an Astro site that writes no port. What P310 reads:
    clear() {...} })`: `Cart.add`, `Cart.addAll` and `Cart.clear`. `start()`
    calls `cart.addAll(items)` and `cart.clear()` on `new Cart('guest')`, and
    `Cart.addAll` calls `this.add(item)`: each joined, `Object.assign`'s
-   member by the instance's constructor.
+   member by the instance's constructor; the `new` is a call of the
+   constructor `Cart` (P349).
 3. **A module's default object.** `web/js/account.js` is `export default {
    profile() {...}, save(profile) {...} }`: `default.profile` and
    `default.save`.

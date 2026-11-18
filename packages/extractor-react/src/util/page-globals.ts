@@ -419,14 +419,61 @@ const importedNames = (source: ts.SourceFile): ReadonlyMap<string, Imported> => 
 };
 
 /** What a top-level `const name = …` of a module holds. */
-const localValue = (source: ts.SourceFile, name: string): ts.Expression | undefined => {
-  for (const statement of source.statements) {
+const localValue = (source: ts.SourceFile, name: string): ts.Expression | undefined => statementsValue(source.statements, name);
+
+/** What a `const name = …` among some statements holds. */
+const statementsValue = (statements: readonly ts.Statement[], name: string): ts.Expression | undefined => {
+  for (const statement of statements) {
     if (!ts.isVariableStatement(statement)) continue;
     for (const declaration of statement.declarationList.declarations) {
       if (ts.isIdentifier(declaration.name) && declaration.name.text === name) return declaration.initializer;
     }
   }
   return undefined;
+};
+
+/**
+ * What a name holds where it is written (P349): the `const` of the block
+ * around it that declares it - a function building a plugin's
+ * configurations keeps them under a name of its own - else the module's.
+ */
+const scopedValue = (source: ts.SourceFile, name: ts.Identifier): ts.Expression | undefined => {
+  for (let at: ts.Node | undefined = name.parent; at !== undefined && !ts.isSourceFile(at); at = at.parent) {
+    if (!ts.isBlock(at)) continue;
+    const found = statementsValue(at.statements, name.text);
+    if (found !== undefined) return found;
+  }
+  return localValue(source, name.text);
+};
+
+/** How many returns of one function are tried for a member a call of it builds. */
+const MOST_RETURNS = 8;
+
+/**
+ * What a call of a function the module declares hands back (P349):
+ * `configs: makeConfigs()` - each value its returns write, an arrow's body,
+ * of a function declared at the top, a `const` holding one, or written in
+ * place. Nothing for a function of another module, or one the module does
+ * not declare.
+ */
+const returnedFrom = (source: ts.SourceFile, call: ts.CallExpression): ts.Expression[] => {
+  const callee = unwrapped(call.expression);
+  let fn: ts.Node | undefined = ts.isArrowFunction(callee) || ts.isFunctionExpression(callee) ? callee : undefined;
+  if (fn === undefined && ts.isIdentifier(callee)) {
+    fn = source.statements.find((statement): statement is ts.FunctionDeclaration => ts.isFunctionDeclaration(statement) && statement.name?.text === callee.text);
+    const held = fn === undefined ? localValue(source, callee.text) : undefined;
+    if (held !== undefined && (ts.isArrowFunction(unwrapped(held)) || ts.isFunctionExpression(unwrapped(held)))) fn = unwrapped(held);
+  }
+  if (fn === undefined || !(ts.isFunctionDeclaration(fn) || ts.isArrowFunction(fn) || ts.isFunctionExpression(fn)) || fn.body === undefined) return [];
+  if (!ts.isBlock(fn.body)) return [fn.body];
+  const found: ts.Expression[] = [];
+  const visit = (node: ts.Node): void => {
+    if (found.length >= MOST_RETURNS || ts.isFunctionLike(node)) return;
+    if (ts.isReturnStatement(node) && node.expression !== undefined) found.push(node.expression);
+    ts.forEachChild(node, visit);
+  };
+  ts.forEachChild(fn.body, visit);
+  return found;
 };
 
 /** Whether an expression is a CommonJS module's exports: `module.exports` or `exports`. */
@@ -515,7 +562,11 @@ const memberWrites = (source: ts.SourceFile): readonly MemberWrite[] => {
   const writes: MemberWrite[] = [];
   const target = (node: ts.Expression): { root: string; members: readonly string[] } | undefined => {
     const { base, members } = chainOf(node);
-    return ts.isIdentifier(base) ? { root: base.text, members } : undefined;
+    if (!ts.isIdentifier(base)) return undefined;
+    // `module.exports.configs.x = …` and `exports.configs.x = …`: a write to the module's own value (P349).
+    if (base.text === 'module' && members[0] === 'exports') return { root: EXPORTS, members: members.slice(1) };
+    if (base.text === 'exports') return { root: EXPORTS, members };
+    return { root: base.text, members };
   };
   const visit = (node: ts.Node): void => {
     if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
@@ -535,6 +586,35 @@ const memberWrites = (source: ts.SourceFile): readonly MemberWrite[] => {
 
 /** How many names and members one value of a module is followed through at most. */
 const MEMBER_HOPS = 16;
+
+/** The root a write through `module.exports` or `exports` is kept under: no name a script can declare (P349). */
+const EXPORTS = 'module.exports';
+
+/**
+ * The value a module last writes to the members `wanted` of a name, read
+ * for the members left after them (P341): `plugin.configs.browser = …`,
+ * `Object.assign(plugin.configs, …)`, `module.exports.configs.x = …`.
+ */
+const writtenTo = (
+  source: ts.SourceFile,
+  root: string,
+  wanted: readonly string[],
+  imported: ReadonlyMap<string, Imported>,
+  hops: number,
+): ts.Expression | Imported | undefined => {
+  let written: ts.Expression | Imported | undefined;
+  for (const write of memberWrites(source)) {
+    if (write.root !== root || write.members.length > wanted.length || write.members.some((member, at) => wanted[at] !== member)) continue;
+    const rest = wanted.slice(write.members.length);
+    for (const value of write.values) {
+      const found = memberValue(source, value, rest, imported, hops + 1);
+      if (found === undefined) continue;
+      written = found;
+      break;
+    }
+  }
+  return written;
+};
 
 /**
  * What an expression of a module stands for with members taken off it (P334,
@@ -561,20 +641,18 @@ const memberValue = (
   const { base, members } = chainOf(start);
   const wanted = [...members, ...path];
   if (ts.isIdentifier(base)) {
-    let written: ts.Expression | Imported | undefined;
-    for (const write of memberWrites(source)) {
-      if (write.root !== base.text || write.members.length > wanted.length || write.members.some((member, at) => wanted[at] !== member)) continue;
-      const rest = wanted.slice(write.members.length);
-      for (const value of write.values) {
-        const found = memberValue(source, value, rest, imported, hops + 1);
-        if (found === undefined) continue;
-        written = found;
-        break;
-      }
-    }
+    const written = writtenTo(source, base.text, wanted, imported, hops);
     if (written !== undefined) return written;
-    const held = imported.get(base.text) ?? localValue(source, base.text);
+    const held = imported.get(base.text) ?? scopedValue(source, base);
     return held === undefined ? undefined : memberValue(source, held, wanted, imported, hops + 1);
+  }
+  // `configs: makeConfigs()`: what the function the module declares hands back (P349).
+  if (ts.isCallExpression(base) && !isObjectAssign(base)) {
+    for (const returned of returnedFrom(source, base).reverse()) {
+      const found = memberValue(source, returned, wanted, imported, hops + 1);
+      if (found !== undefined) return found;
+    }
+    return undefined;
   }
   if (wanted.length === 0) return base;
   const [key, ...rest] = wanted;
@@ -604,6 +682,9 @@ const memberValue = (
  * export the first member is, the way `import * as lib` reads `lib.configs`.
  */
 const moduleMember = (source: ts.SourceFile, imported: ReadonlyMap<string, Imported>, exported: string | undefined, path: readonly string[]): ts.Expression | Imported | undefined => {
+  // A member written through `module.exports` or `exports` itself (P349), the last such write winning.
+  const throughExports = writtenTo(source, EXPORTS, exported === undefined || exported === 'default' ? path : [exported, ...path], imported, 0);
+  if (throughExports !== undefined && (exported !== undefined || path.length > 0)) return throughExports;
   if (exported !== undefined) return memberValue(source, exportedValue(source, exported), path, imported);
   const whole = memberValue(source, exportedValue(source, 'default'), path, imported);
   if (whole !== undefined || path.length === 0) return whole;

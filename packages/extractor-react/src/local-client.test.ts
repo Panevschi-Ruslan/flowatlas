@@ -21,7 +21,7 @@ import { extractReact } from './extract-repo.js';
 const read = (files: Record<string, string>, declared: readonly string[] = []): RepoGraph => {
   const project = new Project({
     useInMemoryFileSystem: true,
-    compilerOptions: { strict: false, jsx: 4 },
+    compilerOptions: { strict: false, jsx: 4, allowJs: true },
   });
   for (const [path, source] of Object.entries(files)) project.createSourceFile(path, source);
 
@@ -227,6 +227,53 @@ const WRAPPING_FETCH_UNDER_API = `
 `;
 
 describe('the base a client of one own holds', () => {
+  it('is read from what is written on its instances outside the class, typed or not (P349)', () => {
+    const graph = read({
+      '/src/api.js': [
+        // Plain JavaScript: the field is declared by the constructor's write, set to nothing yet.
+        "export class Api { constructor() { this.base = ''; } get(path) { return fetch(this.base + path); } }",
+        'export const api = new Api();',
+        "api.base = 'https://shop.example/api';",
+        // Written through a parameter typed as nothing that its caller hands an instance.
+        'export class Stock { constructor() { this.base = null; } get(path) { return fetch(this.base + path); } }',
+        "function setup(m) { m.base = 'https://stock.example/v1'; }",
+        'export const stock = new Stock();',
+        'setup(stock);',
+        // Two instances given two bases: no one base, said.
+        'export class Split { constructor() { this.base = null; } get(path) { return fetch(this.base + path); } }',
+        "export const one = new Split(); one.base = 'https://one.example';",
+        "export const two = new Split(); Object.assign(two, { base: 'https://two.example' });",
+      ].join('\n'),
+      '/src/typed.ts': [
+        "export class Typed { base = ''; get = (path: string) => fetch(this.base + path); }",
+        'export const typed = new Typed();',
+        "Object.assign(typed, { base: 'https://typed.example/v2' });",
+        // A base of the class's own beside one written outside that agrees with it.
+        "export class Kept { base = 'https://kept.example'; get = (path: string) => fetch(this.base + path); }",
+        'export const kept = new Kept();',
+        "kept.base = 'https://kept.example';",
+      ].join('\n'),
+      '/src/Panel.tsx': `
+        import { api, stock, one } from './api';
+        import { typed, kept } from './typed';
+        export const Panel = () => {
+          const load = () => { api.get('/orders'); stock.get('/levels'); one.get('/split'); typed.get('/items'); kept.get('/kept'); };
+          return <button onClick={load} />;
+        };
+      `,
+    });
+    expect(requests(graph).map((node) => node.meta?.['url']).sort()).toEqual([
+      '/split',
+      'https://kept.example/kept',
+      'https://shop.example/api/orders',
+      'https://stock.example/v1/levels',
+      'https://typed.example/v2/items',
+    ]);
+    const rows = graph.unresolved.filter((row) => row.reason === 'api-client-base-unread');
+    expect(rows.map((row) => [row.file, row.symbol])).toEqual([['src/api.js', 'Split.base']]);
+    expect(rows[0]?.hint).toContain('2 different bases');
+  });
+
   it('is part of every address written through it', () => {
     const graph = read({
       '/src/api.ts': WRAPPING_FETCH_UNDER_API,

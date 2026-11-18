@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T20:35:40.334Z",
+  "builtAt": "2026-11-18T13:16:19.306Z",
   "configHash": "5cbd5499f486",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 14,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 2244,
       "packages": {
         "name": "shop",
         "runtime": [
@@ -26,11 +26,11 @@
       "repo": "./web",
       "type": "browser",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 18,
-      "edges": 22,
+      "nodes": 19,
+      "edges": 23,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 0
+      "durationMs": 2310
     }
   ],
   "httpOut": {
@@ -67,8 +67,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 33,
-    "edges": 36,
+    "nodes": 34,
+    "edges": 37,
     "types": 0,
     "missed": 5,
     "sites": 13,

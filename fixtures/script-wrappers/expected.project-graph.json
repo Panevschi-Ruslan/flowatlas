@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:34:25.662Z",
+  "builtAt": "2026-11-18T13:16:19.306Z",
   "services": [
     {
       "name": "web",
@@ -608,6 +608,25 @@
       }
     },
     {
+      "id": "web#js/store.js:Cart",
+      "type": "function",
+      "label": "Cart",
+      "repo": "web",
+      "file": "js/store.js",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "owner",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
       "id": "web#js/store.js:Cart.add",
       "type": "function",
       "label": "Cart.add",
@@ -992,6 +1011,18 @@
       "returns": "unknown",
       "file": "js/page.js",
       "line": 9
+    },
+    {
+      "from": "web#js/page.js:start",
+      "to": "web#js/store.js:Cart",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "void",
+      "file": "js/page.js",
+      "line": 3
     },
     {
       "from": "web#js/page.js:start",

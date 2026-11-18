@@ -249,6 +249,14 @@ const listElements = (expr: Node, depth = 0): { items: Expression[]; unread: Nod
   }
   const declared = depth < FOLLOW_LIMIT ? declaredValue(value) : undefined;
   if (declared !== undefined) return listElements(declared, depth + 1);
+  // `providers: [...moreProviders()]`: the list a function of this repository answers with (P349).
+  if (depth < FOLLOW_LIMIT && Node.isCallExpression(value) && !isDynamicModuleExpression(value)) {
+    const callee = value.getExpression();
+    const answer = Node.isIdentifier(callee) ? answerOf(callee) : undefined;
+    const answered = answer === undefined ? undefined : listElements(answer, depth + 1);
+    // A part of what it answers not read is said at the call, where the list names it.
+    if (answered !== undefined) return answered.unread.length === 0 ? answered : { items: answered.items, unread: [value] };
+  }
   return { items: [], unread: [value] };
 };
 
@@ -363,6 +371,12 @@ const readProvider = (
           file,
           line,
         };
+      }
+      // `useValue: new Reader(api)`: an instance of a class of this repository, whose methods a call on it runs (P349).
+      const made = shape === 'useValue' ? unwrapValue(initializer) : undefined;
+      if (made !== undefined && Node.isNewExpression(made)) {
+        const target = resolveClassExpression(made.getExpression());
+        if (target.kind === 'local') return { token, kind: shape, declaration: target.declaration, file, line };
       }
       return { token, kind: shape, file, line };
     }

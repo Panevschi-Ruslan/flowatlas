@@ -1,5 +1,5 @@
-import { forEachCall, isLibFile, lineOf, namedByProperty, packageOfPath } from '@flowatlas/core';
-import type { Node as TsNode } from 'ts-morph';
+import { forEachCall, isLibFile, lineOf, namedByProperty, packageOfPath, startLineOf } from '@flowatlas/core';
+import type { NewExpression, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
@@ -109,6 +109,50 @@ const calledFunctions = (
     if (member !== undefined) found.add(member);
   }
   return [...found];
+};
+
+/**
+ * Every `new` inside a body (P349), as {@link forEachCall} walks the calls:
+ * not inside a class written there, nor a part `leaveOut` names.
+ */
+const forEachNew = (body: TsNode, visit: (made: NewExpression) => void, leaveOut?: ReadonlySet<TsNode>): void => {
+  if (Node.isNewExpression(body)) visit(body);
+  body.forEachDescendant((node, traversal) => {
+    if (Node.isClassDeclaration(node) || Node.isClassExpression(node) || leaveOut?.has(node) === true) {
+      traversal.skip();
+      return;
+    }
+    if (Node.isNewExpression(node)) visit(node);
+  });
+};
+
+/**
+ * The function a `new` runs in a plain script (P349): a constructor function
+ * the script declares (`function Router(routes) { … }`), or the constructor
+ * a class writes (`class Router { constructor(routes) { … } }`, read as
+ * `Router.constructor`) - by the name it is declared under, past an import,
+ * or the one a script hands the page by that name (P311). Nothing for a
+ * class with no constructor of its own, or one this repository does not
+ * declare.
+ */
+const constructedBy = (ctx: ReactExtractContext, made: NewExpression): IndexedFunction | undefined => {
+  const callee = made.getExpression();
+  const named = Node.isIdentifier(callee) ? declarationsOf(callee) : [];
+  const onPage = named.length === 0 && ctx.functions.hasGlobals ? pageName(callee) : undefined;
+  const declarations = onPage === undefined ? named : [...ctx.functions.globalConstructor(onPage)];
+  for (const declaration of declarations) {
+    if (declaration.getSourceFile().isInNodeModules() || declaration.getSourceFile().isDeclarationFile()) continue;
+    const indexed = ctx.functions.get(declaration as never);
+    if (indexed !== undefined) return indexed;
+    const held = Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : undefined;
+    const cls = Node.isClassDeclaration(declaration) ? declaration : held !== undefined && Node.isClassExpression(held) ? held : undefined;
+    const constructor = cls?.getConstructors().find((each) => each.getBody() !== undefined);
+    const body = constructor?.getBody();
+    const name = cls === undefined ? undefined : (cls.getName() ?? (Node.isVariableDeclaration(declaration) ? declaration.getName() : undefined));
+    if (constructor === undefined || body === undefined || name === undefined) continue;
+    return ctx.functions.get(constructor) ?? ctx.functions.adopt({ name: `${name}.constructor`, declaration: constructor, body, line: startLineOf(constructor) });
+  }
+  return undefined;
 };
 
 const NO_NAMES: ReadonlySet<string> = new Set();
@@ -271,6 +315,14 @@ export const callsPass = definePass('calls', (ctx: ReactExtractContext) => {
       }
       for (const each of called) draw(each, call);
     }, nested);
+    // A `new` in a plain script runs the constructor it names (P349): the
+    // top of a script that only makes an instance draws it.
+    if (ctx.functions.readsMembers) {
+      forEachNew(indexed.fn.body, (made) => {
+        const each = constructedBy(ctx, made);
+        if (each !== undefined) draw(each, made);
+      }, nested);
+    }
     if (readsAccessors) {
       forEachAccess(
         indexed.fn.body,

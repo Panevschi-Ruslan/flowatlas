@@ -56,6 +56,15 @@ export interface ClassReading {
    * its base there, not in a field of its own.
    */
   basesIn?(body: TsNode): ReadonlyArray<ReachedBase | null>;
+  /**
+   * What a field of the class is given from outside its classes (P349):
+   * `client.base = '/api'`, `Object.assign(client, { base })`, over an
+   * instance typed or one a value typed as nothing may hold - core's reading
+   * of writes over an instance, handed in as `address` is.
+   */
+  writtenOutside?(cls: ClassDeclaration, field: string): { readonly values: readonly TsNode[]; readonly changed: boolean };
+  /** Said where the base a field holds is written outside the class and could not be read as one (P349). */
+  baseUnread?(cls: ClassDeclaration, field: string, why: string): void;
 }
 
 /**
@@ -180,21 +189,74 @@ const baseOf = (chain: readonly ClassDeclaration[], reading: ClassReading): ApiU
   // One walk for all of the names: the class carrying every request of an
   // application is the largest declaration in the repository, and it is walked
   // once per candidate name otherwise.
-  const found = new Map<string, TsNode>();
+  const found = new Map<string, { access: TsNode; cls: ClassDeclaration }>();
   for (const cls of chain) {
     for (const access of cls.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)) {
       const name = access.getName();
       if (found.has(name) || !BASE_FIELDS.includes(name)) continue;
-      if (Node.isThisExpression(access.getExpression())) found.set(name, access);
+      if (Node.isThisExpression(access.getExpression())) found.set(name, { access, cls });
     }
   }
   for (const name of BASE_FIELDS) {
-    const access = found.get(name);
-    if (access === undefined) continue;
-    const address = reading.address(access);
-    if (isSomewhere(address)) return address;
+    const at = found.get(name);
+    if (at === undefined) continue;
+    const address = writtenBase(chain, at.cls, name, reading.address(at.access), reading);
+    if (address !== undefined && isSomewhere(address)) return address;
   }
   return undefined;
+};
+
+/** A value that holds nothing yet: `null`, `undefined`, `''` - what a field is set to before it is given its value. */
+const holdsNothing = (value: TsNode): boolean => {
+  let at = value;
+  while (Node.isParenthesizedExpression(at) || Node.isAsExpression(at)) at = at.getExpression();
+  return Node.isNullLiteral(at) || (Node.isIdentifier(at) && at.getText() === 'undefined') || ((Node.isStringLiteral(at) || Node.isNoSubstitutionTemplateLiteral(at)) && at.getLiteralText() === '');
+};
+
+/** Every value the classes of a chain give a field themselves: an initializer, each `this.<field> =` written in them. */
+const ownValues = (chain: readonly ClassDeclaration[], field: string): TsNode[] =>
+  chain.flatMap((cls) => {
+    const declared = cls.getProperty(field);
+    const initializer = declared?.isStatic() === true ? undefined : declared?.getInitializer();
+    const writes = cls.getDescendantsOfKind(SyntaxKind.BinaryExpression).flatMap((binary) => {
+      if (binary.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) return [];
+      const left = binary.getLeft();
+      return Node.isPropertyAccessExpression(left) && left.getName() === field && Node.isThisExpression(left.getExpression()) ? [binary.getRight()] : [];
+    });
+    return [...(initializer === undefined ? [] : [initializer]), ...writes];
+  });
+
+/**
+ * The base a field holds, with what is written on the class's instances from
+ * outside it (P349): `api.base = 'https://shop.example/api'` after `new
+ * Api()`, `Object.assign(api, { base })`, typed or through a value typed as
+ * nothing. Where the class gives the field nothing of its own but a value
+ * that holds nothing yet (`this.base = ''`), the writes outside are its
+ * value; otherwise they are values beside the class's own. One base where
+ * every value read is that base; none where they disagree or one is not
+ * read, which is said.
+ */
+const writtenBase = (chain: readonly ClassDeclaration[], cls: ClassDeclaration, field: string, own: ApiUrl, reading: ClassReading): ApiUrl | undefined => {
+  const outside = reading.writtenOutside?.(cls, field);
+  if (outside === undefined || (outside.values.length === 0 && !outside.changed)) return own;
+  const owner = chain[0] ?? cls;
+  if (outside.changed) {
+    reading.baseUnread?.(owner, field, `is changed in place outside ${owner.getName() ?? 'the class'}`);
+    return undefined;
+  }
+  const placeholder = ownValues(chain, field).every(holdsNothing);
+  const addresses = [...(placeholder ? [] : [own]), ...outside.values.filter((value) => !holdsNothing(value)).map((value) => reading.address(value))];
+  if (addresses.some((address) => !isSomewhere(address))) {
+    reading.baseUnread?.(owner, field, `is given a value that could not be read as an address outside ${owner.getName() ?? 'the class'}`);
+    return undefined;
+  }
+  const [first] = addresses;
+  if (first === undefined) return own;
+  if (addresses.some((address) => address.url !== first.url)) {
+    reading.baseUnread?.(owner, field, `is given ${new Set(addresses.map((address) => address.url)).size} different bases, written outside ${owner.getName() ?? 'the class'} on its instances`);
+    return undefined;
+  }
+  return first;
 };
 
 /**

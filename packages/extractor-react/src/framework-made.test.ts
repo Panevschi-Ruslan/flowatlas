@@ -101,3 +101,91 @@ describe('instances a framework makes (P342)', () => {
     expect(graph.unresolved.filter((row) => row.reason === 'api-client-base-unread')).toEqual([]);
   });
 });
+
+describe('components wrapped in calls, props handed through a spread, providers built and handed on (P349)', () => {
+  it('reads a component wrapped in memo, forwardRef or both, exported or not, as a component whose props each element hands', () => {
+    const graph = read(
+      {
+        '/src/pages.jsx': [
+          ...CLIENTS,
+          "import React, { memo, forwardRef, useEffect } from 'react';",
+          "const Feed = memo(function Feed({ client }) { useEffect(() => { client.get('/feed'); }, []); return <i />; });",
+          "const Panel = React.memo((props) => { useEffect(() => { props.client.get('/panel'); }, []); return <i />; });",
+          "const Field = forwardRef((props, ref) => { useEffect(() => { props.client.get('/field'); }, []); return <i ref={ref} />; });",
+          "export const Both = memo(forwardRef(({ client }, ref) => { useEffect(() => { client.get('/both'); }, []); return <i ref={ref} />; }));",
+          // Kept under a capitalised name, but no markup: no component.
+          "const Loader = memo(() => catalogApi.get('/loader'));",
+          'export function CatalogPage() { return <div><Feed client={catalogApi} /><Panel client={catalogApi} /><Field client={catalogApi} /><Both client={catalogApi} /></div>; }',
+          'export function StockPage() { return <div><Feed client={stockApi} /><Panel client={stockApi} /><Field client={stockApi} /><Both client={stockApi} /></div>; }',
+        ].join('\n'),
+      },
+      { react: '^19.0.0', axios: '^1.0.0' },
+    );
+    expect(placed(graph)).toEqual([
+      'CatalogPage localhost:4600 /both',
+      'CatalogPage localhost:4600 /feed',
+      'CatalogPage localhost:4600 /field',
+      'CatalogPage localhost:4600 /panel',
+      'StockPage localhost:4700 /both',
+      'StockPage localhost:4700 /feed',
+      'StockPage localhost:4700 /field',
+      'StockPage localhost:4700 /panel',
+    ]);
+    const components = graph.nodes.filter((node) => node.type === 'ui_component').map((node) => node.label).sort();
+    expect(components).toEqual(['Both', 'CatalogPage', 'Feed', 'Field', 'Panel', 'StockPage']);
+  });
+
+  it('follows a prop handed through a spread of the props an element hands, of a rest, or of an object, and says one it cannot follow', () => {
+    const graph = read(
+      {
+        '/src/pages.jsx': [
+          ...CLIENTS,
+          "import { useEffect } from 'react';",
+          "function Feed({ client }) { useEffect(() => { client.get('/feed'); }, []); return <i />; }",
+          // A rest of the props, the props whole with a prop written after it, an object written in place.
+          'function Shell({ title, ...rest }) { return <section><h1>{title}</h1><Feed {...rest} /></section>; }',
+          'function Over(props) { return <Feed {...props} client={stockApi} />; }',
+          'function Literal() { return <Feed {...{ client: catalogApi }} />; }',
+          // The props of a component nothing renders: not read, and said.
+          'function Lost(props) { return <Feed {...props} />; }',
+          'export function CatalogPage() { return <div><Shell title="a" client={catalogApi} /><Literal /></div>; }',
+          'export function StockPage() { return <div><Shell title="b" client={stockApi} /><Over client={catalogApi} /></div>; }',
+        ].join('\n'),
+      },
+      { react: '^19.0.0', axios: '^1.0.0' },
+    );
+    expect(placed(graph)).toEqual(['CatalogPage localhost:4600 /feed', 'Literal localhost:4600 /feed', 'Over localhost:4700 /feed', 'StockPage localhost:4700 /feed']);
+    const rows = graph.unresolved.filter((row) => row.reason === 'api-client-base-unread');
+    expect(rows.map((row) => [row.file, row.line, row.meta?.['spread']])).toEqual([['src/pages.jsx', 5, { file: 'src/pages.jsx', line: 9 }]]);
+    expect(rows[0]?.hint).toContain('{...props}');
+  });
+
+  it('reads providers spread in from a list, returned by a function, named by useExisting or made with new', () => {
+    const graph = read(
+      {
+        '/src/shared.ts': [
+          CLIENTS[0] as string,
+          ...CLIENTS.slice(1).map((line) => `export ${line}`),
+          'export class Reader { constructor(private api) {} read(path) { return this.api.get(path); } }',
+          "export const SHARED = [{ provide: 'CATALOG', useValue: catalogApi }];",
+          "export function more() { return [{ provide: 'STOCK', useValue: stockApi }, { provide: 'ALIAS', useExisting: 'STOCK' }]; }",
+          "export const made = { provide: 'MADE', useValue: new Reader(catalogApi) };",
+        ].join('\n'),
+        '/src/jobs.ts': [
+          "import { Inject, Injectable, Module } from '@nestjs/common';",
+          "import { SHARED, more, made } from './shared';",
+          '@Injectable()',
+          "export class Catalog { constructor(@Inject('CATALOG') private api) {} onModuleInit() { return this.api.get('/catalog'); } }",
+          '@Injectable()',
+          "export class Stock { constructor(@Inject('ALIAS') private api) {} onModuleInit() { return this.api.get('/stock'); } }",
+          '@Injectable()',
+          "export class Made { constructor(@Inject('MADE') private reader) {} onModuleInit() { return this.reader.read('/made'); } }",
+          '@Module({ providers: [...SHARED, ...more(), made, Catalog, Stock, Made] })',
+          'export class JobsModule {}',
+        ].join('\n'),
+      },
+      { axios: '^1.0.0', '@nestjs/common': '^10.0.0' },
+    );
+    expect(placed(graph)).toEqual(['Catalog.onModuleInit localhost:4600 /catalog', 'Made.onModuleInit localhost:4600 /made', 'Stock.onModuleInit localhost:4700 /stock']);
+  });
+});

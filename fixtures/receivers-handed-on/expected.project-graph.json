@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:33:20.058Z",
+  "builtAt": "2026-11-18T13:16:03.405Z",
   "services": [
     {
       "name": "web",
@@ -692,6 +692,14 @@
       }
     },
     {
+      "id": "web#js/latest.js:Feed.constructor",
+      "type": "function",
+      "label": "Feed.constructor",
+      "repo": "web",
+      "file": "js/latest.js",
+      "line": 16
+    },
+    {
       "id": "web#js/latest.js:Feed.recent",
       "type": "function",
       "label": "Feed.recent",
@@ -1319,6 +1327,14 @@
     {
       "from": "web#js/latest.js:latest.js:top",
       "to": "ui_api_call:web#js/latest.js:25:21@21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/latest.js",
+      "line": 25
+    },
+    {
+      "from": "web#js/latest.js:latest.js:top",
+      "to": "web#js/latest.js:Feed.constructor",
       "type": "calls",
       "confidence": "static",
       "file": "js/latest.js",

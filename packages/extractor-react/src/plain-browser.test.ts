@@ -680,7 +680,8 @@ describe('plain browser code (P284)', () => {
     ]);
     const isFunction = (id: string): boolean => graph.nodes.find((node) => node.id === id)?.type === 'function';
     const calls = graph.edges.filter((edge) => edge.type === 'calls' && isFunction(edge.to)).map((edge) => `${label(edge.from)} -> ${label(edge.to)}`);
-    expect(calls.sort()).toEqual(['Store.saveAll -> Store.save', 'start -> Pager.next', 'start -> Store.saveAll', 'start -> api.load', 'start -> api.users.list', 'views.recent -> get']);
+    // A `new` runs the constructor function it names (P349).
+    expect(calls.sort()).toEqual(['Store.saveAll -> Store.save', 'start -> Pager', 'start -> Pager.next', 'start -> Store', 'start -> Store.saveAll', 'start -> api.load', 'start -> api.users.list', 'views.recent -> get']);
   });
 
   it('reads axios as the installed client where a page loads it by a script tag or the script declares it (P310)', () => {
@@ -743,7 +744,8 @@ describe('plain browser code (P284)', () => {
       'init@9 GET /other',
       'views.recent GET /views',
     ]);
-    expect(calls).toEqual(['start -> Cart.clear', 'start -> Store.save', 'start -> add', 'start -> api.load', 'start -> views.recent']);
+    // `new Store()` runs the constructor the wrapper hands the page as `Store` (P349).
+    expect(calls).toEqual(['start -> Cart.clear', 'start -> Store', 'start -> Store.save', 'start -> add', 'start -> api.load', 'start -> views.recent']);
   });
 
   it("reads what a module's exports and the page are given as members, and joins require and the page's names to them (P311)", () => {
@@ -1243,6 +1245,26 @@ describe('plain browser code (P284)', () => {
     expect(row?.message).toContain('not followed');
   });
 
+  it("reads a plugin's configs a function it declares builds, and a member written through module.exports (P349)", () => {
+    const script = "function items() { return axios.get('https://api.example.test/items'); }\n";
+    const graphOf = (pages: Record<string, string>): RepoGraph => read({ '/js/shop.js': script }, pages);
+    const urls = (pages: Record<string, string>): unknown[] => requests(graphOf(pages)).map((node) => node.meta?.['url']);
+    const items = ['https://api.example.test/items'];
+    const extendsBrowser = { '/.eslintrc.json': '{ "extends": ["plugin:shop/browser"] }' };
+    const extendsNode = { '/.eslintrc.json': '{ "extends": ["plugin:shop/node"] }' };
+    const plugin = (text: string): Record<string, string> => ({ '/node_modules/eslint-plugin-shop/index.js': text });
+    const browser = "{ globals: { axios: 'readonly' } }";
+    // A function returning the object in place, an arrow's body, a name of its own it fills and returns.
+    expect(urls({ ...extendsBrowser, ...plugin(`function makeConfigs() { return { browser: ${browser}, node: {} }; }\nmodule.exports = { configs: makeConfigs() };\n`) })).toEqual(items);
+    expect(urls({ ...extendsNode, ...plugin(`function makeConfigs() { return { browser: ${browser}, node: {} }; }\nmodule.exports = { configs: makeConfigs() };\n`) })).toEqual([]);
+    expect(urls({ ...extendsBrowser, ...plugin(`const build = () => ({ browser: ${browser} });\nmodule.exports = { configs: build() };\n`) })).toEqual(items);
+    expect(urls({ ...extendsBrowser, ...plugin(`function build() { const configs = {};\nconfigs.browser = ${browser};\nreturn configs; }\nconst plugin = { configs: build() };\nmodule.exports = plugin;\n`) })).toEqual(items);
+    // Written through the module's exports after it is set, or through `exports`.
+    expect(urls({ ...extendsBrowser, ...plugin(`module.exports = { configs: {} };\nmodule.exports.configs.browser = ${browser};\n`) })).toEqual(items);
+    expect(urls({ ...extendsBrowser, ...plugin(`exports.configs = {};\nexports.configs.browser = ${browser};\n`) })).toEqual(items);
+    expect(urls({ ...extendsNode, ...plugin(`module.exports = { configs: {} };\nmodule.exports.configs.browser = ${browser};\n`) })).toEqual([]);
+  });
+
   it('follows a flat configuration entry named by members taken off a module imported or required, and says one it cannot follow (P341)', () => {
     const script = "function items() { return axios.get('https://api.example.test/items'); }\n";
     const graphOf = (pages: Record<string, string>): RepoGraph => read({ '/js/shop.js': script }, pages);
@@ -1302,6 +1324,24 @@ describe('plain browser code (P284)', () => {
     expect(found).toEqual(['app.js:top GET /enter', 'later GET /later', 'router.js:top GET /items', 'shop.load GET /load', 'widget.js:top POST /clicked']);
     const tops = graph.nodes.filter((node) => node.type === 'function' && String(node.label).endsWith(':top')).map((node) => node.label);
     expect(tops.sort()).toEqual(['app.js:top', 'router.js:top', 'widget.js:top']);
+  });
+
+  it('draws a new at the top of a script to the constructor it runs, a class\'s or a function\'s, imported or not (P349)', () => {
+    const graph = read({
+      '/js/poller.js': [
+        'export class Poller {',
+        "  constructor(every) { this.every = every; fetch('https://api.example.test/ping'); }",
+        "  poll() { return fetch('https://api.example.test/poll'); }",
+        '}',
+        "export function Feed(path) { this.path = path; return fetch('https://api.example.test/feed'); }",
+        // No constructor of its own: nothing to run.
+        'export class Quiet { stop() {} }',
+      ].join('\n'),
+      '/js/boot.js': ["import { Poller, Feed, Quiet } from './poller.js';", 'new Poller(1000);', "const feed = new Feed('/feed');", 'new Quiet();', 'new Date();'].join('\n'),
+    });
+    const { found, calls } = drawn(graph);
+    expect(found).toEqual(['Feed GET /feed', 'Poller.constructor GET /ping', 'Poller.poll GET /poll']);
+    expect(calls).toEqual(['boot.js:top -> Feed', 'boot.js:top -> Poller.constructor']);
   });
 
   it("asks a client's global called directly, or a wrapper's parameter called as one, for a declaration as its members are (P334)", () => {

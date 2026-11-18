@@ -910,6 +910,72 @@ describe('a method called through a receiver the checker types as nothing (P336)
       'this.props.reader.health() runs',
     ]);
   });
+
+  it('reads the props of a component wrapped in calls, and a rest of props spread into an element (P349)', () => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true, checkJs: false, jsx: 1 } });
+    const file = project.createSourceFile(
+      'a.jsx',
+      [
+        "import React, { memo, forwardRef } from 'react';",
+        'class Reader { health() { return 1; } }',
+        'class Other { health() { return 2; } }',
+        'const Feed = memo(function Feed({ reader }) { reader.health(); return null; });',
+        'const Field = memo(forwardRef((props, ref) => { props.reader.health(); return null; }));',
+        'const Pane = React.memo(({ probe }) => { probe.health(); return null; });',
+        'function Shell({ title, ...rest }) { return <Pane {...rest} />; }',
+        'export const page = () => <div><Feed reader={new Reader()} /><Field reader={new Reader()} /><Shell title="a" probe={new Other()} /></div>;',
+      ].join('\n'),
+    );
+    const sites = (owner: string): string[] => {
+      const method = file.getClassOrThrow(owner).getMethodOrThrow('health');
+      return callSitesOf(method).map((call) => `${call.getText()} ${dispatchOf(call, method)}`).sort();
+    };
+    expect(sites('Reader')).toEqual(['props.reader.health() runs', 'reader.health() runs']);
+    expect(sites('Other')).toEqual(['probe.health() runs']);
+  });
+
+  it('reads a parameter the injector hands as the instance each provider of its token gives (P349)', () => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true, checkJs: false, experimentalDecorators: true } });
+    project.createSourceFile(
+      'shared.js',
+      [
+        "import { Injectable } from '@nestjs/common';",
+        'export class Reader { health() { return 1; } }',
+        'export class Other { health() { return 2; } }',
+        'export class Mirror { health() { return 3; } }',
+        'export class Keeper { health() { return 4; } }',
+        "export const SHARED = [Reader, { provide: 'MIRROR', useValue: new Mirror() }];",
+        "export function more() { return [{ provide: 'KEEP', useClass: Keeper }, { provide: 'ALIAS', useExisting: 'KEEP' }]; }",
+      ].join('\n'),
+    );
+    project.createSourceFile(
+      'jobs.js',
+      [
+        "import { Dependencies, Inject, Injectable, Module } from '@nestjs/common';",
+        "import { Reader, Other, SHARED, more } from './shared';",
+        // By the class `@Dependencies` lists at its place, plain JavaScript's way.
+        '@Injectable()',
+        '@Dependencies(Reader)',
+        'export class Poller { constructor(reader) { this.reader = reader; } poll() { return this.reader.health(); } }',
+        // By a token: a value made with `new`, a class `useClass` names, a token `useExisting` hands on.
+        '@Injectable()',
+        "export class Watch { constructor(@Inject('MIRROR') mirror, @Inject('ALIAS') keeper) { this.mirror = mirror; this.keeper = keeper; } run() { this.mirror.health(); return this.keeper.health(); } }",
+        '@Injectable()',
+        "export class Spare { constructor(@Inject('NONE') none) { this.none = none; } run() { return this.none.health(); } }",
+        '@Module({ providers: [...SHARED, ...more(), Poller, Watch, Spare] })',
+        'export class JobsModule {}',
+      ].join('\n'),
+    );
+    const sites = (owner: string): string[] => {
+      const method = project.getSourceFileOrThrow('shared.js').getClassOrThrow(owner).getMethodOrThrow('health');
+      return callSitesOf(method).map((call) => `${call.getText()} ${dispatchOf(call, method)}`).sort();
+    };
+    expect(sites('Reader')).toEqual(['this.reader.health() runs']);
+    expect(sites('Mirror')).toEqual(['this.mirror.health() runs']);
+    expect(sites('Keeper')).toEqual(['this.keeper.health() runs']);
+    // A token nothing provides hands nothing read: no call of any class.
+    expect(sites('Other')).toEqual([]);
+  });
 });
 
 describe('a function a library composes into another (P285)', () => {

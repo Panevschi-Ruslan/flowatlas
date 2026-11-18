@@ -26,6 +26,7 @@ import {
   parametersOf,
   type ClassMethod,
 } from './di/member-call.js';
+import { classOfListing, injectedInto } from './di/injected.js';
 import { HTTP_METHODS, holeIn, UNREAD_SPAN } from './ids.js';
 import type { Unresolved } from './model/graph.js';
 import { writtenObjectLiteral } from './origin.js';
@@ -1986,14 +1987,20 @@ export const returnedBy = (fn: TsNode): TsNode[] | undefined => {
 /**
  * Where a destructured name is taken from (P342): the parameter or the
  * variable whose pattern it is written in, and the members and elements down
- * to it - `{ deps: { client } }` is `client` of `deps` of the parameter.
- * Nothing where a key is computed.
+ * to it - `{ deps: { client } }` is `client` of `deps` of the parameter. A
+ * rest, `{ title, ...rest }` or `[first, ...others]`, is what it is taken
+ * from, the rest of its members and elements (P349). Nothing where a key is
+ * computed.
  */
 export const destructuredFrom = (binding: BindingElement): { root: ParameterDeclaration | VariableDeclaration; parts: string[] } | undefined => {
   const parts: string[] = [];
   let at: TsNode = binding;
   for (let depth = 0; depth < MOST_UNTYPED_PARTS * 2 && Node.isBindingElement(at); depth += 1) {
     const pattern = at.getParent();
+    if (at.getDotDotDotToken() !== undefined) {
+      at = pattern.getParent();
+      continue;
+    }
     if (Node.isArrayBindingPattern(pattern)) parts.unshift(ELEMENT);
     else {
       const key = at.getPropertyNameNode() ?? at.getNameNode();
@@ -2014,6 +2021,9 @@ const classOfNew = (made: TsNode): ClassNode | undefined => {
   return declared !== undefined && Node.isClassDeclaration(declared) ? declared : undefined;
 };
 
+/** The class an instance is of: one a `new` makes, or one the injector makes where a module lists it as a provider (P349). */
+const classOfMade = (made: TsNode): ClassNode | undefined => classOfNew(made) ?? classOfListing(made);
+
 /** Each `this.<field> = value` the members of a class write, the value. */
 const thisWritesIn = (cls: ClassNode, field: string): TsNode[] =>
   cls.getDescendantsOfKind(SyntaxKind.BinaryExpression).flatMap((binary) => {
@@ -2028,8 +2038,8 @@ const thisWritesIn = (cls: ClassNode, field: string): TsNode[] =>
  * being what this `new` hands it. Nothing where no class read declares it.
  */
 const memberOfMade = (made: TsNode, member: string): TsNode[] | undefined => {
-  const cls = classOfNew(made);
-  if (cls === undefined || !Node.isNewExpression(made)) return undefined;
+  const cls = classOfMade(made);
+  if (cls === undefined) return undefined;
   for (const each of classChain(cls, BUDGET)) {
     const values: TsNode[] = [];
     const method = each.getMethod(member);
@@ -2040,8 +2050,15 @@ const memberOfMade = (made: TsNode, member: string): TsNode[] | undefined => {
     for (const constructor of each.getConstructors()) {
       for (const parameter of constructor.getParameters()) {
         if (!parameter.isParameterProperty() || parameter.getName() !== member) continue;
-        // Handed by this `new` where it makes this class; otherwise by what the subclass hands `super`, not read here.
-        const argument = each === cls ? (made.getArguments()[positionOf(parameter)] ?? parameter.getInitializer()) : undefined;
+        // Handed by this `new` where it makes this class, or by the injector
+        // where a module lists it (P349); otherwise by what the subclass hands `super`, not read here.
+        if (each === cls && !Node.isNewExpression(made)) {
+          const injected = injectedInto(parameter);
+          if (injected.length === 0) return undefined;
+          values.push(...injected);
+          continue;
+        }
+        const argument = each === cls && Node.isNewExpression(made) ? (made.getArguments()[positionOf(parameter)] ?? parameter.getInitializer()) : undefined;
         if (argument === undefined) return undefined;
         values.push(argument);
       }
@@ -2128,14 +2145,39 @@ const tagsWrittenIn = (file: SourceFile): ReadonlySet<string> => {
   return names;
 };
 
-/** The component a function's first parameter is the props of: the function or the `const` holding it, where it is one a tag may name. */
+/** How many calls a component written in place is wrapped in and still read as the one a `const` holds (P349): `memo(forwardRef(...))`. */
+const MOST_WRAPPERS = 4;
+
+/**
+ * The `const` holding a function written in place, directly or through the
+ * calls it is the first argument of (P349): `const Feed = (props) => ...`,
+ * `const Feed = memo(function Feed(props) {...})`, `React.memo(...)`,
+ * `memo(forwardRef((props, ref) => ...))` - what a tag names the component
+ * by. Nothing where it is held some other way.
+ */
+export const componentHeldBy = (fn: TsNode): VariableDeclaration | undefined => {
+  let at: TsNode = fn;
+  for (let depth = 0; depth <= MOST_WRAPPERS; depth += 1) {
+    const holder = at.getParent();
+    if (holder === undefined) return undefined;
+    if (Node.isVariableDeclaration(holder)) return holder.getInitializer() === at ? holder : undefined;
+    if (Node.isParenthesizedExpression(holder) || Node.isAsExpression(holder) || Node.isSatisfiesExpression(holder)) {
+      at = holder;
+      continue;
+    }
+    if (!Node.isCallExpression(holder) || holder.getArguments()[0] !== at) return undefined;
+    at = holder;
+  }
+  return undefined;
+};
+
+/** The component a function's first parameter is the props of: the function or the `const` holding it, wrapped or not, where it is one a tag may name. */
 const componentOfProps = (parameter: ParameterDeclaration): TsNode | undefined => {
   const fn = parameter.getParent();
   if (positionOf(parameter) !== 0) return undefined;
   if (Node.isFunctionDeclaration(fn)) return fn;
   if (!Node.isArrowFunction(fn) && !Node.isFunctionExpression(fn)) return undefined;
-  const holder = fn.getParent();
-  return holder !== undefined && Node.isVariableDeclaration(holder) ? holder : undefined;
+  return componentHeldBy(fn);
 };
 
 /** The list a function handed to a walk over it is called with the elements of, at the parameter the element comes in (P342): `readers.forEach((r) => ...)`. */
@@ -2194,7 +2236,7 @@ const untypedValues = (receiver: TsNode): (TsNode | undefined)[] => {
       break;
     }
     const [part, ...rest] = parts;
-    if (part === undefined && (Node.isNewExpression(value) || Node.isObjectLiteralExpression(value))) {
+    if (part === undefined && (Node.isNewExpression(value) || Node.isObjectLiteralExpression(value) || classOfListing(value) !== undefined)) {
       out.push(value);
       continue;
     }
@@ -2213,7 +2255,8 @@ const untypedValues = (receiver: TsNode): (TsNode | undefined)[] => {
       for (const each of member?.carried ?? []) push(each, parts);
       continue;
     }
-    if (part !== undefined && Node.isNewExpression(value)) {
+    // A member of an instance a `new` makes, or the injector makes of a class a module lists (P349).
+    if (part !== undefined && (Node.isNewExpression(value) || classOfListing(value) !== undefined)) {
       const member = part === ELEMENT || part === RETURNED ? undefined : memberOfMade(value, part);
       if (member === undefined) out.push(undefined);
       for (const each of member ?? []) push(each, rest);
@@ -2345,7 +2388,10 @@ const untypedValues = (receiver: TsNode): (TsNode | undefined)[] => {
       });
       // A component class's first parameter is its props: what each element written with it as its tag hands it.
       const elements = index === 0 && Node.isClassDeclaration(cls) ? elementsOfTag(cls) : [];
-      if (made.length === 0 && elements.length === 0) out.push(undefined);
+      // What the injector hands it, where a module lists the class or a package's decorator marks it (P349).
+      const injected = injectedInto(root);
+      if (made.length === 0 && elements.length === 0 && injected.length === 0) out.push(undefined);
+      for (const each of injected) push(each, along);
       for (const each of made) {
         const argument = each.getArguments()[index] ?? root.getInitializer();
         if (argument === undefined) out.push(undefined);
@@ -2386,7 +2432,7 @@ export const untypedHoldsInstanceOf = (value: TsNode, owner: TsNode): boolean =>
   const type = target.getType();
   if (!type.isAny() && !type.isUnknown()) return false;
   return untypedValues(target).some((each) => {
-    const cls = each === undefined ? undefined : classOfNew(each);
+    const cls = each === undefined ? undefined : classOfMade(each);
     return cls !== undefined && classChain(cls, BUDGET).includes(owner as ClassNode);
   });
 };
@@ -2394,10 +2440,8 @@ export const untypedHoldsInstanceOf = (value: TsNode, owner: TsNode): boolean =>
 /** Whether a value is an instance of a method's class, or of one extending it that does not declare the method again, or the object it is written in (P336). */
 const holdsMethodOf = (value: TsNode, owner: TsNode, name: string): boolean => {
   if (Node.isObjectLiteralExpression(owner)) return value === owner;
-  if (!Node.isNewExpression(value)) return false;
-  const made = unwrap(value.getExpression());
-  const symbol = Node.isIdentifier(made) ? made.getSymbol() : undefined;
-  const declared = (symbol?.isAlias() === true ? symbol.getAliasedSymbol() : symbol)?.getDeclarations()[0];
+  // An instance a `new` makes, or the injector makes of a class a module lists (P349).
+  const declared = classOfMade(value);
   if (declared === undefined || !Node.isClassDeclaration(declared)) return false;
   for (const cls of classChain(declared, BUDGET)) {
     if (cls === owner) return true;

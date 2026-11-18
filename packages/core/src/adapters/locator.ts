@@ -1231,13 +1231,13 @@ const instanceOf = (value: TsNode, owner: TsNode): boolean => {
  * read, so each is a value the field may hold beside the rest.
  */
 const outsideWrites = (owner: TsNode, name: string): FieldValues => {
-  const field = memberUp(owner, name, false);
-  if (field === undefined || !(Node.isPropertyDeclaration(field) || Node.isParameterDeclaration(field))) return { values: [], changed: false };
+  const field = memberUp(owner, name, false) ?? thisWriteDeclaring(owner, name);
+  if (field === undefined || !(Node.isPropertyDeclaration(field) || Node.isParameterDeclaration(field) || Node.isPropertyAccessExpression(field))) return { values: [], changed: false };
   const known = OUTSIDE_WRITES.get(field);
   if (known !== undefined) return known;
   // A source read on the way that reads this field again finds nothing more.
   OUTSIDE_WRITES.set(field, { values: [], changed: false });
-  const holder = Node.isParameterDeclaration(field) ? field.getParent()?.getParent() : field.getParent();
+  const holder = Node.isParameterDeclaration(field) ? field.getParent()?.getParent() : Node.isPropertyAccessExpression(field) ? memberAround(field)?.getParent() : field.getParent();
   const values: TsNode[] = [];
   let changed = false;
   const nameNode = field.getNameNode();
@@ -1274,6 +1274,40 @@ const outsideWrites = (owner: TsNode, name: string): FieldValues => {
   OUTSIDE_WRITES.set(field, found);
   return found;
 };
+
+/**
+ * The `this.<name> = ...` that declares an instance field a class never
+ * declares (P349): in plain JavaScript a field is written in a member, most
+ * often the constructor, and the checker takes that write for its
+ * declaration. The constructor's write of the class or of one it extends,
+ * else the first a member writes.
+ */
+const thisWriteDeclaring = (owner: TsNode, name: string): TsNode | undefined => {
+  let current: TsNode | undefined = owner;
+  for (let depth = 0; depth < MOST_BASES && current !== undefined; depth += 1) {
+    if (!Node.isClassDeclaration(current) && !Node.isClassExpression(current)) return undefined;
+    const cls: TsNode = current;
+    const writes = cls.getDescendantsOfKind(SyntaxKind.BinaryExpression).flatMap((binary) => {
+      if (binary.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) return [];
+      const left = peeled(binary.getLeft());
+      return Node.isPropertyAccessExpression(left) && left.getName() === name && Node.isThisExpression(peeled(left.getExpression())) && memberAround(left)?.getParent() === cls && !inStaticMember(memberAround(left) as TsNode) ? [left] : [];
+    });
+    const declaring = writes.find((left) => Node.isConstructorDeclaration(memberAround(left))) ?? writes[0];
+    if (declaring !== undefined) return declaring;
+    current = current.getBaseClass();
+  }
+  return undefined;
+};
+
+/**
+ * Every value an instance field of a class is given from outside the members
+ * of its classes (P336, P349): `client.base = '/api'` on an instance,
+ * `Object.assign(client, { base })`, and the same over a value typed as
+ * nothing that may hold one (`setup(client)` writing `m.base`). The field may
+ * be declared, a parameter property, or - in plain JavaScript - one a
+ * member's `this.<name> =` declares. `changed` where one is changed in place.
+ */
+export const fieldWrittenOutside = (cls: TsNode, name: string): { readonly values: readonly TsNode[]; readonly changed: boolean } => outsideWrites(cls, name);
 
 /** The name a class member is called by, where it is a method, an accessor or a field: what a class extending it overrides. */
 const memberName = (member: TsNode | undefined): string | undefined =>

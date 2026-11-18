@@ -22,6 +22,7 @@ import {
   writtenKeysOf,
   describedRequestsAt,
   evaluateExpression,
+  fieldWrittenOutside,
   PLATFORM_FETCH,
   PLATFORM_HEADERS,
   PLATFORM_QUERY,
@@ -887,8 +888,14 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     const clients = new Set<RequestClient>();
     const held = new Set<ClientInstance>();
     const handed: { instance: ClientInstance; at: TsNode }[] = [];
+    const spreads: TsNode[] = [];
     for (const value of heldBy(receiver)) {
       if (holdsNothing(value)) continue;
+      // A prop an element hands through a spread not read (P349): passed over as a value nothing knows, and said.
+      if (Node.isJsxSpreadAttribute(value)) {
+        spreads.push(value);
+        continue;
+      }
       const instance = instances.of(value);
       if (instance !== undefined) {
         held.add(instance);
@@ -903,14 +910,48 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     const [client] = clients;
     if (client !== undefined) {
       const shape = client.receiver?.verbs[method];
-      return shape === undefined ? undefined : { call: node, client, shape };
+      if (shape === undefined) return undefined;
+      reportSpreadsUnread(node, client, spreads);
+      return { call: node, client, shape };
     }
     const [first] = held;
     if (first === undefined || [...held].some((each) => each.factory !== first.factory)) return undefined;
     const shape = Object.hasOwn(first.factory.verbs, method) ? first.factory.verbs[method] : undefined;
     if (shape === undefined) return undefined;
+    reportSpreadsUnread(node, first.factory.client, spreads);
     const agreed = agreedInstance([...held]);
     return agreed !== undefined ? { call: node, client: clientOf(agreed), shape, instance: agreed } : { call: node, client: first.factory.client, shape, held: handed };
+  };
+
+  /** The spreads already said at each request, so a request read twice says each once. */
+  const spreadsSaid = new Set<string>();
+
+  /**
+   * A request whose receiver is a prop some element hands through a spread
+   * not read (P349): `<Feed {...props} />` where nothing says what `props`
+   * holds. The request is read from what the other elements hand by name;
+   * what the spread hands, and its base, is not read, which is said once
+   * per spread at the request.
+   */
+  const reportSpreadsUnread = (node: CallExpression, client: RequestClient, spreads: readonly TsNode[]): void => {
+    const at = siteOf(node);
+    for (const spread of spreads) {
+      const where = siteOf(spread);
+      const key = `${ctx.fileOf(node)}:${at.line}:${ctx.fileOf(spread)}:${where.line}:${spread.getStart()}`;
+      if (spreadsSaid.has(key)) continue;
+      spreadsSaid.add(key);
+      ctx.report({
+        file: ctx.fileOf(node),
+        line: at.line,
+        reason: 'api-client-base-unread',
+        hint:
+          `The receiver is a prop that ${spread.getText().slice(0, 60)} at ${ctx.fileOf(spread)}:${where.line} may hand, and what it spreads could not be followed, ` +
+          `so the ${client.name} instance it hands, and its base, are not read; the request is read from the instances handed by name. ` +
+          'Hand the prop by name, or spread an object or props this reader can follow.',
+        symbol: node.getText().slice(0, 80),
+        meta: { spread: { file: ctx.fileOf(spread), line: where.line } },
+      });
+    }
   };
 
   /** The one instance several stand for, where they are one or are made with one base and nothing rewrites it. */
@@ -1075,6 +1116,18 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       reaches: (body) => describedCallsIn(body).length > 0,
       declared: ctx.config.adapters.frontend.localClientClasses,
       address: (node) => analyzeClientBase(node, { sharedPackages: ctx.config.sharedPackages }),
+      // A base written on the class's instances from outside it (P349).
+      writtenOutside: (owner, field) => fieldWrittenOutside(owner, field),
+      baseUnread: (owner, field, why) => {
+        const at = siteOf(owner);
+        ctx.report({
+          file: ctx.fileOf(owner),
+          line: at.line,
+          reason: 'api-client-base-unread',
+          hint: `The base ${owner.getName() ?? 'the class'} keeps in its field ${field} ${why}, so its requests are recorded under the paths they write. Give the field one base, in the class or on each instance alike.`,
+          symbol: `${owner.getName() ?? 'class'}.${field}`,
+        });
+      },
       // The base of each instance the class's members write through, and the
       // one that could not be read said where it is made (P239).
       basesIn: (body) =>

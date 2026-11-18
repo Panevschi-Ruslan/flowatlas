@@ -427,6 +427,7 @@ export {
   EVERY_ELEMENT,
   EVERY_KEY,
   constructedNames,
+  fieldWrittenOutside,
   listOfElement,
   locatedExpressions,
   locatedSlots,
@@ -671,6 +672,7 @@ export type { DecoratorMatch } from './decorators.js';
 export { resolveConstructorInjection, resolveFieldInjection } from './di/constructor.js';
 export { resolveClassOfExpression, resolveClassOfType } from './di/class-ref.js';
 export { providerIndex, sameToken } from './di/providers.js';
+export { classOfListing, injectedInto, injectorMakes, providerListingsOf } from './di/injected.js';
 export type { ProviderIndex, WrittenProvider } from './di/providers.js';
 export type { ClassRef } from './di/class-ref.js';
 export {
@@ -747,6 +749,7 @@ export {
   returnedExpression,
   returnedBy,
   destructuredFrom,
+  componentHeldBy,
   elementsOfTag,
   untypedHoldsInstanceOf,
   rootSettingAddress,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T20:35:19.667Z",
+  "builtAt": "2026-11-18T13:16:03.405Z",
   "configHash": "2ff1e6fc9e06",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 10,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 793,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 9,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 799,
       "packages": {
         "name": "jobs",
         "runtime": [
@@ -44,11 +44,11 @@
       "repo": "./web",
       "type": "browser",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 31,
-      "edges": 26,
+      "nodes": 32,
+      "edges": 27,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 0
+      "durationMs": 828
     }
   ],
   "httpOut": {
@@ -118,8 +118,8 @@
     }
   ],
   "totals": {
-    "nodes": 51,
-    "edges": 49,
+    "nodes": 52,
+    "edges": 50,
     "types": 0,
     "missed": 7,
     "sites": 13,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:36:34.463Z",
+  "builtAt": "2026-11-18T13:16:26.147Z",
   "services": [
     {
       "name": "web",
@@ -908,12 +908,28 @@
       "line": 8
     },
     {
+      "id": "web#js/elements.js:RecentFeed.constructor",
+      "type": "function",
+      "label": "RecentFeed.constructor",
+      "repo": "web",
+      "file": "js/elements.js",
+      "line": 3
+    },
+    {
       "id": "web#js/elements.js:Ticker.connectedCallback",
       "type": "function",
       "label": "Ticker.connectedCallback",
       "repo": "web",
       "file": "js/elements.js",
       "line": 30
+    },
+    {
+      "id": "web#js/elements.js:Ticker.constructor",
+      "type": "function",
+      "label": "Ticker.constructor",
+      "repo": "web",
+      "file": "js/elements.js",
+      "line": 25
     },
     {
       "id": "web#js/elements.js:catalogTicker",
@@ -926,6 +942,20 @@
         "signature": {
           "params": [],
           "returns": "type:@flowatlas/fixtures#Ticker"
+        }
+      }
+    },
+    {
+      "id": "web#js/elements.js:previewFeed",
+      "type": "function",
+      "label": "previewFeed",
+      "repo": "web",
+      "file": "js/elements.js",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@flowatlas/fixtures#RecentFeed"
         }
       }
     },
@@ -956,6 +986,22 @@
           "returns": "type:@flowatlas/fixtures#Ticker"
         }
       }
+    },
+    {
+      "id": "web#js/health.js:Board.constructor",
+      "type": "function",
+      "label": "Board.constructor",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 41
+    },
+    {
+      "id": "web#js/health.js:Reader.constructor",
+      "type": "function",
+      "label": "Reader.constructor",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 3
     },
     {
       "id": "web#js/health.js:Reader.health",
@@ -1356,8 +1402,32 @@
       "line": 36
     },
     {
+      "from": "web#js/elements.js:catalogTicker",
+      "to": "web#js/elements.js:Ticker.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/elements.js",
+      "line": 36
+    },
+    {
+      "from": "web#js/elements.js:previewFeed",
+      "to": "web#js/elements.js:RecentFeed.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/elements.js",
+      "line": 20
+    },
+    {
       "from": "web#js/elements.js:stockFeed",
       "to": "ui_api_call:web#js/elements.js:14:16@9:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/elements.js",
+      "line": 14
+    },
+    {
+      "from": "web#js/elements.js:stockFeed",
+      "to": "web#js/elements.js:RecentFeed.constructor",
       "type": "calls",
       "confidence": "static",
       "file": "js/elements.js",
@@ -1372,6 +1442,14 @@
       "line": 40
     },
     {
+      "from": "web#js/elements.js:stockTicker",
+      "to": "web#js/elements.js:Ticker.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/elements.js",
+      "line": 40
+    },
+    {
       "from": "web#js/health.js:catalogBoard",
       "to": "ui_api_call:web#js/health.js:51:10@8:12",
       "type": "calls",
@@ -1380,8 +1458,32 @@
       "line": 51
     },
     {
+      "from": "web#js/health.js:catalogBoard",
+      "to": "web#js/health.js:Board.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 51
+    },
+    {
+      "from": "web#js/health.js:catalogBoard",
+      "to": "web#js/health.js:Reader.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 51
+    },
+    {
       "from": "web#js/health.js:catalogUp",
       "to": "ui_api_call:web#js/health.js:22:10@8:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 22
+    },
+    {
+      "from": "web#js/health.js:catalogUp",
+      "to": "web#js/health.js:Reader.constructor",
       "type": "calls",
       "confidence": "static",
       "file": "js/health.js",
@@ -1408,8 +1510,32 @@
       "line": 55
     },
     {
+      "from": "web#js/health.js:stockBoard",
+      "to": "web#js/health.js:Board.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 55
+    },
+    {
+      "from": "web#js/health.js:stockBoard",
+      "to": "web#js/health.js:Reader.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 55
+    },
+    {
       "from": "web#js/health.js:stockLevels",
       "to": "ui_api_call:web#js/health.js:36:10@8:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 36
+    },
+    {
+      "from": "web#js/health.js:stockLevels",
+      "to": "web#js/health.js:Reader.constructor",
       "type": "calls",
       "confidence": "static",
       "file": "js/health.js",
@@ -1434,6 +1560,14 @@
       "confidence": "static",
       "file": "js/health.js",
       "line": 27
+    },
+    {
+      "from": "web#js/health.js:stockUp",
+      "to": "web#js/health.js:Reader.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 26
     },
     {
       "from": "web#js/health.js:stockUp",

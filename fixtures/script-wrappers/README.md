@@ -13,7 +13,8 @@ server that answers them. What P311 reads:
    `api.items`, `Cart.add`, `Cart.total`, `Cart.coupon=`.
 2. **What the page is handed, and what a wrapper returns.** `start()` in
    `web/js/page.js` calls `api.items()` and `window.reviews.list(1)` with
-   nothing declaring either, makes `new Cart('guest')` and calls
+   nothing declaring either, makes `new Cart('guest')` (a call of the
+   constructor the wrapper hands the page, P349) and calls
    `cart.add(...)`, reads `cart.total` and writes `cart.coupon`: each joined,
    the getter and setter where the property is read and written. `stock.js`
    is `var stock = (function () { function load() {...} return { load: load

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:32:52.278Z",
+  "builtAt": "2026-11-18T13:16:01.562Z",
   "services": [
     {
       "name": "web",
@@ -986,6 +986,14 @@
       }
     },
     {
+      "id": "web#js/readers.js:Reader.constructor",
+      "type": "function",
+      "label": "Reader.constructor",
+      "repo": "web",
+      "file": "js/readers.js",
+      "line": 3
+    },
+    {
       "id": "web#js/readers.js:Reader.read",
       "type": "function",
       "label": "Reader.read",
@@ -1633,6 +1641,14 @@
       "line": 16
     },
     {
+      "from": "web#js/readers.js:latestProducts",
+      "to": "web#js/readers.js:Reader.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/readers.js",
+      "line": 16
+    },
+    {
       "from": "web#js/readers.js:levelsOn",
       "to": "ui_api_call:web#js/readers.js:35:10@26:10",
       "type": "calls",
@@ -1660,6 +1676,14 @@
       "confidence": "static",
       "file": "js/readers.js",
       "line": 21
+    },
+    {
+      "from": "web#js/readers.js:stockLevelsRead",
+      "to": "web#js/readers.js:Reader.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/readers.js",
+      "line": 20
     }
   ],
   "types": {},

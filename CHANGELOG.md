@@ -428,6 +428,29 @@ only one of them moved.
   Object.assign(m, { queue }) }` and `m.queue = ...` on a parameter typed as
   nothing count for the field where a caller hands it an instance of the
   class.
+- **Wrapped components, props handed through a spread, providers built and
+  aliased, bases written outside a client, and what a script's top makes
+  (P349).** A component a module keeps unexported under a capitalised name,
+  wrapped in calls (`memo(...)`, `React.memo(...)`, `forwardRef(...)`,
+  `memo(forwardRef(...))`), is a component, its props what each element
+  hands. A prop handed through a spread is followed where what is spread is
+  read - a rest of the props (`{ title, ...rest }`), the props whole (an
+  attribute written after the spread winning), an object written in place;
+  one not read is an `api-client-base-unread` row at the request
+  (`meta.spread`). Core's search for a method's calls reads the instance the
+  NestJS injector hands a parameter typed as nothing (`useValue: new X()`,
+  `useClass`, a class listed, `useExisting` followed, `@Dependencies(...)`
+  in plain JavaScript), in provider lists spread in, held by a `const` or
+  returned by a function, and the Nest reader draws a call on a
+  `useValue: new X()` token to `X` and reads a provider list a function
+  answers with. A local client's `this.base` is read with the writes on its
+  instances outside the class (`client.base = …`, `Object.assign(client, …)`,
+  over a value typed as nothing), a field the class only sets to nothing
+  taking theirs; several bases are an `api-client-base-unread` row. A `new`
+  in a plain script draws a call to the constructor function or the class's
+  constructor (`Pulse.constructor`) it runs. A linter plugin's `configs`
+  built by a function it declares, and a configuration written through
+  `module.exports.configs.x` or `exports.configs.x`, are read.
 - **A pair's key, an entry handed beside its store, a receiver of several
   instances, and an instance made where it is read (P338).** The key of a
   `[key, entry]` pair is bound to the key its entry is kept under - a

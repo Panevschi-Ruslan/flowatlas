@@ -1,6 +1,6 @@
 import { Project, SyntaxKind, type CallExpression, type SourceFile } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
-import { locatedExpressions, locatedSlots, locatorApplies, type NameLocator } from './locator.js';
+import { fieldWrittenOutside, locatedExpressions, locatedSlots, locatorApplies, type NameLocator } from './locator.js';
 
 /**
  * A path through an argument, and through what a class is constructed with.
@@ -475,6 +475,30 @@ class Mailer extends Base { open() { this.queue = new Queue('other'); } send(job
     const based = (rest: string): (string | undefined)[] => slots(callTo(parse(`class Mailer { queue = new Queue('base'); send(job: string) { return this.queue.add(job); } }\n${rest}`), 'add'), MADE);
     expect(based("class Other { queue?: Queue; }\nfunction setup(m) { Object.assign(m, { queue: new Queue('other') }); m.queue = new Queue('other'); }\nsetup(new Other());")).toEqual(["'base'"]);
     expect(based("function setup(m) { m.queue = new Queue('loose'); }")).toEqual(["'base'"]);
+  });
+
+  it('reads the writes outside a plain JavaScript class of a field only a member declares, typed or not (P349)', () => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true, checkJs: false } });
+    const file = project.createSourceFile(
+      'a.js',
+      [
+        "class Api { constructor() { this.base = ''; } get(path) { return fetch(this.base + path); } }",
+        'class Other { constructor() { this.base = null; } }',
+        'const api = new Api();',
+        "api.base = '/plain';",
+        "Object.assign(new Api(), { base: '/assigned' });",
+        "function setup(m) { m.base = '/untyped'; }",
+        'setup(new Api());',
+        "const other = new Other(); other.base = '/other';",
+        'function bump(m) { m.base += "/more"; }',
+      ].join('\n'),
+    );
+    const written = fieldWrittenOutside(file.getClassOrThrow('Api'), 'base');
+    expect(written.values.map((value) => value.getText()).sort()).toEqual(["'/assigned'", "'/plain'", "'/untyped'"]);
+    expect(written.changed).toBe(false);
+    expect(fieldWrittenOutside(file.getClassOrThrow('Other'), 'base').values.map((value) => value.getText())).toEqual(["'/other'"]);
+    // A field no member writes is no field read here.
+    expect(fieldWrittenOutside(file.getClassOrThrow('Api'), 'missing').values).toEqual([]);
   });
 
   it('reads a read through a name that may stand for two classes as either class\'s own field, saying which (P332)', () => {

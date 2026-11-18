@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T13:21:06.447Z",
+  "configHash": "b53475ee89bf",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 19,
+      "edges": 9,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1208,
+      "packages": {
+        "name": "catalog",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 16,
+      "edges": 12,
+      "types": 0,
+      "unresolved": 3,
+      "durationMs": 1476,
+      "packages": {
+        "name": "wrapped-spread-providers-tops-jobs",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "axios",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "pages",
+      "repo": "./pages",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 7,
+      "edges": 6,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1209
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 17,
+      "edges": 8,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1273,
+      "packages": {
+        "name": "stock",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 29,
+      "edges": 44,
+      "types": 0,
+      "unresolved": 9,
+      "durationMs": 1291,
+      "packages": {
+        "name": "wrapped-spread-providers-tops-web",
+        "runtime": [
+          "axios",
+          "react",
+          "react-dom"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 19,
+    "resolved": 19,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 17,
+    "called": 17,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 83,
+    "edges": 79,
+    "types": 0,
+    "missed": 14,
+    "sites": 29,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 14
+  }
+}

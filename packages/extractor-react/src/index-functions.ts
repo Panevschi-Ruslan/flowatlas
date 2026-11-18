@@ -419,6 +419,52 @@ const defaultExportFunction = (sourceFile: SourceFile, file: string): NamedFunct
  * neither can claim a function the other does not have (R74).
  */
 
+/** How many calls deep a component written in place is looked for inside the calls wrapping it (P349). */
+const MOST_WRAPPERS = 4;
+
+/**
+ * The function written in place a value wraps (P349): the first argument of
+ * each call it is, down to a function - `memo(function Feed(props) {...})`,
+ * `React.memo((props) => ...)`, `memo(forwardRef((props, ref) => ...))`,
+ * `observer(...)`, a higher-order component of the repository's own.
+ */
+const wrappedFunction = (value: TsNode): TsNode | undefined => {
+  let at: TsNode = value;
+  for (let depth = 0; depth <= MOST_WRAPPERS; depth += 1) {
+    while (Node.isParenthesizedExpression(at) || Node.isAsExpression(at) || Node.isSatisfiesExpression(at)) at = at.getExpression();
+    if (Node.isArrowFunction(at) || Node.isFunctionExpression(at)) return depth === 0 ? undefined : at;
+    if (!Node.isCallExpression(at)) return undefined;
+    const [first] = at.getArguments();
+    if (first === undefined) return undefined;
+    at = first;
+  }
+  return undefined;
+};
+
+/**
+ * The components a module keeps under a name it does not export, wrapped in
+ * a call (P349): `const Feed = memo(function Feed(props) {...})`. An export
+ * is read by {@link builtExportFunctions}; one the module keeps to itself is
+ * read here, as a component only - its name capitalised and the function it
+ * wraps handing back markup - so a memoised value or a configured client
+ * kept under a name is not made a function. The body is the whole call, as
+ * an export's is, so the component reaches what the function inside it does.
+ */
+const wrappedComponents = (sourceFile: SourceFile, known: ReadonlySet<TsNode>): NamedFunction[] => {
+  const found: NamedFunction[] = [];
+  for (const declaration of sourceFile.getVariableDeclarations()) {
+    if (known.has(declaration) || !Node.isIdentifier(declaration.getNameNode())) continue;
+    const name = declaration.getName();
+    const value = declaration.getInitializer();
+    if (!COMPONENT_NAME.test(name) || value === undefined || !Node.isCallExpression(value)) continue;
+    const inner = wrappedFunction(value);
+    if (inner === undefined || !(Node.isArrowFunction(inner) || Node.isFunctionExpression(inner))) continue;
+    const fn: NamedFunction = { name, declaration, body: value, line: startLineOf(declaration) };
+    if (returnsMarkup({ ...fn, body: inner.getBody() })) found.push(fn);
+  }
+  return found;
+};
+
 /** The member function of a plain script a declaration is written inside, where it is written inside one. */
 const enclosingMember = (index: ReactFunctionIndex, declaration: TsNode): IndexedFunction | undefined => {
   for (let at = declaration.getParent(); at !== undefined && !Node.isSourceFile(at); at = at.getParent()) {
@@ -439,6 +485,7 @@ export const buildReactFunctionIndex = (
     if (!isRepoFile(sourceFile) || !reads(sourceFile.getFilePath())) continue;
     const file = normalizeFilePath(sourceFile.getFilePath(), repoDir);
     const found = [...moduleFunctions(sourceFile), ...builtExportFunctions(sourceFile)];
+    found.push(...wrappedComponents(sourceFile, new Set(found.map((fn) => fn.declaration))));
     const anonymous = defaultExportFunction(sourceFile, file);
     if (anonymous !== undefined) found.push(anonymous);
 
