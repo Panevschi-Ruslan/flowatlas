@@ -549,6 +549,30 @@ only one of them moved.
   `route-handler-unread` row. A write cut at a call several functions out
   binds each function on the way, so an outer parameter its value names is
   that call's argument.
+- **Minified bundles, the order modules add in, and adding functions handing
+  on their parameters (P355).** A bundler's helpers are told by what their
+  bodies do, not their names, so a minified build renaming them is read as
+  one that keeps them: a CommonJS wrapper (esbuild's, rolldown's) makes `{
+  exports: {} }` and calls the factory it is handed, webpack's loader
+  indexes its table of factories by its one parameter - and is the third
+  parameter each factory is handed - an export helper defines each key of
+  its second argument as a getter on its first, an interop helper speaks of
+  `__esModule`; statements a minifier joins by commas are read one by one,
+  and a bundle whose helpers are of no shape known stays the
+  `route-registry-unread` row it was. A list added to across modules and
+  read as `[place, item]` pairs - a registry's (`[...this.items.entries()]`)
+  or a module's own list `push`ed onto from other modules
+  (`Object.entries(panels)`) - keeps each item under its place: those it is
+  written with first, then those added outside any function in the order
+  the modules are evaluated from the one entry point reaching them all (each
+  module's static imports first, in the order written). Where a module adding
+  to it is loaded only by `import()`, the modules are reached from several
+  entry points, or an item is added inside a function or by `unshift`, the
+  `route-entries-unread` row says so; what other modules push onto a
+  module's list is now read at all. An object an adding function writes per
+  call is read at the calls of an adding function handing it its own
+  parameters (`addHome(Screen) { this.add('home', Screen) }`), through as
+  many such functions as are written.
 - **Settings chosen by a branch, and read inside a function handed nothing
   (P302).** A condition nobody settles whose branches read different
   settings, `isProd ? process.env.API_URL : process.env.DEV_API_URL`, written

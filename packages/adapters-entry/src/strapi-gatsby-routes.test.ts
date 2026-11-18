@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { GraphBuilder, noAdapters, parseConfig, silentLogger, type EntryAdapter, type EntryNode, type ExtractContext, type Unresolved } from '@flowatlas/core';
@@ -671,6 +671,24 @@ describe("Strapi plugins shipped only bundled, plugins not installed, controller
     const read = extract(strapiServerAdapter, {}, { ...webpack, ...webpack4 }, { dependencies: { 'strapi-plugin-pins': '1.0.0', 'strapi-plugin-maps': '1.0.0' } });
     expect(read.unresolved).toEqual([]);
     expect(routes(read)).toEqual(['GET /api/maps/maps -> (package)', 'GET /api/pins/pins -> (package)', 'PUT /pins/settings -> (package)']);
+  });
+
+  it("reads minified esbuild, rolldown and webpack bundles by their helpers' shapes, not their names; a loader of no known shape stays a row (P355)", () => {
+    const fixture = join(import.meta.dirname, '..', '..', '..', 'fixtures', 'minified-helpers-module-order-nested-adders', 'cms', 'node_modules');
+    const plugins = ['badges', 'ribbons', 'stamps', 'seals'];
+    const files = Object.fromEntries(
+      plugins.flatMap((name) => ['package.json', 'strapi-server.js'].map((file) => [`node_modules/strapi-plugin-${name}/${file}`, readFileSync(join(fixture, `strapi-plugin-${name}`, file), 'utf8')])),
+    );
+    const read = extract(strapiServerAdapter, {}, files, { dependencies: Object.fromEntries(plugins.map((name) => [`strapi-plugin-${name}`, '1.0.0'])) });
+    expect(routes(read)).toEqual([
+      'DELETE /api/stamps/stamps/:id -> (package)',
+      'GET /api/badges/badges -> (package)',
+      'GET /api/ribbons/ribbons -> (package)',
+      'GET /api/stamps/stamps -> (package)',
+      'POST /api/badges/badges -> (package)',
+      'PUT /stamps/settings -> (package)',
+    ]);
+    expect(read.unresolved.map((row) => `${row.reason} ${row.symbol}`)).toEqual(['route-registry-unread node_modules/strapi-plugin-seals/strapi-server.js']);
   });
 
   it('merges a dependency not installed into the key of config/plugins that names it otherwise (P351)', () => {

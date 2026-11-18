@@ -964,7 +964,16 @@ a `concat`, a `map` or a function of the repository puts together from lists
 whose order is known (P351) - keeps each item under its place
 (`Object.entries([Welcome, Finish])` binds `0` and `1`); past a list read
 otherwise (a spread of a value read at run time) the places are said not
-known in the `route-entries-unread` row. The entries of a view
+known in the `route-entries-unread` row. A list added to across modules -
+a registry's read as `[...this.items.entries()]`, or a module's own list
+other modules `push` onto - keeps its items under the places they are
+added at (P355): those it is written with first, then those added outside
+any function in the order the modules are evaluated, from the one entry
+point (a module nothing imports and no `import()` loads, no test or story)
+reaching them all, each module's static imports first in the order written.
+A module adding to it that only `import()` loads, modules reached from
+several entry points, or an item added inside a function or by `unshift`
+leave the places not known, and the row says which. The entries of a view
 made any other way (a function of its own handed to `map`, `flatMap` or
 `reduce`, a `reduce` from anything else, pairs taken apart otherwise) are
 not read and count toward `unplaced`.
@@ -1021,7 +1030,10 @@ its own parameters (`this.pages[name] = { Screen, title: name }`,
 `shelves.set(path, { Screen })`) is one entry per call, read with that
 call's arguments under the key it hands (P351,
 `fixtures/keyed-stores-pair-patterns`,
-`fixtures/key-reads-places-webpack-plugins`). A view the caller makes of what a reader hands back is read as
+`fixtures/key-reads-places-webpack-plugins`) - and at each call of another
+adding function handing it its own parameters (`addHome(Screen) {
+this.add('home', Screen) }`), its parameters bound through every call on
+the way (P355, `fixtures/minified-helpers-module-order-nested-adders`). A view the caller makes of what a reader hands back is read as
 the reader's own view is: `const pages = listPages().filter(...).map((page) =>
 ({ ...page, path: `/app${page.path}` }))` and then `pages.map((page) => <Route
 path={page.path} />)` places each page at `/app` and its path, as do a
@@ -7735,8 +7747,14 @@ esbuild's and rolldown's `__commonJS` factories, `__esm` initializers and
 `__export`, webpack's table of modules (`__webpack_modules__`, webpack 4's
 bootstrap array, `__webpack_require__.d` and `.n`, an entry inlined in the
 bootstrap), interop helpers through and a `default` taken as Strapi takes
-it; what is still not read - a minified bundle renaming the helpers - is a
-`route-registry-unread` row naming the value the follow stopped at. Its routes are ways in drawn at `package.json` with
+it. A minified build renaming those helpers is read the same way (P355):
+each is told by what its body does - a wrapper making `{ exports: {} }` and
+calling the factory it is handed, a loader indexing its table by its one
+parameter, an export helper defining its second argument's keys as getters
+on its first, an interop helper speaking of `__esModule` - and statements
+joined by commas are read one by one. What is still not read - a loader of
+no such shape - is a `route-registry-unread` row naming the value the follow
+stopped at. Its routes are ways in drawn at `package.json` with
 `meta.package` and `meta.declaredIn`, and their handlers, policies and
 middlewares are the package's code (`handlerVia: "package"`, names only).
 Strapi's own plugins (upload, i18n, the content manager...) are not read. A

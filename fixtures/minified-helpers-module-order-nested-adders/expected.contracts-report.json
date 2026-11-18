@@ -1,0 +1,141 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-18T16:54:57.395Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:poller#src/poll.ts:11:29",
+        "to": "entry:cms:http:GET:/api/stamps/stamps",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:poller#src/poll.ts:11:29|http_calls|entry:cms:http:GET:/api/stamps/stamps",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "poller#src/poll.ts:stamps declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:poller#src/poll.ts:11:29",
+        "to": "entry:cms:http:GET:/api/stamps/stamps",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:poller#src/poll.ts:11:29|http_calls|entry:cms:http:GET:/api/stamps/stamps",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "entry:cms:http:GET:/api/stamps/stamps declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:poller#src/poll.ts:12:40",
+        "to": "entry:cms:http:DELETE:/api/stamps/stamps/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:poller#src/poll.ts:12:40|http_calls|entry:cms:http:DELETE:/api/stamps/stamps/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "poller#src/poll.ts:unstamp declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:poller#src/poll.ts:12:40",
+        "to": "entry:cms:http:DELETE:/api/stamps/stamps/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:poller#src/poll.ts:12:40|http_calls|entry:cms:http:DELETE:/api/stamps/stamps/:param",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "entry:cms:http:DELETE:/api/stamps/stamps/:param declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:poller#src/poll.ts:4:29",
+        "to": "entry:cms:http:GET:/api/badges/badges",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:poller#src/poll.ts:4:29|http_calls|entry:cms:http:GET:/api/badges/badges",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "poller#src/poll.ts:badges declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:poller#src/poll.ts:4:29",
+        "to": "entry:cms:http:GET:/api/badges/badges",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:poller#src/poll.ts:4:29|http_calls|entry:cms:http:GET:/api/badges/badges",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "entry:cms:http:GET:/api/badges/badges declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:poller#src/poll.ts:5:44",
+        "to": "entry:cms:http:POST:/api/badges/badges",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:poller#src/poll.ts:5:44|http_calls|entry:cms:http:POST:/api/badges/badges",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "poller#src/poll.ts:addBadge declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:poller#src/poll.ts:5:44",
+        "to": "entry:cms:http:POST:/api/badges/badges",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:poller#src/poll.ts:5:44|http_calls|entry:cms:http:POST:/api/badges/badges",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "entry:cms:http:POST:/api/badges/badges declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:poller#src/poll.ts:8:30",
+        "to": "entry:cms:http:GET:/api/ribbons/ribbons",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:poller#src/poll.ts:8:30|http_calls|entry:cms:http:GET:/api/ribbons/ribbons",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "poller#src/poll.ts:ribbons declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:poller#src/poll.ts:8:30",
+        "to": "entry:cms:http:GET:/api/ribbons/ribbons",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:poller#src/poll.ts:8:30|http_calls|entry:cms:http:GET:/api/ribbons/ribbons",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "entry:cms:http:GET:/api/ribbons/ribbons declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 10,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

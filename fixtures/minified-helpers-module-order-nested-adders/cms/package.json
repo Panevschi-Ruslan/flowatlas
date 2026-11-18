@@ -1,0 +1,15 @@
+{
+  "name": "cms",
+  "private": true,
+  "scripts": {
+    "develop": "strapi develop",
+    "start": "strapi start"
+  },
+  "dependencies": {
+    "@strapi/strapi": "^5.10.0",
+    "strapi-plugin-badges": "^1.0.0",
+    "strapi-plugin-ribbons": "^1.0.0",
+    "strapi-plugin-seals": "^1.0.0",
+    "strapi-plugin-stamps": "^1.0.0"
+  }
+}

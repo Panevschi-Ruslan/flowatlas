@@ -20,6 +20,7 @@ import {
   type ExtractContext,
 } from '@flowatlas/core';
 import { Node, Project, SyntaxKind, type BinaryExpression, type CallExpression, type Node as TsNode, type SourceFile } from 'ts-morph';
+import { calleeShapeOf, holdsBundlerHelpers, webpackLoaderOf } from './bundle-helpers.js';
 import { lockedPackageFinder, packageAtDir, packageFileOf, packageFinder, type LockedPackage, type PackageAt } from './installed-packages.js';
 import { strapiEnvironmentOf, strapiListens } from './listen-ports.js';
 import { KOA_REQUEST, readingOf } from './request-readings.js';
@@ -92,14 +93,15 @@ const isFactoryExports = (factory: TsNode): ((target: TsNode) => boolean) => {
   return (target) => (names.exports !== undefined && target.getText() === names.exports) || (names.module !== undefined && target.getText() === `${names.module}.exports`);
 };
 
-/** Whether a call is a bundler's CommonJS module wrapper, by the names esbuild and rolldown give it. */
+/** Whether a call is a bundler's CommonJS module wrapper: by the names esbuild and rolldown give it, or - minified - by its shape (P355). */
 const isCommonJsWrapper = (node: TsNode | undefined): node is CallExpression =>
-  node !== undefined && Node.isCallExpression(node) && /^__commonJS(?:Min)?$/.test(node.getExpression().getText());
+  node !== undefined && Node.isCallExpression(node) && (/^__commonJS(?:Min)?$/.test(node.getExpression().getText()) || calleeShapeOf(node.getExpression()) === 'wrapper');
 
 /** The function a bundler's CommonJS wrapper is handed: the method of the object, or the function itself. */
 const factoryOf = (wrapper: CallExpression): TsNode | undefined => {
-  const argument = wrapper.getArguments()[0];
-  if (argument === undefined) return undefined;
+  const written = wrapper.getArguments()[0];
+  if (written === undefined) return undefined;
+  const argument = unwrapValue(written);
   if (Node.isArrowFunction(argument) || Node.isFunctionExpression(argument)) return argument;
   if (!Node.isObjectLiteralExpression(argument)) return undefined;
   const first = argument.getProperties()[0];
@@ -123,7 +125,33 @@ const isInterop = (node: TsNode): node is CallExpression => {
   if (!Node.isCallExpression(node) || node.getArguments().length === 0) return false;
   // `helpers.getDefaultExportFromCjs(x)`: a helper a chunk of the bundle exports, by its own name.
   const callee = unwrapValue(node.getExpression());
-  return INTEROP.test(Node.isPropertyAccessExpression(callee) ? callee.getName() : callee.getText());
+  if (INTEROP.test(Node.isPropertyAccessExpression(callee) ? callee.getName() : callee.getText())) return true;
+  // A minified build's helper, by what its body does (P355): written in the file, or exported by a chunk of the bundle (`s.g(x)`).
+  if (calleeShapeOf(callee) === 'interop') return true;
+  return Node.isPropertyAccessExpression(callee) && calleeShapeOf(resolved(callee, FOLLOW_DEPTH - 3) ?? callee) === 'interop';
+};
+
+/** Whether an expression is an interop's call, written there or held by a variable it starts as (`var d = __toESM(require_x())`, P355). */
+const throughInterop = (node: TsNode): boolean => {
+  const value = unwrapValue(node);
+  if (isInterop(value)) return true;
+  const declaration = Node.isIdentifier(value) ? value.getSymbol()?.getDeclarations()[0] : undefined;
+  const initializer = declaration !== undefined && Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : undefined;
+  return initializer !== undefined && isInterop(unwrapValue(initializer));
+};
+
+/**
+ * Whether a call defines keys on its first argument as getters of its second
+ * (P351, P355): esbuild's `__export(target, { key: () => value })`, webpack's
+ * `__webpack_require__.d(exports, { ... })` - or a helper of that shape a
+ * minified build renames, and `.d` off a loader of that shape.
+ */
+const isExportCall = (call: CallExpression): boolean => {
+  const callee = unwrapValue(call.getExpression());
+  const text = callee.getText();
+  if (text === '__export' || text === '__webpack_require__.d') return true;
+  if (Node.isPropertyAccessExpression(callee)) return callee.getName() === 'd' && isWebpackLoader(callee.getExpression());
+  return calleeShapeOf(callee) === 'export';
 };
 
 /** One write of a key a file makes: into what (`target`), which key, and the value. */
@@ -179,8 +207,8 @@ const fileWritesOf = (sourceFile: SourceFile): FileWrites => {
     const callee = node.getExpression().getText();
     const [target, second, third] = node.getArguments();
     if (target === undefined) continue;
-    // esbuild's `__export(target, { key: () => value })`, and webpack's `__webpack_require__.d(exports, { key: () => value })` (P351).
-    if ((callee === '__export' || callee === '__webpack_require__.d') && second !== undefined && Node.isObjectLiteralExpression(second)) {
+    // esbuild's `__export(target, { key: () => value })`, and webpack's `__webpack_require__.d(exports, { key: () => value })` (P351), however named (P355).
+    if (second !== undefined && Node.isObjectLiteralExpression(second) && isExportCall(node)) {
       for (const property of second.getProperties()) {
         const value = Node.isPropertyAssignment(property) ? gotten(property.getInitializer()) : Node.isMethodDeclaration(property) ? gotten(property) : undefined;
         if (value !== undefined && (Node.isPropertyAssignment(property) || Node.isMethodDeclaration(property))) keys.push({ target, key: property.getName().replace(/^['"]|['"]$/g, ''), value });
@@ -300,8 +328,31 @@ const factoryValue = (factory: TsNode, order: 'esbuild' | 'webpack', depth: numb
   return factory;
 };
 
+/**
+ * Whether an expression names webpack's loader (P351, P355): `__webpack_require__`,
+ * the function a file writes in its shape however minified (`function r(o) {
+ * ... }`), or the third parameter a factory of its table is handed it by.
+ */
+const isWebpackLoader = (node: TsNode): boolean => {
+  const value = unwrapValue(node);
+  if (!Node.isIdentifier(value)) return false;
+  if (value.getText() === '__webpack_require__') return true;
+  const declaration = value.getSymbol()?.getDeclarations()[0];
+  if (declaration === undefined) return false;
+  if (declaration === webpackLoaderOf(value.getSourceFile())) return true;
+  if (!Node.isParameterDeclaration(declaration)) return false;
+  const factory = declaration.getParent();
+  if (!(Node.isArrowFunction(factory) || Node.isFunctionExpression(factory) || Node.isMethodDeclaration(factory)) || factory.getParameters().indexOf(declaration) !== 2) return false;
+  // A factory of the table the loader reads: a value of its object, or a place of its array.
+  const table = webpackTableOf(value.getSourceFile());
+  if (table === undefined) return false;
+  let holder: TsNode | undefined = factory.getParent();
+  while (holder !== undefined && (Node.isParenthesizedExpression(holder) || Node.isPropertyAssignment(holder))) holder = holder.getParent();
+  return holder === table;
+};
+
 /** Whether a call is webpack's module loader, `__webpack_require__(id)` - not one of its helpers (`__webpack_require__.d`). */
-const isWebpackRequire = (node: TsNode): node is CallExpression => Node.isCallExpression(node) && node.getExpression().getText() === '__webpack_require__' && node.getArguments().length === 1;
+const isWebpackRequire = (node: TsNode): node is CallExpression => Node.isCallExpression(node) && node.getArguments().length === 1 && isWebpackLoader(node.getExpression());
 
 /** The id a webpack loader's call names: `"./server/index.js"`, `12`, the entry's `__webpack_require__.s = id`. */
 const webpackIdOf = (call: CallExpression): string | undefined => {
@@ -318,7 +369,8 @@ const webpackIdOf = (call: CallExpression): string | undefined => {
  * (`modules[moduleId].call(...)`).
  */
 const webpackTableOf = (sourceFile: SourceFile): TsNode | undefined => {
-  const loader = sourceFile.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).find((each) => each.getName() === '__webpack_require__');
+  // The loader by its name, or by its shape where a minified build renames it (P355).
+  const loader = webpackLoaderOf(sourceFile);
   // The table the loader calls a module's factory out of: `__webpack_modules__[moduleId](...)`, `modules[moduleId].call(...)` - not its cache.
   const indexed = loader?.getDescendantsOfKind(SyntaxKind.ElementAccessExpression).find((access) => {
     if (!Node.isIdentifier(unwrapValue(access.getExpression()))) return false;
@@ -386,7 +438,9 @@ const webpackDefaultOf = (call: CallExpression, depth: number): TsNode | undefin
   const declaration = Node.isIdentifier(callee) ? callee.getSymbol()?.getDeclarations()[0] : undefined;
   const getter = declaration !== undefined && Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : undefined;
   const made = getter === undefined ? undefined : unwrapValue(getter);
-  if (made === undefined || !Node.isCallExpression(made) || made.getExpression().getText() !== '__webpack_require__.n') return undefined;
+  // `__webpack_require__.n(x)`, `.n` off the loader however a minified build names it (P355).
+  const maker = made !== undefined && Node.isCallExpression(made) ? unwrapValue(made.getExpression()) : undefined;
+  if (made === undefined || !Node.isCallExpression(made) || maker === undefined || !Node.isPropertyAccessExpression(maker) || maker.getName() !== 'n' || !isWebpackLoader(maker.getExpression())) return undefined;
   const module = resolved(made.getArguments()[0], depth + 1);
   const defaulted = module !== undefined && isObjectLike(module) ? propertyOf(module, 'default') : undefined;
   return defaulted === undefined ? module : resolved(defaulted, depth + 1);
@@ -441,6 +495,11 @@ const resolved = (node: TsNode | undefined, depth = 0): TsNode | undefined => {
   if (Node.isCallExpression(value)) {
     const defaulted = webpackDefaultOf(value, depth + 1);
     if (defaulted !== undefined) return defaulted;
+    // `require_x()` of `var require_x = __commonJS(...)` where it is read as a value, as `__toESM(require_x())` hands it (P355).
+    if (value.getArguments().length === 0 && Node.isIdentifier(unwrapValue(value.getExpression()))) {
+      const callee = resolved(value.getExpression(), depth + 1);
+      if (callee !== undefined && callee !== value && isCommonJsWrapper(callee)) return wrappedModuleValue(callee, depth + 1) ?? value;
+    }
   }
   // `x["default"]`, as webpack reads a module's key: the key of what the object is (P351).
   if (Node.isElementAccessExpression(value)) {
@@ -454,7 +513,7 @@ const resolved = (node: TsNode | undefined, depth = 0): TsNode | undefined => {
     const owner = resolved(value.getExpression(), depth + 1);
     const property = propertyOf(owner, value.getName());
     // `__importDefault(require('./server')).default` of a module that writes no `default`: the module's value itself, as the interop hands it (P345).
-    if (property === undefined && value.getName() === 'default' && isInterop(unwrapValue(value.getExpression())) && owner !== undefined && isObjectLike(owner)) return owner;
+    if (property === undefined && value.getName() === 'default' && throughInterop(value.getExpression()) && owner !== undefined && isObjectLike(owner)) return owner;
     return property === undefined ? value : resolved(property, depth + 1);
   }
   if (!Node.isIdentifier(value)) return value;
@@ -511,9 +570,12 @@ const moduleValue = (sourceFile: SourceFile, depth = 0): TsNode | undefined => {
  * ... module.exports = __webpack_exports__; })()` (P351).
  */
 const moduleExportsAssigned = (statements: readonly TsNode[], depth = 0): TsNode | undefined => {
-  for (const statement of statements) {
-    if (!Node.isExpressionStatement(statement)) continue;
-    const expression = unwrapValue(statement.getExpression());
+  // A minified build joins statements by commas (`(() => { ... })(), module.exports = o`, P355): each part a statement of its own.
+  const parts = (node: TsNode): TsNode[] => {
+    const value = unwrapValue(node);
+    return Node.isBinaryExpression(value) && value.getOperatorToken().getKind() === SyntaxKind.CommaToken ? [...parts(value.getLeft()), ...parts(value.getRight())] : [value];
+  };
+  for (const expression of statements.flatMap((statement) => (Node.isExpressionStatement(statement) ? parts(statement.getExpression()) : []))) {
     if (Node.isBinaryExpression(expression) && expression.getOperatorToken().getKind() === SyntaxKind.EqualsToken && expression.getLeft().getText() === 'module.exports') return expression.getRight();
     // `(() => { ... })()`, `(function () { ... })()`, `!function () { ... }()`.
     const call = Node.isPrefixUnaryExpression(expression) ? unwrapValue(expression.getOperand()) : expression;
@@ -1044,7 +1106,7 @@ const unreadServerWhy = (entry: SourceFile, stopped: TsNode | undefined, repoDir
   if (required !== undefined) return `${where} what require('${required}') loads at ${at}, ${required.startsWith('.') ? 'which is no file there' : 'a package not followed from it'}`;
   const text = stopped.getText().replace(/\s+/g, ' ');
   const shown = text.length > 60 ? `${text.slice(0, 57)}...` : text;
-  const bundled = BUNDLED.test(stopped.getSourceFile().getFullText()) ? ', a bundled build whose module wrappers were followed as far as they are read' : '';
+  const bundled = BUNDLED.test(stopped.getSourceFile().getFullText()) || holdsBundlerHelpers(stopped.getSourceFile()) ? ', a bundled build whose module wrappers were followed as far as they are read' : '';
   return `${where} ${shown} at ${at}${bundled}, which is not an object of the server's keys nor a function returning one`;
 };
 

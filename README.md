@@ -1569,15 +1569,18 @@ Known gaps in what it can read:
   `heuristic`, with every route mounted under it, and with nothing installed
   one a constructor writes into a field declared with no initialiser is not
   recognised at all.
-- A minified bundle that renames a bundler's helpers is a row saying where
-  the follow stopped, and a key enabling a Strapi plugin no package is named
-  after, beside several dependencies not installed, names each of them as a
-  candidate: the install is what tells which.
-- A registry's list pushed into across modules and read through
-  `.entries()` gives places the order modules are evaluated in decides, so
-  they are not read; and an entry an adding function hands on to another
-  with its own parameters is read at the outer call only where the inner one
-  hands it on as it is.
+- A bundle whose helpers are of no shape known - a loader of its own, not
+  a wrapper, webpack's table or an export or interop helper as bundlers write
+  them, renamed or not - is a row saying where the follow stopped, and a key
+  enabling a Strapi plugin no package is named after, beside several
+  dependencies not installed, names each of them as a candidate: the install
+  is what tells which.
+- The places of a list added to across modules are read only where every
+  module adding to it is reached by static imports from one entry point and
+  adds outside any function; one loaded by `import()`, reached from several
+  entry points or adding inside a function is a row. An import whose names
+  are used only as types is taken to load its module, as `import type` is
+  not; and a module loaded through `require()` is not in the order.
 - A port a cluster `Secret` gives is not known, by policy, so the request
   gets a row rather than a join. A program's listen is found in its file and
   the files it imports by a relative path, so one listening through a
