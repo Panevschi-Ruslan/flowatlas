@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import * as nativePath from 'node:path';
+import { posix } from 'node:path';
 import { isWithinDir } from './ids.js';
 
 /**
@@ -18,6 +19,17 @@ import { isWithinDir } from './ids.js';
  * in the home directory or at the root of the file system, which are no
  * repository's.
  */
+
+/**
+ * The path functions a path is spelled for: a POSIX path (`/repo/src`, the
+ * disk's on macOS and Linux, an in-memory project's anywhere) is walked as
+ * one on Windows too, where `path.resolve` would put the drive in front and
+ * `path.join` turn its slashes round, so that it names another file.
+ */
+export const pathsOf = (path: string): typeof posix => (path.startsWith('/') ? posix : nativePath);
+const resolve = (path: string): string => pathsOf(path).resolve(path);
+const dirname = (path: string): string => pathsOf(path).dirname(path);
+const join = (path: string, ...rest: string[]): string => pathsOf(path).join(path, ...rest);
 
 /** Something that answers whether a path exists: the disk, or a project's own file system. */
 export type PathExists = (path: string) => boolean;

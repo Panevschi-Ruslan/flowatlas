@@ -1,7 +1,11 @@
-import { basename, dirname, isAbsolute, join } from 'node:path';
-import { compileGlob, isWithinDir, readDocument, scanCeilingOf, type Glob } from '@flowatlas/core';
+import { basename, isAbsolute } from 'node:path';
+import { compileGlob, isWithinDir, pathsOf, readDocument, scanCeilingOf, type Glob } from '@flowatlas/core';
 import type { FileSystemHost, SourceFile } from 'ts-morph';
 import { ts } from 'ts-morph';
+
+/** `dirname` and `join` as the path is spelled: a project's POSIX paths stay POSIX on Windows. */
+const dirname = (path: string): string => pathsOf(path).dirname(path);
+const join = (path: string, ...rest: string[]): string => pathsOf(path).join(path, ...rest);
 
 /**
  * The installed clients a plain page loads by a script tag (P310).

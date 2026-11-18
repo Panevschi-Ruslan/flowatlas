@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { isBelowDir, isWithinDir, toPosixPath } from './ids.js';
 import { readPackageJson, type PackageJson } from './package-json.js';
-import { mayClimbTo, upwardCeilingOf } from './upward-walk.js';
+import { mayClimbTo, pathsOf, upwardCeilingOf } from './upward-walk.js';
 import { applicationLibraryDirs, forgetWorkspaceApplications } from './workspace-application.js';
 
 /**
@@ -313,17 +313,18 @@ export const workspacePackages = (root: string): readonly WorkspacePackage[] => 
  * directory, but one outside the repository is not read at all.
  */
 export const workspaceRootsAbove = (dir: string): readonly string[] => {
-  const member = resolve(dir);
+  const paths = pathsOf(dir);
+  const member = paths.resolve(dir);
   const found: string[] = [];
   const ceiling = upwardCeilingOf(member);
-  let at = dirname(member);
+  let at = paths.dirname(member);
   for (;;) {
     if (at === member || !mayClimbTo(at, ceiling)) return found;
     const patterns = declaredMembers(at);
-    if (patterns !== undefined && declares(patterns, relative(at, member).replace(/\\/g, '/'))) {
+    if (patterns !== undefined && declares(patterns, paths.relative(at, member).replace(/\\/g, '/'))) {
       found.push(at);
     }
-    const parent = dirname(at);
+    const parent = paths.dirname(at);
     if (parent === at) return found;
     at = parent;
   }
@@ -334,7 +335,7 @@ export const workspaceRootsAbove = (dir: string): readonly string[] => {
  * outermost workspace above it that declares it as a member - a package of a
  * monorepo finds what the workspace installs - else `root` itself.
  */
-export const scanCeilingOf = (root: string): string => workspaceRootsAbove(root).at(-1) ?? resolve(root);
+export const scanCeilingOf = (root: string): string => workspaceRootsAbove(root).at(-1) ?? pathsOf(root).resolve(root);
 
 /**
  * The workspace `dir` is a package of, when it is a package of one.
