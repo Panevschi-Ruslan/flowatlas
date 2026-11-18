@@ -1,0 +1,2245 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T12:41:18.287Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/index.ts:GET /feed@9",
+      "type": "function",
+      "label": "GET /feed@9",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /health@5",
+      "type": "function",
+      "label": "GET /health@5",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /list@17",
+      "type": "function",
+      "label": "GET /list@17",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /panel@13",
+      "type": "function",
+      "label": "GET /panel@13",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "channel:alerts",
+      "type": "channel",
+      "label": "alerts",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 24,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:digests",
+      "type": "channel",
+      "label": "digests",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 8,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/feed",
+      "type": "entry",
+      "label": "GET /feed",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/feed",
+        "rawPath": "/feed",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/list",
+      "type": "entry",
+      "label": "GET /list",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/list",
+        "rawPath": "/list",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/panel",
+      "type": "entry",
+      "label": "GET /panel",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/panel",
+        "rawPath": "/panel",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:jobs:cron:Poller.poll",
+      "type": "entry",
+      "label": "cron Poller.poll",
+      "repo": "jobs",
+      "file": "src/pollers.ts",
+      "line": 13,
+      "kind": "cron",
+      "meta": {
+        "intervalMs": 60000,
+        "trigger": "Interval",
+        "adapter": "nestjs-schedule"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/feed",
+      "type": "entry",
+      "label": "GET /feed",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/feed",
+        "rawPath": "/feed",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/levels",
+      "type": "entry",
+      "label": "GET /levels",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/levels",
+        "rawPath": "/levels",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/list",
+      "type": "entry",
+      "label": "GET /list",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/list",
+        "rawPath": "/list",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/panel",
+      "type": "entry",
+      "label": "GET /panel",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/panel",
+        "rawPath": "/panel",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "jobs#src/pollers.ts:CATALOG_API",
+      "type": "provider",
+      "label": "CATALOG_API",
+      "repo": "jobs",
+      "file": "src/pollers.ts",
+      "line": 60,
+      "kind": "value",
+      "meta": {
+        "token": "CATALOG_API"
+      }
+    },
+    {
+      "id": "jobs#src/pollers.ts:Levels",
+      "type": "provider",
+      "label": "Levels",
+      "repo": "jobs",
+      "file": "src/pollers.ts",
+      "line": 42,
+      "kind": "injectable",
+      "meta": {
+        "module": "PollersModule"
+      }
+    },
+    {
+      "id": "jobs#src/pollers.ts:Levels.onModuleInit",
+      "type": "function",
+      "label": "Levels.onModuleInit",
+      "repo": "jobs",
+      "file": "src/pollers.ts",
+      "line": 46,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/pollers.ts:Poller",
+      "type": "provider",
+      "label": "Poller",
+      "repo": "jobs",
+      "file": "src/pollers.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "PollersModule"
+      }
+    },
+    {
+      "id": "jobs#src/pollers.ts:Poller.poll",
+      "type": "function",
+      "label": "Poller.poll",
+      "repo": "jobs",
+      "file": "src/pollers.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/pollers.ts:PollersModule",
+      "type": "module",
+      "label": "PollersModule",
+      "repo": "jobs",
+      "file": "src/pollers.ts",
+      "line": 56,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "Poller",
+          "Levels",
+          "CATALOG_API",
+          "STOCK_API",
+          "Reader"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "jobs#src/pollers.ts:Reader",
+      "type": "provider",
+      "label": "Reader",
+      "repo": "jobs",
+      "file": "src/pollers.ts",
+      "line": 25,
+      "kind": "injectable"
+    },
+    {
+      "id": "jobs#src/pollers.ts:Reader.read",
+      "type": "function",
+      "label": "Reader.read",
+      "repo": "jobs",
+      "file": "src/pollers.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/pollers.ts:STOCK_API",
+      "type": "provider",
+      "label": "STOCK_API",
+      "repo": "jobs",
+      "file": "src/pollers.ts",
+      "line": 61,
+      "kind": "factory",
+      "meta": {
+        "token": "STOCK_API"
+      }
+    },
+    {
+      "id": "jobs#src/pollers.ts:StockReader",
+      "type": "provider",
+      "label": "StockReader",
+      "repo": "jobs",
+      "file": "src/pollers.ts",
+      "line": 34,
+      "kind": "injectable",
+      "meta": {
+        "module": "PollersModule"
+      }
+    },
+    {
+      "id": "jobs#src/pollers.ts:catalogHealth",
+      "type": "function",
+      "label": "catalogHealth",
+      "repo": "jobs",
+      "file": "src/pollers.ts",
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/senders.ts:Alerter",
+      "type": "provider",
+      "label": "Alerter",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 20,
+      "kind": "injectable"
+    },
+    {
+      "id": "jobs#src/senders.ts:Alerter.alert",
+      "type": "method",
+      "label": "Alerter.alert",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/senders.ts:Digest",
+      "type": "provider",
+      "label": "Digest",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 4,
+      "kind": "injectable"
+    },
+    {
+      "id": "jobs#src/senders.ts:Digest.send",
+      "type": "method",
+      "label": "Digest.send",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "user",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/status.tsx:Status",
+      "type": "ui_component",
+      "label": "Status",
+      "repo": "jobs",
+      "file": "src/status.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "producer:jobs#src/senders.ts:24:12",
+      "type": "producer",
+      "label": "job alerts",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 24,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "alert"
+      }
+    },
+    {
+      "id": "producer:jobs#src/senders.ts:8:12",
+      "type": "producer",
+      "label": "job digests",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 8,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "digest"
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4600,
+            "file": "src/index.ts",
+            "line": 21
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 7,
+          "skippedExternalCalls": {},
+          "functions": 5,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nestjs-http",
+            "nestjs-schedule"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4700,
+            "file": "src/index.ts",
+            "line": 25
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "functions": 19,
+          "components": 2,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /feed@9",
+      "type": "function",
+      "label": "GET /feed@9",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /health@5",
+      "type": "function",
+      "label": "GET /health@5",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /levels@21",
+      "type": "function",
+      "label": "GET /levels@21",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /list@17",
+      "type": "function",
+      "label": "GET /list@17",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /panel@13",
+      "type": "function",
+      "label": "GET /panel@13",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:jobs#src/pollers.ts:15:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "jobs",
+      "file": "src/pollers.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:jobs#src/pollers.ts:47:12@29:12",
+      "type": "ui_api_call",
+      "label": "GET /levels",
+      "repo": "jobs",
+      "file": "src/pollers.ts",
+      "line": 47,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/levels",
+        "path": "/levels",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Reader.read",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:jobs#src/pollers.ts:53:10@29:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "jobs",
+      "file": "src/pollers.ts",
+      "line": 53,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Reader.read",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/health.js:24:10@10:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Reader.read",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/health.js:33:10@10:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Reader.read",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/health.js:42:10@10:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 42,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Reader.read",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/health.js:50:10@10:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 50,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Reader.read",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/health.js:58:10@10:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 58,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Reader.read",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/health.js:73:10@10:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 73,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Reader.read",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/health.js:82:18@10:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 82,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Reader.read",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages.jsx:34:13@7:5",
+      "type": "ui_api_call",
+      "label": "GET /feed",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 34,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/feed",
+        "path": "/feed",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Feed",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages.jsx:35:14@15:5",
+      "type": "ui_api_call",
+      "label": "GET /panel",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/panel",
+        "path": "/panel",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Panel",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages.jsx:36:7@23:12",
+      "type": "ui_api_call",
+      "label": "GET /list",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 36,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/list",
+        "path": "/list",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Lister.componentDidMount",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages.jsx:44:13@7:5",
+      "type": "ui_api_call",
+      "label": "GET /feed",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 44,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/feed",
+        "path": "/feed",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Feed",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages.jsx:45:14@15:5",
+      "type": "ui_api_call",
+      "label": "GET /panel",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 45,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/panel",
+        "path": "/panel",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Panel",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages.jsx:46:7@23:12",
+      "type": "ui_api_call",
+      "label": "GET /list",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 46,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/list",
+        "path": "/list",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Lister.componentDidMount",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "web#src/health.js:Reader.health",
+      "type": "function",
+      "label": "Reader.health",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 13
+    },
+    {
+      "id": "web#src/health.js:Reader.read",
+      "type": "function",
+      "label": "Reader.read",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 9
+    },
+    {
+      "id": "web#src/health.js:catalogFirst",
+      "type": "function",
+      "label": "catalogFirst",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#src/health.js:catalogMade",
+      "type": "function",
+      "label": "catalogMade",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 81,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#src/health.js:catalogOptions",
+      "type": "function",
+      "label": "catalogOptions",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#src/health.js:catalogWalk",
+      "type": "function",
+      "label": "catalogWalk",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 57,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/health.js:each",
+      "type": "function",
+      "label": "each",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "readers",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/health.js:first",
+      "type": "function",
+      "label": "first",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "readers",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#src/health.js:readerOf",
+      "type": "function",
+      "label": "readerOf",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 77,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "api",
+              "type": "any"
+            }
+          ],
+          "returns": "type:web#Reader"
+        }
+      }
+    },
+    {
+      "id": "web#src/health.js:stockDeps",
+      "type": "function",
+      "label": "stockDeps",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 72,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#src/health.js:stockEach",
+      "type": "function",
+      "label": "stockEach",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 49,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/health.js:stockFactory",
+      "type": "function",
+      "label": "stockFactory",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#src/health.js:viaFactory",
+      "type": "function",
+      "label": "viaFactory",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "make",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#src/health.js:viaOptions",
+      "type": "function",
+      "label": "viaOptions",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "options",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#src/health.js:walk",
+      "type": "function",
+      "label": "walk",
+      "repo": "web",
+      "file": "src/health.js",
+      "line": 53,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "readers",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/pages.jsx:CatalogPage",
+      "type": "ui_component",
+      "label": "CatalogPage",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 31,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/pages.jsx:Feed",
+      "type": "function",
+      "label": "Feed",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ client }",
+              "type": "object"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#src/pages.jsx:Lister.componentDidMount",
+      "type": "function",
+      "label": "Lister.componentDidMount",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 22
+    },
+    {
+      "id": "web#src/pages.jsx:Panel",
+      "type": "function",
+      "label": "Panel",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "props",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#src/pages.jsx:StockPage",
+      "type": "ui_component",
+      "label": "StockPage",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 41,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:http:GET:/feed",
+      "to": "catalog#src/index.ts:GET /feed@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/health",
+      "to": "catalog#src/index.ts:GET /health@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/list",
+      "to": "catalog#src/index.ts:GET /list@17",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 17,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/panel",
+      "to": "catalog#src/index.ts:GET /panel@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:jobs:cron:Poller.poll",
+      "to": "jobs#src/pollers.ts:Poller.poll",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "src/pollers.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:stock:http:GET:/feed",
+      "to": "stock#src/index.ts:GET /feed@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/health",
+      "to": "stock#src/index.ts:GET /health@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/levels",
+      "to": "stock#src/index.ts:GET /levels@21",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 21,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/list",
+      "to": "stock#src/index.ts:GET /list@17",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 17,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/panel",
+      "to": "stock#src/index.ts:GET /panel@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "jobs#src/pollers.ts:Levels",
+      "to": "jobs#src/pollers.ts:Reader",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/pollers.ts",
+      "line": 44
+    },
+    {
+      "from": "jobs#src/pollers.ts:Levels.onModuleInit",
+      "to": "jobs#src/pollers.ts:Reader.read",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "any",
+      "file": "src/pollers.ts",
+      "line": 47
+    },
+    {
+      "from": "jobs#src/pollers.ts:Levels.onModuleInit",
+      "to": "ui_api_call:jobs#src/pollers.ts:47:12@29:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pollers.ts",
+      "line": 47
+    },
+    {
+      "from": "jobs#src/pollers.ts:Poller",
+      "to": "jobs#src/pollers.ts:CATALOG_API",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/pollers.ts",
+      "line": 11,
+      "meta": {
+        "token": "CATALOG_API",
+        "provider": "useValue"
+      }
+    },
+    {
+      "from": "jobs#src/pollers.ts:Poller.poll",
+      "to": "ui_api_call:jobs#src/pollers.ts:15:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pollers.ts",
+      "line": 15
+    },
+    {
+      "from": "jobs#src/pollers.ts:StockReader",
+      "to": "jobs#src/pollers.ts:STOCK_API",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/pollers.ts",
+      "line": 36,
+      "meta": {
+        "token": "STOCK_API",
+        "provider": "useFactory"
+      }
+    },
+    {
+      "from": "jobs#src/pollers.ts:catalogHealth",
+      "to": "ui_api_call:jobs#src/pollers.ts:53:10@29:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pollers.ts",
+      "line": 53
+    },
+    {
+      "from": "jobs#src/senders.ts:Alerter.alert",
+      "to": "producer:jobs#src/senders.ts:24:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/senders.ts",
+      "line": 24
+    },
+    {
+      "from": "jobs#src/senders.ts:Digest.send",
+      "to": "producer:jobs#src/senders.ts:8:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/senders.ts",
+      "line": 8
+    },
+    {
+      "from": "producer:jobs#src/senders.ts:24:12",
+      "to": "channel:alerts",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{message:string}"
+      ],
+      "file": "src/senders.ts",
+      "line": 24
+    },
+    {
+      "from": "producer:jobs#src/senders.ts:8:12",
+      "to": "channel:digests",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{user:string}"
+      ],
+      "file": "src/senders.ts",
+      "line": 8
+    },
+    {
+      "from": "ui_api_call:jobs#src/pollers.ts:15:12",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pollers.ts",
+      "line": 15,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "ui_api_call:jobs#src/pollers.ts:47:12@29:12",
+      "to": "entry:stock:http:GET:/levels",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pollers.ts",
+      "line": 47,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:25"
+      }
+    },
+    {
+      "from": "ui_api_call:jobs#src/pollers.ts:53:10@29:12",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pollers.ts",
+      "line": 53,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/health.js:24:10@10:12",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/health.js",
+      "line": 24,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/health.js:33:10@10:12",
+      "to": "entry:stock:http:GET:/health",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/health.js",
+      "line": 33,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:25"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/health.js:42:10@10:12",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/health.js",
+      "line": 42,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/health.js:50:10@10:12",
+      "to": "entry:stock:http:GET:/health",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/health.js",
+      "line": 50,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:25"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/health.js:58:10@10:12",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/health.js",
+      "line": 58,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/health.js:73:10@10:12",
+      "to": "entry:stock:http:GET:/health",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/health.js",
+      "line": 73,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:25"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/health.js:82:18@10:12",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/health.js",
+      "line": 82,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages.jsx:34:13@7:5",
+      "to": "entry:catalog:http:GET:/feed",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pages.jsx",
+      "line": 34,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages.jsx:35:14@15:5",
+      "to": "entry:catalog:http:GET:/panel",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pages.jsx",
+      "line": 35,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages.jsx:36:7@23:12",
+      "to": "entry:catalog:http:GET:/list",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pages.jsx",
+      "line": 36,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages.jsx:44:13@7:5",
+      "to": "entry:stock:http:GET:/feed",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pages.jsx",
+      "line": 44,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:25"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages.jsx:45:14@15:5",
+      "to": "entry:stock:http:GET:/panel",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pages.jsx",
+      "line": 45,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:25"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages.jsx:46:7@23:12",
+      "to": "entry:stock:http:GET:/list",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pages.jsx",
+      "line": 46,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:25"
+      }
+    },
+    {
+      "from": "web#src/health.js:catalogFirst",
+      "to": "ui_api_call:web#src/health.js:42:10@10:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/health.js",
+      "line": 42
+    },
+    {
+      "from": "web#src/health.js:catalogFirst",
+      "to": "web#src/health.js:first",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "src/health.js",
+      "line": 42
+    },
+    {
+      "from": "web#src/health.js:catalogMade",
+      "to": "ui_api_call:web#src/health.js:82:18@10:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/health.js",
+      "line": 82
+    },
+    {
+      "from": "web#src/health.js:catalogMade",
+      "to": "web#src/health.js:readerOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "type:web#Reader",
+      "file": "src/health.js",
+      "line": 82
+    },
+    {
+      "from": "web#src/health.js:catalogOptions",
+      "to": "ui_api_call:web#src/health.js:24:10@10:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/health.js",
+      "line": 24
+    },
+    {
+      "from": "web#src/health.js:catalogOptions",
+      "to": "web#src/health.js:viaOptions",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "src/health.js",
+      "line": 24
+    },
+    {
+      "from": "web#src/health.js:catalogWalk",
+      "to": "ui_api_call:web#src/health.js:58:10@10:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/health.js",
+      "line": 58
+    },
+    {
+      "from": "web#src/health.js:catalogWalk",
+      "to": "web#src/health.js:walk",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "void",
+      "file": "src/health.js",
+      "line": 58
+    },
+    {
+      "from": "web#src/health.js:stockDeps",
+      "to": "ui_api_call:web#src/health.js:73:10@10:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/health.js",
+      "line": 73
+    },
+    {
+      "from": "web#src/health.js:stockEach",
+      "to": "ui_api_call:web#src/health.js:50:10@10:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/health.js",
+      "line": 50
+    },
+    {
+      "from": "web#src/health.js:stockEach",
+      "to": "web#src/health.js:each",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "void",
+      "file": "src/health.js",
+      "line": 50
+    },
+    {
+      "from": "web#src/health.js:stockFactory",
+      "to": "ui_api_call:web#src/health.js:33:10@10:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/health.js",
+      "line": 33
+    },
+    {
+      "from": "web#src/health.js:stockFactory",
+      "to": "web#src/health.js:viaFactory",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "src/health.js",
+      "line": 33
+    },
+    {
+      "from": "web#src/pages.jsx:CatalogPage",
+      "to": "ui_api_call:web#src/pages.jsx:34:13@7:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 34
+    },
+    {
+      "from": "web#src/pages.jsx:CatalogPage",
+      "to": "ui_api_call:web#src/pages.jsx:35:14@15:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 35
+    },
+    {
+      "from": "web#src/pages.jsx:CatalogPage",
+      "to": "ui_api_call:web#src/pages.jsx:36:7@23:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 36
+    },
+    {
+      "from": "web#src/pages.jsx:StockPage",
+      "to": "ui_api_call:web#src/pages.jsx:44:13@7:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 44
+    },
+    {
+      "from": "web#src/pages.jsx:StockPage",
+      "to": "ui_api_call:web#src/pages.jsx:45:14@15:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 45
+    },
+    {
+      "from": "web#src/pages.jsx:StockPage",
+      "to": "ui_api_call:web#src/pages.jsx:46:7@23:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 46
+    }
+  ],
+  "types": {
+    "type:web#Reader": {
+      "name": "Reader",
+      "kind": "object",
+      "declaredIn": "web#src/health.js",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declKind": "class",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 4,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /health@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 4,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 6,
+                "symbol": "GET /health@5 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 10,
+                "symbol": "GET /feed@9 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 14,
+                "symbol": "GET /panel@13 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/main.ts",
+      "line": 1,
+      "reason": "bootstrap-not-found",
+      "hint": "Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.",
+      "symbol": "bootstrap",
+      "service": "jobs"
+    },
+    {
+      "file": "src/pollers.ts",
+      "line": 15,
+      "reason": "call-through-token",
+      "hint": "Cannot follow a value provided for CATALOG_API; provide it with useClass to make calls visible.",
+      "symbol": "Poller.poll -> this.api.get",
+      "meta": {
+        "cause": "untyped-di-token"
+      },
+      "service": "jobs"
+    },
+    {
+      "file": "src/pollers.ts",
+      "line": 29,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "Reader.read -> this.api.get",
+      "meta": {
+        "cause": "untyped-parameter"
+      },
+      "service": "jobs"
+    },
+    {
+      "file": "src/senders.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "jobs"
+    },
+    {
+      "file": "src/senders.ts",
+      "line": 23,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "jobs"
+    },
+    {
+      "file": "src/status.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "jobs"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 5,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /health@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 5,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 6,
+                "symbol": "GET /health@5 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 10,
+                "symbol": "GET /feed@9 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 14,
+                "symbol": "GET /panel@13 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "stock"
+    },
+    {
+      "file": "src/pages.jsx",
+      "line": 31,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/pages.jsx",
+      "line": 41,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    }
+  ]
+}

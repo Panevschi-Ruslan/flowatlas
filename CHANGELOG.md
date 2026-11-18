@@ -406,6 +406,28 @@ only one of them moved.
   name chosen when the app is synthesized, unread with the reason
   `context`, rather than a generated name; a stage name and a stack's
   region keep P298's reading.
+- **Instances a framework makes, receivers read through parts, and
+  untyped parameters written over (P342).** An element written with a
+  component as its tag (`<Feed client={api} />`) is that component's
+  instance, its attributes the props: a request a function component makes
+  through a destructured `client` or `props.client`, or a class component
+  through `this.props.client` in `componentDidMount`, is placed at the
+  function rendering each element under the base of the client it hands.
+  A class a NestJS module lists as a provider (`providers: [Poller]`, `{
+  provide: Reader, useClass: StockReader }`) is the instance the injector
+  makes, each constructor parameter handed what the module provides for its
+  `@Inject(token)` or its type (`useValue`, what `useFactory` returns, a
+  class listed or `useClass`), a parameter handed on to `super(...)`
+  followed up to the field it fills. An untyped receiver is followed
+  through a member of an object (`options.reader.health()`,
+  `this.deps.client.get()`), a value a function returns (`make().health()`,
+  `const r = readerOf(api); r.health()`) and an element of a list
+  (`readers[0]`, `for (const r of readers)`, `readers.forEach((r) => ...)`,
+  one `push`ed), as a call of the method and as the instance a request is
+  placed at, bounded in parts as in values. `function setup(m) {
+  Object.assign(m, { queue }) }` and `m.queue = ...` on a parameter typed as
+  nothing count for the field where a caller hands it an instance of the
+  class.
 - **A pair's key, an entry handed beside its store, a receiver of several
   instances, and an instance made where it is read (P338).** The key of a
   `[key, entry]` pair is bound to the key its entry is kept under - a

@@ -854,6 +854,62 @@ describe('a method called through a receiver the checker types as nothing (P336)
     expect(sitesOf(SOURCE, 'Other')).toEqual(['probe.health() undecided', 'thing.health() runs']);
     expect(sitesOf(SOURCE, 'loose')).toEqual(['target.health() runs']);
   });
+
+  it('follows the receiver into a member of an object, a value a function returns and an element of a list (P342)', () => {
+    const source = [
+      'class Reader { health() { return 1; } }',
+      'class Other { health() { return 2; } }',
+      'function viaOptions(options) { return options.reader.health(); }',
+      'viaOptions({ reader: new Reader() });',
+      'class Deps { constructor(deps) { this.deps = deps; } run() { return this.deps.client.health(); } }',
+      'new Deps({ client: new Reader() });',
+      'function viaFactory(make) { return make().health(); }',
+      'viaFactory(() => new Reader());',
+      'function viaSource(source) { const got = source.get(); return got.health(); }',
+      'viaSource({ get() { return new Reader(); } });',
+      'function first(readers) { return readers[0].health(); }',
+      'first([new Reader()]);',
+      'function every(readers) { for (const each of readers) each.health(); }',
+      'every([new Reader(), new Other()]);',
+      'function walk(readers) { readers.forEach((one) => one.health()); }',
+      'walk([new Other()]);',
+      'function taken({ deps: { reader } }) { return reader.health(); }',
+      'taken({ deps: { reader: new Reader() } });',
+      'function filled(made) { const list = []; list.push(made); return list.at(0).health(); }',
+      'filled(new Reader());',
+    ].join('\n');
+    expect(sitesOf(source, 'Reader')).toEqual([
+      'each.health() undecided',
+      'got.health() runs',
+      'list.at(0).health() runs',
+      'make().health() runs',
+      'options.reader.health() runs',
+      'reader.health() runs',
+      'readers[0].health() runs',
+      'this.deps.client.health() runs',
+    ]);
+    expect(sitesOf(source, 'Other')).toEqual(['each.health() undecided', 'one.health() runs']);
+  });
+
+  it('reads a component\'s props as what each element written with it as its tag hands it (P342)', () => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true, checkJs: false, jsx: 1 } });
+    const file = project.createSourceFile(
+      'a.jsx',
+      [
+        'class Reader { health() { return 1; } }',
+        'function Feed({ reader }) { reader.health(); return null; }',
+        'function Panel(props) { props.reader.health(); return null; }',
+        'class Board extends Base { show() { return this.props.reader.health(); } }',
+        'export const page = () => <div><Feed reader={new Reader()} /><Panel reader={new Reader()} /><Board reader={new Reader()} /></div>;',
+      ].join('\n'),
+    );
+    const method = file.getClassOrThrow('Reader').getMethodOrThrow('health');
+    expect(callSitesOf(method).map((call) => `${call.getText()} ${dispatchOf(call, method)}`).sort()).toEqual([
+      'props.reader.health() runs',
+      'reader.health() runs',
+      'this.props.reader.health() runs',
+    ]);
+  });
 });
 
 describe('a function a library composes into another (P285)', () => {

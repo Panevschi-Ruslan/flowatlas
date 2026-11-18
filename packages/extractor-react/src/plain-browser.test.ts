@@ -495,6 +495,50 @@ describe('plain browser code (P284)', () => {
     expect(graph.unresolved.filter((row) => row.reason === 'api-client-base-unread')).toEqual([]);
   });
 
+  it('follows an untyped receiver through a member of an object, a value a function returns and an element of a list out to each caller (P342)', () => {
+    const graph = read({
+      '/js/api.js': [
+        "import axios from 'axios';",
+        "const catalogApi = axios.create({ baseURL: 'http://localhost:4600' });",
+        "const stockApi = axios.create({ baseURL: 'http://localhost:4700' });",
+        'class Reader {',
+        '  constructor(api) { this.api = api; }',
+        '  read(path) { return this.api.get(path); }',
+        "  health() { return this.read('/health'); }",
+        '}',
+        'function viaOptions(options) { return options.reader.health(); }',
+        'function one() { return viaOptions({ reader: new Reader(catalogApi) }); }',
+        'function viaFactory(make) { return make().health(); }',
+        'function two() { return viaFactory(() => new Reader(stockApi)); }',
+        'function first(readers) { return readers[0].health(); }',
+        'function three() { return first([new Reader(catalogApi)]); }',
+        'function every(readers) { for (const each of readers) each.health(); }',
+        'function four() { return every([new Reader(stockApi)]); }',
+        'function walk(readers) { readers.forEach((each) => each.health()); }',
+        'function five() { return walk([new Reader(catalogApi)]); }',
+        'function taken({ reader }) { return reader.health(); }',
+        'function six() { return taken({ reader: new Reader(stockApi) }); }',
+        'class Deps { constructor(deps) { this.deps = deps; } run() { return this.deps.client.health(); } }',
+        'function seven() { return new Deps({ client: new Reader(catalogApi) }).run(); }',
+        'function made(api) { return new Reader(api); }',
+        'function eight() { const reader = made(stockApi); return reader.health(); }',
+      ].join('\n'),
+    });
+    const label = (id: string): string | undefined => graph.nodes.find((node) => node.id === id)?.label;
+    const found = requests(graph).map((node) => [label(graph.edges.find((edge) => edge.to === node.id && edge.type === 'calls')?.from ?? ''), node.meta?.['host'], node.meta?.['path']]);
+    expect(found.map((each) => each.join(' ')).sort()).toEqual([
+      'eight localhost:4700 /health',
+      'five localhost:4600 /health',
+      'four localhost:4700 /health',
+      'one localhost:4600 /health',
+      'seven localhost:4600 /health',
+      'six localhost:4700 /health',
+      'three localhost:4600 /health',
+      'two localhost:4700 /health',
+    ]);
+    expect(graph.unresolved.filter((row) => row.reason === 'api-client-base-unread')).toEqual([]);
+  });
+
   it('places a request in a method a framework calls at the instance registered with it, and says so where no registered instance is read (P336)', () => {
     const graph = read({
       '/src/poller.ts': [

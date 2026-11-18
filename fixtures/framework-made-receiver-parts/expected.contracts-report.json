@@ -1,0 +1,429 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-18T12:41:21.306Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:jobs#src/senders.ts:24:12",
+        "to": "channel:alerts",
+        "type": "emits"
+      },
+      "edgeKey": "channel:alerts|emits|producer:jobs#src/senders.ts:24:12",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:alerts is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:jobs#src/senders.ts:8:12",
+        "to": "channel:digests",
+        "type": "emits"
+      },
+      "edgeKey": "channel:digests|emits|producer:jobs#src/senders.ts:8:12",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:digests is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:jobs#src/pollers.ts:15:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:jobs#src/pollers.ts:15:12|hits|entry:catalog:http:GET:/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/pollers.ts:Poller.poll declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:jobs#src/pollers.ts:15:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:jobs#src/pollers.ts:15:12|hits|entry:catalog:http:GET:/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "jobs#src/pollers.ts:Poller.poll declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:jobs#src/pollers.ts:47:12@29:12",
+        "to": "entry:stock:http:GET:/levels",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:jobs#src/pollers.ts:47:12@29:12|hits|entry:stock:http:GET:/levels",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/pollers.ts:Levels.onModuleInit declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:jobs#src/pollers.ts:47:12@29:12",
+        "to": "entry:stock:http:GET:/levels",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:jobs#src/pollers.ts:47:12@29:12|hits|entry:stock:http:GET:/levels",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "stock#src/index.ts:GET /levels@21 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:jobs#src/pollers.ts:53:10@29:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:jobs#src/pollers.ts:53:10@29:12|hits|entry:catalog:http:GET:/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/pollers.ts:catalogHealth declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:jobs#src/pollers.ts:53:10@29:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:jobs#src/pollers.ts:53:10@29:12|hits|entry:catalog:http:GET:/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "jobs#src/pollers.ts:catalogHealth declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/health.js:24:10@10:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/health.js:24:10@10:12|hits|entry:catalog:http:GET:/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/health.js:catalogOptions declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/health.js:24:10@10:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/health.js:24:10@10:12|hits|entry:catalog:http:GET:/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/health.js:catalogOptions declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/health.js:33:10@10:12",
+        "to": "entry:stock:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/health.js:33:10@10:12|hits|entry:stock:http:GET:/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/health.js:stockFactory declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/health.js:33:10@10:12",
+        "to": "entry:stock:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/health.js:33:10@10:12|hits|entry:stock:http:GET:/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/health.js:stockFactory declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/health.js:42:10@10:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/health.js:42:10@10:12|hits|entry:catalog:http:GET:/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/health.js:catalogFirst declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/health.js:42:10@10:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/health.js:42:10@10:12|hits|entry:catalog:http:GET:/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/health.js:catalogFirst declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/health.js:50:10@10:12",
+        "to": "entry:stock:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/health.js:50:10@10:12|hits|entry:stock:http:GET:/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/health.js:stockEach declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/health.js:50:10@10:12",
+        "to": "entry:stock:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/health.js:50:10@10:12|hits|entry:stock:http:GET:/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/health.js:stockEach declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/health.js:58:10@10:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/health.js:58:10@10:12|hits|entry:catalog:http:GET:/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/health.js:catalogWalk declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/health.js:58:10@10:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/health.js:58:10@10:12|hits|entry:catalog:http:GET:/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/health.js:catalogWalk declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/health.js:73:10@10:12",
+        "to": "entry:stock:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/health.js:73:10@10:12|hits|entry:stock:http:GET:/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/health.js:stockDeps declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/health.js:73:10@10:12",
+        "to": "entry:stock:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/health.js:73:10@10:12|hits|entry:stock:http:GET:/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/health.js:stockDeps declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/health.js:82:18@10:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/health.js:82:18@10:12|hits|entry:catalog:http:GET:/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/health.js:catalogMade declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/health.js:82:18@10:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/health.js:82:18@10:12|hits|entry:catalog:http:GET:/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/health.js:catalogMade declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:34:13@7:5",
+        "to": "entry:catalog:http:GET:/feed",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:34:13@7:5|hits|entry:catalog:http:GET:/feed",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages.jsx:CatalogPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:34:13@7:5",
+        "to": "entry:catalog:http:GET:/feed",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:34:13@7:5|hits|entry:catalog:http:GET:/feed",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/index.ts:GET /feed@9 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:35:14@15:5",
+        "to": "entry:catalog:http:GET:/panel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:35:14@15:5|hits|entry:catalog:http:GET:/panel",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages.jsx:CatalogPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:35:14@15:5",
+        "to": "entry:catalog:http:GET:/panel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:35:14@15:5|hits|entry:catalog:http:GET:/panel",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/index.ts:GET /panel@13 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:36:7@23:12",
+        "to": "entry:catalog:http:GET:/list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:36:7@23:12|hits|entry:catalog:http:GET:/list",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages.jsx:CatalogPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:36:7@23:12",
+        "to": "entry:catalog:http:GET:/list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:36:7@23:12|hits|entry:catalog:http:GET:/list",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/index.ts:GET /list@17 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:44:13@7:5",
+        "to": "entry:stock:http:GET:/feed",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:44:13@7:5|hits|entry:stock:http:GET:/feed",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages.jsx:StockPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:44:13@7:5",
+        "to": "entry:stock:http:GET:/feed",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:44:13@7:5|hits|entry:stock:http:GET:/feed",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "stock#src/index.ts:GET /feed@9 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:45:14@15:5",
+        "to": "entry:stock:http:GET:/panel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:45:14@15:5|hits|entry:stock:http:GET:/panel",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages.jsx:StockPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:45:14@15:5",
+        "to": "entry:stock:http:GET:/panel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:45:14@15:5|hits|entry:stock:http:GET:/panel",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "stock#src/index.ts:GET /panel@13 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:46:7@23:12",
+        "to": "entry:stock:http:GET:/list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:46:7@23:12|hits|entry:stock:http:GET:/list",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages.jsx:StockPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:46:7@23:12",
+        "to": "entry:stock:http:GET:/list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:46:7@23:12|hits|entry:stock:http:GET:/list",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "stock#src/index.ts:GET /list@17 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 34,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

@@ -463,6 +463,20 @@ class Mailer extends Base { open() { this.queue = new Queue('other'); } send(job
     expect(based("class Other { queue?: Queue; }\nconst other = new Other();\nObject.assign(other, { queue: new Queue('other') });\nother.queue = new Queue('other');")).toEqual(["'base'"]);
   });
 
+  it('follows a parameter typed as nothing that is written over to the instances its callers hand it (P342)', () => {
+    const MADE: NameLocator = { kind: 'receiver-constructed-path', class: 'Queue', path: [] };
+    const base = 'class Mailer { queue?: Queue; send(job: string) { return this.queue.add(job); } }';
+    const read = (rest: string): (string | undefined)[] => slots(callTo(parse(`${base}\n${rest}`), 'add'), MADE);
+    expect(read("function setup(m) { Object.assign(m, { queue: new Queue('assigned') }); }\nconst mailer = new Mailer();\nsetup(mailer);")).toEqual(["'assigned'"]);
+    expect(read("function setup(m) { m.queue = new Queue('plain'); }\nsetup(new Mailer());")).toEqual(["'plain'"]);
+    // Handed on, one caller further out.
+    expect(read("function setup(m) { m['queue'] = new Queue('keyed'); }\nfunction boot(target) { setup(target); }\nboot(new Mailer());")).toEqual(["'keyed'"]);
+    // Handed only another class's instance, or by nobody: not this field.
+    const based = (rest: string): (string | undefined)[] => slots(callTo(parse(`class Mailer { queue = new Queue('base'); send(job: string) { return this.queue.add(job); } }\n${rest}`), 'add'), MADE);
+    expect(based("class Other { queue?: Queue; }\nfunction setup(m) { Object.assign(m, { queue: new Queue('other') }); m.queue = new Queue('other'); }\nsetup(new Other());")).toEqual(["'base'"]);
+    expect(based("function setup(m) { m.queue = new Queue('loose'); }")).toEqual(["'base'"]);
+  });
+
   it('reads a read through a name that may stand for two classes as either class\'s own field, saying which (P332)', () => {
     const MADE: NameLocator = { kind: 'receiver-constructed-path', class: 'Queue', path: [] };
     const read = (extra: string): { text?: string; heldIn?: string }[] => {

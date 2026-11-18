@@ -19,7 +19,7 @@ import { classMembersOf } from '../di/class-members.js';
 import { functionOf, methodNamedOn } from '../di/member-call.js';
 import { evaluateExpression } from '../static-value.js';
 import { registryOf } from '../stated-origin.js';
-import { callSitesOf, returnedExpression } from '../trace.js';
+import { callSitesOf, returnedExpression, untypedHoldsInstanceOf } from '../trace.js';
 
 /**
  * Where a library writes the name of the thing a call is addressed to.
@@ -1185,6 +1185,35 @@ const assignsOverValues = (from: TsNode): CallExpression[] =>
       return found;
     });
 
+/** Each `x.<field> = ...` and `x['field'] = ...` of each file met over a value typed as nothing, by the field's name, found once per file (P342). */
+const UNTYPED_WRITES = new WeakMap<SourceFile, Map<string, TsNode[]>>();
+
+/** Every write of a member named `name` over a value the checker types as nothing, in the program's own files: the access written (P342). */
+const untypedWritesOf = (from: TsNode, name: string): TsNode[] =>
+  from
+    .getProject()
+    .getSourceFiles()
+    .flatMap((file) => {
+      if (file.isDeclarationFile() || file.isInNodeModules()) return [];
+      let known = UNTYPED_WRITES.get(file);
+      if (known === undefined) {
+        known = new Map<string, TsNode[]>();
+        for (const binary of file.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
+          if (binary.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) continue;
+          const left = peeled(binary.getLeft());
+          if (!Node.isPropertyAccessExpression(left) && !Node.isElementAccessExpression(left)) continue;
+          const object = peeled(left.getExpression());
+          if (Node.isThisExpression(object)) continue;
+          const written = accessed(left)?.name;
+          const type = object.getType();
+          if (written === undefined || !(type.isAny() || type.isUnknown())) continue;
+          known.set(written, [...(known.get(written) ?? []), left]);
+        }
+        UNTYPED_WRITES.set(file, known);
+      }
+      return known.get(name) ?? [];
+    });
+
 /** Whether a value is known by its type to be an instance of `owner` or of a class extending it (P336). */
 const instanceOf = (value: TsNode, owner: TsNode): boolean => {
   const type = peeled(value).getType();
@@ -1224,9 +1253,18 @@ const outsideWrites = (owner: TsNode, name: string): FieldValues => {
     else if (write !== undefined) values.push(write.value);
   }
   if (holder !== undefined) {
+    // `m.queue = ...` on a value typed as nothing, which no reference links to the field, where it may hold an instance (P342).
+    for (const access of untypedWritesOf(holder, name)) {
+      const object = (access as PropertyAccessExpression).getExpression();
+      if (!untypedHoldsInstanceOf(object, holder)) continue;
+      const write = writeAt(access);
+      if (write === 'changed') changed = true;
+      else if (write !== undefined) values.push(write.value);
+    }
     for (const call of assignsOverValues(holder)) {
       const [target, ...sources] = call.getArguments();
-      if (target === undefined || !instanceOf(target, holder)) continue;
+      // A target typed as nothing, a parameter `setup(m)` among them, by what it is handed (P342).
+      if (target === undefined || !(instanceOf(target, holder) || untypedHoldsInstanceOf(target, holder))) continue;
       const given = laidOver(sources, name, NO_BINDINGS, 0);
       values.push(...given.values);
       changed ||= given.changed;

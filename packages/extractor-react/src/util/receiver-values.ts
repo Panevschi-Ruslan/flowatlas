@@ -1,6 +1,7 @@
-import { argumentAlong, callSitesOf, decoratorModule, handedByEachCall } from '@flowatlas/core';
+import { argumentAlong, callSitesOf, decoratorModule, destructuredFrom, elementsOfTag, handedByEachCall, returnedBy } from '@flowatlas/core';
 import type { CallExpression, ClassDeclaration, MethodDeclaration, NewExpression, Node as TsNode, ParameterDeclaration, PropertyDeclaration } from 'ts-morph';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
+import { attributesOf, attributeValues, classMadeByFramework, frameworkMade, injectedInto, isTagInstance, propsHandedTo } from './framework-made.js';
 
 /**
  * What a request's receiver may hold, where the compiler does not say (P301).
@@ -61,6 +62,8 @@ export const fieldValues = (owner: TsNode, field: string): TsNode[] => {
     for (const constructor of owner.getConstructors()) {
       for (const parameter of constructor.getParameters()) if (parameter.isParameterProperty() && parameter.getName() === field) values.push(parameter.getNameNode());
     }
+    // A component's props: what each element written with it as its tag hands it (P342).
+    if (field === 'props') values.push(...elementsOfTag(owner));
   }
   if (Node.isObjectLiteralExpression(owner)) {
     const property = owner.getProperty(field);
@@ -106,13 +109,25 @@ export const handedAt = (parameter: ParameterDeclaration): Handed[] => {
   const index = Node.isParametered(owner) ? owner.getParameters().indexOf(parameter) : -1;
   if (index < 0) return [];
   const fallback = parameter.getInitializer();
+  // What a renderer hands a component's props, and the injector a provider's parameter (P342).
+  const framework: Handed[] = [...propsHandedTo(parameter), ...(Node.isConstructorDeclaration(owner) ? injectedInto(parameter) : [])].map((argument) => ({ call: undefined, argument }));
   if (Node.isConstructorDeclaration(owner)) {
-    return constructions(owner.getParent()).flatMap((made) => {
-      const argument = made.getArguments()[index];
-      return argument === undefined ? (fallback === undefined ? [] : [{ call: made, argument: fallback }]) : [{ call: made, argument }];
+    const cls = owner.getParent();
+    // Each `new` of the class, and of one extending it with no constructor of its own (P342).
+    const classes = [cls, ...(Node.isClassDeclaration(cls) ? cls.getDerivedClasses().filter((each) => superCallIn(each) === undefined && each.getConstructors().length === 0) : [])];
+    const made = classes.flatMap((each) => constructions(each)).flatMap((each): Handed[] => {
+      const argument = each.getArguments()[index];
+      return argument === undefined ? (fallback === undefined ? [] : [{ call: each, argument: fallback }]) : [{ call: each, argument }];
     });
+    // What each class extending it hands `super(...)` (P342).
+    const supered = (Node.isClassDeclaration(cls) ? cls.getDerivedClasses() : []).flatMap((each): Handed[] => {
+      const call = superCallIn(each);
+      const argument = call?.getArguments()[index];
+      return call === undefined || argument === undefined || Node.isSpreadElement(argument) ? [] : [{ call, argument }];
+    });
+    return [...made, ...supered, ...framework];
   }
-  const calls: Handed[] = handedByEachCall(parameter);
+  const calls: Handed[] = [...handedByEachCall(parameter), ...framework];
   return fallback === undefined || calls.some((each) => each.argument === fallback) ? calls : [...calls, { call: undefined, argument: fallback }];
 };
 
@@ -164,6 +179,23 @@ export const receiverValues = (isLeaf: (value: TsNode) => boolean) => {
       if (objects.length === 0 || members.some((member) => member === undefined)) return [target];
       return members.flatMap((member) => (member ?? []).flatMap((value) => valuesOf(value, depth + 1, seen)));
     }
+    // An element of a list, what a function returns, a destructured name (P342).
+    const held = heldIn(target);
+    if (held !== undefined) {
+      let current = held.from.flatMap((each) => valuesOf(each, depth + 1, seen));
+      if (current.length === 0) return [target];
+      for (const part of held.parts) {
+        const next: TsNode[] = [];
+        for (const object of current) {
+          // An object that does not say - a spread, a value not read - is the name itself there, a value nothing knows.
+          const values = partOf(object, part);
+          if (values === undefined) next.push(target);
+          else next.push(...values.flatMap((value) => valuesOf(value, depth + 1, seen)));
+        }
+        current = next;
+      }
+      return current;
+    }
     const key = keyOf(target);
     if (key === undefined) return [target];
     if (seen.has(key)) return [];
@@ -185,24 +217,163 @@ export const receiverValues = (isLeaf: (value: TsNode) => boolean) => {
  * the object is no such thing or does not name the member.
  */
 const memberWritten = (object: TsNode, member: string): TsNode[] | undefined => {
+  // The props an element hands its component, and each of them (P342).
+  if (object.getKind() === SyntaxKind.JsxAttributes) return attributeValues(object, member);
+  if (isTagInstance(object) && member === 'props') {
+    const attributes = attributesOf(object);
+    return attributes === undefined ? undefined : [attributes];
+  }
   if (Node.isObjectLiteralExpression(object)) {
     const property = object.getProperty(member);
     if (property !== undefined && Node.isPropertyAssignment(property)) {
       const written = property.getInitializer();
       return written === undefined ? undefined : [written];
     }
+    if (property !== undefined && Node.isMethodDeclaration(property)) return [property];
     if (property === undefined || !Node.isShorthandPropertyAssignment(property)) return undefined;
     const declaration = declarationNamed(property.getNameNode());
     return declaration !== undefined && (Node.isVariableDeclaration(declaration) || Node.isParameterDeclaration(declaration)) ? [declaration.getNameNode()] : undefined;
   }
   const owner = classMade(object);
   const given = owner === undefined ? [] : fieldValues(owner, member);
-  return given.length === 0 ? undefined : given;
+  if (given.length > 0) return given;
+  // A method of the instance's class, called for what it returns (P342).
+  const method = owner?.getMethod(member);
+  return method === undefined ? undefined : [method];
+};
+
+/** The part of a value that is an element of a list (P342). */
+const ELEMENT = '[]';
+
+/** The part of a value that is what calling it returns (P342). */
+const RETURNED = '()';
+
+/** How many parts deep a destructured name is followed (P342). */
+const MOST_PARTS = 4;
+
+/** The methods of a list that answer one of its elements (P342). */
+const ELEMENT_PICKS: ReadonlySet<string> = new Set(['find', 'findLast', 'at', 'pop', 'shift']);
+
+/** The methods of a list that call the function they are handed with each element, as its first parameter (P342). */
+const ELEMENT_WALKS: ReadonlySet<string> = new Set(['forEach', 'map', 'flatMap', 'filter', 'some', 'every', 'find', 'findLast', 'findIndex', 'findLastIndex']);
+
+/** The function a value is, where it is one written here: a function, an arrow, a method, or a name of a function declared. */
+const functionOf = (value: TsNode): TsNode | undefined => {
+  if (Node.isArrowFunction(value) || Node.isFunctionExpression(value) || Node.isFunctionDeclaration(value) || Node.isMethodDeclaration(value)) return value;
+  const declaration = declarationNamed(value);
+  return declaration !== undefined && Node.isFunctionDeclaration(declaration) ? declaration : undefined;
+};
+
+/**
+ * What one part of a value holds (P342): an element of a list written in
+ * place, what a function returns, a member of an object or an instance (see
+ * {@link memberWritten}). Nothing where the value does not say - a list
+ * spreading another included.
+ */
+const partOf = (object: TsNode, part: string): TsNode[] | undefined => {
+  if (part === ELEMENT) {
+    if (!Node.isArrayLiteralExpression(object)) return undefined;
+    const elements = object.getElements();
+    return elements.some((each) => Node.isSpreadElement(each)) ? undefined : elements;
+  }
+  if (part === RETURNED) {
+    const fn = functionOf(object);
+    const returned = fn === undefined ? undefined : returnedBy(fn);
+    return returned === undefined || returned.length === 0 ? undefined : returned;
+  }
+  return memberWritten(object, part);
+};
+
+/** Where a value is part of another (P342): the values it is taken from, and the parts down to it. */
+interface HeldIn {
+  readonly from: readonly TsNode[];
+  readonly parts: readonly string[];
+  /** Whether `from` is what callers hand a parameter, each said to be handed where it is written. */
+  readonly handed: boolean;
+}
+
+/** The list a function handed to a walk over it takes its elements from, at the parameter the element comes in. */
+const walkedList = (parameter: ParameterDeclaration): TsNode | undefined => {
+  const fn = parameter.getParent();
+  if (!Node.isArrowFunction(fn) && !Node.isFunctionExpression(fn)) return undefined;
+  const call = fn.getParent();
+  if (call === undefined || !Node.isCallExpression(call) || call.getArguments()[0] !== fn) return undefined;
+  const callee = unwrap(call.getExpression());
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const index = fn.getParameters().indexOf(parameter);
+  const walks = (ELEMENT_WALKS.has(callee.getName()) && index === 0) || (callee.getName() === 'reduce' && index === 1);
+  return walks ? callee.getExpression() : undefined;
+};
+
+/**
+ * What a value is part of, where it is one (P342): an element of a list
+ * (`readers[0]`, `readers.find(...)`, `for (const r of readers)`,
+ * `readers.forEach((r) => ...)`), what a function returns (`makeReader()`,
+ * `source.get()`, `this.make()`), a destructured name (`{ client }` of a
+ * parameter, `{ deps: { client } }` of a variable).
+ */
+const heldIn = (target: TsNode): HeldIn | undefined => {
+  if (Node.isElementAccessExpression(target)) {
+    const index = target.getArgumentExpression();
+    const named = index !== undefined && (Node.isStringLiteral(index) || Node.isNoSubstitutionTemplateLiteral(index)) ? index.getLiteralText() : ELEMENT;
+    return { from: [target.getExpression()], parts: [named], handed: false };
+  }
+  if (Node.isCallExpression(target)) {
+    const callee = unwrap(target.getExpression());
+    if (Node.isPropertyAccessExpression(callee) && ELEMENT_PICKS.has(callee.getName())) return { from: [callee.getExpression()], parts: [ELEMENT], handed: false };
+    if (isThisField(callee)) {
+      const owner = thisOwnerOf(callee);
+      const method = owner !== undefined && (Node.isClassDeclaration(owner) || Node.isClassExpression(owner)) ? owner.getMethod(callee.getName()) : undefined;
+      return method === undefined ? undefined : { from: [method], parts: [RETURNED], handed: false };
+    }
+    return { from: [callee], parts: [RETURNED], handed: false };
+  }
+  if (!Node.isIdentifier(target)) return undefined;
+  const declaration = declarationNamed(target);
+  if (declaration !== undefined && Node.isParameterDeclaration(declaration)) {
+    const list = walkedList(declaration);
+    return list === undefined ? undefined : { from: [list], parts: [ELEMENT], handed: false };
+  }
+  let root: TsNode | undefined = declaration;
+  let parts: string[] = [];
+  if (declaration !== undefined && Node.isBindingElement(declaration)) {
+    const from = destructuredFrom(declaration);
+    if (from === undefined || from.parts.length > MOST_PARTS) return undefined;
+    root = from.root;
+    parts = from.parts;
+  }
+  if (root === undefined) return undefined;
+  if (Node.isVariableDeclaration(root)) {
+    const statement = root.getParent()?.getParent();
+    if (statement !== undefined && Node.isForOfStatement(statement)) return { from: [statement.getExpression()], parts: [ELEMENT, ...parts], handed: false };
+    const written = root.getInitializer();
+    return parts.length === 0 || written === undefined ? undefined : { from: [written], parts, handed: false };
+  }
+  if (!Node.isParameterDeclaration(root) || parts.length === 0) return undefined;
+  const list = walkedList(root);
+  if (list !== undefined) return { from: [list], parts: [ELEMENT, ...parts], handed: false };
+  return { from: handedTo(root), parts, handed: true };
+};
+
+/** The values a value may hold where nothing along calls is asked: an object, an instance, a list, a function (P342). */
+const plainValues = (value: TsNode): TsNode[] =>
+  receiverValues((each) => Node.isObjectLiteralExpression(each) || Node.isNewExpression(each) || Node.isArrayLiteralExpression(each) || functionOf(each) !== undefined || isTagInstance(each) || each.getKind() === SyntaxKind.JsxAttributes || classMadeByFramework(each) !== undefined)(value);
+
+/** What a part of what a value holds holds (P342), each value it may hold read; nothing where one does not say. */
+const partOfHeld = (value: TsNode, part: string): TsNode[] | undefined => {
+  const out: TsNode[] = [];
+  for (const object of plainValues(value)) {
+    const found = partOf(object, part);
+    if (found === undefined) return undefined;
+    out.push(...found);
+  }
+  return out.length === 0 ? undefined : out;
 };
 
 /** The class of this repository a `new` makes an instance of. */
 const classMade = (object: TsNode): ClassDeclaration | undefined => {
-  if (!Node.isNewExpression(object)) return undefined;
+  // An instance a renderer or the injector makes (P342).
+  if (!Node.isNewExpression(object)) return classMadeByFramework(object);
   const made = unwrap(object.getExpression());
   const symbol = Node.isIdentifier(made) ? made.getSymbol() : undefined;
   const owner = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
@@ -288,7 +459,23 @@ const declarationNamed = (name: TsNode): TsNode | undefined => {
 const objectsAlong = (value: TsNode, hops: readonly CallExpression[], depth: number): Along[] | undefined => {
   if (depth > DEPTH) return undefined;
   const target = unwrap(value);
-  if (Node.isObjectLiteralExpression(target) || Node.isNewExpression(target)) return [{ value: target, hops }];
+  if (Node.isObjectLiteralExpression(target) || Node.isNewExpression(target) || isTagInstance(target) || target.getKind() === SyntaxKind.JsxAttributes || classMadeByFramework(target) !== undefined) return [{ value: target, hops }];
+  // An element of a list, what a function returns, a destructured name (P342), with nothing along the calls asked.
+  const held = heldIn(target);
+  if (held !== undefined) {
+    let current: TsNode[] = held.from.flatMap((each) => plainValues(each));
+    for (const part of held.parts) {
+      const next: TsNode[] = [];
+      for (const object of current) {
+        const found = partOf(object, part);
+        if (found === undefined) return undefined;
+        next.push(...found.flatMap((each) => plainValues(each)));
+      }
+      current = next;
+    }
+    const objects = current.filter((each) => Node.isObjectLiteralExpression(each) || Node.isNewExpression(each) || isTagInstance(each) || classMadeByFramework(each) !== undefined);
+    return objects.length === 0 || objects.length !== current.length ? undefined : objects.map((each) => ({ value: each, hops }));
+  }
   const declaration = declarationNamed(target);
   if (declaration !== undefined && Node.isParameterDeclaration(declaration)) {
     const handed = handedAlongHops(declaration, hops);
@@ -328,21 +515,84 @@ const membersOf = (objects: readonly Along[], member: string, depth: number): Ts
       values.push(...(valuesAlong(written, hops, depth + 1) ?? [written]));
       continue;
     }
-    const owner = classMade(object);
-    if (owner === undefined || !Node.isNewExpression(object)) return undefined;
-    const given = fieldValues(owner, member);
-    if (given.length === 0) return undefined;
-    for (const value of given) {
-      const handed = constructorParameterOf(value, owner);
-      if (handed === undefined) {
-        values.push(value);
-        continue;
-      }
-      const argument = object.getArguments()[handed.index] ?? handed.parameter.getInitializer();
-      if (argument !== undefined) values.push(...(valuesAlong(argument, hops, depth + 1) ?? [argument]));
+    // The props an element hands its component, and each of them (P342).
+    if (object.getKind() === SyntaxKind.JsxAttributes || (isTagInstance(object) && member === 'props')) {
+      const written = memberWritten(object, member);
+      if (written === undefined) return undefined;
+      values.push(...written.flatMap((each) => valuesAlong(each, hops, depth + 1) ?? [each]));
+      continue;
     }
+    const given = lineageMember(object, member);
+    if (given === undefined) return undefined;
+    for (const value of given) values.push(...(valuesAlong(value, hops, depth + 1) ?? [value]));
   }
   return values;
+};
+
+/** The `super(...)` call a class's constructor makes, where it has one. */
+const superCallIn = (cls: ClassDeclaration): CallExpression | undefined => {
+  const constructor = cls.getConstructors()[0];
+  return constructor
+    ?.getDescendantsOfKind(SyntaxKind.CallExpression)
+    .find((call) => call.getExpression().getKind() === SyntaxKind.SuperKeyword);
+};
+
+/**
+ * What a member of one instance holds, through the classes its class
+ * extends (P342): the field's values in the first class of the lineage
+ * that gives it - a constructor's parameter being what this instance's
+ * `new`, element or listing hands it, carried up each `super(...)` - or the
+ * method of its name. Nothing where no class read gives it.
+ */
+const lineageMember = (made: TsNode, member: string): TsNode[] | undefined => {
+  let cls: ClassDeclaration | undefined = classMade(made);
+  // What this instance hands the constructor of the class at hand, by parameter.
+  let handedAt: (handed: { index: number; parameter: ParameterDeclaration }) => TsNode[] = (handed) => argumentsOf(made, handed);
+  for (let depth = 0; depth < DEPTH && cls !== undefined; depth += 1) {
+    const owner: ClassDeclaration = cls;
+    const given = fieldValues(owner, member);
+    if (given.length > 0) {
+      const at = handedAt;
+      return given.flatMap((value) => {
+        const handed = constructorParameterOf(value, owner);
+        return handed === undefined ? [value] : at(handed);
+      });
+    }
+    const method = owner.getMethod(member);
+    if (method !== undefined) return [method];
+    const base = owner.getBaseClass();
+    if (base === undefined || !Node.isClassDeclaration(base)) return undefined;
+    const call = superCallIn(owner);
+    if (call !== undefined) {
+      const outer = handedAt;
+      handedAt = (handed) => {
+        const argument = call.getArguments()[handed.index];
+        if (argument === undefined || Node.isSpreadElement(argument)) return [];
+        const passed = constructorParameterOf(argument, owner);
+        return passed === undefined ? [argument] : outer(passed);
+      };
+    } else if (owner.getConstructors().length > 0) return undefined;
+    cls = base;
+  }
+  return undefined;
+};
+
+/**
+ * What an instance's constructor is handed at a parameter (P342): what its
+ * `new` writes there; the attributes for a component's props where a
+ * renderer makes it from an element; what the injector provides where a
+ * module lists it.
+ */
+const argumentsOf = (made: TsNode, handed: { index: number; parameter: ParameterDeclaration }): TsNode[] => {
+  if (Node.isNewExpression(made)) {
+    const argument = made.getArguments()[handed.index] ?? handed.parameter.getInitializer();
+    return argument === undefined ? [] : [argument];
+  }
+  if (isTagInstance(made)) {
+    const attributes = handed.index === 0 ? attributesOf(made) : undefined;
+    return attributes === undefined ? [] : [attributes];
+  }
+  return injectedInto(handed.parameter);
 };
 
 /**
@@ -553,10 +803,12 @@ const handedToFramework = (made: TsNode): boolean => {
  * the class, or of one extending it, that is handed to what registers it
  * for the framework (see {@link handedToFramework}).
  */
-export const frameworkInstances = (method: MethodDeclaration | PropertyDeclaration): NewExpression[] => {
+export const frameworkInstances = (method: MethodDeclaration | PropertyDeclaration): TsNode[] => {
   const owner = method.getParent();
   if (owner === undefined || !Node.isClassDeclaration(owner)) return [];
-  return [owner, ...owner.getDerivedClasses()].flatMap((cls) => constructions(cls)).filter(handedToFramework);
+  const classes = [owner, ...owner.getDerivedClasses()];
+  // One the framework makes itself, from an element or a module's listing (P342).
+  return [...classes.flatMap((cls) => constructions(cls)).filter(handedToFramework), ...classes.flatMap((cls) => frameworkMade(cls))];
 };
 
 /** Each placed value of each of several, or nothing where any one is not followed. */
@@ -614,7 +866,8 @@ export const placedOut = (receiver: TsNode, calls: readonly CallExpression[] = [
       });
     }
     const declaration = declarationNamed(target);
-    if (declaration !== undefined && Node.isParameterDeclaration(declaration) && Node.isIdentifier(declaration.getNameNode())) {
+    // A function handed to a walk over a list is handed its elements, read below (P342).
+    if (declaration !== undefined && Node.isParameterDeclaration(declaration) && Node.isIdentifier(declaration.getNameNode()) && walkedList(declaration) === undefined) {
       // A constructor's parameter is what each `new` hands it, read where its field is.
       if (Node.isConstructorDeclaration(declaration.getParent())) return [{ value: target, at }];
       const along = argumentAlong(declaration, hops);
@@ -631,6 +884,19 @@ export const placedOut = (receiver: TsNode, calls: readonly CallExpression[] = [
         const members = memberOfInstance(object.value, target.getName());
         return members === undefined ? undefined : everyPlaced(members, (member) => out(member, [], object.at, depth + 1));
       });
+    }
+    // An element of a list, what a function returns, a destructured name (P342): what it is part of, followed out, then the part.
+    const held = heldIn(target);
+    if (held !== undefined) {
+      let placed = everyPlaced(held.from, (from) => (held.handed ? out(from, [], from, depth + 1) : out(from, hops, at, depth + 1)));
+      for (const part of held.parts) {
+        if (placed === undefined) return undefined;
+        placed = everyPlaced(placed, (each) => {
+          const found = part === ELEMENT || part === RETURNED ? partOfHeld(each.value, part) : memberOfInstance(each.value, part);
+          return found === undefined ? undefined : everyPlaced(found, (value) => out(value, [], each.at, depth + 1));
+        });
+      }
+      return placed;
     }
     return [{ value: target, at }];
   };
