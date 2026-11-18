@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-15T14:55:00.764Z",
+  "builtAt": "2026-11-18T12:33:29.216Z",
   "services": [
     {
       "name": "docs",
@@ -199,8 +199,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {

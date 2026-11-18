@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T18:07:17.260Z",
+  "builtAt": "2026-11-18T12:36:48.217Z",
   "services": [
     {
       "name": "web",
@@ -124,8 +124,7 @@
         "adapter": "express-routes",
         "registration": "app.delete",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -143,8 +142,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -162,8 +160,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {

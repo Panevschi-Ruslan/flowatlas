@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T20:48:39.400Z",
+  "builtAt": "2026-11-18T12:32:52.278Z",
   "services": [
     {
       "name": "web",
@@ -112,8 +112,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -131,8 +130,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -150,8 +148,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -169,8 +166,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -188,8 +184,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -207,8 +202,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -1153,7 +1147,7 @@
       "from": "http_out:jobs#src/index.ts:22:34",
       "to": "entry:stock:http:GET:/health",
       "type": "http_calls",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/index.ts",
       "line": 22,
       "meta": {
@@ -1166,7 +1160,7 @@
       "from": "http_out:jobs#src/index.ts:24:36",
       "to": "entry:catalog:http:GET:/health",
       "type": "http_calls",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/index.ts",
       "line": 24,
       "meta": {
@@ -1179,7 +1173,7 @@
       "from": "http_out:jobs#src/index.ts:26:41",
       "to": "entry:catalog:http:GET:/health",
       "type": "http_calls",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/index.ts",
       "line": 26,
       "meta": {
@@ -1192,7 +1186,7 @@
       "from": "http_out:jobs#src/index.ts:30:21",
       "to": "entry:stock:http:GET:/levels",
       "type": "http_calls",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/index.ts",
       "line": 30,
       "meta": {
@@ -1351,7 +1345,7 @@
       "from": "ui_api_call:web#js/kept.js:17:10@13:10",
       "to": "entry:stock:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/kept.js",
       "line": 17,
       "meta": {
@@ -1364,7 +1358,7 @@
       "from": "ui_api_call:web#js/kept.js:21:10@13:10",
       "to": "entry:catalog:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/kept.js",
       "line": 21,
       "meta": {
@@ -1377,7 +1371,7 @@
       "from": "ui_api_call:web#js/kept.js:25:10@13:10",
       "to": "entry:catalog:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/kept.js",
       "line": 25,
       "meta": {
@@ -1390,7 +1384,7 @@
       "from": "ui_api_call:web#js/kept.js:30:10",
       "to": "entry:stock:http:GET:/levels",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/kept.js",
       "line": 30,
       "meta": {
@@ -1403,7 +1397,7 @@
       "from": "ui_api_call:web#js/kept.js:39:10",
       "to": "entry:catalog:http:GET:/latest/:param",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/kept.js",
       "line": 39,
       "meta": {
@@ -1416,7 +1410,7 @@
       "from": "ui_api_call:web#js/malformed.js:12:10@3:10",
       "to": "entry:stock:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/malformed.js",
       "line": 12,
       "meta": {
@@ -1437,7 +1431,7 @@
       "from": "ui_api_call:web#js/readers.js:16:10@8:12",
       "to": "entry:catalog:http:GET:/latest",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/readers.js",
       "line": 16,
       "meta": {
@@ -1450,7 +1444,7 @@
       "from": "ui_api_call:web#js/readers.js:21:10@8:12",
       "to": "entry:stock:http:GET:/levels",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/readers.js",
       "line": 21,
       "meta": {
@@ -1463,7 +1457,7 @@
       "from": "ui_api_call:web#js/readers.js:30:10@26:10",
       "to": "entry:catalog:http:GET:/latest",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/readers.js",
       "line": 30,
       "meta": {
@@ -1476,7 +1470,7 @@
       "from": "ui_api_call:web#js/readers.js:35:10@26:10",
       "to": "entry:stock:http:GET:/levels",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/readers.js",
       "line": 35,
       "meta": {

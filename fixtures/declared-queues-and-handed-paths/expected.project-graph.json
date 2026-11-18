@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-15T16:12:58.944Z",
+  "builtAt": "2026-11-18T12:21:29.248Z",
   "services": [
     {
       "name": "jobs",
@@ -298,8 +298,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -317,8 +316,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -336,8 +334,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -355,8 +352,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -374,8 +370,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {

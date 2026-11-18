@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "job-queue-layers",
-  "generatedAt": "2026-11-14T18:09:30.173Z",
+  "generatedAt": "2026-11-18T12:24:39.530Z",
   "nodes": [
     {
       "id": "channel:archive-order",
@@ -401,8 +401,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -420,8 +419,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -439,8 +437,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -458,8 +455,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -477,8 +473,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -496,8 +491,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -515,8 +509,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -534,8 +527,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -553,8 +545,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {

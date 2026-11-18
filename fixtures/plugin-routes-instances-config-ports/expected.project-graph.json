@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T21:11:33.002Z",
+  "builtAt": "2026-11-18T12:32:41.882Z",
   "services": [
     {
       "name": "cms",
@@ -223,8 +223,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -393,8 +392,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -1217,7 +1215,7 @@
       "from": "http_out:poller#src/poll.ts:21:29",
       "to": "entry:api:http:GET:/health",
       "type": "http_calls",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/poll.ts",
       "line": 21,
       "meta": {
@@ -1230,7 +1228,7 @@
       "from": "http_out:poller#src/poll.ts:24:27",
       "to": "entry:workers:http:GET:/api/work",
       "type": "http_calls",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/poll.ts",
       "line": 24,
       "meta": {

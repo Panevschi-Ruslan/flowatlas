@@ -23,7 +23,7 @@ import { Node, SyntaxKind } from 'ts-morph';
 import type { MountShape, RouteDialect } from './route-dialects.js';
 import { EXPRESS, FASTIFY, HONO, KOA, MOUNT_HELPERS } from './route-dialects.js';
 import { Registries, registryOf } from './route-registries.js';
-import { appDeclaration, statedApp, statedBase } from './stated-apps.js';
+import { appDeclaration, madeDirectly, statedApp, statedBase } from './stated-apps.js';
 import {
   builtByFactory,
   enclosingClass,
@@ -136,10 +136,12 @@ const propertyOf = (argument: TsNode | undefined, key: string): TsNode | undefin
 };
 
 /**
- * How an application was recognised: by the type the checker resolved, or by
- * what the source states where the checker resolved none (R142).
+ * How an application was recognised: by the type the checker resolved, by the
+ * framework's own maker called right there where the checker resolved none
+ * (P346), or by any other statement of the source (R142). Only the last is
+ * `heuristic`; the maker's value is the value a type would have described.
  */
-type Recognised = 'type' | 'source';
+type Recognised = 'type' | 'maker' | 'source';
 
 /**
  * Whether a type is one the framework declares routes on.
@@ -159,7 +161,10 @@ type Recognised = 'type' | 'source';
  */
 const recognised = (expr: TsNode, dialect: RouteDialect): Recognised | undefined => {
   const origin = resolveTypeOrigin(expr);
-  if (origin === null) return statedApp(expr, dialect) === undefined ? undefined : 'source';
+  if (origin === null) {
+    if (statedApp(expr, dialect) === undefined) return undefined;
+    return madeDirectly(expr, dialect) ? 'maker' : 'source';
+  }
   const named = (pkg: string | null, typeName: string | undefined): boolean =>
     pkg !== null &&
     typeName !== undefined &&
@@ -194,8 +199,10 @@ interface AppCall {
   /** Where in the repository it is written, for putting installs in order. */
   site: Site;
   /**
-   * Whether the receiver was recognised from what the source states rather than
-   * from a resolved type. Every route read off it is then `heuristic`.
+   * Whether the receiver was recognised from what the source states, other than
+   * the framework's own maker called right there, rather than from a resolved
+   * type. Every route read off it is then `heuristic`, and so is every route
+   * under a mount written on it.
    */
   stated?: true;
   /**
@@ -645,6 +652,13 @@ interface Install {
 interface RouteContext {
   prefix: string;
   guards: readonly Install[];
+  /**
+   * A mount on the way down was written on an application recognised only by
+   * what the source states (R142). The address rests on that reading, so a
+   * route placed through it is no surer than `heuristic`, however its own
+   * application was made (P346).
+   */
+  stated?: true;
 }
 
 const ROOT: RouteContext = { prefix: '', guards: [] };
@@ -697,6 +711,8 @@ interface Mount {
    * what the hint asked.
    */
   through?: string;
+  /** Written on a parent recognised only by what the source states (R142). */
+  stated?: true;
 }
 
 /**
@@ -826,6 +842,7 @@ class Applications {
         site: site.site,
         ...(at === undefined ? {} : { at }),
         ...(at === undefined && helper !== undefined ? { through: label(written) } : {}),
+        ...(site.stated === true ? { stated: true as const } : {}),
       });
       this.#mounts.set(target, found);
     }
@@ -875,7 +892,12 @@ class Applications {
     }
     for (const target of found) {
       const mounts = this.#mounts.get(target) ?? [];
-      mounts.push({ parent: site.receiver, site: site.site, ...(at === undefined ? {} : { at }) });
+      mounts.push({
+        parent: site.receiver,
+        site: site.site,
+        ...(at === undefined ? {} : { at }),
+        ...(site.stated === true ? { stated: true as const } : {}),
+      });
       this.#mounts.set(target, mounts);
     }
     return true;
@@ -996,6 +1018,7 @@ class Applications {
             const owner = appOwner(callee.getExpression(), dialect);
             const here = siteOf(node, this.#ctx);
             return inner.map((context) => ({
+              ...context,
               prefix: joinPath(context.prefix, at),
               guards: [...context.guards, ...this.guardsOn(owner, here, context.prefix)],
             }));
@@ -1083,9 +1106,11 @@ class Applications {
           ...this.guardsOn(parent, mount.site, outer.prefix),
         ];
         for (const inner of own ?? [ROOT]) {
+          const stated = outer.stated === true || mount.stated === true || inner.stated === true;
           out.push({
             prefix: joinPath(outer.prefix, mount.at, inner.prefix),
             guards: [...inherited, ...inner.guards],
+            ...(stated ? { stated: true as const } : {}),
           });
         }
       }
@@ -1632,8 +1657,11 @@ export const callRoutesAdapter = (
                 ...(route.answer.why === undefined ? {} : { wrapperUnread: route.answer.why }),
                 // An application recognised from the source rather than from a
                 // resolved type: what the author meant, not what a compiler
-                // checked, and never more than `heuristic` (R142, as R122).
-                ...(site.stated === true ? { confidence: 'heuristic' } : {}),
+                // checked, and never more than `heuristic` (R142, as R122) -
+                // nor is a route placed through a mount written on one. The
+                // framework's own maker called right there is the value
+                // itself and carries what a typed reading carries (P346).
+                ...(site.stated === true || context.stated === true ? { confidence: 'heuristic' } : {}),
               },
             });
           }

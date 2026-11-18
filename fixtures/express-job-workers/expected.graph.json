@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "express-job-workers",
-  "generatedAt": "2026-11-09T22:02:41.518Z",
+  "generatedAt": "2026-11-18T12:22:41.640Z",
   "nodes": [
     {
       "id": "channel:audit-queue",
@@ -322,8 +322,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -341,8 +340,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -360,8 +358,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {

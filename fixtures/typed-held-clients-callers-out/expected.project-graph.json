@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T19:09:30.786Z",
+  "builtAt": "2026-11-18T12:36:21.153Z",
   "services": [
     {
       "name": "shop",
@@ -83,8 +83,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -102,8 +101,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -121,8 +119,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -140,8 +137,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -650,7 +646,7 @@
       "from": "ui_api_call:shop#src/api.ts:20:10@11:12",
       "to": "entry:catalog:http:GET:/latest",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/api.ts",
       "line": 20,
       "meta": {
@@ -663,7 +659,7 @@
       "from": "ui_api_call:shop#src/api.ts:24:10@11:12",
       "to": "entry:stock:http:GET:/levels",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/api.ts",
       "line": 24,
       "meta": {
@@ -676,7 +672,7 @@
       "from": "ui_api_call:shop#src/api.ts:33:10@11:12",
       "to": "entry:catalog:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/api.ts",
       "line": 33,
       "meta": {
@@ -689,7 +685,7 @@
       "from": "ui_api_call:shop#src/api.ts:38:10@11:12",
       "to": "entry:stock:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/api.ts",
       "line": 38,
       "meta": {
@@ -702,7 +698,7 @@
       "from": "ui_api_call:shop#src/api.ts:50:35@11:12",
       "to": "entry:catalog:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/api.ts",
       "line": 50,
       "meta": {
@@ -715,7 +711,7 @@
       "from": "ui_api_call:shop#src/api.ts:52:33@11:12",
       "to": "entry:stock:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/api.ts",
       "line": 52,
       "meta": {

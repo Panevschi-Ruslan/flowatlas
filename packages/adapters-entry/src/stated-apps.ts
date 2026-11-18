@@ -1,6 +1,6 @@
 import { originOfValue, packageOfSpecifier } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
-import { Node, SyntaxKind } from 'ts-morph';
+import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 import type { AppType, RouteDialect } from './route-dialects.js';
 
 /**
@@ -26,7 +26,10 @@ import type { AppType, RouteDialect } from './route-dialects.js';
  * the checker's fallback and never its rival: it is asked only where the type
  * could not be resolved at all, so an installed repository reads exactly as it
  * did. And an answer from here is `heuristic`, never `static`, because the
- * source states what the author meant rather than what a compiler checked.
+ * source states what the author meant rather than what a compiler checked -
+ * with one exception, `madeDirectly` below: a name holding the very value the
+ * framework's own maker made on that line is the value, not an account of it,
+ * and is as sure as its type would have been (P346).
  *
  * One difference, and it is deliberate. R122 does not read an initialiser, since
  * `const db = makeDb()` states nothing about a type. `express()` does, but only
@@ -80,6 +83,12 @@ interface Imported {
   readonly package: string;
   /** The name the package exports it under; `default` for a default import. */
   readonly name: string;
+  /**
+   * Whether the statement names the package itself, `'express'`, rather than a
+   * file inside it, `'express/lib/router'`. Only the package's own entry is
+   * what the dialect's description is a description of (P346).
+   */
+  readonly whole: boolean;
 }
 
 /**
@@ -104,11 +113,13 @@ const importOf = (identifier: TsNode): Imported | undefined => {
     if (required !== undefined) return required;
     const statement = declaration.getFirstAncestorByKind(SyntaxKind.ImportDeclaration);
     if (statement === undefined) continue;
-    const pkg = packageOfSpecifier(statement.getModuleSpecifierValue());
+    const specifier = statement.getModuleSpecifierValue();
+    const pkg = packageOfSpecifier(specifier);
     if (pkg === undefined) return undefined;
-    if (Node.isImportSpecifier(declaration)) return { package: pkg, name: declaration.getName() };
-    if (Node.isImportClause(declaration)) return { package: pkg, name: 'default' };
-    if (Node.isNamespaceImport(declaration)) return { package: pkg, name: 'namespace' };
+    const whole = specifier === pkg;
+    if (Node.isImportSpecifier(declaration)) return { package: pkg, name: declaration.getName(), whole };
+    if (Node.isImportClause(declaration)) return { package: pkg, name: 'default', whole };
+    if (Node.isNamespaceImport(declaration)) return { package: pkg, name: 'namespace', whole };
   }
   return undefined;
 };
@@ -124,8 +135,11 @@ const requiredBy = (declaration: TsNode): Imported | undefined => {
   if (specifier === undefined || !Node.isStringLiteral(specifier)) return undefined;
   const pkg = packageOfSpecifier(specifier.getLiteralValue());
   if (pkg === undefined) return undefined;
-  if (Node.isBindingElement(declaration)) return { package: pkg, name: declaration.getPropertyNameNode()?.getText() ?? declaration.getName() };
-  return Node.isIdentifier(holder.getNameNode()) ? { package: pkg, name: 'default' } : undefined;
+  const whole = specifier.getLiteralValue() === pkg;
+  if (Node.isBindingElement(declaration)) {
+    return { package: pkg, name: declaration.getPropertyNameNode()?.getText() ?? declaration.getName(), whole };
+  }
+  return Node.isIdentifier(holder.getNameNode()) ? { package: pkg, name: 'default', whole } : undefined;
 };
 
 /**
@@ -145,7 +159,7 @@ const exportNamed = (name: TsNode): Imported | undefined => {
       return undefined;
     }
     const member = Node.isPropertyAccessExpression(node) ? node.getName() : node.getRight().getText();
-    return { package: bound.package, name: member };
+    return { package: bound.package, name: member, whole: bound.whole };
   }
   const bound = importOf(node);
   if (bound === undefined) return undefined;
@@ -378,3 +392,104 @@ const ofValue = (expr: TsNode, dialect: RouteDialect, depth: number): AppType | 
  */
 export const statedApp = (expr: TsNode, dialect: RouteDialect): AppType | undefined =>
   ofValue(expr, dialect, 0);
+
+/**
+ * Whether the source states an application as surely as a type would (P346).
+ *
+ * `import express from 'express'; const app = express();` is not the author's
+ * account of what `app` is, the way `app: Express` is: it is the value itself,
+ * made on that line by the export the framework publishes for making it, from
+ * the framework's own package. A checker with the types installed would read
+ * nothing more than that. So a route on it carries what a typed one carries,
+ * and every other statement R142 reads stays `heuristic`: an annotation, a
+ * destructured member, a class of the repository extending one, a function of
+ * the repository returning one and a value arriving as a parameter all rest on
+ * somebody's account of the value rather than on the value.
+ *
+ * Direct means three things together:
+ *
+ * - **The maker.** A call or `new` of an export the dialect describes as making
+ *   an application (`makers`, or one named after an `appType`), imported or
+ *   required straight from the package - not a file inside it, and not a module
+ *   of the repository handing it on.
+ * - **The value.** The receiver is that call, or a chain of methods the dialect
+ *   says answer with the application (`express().disable('x-powered-by')`,
+ *   `Router().get(…).post(…)`), or a name holding one of those.
+ * - **The name.** A variable holding that value and only it: a `const`, or a
+ *   `let` or `var` nothing in its file assigns again. A property, a parameter
+ *   or a destructured name is somebody's account of where the value went.
+ */
+export const madeDirectly = (expr: TsNode, dialect: RouteDialect): boolean =>
+  directly(expr, dialect, 0);
+
+const directly = (expr: TsNode, dialect: RouteDialect, depth: number): boolean => {
+  if (depth > MAX_DEPTH) return false;
+  const node = unwrap(expr);
+  if (Node.isCallExpression(node) || Node.isNewExpression(node)) {
+    const callee = node.getExpression();
+    const exported = exportNamed(callee);
+    if (exported !== undefined && madeBy(exported, dialect) !== undefined) return exported.whole;
+    return (
+      Node.isCallExpression(node) &&
+      Node.isPropertyAccessExpression(callee) &&
+      answersWithSelf(callee.getName(), dialect) &&
+      directly(callee.getExpression(), dialect, depth + 1)
+    );
+  }
+  if (!Node.isIdentifier(node)) return false;
+  const declaration = appDeclaration(node);
+  if (declaration === undefined || !Node.isVariableDeclaration(declaration)) return false;
+  if (!Node.isIdentifier(declaration.getNameNode()) || reassigned(declaration)) return false;
+  const value = declaration.getInitializer();
+  return value !== undefined && directly(value, dialect, depth + 1);
+};
+
+/** The operators that can put an application into a name; `+=` cannot. */
+const ASSIGNMENTS: ReadonlySet<SyntaxKind> = new Set([
+  SyntaxKind.EqualsToken,
+  SyntaxKind.BarBarEqualsToken,
+  SyntaxKind.AmpersandAmpersandEqualsToken,
+  SyntaxKind.QuestionQuestionEqualsToken,
+]);
+
+const writtenAgain = new WeakMap<TsNode, boolean>();
+
+/** Whether an identifier is the target of an assignment, plain or destructuring. */
+const isWritten = (identifier: TsNode): boolean => {
+  const parent = identifier.getParent();
+  if (parent === undefined) return false;
+  if (Node.isBinaryExpression(parent)) {
+    return parent.getLeft() === identifier && ASSIGNMENTS.has(parent.getOperatorToken().getKind());
+  }
+  // `[app] = others` and `({ app } = others)`.
+  if (!Node.isArrayLiteralExpression(parent) && !Node.isShorthandPropertyAssignment(parent)) return false;
+  const assignment = parent.getFirstAncestorByKind(SyntaxKind.BinaryExpression);
+  return assignment?.getOperatorToken().getKind() === SyntaxKind.EqualsToken;
+};
+
+/**
+ * Whether a `let` or `var` is given another value anywhere in its file.
+ *
+ * Its file is enough: a module's binding is read-only to every importer, so
+ * only the module itself can write it. A `const` is never asked.
+ */
+const reassigned = (declaration: TsNode): boolean => {
+  if (!Node.isVariableDeclaration(declaration)) return true;
+  const list = declaration.getParent();
+  if (Node.isVariableDeclarationList(list) && list.getDeclarationKind() === VariableDeclarationKind.Const) {
+    return false;
+  }
+  const known = writtenAgain.get(declaration);
+  if (known !== undefined) return known;
+  const name = declaration.getName();
+  const symbol = declaration.getNameNode().getSymbol();
+  const found = declaration
+    .getSourceFile()
+    .getDescendantsOfKind(SyntaxKind.Identifier)
+    .some(
+      (identifier) =>
+        identifier.getText() === name && isWritten(identifier) && identifier.getSymbol() === symbol,
+    );
+  writtenAgain.set(declaration, found);
+  return found;
+};

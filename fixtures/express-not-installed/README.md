@@ -31,6 +31,11 @@ Which exports make an application is written once, on each dialect in
 the checker resolved no type at all, so the same repository with `express`
 installed reads exactly as before.
 
-Every entry here carries `confidence: heuristic` in its meta, and none would
-with types installed: the source states what the author meant rather than what
-a compiler checked - the rule R122 set for the data layer (`db-not-installed`).
+An answer read from the source is `heuristic`, as R122 set for the data layer
+(`db-not-installed`): the source states what the author meant rather than what
+a compiler checked. Every application here is the exception P346 makes, though:
+`express()` and `Router()`, imported from `express` itself, called right there
+and held by a `const` (`disable` hands the same application back), are the
+value itself rather than an account of it, and a type would say no more. So
+none of the five entries carries `confidence: heuristic`, exactly as with types
+installed. `express-maker-direct-and-stated` shows the two side by side.

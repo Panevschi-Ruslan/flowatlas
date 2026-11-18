@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T20:35:36.799Z",
+  "builtAt": "2026-11-18T12:34:14.237Z",
   "services": [
     {
       "name": "web",
@@ -37,8 +37,7 @@
         "adapter": "express-routes",
         "registration": "app.delete",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -56,8 +55,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -75,8 +73,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -94,8 +91,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -113,8 +109,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -132,8 +127,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -151,8 +145,7 @@
         "adapter": "express-routes",
         "registration": "app.put",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -973,7 +966,7 @@
       "from": "ui_api_call:site#src/components/Stock.tsx:6:5",
       "to": "entry:shop:http:GET:/items/:param",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/components/Stock.tsx",
       "line": 6,
       "meta": {
@@ -986,7 +979,7 @@
       "from": "ui_api_call:web#js/account.js:5:12",
       "to": "entry:shop:http:GET:/account",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/account.js",
       "line": 5,
       "meta": {
@@ -999,7 +992,7 @@
       "from": "ui_api_call:web#js/account.js:8:12",
       "to": "entry:shop:http:PUT:/account",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/account.js",
       "line": 8,
       "params": [
@@ -1015,7 +1008,7 @@
       "from": "ui_api_call:web#js/api.js:11:19",
       "to": "entry:shop:http:GET:/items/:param/reviews",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/api.js",
       "line": 11,
       "meta": {
@@ -1028,7 +1021,7 @@
       "from": "ui_api_call:web#js/api.js:5:12",
       "to": "entry:shop:http:GET:/items",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/api.js",
       "line": 5,
       "meta": {
@@ -1041,7 +1034,7 @@
       "from": "ui_api_call:web#js/api.js:8:12",
       "to": "entry:shop:http:GET:/items/:param",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/api.js",
       "line": 8,
       "meta": {
@@ -1054,7 +1047,7 @@
       "from": "ui_api_call:web#js/cart.js:10:3",
       "to": "entry:shop:http:POST:/cart",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/cart.js",
       "line": 10,
       "params": [
@@ -1070,7 +1063,7 @@
       "from": "ui_api_call:web#js/cart.js:22:12",
       "to": "entry:shop:http:DELETE:/cart",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/cart.js",
       "line": 22,
       "meta": {

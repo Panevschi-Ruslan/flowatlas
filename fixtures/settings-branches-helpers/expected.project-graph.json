@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-15T16:10:59.230Z",
+  "builtAt": "2026-11-18T12:34:56.627Z",
   "services": [
     {
       "name": "web",
@@ -155,8 +155,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -174,8 +173,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -193,8 +191,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -212,8 +209,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -231,8 +227,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -947,7 +942,7 @@
       "from": "http_out:web#server/orders.ts:12:21",
       "to": "entry:orders:http:GET:/orders",
       "type": "http_calls",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "server/orders.ts",
       "line": 12,
       "meta": {
@@ -959,7 +954,7 @@
       "from": "http_out:web#server/orders.ts:18:21",
       "to": "entry:orders:http:GET:/orders/late",
       "type": "http_calls",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "server/orders.ts",
       "line": 18,
       "meta": {
@@ -971,7 +966,7 @@
       "from": "http_out:web#server/orders.ts:24:21",
       "to": "entry:catalog:http:GET:/items",
       "type": "http_calls",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "server/orders.ts",
       "line": 24,
       "meta": {
@@ -983,7 +978,7 @@
       "from": "http_out:web#server/orders.ts:30:21",
       "to": "entry:catalog:http:GET:/categories",
       "type": "http_calls",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "server/orders.ts",
       "line": 30,
       "meta": {
@@ -995,7 +990,7 @@
       "from": "http_out:web#server/orders.ts:6:21",
       "to": "entry:orders:http:GET:/orders/open",
       "type": "http_calls",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "server/orders.ts",
       "line": 6,
       "meta": {
@@ -1027,7 +1022,7 @@
       "from": "ui_api_call:web#components/Orders.tsx:15:11",
       "to": "entry:catalog:http:GET:/items",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "components/Orders.tsx",
       "line": 15,
       "meta": {
@@ -1063,7 +1058,7 @@
       "from": "ui_api_call:web#server/orders.ts:24:21",
       "to": "entry:catalog:http:GET:/items",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "server/orders.ts",
       "line": 24,
       "meta": {
@@ -1075,7 +1070,7 @@
       "from": "ui_api_call:web#server/orders.ts:30:21",
       "to": "entry:catalog:http:GET:/categories",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "server/orders.ts",
       "line": 30,
       "meta": {

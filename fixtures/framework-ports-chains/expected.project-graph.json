@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:56:33.100Z",
+  "builtAt": "2026-11-18T12:23:13.786Z",
   "services": [
     {
       "name": "web",
@@ -119,8 +119,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -138,8 +137,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -157,8 +155,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -245,8 +242,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -264,8 +260,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -1271,7 +1266,7 @@
       "from": "http_out:web#server/status.ts:12:21",
       "to": "entry:status:http:GET:/admin/checks",
       "type": "http_calls",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "server/status.ts",
       "line": 12,
       "meta": {
@@ -1283,7 +1278,7 @@
       "from": "http_out:web#server/status.ts:6:21",
       "to": "entry:status:http:GET:/checks",
       "type": "http_calls",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "server/status.ts",
       "line": 6,
       "meta": {
@@ -1383,7 +1378,7 @@
       "from": "ui_api_call:web#server/status.ts:12:21",
       "to": "entry:status:http:GET:/admin/checks",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "server/status.ts",
       "line": 12,
       "meta": {
@@ -1395,7 +1390,7 @@
       "from": "ui_api_call:web#server/status.ts:6:21",
       "to": "entry:status:http:GET:/checks",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "server/status.ts",
       "line": 6,
       "meta": {

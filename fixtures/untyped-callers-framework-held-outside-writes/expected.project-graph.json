@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T21:35:22.431Z",
+  "builtAt": "2026-11-18T12:36:34.463Z",
   "services": [
     {
       "name": "web",
@@ -178,8 +178,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -197,8 +196,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -216,8 +214,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -267,8 +264,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -286,8 +282,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -305,8 +300,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -324,8 +318,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -1254,7 +1247,7 @@
       "from": "ui_api_call:web#js/elements.js:14:16@9:12",
       "to": "entry:stock:http:GET:/recent",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/elements.js",
       "line": 14,
       "meta": {
@@ -1267,7 +1260,7 @@
       "from": "ui_api_call:web#js/elements.js:36:10@31:12",
       "to": "entry:catalog:http:GET:/ticks",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/elements.js",
       "line": 36,
       "meta": {
@@ -1280,7 +1273,7 @@
       "from": "ui_api_call:web#js/elements.js:40:10@31:12",
       "to": "entry:stock:http:GET:/ticks",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/elements.js",
       "line": 40,
       "meta": {
@@ -1293,7 +1286,7 @@
       "from": "ui_api_call:web#js/health.js:22:10@8:12",
       "to": "entry:catalog:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/health.js",
       "line": 22,
       "meta": {
@@ -1306,7 +1299,7 @@
       "from": "ui_api_call:web#js/health.js:27:10@8:12",
       "to": "entry:stock:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/health.js",
       "line": 27,
       "meta": {
@@ -1319,7 +1312,7 @@
       "from": "ui_api_call:web#js/health.js:36:10@8:12",
       "to": "entry:stock:http:GET:/levels",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/health.js",
       "line": 36,
       "meta": {
@@ -1332,7 +1325,7 @@
       "from": "ui_api_call:web#js/health.js:51:10@8:12",
       "to": "entry:catalog:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/health.js",
       "line": 51,
       "meta": {
@@ -1345,7 +1338,7 @@
       "from": "ui_api_call:web#js/health.js:55:10@8:12",
       "to": "entry:stock:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/health.js",
       "line": 55,
       "meta": {

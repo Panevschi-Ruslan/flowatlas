@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "job-batches-planned-by-a-layer",
-  "generatedAt": "2026-11-14T18:09:46.592Z",
+  "generatedAt": "2026-11-18T12:24:34.367Z",
   "nodes": [
     {
       "id": "channel:invoices",
@@ -152,8 +152,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -171,8 +170,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T20:37:05.805Z",
+  "builtAt": "2026-11-18T12:34:22.003Z",
   "services": [
     {
       "name": "web",
@@ -31,8 +31,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -50,8 +49,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -69,8 +67,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -88,8 +85,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -107,8 +103,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -126,8 +121,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -631,7 +625,7 @@
       "from": "ui_api_call:web#js/top.js:3:1",
       "to": "entry:shop:http:GET:/catalog",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/top.js",
       "line": 3,
       "meta": {
@@ -644,7 +638,7 @@
       "from": "ui_api_call:web#js/top.js:7:10",
       "to": "entry:shop:http:POST:/visits",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/top.js",
       "line": 7,
       "params": [
@@ -660,7 +654,7 @@
       "from": "ui_api_call:web#widgets/cart.js:2:10",
       "to": "entry:shop:http:GET:/cart",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "widgets/cart.js",
       "line": 2,
       "meta": {
@@ -673,7 +667,7 @@
       "from": "ui_api_call:web#widgets/promos.js:2:10",
       "to": "entry:shop:http:GET:/promos",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "widgets/promos.js",
       "line": 2,
       "meta": {

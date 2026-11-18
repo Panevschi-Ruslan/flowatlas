@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:36:08.521Z",
+  "builtAt": "2026-11-18T12:17:44.882Z",
   "services": [
     {
       "name": "catalogue",
@@ -226,8 +226,7 @@
         "adapter": "express-routes",
         "registration": "app.delete",
         "middlewareRead": true,
-        "handlerVia": "function",
-        "confidence": "heuristic"
+        "handlerVia": "function"
       }
     },
     {
@@ -245,8 +244,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "function",
-        "confidence": "heuristic"
+        "handlerVia": "function"
       }
     },
     {
