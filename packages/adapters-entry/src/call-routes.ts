@@ -23,7 +23,7 @@ import { Node, SyntaxKind } from 'ts-morph';
 import type { MountShape, RouteDialect } from './route-dialects.js';
 import { EXPRESS, FASTIFY, HONO, KOA, MOUNT_HELPERS } from './route-dialects.js';
 import { Registries, registryOf } from './route-registries.js';
-import { appDeclaration, madeDirectly, statedApp, statedBase } from './stated-apps.js';
+import { appDeclaration, madeDirectly, statedApp, statedBase, valuesHandedTo, valuesWrittenTo } from './stated-apps.js';
 import {
   builtByFactory,
   enclosingClass,
@@ -554,9 +554,10 @@ const assignedApps = (declaration: TsNode, dialect: RouteDialect): TsNode[] => {
  * A parameter's default is one of them, and it is the one that earns this its own
  * function. `export default function init(app: Koa = new Koa(), server?: Server)`
  * is how a wiki app's web service declares the application every one of its routes
- * is served on: the service is started through a map of dynamic imports, so no
- * call to `init` can be followed from here, and the default is the only statement
- * in the repository about what `app` is.
+ * is served on. Where every call of `init` can be found - through a map of
+ * dynamic imports too - what the callers hand it is read first (P354); where one
+ * cannot, the default is the only statement in the repository about what `app`
+ * is.
  *
  * Read as the parameter's value, with the same walk a `const` gets, because it is
  * the same kind of fact and it is better evidence than what stood here before: a
@@ -1074,14 +1075,38 @@ class Applications {
     }
   }
 
+  /**
+   * Where an application whose value is not written at its declaration is
+   * served, from every value it is given (P354): what every caller of its
+   * function hands a parameter - `mount(app)` from a service's start,
+   * `init(app)` through a map of lazy imports - and what the repository
+   * writes into a property declared bare, `app; constructor() { this.app =
+   * express(); }`. Undefined where a caller or a write cannot be seen, or one
+   * gives something whose place cannot be read; the declaration's own value,
+   * or nothing, is then what is read, as before.
+   */
+  #handedContexts(declaration: TsNode, seen: Set<TsNode>): RouteContext[] | undefined {
+    const values = Node.isParameterDeclaration(declaration) ? valuesHandedTo(declaration) : valuesWrittenTo(declaration);
+    if (values === undefined) return undefined;
+    const out: RouteContext[] = [];
+    for (const value of values) {
+      const contexts = this.contextsOf(value, seen);
+      if (contexts === undefined) return undefined;
+      out.push(...contexts);
+    }
+    return out;
+  }
+
   #basesOf(declaration: TsNode, seen: Set<TsNode>): RouteContext[] | undefined {
     const shifted = this.#shifted.get(declaration);
     if (this.#shifted.has(declaration) && shifted === undefined) return undefined;
 
     const initializer = valueWritten(declaration);
     // A binding whose value is not written here: the base is whatever the caller
-    // had, which only the caller knows.
-    const written = initializer === undefined ? undefined : this.contextsOf(initializer, seen);
+    // had, which only the caller knows - and where every caller is known, it is
+    // every place each of them hands it (P354).
+    const handed = this.#handedContexts(declaration, seen);
+    const written = handed ?? (initializer === undefined ? undefined : this.contextsOf(initializer, seen));
     const own =
       written === undefined || shifted === undefined
         ? written

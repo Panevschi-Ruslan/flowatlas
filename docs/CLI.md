@@ -371,17 +371,25 @@ are read too, each held by a fixture:
   `new Koa()`, `Fastify()`, `new Hono()`, imported or required from the
   package itself, through a chain that answers with the application
   (`express().disable(...)`), held by a `const`, a `let` nothing assigns
-  again, a field nothing but its own class's constructor writes or a
-  parameter whose maker default every caller leaves (P346, P350) - carries
-  what a typed route carries, and so do the joins on it: that call is the
-  value, not an account of it. Every other route read that way - off an
-  annotation, a destructured member, a class of the repository, a function's
-  answer, a parameter a caller may hand, a property - carries `heuristic`
+  again, a property every write of which is known, made inside its class or
+  its object's module and direct (a field, `catalog.router`, a JavaScript
+  `this.app = express()`), or a parameter every caller of which hands a
+  direct value or leaves a maker default - callers found by name, through
+  imports and aliases, and through every `import()` of the function's module,
+  a map of lazy imports included (P346, P350, P354) - carries what a typed
+  route carries, and so do the joins on it: that call is the value, not an
+  account of it. A field declared with no value and given one by the
+  constructor is recognised from that write, and an application arriving as
+  a parameter is placed where every value its callers hand it is. Every other
+  route read that way - off an annotation, a destructured member, a class of
+  the repository, a function's answer, a parameter a caller the reading cannot
+  see may hand, a property something unplaced may write - carries `heuristic`
   confidence, because it rests on what the author wrote rather than on what a
   compiler checked, and so does a route placed through a mount written on
   one (`fixtures/express-not-installed`,
   `fixtures/express-maker-direct-and-stated`,
-  `fixtures/script-modes-workspace-make-fields`).
+  `fixtures/script-modes-workspace-make-fields`,
+  `fixtures/maker-held-by-property-parameter-constructor`).
 
 A path assembled at run time is reported rather than placed at a guessed
 address. A route under a mount whose path could not be read has a row of its own,

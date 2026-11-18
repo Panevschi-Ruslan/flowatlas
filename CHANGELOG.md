@@ -2387,6 +2387,28 @@ only one of them moved.
   A program whose listen is reached through a package's name
   (`require('@shop/server')`) is followed to that workspace package's
   entry, its build mapped to its `src` as an uninstalled import is.
+- **An application held by a property, handed as a parameter or given by a
+  constructor is as sure as the maker's value it holds (P354).** A property,
+  whether a field (`this.app`, `server.app`, a static one, a parameter
+  property), a member of an object written in place (`const catalog = {
+  router: Router() }`) or the property a JavaScript class declares by writing
+  `this.app = express()`, is lifted where every write of it the repository
+  makes is placed by the checker, made inside its class or its object's
+  module, and a direct value, and nothing writes the object whole
+  (`Object.assign(this, …)`). A parameter is lifted where every caller of
+  its function hands it a direct value or a name holding one, or hands
+  nothing to a maker default; callers are found by name, through imports,
+  destructuring, aliases and object members, through receivers typed as
+  nothing, and through every `import()` or `require()` of the function's
+  module - a service's default started by name through a map of lazy
+  imports (`const { default: init } = await services[name](); init(app)`)
+  included. An application arriving as a parameter is served where every
+  value its callers hand it is, and a field declared with no value
+  (`app;`, `private app: Application;`) where every value written to it is;
+  with nothing installed such a field is recognised from what the
+  constructor writes. A write or a caller the reading cannot place keeps
+  the application `heuristic`, with every route mounted under it
+  (`maker-held-by-property-parameter-constructor`).
 - **Fields written through an alias or in a subclass, domains a workspace
   names, and grants of a bus, table or stream by the CDK's version (P322).**
   A static field written through the class under `any` - `const R: any =

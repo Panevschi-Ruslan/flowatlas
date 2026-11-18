@@ -1564,11 +1564,12 @@ Known gaps in what it can read:
   makes is a row. A rest of props beside a member written by a computed key
   is not said to lack any member.
 - An application the framework's own maker makes is as sure as a typed one
-  only where nothing else can change what holds it; held by a property
-  anything may write or a parameter some caller may fill, it stays
-  `heuristic`, with every route mounted under it, and with nothing installed
-  one a constructor writes into a field declared with no initialiser is not
-  recognised at all.
+  only where every write of what holds it and every caller handing it on can
+  be read. A write on a receiver typed as nothing, a function handed round as
+  a value, a module loaded through a promise's `then` or re-exported before
+  it is loaded lazily, and a CommonJS `module.exports = function (app)` keep
+  it `heuristic`, with every route mounted under it; and a parameter with no
+  annotation and no default is not recognised from its callers at all.
 - A bundle whose helpers are of no shape known - a loader of its own, not
   a wrapper, webpack's table or an export or interop helper as bundlers write
   them, renamed or not - is a row saying where the follow stopped, and a key

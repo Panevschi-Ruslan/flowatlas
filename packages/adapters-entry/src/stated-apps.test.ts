@@ -26,7 +26,7 @@ const read = (
   files: Record<string, string> = {},
   stubs: Record<string, string> = {},
 ): EntryNode[] => {
-  const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: false } });
+  const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: false, allowJs: true } });
   for (const [name, source] of Object.entries(stubs)) {
     project.createSourceFile(`/node_modules/${name}/package.json`, '{"types":"index.d.ts"}');
     project.createSourceFile(`/node_modules/${name}/index.d.ts`, source);
@@ -350,7 +350,7 @@ describe('an application made by the framework\'s own maker, called right there 
 });
 
 describe('a field and a parameter default holding what a maker made (P350)', () => {
-  it('lifts a field no code but its own constructor writes, and keeps one written elsewhere heuristic', () => {
+  it('lifts a field its own class alone writes, each time directly, and keeps one written otherwise heuristic (P354)', () => {
     const entries = read(
       expressRoutesAdapter,
       `import express, { Router } from 'express';
@@ -378,12 +378,12 @@ describe('a field and a parameter default holding what a maker made (P350)', () 
     expect(confidences(entries)).toEqual({
       'GET /api/field': 'sure',
       'GET /constructed': 'sure',
-      'GET /moved': 'heuristic',
+      'GET /moved': 'sure',
       'GET /made': 'heuristic',
     });
   });
 
-  it("lifts a parameter's default where every caller hands it nothing, and not where one may hand it something", () => {
+  it("lifts a parameter's default where every caller hands it nothing or a maker's value, and not where one may hand it something else (P354)", () => {
     const entries = read(
       expressRoutesAdapter,
       `import express, { Router } from 'express';
@@ -392,13 +392,14 @@ describe('a field and a parameter default holding what a maker made (P350)', () 
        mount(undefined);
        const install = (router = Router()) => { router.get('/handed', (_q, s) => s.send('')); };
        install();
-       install(Router());
+       install(makeRouter());
        function never(router = Router()) { router.get('/uncalled', (_q, s) => s.send('')); }
        function passed(router = Router()) { router.get('/passed', (_q, s) => s.send('')); }
        [1].forEach(() => passed());
-       const later = passed;
+       setTimeout(passed);
        class Api { constructor(private readonly http = express()) { this.http.get('/property', (_q, s) => s.send('')); } }
-       new Api();`,
+       new Api();
+       function makeRouter() { return Router(); }`,
     );
     expect(confidences(entries)).toEqual({
       'GET /defaulted': 'sure',
@@ -406,6 +407,183 @@ describe('a field and a parameter default holding what a maker made (P350)', () 
       'GET /uncalled': 'heuristic',
       'GET /passed': 'heuristic',
       'GET /property': 'sure',
+    });
+  });
+});
+
+describe('an application held by a property, handed as a parameter, or given by a constructor (P354)', () => {
+  it('lifts a property every write of which is placed, inside its class or module, and direct', () => {
+    const entries = read(
+      expressRoutesAdapter,
+      `import express, { Router } from 'express';
+       import { replace } from './elsewhere';
+       export const server = { app: express(), admin: Router() };
+       const literal = { app: express() };
+       const patched = { app: express() };
+       patched.app = makeApp();
+       server.app.get('/literal', (_q, s) => s.send(''));
+       literal['app'].get('/bracketed', (_q, s) => s.send(''));
+       patched.app.get('/patched', (_q, s) => s.send(''));
+       server.admin.get('/written-elsewhere', (_q, s) => s.send(''));
+       class Api {
+         http = express();
+         reset() { this.http = express(); }
+       }
+       const api = new Api();
+       api.http.get('/instance', (_q, s) => s.send(''));
+       class Assigned {
+         http = express();
+         constructor(options: object) { Object.assign(this, options); }
+         go() { this.http.get('/assigned', (_q, s) => s.send('')); }
+       }
+       class Untyped {
+         router = Router();
+         go() { this.router.get('/untyped-write', (_q, s) => s.send('')); }
+       }
+       function swap(anything) { anything.router = makeApp(); }
+       function makeApp() { return express(); }`,
+      {
+        '/src/elsewhere.ts': `import { Router } from 'express';
+          import { server } from './main';
+          export const replace = () => { server.admin = Router(); };`,
+      },
+    );
+    expect(confidences(entries)).toEqual({
+      'GET /literal': 'sure',
+      'GET /bracketed': 'sure',
+      'GET /patched': 'heuristic',
+      'GET /written-elsewhere': 'heuristic',
+      'GET /instance': 'sure',
+      'GET /assigned': 'heuristic',
+      'GET /untyped-write': 'heuristic',
+    });
+  });
+
+  it('lifts a parameter every caller found hands a direct value, by name or however it is reached', () => {
+    const entries = read(
+      koaRoutesAdapter,
+      `import Koa from 'koa';
+       import Router from '@koa/router';
+       import services from './services';
+       import mountAdmin from './admin';
+       import { routes } from './routes';
+       import mountJobs from './jobs';
+       export async function start(name: keyof typeof services) {
+         const app = new Koa();
+         const { default: init } = await services[name]();
+         init(app);
+         const docs = await import('./docs');
+         docs.default(app);
+         mountJobs();
+         mountAdmin();
+         routes.mount(app);
+         walk(app, 2);
+         share(app);
+         share(makeKoa());
+       }
+       function walk(app: Koa, depth: number) {
+         if (depth > 0) walk(app, depth - 1);
+         const router = new Router();
+         router.get('/walked', (ctx) => { ctx.body = 1; });
+         app.use(router.routes());
+       }
+       function share(app: Koa) {
+         const router = new Router();
+         router.get('/shared', (ctx) => { ctx.body = 1; });
+         app.use(router.routes());
+       }
+       function makeKoa() { return new Koa(); }`,
+      {
+        '/src/services.ts': `const services = { web: () => import('./web') } as const;
+          export default services;`,
+        '/src/web.ts': `import Koa from 'koa';
+          import Router from '@koa/router';
+          export default function init(app: Koa = new Koa()) {
+            const router = new Router();
+            router.get('/web', (ctx) => { ctx.body = 1; });
+            app.use(router.routes());
+          }`,
+        '/src/jobs.ts': `import Koa from 'koa';
+          import Router from '@koa/router';
+          export default function (app: Koa = new Koa()) {
+            const router = new Router();
+            router.get('/jobs', (ctx) => { ctx.body = 1; });
+            app.use(router.routes());
+          }`,
+        '/src/docs.ts': `import Koa from 'koa';
+          import Router from '@koa/router';
+          export default function mountDocs(app: Koa) {
+            const router = new Router();
+            router.get('/docs', (ctx) => { ctx.body = 1; });
+            app.use(router.routes());
+          }`,
+        '/src/admin.ts': `import Koa from 'koa';
+          import Router from '@koa/router';
+          export default (app: Koa = new Koa()) => {
+            const router = new Router();
+            router.get('/admin', (ctx) => { ctx.body = 1; });
+            app.use(router.routes());
+          };`,
+        '/src/routes.ts': `import Koa from 'koa';
+          import Router from '@koa/router';
+          export const routes = {
+            mount(app: Koa) {
+              const router = new Router();
+              router.get('/member', (ctx) => { ctx.body = 1; });
+              app.use(router.routes());
+            },
+          };`,
+      },
+    );
+    expect(confidences(entries)).toEqual({
+      'GET /web': 'sure',
+      'GET /docs': 'sure',
+      'GET /jobs': 'sure',
+      'GET /admin': 'sure',
+      'GET /member': 'sure',
+      'GET /walked': 'sure',
+      'GET /shared': 'heuristic',
+    });
+  });
+
+  it('recognises a field declared bare and given its application by the constructor, and lifts it where only that writes it', () => {
+    const entries = read(
+      expressRoutesAdapter,
+      `import express, { Router, Application } from 'express';
+       class Bare {
+         app;
+         constructor() { this.app = express(); }
+         start() { this.app.get('/bare', (_q, s) => s.send('')); }
+       }
+       class Typed {
+         private app: Application;
+         constructor() { this.app = express(); }
+         start() { this.app.get('/typed', (_q, s) => s.send('')); }
+       }
+       class Replaced {
+         router;
+         constructor() { this.router = Router(); }
+         reset(next) { this.router = next; }
+         start() {
+           this.router.get('/replaced', (_q, s) => s.send(''));
+           const app = express();
+           app.use('/under', this.router);
+         }
+       }`,
+      {
+        '/src/plain.js': `const express = require('express');
+          class Plain {
+            constructor() { this.app = express(); }
+            start() { this.app.get('/plain', (_q, s) => s.send('')); }
+          }
+          module.exports = Plain;`,
+      },
+    );
+    expect(confidences(entries)).toEqual({
+      'GET /bare': 'sure',
+      'GET /typed': 'sure',
+      'GET /under/replaced': 'heuristic',
+      'GET /plain': 'sure',
     });
   });
 });

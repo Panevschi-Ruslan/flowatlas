@@ -1,0 +1,1009 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T17:01:17.228Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/catalog.routes.ts:GET /products@6",
+      "type": "function",
+      "label": "GET /products@6",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "api#src/orders.routes.ts:GET /@9",
+      "type": "function",
+      "label": "GET /@9",
+      "repo": "api",
+      "file": "src/orders.routes.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "api#src/orders.routes.ts:POST /@12",
+      "type": "function",
+      "label": "POST /@12",
+      "repo": "api",
+      "file": "src/orders.routes.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "api#src/plugins.routes.ts:GET /list@9",
+      "type": "function",
+      "label": "GET /list@9",
+      "repo": "api",
+      "file": "src/plugins.routes.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "api#src/reports.routes.ts:GET /api/reports@8",
+      "type": "function",
+      "label": "GET /api/reports@8",
+      "repo": "api",
+      "file": "src/reports.routes.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "api#src/server.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "api",
+      "file": "src/server.ts",
+      "line": 20,
+      "kind": "function"
+    },
+    {
+      "id": "api#src/services/status.ts:GET /api/status@9",
+      "type": "function",
+      "label": "GET /api/status@9",
+      "repo": "api",
+      "file": "src/services/status.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/catalog/products",
+      "type": "entry",
+      "label": "GET /api/catalog/products",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/catalog/products",
+        "rawPath": "/api/catalog/products",
+        "adapter": "express-routes",
+        "registration": "catalog.router.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "api",
+      "file": "src/orders.routes.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "adapter": "express-routes",
+        "registration": "router.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/plugins/list",
+      "type": "entry",
+      "label": "GET /api/plugins/list",
+      "repo": "api",
+      "file": "src/plugins.routes.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/plugins/list",
+        "rawPath": "/api/plugins/list",
+        "adapter": "express-routes",
+        "registration": "plugins.router.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/reports",
+      "type": "entry",
+      "label": "GET /api/reports",
+      "repo": "api",
+      "file": "src/reports.routes.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/reports",
+        "rawPath": "/api/reports",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/status",
+      "type": "entry",
+      "label": "GET /api/status",
+      "repo": "api",
+      "file": "src/services/status.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/status",
+        "rawPath": "/api/status",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/api/orders",
+      "type": "entry",
+      "label": "POST /api/orders",
+      "repo": "api",
+      "file": "src/orders.routes.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "adapter": "express-routes",
+        "registration": "router.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:jobs:http:GET:/jobs/health",
+      "type": "entry",
+      "label": "GET /jobs/health",
+      "repo": "jobs",
+      "file": "src/server.js",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/jobs/health",
+        "rawPath": "/jobs/health",
+        "adapter": "express-routes",
+        "registration": "this.app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "jobs#src/server.js:GET /jobs/health@11",
+      "type": "function",
+      "label": "GET /jobs/health@11",
+      "repo": "jobs",
+      "file": "src/server.js",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 34
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4000,
+            "file": "src/server.js",
+            "line": 17
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "functions": 7,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:jobsHealth",
+      "type": "function",
+      "label": "jobsHealth",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:listPlugins",
+      "type": "function",
+      "label": "listPlugins",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:listProducts",
+      "type": "function",
+      "label": "listProducts",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:placeOrder",
+      "type": "function",
+      "label": "placeOrder",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:reports",
+      "type": "function",
+      "label": "reports",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:status",
+      "type": "function",
+      "label": "status",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:10:3",
+      "type": "ui_api_call",
+      "label": "POST /api/orders",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": "{total:number}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "total"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:12:35",
+      "type": "ui_api_call",
+      "label": "GET /api/catalog/products",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/api/catalog/products",
+        "path": "/api/catalog/products",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:14:34",
+      "type": "ui_api_call",
+      "label": "GET /api/plugins/list",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/api/plugins/list",
+        "path": "/api/plugins/list",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:16:33",
+      "type": "ui_api_call",
+      "label": "GET /jobs/health",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_JOBS_URL}/jobs/health",
+        "path": "/jobs/health",
+        "baseUrlEnv": "VITE_JOBS_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "jobs"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:18:29",
+      "type": "ui_api_call",
+      "label": "GET /api/status",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/api/status",
+        "path": "/api/status",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:20:30",
+      "type": "ui_api_call",
+      "label": "GET /api/reports",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/api/reports",
+        "path": "/api/reports",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:7:33",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:api:http:GET:/api/catalog/products",
+      "to": "api#src/catalog.routes.ts:GET /products@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog.routes.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/catalog/products",
+      "to": "api#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 20,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "this.app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/orders",
+      "to": "api#src/orders.routes.ts:GET /@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.routes.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/plugins/list",
+      "to": "api#src/plugins.routes.ts:GET /list@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/plugins.routes.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/plugins/list",
+      "to": "api#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 20,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "this.app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/reports",
+      "to": "api#src/reports.routes.ts:GET /api/reports@8",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/reports.routes.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/status",
+      "to": "api#src/services/status.ts:GET /api/status@9",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/services/status.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/api/orders",
+      "to": "api#src/orders.routes.ts:POST /@12",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.routes.ts",
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:jobs:http:GET:/jobs/health",
+      "to": "jobs#src/server.js:GET /jobs/health@11",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "string",
+      "file": "src/server.js",
+      "line": 11,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "shop#src/api.ts:jobsHealth",
+      "to": "ui_api_call:shop#src/api.ts:16:33",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 16
+    },
+    {
+      "from": "shop#src/api.ts:listOrders",
+      "to": "ui_api_call:shop#src/api.ts:7:33",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 7
+    },
+    {
+      "from": "shop#src/api.ts:listPlugins",
+      "to": "ui_api_call:shop#src/api.ts:14:34",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 14
+    },
+    {
+      "from": "shop#src/api.ts:listProducts",
+      "to": "ui_api_call:shop#src/api.ts:12:35",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 12
+    },
+    {
+      "from": "shop#src/api.ts:placeOrder",
+      "to": "ui_api_call:shop#src/api.ts:10:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 10
+    },
+    {
+      "from": "shop#src/api.ts:reports",
+      "to": "ui_api_call:shop#src/api.ts:20:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 20
+    },
+    {
+      "from": "shop#src/api.ts:status",
+      "to": "ui_api_call:shop#src/api.ts:18:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 18
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:10:3",
+      "to": "entry:api:http:POST:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 10,
+      "params": [
+        "{total:number}"
+      ],
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:12:35",
+      "to": "entry:api:http:GET:/api/catalog/products",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 12,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:14:34",
+      "to": "entry:api:http:GET:/api/plugins/list",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/api.ts",
+      "line": 14,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:16:33",
+      "to": "entry:jobs:http:GET:/jobs/health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 16,
+      "meta": {
+        "via": "api-target",
+        "targetService": "jobs"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:18:29",
+      "to": "entry:api:http:GET:/api/status",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 18,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:20:30",
+      "to": "entry:api:http:GET:/api/reports",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/api.ts",
+      "line": 20,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:7:33",
+      "to": "entry:api:http:GET:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 7,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/catalog.routes.ts",
+      "line": 7,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 9,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /products@6 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 7,
+            "samples": [
+              {
+                "file": "src/catalog.routes.ts",
+                "line": 7,
+                "symbol": "GET /products@6 -> res.json"
+              },
+              {
+                "file": "src/orders.routes.ts",
+                "line": 10,
+                "symbol": "GET /@9 -> res.json"
+              },
+              {
+                "file": "src/orders.routes.ts",
+                "line": 13,
+                "symbol": "POST /@12 -> res.status(201).json"
+              }
+            ],
+            "files": [
+              "src/plugins.routes.ts",
+              "src/reports.routes.ts",
+              "src/services/status.ts"
+            ]
+          },
+          {
+            "cause": "dynamic-member",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 32,
+                "symbol": "Server.start -> services[name]"
+              }
+            ]
+          },
+          {
+            "cause": "module-not-installed",
+            "package": "express",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 34,
+                "symbol": "Server.start -> this.app.listen"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/server.js",
+      "line": 12,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /jobs/health@11 -> res.send",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/server.js",
+                "line": 12,
+                "symbol": "GET /jobs/health@11 -> res.send"
+              }
+            ]
+          },
+          {
+            "cause": "untyped-value",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/server.js",
+                "line": 17,
+                "symbol": "JobsServer.start -> this.app.listen"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "jobs"
+    }
+  ]
+}

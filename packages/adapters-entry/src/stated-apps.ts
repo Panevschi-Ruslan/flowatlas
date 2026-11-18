@@ -1,5 +1,5 @@
-import { originOfValue, packageOfSpecifier } from '@flowatlas/core';
-import type { Node as TsNode } from 'ts-morph';
+import { callSitesOf, originOfValue, packageOfSpecifier, type Forwarder } from '@flowatlas/core';
+import type { CallExpression, ParameterDeclaration, SourceFile, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 import type { AppType, RouteDialect } from './route-dialects.js';
 
@@ -48,6 +48,36 @@ const unwrap = (expr: TsNode): TsNode =>
   Node.isParenthesizedExpression(expr) || Node.isAsExpression(expr) || Node.isNonNullExpression(expr)
     ? unwrap(expr.getExpression())
     : expr;
+
+/**
+ * What an answer about the whole project is kept under: the program, not the
+ * project. A watch refreshes a changed file in place and the checker then
+ * answers from a new program, and an answer here - a property's writes, a
+ * function's callers - may rest on any file.
+ */
+const programOf = (node: TsNode): object => node.getProject().getProgram().compilerObject;
+
+/** Answers about nodes, kept per program. */
+class PerProgram<V> {
+  readonly #byProgram = new WeakMap<object, WeakMap<TsNode, V>>();
+
+  #of(node: TsNode): WeakMap<TsNode, V> {
+    const program = programOf(node);
+    const known = this.#byProgram.get(program);
+    if (known !== undefined) return known;
+    const fresh = new WeakMap<TsNode, V>();
+    this.#byProgram.set(program, fresh);
+    return fresh;
+  }
+
+  get(node: TsNode): V | undefined {
+    return this.#of(node).get(node);
+  }
+
+  set(node: TsNode, value: V): void {
+    this.#of(node).set(node, value);
+  }
+}
 
 /**
  * The declaration an application value stands for.
@@ -370,7 +400,7 @@ const ofValue = (expr: TsNode, dialect: RouteDialect, depth: number): AppType | 
   const declaration =
     STATED_TYPE[node.getKind()] !== undefined
       ? node
-      : Node.isIdentifier(node) || Node.isPropertyAccessExpression(node)
+      : Node.isIdentifier(node) || Node.isPropertyAccessExpression(node) || Node.isElementAccessExpression(node)
         ? appDeclaration(node)
         : undefined;
   if (declaration === undefined) return undefined;
@@ -379,8 +409,11 @@ const ofValue = (expr: TsNode, dialect: RouteDialect, depth: number): AppType | 
   // the answer whichever way it goes: `app: Express` is an application, and
   // `settings: AppSettings = express()` is a sign the reading has gone wrong.
   if (written !== undefined) return ofWrittenType(written, dialect, depth);
-  const value = valueOf(declaration);
-  return value === undefined ? undefined : ofValue(value, dialect, depth + 1);
+  for (const value of valuesOf(declaration)) {
+    const found = ofValue(value, dialect, depth + 1);
+    if (found !== undefined) return found;
+  }
+  return undefined;
 };
 
 /**
@@ -393,6 +426,7 @@ const ofValue = (expr: TsNode, dialect: RouteDialect, depth: number): AppType | 
 export const statedApp = (expr: TsNode, dialect: RouteDialect): AppType | undefined =>
   ofValue(expr, dialect, 0);
 
+
 /**
  * Whether the source states an application as surely as a type would (P346).
  *
@@ -402,9 +436,9 @@ export const statedApp = (expr: TsNode, dialect: RouteDialect): AppType | undefi
  * the framework's own package. A checker with the types installed would read
  * nothing more than that. So a route on it carries what a typed one carries,
  * and every other statement R142 reads stays `heuristic`: an annotation, a
- * destructured member, a class of the repository extending one, a function of
- * the repository returning one and a value arriving as a parameter all rest on
- * somebody's account of the value rather than on the value.
+ * destructured member, a class of the repository extending one and a function
+ * of the repository returning one all rest on somebody's account of the value
+ * rather than on the value.
  *
  * Direct means three things together:
  *
@@ -415,13 +449,16 @@ export const statedApp = (expr: TsNode, dialect: RouteDialect): AppType | undefi
  * - **The value.** The receiver is that call, or a chain of methods the dialect
  *   says answer with the application (`express().disable('x-powered-by')`,
  *   `Router().get(…).post(…)`), or a name holding one of those.
- * - **The name.** A variable holding that value and only it: a `const`, or a
- *   `let` or `var` nothing in its file assigns again; a field of the instance
- *   (`readonly app = express()`) nothing but its own class's constructor
- *   writes, every value it is given made directly; a parameter whose default
- *   is made directly and that every caller of its function hands nothing
- *   (P350). A static field, a parameter a caller may hand something, or a
- *   destructured name is somebody's account of where the value went.
+ * - **The name.** Whatever holds the value holds only values made that way:
+ *   a `const`, or a `let` or `var` nothing in its file assigns again; a
+ *   property - a field of a class, `this.app` or `server.app`, or a member of
+ *   an object written in place - every write of which the repository makes is
+ *   known, made inside its class or its module, and a direct value (P350,
+ *   P354); a parameter every caller of whose function, found by its name or
+ *   through any reference to it the reading can follow, hands a direct value or
+ *   hands nothing to a default that is one (P354). A write the reading cannot
+ *   place, a caller it cannot see, or a destructured name is somebody's account
+ *   of where the value went.
  */
 export const madeDirectly = (expr: TsNode, dialect: RouteDialect): boolean =>
   directly(expr, dialect, 0);
@@ -440,19 +477,20 @@ const directly = (expr: TsNode, dialect: RouteDialect, depth: number): boolean =
       directly(callee.getExpression(), dialect, depth + 1)
     );
   }
-  // `this.app`, a field of the instance (P350).
-  if (Node.isPropertyAccessExpression(node) && Node.isThisExpression(node.getExpression())) {
+  // A property: `this.app`, `server.app`, `server['app']` (P350, P354).
+  if (Node.isPropertyAccessExpression(node) || Node.isElementAccessExpression(node)) {
     const declaration = appDeclaration(node);
-    if (declaration !== undefined && Node.isPropertyDeclaration(declaration)) return fieldMadeDirectly(declaration, dialect, depth);
-    if (declaration !== undefined && Node.isParameterDeclaration(declaration) && declaration.isParameterProperty()) {
-      return parameterMadeDirectly(declaration, dialect, depth) && !writtenOutside(declaration);
-    }
-    return false;
+    return declaration !== undefined && heldDirectly(declaration, dialect, depth);
   }
   if (!Node.isIdentifier(node)) return false;
   const declaration = appDeclaration(node);
-  if (declaration !== undefined && Node.isParameterDeclaration(declaration)) return parameterMadeDirectly(declaration, dialect, depth);
-  if (declaration === undefined || !Node.isVariableDeclaration(declaration)) return false;
+  return declaration !== undefined && declaredDirectly(declaration, dialect, depth);
+};
+
+/** Whether a declaration of a name holds only direct values: a `const`, a `let` written once, a parameter. */
+const declaredDirectly = (declaration: TsNode, dialect: RouteDialect, depth: number): boolean => {
+  if (Node.isParameterDeclaration(declaration)) return parameterMadeDirectly(declaration, dialect, depth);
+  if (!Node.isVariableDeclaration(declaration)) return heldDirectly(declaration, dialect, depth);
   if (!Node.isIdentifier(declaration.getNameNode()) || reassigned(declaration)) return false;
   const value = declaration.getInitializer();
   return value !== undefined && directly(value, dialect, depth + 1);
@@ -468,15 +506,28 @@ const ASSIGNMENTS: ReadonlySet<SyntaxKind> = new Set([
 
 const writtenAgain = new WeakMap<TsNode, boolean>();
 
-/** Whether an identifier is the target of an assignment, plain or destructuring. */
-const isWritten = (identifier: TsNode): boolean => {
-  const parent = identifier.getParent();
+/** The assignment a node is the whole left side of, `app = …` or `app ??= …`. */
+const assignmentTo = (target: TsNode): TsNode | undefined => {
+  const parent = target.getParent();
+  return parent !== undefined &&
+    Node.isBinaryExpression(parent) &&
+    parent.getLeft() === target &&
+    ASSIGNMENTS.has(parent.getOperatorToken().getKind())
+    ? parent
+    : undefined;
+};
+
+/** Whether an identifier or a member is the target of an assignment, plain or destructuring. */
+const isWritten = (target: TsNode): boolean => {
+  if (assignmentTo(target) !== undefined) return true;
+  const parent = target.getParent();
   if (parent === undefined) return false;
-  if (Node.isBinaryExpression(parent)) {
-    return parent.getLeft() === identifier && ASSIGNMENTS.has(parent.getOperatorToken().getKind());
-  }
-  // `[app] = others` and `({ app } = others)`.
-  if (!Node.isArrayLiteralExpression(parent) && !Node.isShorthandPropertyAssignment(parent)) return false;
+  // `[app] = others`, `({ app } = others)` and `({ app: this.app } = others)`.
+  const destructured =
+    Node.isArrayLiteralExpression(parent) ||
+    Node.isShorthandPropertyAssignment(parent) ||
+    (Node.isPropertyAssignment(parent) && parent.getInitializer() === target);
+  if (!destructured) return false;
   const assignment = parent.getFirstAncestorByKind(SyntaxKind.BinaryExpression);
   return assignment?.getOperatorToken().getKind() === SyntaxKind.EqualsToken;
 };
@@ -508,117 +559,284 @@ const reassigned = (declaration: TsNode): boolean => {
   return found;
 };
 
-/** The member a write to a field is in: the constructor, another member, or none of the class. */
-const memberOf = (node: TsNode): TsNode | undefined =>
-  node.getFirstAncestor(
-    (each) =>
-      Node.isConstructorDeclaration(each) ||
-      Node.isMethodDeclaration(each) ||
-      Node.isGetAccessorDeclaration(each) ||
-      Node.isSetAccessorDeclaration(each) ||
-      Node.isPropertyDeclaration(each) ||
-      Node.isClassStaticBlockDeclaration(each),
-  );
-
-/** A field or a parameter property: what has a name. */
-type Named = TsNode & { getName(): string };
-
-/** The writes to a field anywhere in the project, `<x>.app = …` and `<x>['app'] = …`, by its name. */
-const fieldWrites = (field: Named): TsNode[] => {
-  const name = field.getName();
-  const found: TsNode[] = [];
-  for (const file of field.getSourceFile().getProject().getSourceFiles()) {
-    if (!file.getFullText().includes(name)) continue;
-    for (const access of file.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)) {
-      if (access.getName() === name && isWritten(access)) found.push(access);
-    }
-    for (const access of file.getDescendantsOfKind(SyntaxKind.ElementAccessExpression)) {
-      const key = access.getArgumentExpression();
-      if (key !== undefined && (Node.isStringLiteral(key) || Node.isNoSubstitutionTemplateLiteral(key)) && key.getLiteralValue() === name && isWritten(access)) found.push(access);
-    }
-  }
-  return found;
-};
-
-const fieldWritesOf = new WeakMap<TsNode, readonly TsNode[]>();
-
-/** The writes to a field, remembered per field. */
-const writesOf = (field: Named): readonly TsNode[] => {
-  const known = fieldWritesOf.get(field);
-  if (known !== undefined) return known;
-  const found = fieldWrites(field);
-  fieldWritesOf.set(field, found);
-  return found;
-};
+/**
+ * A property an application may be held by (P354): a field of a class
+ * (`app = express()`, `private app: Application;`, a parameter property), a
+ * member of an object written in place (`{ app: express() }`), or - in
+ * JavaScript - the property `this.app = express()` declares in a class.
+ */
+interface Holder {
+  /** The declaration every write of the property names. */
+  readonly declaration: TsNode;
+  readonly name: string;
+  /** The class, or the object written in place, the property is a member of. */
+  readonly owner: TsNode;
+  /** What the declaration itself gives it, where it gives anything. */
+  readonly initial: TsNode | undefined;
+}
 
 /** The class a field or a parameter property belongs to. */
-const classOf = (field: TsNode): TsNode | undefined => field.getFirstAncestor((each) => Node.isClassDeclaration(each) || Node.isClassExpression(each));
+const classOf = (node: TsNode): TsNode | undefined =>
+  node.getFirstAncestor((each) => Node.isClassDeclaration(each) || Node.isClassExpression(each));
 
-/** Whether a write is `this.<field> = …` in the constructor of the field's own class. */
-const inOwnConstructor = (write: TsNode, owner: TsNode | undefined): boolean => {
-  const member = memberOf(write);
-  if (member === undefined || !Node.isConstructorDeclaration(member) || member.getParent() !== owner) return false;
-  const receiver = Node.isPropertyAccessExpression(write) || Node.isElementAccessExpression(write) ? write.getExpression() : undefined;
-  return receiver !== undefined && Node.isThisExpression(receiver);
-};
-
-/**
- * Whether a field, or a parameter property, is written anywhere but in its
- * own class's constructor (P350): another member of the class, a subclass,
- * code holding an instance. Found by the name, wherever it is written - with
- * nothing installed a receiver's type is nobody's - so a write to a field of
- * the same name elsewhere counts too, the safe way.
- */
-const writtenOutside = (field: Named): boolean => {
-  const owner = classOf(field);
-  return writesOf(field).some((write) => !inOwnConstructor(write, owner));
-};
-
-/**
- * Whether a field holds what a maker made, as surely as a `const` (P350):
- * `readonly app = express()`, `private router = Router()`, or a field the
- * constructor gives one - every value it is given, by its initialiser and by
- * its own class's constructor, made directly, and it is written nowhere else.
- * A static field is the class's, written wherever the class is reachable, and
- * stays an account of the value.
- */
-const fieldMadeDirectly = (field: TsNode, dialect: RouteDialect, depth: number): boolean => {
-  if (!Node.isPropertyDeclaration(field) || field.isStatic() || writtenOutside(field)) return false;
-  const values: TsNode[] = [];
-  const initializer = field.getInitializer();
-  if (initializer !== undefined) values.push(initializer);
-  for (const write of writesOf(field)) {
-    const assignment = write.getParent();
-    if (assignment === undefined || !Node.isBinaryExpression(assignment) || assignment.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) return false;
-    values.push(assignment.getRight());
+/** What an object written in place is held by, past parentheses and casts. */
+const holderOfLiteral = (literal: TsNode): TsNode | undefined => {
+  let parent = literal.getParent();
+  while (parent !== undefined && (Node.isParenthesizedExpression(parent) || Node.isAsExpression(parent) || Node.isSatisfiesExpression(parent))) {
+    parent = parent.getParent();
   }
-  return values.length > 0 && values.every((value) => directly(value, dialect, depth + 1));
+  return parent;
 };
 
-/** The name a function is called by: its own, the variable holding it, its class's for a constructor. */
-const calledAs = (fn: TsNode): TsNode | undefined => {
-  if (Node.isFunctionDeclaration(fn) || Node.isMethodDeclaration(fn)) return fn.getNameNode();
-  if (Node.isConstructorDeclaration(fn)) {
-    const owner = fn.getParent();
-    return Node.isClassDeclaration(owner) ? owner.getNameNode() : undefined;
+const holderOf = (declaration: TsNode): Holder | undefined => {
+  if (Node.isPropertyDeclaration(declaration) || (Node.isParameterDeclaration(declaration) && declaration.isParameterProperty())) {
+    const owner = classOf(declaration);
+    const nameNode = declaration.getNameNode();
+    if (owner === undefined || !(Node.isIdentifier(nameNode) || Node.isPrivateIdentifier(nameNode) || Node.isStringLiteral(nameNode))) return undefined;
+    return { declaration, name: declaration.getName(), owner, initial: Node.isPropertyDeclaration(declaration) ? declaration.getInitializer() : undefined };
   }
-  if (Node.isArrowFunction(fn) || Node.isFunctionExpression(fn)) {
-    const holder = fn.getParent();
-    return holder !== undefined && Node.isVariableDeclaration(holder) && holder.getInitializer() === fn && Node.isIdentifier(holder.getNameNode()) ? holder.getNameNode() : undefined;
+  if (Node.isPropertyAssignment(declaration) || Node.isShorthandPropertyAssignment(declaration)) {
+    const owner = declaration.getParent();
+    const nameNode = declaration.getNameNode();
+    if (!Node.isObjectLiteralExpression(owner) || !(Node.isIdentifier(nameNode) || Node.isStringLiteral(nameNode))) return undefined;
+    // The object has to be the one the property's readers hold: `const server
+    // = { app }` or a module's default, never a `let` given another object.
+    const holder = holderOfLiteral(owner);
+    const settled =
+      holder !== undefined &&
+      ((Node.isVariableDeclaration(holder) && Node.isIdentifier(holder.getNameNode()) && !reassigned(holder)) ||
+        (Node.isExportAssignment(holder) && !holder.isExportEquals()));
+    if (!settled) return undefined;
+    return { declaration, name: declaration.getName(), owner, initial: Node.isPropertyAssignment(declaration) ? declaration.getInitializer() : undefined };
+  }
+  if (Node.isBinaryExpression(declaration)) {
+    const left = declaration.getLeft();
+    const owner = classOf(declaration);
+    if (!Node.isPropertyAccessExpression(left) || !Node.isThisExpression(left.getExpression()) || owner === undefined) return undefined;
+    return { declaration, name: left.getName(), owner, initial: undefined };
   }
   return undefined;
 };
 
-/** Whether the arguments of a call hand the parameter at `index` nothing: none written, `undefined`, `void 0`. */
-const handsNothing = (args: readonly TsNode[], index: number): boolean => {
-  if (args.slice(0, index + 1).some((arg) => Node.isSpreadElement(arg))) return false;
-  const arg = args[index];
-  if (arg === undefined) return true;
-  const value = unwrap(arg);
-  return (Node.isIdentifier(value) && value.getText() === 'undefined') || (Node.isVoidExpression(value) && Node.isNumericLiteral(value.getExpression()));
+/** One write to a property: the value it puts there, and whether it is written inside the property's class or module. */
+interface Write {
+  readonly value: TsNode | undefined;
+  readonly inside: boolean;
+}
+
+interface Writes {
+  readonly writes: readonly Write[];
+  /** A write by the property's name whose receiver the checker types as nothing: it may be this property. */
+  readonly unplaced: boolean;
+}
+
+/** Every write by a name anywhere in the project, `<x>.app = …` and `<x>['app'] = …`. */
+const writesIn = new WeakMap<object, ReadonlyMap<string, readonly TsNode[]>>();
+
+/**
+ * Every write to a property in the project, by the property's name, found in
+ * one pass: a reading of every field a class writes would otherwise walk the
+ * whole project once per field.
+ */
+const propertyWrites = (from: TsNode): ReadonlyMap<string, readonly TsNode[]> => {
+  const program = programOf(from);
+  const known = writesIn.get(program);
+  if (known !== undefined) return known;
+  const byName = new Map<string, TsNode[]>();
+  const add = (name: string, access: TsNode): void => {
+    byName.set(name, [...(byName.get(name) ?? []), access]);
+  };
+  for (const file of from.getProject().getSourceFiles()) {
+    if (file.isDeclarationFile() || file.isInNodeModules()) continue;
+    for (const access of file.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)) {
+      if (isWritten(access)) add(access.getName(), access);
+    }
+    for (const access of file.getDescendantsOfKind(SyntaxKind.ElementAccessExpression)) {
+      const key = access.getArgumentExpression();
+      if (key !== undefined && (Node.isStringLiteral(key) || Node.isNoSubstitutionTemplateLiteral(key)) && isWritten(access)) add(key.getLiteralValue(), access);
+    }
+  }
+  writesIn.set(program, byName);
+  return byName;
 };
 
-const callersHandNothing = new WeakMap<TsNode, Map<number, boolean>>();
+const writesByName = (from: TsNode, name: string): readonly TsNode[] => propertyWrites(from).get(name) ?? [];
+
+const writesOfHolder = new PerProgram<Writes>();
+
+/**
+ * The writes to a property (P354), found by its name wherever they are and
+ * kept where the checker says they are this property's. A write the checker
+ * places on another property of the same name is that one's; a write on a
+ * receiver it types as nothing may be this one, and is `unplaced`. Inside means
+ * written in the property's own class - any member of it, never a subclass -
+ * or, for a member of an object written in place, in the object's module.
+ */
+const writesOf = (holder: Holder): Writes => {
+  const known = writesOfHolder.get(holder.declaration);
+  if (known !== undefined) return known;
+  const writes: Write[] = [];
+  let unplaced = false;
+  for (const write of writesByName(holder.declaration, holder.name)) {
+    const named = Node.isPropertyAccessExpression(write) ? write.getNameNode() : Node.isElementAccessExpression(write) ? write.getArgumentExpression() : undefined;
+    const declarations = named?.getSymbol()?.getDeclarations() ?? [];
+    if (declarations.length === 0) {
+      unplaced = true;
+      continue;
+    }
+    if (!declarations.includes(holder.declaration)) continue;
+    const inside = Node.isObjectLiteralExpression(holder.owner)
+      ? write.getSourceFile() === holder.owner.getSourceFile()
+      : write.getFirstAncestor((each) => each === holder.owner) !== undefined;
+    const assignment = assignmentTo(write);
+    writes.push({ value: assignment !== undefined && Node.isBinaryExpression(assignment) ? assignment.getRight() : undefined, inside });
+  }
+  const found = { writes, unplaced };
+  writesOfHolder.set(holder.declaration, found);
+  return found;
+};
+
+/** The calls that may write any property of an object at once: `Object.assign(target, …)` and its kin. */
+const WHOLE_WRITERS = new Set(['Object.assign', 'Object.defineProperty', 'Object.defineProperties', 'Reflect.set']);
+
+const wholeWritesIn = new WeakMap<object, readonly TsNode[]>();
+
+/** Every such call's target in the project, found once. */
+const wholeWriteTargets = (from: TsNode): readonly TsNode[] => {
+  const program = programOf(from);
+  const known = wholeWritesIn.get(program);
+  if (known !== undefined) return known;
+  const targets: TsNode[] = [];
+  for (const file of from.getProject().getSourceFiles()) {
+    if (file.isDeclarationFile()) continue;
+    for (const call of file.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+      const [target] = call.getArguments();
+      if (target !== undefined && WHOLE_WRITERS.has(call.getExpression().getText())) targets.push(unwrap(target));
+    }
+  }
+  wholeWritesIn.set(program, targets);
+  return targets;
+};
+
+/**
+ * Whether something may write the property without naming it (P354):
+ * `Object.assign(this, options)` in its class, or `Object.assign(server, …)`
+ * on an instance of the class or on the object itself.
+ */
+const writtenWhole = (holder: Holder): boolean =>
+  wholeWriteTargets(holder.declaration).some((target) => {
+    if (Node.isThisExpression(target)) return classOf(target) === holder.owner;
+    const declarations = target.getType().getSymbol()?.getDeclarations() ?? [];
+    return declarations.includes(holder.owner);
+  });
+
+/**
+ * Whether a property holds only what a maker made, as surely as a `const`
+ * (P350, P354): every write the repository makes of it is placed, made inside
+ * its class or its object's module, and a direct value, and so is what its
+ * declaration gives it; nothing writes the object whole. A parameter property
+ * is given what its constructor is called with, so that parameter is asked
+ * too. A property neither of a class nor of an object written in place - a
+ * name a namespace import reads - is its declaration.
+ */
+const heldDirectly = (declaration: TsNode, dialect: RouteDialect, depth: number): boolean => {
+  const holder = holderOf(declaration);
+  if (holder === undefined) return Node.isVariableDeclaration(declaration) && declaredDirectly(declaration, dialect, depth);
+  const { writes, unplaced } = writesOf(holder);
+  if (unplaced || writes.some((write) => !write.inside || write.value === undefined) || writtenWhole(holder)) return false;
+  const values = writes.map((write) => write.value as TsNode);
+  const given = (value: TsNode): boolean => directly(value, dialect, depth + 1);
+  if (Node.isParameterDeclaration(declaration)) {
+    return parameterMadeDirectly(declaration, dialect, depth) && values.every(given);
+  }
+  if (Node.isShorthandPropertyAssignment(declaration)) {
+    const named = declaration.getValueSymbol()?.getDeclarations()[0];
+    return named !== undefined && declaredDirectly(named, dialect, depth + 1) && values.every(given);
+  }
+  if (holder.initial !== undefined) values.unshift(holder.initial);
+  return values.length > 0 && values.every(given);
+};
+
+/**
+ * Every value a property declared with none of its own is given (P354): `app;
+ * constructor() { this.app = express(); }`, or the property a JavaScript class
+ * declares by writing it - for placing what is declared on it where each value
+ * is served. Undefined where a write cannot be placed or read, or where
+ * something writes the object whole.
+ */
+export const valuesWrittenTo = (declaration: TsNode): readonly TsNode[] | undefined => {
+  const holder = Node.isPropertyDeclaration(declaration) || Node.isBinaryExpression(declaration) ? holderOf(declaration) : undefined;
+  if (holder === undefined || holder.initial !== undefined) return undefined;
+  const { writes, unplaced } = writesOf(holder);
+  if (unplaced || writes.length === 0 || writtenWhole(holder)) return undefined;
+  const values: TsNode[] = [];
+  for (const write of writes) {
+    if (write.value === undefined) return undefined;
+    values.push(write.value);
+  }
+  return values;
+};
+
+/**
+ * The values a declaration may hold, for telling what it is (R142, P354): its
+ * initialiser, and for a property every value the repository writes to it - a
+ * field declared bare and given its application by the constructor, `app;
+ * constructor() { this.app = express(); }`, or the property a JavaScript
+ * class declares by writing it.
+ */
+const valuesOf = (declaration: TsNode): TsNode[] => {
+  const own = valueOf(declaration);
+  if (Node.isPropertyAssignment(declaration)) return declaration.getInitializer() === undefined ? [] : [declaration.getInitializer() as TsNode];
+  if (Node.isShorthandPropertyAssignment(declaration)) {
+    const named = declaration.getValueSymbol()?.getDeclarations()[0];
+    return named === undefined ? [] : [named];
+  }
+  const holder = Node.isPropertyDeclaration(declaration) || Node.isBinaryExpression(declaration) ? holderOf(declaration) : undefined;
+  const written = holder === undefined ? [] : writesOf(holder).writes.flatMap((write) => (write.value === undefined ? [] : [write.value]));
+  return own === undefined ? written : [own, ...written];
+};
+
+/** The arguments of one call of a function. */
+type Arguments = readonly TsNode[];
+
+/** How many names a function is handed through on the way to its calls. */
+const ALIAS_DEPTH = 6;
+
+/**
+ * The node a function's references are searched from: its name, the
+ * variable or the member holding it, its class's name for a constructor, or
+ * the `default` of a module exporting it with no name of its own.
+ */
+const searchedFrom = (fn: TsNode): TsNode | undefined => {
+  if (Node.isFunctionDeclaration(fn)) {
+    return fn.getNameNode() ?? fn.getModifiers().find((each) => each.getKind() === SyntaxKind.DefaultKeyword);
+  }
+  if (Node.isMethodDeclaration(fn)) {
+    const name = fn.getNameNode();
+    return Node.isIdentifier(name) || Node.isPrivateIdentifier(name) || Node.isStringLiteral(name) ? name : undefined;
+  }
+  if (Node.isConstructorDeclaration(fn)) {
+    const owner = fn.getParent();
+    return Node.isClassDeclaration(owner)
+      ? owner.getNameNode() ?? owner.getModifiers().find((each) => each.getKind() === SyntaxKind.DefaultKeyword)
+      : undefined;
+  }
+  if (!Node.isArrowFunction(fn) && !Node.isFunctionExpression(fn)) return undefined;
+  let outer: TsNode = fn;
+  let holder = fn.getParent();
+  while (holder !== undefined && (Node.isParenthesizedExpression(holder) || Node.isAsExpression(holder) || Node.isSatisfiesExpression(holder))) {
+    outer = holder;
+    holder = holder.getParent();
+  }
+  if (holder === undefined) return undefined;
+  if (Node.isExportAssignment(holder) && !holder.isExportEquals()) return holder.getFirstChildByKind(SyntaxKind.DefaultKeyword);
+  if (Node.isVariableDeclaration(holder) || Node.isPropertyAssignment(holder) || Node.isPropertyDeclaration(holder)) {
+    if (holder.getInitializer() !== outer) return undefined;
+    const name = holder.getNameNode();
+    return Node.isIdentifier(name) || Node.isStringLiteral(name) ? name : undefined;
+  }
+  return undefined;
+};
 
 /** The kinds of a use of a name that hand it on or name a type, and so call nothing. */
 const notAUse = (parent: TsNode): boolean =>
@@ -631,57 +849,384 @@ const notAUse = (parent: TsNode): boolean =>
   Node.isTypeQuery(parent) ||
   Node.isQualifiedName(parent);
 
+/** Whether a reference is the name of a declaration rather than a use of one. */
+const declares = (parent: TsNode, reference: TsNode): boolean =>
+  (Node.isFunctionDeclaration(parent) ||
+    Node.isClassDeclaration(parent) ||
+    Node.isMethodDeclaration(parent) ||
+    Node.isPropertyDeclaration(parent) ||
+    Node.isVariableDeclaration(parent) ||
+    Node.isParameterDeclaration(parent) ||
+    Node.isPropertyAssignment(parent)) &&
+  parent.getNameNode() === reference;
+
 /**
- * Whether every place a function is used calls it handing the parameter at
- * `index` nothing (P350), and there is at least one: a call by its name, a
- * method's call on anything by its name, a `new` of a constructor's class. An
- * import or an export hands it on and is not a use; a type naming the class
- * is none either. Anything else - passed as a value, called through
- * `super(…)`, a spread - may hand it anything, and is no.
+ * The name a use hands a function on to, whose own uses are then its calls:
+ * `const { default: init } = await import('./web')`, `const { init } = api`,
+ * `const later = init`, `{ init: init }` and `{ init }`.
  */
-const everyCallerHandsNothing = (fn: TsNode, index: number): boolean => {
-  const known = callersHandNothing.get(fn)?.get(index);
+const handedTo = (reference: TsNode, value: TsNode): TsNode | undefined => {
+  const parent = reference.getParent();
+  if (parent === undefined) return undefined;
+  if (Node.isBindingElement(parent)) {
+    const name = parent.getNameNode();
+    return Node.isIdentifier(name) ? name : undefined;
+  }
+  if (Node.isShorthandPropertyAssignment(parent)) return reference;
+  const holder = value.getParent();
+  if (holder !== undefined && (Node.isVariableDeclaration(holder) || Node.isPropertyAssignment(holder)) && holder.getInitializer() === value) {
+    const name = holder.getNameNode();
+    return Node.isIdentifier(name) || Node.isStringLiteral(name) ? name : undefined;
+  }
+  return undefined;
+};
+
+/** Where a reference is in the project, to visit each once. */
+const placeOf = (node: TsNode): string => `${node.getSourceFile().getFilePath()}:${node.getStart()}`;
+
+/**
+ * Collects the calls of a function through every use of a name for it, and
+ * answers whether every use was one it could follow: a call, an import or
+ * export handing it on, a type, or a name it is handed to whose uses are
+ * followed in turn. Anything else - passed as a value, written into a list -
+ * may call it with anything.
+ */
+const callsThrough = (from: TsNode, fn: TsNode, calls: Set<TsNode>, seen: Set<string>, depth: number): boolean => {
+  const references = from.getProject().getLanguageService().findReferencesAsNodes(from as never) as TsNode[];
+  for (const reference of references) {
+    if (reference === from) continue;
+    const place = placeOf(reference);
+    if (seen.has(place)) continue;
+    seen.add(place);
+    const parent = reference.getParent();
+    if (parent === undefined) return false;
+    if (declares(parent, reference) || notAUse(parent)) continue;
+    const callee = Node.isPropertyAccessExpression(parent) && parent.getNameNode() === reference ? parent : reference;
+    const call = callee.getParent();
+    if (
+      call !== undefined &&
+      (Node.isCallExpression(call) || (Node.isNewExpression(call) && Node.isConstructorDeclaration(fn))) &&
+      call.getExpression() === callee
+    ) {
+      calls.add(call);
+      continue;
+    }
+    const onward = depth < ALIAS_DEPTH ? handedTo(reference, callee) : undefined;
+    if (onward === undefined || !callsThrough(onward, fn, calls, seen, depth + 1)) return false;
+  }
+  return true;
+};
+
+/** What core's search for a function's calls is asked with: the function, or what holds it. */
+const forwarderOf = (fn: TsNode): Forwarder | undefined => {
+  // Core's search starts from a name; a module's unnamed default has none.
+  if (Node.isFunctionDeclaration(fn)) return fn.getName() === undefined ? undefined : fn;
+  if (Node.isMethodDeclaration(fn)) return fn;
+  const holder = fn.getParent();
+  return holder !== undefined && (Node.isVariableDeclaration(holder) || Node.isPropertyDeclaration(holder)) ? holder : undefined;
+};
+
+/** A function's module and the names it exports it under, where it exports it. */
+interface Exported {
+  readonly module: SourceFile;
+  readonly names: ReadonlySet<string>;
+}
+
+const exportedAs = (fn: TsNode): Exported | undefined => {
+  // A method is called through what holds it, never as an export of its own.
+  if (Node.isMethodDeclaration(fn)) return undefined;
+  const holder = fn.getParent();
+  const module = fn.getSourceFile();
+  const names = new Set<string>();
+  for (const [name, declarations] of module.getExportedDeclarations()) {
+    if (declarations.some((declaration) => declaration === fn || declaration === holder)) names.add(name);
+  }
+  return names.size > 0 ? { module, names } : undefined;
+};
+
+const loadsIn = new WeakMap<object, ReadonlyMap<SourceFile, readonly TsNode[]>>();
+
+/** Every `import('./x')` and `require('./x')` in the project, by the module it loads, found once. */
+const moduleLoads = (from: TsNode): ReadonlyMap<SourceFile, readonly TsNode[]> => {
+  const program = programOf(from);
+  const known = loadsIn.get(program);
   if (known !== undefined) return known;
-  const name = calledAs(fn);
-  let calls = 0;
-  let ok = name !== undefined && Node.isIdentifier(name);
-  if (name !== undefined && Node.isIdentifier(name)) {
-    for (const ref of name.findReferencesAsNodes()) {
-      if (ref === name) continue;
-      const parent = ref.getParent();
-      if (parent === undefined || notAUse(parent)) continue;
-      const callee = Node.isPropertyAccessExpression(parent) && parent.getNameNode() === ref ? parent : ref;
-      const call = callee.getParent();
-      const isCall = call !== undefined && (Node.isCallExpression(call) || (Node.isNewExpression(call) && Node.isConstructorDeclaration(fn))) && call.getExpression() === callee;
-      if (!isCall || !handsNothing(call.getArguments(), index)) {
-        ok = false;
-        break;
-      }
-      calls += 1;
+  const byModule = new Map<SourceFile, TsNode[]>();
+  for (const file of from.getProject().getSourceFiles()) {
+    if (file.isDeclarationFile() || file.isInNodeModules()) continue;
+    for (const call of file.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+      const callee = call.getExpression();
+      if (callee.getKind() !== SyntaxKind.ImportKeyword && !(Node.isIdentifier(callee) && callee.getText() === 'require')) continue;
+      const loaded = call.getArguments()[0]?.getSymbol()?.getDeclarations()[0];
+      if (loaded === undefined || !Node.isSourceFile(loaded)) continue;
+      byModule.set(loaded, [...(byModule.get(loaded) ?? []), call]);
     }
   }
-  const answer = ok && calls > 0;
-  callersHandNothing.set(fn, (callersHandNothing.get(fn) ?? new Map<number, boolean>()).set(index, answer));
-  return answer;
+  loadsIn.set(program, byModule);
+  return byModule;
+};
+
+/** Past parentheses and casts, to what an expression's value is handed to. */
+const outermost = (node: TsNode): TsNode => {
+  let current = node;
+  let parent = current.getParent();
+  while (parent !== undefined && (Node.isParenthesizedExpression(parent) || Node.isAsExpression(parent) || Node.isNonNullExpression(parent) || Node.isSatisfiesExpression(parent))) {
+    current = parent;
+    parent = current.getParent();
+  }
+  return current;
+};
+
+/** What a search through a module loaded at run time carries along. */
+interface Search {
+  readonly fn: TsNode;
+  readonly names: ReadonlySet<string>;
+  readonly calls: Set<TsNode>;
+  readonly seen: Set<string>;
+}
+
+/**
+ * Follows a module's value - what `require('./web')` is, or what `await
+ * import('./web')` gives - to the calls of the function it exports (P354):
+ * `const { default: init } = …` then `init(app)`, `const web = …` then
+ * `web.default(app)`, `(…).default(app)`. Another export read off it is not
+ * this function. Anything else done with the module may call it unseen.
+ */
+const followModule = (value: TsNode, search: Search, depth: number): boolean => {
+  const node = outermost(value);
+  const parent = node.getParent();
+  if (parent === undefined || depth > ALIAS_DEPTH) return false;
+  if (Node.isPropertyAccessExpression(parent) && parent.getExpression() === node) {
+    if (!search.names.has(parent.getName())) return true;
+    const call = outermost(parent).getParent();
+    if (call !== undefined && Node.isCallExpression(call) && unwrap(call.getExpression()) === parent) {
+      search.calls.add(call);
+      return true;
+    }
+    const onward = handedTo(parent.getNameNode(), parent);
+    return onward !== undefined && callsThrough(onward, search.fn, search.calls, search.seen, depth + 1);
+  }
+  if (!Node.isVariableDeclaration(parent) || parent.getInitializer() !== node) return false;
+  const name = parent.getNameNode();
+  if (Node.isObjectBindingPattern(name)) {
+    for (const element of name.getElements()) {
+      if (element.getDotDotDotToken() !== undefined) return false;
+      const key = element.getPropertyNameNode()?.getText() ?? element.getName();
+      if (!search.names.has(key)) continue;
+      const bound = element.getNameNode();
+      if (!Node.isIdentifier(bound) || !callsThrough(bound, search.fn, search.calls, search.seen, depth + 1)) return false;
+    }
+    return true;
+  }
+  if (!Node.isIdentifier(name)) return false;
+  for (const reference of name.findReferencesAsNodes()) {
+    const at = reference.getParent();
+    if (at === undefined) return false;
+    if (notAUse(at)) continue;
+    if (!followModule(reference, search, depth + 1)) return false;
+  }
+  return true;
+};
+
+/** Follows a promise of a module - `import('./web')`, a loader's call - to where it is awaited. */
+const followPromise = (value: TsNode, search: Search, depth: number): boolean => {
+  const awaited = outermost(value).getParent();
+  return awaited !== undefined && Node.isAwaitExpression(awaited) && followModule(awaited, search, depth);
+};
+
+/** Whether a use of an object of loaders only reads its keys: `Object.keys(services)`. */
+const readsKeys = (reference: TsNode): boolean => {
+  const call = outermost(reference).getParent();
+  return call !== undefined && Node.isCallExpression(call) && call.getExpression().getText() === 'Object.keys';
 };
 
 /**
- * Whether a parameter holds what a maker made, as surely as a `const`
- * (P350): its default is a maker's call, nothing in its function gives it
- * another value, and every caller of the function hands it nothing, so the
- * default is the value every time. A caller that may hand it something
- * leaves it an account of the value.
+ * Follows a function that loads a module, `() => import('./web')`, to its
+ * calls (P354): held by a name, `load()`; or a member of an object of
+ * loaders, `services.web()`, or `services[name]()` with a key that may be
+ * this one - the shape a service started by name is written in.
  */
-const parameterMadeDirectly = (parameter: TsNode, dialect: RouteDialect, depth: number): boolean => {
-  if (!Node.isParameterDeclaration(parameter) || parameter.isRestParameter() || !Node.isIdentifier(parameter.getNameNode())) return false;
-  const value = parameter.getInitializer();
-  if (value === undefined || !directly(value, dialect, depth + 1)) return false;
+const followLoader = (loader: TsNode, search: Search, depth: number): boolean => {
+  const holder = outermost(loader).getParent();
+  if (holder === undefined || depth > ALIAS_DEPTH) return false;
+  const callOf = (callee: TsNode): TsNode | undefined => {
+    const call = outermost(callee).getParent();
+    return call !== undefined && Node.isCallExpression(call) && unwrap(call.getExpression()) === callee ? call : undefined;
+  };
+  const named = Node.isVariableDeclaration(holder) ? holder.getNameNode() : undefined;
+  if (named !== undefined && Node.isIdentifier(named) && !reassigned(holder)) {
+    for (const reference of named.findReferencesAsNodes()) {
+      const at = reference.getParent();
+      if (at !== undefined && notAUse(at)) continue;
+      const call = callOf(reference);
+      if (call === undefined || !followPromise(call, search, depth + 1)) return false;
+    }
+    return true;
+  }
+  if (!Node.isPropertyAssignment(holder)) return false;
+  const key = holder.getName();
+  const object = holderOfLiteral(holder.getParent());
+  const objectName = object !== undefined && Node.isVariableDeclaration(object) ? object.getNameNode() : undefined;
+  if (object === undefined || objectName === undefined || !Node.isIdentifier(objectName) || reassigned(object)) return false;
+  for (const reference of objectName.findReferencesAsNodes()) {
+    const at = reference.getParent();
+    if (at === undefined) return false;
+    if (notAUse(at) || readsKeys(reference)) continue;
+    const member =
+      Node.isPropertyAccessExpression(at) && at.getExpression() === reference
+        ? at.getName() === key
+          ? at
+          : undefined
+        : Node.isElementAccessExpression(at) && at.getExpression() === reference
+          ? at
+          : null;
+    if (member === null) return false;
+    if (member === undefined) continue;
+    if (Node.isElementAccessExpression(member)) {
+      const written = member.getArgumentExpression();
+      if (written !== undefined && (Node.isStringLiteral(written) || Node.isNoSubstitutionTemplateLiteral(written)) && written.getLiteralValue() !== key) continue;
+    }
+    const call = callOf(member);
+    if (call === undefined || !followPromise(call, search, depth + 1)) return false;
+  }
+  return true;
+};
+
+/**
+ * Follows every load of the module a function is exported from, written
+ * anywhere in the project (P354). The checker's own search for a function's
+ * uses looks only in the modules that import its module, so a module loaded
+ * through a map of lazy imports - a service started by its name - is found
+ * here instead, or the search says it cannot be.
+ */
+const followLoads = (exported: Exported, search: Search): boolean =>
+  (moduleLoads(exported.module).get(exported.module) ?? []).every((load) => {
+    const callee = (load as CallExpression).getExpression();
+    if (callee.getKind() !== SyntaxKind.ImportKeyword) return followModule(load, search, 0);
+    const parent = outermost(load).getParent();
+    if (parent !== undefined && Node.isAwaitExpression(parent)) return followModule(parent, search, 0);
+    return parent !== undefined && Node.isArrowFunction(parent) && parent.getBody() === outermost(load) && followLoader(parent, search, 0);
+  });
+
+const callersFound = new PerProgram<readonly Arguments[] | null>();
+
+/**
+ * The arguments of every call of a function, or undefined when some use of it
+ * may call it unseen (P354). Found by its name, through what it is imported
+ * and destructured as, through every load of its module at run time - a
+ * service's default reached by `import()` from a map of loaders included -
+ * and through receivers the checker types as nothing (core's `callSitesOf`).
+ */
+const callersOf = (fn: TsNode): readonly Arguments[] | undefined => {
+  const known = callersFound.get(fn);
+  if (known !== undefined) return known ?? undefined;
+  const from = searchedFrom(fn);
+  const calls = new Set<TsNode>();
+  const seen = new Set<string>();
+  const exported = exportedAs(fn);
+  let found: readonly Arguments[] | undefined;
+  if (
+    from !== undefined &&
+    callsThrough(from, fn, calls, seen, 0) &&
+    (exported === undefined || followLoads(exported, { fn, names: exported.names, calls, seen }))
+  ) {
+    const forwarder = forwarderOf(fn);
+    for (const call of forwarder === undefined ? [] : callSitesOf(forwarder)) calls.add(call);
+    found = [...calls].map((call) => (Node.isCallExpression(call) || Node.isNewExpression(call) ? call.getArguments() : []));
+  }
+  callersFound.set(fn, found ?? null);
+  return found;
+};
+
+/** Whether the arguments of a call hand the parameter at `index` nothing: none written, `undefined`, `void 0`. */
+const handsNothing = (args: Arguments, index: number): boolean => {
+  const arg = args[index];
+  if (arg === undefined) return true;
+  const value = unwrap(arg);
+  return (Node.isIdentifier(value) && value.getText() === 'undefined') || (Node.isVoidExpression(value) && Node.isNumericLiteral(value.getExpression()));
+};
+
+
+const handedValues = new PerProgram<readonly TsNode[] | null>();
+
+/**
+ * What a parameter is given, call by call (P354): each caller's argument for
+ * it, or its default where a caller hands nothing - or undefined where that
+ * cannot all be told: a caller the reading cannot see, a spread in front of
+ * it, nothing handed and no default, or a function that gives the parameter
+ * another value itself. A call by which the function hands the parameter on
+ * to itself, `walk(app, rest)`, gives it what its other callers did and adds
+ * nothing.
+ *
+ * Whether a parameter holds what a maker made is asked of these, and so is
+ * where an application arriving as one is served: at every place each value
+ * handed to it is.
+ */
+export const valuesHandedTo = (parameter: TsNode): readonly TsNode[] | undefined => {
+  if (!Node.isParameterDeclaration(parameter) || parameter.isRestParameter() || !Node.isIdentifier(parameter.getNameNode())) return undefined;
+  const known = handedValues.get(parameter);
+  if (known !== undefined) return known ?? undefined;
+  const found = valuesFromCallers(parameter);
+  handedValues.set(parameter, found ?? null);
+  return found;
+};
+
+const valuesFromCallers = (parameter: ParameterDeclaration): readonly TsNode[] | undefined => {
   const fn = parameter.getParent();
+  if (!Node.isParametered(fn)) return undefined;
   const symbol = parameter.getNameNode().getSymbol();
   const written = fn
     .getDescendantsOfKind(SyntaxKind.Identifier)
     .some((identifier) => identifier.getText() === parameter.getName() && isWritten(identifier) && identifier.getSymbol() === symbol);
-  if (written) return false;
-  const index = Node.isIndexSignatureDeclaration(fn) ? -1 : fn.getParameters().indexOf(parameter);
-  return index >= 0 && everyCallerHandsNothing(fn, index);
+  if (written) return undefined;
+  // A `this` parameter is a type, and no caller writes an argument for it.
+  const index = fn.getParameters().filter((each) => each.getName() !== 'this').indexOf(parameter);
+  const callers = index < 0 ? undefined : callersOf(fn);
+  if (callers === undefined) return undefined;
+  const fallback = parameter.getInitializer();
+  const values: TsNode[] = [];
+  for (const args of callers) {
+    if (args.slice(0, index + 1).some((arg) => Node.isSpreadElement(arg))) return undefined;
+    if (handsNothing(args, index)) {
+      if (fallback === undefined) return undefined;
+      values.push(fallback);
+      continue;
+    }
+    const handed = unwrap(args[index] as TsNode);
+    if (Node.isIdentifier(handed) && appDeclaration(handed) === parameter) continue;
+    values.push(handed);
+  }
+  return values.length > 0 ? values : undefined;
+};
+
+/** The parameters being asked about, so two functions handing a parameter to each other are not asked forever. */
+const parametersAsked = new Set<TsNode>();
+
+const parameterAnswers = new PerProgram<boolean>();
+
+/**
+ * Whether a parameter holds only what a maker made, as surely as a `const`
+ * (P350, P354): every value it is given - by every caller of its function,
+ * at least one, or by its default where a caller hands nothing - is direct.
+ * A caller the reading cannot see, or one handing it anything else, leaves it
+ * an account of the value.
+ */
+const parameterMadeDirectly = (parameter: TsNode, dialect: RouteDialect, depth: number): boolean => {
+  const known = parameterAnswers.get(parameter);
+  if (known !== undefined) return known;
+  if (parametersAsked.has(parameter)) return false;
+  const values = valuesHandedTo(parameter);
+  if (values === undefined) return false;
+  // Only an answer reached with no other parameter in question is kept: one
+  // reached inside a cycle was cut short by it.
+  const outermost = parametersAsked.size === 0;
+  parametersAsked.add(parameter);
+  let answer = false;
+  try {
+    answer = values.every((value) => directly(value, dialect, depth + 1));
+  } finally {
+    parametersAsked.delete(parameter);
+  }
+  if (outermost) parameterAnswers.set(parameter, answer);
+  return answer;
 };
