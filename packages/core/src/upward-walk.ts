@@ -119,7 +119,7 @@ export const upwardCeilingOf = (start: string, exists: PathExists = onDisk): str
 
 /** Whether a walk bounded by `ceiling` may read in `dir` (P334). */
 export const mayClimbTo = (dir: string, ceiling: string | undefined): boolean =>
-  ceiling === undefined ? !isNoRepositoryDir(dir) : isWithinDir(resolve(dir), ceiling);
+  ceiling === undefined ? !isNoRepositoryDir(dir) : isWithinDir(resolve(dir), resolve(ceiling));
 
 /** Forgets the checkouts this process found, for a test that makes one. */
 export const forgetCheckouts = (): void => {

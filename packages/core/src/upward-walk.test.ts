@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join, parse } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -105,6 +105,18 @@ describe('walks and installs bounded by what a run reads (P340)', () => {
   it('resolves no import and reads no types from an install above the checkout, and an install inside it as before', () => {
     const dir = tree({ ...DECOY, 'repo/.git/': '' });
     expect(resolvedOf(join(dir, 'repo'))).toEqual({ imports: [undefined, 'index.d.ts'], stray: false });
+  });
+
+  it('reads an install inside a repository reached through a link, where the compiler names it by its real path', () => {
+    // A temporary directory under `/var` is `/private/var` on macOS: the run
+    // is given the linked spelling and the compiler resolves the real one.
+    const dir = tree(DECOY);
+    const linked = join(dir, 'linked');
+    symlinkSync(join(dir, 'repo'), linked, 'dir');
+    expect(resolvedOf(linked).imports[1]).toBe('index.d.ts');
+    boundWalksAt([linked]);
+    expect(resolvedOf(linked).imports[1]).toBe('index.d.ts');
+    boundWalksAt([]);
   });
 
   it('bounds a service in no checkout by what the run was asked to read', () => {

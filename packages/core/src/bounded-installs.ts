@@ -22,6 +22,22 @@ import { mayClimbTo } from './upward-walk.js';
  */
 export const boundedInstalls = (ceiling: string, base: FileSystemHost = realFileSystem()): FileSystemHost => {
   const allowed = new Map<string, boolean>();
+  // A directory and the ceiling may be spelled through different links to the
+  // same place - a temporary directory under `/var` that the compiler reaches
+  // as `/private/var` - so each is also compared by the path it really is.
+  const realOf = (path: string): string | undefined => {
+    try {
+      return toPosixPath(base.realpathSync(path));
+    } catch {
+      return undefined;
+    }
+  };
+  const ceilings = [...new Set([ceiling, realOf(ceiling)].filter((path): path is string => path !== undefined))];
+  const within = (dir: string): boolean => {
+    if (ceilings.some((top) => mayClimbTo(dir, top))) return true;
+    const real = realOf(dir);
+    return real !== undefined && real !== dir && ceilings.some((top) => mayClimbTo(real, top));
+  };
   const hidden = (path: string): boolean => {
     const posixPath = toPosixPath(path);
     // The outermost install a path is under decides: one inside the
@@ -36,7 +52,7 @@ export const boundedInstalls = (ceiling: string, base: FileSystemHost = realFile
     const dir = at === 0 ? '/' : posixPath.slice(0, at);
     let may = allowed.get(dir);
     if (may === undefined) {
-      may = mayClimbTo(dir, ceiling);
+      may = within(dir);
       allowed.set(dir, may);
     }
     return !may;
