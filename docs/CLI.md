@@ -1096,9 +1096,12 @@ gives the same root entries, `declared` (`fixtures/graphql-gateway`,
 method of a service a server implements, keyed
 `grpc:<package>.<Service>/<Method>` (`rpc`), with how it is called - `unary`,
 `server-stream`, `client-stream`, `bidi-stream` - from the contract. The
-contract is every `.proto` file from the service's directory up to the
-directory holding `.git` or this configuration, a shared `proto/` directory
-included; a contract is never a way in by itself. A server is
+contract is every `.proto` file under the nearest directory at or above the
+service's, at most twelve up, holding `.git` or this configuration (the
+service's own directory where none is found), a shared `proto/` directory
+included - searched through at most 5000 directories, leaving out hidden
+ones, `node_modules`, `dist`, `build`, `target`, `bin`, `obj`, `vendor` and
+`coverage`; a contract is never a way in by itself. A server is
 `server.addService(definition, implementation)` (`@grpc/grpc-js`, `grpc`):
 the service of a loaded contract (`loadPackageDefinition(loadSync('shop.proto')).shop.CartService.service`),
 a generated definition, or a generated name a contract declares where the
@@ -1582,8 +1585,13 @@ it a member, so a package still finds what its workspace installs; a walk
 given no repository - the workspace roots above a package, the package a file
 is in, a tsconfig's relative `extends`, a workspace application's manifest, a
 Prisma schema, a gRPC contract's search top, the checkout a build is stamped
-with - stops at the top of the checkout it starts in, the nearest `.git`; and
-none reads in the home directory or at the file system's root. A linter
+with - stops at the top of the checkout it starts in, the nearest `.git` (a
+gRPC contract's search top at this configuration's directory too, where that
+comes first); and none reads in the home directory or at the file system's
+root. The version of the CDK an app is built with is looked for from the
+app's directory up to the service's repository alone, not in a workspace
+above it. Finding this configuration from where a command runs is not such a
+walk: it climbs until it finds one. A linter
 configuration's `extends` by a path climbing out of the repository is not
 followed. The TypeScript checker's own module resolution still looks for
 `node_modules` and `@types` above a repository, as the compiler does.
@@ -6322,7 +6330,7 @@ below:
 | Server | Read |
 |---|---|
 | express, koa, fastify, NestJS, Node's own | `<server>.listen(3001)`, `listen({ port })`, `http.createServer(app).listen(port)`, through constants |
-| Hono | `serve({ fetch, port })` from `@hono/node-server` (3000 where no port is written, its default), `Bun.serve({ port })` (3000, or the `BUN_PORT`, `PORT` or `NODE_PORT` that the `.env.local` or `.env` Bun loads sets, `valueFrom` naming the file, P315), `Deno.serve({ port }, handler)` (8000), `export default { port, fetch }` |
+| Hono | `serve({ fetch, port })` from `@hono/node-server` (3000 where no port is written, its default), `Bun.serve({ port })` (3000, or the `BUN_PORT`, `PORT` or `NODE_PORT` that the `.env.local`, `.env.development` or `.env` Bun loads sets, the first of them that does, `valueFrom` naming the file, P315; these are the development files whatever `NODE_ENV` or `--env-file` the script running it gives), `Deno.serve({ port }, handler)` (8000), `export default { port, fetch }` |
 | GraphQL servers | `startStandaloneServer` (4000 by default) and `.listen` (P245) |
 | Nuxt, Nitro | `devServer: { port }` in `nuxt.config.*`, `--port` / `-p` on a `nuxi` / `nuxt` / `nitro` `dev` / `preview` / `start` script; the `.env` the `dev` command loads (or the file `--dotenv` names), by `NUXT_PORT`, `NITRO_PORT` or `PORT` (P305); 3000 where none of these says (P296) |
 | Next | `-p` / `--port` on a `next dev` / `next start` script, and a workspace tool's target (P257); 3000 where none says (P296). Never its `.env`: Next decides its port before it loads the file (P305) |
@@ -6389,7 +6397,12 @@ carrying `portWithoutColon`, with an `address-port-without-colon` finding
 saying it names another host and no port: `action` after `localhost` or an
 address of numbers, `info` after any other name, which may end in digits
 (`worker3`). Such a request to `localhost` or an address of numbers is joined
-by no path, from a browser as from a server
+by no path, from a browser as from a server, and is drawn to the outside host
+`localhost4600`; one after any other name from a browser is still guessed by
+its path, as a request to a host no service is reached at is. The number must
+be handed or kept apart from the host: an address written out whole,
+`'http://localhost4600/health'`, is a host of that name like any other, with
+no `portWithoutColon` and no finding
 (`fixtures/ports-handed-by-callers`, `fixtures/ports-kept-receivers-in-fields`,
 `fixtures/typed-held-clients-callers-out`).
 
@@ -6404,7 +6417,7 @@ repository decides it, not only on the line that starts the server:
 | A setting alone | `app.listen(process.env.AUDIT_PORT)` is kept as `{ setting, file, line }`, and the service's own example environment file fills it (`AUDIT_PORT=3006`), whatever the setting is called; a value only an example or template file gives is offered rather than given, a guess (P309), and so is one a committed environment file that nothing is read loading gives (`.env.development` beside code that loads no file), whether the code reads the setting alone or the server is not read listening at all, `listensAt` saying `(a file nothing is read loading)` (P331); a file the code is read loading fills the port itself, firm |
 | A container | a compose service's `ports` (`"3001:3000"`, `"127.0.0.1:3001:3000/tcp"`, `{ published, target }`), `environment` and `env_file`; `docker run -p 3009:3000 --name n -e PORT=3000` in a `package.json` script of the service. The container's environment is its image's Dockerfile (`ENV` of the stage built, compose's `build.target` else the last, with what the stages it is built from set, `ARG` defaults and `build.args` or `--build-arg` put in; a `docker run`'s image where a command of the project builds it with `docker build -t`), under each `env_file:` or `--env-file` in order, a later over an earlier, under `environment:` or `-e`; a port a setting whose name is no secret's is given in an env file the container is started with is read whatever the file is called, nothing else of a `.env` being read. A `${PORT}` the compose file writes is filled from the `.env` beside it (P325), or from the files a `docker compose --env-file` in a script, Makefile or shell script of the project hands it, in order, a later over an earlier, where several commands run one file only what they all agree on; what fills a placeholder is a port, an address or a host's name under a name that is no secret's, nothing else of the file, and it fills a port mapping, a container's name, an `env_file:`, a build's context, its arguments, its image and the `environment:` values the graph keeps (P331). A compose service's `image:` with no `build:` is read with the Dockerfile a build of the project tags it from - a `docker build -t`, another compose service's `build:` under that `image:`, a Skaffold artifact - and a `docker run`'s image likewise; an image nothing of the project builds is pulled as it is and never fetched, the info row `container-image-unread` saying so where the setting the code reads its port from hangs on it (P331). `COMPOSE_ENV_FILES` (written before the command, exported earlier in its script, or set in the `.env` beside the file) names the files where the command passes no `--env-file`, and `COMPOSE_FILE` the compose files where it passes no `-f`; what the command's own shell gives is written over every file; a file `include:`d by another is read with it, interpolated from its `env_file` or its project directory's `.env` under the including file's variables; a service that `extends:` another, in the file or another of the project, is read with the other under it, its paths rebased (P337) |
 | A script that starts the server | a command that starts a server (`node`, `tsx`, `nodemon`, `npm start`, `npm run dev`, `next start` and the like) in the service's directory, with a port the shell gives a setting - written before it, or exported earlier in the same script (`cd stock`, `export PORT=4600`, `npm start`) - gives the setting the code reads that port, firmly, `listensAt` naming the script (P337) |
-| An environment file the server loads | a port read from a setting (`app.listen(process.env.PORT ?? 3000)`) where the code loads a file before it listens - dotenv (`import 'dotenv/config'`, `dotenv.config({ path })`), NestJS's `ConfigModule.forRoot({ envFilePath })` (`.env` unless `ignoreEnvFile`), `process.loadEnvFile(path)` - or its script runs it with `--env-file`, `dotenv -e`, `env-cmd -f` or `bun`: a committed loaded file that sets the setting gives the port, `valueFrom` naming it, the code's fallback giving way (P315). Where several are loaded, each loader's own order decides which (P321): a file dotenv loads with `override: true` first (the last of them), then the files loaded before the code runs - a script's command, the runtime - over the code's own; Node's and Deno's repeated `--env-file` the last of them; `dotenv -e a -e b` the first, and `dotenv -c [mode]` the cascade `.env.<mode>.local`, `.env.local`, `.env.<mode>`, `.env`; Bun's `.env.local` over `.env.<NODE_ENV>` (`development` unless the command sets one) over `.env`, or only the files its `--env-file` names; dotenv's `path` list and NestJS's `envFilePath` the first that sets it. A path not written as a literal names no file, and a server whose code loads nothing keeps its fallback, a guess, with the value a committed environment file of its own gives the setting offered beside it as another guess (P325). `process.loadEnvFile(a)` called again with `b` (or `loadEnvFile` imported from `node:process`) keeps `a`'s value: as Node documents it, each call sets only what the environment does not hold yet (P327) |
+| An environment file the server loads | a port read from a setting (`app.listen(process.env.PORT ?? 3000)`) where the code loads a file before it listens - dotenv (`import 'dotenv/config'`, `dotenv.config({ path })`), NestJS's `ConfigModule.forRoot({ envFilePath })` (`.env` unless `ignoreEnvFile`), `process.loadEnvFile(path)` - or its script runs it with `--env-file`, `dotenv -e`, `env-cmd -f` or `bun`: a committed loaded file that sets the setting gives the port, `valueFrom` naming it, the code's fallback giving way (P315). Where several are loaded, each loader's own order decides which (P321): a file dotenv loads with `override: true` first (the last of them), then the files loaded before the code runs - a script's command, the runtime - over the code's own; Node's and Deno's repeated `--env-file` the last of them; `dotenv -e a -e b` the first, and `dotenv -c <mode>` the cascade `.env.<mode>.local`, `.env.local`, `.env.<mode>`, `.env` (a bare `dotenv -c` `.env.local` over `.env`); Bun's `.env.local` over `.env.<NODE_ENV>` (`development` unless the command sets one) over `.env`, or only the files its `--env-file` names, for a server a script runs with `bun` - a server the code starts with `Bun.serve` is read with `.env.local`, `.env.development` and `.env` first, whatever `NODE_ENV` or `--env-file` that script gives; dotenv's `path` list and NestJS's `envFilePath` the first that sets it. A path not written as a literal names no file, and a server whose code loads nothing keeps its fallback, a guess, with the value a committed environment file of its own gives the setting offered beside it as another guess (P325). `process.loadEnvFile(a)` called again with `b` (or `loadEnvFile` imported from `node:process`) keeps `a`'s value: as Node documents it, each call sets only what the environment does not hold yet (P327) |
 | A framework that starts the server itself | `fastify start`: `-p`, then `FASTIFY_PORT`, then `PORT`, each from the command's own environment or the `.env` fastify-cli loads from the directory it runs in (with dotenv up to fastify-cli 7, with `process.loadEnvFile()` from 8, neither over a set variable), else 3000 as a default; a `FASTIFY_PORT` the `.env` gives wins over a `PORT` the command gives (P321, P327); the `port` of the file `--config` (`-c`) names, JSON or `module.exports = { port }`, comes after `FASTIFY_PORT` and before `PORT`, fastify-cli laying its command line over that file, and a file it cannot read is a `listen-port-unread` row (P329); a `--config` naming a package rather than a file that is there is the file its `exports` (for `require`) or `main` gives, the package of the workspace or installed in the repository, and an ES module or TypeScript file gives the port it exports by name (`export const port = 4000`, `export { port }`, or `exports.port`), a port only under `export default` being a `listen-port-unread` row, as `require` hands it under `default` (P335). Strapi: the `port` of `config/server.*` under `config/env/production/server.*` where that file writes one (production being the build read, or the `NODE_ENV` the script running `strapi start` sets, P329), `env.int('PORT', 1337)` moved by the `.env` or `ENV_PATH` Strapi loads, 1337 where no file writes one; another environment's override that moves the port is an info `framework-environment-differs` row (P321, P327). Gatsby's `gatsby develop` and `gatsby serve`, each a dev server: `-p` or `--port`, a `PORT=` its script gives `develop`, else 8000 for `develop` and 9000 for `serve` as defaults; a `PORT` the site's `.env.development` sets is not taken, since Gatsby loads that file after it chooses its port, and leaves the default with an info `listen-port-guessed` row (P321) |
 
 A container mapping is reconciled with the code: the port the service listens
@@ -8493,10 +8506,12 @@ it, since what the account attaches to it is not in the app; what the app
 attaches to it is read as for any role, unless it is imported `mutable:
 false`, which takes nothing (P306). A grant of a queue, a topic, a bucket or a
 function the app creates to such a role is still read where the CDK writes it
-into the resource's own policy instead - the role's ARN naming an account the
-stack is not in (`by` saying `grantSendMessages, on the queue's own policy`) -
-and not where the stack is in the role's account or its account is read only
-when the app runs (P316; `fixtures/cdk-imported-role-grants`,
+into the resource's own policy instead - the role's ARN writing out an account
+other than the one the resource's stack writes, or the stack writing none
+(`by` saying `grantSendMessages, on the queue's own policy`) - and not where
+the stack is in the role's account, where its account is read only when the
+app runs (`process.env.CDK_DEFAULT_ACCOUNT`), or where the role's ARN writes
+no account (P316; `fixtures/cdk-imported-role-grants`,
 `fixtures/shared-queues-and-resource-grants`).
 
 Which grants go into a resource's own policy depends on the CDK's version,
@@ -8505,15 +8520,25 @@ a role that takes nothing is written on the resource where the `aws-cdk-lib`
 the repository uses does so: a stream's from 2.180.0; a table's from 2.144.0
 where the table is made with a `resourcePolicy`, and from 2.222.0 for any
 table; a bus's `grantPutEventsTo` from 2.186.0, with a statement id, under
-the `@aws-cdk/aws-events:requireEventBusPolicySid` flag. The version is the
-installed `aws-cdk-lib`, else the nearest lockfile's (npm, pnpm or yarn),
-else the `package.json` range where every version in it agrees
-(`@aws-cdk/core` for version 1); where it is left open, the grant is unread,
-saying why. A role imported `mutable: false` with `addGrantsToResources:
+the `@aws-cdk/aws-events:requireEventBusPolicySid` flag set in `cdk.json`'s
+context or `services[].infra.options`, and only to a role imported with `addGrantsToResources: true` -
+whatever its account: a bus's grant to a role of another account that does
+not ask for it is dropped, as is any other grant of a bus to a role that
+takes nothing. The version is the `aws-cdk-lib` installed under
+`node_modules`, else the one the nearest lockfile pins (`package-lock.json`,
+`npm-shrinkwrap.json`, `pnpm-lock.yaml` or `yarn.lock`), else the range a
+`package.json` asks for (`@aws-cdk/core`'s for version 1), each looked for
+from the app's directory up to the service's repository and not in a
+workspace above it; several pinned versions, or a range, settle it only
+where every version they allow gives the same answer, and where they do not,
+or nothing pins it, the grant is unread, saying why. A role imported
+`mutable: false` with `addGrantsToResources:
 true` asks for its grants on resources, so a grant to it of a queue, a topic,
 a bucket or a function goes on the resource's policy in its own account too;
-a role imported by an ARN naming another account than its stack's takes
-nothing itself, its grants going on the resources. The statement id a bus's
+a role imported by an ARN naming another account than the one its stack
+writes takes nothing itself, its grants going on the resources (where the
+stack writes no account, or reads it only when the app runs, the role takes
+what the app attaches to it, as a mutable import does). The statement id a bus's
 grant is handed decides it as the CDK does (P328): `undefined` or `null` drops
 the grant, an import or a token is an id, and a value the files do not read
 is an unread grant saying the bus's policy takes the grant only with an id

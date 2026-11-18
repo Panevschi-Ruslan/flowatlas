@@ -120,7 +120,7 @@ steps with a recording of each.
 
 - a row saying why, and the one change that would read it
 - what could not be followed, grouped by cause and by the package it points into
-- an address or a table decided at run time is reported, never guessed
+- an address or a table decided at run time is reported, and drawn only as a guess marked `heuristic` where what its function is granted narrows it
 - test code left out, and every test directory named so you can see it
 
 Every shape above is held by a fixture: a small repository written to prove it,

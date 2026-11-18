@@ -669,9 +669,10 @@ resolves nothing outside it, but the source still says what it means: an import
 names the package, `express()` makes an application, an annotation names a
 client's type and a model class names its table. What is read that way is marked
 `heuristic`, and the run says once, plainly, that the read was partial.
-Looking up the directories above a file for a configuration or a package
-stops at the repository, widened to the workspace that declares it a member,
-or at the top of its checkout, and never reads in the home directory.
+Looking up the directories above a file of a repository for a configuration
+or a package stops at the repository, widened to the workspace that declares
+it a member, or at the top of its checkout, and never reads in the home
+directory or at the root of the file system.
 
 **2. Find the leaves.** A chain of calls ends somewhere: a database, a cache, an
 outgoing request, a settings key, a message published. Which one it is comes from
@@ -1147,9 +1148,12 @@ prove, and the path is given so you can run it.
   (`useFetch(url, { onRequest })`) is that call's (`fixtures/listen-port-joins`).
   A port or a host a caller hands (`health(3000)`, `health(4000)`) is one
   request per caller, each joined where it lands, and a number a module or a
-  class keeps (`static port = 4700`) is read in a port's place; a number glued
-  to a host with no colon (`localhost4600`) is read as spelled and said to be
-  no port (`fixtures/ports-handed-by-callers`,
+  class keeps (`static port = 4700`) is read in a port's place; a number a
+  caller hands glued to a host with no colon (`` `http://localhost${port}` ``
+  handed 4600) is read as spelled, `localhost4600`, said to be no port and,
+  after `localhost` or an address of numbers, joined to no route - an address
+  written out whole as `localhost4600` is a host of that name like any other
+  (`fixtures/ports-handed-by-callers`,
   `fixtures/ports-kept-receivers-in-fields`). The port is read wherever it is
   decided: a Vite, SvelteKit, Astro or Angular dev server's configuration and
   scripts, a port handed to the function that starts the server
@@ -1330,9 +1334,10 @@ prove, and the path is given so you can run it.
   stream or bucket its function is granted by name - a SAM policy template,
   an IAM role or policy, a service file's role statements, a Terraform role's
   policies, a CDK grant, a role handed to a function, and the grant the CDK
-  writes into a resource's own policy for a role of another account, or for a
-  table, a stream or a bus as the `aws-cdk-lib` version the repository pins
-  decides - while a grant on `*` draws nothing and says so, and a version left
+  writes into a resource's own policy for an imported role of another account
+  or one that asks for it (`addGrantsToResources`) - a table's and a stream's
+  as the `aws-cdk-lib` version the repository pins decides, a bus's only for
+  a role that asks, from the version that writes it - while a grant on `*` draws nothing and says so, and a version left
   open or a statement id not read leaves the grant unread, saying why
   (`fixtures/sam-policy-grants`,
   `fixtures/serverless-iam-grants`, `fixtures/terraform-role-grants`,
