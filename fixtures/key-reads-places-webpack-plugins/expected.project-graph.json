@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T13:10:41.522Z",
+  "builtAt": "2026-11-18T13:30:47.602Z",
   "services": [
     {
       "name": "console",
@@ -531,7 +531,7 @@
         "registration": "strapi/plugin-routes",
         "plugin": "maps",
         "package": "strapi-plugin-maps",
-        "declaredIn": "node_modules/strapi-plugin-maps/dist/server.js",
+        "declaredIn": "node_modules/strapi-plugin-maps/build/server.js",
         "handlerVia": "package",
         "handlerName": "map.find",
         "middlewareRead": false

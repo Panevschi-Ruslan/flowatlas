@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:17:27.990Z",
+  "builtAt": "2026-11-18T13:35:13.946Z",
   "services": [
     {
       "name": "web",
@@ -31,8 +31,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -50,8 +49,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -69,8 +67,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -88,8 +85,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -107,8 +103,7 @@
         "adapter": "express-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -553,7 +548,7 @@
       "from": "ui_api_call:web#js/app.js:7:16",
       "to": "entry:shop:http:POST:/orders",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/app.js",
       "line": 7,
       "params": [
@@ -569,7 +564,7 @@
       "from": "ui_api_call:web#js/promos.js:2:10",
       "to": "entry:shop:http:GET:/promos",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/promos.js",
       "line": 2,
       "meta": {
@@ -582,7 +577,7 @@
       "from": "ui_api_call:web#js/router.js:5:12",
       "to": "entry:shop:http:GET:/catalog",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "js/router.js",
       "line": 5,
       "meta": {
@@ -595,7 +590,7 @@
       "from": "ui_api_call:web#widgets/stock.js:2:10",
       "to": "entry:shop:http:GET:/stock",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "widgets/stock.js",
       "line": 2,
       "meta": {

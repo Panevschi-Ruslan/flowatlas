@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:41:18.287Z",
+  "builtAt": "2026-11-18T13:29:48.945Z",
   "services": [
     {
       "name": "web",
@@ -167,8 +167,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -186,8 +185,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -205,8 +203,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -224,8 +221,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -257,8 +253,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -276,8 +271,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -295,8 +289,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -314,8 +307,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -333,8 +325,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -1705,7 +1696,7 @@
       "from": "ui_api_call:jobs#src/pollers.ts:15:12",
       "to": "entry:catalog:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/pollers.ts",
       "line": 15,
       "meta": {
@@ -1718,7 +1709,7 @@
       "from": "ui_api_call:jobs#src/pollers.ts:47:12@29:12",
       "to": "entry:stock:http:GET:/levels",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/pollers.ts",
       "line": 47,
       "meta": {
@@ -1731,7 +1722,7 @@
       "from": "ui_api_call:jobs#src/pollers.ts:53:10@29:12",
       "to": "entry:catalog:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/pollers.ts",
       "line": 53,
       "meta": {
@@ -1744,7 +1735,7 @@
       "from": "ui_api_call:web#src/health.js:24:10@10:12",
       "to": "entry:catalog:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/health.js",
       "line": 24,
       "meta": {
@@ -1757,7 +1748,7 @@
       "from": "ui_api_call:web#src/health.js:33:10@10:12",
       "to": "entry:stock:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/health.js",
       "line": 33,
       "meta": {
@@ -1770,7 +1761,7 @@
       "from": "ui_api_call:web#src/health.js:42:10@10:12",
       "to": "entry:catalog:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/health.js",
       "line": 42,
       "meta": {
@@ -1783,7 +1774,7 @@
       "from": "ui_api_call:web#src/health.js:50:10@10:12",
       "to": "entry:stock:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/health.js",
       "line": 50,
       "meta": {
@@ -1796,7 +1787,7 @@
       "from": "ui_api_call:web#src/health.js:58:10@10:12",
       "to": "entry:catalog:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/health.js",
       "line": 58,
       "meta": {
@@ -1809,7 +1800,7 @@
       "from": "ui_api_call:web#src/health.js:73:10@10:12",
       "to": "entry:stock:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/health.js",
       "line": 73,
       "meta": {
@@ -1822,7 +1813,7 @@
       "from": "ui_api_call:web#src/health.js:82:18@10:12",
       "to": "entry:catalog:http:GET:/health",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/health.js",
       "line": 82,
       "meta": {
@@ -1835,7 +1826,7 @@
       "from": "ui_api_call:web#src/pages.jsx:34:13@7:5",
       "to": "entry:catalog:http:GET:/feed",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/pages.jsx",
       "line": 34,
       "meta": {
@@ -1848,7 +1839,7 @@
       "from": "ui_api_call:web#src/pages.jsx:35:14@15:5",
       "to": "entry:catalog:http:GET:/panel",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/pages.jsx",
       "line": 35,
       "meta": {
@@ -1861,7 +1852,7 @@
       "from": "ui_api_call:web#src/pages.jsx:36:7@23:12",
       "to": "entry:catalog:http:GET:/list",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/pages.jsx",
       "line": 36,
       "meta": {
@@ -1874,7 +1865,7 @@
       "from": "ui_api_call:web#src/pages.jsx:44:13@7:5",
       "to": "entry:stock:http:GET:/feed",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/pages.jsx",
       "line": 44,
       "meta": {
@@ -1887,7 +1878,7 @@
       "from": "ui_api_call:web#src/pages.jsx:45:14@15:5",
       "to": "entry:stock:http:GET:/panel",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/pages.jsx",
       "line": 45,
       "meta": {
@@ -1900,7 +1891,7 @@
       "from": "ui_api_call:web#src/pages.jsx:46:7@23:12",
       "to": "entry:stock:http:GET:/list",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/pages.jsx",
       "line": 46,
       "meta": {

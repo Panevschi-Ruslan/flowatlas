@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:23:13.742Z",
+  "builtAt": "2026-11-18T13:28:25.773Z",
   "services": [
     {
       "name": "shop",
@@ -79,8 +79,7 @@
         "adapter": "hono-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -98,8 +97,7 @@
         "adapter": "hono-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {

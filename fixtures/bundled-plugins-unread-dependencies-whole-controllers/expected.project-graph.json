@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:41:22.942Z",
+  "builtAt": "2026-11-18T13:28:27.557Z",
   "services": [
     {
       "name": "cms",
@@ -136,8 +136,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -723,7 +722,7 @@
       "from": "http_out:poller#src/poll.ts:14:32",
       "to": "entry:api:http:GET:/health",
       "type": "http_calls",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/poll.ts",
       "line": 14,
       "meta": {

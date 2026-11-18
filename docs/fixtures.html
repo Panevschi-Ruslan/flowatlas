@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>307 fixtures</span>
-    <span>785 snapshot files</span>
+    <span>318 fixtures</span>
+    <span>812 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -1344,7 +1344,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Express, Fastify, Koa and Hono <span class="count" data-total="15">15</span></h2>
+    <h2>Express, Fastify, Koa and Hono <span class="count" data-total="16">16</span></h2>
     <ul>
       <li class="fixture" data-search="express-chained-app express, fastify, koa and hono an application declared by a chain, which is how a video platform declares its one application and what cost a video platform every route it has.">
         <div class="head">
@@ -1369,6 +1369,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A shop's Express server that runs its background work on BullMQ, with nothing installed: its workers are made by a construction, <code>new Worker(name, processor)</code>, rather than declared by a decorator (P271).</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="express-maker-direct-and-stated express, fastify, koa and hono an express service declared and **not installed**, and a shop calling it.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/express-maker-direct-and-stated">express-maker-direct-and-stated</a>
+          <span class="kind">2 services</span>
+        </div>
+        <p>An Express service declared and <strong>not installed</strong>, and a shop calling it.</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="express-not-installed express, fastify, koa and hono an express service whose framework is declared and **not installed**, which is what a stranger's clone is.">
         <div class="head">
@@ -1673,7 +1681,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Everything else <span class="count" data-total="115">115</span></h2>
+    <h2>Everything else <span class="count" data-total="125">125</span></h2>
     <ul>
       <li class="fixture" data-search="alias-reads-keyed-fields-dotted-workspaces everything else fields read through what stands for their class and written by a key, a domain a terraform workspace with a dot in its name maps, and a bus grant under a statement id the files do not read.">
         <div class="head">
@@ -1715,6 +1723,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>A bot whose buttons are functions in a table it keeps itself, and whose commands are registered inside module-level functions.</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.graph.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="bounded-reads-scan-top everything else what a look up the directories still reads once every such look is bounded (p334, p340): what the project keeps at the top of what it reads, and what a service installs inside itself.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/bounded-reads-scan-top">bounded-reads-scan-top</a>
+          <span class="kind">2 services</span>
+        </div>
+        <p>What a look up the directories still reads once every such look is bounded (P334, P340): what the project keeps at the top of what it reads, and what a service installs inside itself.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="branch-settings-offered-ports everything else two things p309 reads as candidates rather than answers.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/branch-settings-offered-ports">branch-settings-offered-ports</a>
@@ -1729,6 +1745,22 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">2 services</span>
         </div>
         <p>A booking service deployed with the Serverless Framework (<code>bookings</code>), and the page that books with it (<code>web</code>): plain HTML and the scripts it loads, with no <code>package.json</code> and no framework, configured as <code>browser</code> (P284).</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="bun-env-modes-cdk-workspace-lockfile everything else servers `bun.serve` starts with no port, read by the files the script that runs them makes bun load, and a cdk app that is a member of a workspace whose lockfile pins the cdk's version (p348).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/bun-env-modes-cdk-workspace-lockfile">bun-env-modes-cdk-workspace-lockfile</a>
+          <span class="kind">4 services</span>
+        </div>
+        <p>Servers <code>Bun.serve</code> starts with no port, read by the files the script that runs them makes Bun load, and a CDK app that is a member of a workspace whose lockfile pins the CDK's version (P348).</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="bundled-plugins-unread-dependencies-whole-controllers everything else what p335 left open (p345): an installed strapi plugin whose package ships only a bundled build - a rollup build with lazy `requirex()` wrappers in a chunk, and an esbuild build with `__commonjs` module factories - read through the bundler's wrappers; dependencies not installed (a fresh clone) that the repository says are strapi plugins, by their names or by a lockfile entry; an extension writing a plugin's controller whole, with and without the plugin's own spread into it; and a key written through a chain of three functions whose value is an outer parameter, bound to the call the write is cut at.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/bundled-plugins-unread-dependencies-whole-controllers">bundled-plugins-unread-dependencies-whole-controllers</a>
+          <span class="kind">3 services</span>
+        </div>
+        <p>What P335 left open (P345): an installed Strapi plugin whose package ships only a bundled build - a rollup build with lazy <code>requireX()</code> wrappers in a chunk, and an esbuild build with <code>__commonJS</code> module factories - read through the bundler's wrappers; dependencies not installed (a fresh clone) that the repository says are Strapi plugins, by their names or by a lockfile entry; an extension writing a plugin's controller whole, with and without the plugin's own spread into it; and a key written through a chain of three functions whose value is an outer parameter, bound to the call the write is cut at.</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="caller-steps-handed-instances everything else what p320 left open (p326): a view the caller makes of a list through `flatmap`, `array.from(list, fn)` or a `reduce`; an instance's registry field reached through a parameter it is handed, a field of another class given it when made, or an import; and a link of the application's own whose prop of any name it puts into its link's address after a segment written out whole.">
@@ -1859,6 +1891,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>What P326 left open (P333): a step over a view mapped already, an object a <code>reduce</code> gathers read through <code>Object.values</code> or <code>Object.entries</code>, a registry reached through a destructured parameter, a component's props or a factory function, and a value a link of the application's own glues to a segment it writes out whole, read as a query or a further segment from what its uses hand.</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="container-script-environment everything else what p337 left open, read by p343: a compose setting written with no value, an included compose file's precedence, a makefile's own exports, a script's export reaching a program of the project's own, and a port a secret gives.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/container-script-environment">container-script-environment</a>
+          <span class="kind">10 services</span>
+        </div>
+        <p>What P337 left open, read by P343: a compose setting written with no value, an included compose file's precedence, a Makefile's own exports, a script's export reaching a program of the project's own, and a port a Secret gives.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="custom-http everything else one repository built on a framework this tool has never heard of, read entirely from a description in `flowatlas.config.json`.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/custom-http">custom-http</a>
@@ -1906,6 +1946,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>Servers whose port P315 left unread - started by a framework's own command, moved by several loaded environment files, offered by an example file, held by a callback's, a class's or a function's write, or loaded by a path built from the file's own directory - and a jobs service calling them on this machine (P321).</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="framework-made-receiver-parts everything else a react front end whose components are handed their client as a prop, a plain-script reader handed around inside objects, lists and factories, and a nestjs jobs service whose pollers the injector makes and whose queues are laid over instances by functions with untyped parameters.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/framework-made-receiver-parts">framework-made-receiver-parts</a>
+          <span class="kind">4 services</span>
+        </div>
+        <p>A React front end whose components are handed their client as a prop, a plain-script reader handed around inside objects, lists and factories, and a NestJS jobs service whose pollers the injector makes and whose queues are laid over instances by functions with untyped parameters.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="framework-ports-chains everything else a full-stack next `web` whose server code and browser code make requests p292 left open.">
         <div class="head">
@@ -2130,6 +2178,22 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A shop's Express server whose BullMQ queues sit behind layers of its own, with nothing installed (P286): a base class keeps each queue's topic from what the class extending it hands <code>super(...)</code>, a client opens the queue in one method and adds to it in another, job records are built by functions further in, and a flow adds a tree of jobs on several queues at once.</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="key-reads-places-webpack-plugins everything else what p344 and p345 left open (p351): a route or a link written straight over `object.keys(...)`, a route-level pattern nested deeper than one key, the places of a list put together from lists whose order is known, an object an adding function writes from what each call hands; an installed strapi plugin shipped as a webpack bundle, dependencies not installed that a key of `config/plugins` names otherwise than their package, and an extension writing the plugin's `controllers` object whole.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/key-reads-places-webpack-plugins">key-reads-places-webpack-plugins</a>
+          <span class="kind">3 services</span>
+        </div>
+        <p>What P344 and P345 left open (P351): a route or a link written straight over <code>Object.keys(...)</code>, a route-level pattern nested deeper than one key, the places of a list put together from lists whose order is known, an object an adding function writes from what each call hands; an installed Strapi plugin shipped as a webpack bundle, dependencies not installed that a key of <code>config/plugins</code> names otherwise than their package, and an extension writing the plugin's <code>controllers</code> object whole.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="keyed-stores-pair-patterns everything else what p338 left open (p344): a registry's own keyed store, a pair's entry taken apart by an object pattern, a list read as `[key, entry]` pairs, a folded row's fourth place writing a value none of its samples writes, and a receiver that may hold more than twelve instances.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/keyed-stores-pair-patterns">keyed-stores-pair-patterns</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>What P338 left open (P344): a registry's own keyed store, a pair's entry taken apart by an object pattern, a list read as <code>[key, entry]</code> pairs, a folded row's fourth place writing a value none of its samples writes, and a receiver that may hold more than twelve instances.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="listen-port-joins everything else nine services run on one machine, and the requests between them name each other by port: `http://localhost:3001/orders`, `http://127.0.0.1:3003/products`, `http://0.0.0.0:3002/stock/abc-1`.">
         <div class="head">
@@ -2411,12 +2475,28 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>A plain page whose requests are written in the methods of objects and in a constructor's prototype, with axios the global a script tag loads; a server that answers them; and an Astro site that writes no port.</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="script-modes-workspace-make-fields everything else what p343, p346 and p348 left open, read by p350: a makefile's included file and the targets that build another, a script run in another package of the workspace, bun's mode however it is given, a server several scripts start in different modes, and an application held by a field or by a parameter's default.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/script-modes-workspace-make-fields">script-modes-workspace-make-fields</a>
+          <span class="kind">9 services</span>
+        </div>
+        <p>What P343, P346 and P348 left open, read by P350: a Makefile's included file and the targets that build another, a script run in another package of the workspace, Bun's mode however it is given, a server several scripts start in different modes, and an application held by a field or by a parameter's default.</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="script-ready-handlers everything else a plain page whose code waits for the document to load, a commonjs script a bundler joins for it, and a server written in commonjs whose modules export their functions by name.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/script-ready-handlers">script-ready-handlers</a>
           <span class="kind">2 services</span>
         </div>
         <p>A plain page whose code waits for the document to load, a CommonJS script a bundler joins for it, and a server written in CommonJS whose modules export their functions by name.</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="script-tops-built-configs everything else a plain page whose scripts only build at their top, with the clients declared by a linter plugin's configurations built from other objects and by a flat configuration's entries named by members.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/script-tops-built-configs">script-tops-built-configs</a>
+          <span class="kind">2 services</span>
+        </div>
+        <p>A plain page whose scripts only build at their top, with the clients declared by a linter plugin's configurations built from other objects and by a flat configuration's entries named by members.</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="script-tops-plugin-configs everything else a plain page whose scripts write requests at their very top, with the clients declared by a linter plugin's configurations.">
@@ -2594,6 +2674,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A Vue single-page application and the NestJS service it calls, in two repositories (P233).</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="wrapped-spread-providers-tops everything else a react front end whose components are wrapped in calls and handed their client through spreads, clients of its own whose base is written on the instance, a nestjs service whose readers the injector makes from providers built by spreads, a call and an alias, and a plain-script page whose top only makes instances, its globals declared by a linter plugin that builds its configurations.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/wrapped-spread-providers-tops">wrapped-spread-providers-tops</a>
+          <span class="kind">5 services</span>
+        </div>
+        <p>A React front end whose components are wrapped in calls and handed their client through spreads, clients of its own whose base is written on the instance, a NestJS service whose readers the injector makes from providers built by spreads, a call and an alias, and a plain-script page whose top only makes instances, its globals declared by a linter plugin that builds its configurations.</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
     </ul>
   </section>
