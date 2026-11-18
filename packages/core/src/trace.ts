@@ -2151,7 +2151,7 @@ const MOST_WRAPPERS = 4;
 /**
  * The `const` holding a function written in place, directly or through the
  * calls it is the first argument of (P349): `const Feed = (props) => ...`,
- * `const Feed = memo(function Feed(props) {...})`, `React.memo(...)`,
+ * `const Feed = memo(function Feed(props) {...})`, `ui.memo(...)`,
  * `memo(forwardRef((props, ref) => ...))` - what a tag names the component
  * by. Nothing where it is held some other way.
  */

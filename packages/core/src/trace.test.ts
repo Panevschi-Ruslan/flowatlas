@@ -916,12 +916,12 @@ describe('a method called through a receiver the checker types as nothing (P336)
     const file = project.createSourceFile(
       'a.jsx',
       [
-        "import React, { memo, forwardRef } from 'react';",
+        "import ui, { memo, forwardRef } from 'ui-kit';",
         'class Reader { health() { return 1; } }',
         'class Other { health() { return 2; } }',
         'const Feed = memo(function Feed({ reader }) { reader.health(); return null; });',
         'const Field = memo(forwardRef((props, ref) => { props.reader.health(); return null; }));',
-        'const Pane = React.memo(({ probe }) => { probe.health(); return null; });',
+        'const Pane = ui.memo(({ probe }) => { probe.health(); return null; });',
         'function Shell({ title, ...rest }) { return <Pane {...rest} />; }',
         'export const page = () => <div><Feed reader={new Reader()} /><Field reader={new Reader()} /><Shell title="a" probe={new Other()} /></div>;',
       ].join('\n'),
