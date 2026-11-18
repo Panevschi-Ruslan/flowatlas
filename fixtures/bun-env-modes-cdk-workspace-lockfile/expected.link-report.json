@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T12:23:13.742Z",
+  "configHash": "1155eb3aaa12",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "admin",
+        "runtime": [
+          "hono"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "shop",
+        "runtime": [
+          "hono"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./infra/stock",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 5,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "stock",
+        "runtime": [
+          "@aws-sdk/client-dynamodb",
+          "@aws-sdk/client-kinesis",
+          "aws-cdk-lib",
+          "constructs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 2,
+    "linked": 2,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 1,
+    "linked": 0,
+    "noConsumers": [
+      "channel:kinesis/stock-moves"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 2,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 16,
+    "edges": 9,
+    "types": 0,
+    "missed": 4,
+    "sites": 4,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 4
+  }
+}

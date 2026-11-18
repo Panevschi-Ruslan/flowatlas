@@ -154,6 +154,25 @@ describe('an app, followed from its entry (P57)', () => {
     expect(deployment.rows.map((row) => row.reason)).toContain('construct-conditional');
   });
 
+  it("writes a cron as aws-cdk-lib's Schedule.cron does: a minute not written is every minute, a week day makes the day '?', and both are refused (P348)", () => {
+    const rule = (name: string, cron: string): string =>
+      `    new events.Rule(this, '${name}', { ruleName: 'shop-${name.toLowerCase()}', schedule: events.Schedule.cron(${cron}), targets: [new targets.LambdaFunction(target)] });`;
+    const deployment = stack(
+      [
+        `    const target = ${fn('Target', ", functionName: 'shop-target'")};`,
+        rule('Hourly', "{ hour: '2' }"),
+        rule('Weekly', "{ minute: '0', hour: '2', weekDay: 'MON' }"),
+        rule('Both', "{ minute: '0', day: '1', weekDay: 'MON' }"),
+      ].join('\n'),
+    );
+    const expressions = Object.fromEntries(deployment.deliveries.map((each) => [each.name, each.from.kind === 'schedule' ? each.from.expression : undefined]));
+    expect(expressions['shop-hourly']).toBe('cron(* 2 * * ? *)');
+    expect(expressions['shop-weekly']).toBe('cron(0 2 ? * MON *)');
+    // The schedule is still drawn, its expression unread.
+    expect(Object.keys(expressions)).toContain('shop-both');
+    expect(expressions['shop-both']).toBeUndefined();
+  });
+
   it('reads a REST API by its resource tree, and a LambdaRestApi as a proxy', () => {
     const deployment = stack(
       [

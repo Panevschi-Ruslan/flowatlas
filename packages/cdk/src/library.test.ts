@@ -55,3 +55,36 @@ describe('the version of the CDK an app is built with (P322)', () => {
     expect(answers({})).toEqual([undefined, undefined, undefined]);
   });
 });
+
+describe('the version of the CDK a workspace member is built with (P348)', () => {
+  /** A workspace whose member `services/billing` holds the app in `infra/`, the member read as the repository. */
+  const member = (files: Record<string, string>): [string | undefined, readonly string[]] => {
+    const dir = repo(files);
+    mkdirSync(join(dir, 'services', 'billing', 'infra'), { recursive: true });
+    const library = cdkLibraryOf(join(dir, 'services', 'billing', 'infra'), join(dir, 'services', 'billing'));
+    return [library.said, library.files];
+  };
+  const lock = JSON.stringify({ packages: { 'node_modules/aws-cdk-lib': { version: '2.200.0' } } });
+
+  it("reads the lockfile at the root of the workspace that declares the repository, past the repository's own directory", () => {
+    expect(member({ 'package.json': JSON.stringify({ workspaces: ['services/*'] }), 'package-lock.json': lock })).toEqual([
+      'aws-cdk-lib 2.200.0 (../../package-lock.json)',
+      ['../../package-lock.json'],
+    ]);
+    expect(member({ 'pnpm-workspace.yaml': "packages:\n  - 'services/*'\n", 'pnpm-lock.yaml': 'packages:\n  aws-cdk-lib@2.190.0:\n    resolution: {}\n' })[0]).toBe(
+      'aws-cdk-lib 2.190.0 (../../pnpm-lock.yaml)',
+    );
+  });
+
+  it('keeps what the repository itself pins first, and reads nothing above a directory no workspace declares it in', () => {
+    expect(
+      member({
+        'package.json': JSON.stringify({ workspaces: ['services/*'] }),
+        'package-lock.json': lock,
+        'services/billing/package.json': JSON.stringify({ name: 'billing', dependencies: { 'aws-cdk-lib': '2.150.0' } }),
+        'services/billing/package-lock.json': JSON.stringify({ packages: { 'node_modules/aws-cdk-lib': { version: '2.150.0' } } }),
+      })[0],
+    ).toBe('aws-cdk-lib 2.150.0 (package-lock.json)');
+    expect(member({ 'package.json': JSON.stringify({ workspaces: ['apps/*'] }), 'package-lock.json': lock })).toEqual([undefined, []]);
+  });
+});

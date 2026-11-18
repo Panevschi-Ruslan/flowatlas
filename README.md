@@ -1169,7 +1169,8 @@ prove, and the path is given so you can run it.
   `FASTIFY_PORT` or `--config` file, Strapi's `config/server`, or the
   environment file `dotenv`, NestJS's `ConfigModule`, `--env-file` or Bun
   loads sets the port, there, several loaded files taken in each loader's own
-  order; a port kept in a configuration a setter merges, changed in place
+  order (Bun's by the `NODE_ENV` and `--env-file` of the script running it,
+  a server `Bun.serve` starts included); a port kept in a configuration a setter merges, changed in place
   (`Object.assign(config, ...)`, `config.server.port = 4000`), read per
   instance, handed in by each caller or written as `PORT ?? 3000` is read too.
   A port only assumed, offered by an example file or by a committed file
@@ -1181,7 +1182,8 @@ prove, and the path is given so you can run it.
   `fixtures/claimants-nested-chain-env-port`,
   `fixtures/env-order-framework-ports`,
   `fixtures/framework-routes-in-place-writes`,
-  `fixtures/unloaded-env-image-environment`). A container's environment is
+  `fixtures/unloaded-env-image-environment`,
+  `fixtures/bun-env-modes-cdk-workspace-lockfile`). A container's environment is
   its image's Dockerfile - where a `docker build -t`, a compose `build:` or a
   Skaffold artifact builds it - under its `env_file`s and its `environment`; a
   compose file is filled from the `.env` beside it, the files `--env-file` or
@@ -1336,10 +1338,12 @@ prove, and the path is given so you can run it.
   policies, a CDK grant, a role handed to a function, and the grant the CDK
   writes into a resource's own policy for an imported role of another account
   or one that asks for it (`addGrantsToResources`) - a table's and a stream's
-  as the `aws-cdk-lib` version the repository pins decides, a bus's only for
-  a role that asks, from the version that writes it - while a grant on `*` draws nothing and says so, and a version left
-  open or a statement id not read leaves the grant unread, saying why
-  (`fixtures/sam-policy-grants`,
+  as the `aws-cdk-lib` version the repository, or the workspace that declares
+  it a member, pins decides, a bus's only for a role that asks, from the
+  version that writes it - while a grant on `*` draws nothing and says so,
+  and a version left open or a statement id not read leaves the grant unread,
+  saying why (`fixtures/bun-env-modes-cdk-workspace-lockfile`,
+  `fixtures/sam-policy-grants`,
   `fixtures/serverless-iam-grants`, `fixtures/terraform-role-grants`,
   `fixtures/cdk-grants`, `fixtures/cdk-imported-role-grants`,
   `fixtures/shared-queues-and-resource-grants`,

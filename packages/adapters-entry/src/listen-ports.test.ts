@@ -403,6 +403,30 @@ describe('which loaded file wins, as each loader orders them (P321)', () => {
       'src/main.ts:2 4038[PORT] from .env.staging',
     ]);
   });
+
+  it("reads a Bun.serve server by the NODE_ENV and --env-file of the script that runs it, in Bun's own order (P348)", () => {
+    const serve = { 'src/index.ts': 'Bun.serve({ fetch: app.fetch });' };
+    const files = { '.env': 'PORT=4999\n', '.env.development': 'PORT=4040\n', '.env.production': 'PORT=4041\n', '.env.test': 'PORT=4042\n' };
+    const run = (command: string, more: Record<string, string> = {}): string[] => listening([honoRoutesAdapter], serve, { 'package.json': pkg(command), ...files, ...more });
+    // No script: a bare `bun <file>`, development.
+    expect(listening([honoRoutesAdapter], serve, files)).toEqual(['src/index.ts:1 4040[PORT] from .env.development']);
+    expect(run('NODE_ENV=production bun src/index.ts')).toEqual(['src/index.ts:1 4041[PORT] from .env.production']);
+    expect(run('BUN_ENV=production NODE_ENV=test bun src/index.ts')).toEqual(['src/index.ts:1 4041[PORT] from .env.production']);
+    // A mode Bun does not know is development.
+    expect(run('NODE_ENV=staging bun src/index.ts')).toEqual(['src/index.ts:1 4040[PORT] from .env.development']);
+    // `.env.<mode>.local` over `.env.local` over `.env.<mode>`; no `.env.local` in test.
+    expect(run('NODE_ENV=production bun src/index.ts', { '.env.local': 'PORT=4043\n' })).toEqual(['src/index.ts:1 4043[PORT] from .env.local']);
+    expect(run('NODE_ENV=production bun src/index.ts', { '.env.local': 'PORT=4043\n', '.env.production.local': 'PORT=4044\n' })).toEqual([
+      'src/index.ts:1 4044[PORT] from .env.production.local',
+    ]);
+    expect(run('NODE_ENV=test bun src/index.ts', { '.env.local': 'PORT=4043\n' })).toEqual(['src/index.ts:1 4042[PORT] from .env.test']);
+    // `--env-file` replaces Bun's own files: the last named wins, of a comma list too.
+    expect(run('bun --watch --env-file .env.ci src/index.ts', { '.env.ci': 'PORT=4045\n' })).toEqual(['src/index.ts:1 4045[PORT] from .env.ci']);
+    expect(run('bun --env-file=.env.ci,.env.qa src/index.ts', { '.env.ci': 'PORT=4045\n', '.env.qa': 'PORT=4046\n' })).toEqual(['src/index.ts:1 4046[PORT] from .env.qa']);
+    expect(run('bun --env-file=.env.ci src/index.ts', { '.env.ci': 'NAME=x\n' })).toEqual(['src/index.ts:1 3000 default']);
+    // `--no-env-file` loads none of them.
+    expect(run('bun --no-env-file src/index.ts')).toEqual(['src/index.ts:1 3000 default']);
+  });
 });
 
 describe('where fastify-cli and Strapi start a server the code does not (P321)', () => {

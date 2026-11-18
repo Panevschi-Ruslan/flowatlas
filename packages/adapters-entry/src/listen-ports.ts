@@ -78,9 +78,10 @@ export const listensByCall = (ctx: ExtractContext): ListenPort[] => {
  * Deno's repeated `--env-file`, and dotenv's with `override`, the last one's;
  * Node's `process.loadEnvFile(a)` called again with `b` keeps `a`'s, each
  * call setting only what the environment does not hold yet (P327);
- * Bun reads `.env`, then `.env.<NODE_ENV>` (`development` where the command
- * sets none), then `.env.local`, each over the one before, or only the files
- * its own `--env-file` names.
+ * Bun's as {@link bunEnvFiles} says, for the `bun <file>` a script runs, by
+ * the `NODE_ENV` and `--env-file` of that command (P348); a server the code
+ * starts with `Bun.serve` that no script runs is taken to be started with a
+ * bare `bun <file>`.
  */
 export const loadedEnvFiles = (ctx: ExtractContext): string[] => {
   // The files a `dotenv.config({ override: true })` loads, the ones before the code runs, the code's own.
@@ -90,10 +91,13 @@ export const loadedEnvFiles = (ctx: ExtractContext): string[] => {
   const add = (into: string[], named: readonly string[] | undefined, otherwise: readonly string[]): void => {
     for (const file of named ?? otherwise) into.push(file.replace(/^\.\//, ''));
   };
+  // Whether the code starts a server with `Bun.serve`, and whether a script runs a file with `bun`.
+  let servesWithBun = false;
+  let runByBun = false;
   for (const sourceFile of repoSources(ctx)) {
     if (isTestFile(normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir))) continue;
     const text = sourceFile.getFullText();
-    if (/\bBun\.serve\s*\(/.test(text)) add(before, undefined, bunEnvFiles());
+    if (/\bBun\.serve\s*\(/.test(text)) servesWithBun = true;
     if (!/dotenv|loadEnvFile|ConfigModule/.test(text)) continue;
     if (sourceFile.getImportDeclarations().some((each) => each.getModuleSpecifierValue() === 'dotenv/config')) add(code, undefined, ['.env']);
     for (const call of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
@@ -121,11 +125,14 @@ export const loadedEnvFiles = (ctx: ExtractContext): string[] => {
   for (const each of scriptCommands(ctx.repoDir, SCRIPT_LOADS_ENV)) {
     if (/\b(?:jest|vitest|mocha|playwright|cypress)\b/.test(each.command)) continue;
     const command = each.command;
-    // Node's, Deno's and Bun's `--env-file`, repeated: the last one wins.
+    const bun = BUN_RUNS_FILE.test(command);
+    // Node's, Deno's and Bun's `--env-file`, repeated: the last one wins, and
+    // of Bun's `--env-file=a,b` the last one too (it loads them from the end).
     const flagged: string[] = [];
     for (const match of command.matchAll(/(?:^|\s)--env-file(?:-if-exists)?(?:=(\S+)|\s+(\S+))?/g)) {
       const value = match[1] ?? match[2];
-      add(flagged, value === undefined || value.startsWith('-') || /\.[cm]?[jt]sx?$/.test(value) ? undefined : [value], ['.env']);
+      const named = value === undefined || value.startsWith('-') || /\.[cm]?[jt]sx?$/.test(value) ? undefined : bun ? value.split(',').filter((file) => file !== '') : [value];
+      add(flagged, named, ['.env']);
     }
     before.push(...flagged.reverse());
     if (/(?:^|\s)dotenv(?:-cli)?\s/.test(command)) {
@@ -136,22 +143,37 @@ export const loadedEnvFiles = (ctx: ExtractContext): string[] => {
       const named = /(?:^|\s)(?:-f|--file)\s+(\S+)/.exec(command)?.[1];
       add(before, named === undefined ? undefined : [named], ['.env']);
     }
-    if (flagged.length === 0 && /(?:^|\s)bun\s+(?:run\s+)?(?:--[\w-]+\s+)*[\w./-]+\.[cm]?[jt]sx?(?:\s|$)/.test(command)) {
-      add(before, undefined, bunEnvFiles(/(?:^|\s)NODE_ENV=(\w+)/.exec(command)?.[1]));
+    if (bun) {
+      runByBun = true;
+      // `--env-file` replaces Bun's own files, and `--no-env-file` drops them.
+      const mode = /(?:^|\s)BUN_ENV=['"]?(\w+)/.exec(command)?.[1] ?? /(?:^|\s)NODE_ENV=['"]?(\w+)/.exec(command)?.[1];
+      if (flagged.length === 0 && !/(?:^|\s)--no-env-file\b/.test(command)) add(before, undefined, bunEnvFiles(mode));
     }
   }
+  // A server `Bun.serve` starts that no script runs: Bun's own files, as a bare `bun <file>` loads them.
+  if (servesWithBun && !runByBun) add(before, undefined, bunEnvFiles());
   return [...new Set([...overriding, ...before, ...code].map((file) => file.replace(/^['"]|['"]$/g, '')))];
 };
 
 /** The script commands that load an environment file before what they run (P315). */
 const SCRIPT_LOADS_ENV = /--env-file|(?:^|\s)dotenv(?:-cli)?\s|(?:^|\s)env-cmd\s|(?:^|\s)bun\s/;
 
+/** A command that runs a file with Bun, its flags (`--watch`, `--env-file .env.ci`) before the file (P348). */
+const BUN_RUNS_FILE = /(?:^|\s)bun\s+(?:run\s+)?(?:--?[\w-]+(?:=\S+|\s+[^\s-]\S*)?\s+)*[\w./-]+\.[cm]?[jt]sx?(?:\s|$)/;
+
 /**
  * The files Bun loads before it runs a file, the one whose value wins first
- * (P315, P321): `.env.local`, `.env.<NODE_ENV>` and `.env`, as its documentation
- * orders them, `NODE_ENV` being `development` where nothing sets it.
+ * (P315, P321, P348), as its documentation lists them and its loader reads
+ * them (https://bun.com/docs/runtime/environment-variables): `.env.<mode>.local`,
+ * `.env.local` (not where the mode is `test`), `.env.<mode>` and `.env`, each
+ * later file setting only what an earlier one left unset. The mode is
+ * `production` or `test` where `BUN_ENV`, else `NODE_ENV`, says so, and
+ * `development` for any other value or none: Bun knows no other.
  */
-export const bunEnvFiles = (mode = 'development'): readonly string[] => ['.env.local', `.env.${mode}`, '.env'];
+export const bunEnvFiles = (nodeEnv?: string): readonly string[] => {
+  const mode = nodeEnv === 'production' || nodeEnv === 'test' ? nodeEnv : 'development';
+  return [`.env.${mode}.local`, ...(mode === 'test' ? [] : ['.env.local']), `.env.${mode}`, '.env'];
+};
 
 /**
  * The files the dotenv-cli command loads, the one whose value wins first
@@ -256,11 +278,12 @@ interface ServeShape {
   /** The port it listens on where the options write none. */
   readonly otherwise: number;
   /**
-   * The settings it takes that port from before its own default, and the
-   * environment files its runtime loads before it runs (P315): Bun's server
-   * listens on `BUN_PORT`, `PORT` or `NODE_PORT`, which Bun's `.env` may set.
+   * The settings it takes that port from before its own default (P315): Bun's
+   * server listens on `BUN_PORT`, `PORT` or `NODE_PORT`, which a file Bun
+   * loads may set - the files {@link loadedEnvFiles} reads for the scripts
+   * that run it, by their own `NODE_ENV` and `--env-file` (P348).
    */
-  readonly fromEnv?: { readonly settings: readonly string[]; readonly files: readonly string[] };
+  readonly fromEnv?: { readonly settings: readonly string[] };
 }
 
 /** The module a name in a file is imported from. */
@@ -286,7 +309,7 @@ const HONO_SERVES: readonly ServeShape[] = [
     starts: (callee) => callee.getText() === 'Bun.serve',
     optionsAt: 0,
     otherwise: 3000,
-    fromEnv: { settings: ['BUN_PORT', 'PORT', 'NODE_PORT'], files: bunEnvFiles() },
+    fromEnv: { settings: ['BUN_PORT', 'PORT', 'NODE_PORT'] },
   },
   { starts: (callee) => callee.getText() === 'Deno.serve', optionsAt: 0, otherwise: 8000 },
 ];
@@ -306,6 +329,7 @@ const exportedServerIn = (sourceFile: SourceFile): ListenAt | undefined => {
 
 /** Every port a Hono application's server listens on, beside the generic reading. */
 export const honoListens = (ctx: ExtractContext): ListenPort[] => {
+  const files = loadedEnvFiles(ctx);
   const found: ListenAt[] = [];
   // A runtime's own default, moved by the environment file the runtime loads (P315).
   const runtimeDefaults: ListenPort[] = [];
@@ -327,7 +351,7 @@ export const honoListens = (ctx: ExtractContext): ListenPort[] => {
         const read = listenAt({ port: shape.otherwise }, call, { default: true });
         if (read === undefined) continue;
         if (shape.fromEnv === undefined) found.push(read);
-        else runtimeDefaults.push(filledFromEnv(placedPort(read, ctx.repoDir), ctx.repoDir, shape.fromEnv.files, shape.fromEnv.settings));
+        else runtimeDefaults.push(filledFromEnv(placedPort(read, ctx.repoDir), ctx.repoDir, files, shape.fromEnv.settings));
         continue;
       }
       found.push(...listensIn(options, call, { reading, unread }));
@@ -335,7 +359,6 @@ export const honoListens = (ctx: ExtractContext): ListenPort[] => {
     const exported = exportedServerIn(sourceFile);
     if (exported !== undefined) found.push(exported);
   }
-  const files = loadedEnvFiles(ctx);
   return [...listensByCall(ctx), ...found.map((port) => filledFromEnv(placedPort(port, ctx.repoDir), ctx.repoDir, files)), ...runtimeDefaults];
 };
 

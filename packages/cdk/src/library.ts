@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
-import { rangeIncludes, toPosixPath } from '@flowatlas/core';
+import { isWithinDir, pathsOf, rangeIncludes, scanCeilingOf, toPosixPath } from '@flowatlas/core';
 
 /**
  * Which version of the CDK an app is built with, as far as the repository
@@ -44,15 +43,20 @@ export interface CdkLibrary {
   readonly files: readonly string[];
 }
 
-/** The directories from the app's up to the repository's, nearest first. */
+/**
+ * The directories from the app's up to the repository's, nearest first, and
+ * on to the outermost workspace that declares the repository a member (P348,
+ * `scanCeilingOf`): a package of a monorepo is installed, and locked, at the
+ * workspace's root.
+ */
 const upFrom = (appDir: string, repoDir: string): string[] => {
+  const paths = pathsOf(appDir);
+  const ceiling = scanCeilingOf(repoDir);
   const out: string[] = [];
-  const root = resolve(repoDir);
-  let dir = resolve(appDir);
-  for (let depth = 0; depth < 16; depth += 1) {
+  let dir = paths.resolve(appDir);
+  for (let depth = 0; depth < 16 && isWithinDir(dir, ceiling); depth += 1) {
     out.push(dir);
-    if (dir === root || !dir.startsWith(root)) break;
-    const parent = dirname(dir);
+    const parent = paths.dirname(dir);
     if (parent === dir) break;
     dir = parent;
   }
@@ -104,7 +108,10 @@ const LOCKFILES = ['package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml',
 const pinnedOf = (appDir: string, repoDir: string): { pinned: Pinned | undefined; files: string[] } => {
   const dirs = upFrom(appDir, repoDir);
   const files: string[] = [];
-  const rel = (path: string): string => toPosixPath(relative(repoDir, path));
+  const paths = pathsOf(repoDir);
+  const join = (dir: string, ...rest: string[]): string => pathsOf(dir).join(dir, ...rest);
+  // Repo-relative, a workspace's file above the repository included (`../pnpm-lock.yaml`).
+  const rel = (path: string): string => toPosixPath(paths.relative(paths.resolve(repoDir), path));
   for (const dir of dirs) {
     const path = join(dir, 'node_modules', LIBRARY, 'package.json');
     const version = readJson(path)?.['version'];

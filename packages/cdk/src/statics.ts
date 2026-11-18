@@ -6,8 +6,10 @@ import { Built, CdkRef, embedding, Imported, ObjectValue, textOf, Unread, type S
  * the deployment has a use for it (P57).
  *
  * `lambda.Runtime.NODEJS_20_X` is the runtime `nodejs20.x`; `Schedule.cron({
- * hour: '2' })` is the expression `cron(0 2 * * ? *)`, as the CDK writes it
- * into the template; `s3.EventType.OBJECT_CREATED` is `s3:ObjectCreated:*`.
+ * hour: '2' })` is the expression `cron(* 2 * * ? *)`, as the CDK writes it
+ * into the template, every minute of that hour (P348: `aws-cdk-lib` fills a
+ * minute not written with `*`, and warns that it runs every minute);
+ * `s3.EventType.OBJECT_CREATED` is `s3:ObjectCreated:*`.
  * These are the CDK's rules restated, one row each, so a value the CDK would
  * write is the value the reading sees. A token the deployment fills in when it
  * runs - an account, a region, an import - is unread.
@@ -76,20 +78,26 @@ const rateOf = (value: Value): Value => {
   return `rate(${duration.amount} ${duration.unit}${duration.amount === 1 ? '' : 's'})`;
 };
 
-/** `cron(minute hour day month weekDay year)`, with the defaults the CDK fills in. */
+/**
+ * `cron(minute hour day month weekDay year)`, with the defaults the CDK fills
+ * in, as `aws-events`' `Schedule.cron` writes it (P348): `*` for a minute, an
+ * hour, a day, a month and a year not written, `?` for the week day, and `?`
+ * for the day where a week day is written. Both a day and a week day the CDK
+ * refuses, and the app does not synthesize.
+ */
 const cronOf = (value: Value, withYear: boolean): Value => {
   if (!(value instanceof ObjectValue)) return new Unread('the cron options are not written out', 'not-an-object');
+  if (value.get('weekDay') !== undefined && value.get('day') !== undefined) return new Unread('the cron names both a day and a week day, which the CDK refuses', 'not-read');
   const field = (name: string, fallback: string): string | Unread => {
     const written = value.get(name);
     if (written === undefined) return fallback;
     return textOf(written) ?? new Unread(`the cron ${name} is not read`, 'not-text');
   };
   const weekDay = value.get('weekDay');
-  const day = value.get('day');
   const parts = [
     field('minute', '*'),
     field('hour', '*'),
-    weekDay === undefined ? field('day', '*') : day === undefined ? '?' : field('day', '*'),
+    weekDay === undefined ? field('day', '*') : '?',
     field('month', '*'),
     weekDay === undefined ? '?' : field('weekDay', '?'),
     ...(withYear ? [field('year', '*')] : []),

@@ -1,0 +1,544 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T12:23:13.742Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./infra/stock",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "admin#src/index.ts:GET /api/reports@5",
+      "type": "function",
+      "label": "GET /api/reports@5",
+      "repo": "admin",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "channel:kinesis/stock-moves",
+      "type": "channel",
+      "label": "kinesis/stock-moves",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 23,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-kinesis"
+        ],
+        "declaredBy": "StockStack/Moves",
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "entry:admin:http:GET:/api/reports",
+      "type": "entry",
+      "label": "GET /api/reports",
+      "repo": "admin",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/reports",
+        "rawPath": "/api/reports",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/products",
+      "type": "entry",
+      "label": "GET /api/products",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/products",
+        "rawPath": "/api/products",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:stock:invoke:stock-move",
+      "type": "entry",
+      "label": "stock-move",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 29,
+      "kind": "invoke",
+      "meta": {
+        "key": "stock-move",
+        "deployedBy": "cdk",
+        "name": "stock-move",
+        "runtime": "nodejs20.x",
+        "declaredAs": "StockStack/Move",
+        "constructPath": "StockStack/Move",
+        "handler": "src/move.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "queue",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "topic",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "bus",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "stream",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "table",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "bucket",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "function",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "workflow",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "table",
+            "name": "stock-ledger",
+            "by": "grantWriteData, on the table's own policy"
+          },
+          {
+            "kind": "stream",
+            "name": "stock-moves",
+            "by": "grantWrite, on the stream's own policy"
+          }
+        ],
+        "reads": {
+          "": "{sku:string;quantity:number}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/sync.ts:2:31",
+      "type": "http_out",
+      "label": "GET /api/products",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 2,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4102/api/products",
+        "path": "/api/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4102",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/sync.ts:5:30",
+      "type": "http_out",
+      "label": "GET /api/reports",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 5,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4202/api/reports",
+        "path": "/api/reports",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4202",
+        "targetService": "admin"
+      }
+    },
+    {
+      "id": "jobs#src/sync.ts:products",
+      "type": "function",
+      "label": "products",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/sync.ts:reports",
+      "type": "function",
+      "label": "reports",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "producer:stock#src/move.ts:10:9",
+      "type": "producer",
+      "label": "record kinesis/stock-moves",
+      "repo": "stock",
+      "file": "src/move.ts",
+      "line": 10,
+      "kind": "record",
+      "meta": {
+        "kind": "record",
+        "adapter": "aws-kinesis",
+        "channelVia": "literal",
+        "method": "send"
+      }
+    },
+    {
+      "id": "repo:admin",
+      "type": "repo",
+      "label": "admin",
+      "repo": "admin",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "hono-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4202,
+            "file": "src/index.ts",
+            "line": 7,
+            "setting": "PORT",
+            "valueFrom": ".env.ci"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "hono-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4102,
+            "file": "src/index.ts",
+            "line": 8,
+            "setting": "PORT",
+            "valueFrom": ".env.production"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop#src/index.ts:GET /api/products@5",
+      "type": "function",
+      "label": "GET /api/products@5",
+      "repo": "shop",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "stock#src/move.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "stock",
+      "file": "src/move.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{sku:string;quantity:number}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:admin:http:GET:/api/reports",
+      "to": "admin#src/index.ts:GET /api/reports@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/products",
+      "to": "shop#src/index.ts:GET /api/products@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:invoke:stock-move",
+      "to": "stock#src/move.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/move.ts",
+      "line": 8
+    },
+    {
+      "from": "http_out:jobs#src/sync.ts:2:31",
+      "to": "entry:shop:http:GET:/api/products",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/sync.ts",
+      "line": 2,
+      "meta": {
+        "via": "host",
+        "targetService": "shop",
+        "listensAt": "src/index.ts:8 (PORT from .env.production)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/sync.ts:5:30",
+      "to": "entry:admin:http:GET:/api/reports",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/sync.ts",
+      "line": 5,
+      "meta": {
+        "via": "host",
+        "targetService": "admin",
+        "listensAt": "src/index.ts:7 (PORT from .env.ci)"
+      }
+    },
+    {
+      "from": "jobs#src/sync.ts:products",
+      "to": "http_out:jobs#src/sync.ts:2:31",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.ts",
+      "line": 2
+    },
+    {
+      "from": "jobs#src/sync.ts:reports",
+      "to": "http_out:jobs#src/sync.ts:5:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.ts",
+      "line": 5
+    },
+    {
+      "from": "producer:stock#src/move.ts:10:9",
+      "to": "channel:kinesis/stock-moves",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{sku:string;quantity:number}"
+      ],
+      "file": "src/move.ts",
+      "line": 10
+    },
+    {
+      "from": "stock#src/move.ts:handler",
+      "to": "producer:stock#src/move.ts:10:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/move.ts",
+      "line": 10
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/index.ts",
+      "line": 5,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /api/reports@5 -> c.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "admin"
+    },
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "jobs"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 5,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /api/products@5 -> c.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "src/move.ts",
+      "line": 10,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "handler -> Buffer.from",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@types/node"
+      },
+      "service": "stock"
+    }
+  ]
+}
