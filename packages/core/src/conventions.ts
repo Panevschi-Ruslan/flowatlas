@@ -9,7 +9,8 @@ import { readResolvedPackageJson, type PackageJson } from './adapters/manifest.j
 import type { AdapterRegistry } from './adapters/registry.js';
 import type { FlowatlasConfig } from './config.js';
 import type { Unresolved } from './model/graph.js';
-import { widenServiceExtent } from './workspace.js';
+import { boundedConfigHost } from './installs-above.js';
+import { installCeilingOf, widenServiceExtent } from './workspace.js';
 
 /**
  * What a framework's own build writes for the compiler, said by a reader for a
@@ -162,12 +163,8 @@ const absolutePathsOf = (configPath: string): Record<string, string[]> | undefin
   if (read.error !== undefined) return undefined;
   const parsed = ts.parseJsonConfigFileContent(
     read.config,
-    {
-      useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
-      fileExists: ts.sys.fileExists,
-      readFile: ts.sys.readFile,
-      readDirectory: () => [],
-    },
+    // An `extends` naming a package found inside the bound alone (P357).
+    boundedConfigHost(installCeilingOf(dirname(configPath))),
     dirname(configPath),
     undefined,
     configPath,

@@ -1,0 +1,6 @@
+{
+  "name": "catalog",
+  "private": true,
+  "dependencies": { "express": "^4.21.2" },
+  "devDependencies": { "@shop/tsconfig": "1.0.0" }
+}

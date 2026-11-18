@@ -15,6 +15,7 @@ import {
   closeStandIns,
   withoutOtherServicesWaysIn,
   reportSkippedTestDirectories,
+  reportTsconfigReach,
   reportPatterns,
   readPatterns,
   reportStandIns,
@@ -339,6 +340,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // does the count of them the repository node carries.
   reportUnreadableSources(base);
   reportSkippedTestDirectories(base);
+  reportTsconfigReach(base);
   reportStandIns(base);
   reportPatterns(base, patterns);
 

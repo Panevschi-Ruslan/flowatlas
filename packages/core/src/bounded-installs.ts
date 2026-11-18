@@ -1,7 +1,6 @@
 import type { FileSystemHost } from 'ts-morph';
-import { toPosixPath } from './ids.js';
+import { installsHiddenAbove } from './installs-above.js';
 import { realFileSystem } from './stand-ins.js';
-import { mayClimbTo } from './upward-walk.js';
 
 /**
  * The file system the compiler resolves a repository's imports through, with
@@ -18,45 +17,11 @@ import { mayClimbTo } from './upward-walk.js';
  *
  * Only `node_modules` is hidden: a file above the ceiling a repository names
  * by a relative path is its own statement, and the compiler reads it as it
- * always has.
+ * always has - said in a row where a tsconfig names one (P357,
+ * `tsconfig-reach.ts`).
  */
 export const boundedInstalls = (ceiling: string, base: FileSystemHost = realFileSystem()): FileSystemHost => {
-  const allowed = new Map<string, boolean>();
-  // A directory and the ceiling may be spelled through different links to the
-  // same place - a temporary directory under `/var` that the compiler reaches
-  // as `/private/var` - so each is also compared by the path it really is.
-  const realOf = (path: string): string | undefined => {
-    try {
-      return toPosixPath(base.realpathSync(path));
-    } catch {
-      return undefined;
-    }
-  };
-  const ceilings = [...new Set([ceiling, realOf(ceiling)].filter((path): path is string => path !== undefined))];
-  const within = (dir: string): boolean => {
-    if (ceilings.some((top) => mayClimbTo(dir, top))) return true;
-    const real = realOf(dir);
-    return real !== undefined && real !== dir && ceilings.some((top) => mayClimbTo(real, top));
-  };
-  const hidden = (path: string): boolean => {
-    const posixPath = toPosixPath(path);
-    // The outermost install a path is under decides: one inside the
-    // repository may hold another, and both are the repository's.
-    let at = posixPath.indexOf('/node_modules');
-    while (at >= 0) {
-      const after = posixPath.charAt(at + '/node_modules'.length);
-      if (after === '' || after === '/') break;
-      at = posixPath.indexOf('/node_modules', at + 1);
-    }
-    if (at < 0) return false;
-    const dir = at === 0 ? '/' : posixPath.slice(0, at);
-    let may = allowed.get(dir);
-    if (may === undefined) {
-      may = within(dir);
-      allowed.set(dir, may);
-    }
-    return !may;
-  };
+  const hidden = installsHiddenAbove(ceiling, (path) => base.realpathSync(path));
   const absent = (path: string): Error => Object.assign(new Error(`ENOENT: ${path} is above the repository (P340)`), { code: 'ENOENT' });
   return {
     isCaseSensitive: () => base.isCaseSensitive(),

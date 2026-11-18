@@ -1,5 +1,5 @@
 import { basename, dirname, isAbsolute, join, relative } from 'node:path';
-import { isNoRepositoryDir, mayClimbTo, parseProto, protoTypes, sameMethodName, toPosixPath, type ProtoFile, type ProtoMethod, type ProtoService, type ProtoTypes, upwardCeilingOf } from '@flowatlas/core';
+import { isNoRepositoryDir, mayClimbTo, parseProto, protoTypes, sameMethodName, toPosixPath, type ProtoFile, type ProtoMethod, type ProtoService, type ProtoTypes, sharedTopOf } from '@flowatlas/core';
 import type { FileSystemHost } from 'ts-morph';
 
 /**
@@ -87,10 +87,12 @@ const exists = (fs: FileSystemHost, path: string): boolean => {
 /** The top of the repository a directory is in, else of what the run was asked to read, else the directory itself. */
 const searchRootOf = (fs: FileSystemHost, dir: string): string => {
   // Never above the checkout the service is in, nor, in none, above the
-  // directory the run was asked to read (P340); the home directory is no
+  // directory the run was asked to read (P340); inside one, never above
+  // everything the run reads there taken together, where a contract its
+  // services share is kept (P357); the home directory is no
   // repository's (P334): a checkout kept there (its files under version
   // control) would have the search read all of it.
-  const ceiling = upwardCeilingOf(dir, (path) => exists(fs, path));
+  const ceiling = sharedTopOf(dir, (path) => exists(fs, path));
   let at = dir;
   for (let depth = 0; depth < MAX_ASCENT; depth += 1) {
     // Past the directory the run was asked to read, that directory is the top.

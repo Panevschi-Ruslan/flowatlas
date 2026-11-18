@@ -3,8 +3,9 @@ import { dirname, join, resolve } from 'node:path';
 import { ts } from 'ts-morph';
 import { isWithinDir, toPosixPath } from './ids.js';
 import { readPackageJson, type PackageJson } from './package-json.js';
+import { boundedConfigHost } from './installs-above.js';
 import { findTsconfig } from './tsconfig-file.js';
-import { isNoRepositoryDir, mayClimbTo, upwardCeilingOf } from './upward-walk.js';
+import { checkoutTopOf, isNoRepositoryDir, mayClimbTo, scanRootOf, upwardCeilingOf } from './upward-walk.js';
 
 /**
  * An application a workspace builds without giving it a manifest of its own (R180).
@@ -151,12 +152,8 @@ const aliasesOf = (application: WorkspaceApplication): Array<readonly [string, r
   if (config === undefined) return [];
   const options = ts.parseJsonConfigFileContent(
     config,
-    {
-      useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
-      fileExists: ts.sys.fileExists,
-      readFile: ts.sys.readFile,
-      readDirectory: () => [],
-    },
+    // An `extends` naming a package found inside the bound alone (P357).
+    boundedConfigHost(checkoutTopOf(dirname(application.tsconfig)) ?? scanRootOf(dirname(application.tsconfig))),
     dirname(application.tsconfig),
     undefined,
     application.tsconfig,

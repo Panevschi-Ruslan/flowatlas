@@ -7,6 +7,7 @@ import { expandGlob } from './glob.js';
 import { ENTRY_KINDS } from './model/nodes.js';
 import { requestReadingSchema } from './request.js';
 import { ruleSchema, rulesSettingsSchema } from './rule-config.js';
+import { boundWalksAt } from './workspace.js';
 
 export const CONFIG_FILENAME = 'flowatlas.config.json';
 export const DEFAULT_OUTPUT = '.flowatlas';
@@ -1872,6 +1873,13 @@ export const loadConfig = (
       );
     }
   }
+
+  // Whatever command loads a configuration reads what it names and no higher
+  // (P357): a build, a reading of one service, the MCP server, every command
+  // asking about a repository. A walk up from a directory of a service stops
+  // at the configuration's directory or the service's, each widened to the
+  // workspace declaring it, inside a checkout as outside one.
+  boundWalksAt([rootDir, ...config.services.map((service) => repoDirOf(service))]);
 
   return {
     config,

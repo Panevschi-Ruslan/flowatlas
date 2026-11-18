@@ -49,7 +49,7 @@ describe('what a Prisma schema states', () => {
     expect(prismaTableOf(file, 'user')).toBe('users');
   });
 
-  it('reads no schema above what the run was asked to read outside a checkout, and the checkout top inside one (P340)', () => {
+  it('reads no schema above what the run was asked to read, outside a checkout and inside one (P340, P357)', () => {
     const tableIn = (files: Record<string, string>): string | undefined => {
       const project = new Project({ useInMemoryFileSystem: true });
       for (const [path, text] of Object.entries(files)) project.getFileSystem().writeFileSync(path, text);
@@ -60,7 +60,16 @@ describe('what a Prisma schema states', () => {
       expect(tableIn(loose)).toBe('users');
       boundWalksAt(['/work/shop']);
       expect(tableIn(loose)).toBeUndefined();
-      expect(tableIn({ ...loose, '/work/.git/HEAD': '' })).toBe('users');
+      // Inside a checkout, its top is read where the run was asked to read it (P357).
+      const checkout = { ...loose, '/work/.git/HEAD': '' };
+      expect(tableIn(checkout)).toBeUndefined();
+      boundWalksAt(['/work', '/work/shop']);
+      expect(tableIn(checkout)).toBe('users');
+      // Two services of the checkout share the schema kept at the top they share.
+      boundWalksAt(['/work/shop', '/work/admin']);
+      expect(tableIn(checkout)).toBe('users');
+      boundWalksAt([]);
+      expect(tableIn(checkout)).toBe('users');
     } finally {
       boundWalksAt([]);
     }

@@ -1591,11 +1591,14 @@ Known gaps in what it can read:
   read as Bun's default mode; each is a row. A `node` in an image built on
   Bun's own is read as Node, with a row, since the image's files are not
   read.
-- In a linter plugin's `configs`, a key written before a spread of another
-  module's object is taken to be the spread's. Inside a checkout, a look up
-  the directories still climbs to the checkout's top when the run was given
-  a narrower root, and a tsconfig `extends` naming a package resolves only
-  from an install inside.
+- In a linter plugin's `configs`, a spread of another module that cannot be
+  read is said only where a global its configuration leaves undeclared is
+  used; where the key written before it declares the global, nothing says it
+  might have been overridden. Inside a checkout, a narrower root bounds every
+  look up the directories but the compiler's own for an install, which still
+  reaches the checkout's top (a hoisted install is the repository's), and a
+  shared contract or schema kept at that top is found only by a run reading
+  more of the checkout than one service below it.
 
 What it does on the demo project is
 [measured at the top of this file](#measured-on-the-demo-project). Every figure

@@ -524,6 +524,12 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The query names a table, but its text does not open with a verb that says whether it reads or writes (SELECT, WITH … SELECT, INSERT INTO, UPDATE, DELETE FROM or TRUNCATE, as the very first word): a leading comment hides the verb, and EXPLAIN is not one of them. Start the string with its verb, with any comment after it; a statement that neither reads nor writes, such as EXPLAIN, can be left as it is. The operation comes from that verb, not from the descriptor, so the descriptor needs no change.',
   'db-receiver-name-only': () =>
     'Name the base class under adapters.db.localBaseClasses in flowatlas.config.json if this is a data layer of your own. A call the graph already draws as a static call into a repository method of this repository is not listed: its queries are read where they are written.',
+  'tsconfig-read-above-root': () =>
+    'Nothing to do if the file belongs to this repository: it is read as the compiler reads it. Give the run a root that holds it to have it read without a word.',
+  'tsconfig-not-read-above-root': () =>
+    'The directory is above what the run reads: give the run a root that holds it, or name it as a service of its own.',
+  'tsconfig-extends-installed-above': () =>
+    'The package the tsconfig extends is installed only above what the run reads: install it inside the repository, or give the run a root that holds the install.',
   'test-directory-skipped': () =>
     'If the directory holds code the application runs, name it under readTestDirectories in the service entry in flowatlas.config.json.',
   'db-handover-unstated': () =>

@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
-import { boundedInstalls, readingCeilingOf, toPosixPath, type Unresolved } from '@flowatlas/core';
+import { boundedInstalls, installCeilingOf, toPosixPath, type Unresolved } from '@flowatlas/core';
 import { Project, type ClassDeclaration, type SourceFile } from 'ts-morph';
 import { AppDeployment, type DeploymentParts } from './deployment.js';
 import { Interpreter } from './interpret.js';
@@ -114,7 +114,7 @@ export const readApp = (parts: DeploymentParts, options: AppOptions): string[] =
   const project = new Project({
     compilerOptions: { allowJs: false, noEmit: true, skipLibCheck: true, strict: false },
     skipAddingFilesFromTsConfig: true,
-    fileSystem: boundedInstalls(readingCeilingOf(repoDir)),
+    fileSystem: boundedInstalls(installCeilingOf(repoDir)),
   });
   const sources = sourcesOf(appDir);
   for (const source of sources) project.addSourceFileAtPath(source);

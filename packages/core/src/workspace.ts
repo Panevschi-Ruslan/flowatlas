@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { isBelowDir, isWithinDir, toPosixPath } from './ids.js';
 import { readPackageJson, type PackageJson } from './package-json.js';
-import { mayClimbTo, pathsOf, setScanRoots, upwardCeilingOf } from './upward-walk.js';
+import { addScanRoot, checkoutTopOf, mayClimbTo, pathsOf, scanRootOf, setScanRoots, upwardCeilingOf } from './upward-walk.js';
 import { applicationLibraryDirs, forgetWorkspaceApplications } from './workspace-application.js';
 
 /**
@@ -338,12 +338,12 @@ export const workspaceRootsAbove = (dir: string): readonly string[] => {
 export const scanCeilingOf = (root: string): string => workspaceRootsAbove(root).at(-1) ?? pathsOf(root).resolve(root);
 
 /**
- * Bounds every walk of this run in a directory of no checkout (P340): by the
- * outermost of the directories it was asked to read that holds the walk's
- * start - the root of its configuration, a service's root - each widened to
- * the outermost workspace declaring it, never above it. A walk in a checkout
- * stays bounded by the checkout's top (P334). Replaces what an earlier build
- * of the same process set; an empty list sets none.
+ * Bounds every walk of this run (P340, P357): by the outermost of the
+ * directories it was asked to read that holds the walk's start - the root of
+ * its configuration, a service's root - each widened to the outermost
+ * workspace declaring it, never above it; and inside a checkout never above
+ * the checkout's top (P334). Replaces what an earlier build of the same
+ * process set; an empty list sets none.
  */
 export const boundWalksAt = (roots: readonly string[]): void => {
   setScanRoots([]);
@@ -351,13 +351,34 @@ export const boundWalksAt = (roots: readonly string[]): void => {
 };
 
 /**
+ * Bounds the walks of a reading given `root` where nothing has bounded them
+ * (P357): a library caller opening a project, a reading given no
+ * configuration. The root, widened to the outermost workspace declaring it,
+ * is added to the directories the run reads unless one of them holds it.
+ */
+export const boundWalksBelow = (root: string): void => {
+  if (scanRootOf(root) === undefined) addScanRoot(scanCeilingOf(root));
+};
+
+/**
  * The highest directory a reading given `root` may read above it where it
- * looks the way the compiler looks for `node_modules`, or for what a
- * repository keeps at its top (P340): the top of the checkout it is in, else
- * the outermost directory the run was asked to read that holds it, else the
- * root widened to the workspace declaring it ({@link scanCeilingOf}).
+ * looks for what a repository keeps at its top (P340): the directory the run
+ * was asked to read that holds it, inside a checkout no higher than its top
+ * (P357, {@link upwardCeilingOf}), else the root widened to the workspace
+ * declaring it ({@link scanCeilingOf}).
  */
 export const readingCeilingOf = (root: string): string => upwardCeilingOf(root) ?? scanCeilingOf(root);
+
+/**
+ * The highest directory whose `node_modules` a reading given `root` resolves
+ * a package from (P340, P357): the top of the checkout it is in, else the
+ * outermost directory the run was asked to read that holds it, else the root
+ * widened to the workspace declaring it. Wider inside a checkout than
+ * {@link readingCeilingOf}: an install at the checkout's top is what Node and
+ * the compiler resolve a package of a directory below it from, a hoisted one
+ * included, whichever root the run was given.
+ */
+export const installCeilingOf = (root: string): string => checkoutTopOf(root) ?? scanRootOf(root) ?? scanCeilingOf(root);
 
 /**
  * The workspace `dir` is a package of, when it is a package of one.

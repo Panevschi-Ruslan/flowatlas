@@ -8,6 +8,25 @@ only one of them moved.
 
 ### Added
 
+- **A narrower root bounds a reading inside its checkout too, and what a
+  tsconfig names above it is said (P357).** A configuration kept beside or
+  below its services reads no higher in its checkout than its own directory
+  and each service's, each widened to the workspace declaring it; an install
+  at the checkout's top still resolves a package, as Node resolves it, and a
+  gRPC contract or Prisma schema is searched for from the top everything the
+  run reads in the checkout shares. Every
+  command loading a configuration (the MCP server, `extract` and the commands
+  asking about a repository) bounds its walks so, and a project a library
+  opens with none set is bounded at its root. A tsconfig `extends` naming a
+  package resolves from an install inside the bound wherever a tsconfig is
+  read, and one installed only above is a `tsconfig-extends-installed-above`
+  row; a relative `extends` or a `references` above the bound is read and
+  said (`tsconfig-read-above-root`, info), an `include` or `files` above it
+  is a `tsconfig-not-read-above-root` row. In a linter plugin's `configs`, a
+  key written before a spread of another module's object is the one taken
+  where that module writes no such key - the module is read to see - and a
+  spread that cannot be read is said beside the reading.
+
 - **A port a framework only assumes places only the requests its service
   serves (P300, P307).** Where every server heard at a port of this machine
   is there by its framework's default, a merge, an example environment file

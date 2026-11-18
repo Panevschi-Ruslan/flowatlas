@@ -19,6 +19,7 @@ import {
   closeStandIns,
   withoutOtherServicesWaysIn,
   reportSkippedTestDirectories,
+  reportTsconfigReach,
   reportPatterns,
   readPatterns,
   reportStandIns,
@@ -300,6 +301,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // disagree about how many files were read.
   reportUnreadableSources(base);
   reportSkippedTestDirectories(base);
+  reportTsconfigReach(base);
   reportStandIns(base);
   reportPatterns(base, patterns);
   const sources = countSources(project);

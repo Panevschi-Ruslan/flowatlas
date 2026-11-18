@@ -1,5 +1,5 @@
 import { dirname, isAbsolute, join, posix } from 'node:path';
-import { isNoRepositoryDir, isWithinDir, mayClimbTo, toPosixPath, upwardCeilingOf } from '@flowatlas/core';
+import { isNoRepositoryDir, isWithinDir, mayClimbTo, sharedTopOf, toPosixPath } from '@flowatlas/core';
 import type { Project, SourceFile } from 'ts-morph';
 
 /**
@@ -129,8 +129,9 @@ export const prismaSchemaFor = (file: SourceFile): PrismaSchema | undefined => {
   const asked = cache.get(dir);
   if (asked !== undefined) return asked ?? undefined;
   // Never above the checkout, nor, in none, above the directory the run was
-  // asked to read (P340).
-  const ceiling = upwardCeilingOf(dir, (path) => fs.fileExistsSync(path) || fs.directoryExistsSync(path));
+  // asked to read (P340); inside one, never above everything the run reads
+  // there taken together, where a schema its services share is kept (P357).
+  const ceiling = sharedTopOf(dir, (path) => fs.fileExistsSync(path) || fs.directoryExistsSync(path));
   let answer: PrismaSchema | null = null;
   for (let depth = 0; depth < MAX_ASCENT; depth += 1) {
     // The home directory and the file system's root are no repository's (P334).

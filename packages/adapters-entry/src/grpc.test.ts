@@ -108,7 +108,7 @@ describe('gRPC contracts (P274)', () => {
     expect(contracts.byShortName('CartService').map((each) => each.service.fullName)).toEqual(['shop.CartService']);
   });
 
-  it('searches no higher than what the run was asked to read outside a checkout, and from the checkout top inside one (P340)', () => {
+  it('searches no higher than what the run was asked to read, outside a checkout and inside one (P340, P357)', () => {
     const decoy = SHOP.replace('package shop;', 'package decoy;');
     const contractPaths = (files: Record<string, string>, dir: string): string[] => {
       const project = new Project({ useInMemoryFileSystem: true });
@@ -121,8 +121,18 @@ describe('gRPC contracts (P274)', () => {
       expect(contractPaths(loose, '/work/shop/api')).toEqual(['/work/proto/decoy.proto', '/work/shop/proto/shop.proto']);
       boundWalksAt(['/work/shop']);
       expect(contractPaths(loose, '/work/shop/api')).toEqual(['/work/shop/proto/shop.proto']);
-      // A contract kept at the top of the checkout the service is in is still read.
-      expect(contractPaths({ ...loose, '/work/.git/HEAD': '' }, '/work/shop/api')).toEqual(['/work/proto/decoy.proto', '/work/shop/proto/shop.proto']);
+      // Inside a checkout the same (P357): a contract kept at its top is read
+      // where the run was asked to read the top, and not from a narrower root.
+      const checkout = { ...loose, '/work/.git/HEAD': '' };
+      expect(contractPaths(checkout, '/work/shop/api')).toEqual(['/work/shop/proto/shop.proto']);
+      boundWalksAt(['/work', '/work/shop']);
+      expect(contractPaths(checkout, '/work/shop/api')).toEqual(['/work/proto/decoy.proto', '/work/shop/proto/shop.proto']);
+      // Or where it reads several directories of the checkout - a service and
+      // a contract kept at the top - from the top they share.
+      boundWalksAt(['/work/shop', '/work/proto']);
+      expect(contractPaths(checkout, '/work/shop/api')).toEqual(['/work/proto/decoy.proto', '/work/shop/proto/shop.proto']);
+      boundWalksAt([]);
+      expect(contractPaths(checkout, '/work/shop/api')).toEqual(['/work/proto/decoy.proto', '/work/shop/proto/shop.proto']);
     } finally {
       boundWalksAt([]);
     }

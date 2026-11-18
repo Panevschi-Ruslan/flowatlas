@@ -58,6 +58,8 @@ export interface KindedRow {
 // How a join or a reading was made. Every one of these sits beside an edge
 // that was drawn, or a package that was read.
 const NOTES: readonly string[] = [
+  // A file a tsconfig names above the directory the reading is bounded by, read as the compiler reads it (P357)
+  'tsconfig-read-above-root',
   // A gRPC service no .proto file of the repository declares, drawn from what the code writes (P274)
   'grpc-contract-unread',
   // A gRPC service a package implements whose contract is none this knows (P287)
@@ -237,6 +239,9 @@ const GAPS: readonly string[] = [
   // An edge a reader drew to a node it never wrote, left out (core/builder.ts, R180)
   'edge-end-missing',
   'test-directory-skipped',
+  // What a tsconfig names above the directory the reading is bounded by and that is not read (P357)
+  'tsconfig-not-read-above-root',
+  'tsconfig-extends-installed-above',
   // Stand-ins that could not be used (core/stand-ins.ts)
   'package-source-ambiguous',
   'shape-file-unread',

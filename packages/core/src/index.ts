@@ -488,10 +488,14 @@ export {
   widenServiceExtent,
   scanCeilingOf,
   boundWalksAt,
+  boundWalksBelow,
+  installCeilingOf,
   readingCeilingOf,
 } from './workspace.js';
-export { checkoutTopOf, forgetCheckouts, isNoRepositoryDir, mayClimbTo, pathsOf, scanRootOf, upwardCeilingOf } from './upward-walk.js';
+export { addScanRoot, checkoutTopOf, forgetCheckouts, isNoRepositoryDir, mayClimbTo, pathsOf, scanRootOf, sharedTopOf, upwardCeilingOf } from './upward-walk.js';
 export { boundedInstalls } from './bounded-installs.js';
+export { boundedConfigHost, installsHiddenAbove } from './installs-above.js';
+export { extendedPackageConfig, tsconfigReachOf, type TsconfigReach } from './tsconfig-reach.js';
 export type { PathExists } from './upward-walk.js';
 export type { ExtentPackage, WorkspacePackage } from './workspace.js';
 export { applicationLibraryDirs, readServiceManifest, workspaceApplicationOf } from './workspace-application.js';
@@ -505,8 +509,12 @@ export {
   installedFiles,
   listRepoSources,
   reportSkippedTestDirectories,
+  reportTsconfigReach,
   reportUnreadableSources,
   SKIPPED_TEST_DIRECTORY_REASON,
+  TSCONFIG_EXTENDS_ABOVE_REASON,
+  TSCONFIG_NOT_READ_ABOVE_REASON,
+  TSCONFIG_READ_ABOVE_REASON,
   skippedTestDirectories,
   sourceRootsOf,
   TSCONFIG_CANDIDATES,

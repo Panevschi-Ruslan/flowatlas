@@ -1265,6 +1265,47 @@ describe('plain browser code (P284)', () => {
     expect(urls({ ...extendsNode, ...plugin(`module.exports = { configs: {} };\nmodule.exports.configs.browser = ${browser};\n`) })).toEqual([]);
   });
 
+  it("takes a plugin's key written before a spread of another module where that module writes no such key, and says a spread it cannot read (P357)", () => {
+    const script = "function items() { return axios.get('https://api.example.test/items'); }\n";
+    const graphOf = (pages: Record<string, string>): RepoGraph => read({ '/js/shop.js': script }, pages);
+    const urls = (pages: Record<string, string>): unknown[] => requests(graphOf(pages)).map((node) => node.meta?.['url']);
+    const items = ['https://api.example.test/items'];
+    const extendsBrowser = { '/.eslintrc.json': '{ "extends": ["plugin:shop/browser"] }' };
+    const browser = "{ globals: { axios: 'readonly' } }";
+    const plugin = (text: string, more: Record<string, string> = {}): Record<string, string> => ({ '/node_modules/eslint-plugin-shop/index.js': text, ...more });
+    const before = `const base = require('./base');\nmodule.exports = { configs: { browser: ${browser}, ...base.configs } };\n`;
+    // The module spread after the key writes none of it: the key written before wins.
+    expect(urls({ ...extendsBrowser, ...plugin(before, { '/node_modules/eslint-plugin-shop/base.js': 'module.exports = { configs: { node: {} } };\n' }) })).toEqual(items);
+    // It writes one, the later: its own wins, declaring nothing here.
+    expect(urls({ ...extendsBrowser, ...plugin(before, { '/node_modules/eslint-plugin-shop/base.js': 'module.exports = { configs: { browser: { globals: {} } } };\n' }) })).toEqual([]);
+    // Spread through a module the spread module itself spreads: read as deep.
+    expect(
+      urls({
+        ...extendsBrowser,
+        ...plugin(before, {
+          '/node_modules/eslint-plugin-shop/base.js': "const deeper = require('./deeper');\nmodule.exports = { configs: { ...deeper } };\n",
+          '/node_modules/eslint-plugin-shop/deeper.js': 'module.exports = { browser: { globals: {} } };\n',
+        }),
+      }),
+    ).toEqual([]);
+    // A spread from `Object.assign`'s later argument, the same.
+    expect(
+      urls({
+        ...extendsBrowser,
+        ...plugin(`const base = require('./base');\nmodule.exports = { configs: Object.assign({}, { browser: ${browser} }, base) };\n`, {
+          '/node_modules/eslint-plugin-shop/base.js': 'module.exports = { node: {} };\n',
+        }),
+      }),
+    ).toEqual(items);
+    // A spread that cannot be read: the key written before is taken, and the spread is said beside it.
+    const missing = graphOf({ ...extendsBrowser, ...plugin(before.replace('{ globals: { axios', '{ globals: { other') ) });
+    const row = missing.unresolved.find((each) => each.reason === 'api-client-global-undeclared');
+    expect(row?.meta?.['unfollowedConfigs']).toEqual([
+      '.eslintrc.json: plugin:shop/browser (./base configs is spread after browser and was not read (no such file): the browser written before it is taken)',
+    ]);
+    expect(urls({ ...extendsBrowser, ...plugin(before) })).toEqual(items);
+  });
+
   it('follows a flat configuration entry named by members taken off a module imported or required, and says one it cannot follow (P341)', () => {
     const script = "function items() { return axios.get('https://api.example.test/items'); }\n";
     const graphOf = (pages: Record<string, string>): RepoGraph => read({ '/js/shop.js': script }, pages);

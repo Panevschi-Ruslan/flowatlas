@@ -3,7 +3,7 @@ import { dirname, extname } from 'node:path';
 import {
   boundedInstalls,
   readExpressionDocument,
-  readingCeilingOf,
+  installCeilingOf,
   readJson,
   UnreadMember,
   type DefinitionPosition,
@@ -183,7 +183,7 @@ const exportedValue = (source: SourceFile): Node | undefined => {
 const readServiceModule = (path: string): PositionedDocument => {
   const project = new Project({
     // No install above the repository is read (P340).
-    fileSystem: boundedInstalls(readingCeilingOf(dirname(path))),
+    fileSystem: boundedInstalls(installCeilingOf(dirname(path))),
     compilerOptions: { allowJs: true, noEmit: true, skipLibCheck: true },
     skipAddingFilesFromTsConfig: true,
     skipFileDependencyResolution: false,

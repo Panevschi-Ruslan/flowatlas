@@ -1670,12 +1670,21 @@ it a member, so a package still finds what its workspace installs; a walk
 given no repository - the workspace roots above a package, the package a file
 is in, a tsconfig's relative `extends`, a workspace application's manifest, a
 Prisma schema, a gRPC contract's search top, the checkout a build is stamped
-with - stops at the top of the checkout it starts in, the nearest `.git` (a
-gRPC contract's search top at this configuration's directory too, where that
-comes first), or in a directory of no checkout at the outermost directory the
-build was asked to read (its configuration's, a service's, each widened to the
-workspace that declares it, P340); and none reads in the home directory or at
-the file system's root. The version of the CDK an app is built with is looked
+with - stops at the outermost directory the build was asked to read that holds
+where it starts (its configuration's, a service's, each widened to the
+workspace that declares it a member, P340), inside a checkout never above its
+top, the nearest `.git` (a gRPC contract's search top at this configuration's
+directory too, where that comes first); a configuration kept beside or below
+its services reads no higher in its checkout than it was given (P357). A
+search for what services share - a gRPC contract's search top, a Prisma
+schema - reads from the deepest directory holding everything the build reads
+in that checkout, so a contract kept at the top the services and documents it
+reads share is still found (P357). Every
+command that loads a configuration bounds its reading this way - a build, a
+reading of one service, the MCP server and the commands asking about a
+repository - and a project opened by a library caller with none set is bounded
+at its root, widened the same way (P357). None reads in the home directory or
+at the file system's root. The version of the CDK an app is built with is looked
 for from the app's directory up to the service's repository and on to the
 outermost workspace above it that declares it a member (P348), as the readers
 above are. Finding this configuration from where a command runs is not such a
@@ -1684,7 +1693,16 @@ path climbing out of the repository is not followed. The TypeScript checker's
 module resolution finds no `node_modules` or `@types` above the top of the
 checkout a service is in (outside any checkout, above what the build reads,
 else above the service's root and its workspace, P340); an install inside the
-repository resolves as the compiler resolves it.
+repository resolves as the compiler resolves it, one at the checkout's top for
+a service below a narrower root included, since that is what Node and the
+compiler resolve it from. A tsconfig `extends` naming a package is resolved
+the same way, every tsconfig read outside the compiler's own project
+included; one installed only above is a `tsconfig-extends-installed-above`
+row naming it (P357). What a service's tsconfig names by a path above what the
+build reads is said too: a relative `extends` or a project `references` names
+there is read as the compiler reads it, a `tsconfig-read-above-root` row at
+level `info`; a directory `include` or `files` names there is not read, a
+`tsconfig-not-read-above-root` row.
 
 Everything else it keeps is in the same directory, and nothing is written into
 the repositories it reads:
@@ -4199,7 +4217,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 
 | About | Reasons |
 |---|---|
-| A graph or a service that could not be read | `service-read-nothing`, `file-not-parsed`, `duplicate-node-id`, `test-directory-skipped` (info) |
+| A graph or a service that could not be read | `service-read-nothing`, `file-not-parsed`, `duplicate-node-id`, `test-directory-skipped` (info), `tsconfig-not-read-above-root`, `tsconfig-extends-installed-above`, `tsconfig-read-above-root` (info) |
 | A package that is not installed, read in its place | `package-from-repo` (nothing), `package-version-differs` (info), `package-source-ambiguous`, `shape-file-unread`, `shape-file-unmatched` (nothing) |
 | The project's own extraction patterns | `pattern-file-unread`, `pattern-not-expressible` (a rule refused, the part named), `pattern-ambiguous` (two rules on one call, neither read), `pattern-shadowed` (info: a written description reads the call), `pattern-unmatched` (info: a rule nothing matches) |
 | Types | `type-unresolved`, `type-generic-uninstantiated`, `type-depth-exceeded`, `di-type-unresolved`, `decorator-arg-dynamic` |

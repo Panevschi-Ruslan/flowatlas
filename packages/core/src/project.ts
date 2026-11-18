@@ -31,7 +31,11 @@ import { isTestDirectory, isTestName } from './test-files.js';
 import { findTsconfig } from './tsconfig-file.js';
 import { mayClimbTo, pathsOf, upwardCeilingOf } from './upward-walk.js';
 import { boundedInstalls } from './bounded-installs.js';
+import { boundedConfigHost } from './installs-above.js';
+import { tsconfigReachOf, type TsconfigReach } from './tsconfig-reach.js';
 import {
+  boundWalksBelow,
+  installCeilingOf,
   readingCeilingOf,
   serviceExtent,
   serviceSourceDirs,
@@ -496,12 +500,7 @@ const readAliases = (dir: string): PackageAliases | undefined => {
   if (read.error !== undefined) return undefined;
   const parsed = ts.parseJsonConfigFileContent(
     read.config,
-    {
-      useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
-      fileExists: ts.sys.fileExists,
-      readFile: ts.sys.readFile,
-      readDirectory: () => [],
-    },
+    boundedConfigHost(installCeilingOf(dir)),
     dirname(configPath),
     undefined,
     configPath,
@@ -747,19 +746,18 @@ export const workspaceMemberEntries = (dir: string, subpath: string): string[] =
 /** A bare specifier split into the package it names and its subpath inside it (`.` for the package itself), or nothing for a relative or absolute path (P356). */
 export const packageSpecifierParts = (specifier: string): { name: string; subpath: string } | undefined => splitSpecifier(specifier);
 
-/** The compiler options a root is read with, for asking what resolves before anything is mounted. */
-const compilerOptionsAt = (configPath: string | undefined): ts.CompilerOptions => {
+/**
+ * The compiler options a root is read with, for asking what resolves before
+ * anything is mounted: an `extends` naming a package found from an install
+ * inside the bound alone, as the project's compiler finds it (P357).
+ */
+const compilerOptionsAt = (configPath: string | undefined, ceiling: string | undefined): ts.CompilerOptions => {
   if (configPath === undefined) return { ...FALLBACK_COMPILER_OPTIONS };
   const read = readTsconfig(configPath);
   if (read.error !== undefined) return {};
   return ts.parseJsonConfigFileContent(
     read.config,
-    {
-      useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
-      fileExists: ts.sys.fileExists,
-      readFile: ts.sys.readFile,
-      readDirectory: () => [],
-    },
+    boundedConfigHost(ceiling),
     dirname(configPath),
     undefined,
     configPath,
@@ -771,14 +769,17 @@ const INSTALL_PROBE = '__flowatlas_install_probe__.ts';
 
 /** Whether a package resolves from the root as the disk stands: installed, or aliased by the service's own paths. */
 const installedFrom = (rootDir: string, configPath: string | undefined): ((name: string) => boolean) => {
-  const options = compilerOptionsAt(configPath);
+  const ceiling = installCeilingOf(rootDir);
+  const options = compilerOptionsAt(configPath, ceiling);
+  // Resolved as the project's compiler resolves it: no install above the bound (P340, P357).
+  const host = boundedConfigHost(ceiling);
   const answers = new Map<string, boolean>();
   return (name) => {
     let known = answers.get(name);
     if (known === undefined) {
       known =
         existsSync(join(rootDir, 'node_modules', name)) ||
-        ts.resolveModuleName(name, join(rootDir, INSTALL_PROBE), options, ts.sys).resolvedModule !== undefined;
+        ts.resolveModuleName(name, join(rootDir, INSTALL_PROBE), options, host).resolvedModule !== undefined;
       answers.set(name, known);
     }
     return known;
@@ -1032,6 +1033,9 @@ const workspaceResolution = (
  */
 export const createProject = (options: CreateProjectOptions): Project => {
   const { rootDir, tsconfig, readTestDirectories } = options;
+  // A reading no build or command bounded reads no higher than its root,
+  // widened to the workspace declaring it (P357).
+  boundWalksBelow(rootDir);
   const skipped = new Map<string, string[]>();
   // Recorded with forward slashes, as the compiler names the files it opened
   // (P199), so one directory is one key and a path sliced from it is POSIX on
@@ -1067,7 +1071,7 @@ export const createProject = (options: CreateProjectOptions): Project => {
   // (P240): those of the projects a solution tsconfig refers to, and those a
   // framework's build would have written. Merged under the tsconfig's own,
   // every target absolute, so the base each was written against does not matter.
-  const own = compilerOptionsAt(tsConfigFilePath);
+  const own = compilerOptionsAt(tsConfigFilePath, installCeilingOf(rootDir));
   const supplied = conventionAliases(rootDir, tsConfigFilePath, own.paths, conventions);
   const extraPaths =
     Object.keys(supplied.paths).length === 0
@@ -1095,7 +1099,7 @@ export const createProject = (options: CreateProjectOptions): Project => {
     // An install above the repository is not the repository's (P340): the
     // compiler looks for `node_modules` and `@types` in every directory up to
     // the file system's root, and finds none above the checkout here.
-    fileSystem: boundedInstalls(readingCeilingOf(rootDir), mounts.length === 0 ? undefined : mountedFileSystem(mounts)),
+    fileSystem: boundedInstalls(installCeilingOf(rootDir), mounts.length === 0 ? undefined : mountedFileSystem(mounts)),
     // Only inside a workspace, or where a package's source stands in. A service
     // with no package of its own to alias, none to import by name and no source
     // read in place of an install, which is every service outside a workspace,
@@ -1171,6 +1175,7 @@ export const createProject = (options: CreateProjectOptions): Project => {
       installed: new Set(userShapes.map((shape) => shape.package).filter((name) => installed(name) || members.has(name))),
     });
   }
+  TSCONFIG_REACH.set(project, tsconfigReachOf(tsConfigFilePath, readingCeilingOf(rootDir), installCeilingOf(rootDir)));
   SKIPPED_TEST_DIRECTORIES.set(
     project,
     new Map([...skipped].map(([dir, files]) => [dir, [...new Set(files)].sort()])),
@@ -1362,6 +1367,65 @@ export const reportSkippedTestDirectories = (
         symbol: at,
       }),
     );
+  }
+  return rows;
+};
+
+/** What each project's tsconfig names above the directory its reading is bounded by (P357). */
+const TSCONFIG_REACH = new WeakMap<Project, readonly TsconfigReach[]>();
+
+/** The reason on a file a tsconfig names above the bound and that is read all the same. */
+export const TSCONFIG_READ_ABOVE_REASON = 'tsconfig-read-above-root';
+/** The reason on a directory a tsconfig names above the bound and that is not read. */
+export const TSCONFIG_NOT_READ_ABOVE_REASON = 'tsconfig-not-read-above-root';
+/** The reason on a package a tsconfig extends that is installed only above the bound. */
+export const TSCONFIG_EXTENDS_ABOVE_REASON = 'tsconfig-extends-installed-above';
+
+/**
+ * Records everything a service's tsconfig names above the directory its
+ * reading is bounded by (P357), one row each: the top of its checkout, or the
+ * directory the run was asked to read where that is narrower. A relative
+ * `extends` and a project `references` names are read as the compiler reads
+ * them, said at level `info`; a directory `include` or `files` names there is
+ * no code of the service's, and an `extends` naming a package installed only
+ * above the bound is not resolved - each a row a reader acts on.
+ */
+export const reportTsconfigReach = (context: UnreadableSourceContext): readonly Unresolved[] => {
+  const { project, repoDir, builder } = context;
+  const rows: Unresolved[] = [];
+  for (const each of TSCONFIG_REACH.get(project) ?? []) {
+    const file = normalizeFilePath(each.tsconfig, repoDir);
+    const at = normalizeFilePath(each.path, repoDir);
+    const named = `\`${each.key}\` names ${JSON.stringify(each.written)}`;
+    const row: Unresolved =
+      each.why === 'installed-above'
+        ? {
+            file,
+            line: each.line,
+            reason: TSCONFIG_EXTENDS_ABOVE_REASON,
+            message: `${named} (${at}), installed only above the directory this reading is bounded by: not read, so the compiler options it gives are not this service's`,
+            hint: 'Install the package inside the repository, or give the run a root that holds the install.',
+            symbol: each.written,
+          }
+        : each.read
+          ? {
+              file,
+              line: each.line,
+              reason: TSCONFIG_READ_ABOVE_REASON,
+              level: 'info',
+              message: `${named} (${at}), above the directory this reading is bounded by: read as the compiler reads it`,
+              hint: 'Give the run a root that holds it, if it is part of this repository.',
+              symbol: each.written,
+            }
+          : {
+              file,
+              line: each.line,
+              reason: TSCONFIG_NOT_READ_ABOVE_REASON,
+              message: `${named} (${at}), above the directory this reading is bounded by: its code is not read`,
+              hint: 'Name the directory as a service of its own, or give the run a root that holds it.',
+              symbol: each.written,
+            };
+    rows.push(builder.addUnresolved(row));
   }
   return rows;
 };

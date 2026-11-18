@@ -601,13 +601,14 @@ const writtenTo = (
   wanted: readonly string[],
   imported: ReadonlyMap<string, Imported>,
   hops: number,
+  reader?: SpreadReader,
 ): ts.Expression | Imported | undefined => {
   let written: ts.Expression | Imported | undefined;
   for (const write of memberWrites(source)) {
     if (write.root !== root || write.members.length > wanted.length || write.members.some((member, at) => wanted[at] !== member)) continue;
     const rest = wanted.slice(write.members.length);
     for (const value of write.values) {
-      const found = memberValue(source, value, rest, imported, hops + 1);
+      const found = memberValue(source, value, rest, imported, hops + 1, reader);
       if (found === undefined) continue;
       written = found;
       break;
@@ -633,6 +634,7 @@ const memberValue = (
   path: readonly string[],
   imported: ReadonlyMap<string, Imported>,
   hops = 0,
+  reader?: SpreadReader,
 ): ts.Expression | Imported | undefined => {
   if (start === undefined || hops > MEMBER_HOPS) return undefined;
   if (isImported(start)) return deeper(start, path);
@@ -641,39 +643,137 @@ const memberValue = (
   const { base, members } = chainOf(start);
   const wanted = [...members, ...path];
   if (ts.isIdentifier(base)) {
-    const written = writtenTo(source, base.text, wanted, imported, hops);
+    const written = writtenTo(source, base.text, wanted, imported, hops, reader);
     if (written !== undefined) return written;
     const held = imported.get(base.text) ?? scopedValue(source, base);
-    return held === undefined ? undefined : memberValue(source, held, wanted, imported, hops + 1);
+    return held === undefined ? undefined : memberValue(source, held, wanted, imported, hops + 1, reader);
   }
   // `configs: makeConfigs()`: what the function the module declares hands back (P349).
   if (ts.isCallExpression(base) && !isObjectAssign(base)) {
     for (const returned of returnedFrom(source, base).reverse()) {
-      const found = memberValue(source, returned, wanted, imported, hops + 1);
+      const found = memberValue(source, returned, wanted, imported, hops + 1, reader);
       if (found !== undefined) return found;
     }
     return undefined;
   }
   if (wanted.length === 0) return base;
   const [key, ...rest] = wanted;
+  // Later wins: the last property writing the key, or the last spread or
+  // argument holding it - one of another module's read there to see that it
+  // does (P357), and one that cannot be read said where an earlier key is taken.
+  const unread = new Unread(reader);
   if (ts.isObjectLiteralExpression(base)) {
     for (const property of [...base.properties].reverse()) {
-      if (ts.isPropertyAssignment(property) && keyOf(property.name) === key) return memberValue(source, property.initializer, rest, imported, hops + 1);
-      if (ts.isShorthandPropertyAssignment(property) && property.name.text === key) return memberValue(source, property.name, rest, imported, hops + 1);
+      if (ts.isPropertyAssignment(property) && keyOf(property.name) === key) return unread.taken(memberValue(source, property.initializer, rest, imported, hops + 1, reader), wanted);
+      if (ts.isShorthandPropertyAssignment(property) && property.name.text === key) return unread.taken(memberValue(source, property.name, rest, imported, hops + 1, reader), wanted);
       if (ts.isSpreadAssignment(property)) {
-        const found = memberValue(source, property.expression, wanted, imported, hops + 1);
-        if (found !== undefined) return found;
+        const found = holding(source, memberValue(source, property.expression, wanted, imported, hops + 1, reader), reader, unread);
+        if (found !== undefined) return unread.taken(found, wanted);
       }
     }
-    return undefined;
+    return unread.left();
   }
   if (isObjectAssign(base)) {
     for (const argument of [...base.arguments].reverse()) {
-      const found = memberValue(source, argument, wanted, imported, hops + 1);
-      if (found !== undefined) return found;
+      const found = holding(source, memberValue(source, argument, wanted, imported, hops + 1, reader), reader, unread);
+      if (found !== undefined) return unread.taken(found, wanted);
     }
+    return unread.left();
   }
   return undefined;
+};
+
+/**
+ * Opens a module a value of another is spread from (P357), to see whether it
+ * holds the key asked: the module a source names, read from the directory
+ * that source is in, with the names it takes in; why not, where it cannot be
+ * read; nothing for one no configuration is read from (the platform's, the
+ * linter's own). What could not be read is kept, to be said with the reading.
+ */
+interface SpreadReader {
+  readonly open: (from: ts.SourceFile, specifier: string) => OpenedModule | { readonly why: string } | undefined;
+  readonly unread: string[];
+  depth: number;
+}
+
+/** A module opened by a {@link SpreadReader}. */
+interface OpenedModule {
+  readonly source: ts.SourceFile;
+  readonly imported: ReadonlyMap<string, Imported>;
+  readonly json: boolean;
+}
+
+/** How many modules deep a spread is opened to see what it holds. */
+const SPREAD_DEPTH = 4;
+
+/**
+ * The spreads of one object that could not be read, while an earlier key of
+ * it is looked for (P357): said, once one is taken, as what may write it
+ * instead; where none is, the first of them stands as the value, as it did.
+ */
+class Unread {
+  readonly #reader: SpreadReader | undefined;
+  readonly #spreads: Array<{ readonly module: Imported; readonly why: string }> = [];
+
+  constructor(reader: SpreadReader | undefined) {
+    this.#reader = reader;
+  }
+
+  add(module: Imported, why: string): void {
+    this.#spreads.push({ module, why });
+  }
+
+  taken<T extends ts.Expression | Imported | undefined>(value: T, wanted: readonly string[]): T {
+    if (value !== undefined && this.#reader !== undefined) {
+      for (const { module, why } of this.#spreads) {
+        // The spread as written: its module and the members taken off it, the key asked left off.
+        const own = membersOf(module).slice(0, Math.max(0, membersOf(module).length - wanted.length));
+        const spread = [module.from, ...own.filter((member) => member !== 'default')].join(' ');
+        const key = wanted.join('.');
+        this.#reader.unread.push(`${spread} is spread after ${key} and was not read (${why}): the ${key} written before it is taken`);
+      }
+    }
+    return value;
+  }
+
+  left(): Imported | undefined {
+    return this.#spreads[0]?.module;
+  }
+}
+
+/**
+ * A spread's or an argument's value where it holds the key asked (P357): an
+ * expression of this module, or another module's value where that module
+ * writes the key - read to see - or cannot be read to say (kept in `unread`,
+ * and passed over for an earlier key). Nothing where the other module writes
+ * no such key, so that a key written before the spread is the one that wins.
+ */
+const holding = (source: ts.SourceFile, found: ts.Expression | Imported | undefined, reader: SpreadReader | undefined, unread: Unread): ts.Expression | Imported | undefined => {
+  if (found === undefined || !isImported(found) || reader === undefined) return found;
+  if (reader.depth >= SPREAD_DEPTH) {
+    unread.add(found, 'past how many modules are followed');
+    return undefined;
+  }
+  const opened = reader.open(source, found.from);
+  if (opened === undefined) return found;
+  if ('why' in opened) {
+    unread.add(found, opened.why);
+    return undefined;
+  }
+  reader.depth += 1;
+  try {
+    return valueOfModule(opened, found.exported, found.path ?? [], reader) === undefined ? undefined : found;
+  } finally {
+    reader.depth -= 1;
+  }
+};
+
+/** What an opened module holds by an export and the members taken off it: a JSON file's one value, a script's export. */
+const valueOfModule = (opened: OpenedModule, exported: string | undefined, path: readonly string[], reader?: SpreadReader): ts.Expression | Imported | undefined => {
+  if (!opened.json) return moduleMember(opened.source, opened.imported, exported, path, reader);
+  const statement = opened.source.statements[0];
+  const members = exported === undefined || exported === 'default' ? path : [exported, ...path];
+  return statement !== undefined && ts.isExpressionStatement(statement) ? memberValue(opened.source, statement.expression, members, opened.imported, 0, reader) : undefined;
 };
 
 /**
@@ -681,15 +781,21 @@ const memberValue = (
  * export named, else off the module - its default export, or the named
  * export the first member is, the way `import * as lib` reads `lib.configs`.
  */
-const moduleMember = (source: ts.SourceFile, imported: ReadonlyMap<string, Imported>, exported: string | undefined, path: readonly string[]): ts.Expression | Imported | undefined => {
+const moduleMember = (
+  source: ts.SourceFile,
+  imported: ReadonlyMap<string, Imported>,
+  exported: string | undefined,
+  path: readonly string[],
+  reader?: SpreadReader,
+): ts.Expression | Imported | undefined => {
   // A member written through `module.exports` or `exports` itself (P349), the last such write winning.
-  const throughExports = writtenTo(source, EXPORTS, exported === undefined || exported === 'default' ? path : [exported, ...path], imported, 0);
+  const throughExports = writtenTo(source, EXPORTS, exported === undefined || exported === 'default' ? path : [exported, ...path], imported, 0, reader);
   if (throughExports !== undefined && (exported !== undefined || path.length > 0)) return throughExports;
-  if (exported !== undefined) return memberValue(source, exportedValue(source, exported), path, imported);
-  const whole = memberValue(source, exportedValue(source, 'default'), path, imported);
+  if (exported !== undefined) return memberValue(source, exportedValue(source, exported), path, imported, 0, reader);
+  const whole = memberValue(source, exportedValue(source, 'default'), path, imported, 0, reader);
   if (whole !== undefined || path.length === 0) return whole;
   const [first, ...rest] = path;
-  return memberValue(source, exportedValue(source, first as string), rest, imported);
+  return memberValue(source, exportedValue(source, first as string), rest, imported, 0, reader);
 };
 
 /**
@@ -949,16 +1055,16 @@ const namesDeclared = (source: ts.SourceFile): ReadonlySet<string> => {
  * takes from it (P334) and the members taken off that (P341) - the whole
  * where the module writes them in a way not read, said as missed.
  */
-const scriptConfig = (text: string, json: boolean, manifest: boolean, flat: boolean, exported?: string, path: readonly string[] = []): ConfigReading => {
+const scriptConfig = (text: string, json: boolean, manifest: boolean, flat: boolean, exported?: string, path: readonly string[] = [], reader?: SpreadReader): ConfigReading => {
   const source = ts.createSourceFile('config.js', json ? `(${text})` : text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   const imported = json ? new Map<string, Imported>() : importedNames(source);
   if ((exported !== undefined || path.length > 0) && !manifest) {
     const statement = source.statements[0];
     // A JSON file is its one value: what is taken off it is a key of that.
     const value = json
-      ? statement !== undefined && ts.isExpressionStatement(statement) ? memberValue(source, statement.expression, exported === undefined ? path : [exported, ...path], imported) : undefined
-      : moduleMember(source, imported, exported, path);
-    if (value !== undefined) return isImported(value) ? readingOfModule(value, flat) : readConfigNode(value, imported, true, json, flat);
+      ? statement !== undefined && ts.isExpressionStatement(statement) ? memberValue(source, statement.expression, exported === undefined ? path : [exported, ...path], imported, 0, reader) : undefined
+      : moduleMember(source, imported, exported, path, reader);
+    if (value !== undefined) return withUnread(isImported(value) ? readingOfModule(value, flat) : readConfigNode(value, imported, true, json, flat), reader);
     const whole = readConfigNode(source, imported, true, json, flat);
     return { ...whole, missed: `${[exported ?? 'default', ...path].join('.')} is written in a way not read, so the whole module was read` };
   }
@@ -975,12 +1081,12 @@ const scriptConfig = (text: string, json: boolean, manifest: boolean, flat: bool
  * followed (a call builds it), the first `configs` the module writes
  * anywhere that keeps the name.
  */
-const pluginConfigValue = (source: ts.SourceFile, name: string, imported: ReadonlyMap<string, Imported>): ts.Expression | Imported | undefined => {
-  const exported = moduleMember(source, imported, undefined, ['configs', name]);
+const pluginConfigValue = (source: ts.SourceFile, name: string, imported: ReadonlyMap<string, Imported>, reader?: SpreadReader): ts.Expression | Imported | undefined => {
+  const exported = moduleMember(source, imported, undefined, ['configs', name], reader);
   if (exported !== undefined) return exported;
   let found: ts.Expression | Imported | undefined;
   const take = (configs: ts.Expression): void => {
-    found = memberValue(source, configs, [name], imported);
+    found = memberValue(source, configs, [name], imported, 0, reader);
   };
   const visit = (node: ts.Node): void => {
     if (found !== undefined) return;
@@ -995,12 +1101,20 @@ const pluginConfigValue = (source: ts.SourceFile, name: string, imported: Readon
 };
 
 /** What a plugin's configuration by a name says (P334), read as a flat configuration or a cascading one as it was named in. */
-const pluginConfig = (text: string, name: string, flat: boolean): ConfigReading => {
+const pluginConfig = (text: string, name: string, flat: boolean, reader?: SpreadReader): ConfigReading => {
   const source = ts.createSourceFile('plugin.js', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   const imported = importedNames(source);
-  const value = pluginConfigValue(source, name, imported);
-  if (value === undefined) return { ...NOTHING_READ, missed: `the plugin keeps no configs.${name} written in a way read` };
-  return isImported(value) ? readingOfModule(value, flat) : readConfigNode(value, imported, true, false, flat);
+  const value = pluginConfigValue(source, name, imported, reader);
+  if (value === undefined) return withUnread({ ...NOTHING_READ, missed: `the plugin keeps no configs.${name} written in a way read` }, reader);
+  return withUnread(isImported(value) ? readingOfModule(value, flat) : readConfigNode(value, imported, true, false, flat), reader);
+};
+
+/** A reading with the spreads that could not be read while it was looked for said beside it (P357). */
+const withUnread = (reading: ConfigReading, reader: SpreadReader | undefined): ConfigReading => {
+  if (reader === undefined || reader.unread.length === 0) return reading;
+  const said = [...new Set([...(reading.missed === undefined ? [] : [reading.missed]), ...reader.unread])];
+  reader.unread.length = 0;
+  return { ...reading, missed: said.join('; ') };
 };
 
 /** What a configuration written as YAML says, read as the cascading configuration's keys are: `root`, `globals`, `env`, `extends` and `overrides`. */
@@ -1049,10 +1163,10 @@ const textAt = (fs: FileSystemHost, path: string): string | undefined => {
 };
 
 /** What a configuration file says, read by its kind: YAML, JSON (`.eslintrc` included), a manifest's `eslintConfig`, or a script. */
-const configText = (path: string, text: string, flat: boolean, exported?: string, members: readonly string[] = []): ConfigReading => {
+const configText = (path: string, text: string, flat: boolean, exported?: string, members: readonly string[] = [], reader?: SpreadReader): ConfigReading => {
   const name = basename(path);
   if (/\.ya?ml$/.test(name)) return yamlConfig(text);
-  return scriptConfig(text, name === '.eslintrc' || name.endsWith('.json'), name === 'package.json', flat, exported, members);
+  return scriptConfig(text, name === '.eslintrc' || name.endsWith('.json'), name === 'package.json', flat, exported, members, reader);
 };
 
 /** How many configurations named by others one directory's reading follows, and how deep. */
@@ -1173,6 +1287,30 @@ const referencedFile = (fs: FileSystemHost, from: string, reference: Reference, 
   return found === undefined ? { why: `${name} is not installed inside the repository` } : { file: found };
 };
 
+/**
+ * A {@link SpreadReader} for the values of a file in `dir` (P357): a module
+ * it spreads is found as a module a configuration takes in is
+ * ({@link referencedFile}), from the directory of the module naming it, inside
+ * the repository alone, and read as a script or as JSON.
+ */
+const spreadReader = (fs: FileSystemHost, dir: string, ceiling: string): SpreadReader => {
+  const dirs = new WeakMap<ts.SourceFile, string>();
+  return {
+    unread: [],
+    depth: 0,
+    open: (from, specifier) => {
+      const lead = referencedFile(fs, dirs.get(from) ?? dir, { specifier, kind: 'module', scopes: [] }, ceiling);
+      if (lead === undefined || 'why' in lead) return lead;
+      const text = textAt(fs, lead.file);
+      if (text === undefined || text.length > REFERENCE_SIZE) return { why: text === undefined ? 'unreadable' : 'too large to be a configuration' };
+      const json = lead.file.endsWith('.json');
+      const source = ts.createSourceFile(basename(lead.file), json ? `(${text})` : text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+      dirs.set(source, dirname(lead.file));
+      return { source, imported: json ? new Map<string, Imported>() : importedNames(source), json };
+    },
+  };
+};
+
 /** The text a reference is said by where it is not followed (P341). */
 const namedBy = (reference: Reference): string => {
   if (reference.named !== undefined) return reference.named;
@@ -1222,10 +1360,12 @@ const withReferences = (fs: FileSystemHost, path: string, reading: ConfigReading
         missed(text === undefined ? 'unreadable' : 'too large to be a configuration');
         continue;
       }
+      // A spread of another module in the value asked is read to see whether it holds the key (P357).
+      const reader = spreadReader(fs, dirname(file), ceiling);
       const inner =
         reference.config !== undefined
-          ? pluginConfig(text, reference.config.name, reference.config.flat)
-          : configText(file, text, reference.kind === 'module', reference.exported, reference.path);
+          ? pluginConfig(text, reference.config.name, reference.config.flat, reader)
+          : configText(file, text, reference.kind === 'module', reference.exported, reference.path, reader);
       if (inner.missed !== undefined) missed(inner.missed);
       for (const each of inner.declared) declared.push({ names: each.names, scopes: [...reference.scopes, ...each.scopes] });
       for (const each of inner.unknown ?? []) unfollowed.push({ ...each, file, scopes: [...reference.scopes, ...each.scopes] });
