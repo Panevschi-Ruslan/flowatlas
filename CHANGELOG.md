@@ -515,6 +515,23 @@ only one of them moved.
   one spreading the plugin's, `Object.assign`) answers with the controllers
   it writes, the plugin's where it keeps them, and a `route-handler-unread`
   row for each route whose controller it drops.
+- **Strapi plugins shipped as bundles, plugins a fresh clone has not
+  installed, and controllers an extension writes whole (P345).** An
+  installed Strapi plugin shipped only as a bundled build is read through
+  the bundler's wrappers - rollup's `requireX()` functions and chunk exports,
+  esbuild's and rolldown's `__commonJS` factories, `__esm` initializers and
+  `__export`, interop helpers and a `default` taken as Strapi takes it - and
+  what is still not read is a `route-registry-unread` row naming where the
+  follow stopped. A dependency not installed that the repository says is a
+  Strapi plugin, by its name (`strapi-plugin-*`, `@strapi/plugin-*`,
+  `@<scope>/strapi-plugin-*`) or its lockfile entry, is a
+  `route-registry-unread` row at `package.json` unless a key of
+  `config/plugins` turns it off. A controller an extension writes whole
+  answers the actions its object or factory writes, the plugin's own beside
+  them where it spreads them, and each route on an action it drops is a
+  `route-handler-unread` row. A write cut at a call several functions out
+  binds each function on the way, so an outer parameter its value names is
+  that call's argument.
 - **Settings chosen by a branch, and read inside a function handed nothing
   (P302).** A condition nobody settles whose branches read different
   settings, `isProd ? process.env.API_URL : process.env.DEV_API_URL`, written
@@ -2020,6 +2037,18 @@ only one of them moved.
 
 ### Changed
 
+- **A route on an application the framework's own maker made is as sure as
+  a typed one (P346).** With nothing installed, a call or `new` of a
+  dialect's maker imported or required from the package itself
+  (`express()`, `Router()`, `new Koa()`, `Fastify()`, `new Hono()`), through
+  a chain that answers with the application, held by a `const` or a `let`
+  nothing assigns again, is the value rather than an account of it, so its
+  routes and the joins on them are no longer `heuristic`. An annotation, a
+  destructured member, a class of the repository, a function's answer, a
+  parameter and a property stay `heuristic`, and so does a route placed
+  through a mount written on one (`express-not-installed` and the fixtures
+  whose uninstalled Express services make their applications directly lose
+  the ceiling; `express-maker-direct-and-stated` shows both kinds).
 - **A plain request to a procedure's REST route is told where its answer's
   type comes from (P252).** `contracts` said every caller of an oRPC or tRPC
   procedure gets an answer "inferred from the server's own tree", which is
@@ -2067,6 +2096,17 @@ only one of them moved.
 
 ### Fixed
 
+- **A server `Bun.serve` starts reads the files its script makes Bun load,
+  and the CDK's version is looked for in the workspace (P348).** Bun's own
+  files were taken as development's whatever the script running the server
+  said; they are now Bun's order for the mode the command's `BUN_ENV`, else
+  `NODE_ENV`, gives - `.env.<mode>.local`, `.env.local` (not for `test`),
+  `.env.<mode>`, `.env` - or only the files `--env-file` names (the last
+  first, of `a,b` too), none with `--no-env-file`, development's only where
+  no script runs it. The CDK's version is looked for up to the outermost
+  workspace that declares the repository a member, so a member reads the
+  root's lockfile. A `Schedule.cron(...)` naming both a `day` and a
+  `weekDay` is left unread, as the CDK refuses it.
 - **No look up the directories leaves the repository being read (P334).**
   Looking for an ESLint shareable configuration or plugin under
   `node_modules`, or a Nuxt layer or module by its package name, went on to

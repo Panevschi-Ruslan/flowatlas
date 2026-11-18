@@ -64,7 +64,7 @@ code itself). The reasons added most recently:
 | `listen-port-unread` | gap | `info` | a server's port comes from defaults a module loads by a path decided at run time, or from a value a write not read sets, so no request to a port on this machine is joined to it by that port |
 | `listen-port-guessed` | note | `info` | a server's port is read only as a guess: the value from before a write whose own value is not read (`port = await getPort({ port })`, the port's `rewritten`), or a framework's default kept where an environment file the framework does not load before choosing its port sets it (Gatsby's `.env.development`) (P321) |
 | `api-client-global-undeclared` | gap | `action` | a script calls the global a client's browser build leaves (`axios.get(url)`, `ky.post(url)`, `$.ajax(...)`) with no import, no script tag of a page loading the client, no `/* global */` comment and no linter global declaring it, so the call is not read as a request; `meta.client` and `meta.global` name the client and the name (P323); `meta.unfollowedConfigs`, where present, lists what the script's linter configuration names and could not follow, as `file: named (why)` (P341) |
-| `route-entries-unread` | gap | `info` | a `<Route>` is written over a list some of whose entries are not read - an item not written as an object, a view or a `map` made otherwise, an entry whose path or screen is not read - so the screens they place are not placed; `meta.unread`, `meta.read` and `meta.why` say how many and why. Also where a list read off a registry instance made where it is read (`makeShelf().routes()`) places nothing, `meta.notes` saying so (P338), and where the registry's receiver may hold more than twelve instances, each past the first twelve counted in `meta.unread` and said in `meta.why` (P344) |
+| `route-entries-unread` | gap | `info` | a `<Route>` is written over a list some of whose entries are not read - an item not written as an object, a view or a `map` made otherwise, an entry whose path or screen is not read - so the screens they place are not placed; `meta.unread`, `meta.read` and `meta.why` say how many and why. Also where a list read off a registry instance made where it is read (`makeShelf().routes()`) places nothing, `meta.notes` saying so (P338), and where the registry's receiver may hold more than twelve instances, each past the first twelve counted in `meta.unread` and said in `meta.why` (P344), and where `Object.entries` over a list put together past a list read otherwise (a spread of a value read at run time) leaves the places past it not known (P351) |
 | `address-port-without-colon` | finding | `action`, or `info` | a number written straight after a host with no colon, `` `http://localhost${port}` `` handed 4600, read as the code spells it (`localhost4600`): a host of its own, not a port. `action` after `localhost` or an address of numbers, where such a request is joined by no path; `info` after any other name, which may end in digits (P324, P330) |
 | `container-image-unread` | note | `info` | a container's image whose Dockerfile is not read - pulled as it is, built by nothing the project holds, from a Dockerfile not found, or named by a chart value nothing settles - where the setting the code reads its port from hangs on it; said once per service and image, and nothing is fetched (P331, P337) |
 | `server-start-unread` | note | `info` | a program of the project's own a script, a Makefile recipe or a `package.json` script starts with a port in its environment - a package's `bin`, a path such as `./bin/server` - whose file is not in the repository (a build writes it), so the port the service listens on started that way is not read (P343) |
@@ -92,10 +92,16 @@ read (`meta.spread`: the spread's file and line); and at a class of the
 repository's own whose base field is given different bases, or one not read,
 on its instances outside the class.
 `route-registry-unread` is also said for a Strapi plugin a key of
-`config/plugins` enables that is installed nowhere in the repository, or whose
-package ships only a bundled build, and for Gatsby plugins listed by a name
-installed nowhere (`info`); `route-mount-unread` for what an extension does to
-a Strapi plugin's routes beyond adding a route. A `channel-dynamic` row
+`config/plugins` enables that is installed nowhere in the repository - one
+row under the key, naming the dependency not installed it resolves to or is
+spelled like, or those it may be - for a dependency not installed that the
+repository says is a Strapi plugin by its name or its lockfile entry, at
+`package.json`, unless a key turns it off (P345, P351), for a plugin whose
+bundled build is read only so far, naming the value the follow stopped at,
+and for Gatsby plugins listed by a name installed nowhere (`info`);
+`route-mount-unread` for what an extension does to a Strapi plugin's routes
+beyond adding a route; `route-handler-unread` for a route whose action or
+controller an extension drops (P345, P351). A `channel-dynamic` row
 about a job's name read off what a `catch` is handed names in its hint the
 package whose error may be the one caught.
 

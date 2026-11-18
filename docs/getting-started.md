@@ -51,8 +51,10 @@ the TypeScript checker and closes the files.
 **Install each repository's dependencies if you can.** The checker follows a
 type into a package only when the package is on disk. A repository read without
 them is still read — the source says a great deal on its own, and what is read
-that way is marked `heuristic` — but a run over one opens with a sentence saying
-the read was partial, and means it.
+that way is marked `heuristic`, save an application the framework's own maker
+makes right there (`const app = express()`) — but a run over one opens with a
+sentence saying the read was partial, and means it. A package installed above
+the repository's checkout is never used in their place.
 
 ---
 
@@ -419,6 +421,11 @@ to look for.
 | [`compose-include-shell-env`](../fixtures/compose-include-shell-env) | a compose file filled from `COMPOSE_ENV_FILES`, its `include:` and `extends:`, a script's exported port, and a cluster workload's config map and secret |
 | [`untyped-callers-framework-held-outside-writes`](../fixtures/untyped-callers-framework-held-outside-writes) | requests through instances handed around with no types, elements the browser connects, and queues written onto instances from outside their classes |
 | [`pair-keys-instances`](../fixtures/pair-keys-instances) | routes spelled from the keys of `[key, entry]` pairs, and registries read per instance |
+| [`express-maker-direct-and-stated`](../fixtures/express-maker-direct-and-stated) | an Express service with nothing installed whose applications the framework's own maker makes, as sure as typed ones, beside routes that stay `heuristic` |
+| [`wrapped-spread-providers-tops`](../fixtures/wrapped-spread-providers-tops) | components wrapped in `memo` and `forwardRef` handed their client through spreads, and readers the NestJS injector makes from providers built by spreads and calls |
+| [`key-reads-places-webpack-plugins`](../fixtures/key-reads-places-webpack-plugins) | routes written over `Object.keys(...)` and over lists put together, objects a registry keeps per call, and Strapi plugins shipped as webpack bundles or not installed at all |
+| [`bundled-plugins-unread-dependencies-whole-controllers`](../fixtures/bundled-plugins-unread-dependencies-whole-controllers) | Strapi plugins shipped as rollup and esbuild bundles, dependencies a fresh clone has not installed, and extensions writing a controller whole |
+| [`script-modes-workspace-make-fields`](../fixtures/script-modes-workspace-make-fields) | a Makefile's included file, a script run in another package of the workspace, and Bun's mode however the environment gives it |
 
 A fixture with a `flowatlas.config.json` is a project:
 

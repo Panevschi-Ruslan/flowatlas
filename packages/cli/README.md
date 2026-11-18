@@ -49,11 +49,14 @@ steps with a recording of each.
 - NestJS controllers, message handlers and schedules, with their guards and pipes,
   app-wide guards and opt-out decorators included, and what each route can fail
   with
-- Express, Fastify, Koa and Hono, where a route is registered by a call
+- Express, Fastify, Koa and Hono, where a route is registered by a call - as
+  sure with nothing installed where the framework's own maker makes the
+  application
 - Next.js, Medusa, SvelteKit and Remix / React Router, where a route is the path
   of a file - a SvelteKit page's `load` and form actions included
 - Strapi's routes files, with their policies and middlewares, and the routes
-  of the plugins it enables; Gatsby's functions, a plugin's included
+  of the plugins it enables, a bundled build and an extension's controllers
+  included; Gatsby's functions, a plugin's included
 - tRPC and oRPC procedures - an oRPC one under an OpenAPI handler as its REST
   route too - gRPC methods named by the repository's `.proto` files, and
   Telegraf bot commands, callbacks and events
@@ -79,8 +82,8 @@ steps with a recording of each.
 **Browsers**
 
 - Angular templates, services and router, lazy routes included
-- React components and hooks, Vue and Svelte components, and the page each
-  navigation shows
+- React components and hooks, the props each element hands, Vue and Svelte
+  components, and the page each navigation shows
 - a plain page and the scripts it loads, with no manifest and nothing that
   builds them
 - `fetch`, `XMLHttpRequest`, `axios`, jQuery, a wrapper or a client class of
@@ -105,13 +108,16 @@ steps with a recording of each.
 
 **Across repositories**
 
-- a monorepo's services with the workspace packages they use, on a fresh clone
+- a monorepo's services with the workspace packages they use, on a fresh
+  clone, never resolved from an install above its checkout
 - a base address no setting claims, read from the repository's own example
   env, compose and deployment files, keeping only the address
 - the port each server listens on, its framework's default a guess that
   places a request only where that server serves it
 - a container's environment from its image's Dockerfile, its env files and
-  the compose files that start it, and a cluster workload's config maps
+  the compose files that start it, a script's or a Makefile's exports followed
+  into the program or the workspace package it runs, and a cluster
+  workload's config maps
 - where a cluster, a chart, a kustomization or a helmfile routes a request
 - a service you have no source for, from its OpenAPI or AsyncAPI document
 - every contract compared where one repository meets another

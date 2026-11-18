@@ -668,11 +668,17 @@ A repository whose dependencies are not installed is still read. The checker
 resolves nothing outside it, but the source still says what it means: an import
 names the package, `express()` makes an application, an annotation names a
 client's type and a model class names its table. What is read that way is marked
-`heuristic`, and the run says once, plainly, that the read was partial.
+`heuristic`, and the run says once, plainly, that the read was partial - save
+an application the framework's own maker makes right there (`const app =
+express()`, imported from the package itself), which is the value rather
+than an account of it, so its routes are as sure as typed ones.
 Looking up the directories above a file of a repository for a configuration
 or a package stops at the repository, widened to the workspace that declares
 it a member, or at the top of its checkout, and never reads in the home
-directory or at the root of the file system.
+directory or at the root of the file system; outside any checkout it stops
+at what the build was asked to read. The checker resolves no import from a
+`node_modules` or `@types` above the top of the checkout a service is in, so
+a package installed above the repository lends it nothing.
 
 **2. Find the leaves.** A chain of calls ends somewhere: a database, a cache, an
 outgoing request, a settings key, a message published. Which one it is comes from
@@ -775,7 +781,8 @@ async submit(order: Order) {
 Every edge carries how much to trust it, strongest first: `static` was read from
 the code, `marker` was asserted by an annotation in the code, `declared` was
 asserted by a document about code that is not here, `heuristic` was inferred —
-from a name, from what the source states where the types were not installed, or
+from a name, from what the source states where the types were not installed
+(other than an application the framework's own maker makes right there), or
 from an assumption the edge names. A fifth word, `runtime`, is reserved for an
 edge observed while the code runs, and nothing here produces it yet:
 `flowatlas observe` reads trace files you already have and marks which of the
@@ -783,7 +790,8 @@ static joins real traffic went through, without drawing any edge of its own.
 
 A join is no stronger than the weaker of its two ends. A request read in full
 that reaches a route a document declared is `declared`; one that reaches a route
-read off an application recognised only from its source is `heuristic`; and one
+read off an application recognised only from an account its source gives of
+it is `heuristic`; and one
 joined by taking a mount every committed environment file leaves empty as empty
 is `heuristic` and carries the settings it assumed.
 
@@ -816,7 +824,11 @@ prove, and the path is given so you can run it.
   named handler handed to a
   wrapper the repository wrote (`fixtures/express-wrapped-handler`); and an
   application recognised from what the source states when the framework's types
-  are not installed, marked `heuristic` (`fixtures/express-not-installed`). A
+  are not installed: one the framework's own maker makes right there - held
+  by a `const`, a `let` nothing assigns again, a field only its class's
+  constructor writes or a parameter whose default every caller leaves - as
+  sure as a typed one, any other reading marked `heuristic`
+  (`fixtures/express-not-installed`, `fixtures/express-maker-direct-and-stated`). A
   framework nobody here has heard of can be described in configuration, in the
   same schema the four shipped ones are written in (`fixtures/custom-http`).
 - **Routes declared by where a file is.** A file-system router is four values —
@@ -832,14 +844,20 @@ prove, and the path is given so you can run it.
   files - a core router as the routes Strapi builds for its content type's
   schema, custom routes with the controller action each names, their policies
   drawn as guards and their middlewares in front - the routers of the plugins
-  Strapi enables, local or installed, as it mounts them, the routes an
-  extension adds to a plugin, and the routes code registers on Strapi's
-  server; its port is `config/server`'s under the environment's override. A
-  Gatsby site's functions under `src/api` are ways in at `/api/...`, a local
-  or an installed plugin's too, and under the path prefix where `gatsby serve
-  --prefix-paths` serves them (`fixtures/framework-routes-in-place-writes`,
+  Strapi enables, local or installed, as it mounts them (an installed one
+  shipping only a bundled build read through the wrappers rollup, esbuild,
+  rolldown or webpack writes), the routes an extension adds to a plugin
+  and the actions or whole controllers it writes, and the routes code
+  registers on Strapi's server; its port is `config/server`'s under the
+  environment's override. A plugin a fresh clone has not installed, known by
+  its name, its lockfile entry or the key that enables it, is one row saying
+  so. A Gatsby site's functions under `src/api` are ways in at `/api/...`, a
+  local or an installed plugin's too, and under the path prefix where `gatsby
+  serve --prefix-paths` serves them (`fixtures/framework-routes-in-place-writes`,
   `fixtures/plugin-routes-instances-config-ports`,
-  `fixtures/installed-plugins-server-routes-config-packages`).
+  `fixtures/installed-plugins-server-routes-config-packages`,
+  `fixtures/bundled-plugins-unread-dependencies-whole-controllers`,
+  `fixtures/key-reads-places-webpack-plugins`).
 - **GraphQL, both halves.** A field a resolver answers is a way in, read from
   NestJS and type-graphql resolvers, resolver maps and the schema; a client's
   operation (Apollo Client, urql, graphql-request, apollo-angular) joins the
@@ -938,9 +956,15 @@ prove, and the path is given so you can run it.
   class's field - places one page per entry it reads, whether the entries are
   handed back whole, filtered, mapped, flat-mapped, reduced or as
   `Object.entries` pairs whose key spells the path, step after step and in
-  the caller's own view of them. A receiver that may hold several instances
-  is read as each, and the entries not read are counted at the route in a
-  `route-entries-unread` row saying why; Angular's guards and resolvers are
+  the caller's own view of them. A store an adding function writes under a
+  key (`this.pages[name] = entry`, `map.set(path, Screen)`, an object written
+  per call from its parameters) keeps each entry under the key its call
+  hands; a step may take a pair's entry or a list's item apart with a
+  pattern, nested and with defaults; a route or a link written straight over
+  `Object.keys(...)` is one per key; and a list's items, put together by a
+  spread, a `concat` or a `map` too, keep their places. A receiver that may
+  hold several instances is read as each, and the entries not read are
+  counted at the route in a `route-entries-unread` row saying why; Angular's guards and resolvers are
   drawn from the screen in the order the router runs them; and an address
   written without the locale prefix a middleware or next-intl puts in front
   lands on the page under it, said as a note (`fixtures/front-end-route-branches`,
@@ -948,7 +972,9 @@ prove, and the path is given so you can run it.
   `fixtures/registry-reach-views-handed-links`,
   `fixtures/registry-fields-caller-views`,
   `fixtures/caller-steps-handed-instances`,
-  `fixtures/composed-steps-props-factories`, `fixtures/pair-keys-instances`).
+  `fixtures/composed-steps-props-factories`, `fixtures/pair-keys-instances`,
+  `fixtures/keyed-stores-pair-patterns`,
+  `fixtures/key-reads-places-webpack-plugins`).
   A link component of the application's own is read through to the link it
   renders, the address each use hands it included, and a prop of any name it
   puts after a segment written out whole is an address under that segment,
@@ -1078,7 +1104,8 @@ prove, and the path is given so you can run it.
   `fixtures/shared-queues-and-resource-grants`). A queue kept in a field is
   followed however the field is reached and written: through what stands for
   its class under `any` or an alias, by a key (`this['queue']`), by
-  `Object.assign` inside or outside the class, by each class extending it and
+  `Object.assign` inside or outside the class or over a parameter typed as
+  nothing that callers hand an instance, by each class extending it and
   each `super(...)` its options are handed down, and through a name that may
   stand for either of two classes, each field's channels named
   (`fixtures/aliased-fields-workspace-domains-table-grants`,
@@ -1123,12 +1150,24 @@ prove, and the path is given so you can run it.
   whose type names the client - to each caller that hands one, a request in a
   method of the receiver's own class placed at the callers of that method;
   in plain JavaScript a method called on a receiver typed as nothing is found
-  by what the receiver may hold; and a request in a method only a framework
-  calls - a component's lifecycle method, a custom element's
+  by what the receiver may hold, through a member of an object, a function's
+  answer or an element of a list too; and a request in a method only a
+  framework calls - a component's lifecycle method, a custom element's
   `connectedCallback` - is placed where each instance is handed to what
-  registers it (`fixtures/ports-kept-receivers-in-fields`,
+  registers it. An instance the framework makes is read as the one it is: an
+  element with a component as its tag is that component's instance, its
+  attributes the props - a component wrapped in `memo` or `forwardRef`
+  included, a prop handed through a spread of a rest, the whole props or an
+  object written in place followed - and a class a NestJS module lists as a
+  provider is the instance the injector makes, handed what the module
+  provides (`useValue`, `useClass`, `useFactory`, `useExisting`,
+  `@Dependencies`), in core's search for a method's calls too. A local
+  client's base written on its instances outside the class is its base
+  (`fixtures/ports-kept-receivers-in-fields`,
   `fixtures/typed-held-clients-callers-out`,
-  `fixtures/untyped-callers-framework-held-outside-writes`). A call both halves of a full-stack
+  `fixtures/untyped-callers-framework-held-outside-writes`,
+  `fixtures/framework-made-receiver-parts`,
+  `fixtures/wrapped-spread-providers-tops`). A call both halves of a full-stack
   application read is drawn on the side it runs on, by its file's name or
   directive or by what reaches it, and on both, paired, where both do
   (`fixtures/workspace-env-greedy-sides`, `fixtures/settings-chains-paired-calls`).
@@ -1169,8 +1208,13 @@ prove, and the path is given so you can run it.
   `FASTIFY_PORT` or `--config` file, Strapi's `config/server`, or the
   environment file `dotenv`, NestJS's `ConfigModule`, `--env-file` or Bun
   loads sets the port, there, several loaded files taken in each loader's own
-  order (Bun's by the `NODE_ENV` and `--env-file` of the script running it,
-  a server `Bun.serve` starts included); a port kept in a configuration a setter merges, changed in place
+  order (Bun's by the mode and `--env-file` of the command running it,
+  however its environment gives the mode - written before it, exported
+  earlier, after `cross-env` or `env`, handed down by a script running
+  another, a Dockerfile's `ENV` or a compose service's `environment` - with
+  `bunfig.toml`'s `env = false` read, a server `Bun.serve` starts included,
+  and a server several scripts start in different modes heard at each); a
+  port kept in a configuration a setter merges, changed in place
   (`Object.assign(config, ...)`, `config.server.port = 4000`), read per
   instance, handed in by each caller or written as `PORT ?? 3000` is read too.
   A port only assumed, offered by an example file or by a committed file
@@ -1183,18 +1227,29 @@ prove, and the path is given so you can run it.
   `fixtures/env-order-framework-ports`,
   `fixtures/framework-routes-in-place-writes`,
   `fixtures/unloaded-env-image-environment`,
-  `fixtures/bun-env-modes-cdk-workspace-lockfile`). A container's environment is
+  `fixtures/bun-env-modes-cdk-workspace-lockfile`,
+  `fixtures/script-modes-workspace-make-fields`). A container's environment is
   its image's Dockerfile - where a `docker build -t`, a compose `build:` or a
   Skaffold artifact builds it - under its `env_file`s and its `environment`; a
   compose file is filled from the `.env` beside it, the files `--env-file` or
   `COMPOSE_ENV_FILES` name and what the shell running the command exports,
-  with the files it `include:`s and the services it `extends:` read with it; a
-  script that exports a port before it starts a server places the server
-  there; and a cluster workload's pods take the config maps it names over its
-  image, a `Secret` by its names only, its values never read. An image nothing
-  of the project builds is a row rather than a fetch
-  (`fixtures/chain-condition-tier-container-env`,
-  `fixtures/unloaded-env-image-environment`, `fixtures/compose-include-shell-env`). A
+  an `environment:` entry written with no value taking what those give the
+  name, with the files it `include:`s - resolved from the including
+  project's directory, as compose resolves them - and the services it
+  `extends:` read with it. A script or a Makefile that exports a port before
+  it starts a server places the server there: a Makefile's own `export`s,
+  `.EXPORT_ALL_VARIABLES`, the `*.mk` files it includes and a target's
+  variables, handed to the targets it builds; `env X=v` and `cross-env`; a
+  program of the project's own it runs - a `package.json` `bin`, a shell
+  script, a package script - read where its file listens; and another
+  package's script it runs through `pnpm --filter`, `npm -w`, `yarn
+  workspace` or `bun --filter`. A cluster workload's pods take the config
+  maps it names over its image, a `Secret` by its names only, its values
+  never read or kept, a port only it gives naming the Secret, key and
+  manifest. An image nothing of the project builds is a row rather than a
+  fetch (`fixtures/chain-condition-tier-container-env`,
+  `fixtures/unloaded-env-image-environment`, `fixtures/compose-include-shell-env`,
+  `fixtures/container-script-environment`, `fixtures/script-modes-workspace-make-fields`). A
   request a server's proxy forwards joins where it is forwarded: Vite's
   `server.proxy`, an Angular dev server's proxy configuration, Nuxt's
   `devProxy` and route rules, Next's `rewrites()` and Create React App's
@@ -1228,23 +1283,28 @@ prove, and the path is given so you can run it.
   `browser`, which `init` and `link` offer. Its classic scripts share their
   globals; an object's methods, a prototype's members, a getter or a setter,
   what a wrapper run at once hands to `window` or `module.exports`, the
-  wrapper itself, the top of a script that writes a call outside all of them
+  wrapper itself, the top of a script that writes a call outside all of them,
+  or only `new`s a constructor or builds a handler nothing keeps
   (`boot.js:top`), and a handler the page runs once it has loaded
   (`DOMContentLoaded`, `load`, `pageshow`, `readystatechange`, jQuery's
   `$(fn)` and jQuery 1's `$(window).load(fn)`) are functions of their own,
   the requests written in them drawn from them and joined where the page
-  calls them. jQuery's `$.ajax` and its kin, superagent, ky, unfetch and axios
+  calls them, a `new` drawn to the constructor it runs. jQuery's `$.ajax` and its kin, superagent, ky, unfetch and axios
   are the installed client where a script tag loads them, a CommonJS script
   requires them, a comment declares them or the ESLint configuration lists
   them as globals for that script - through its `extends`, a shareable
-  configuration or a plugin's configuration installed in the repository, and
-  the modules a flat configuration takes in, each under the files it is named
+  configuration or a plugin's configuration installed in the repository,
+  however the plugin builds it (spread, `Object.assign`, written after it,
+  by a function, through `module.exports`), and the modules or members of a
+  module a flat configuration takes in, each under the files it is named
   for; called with none of these, directly or through a wrapper's parameter,
-  an `api-client-global-undeclared` row says so. What jQuery's `data` and
+  an `api-client-global-undeclared` row says so, naming what the linter
+  configuration names and could not follow. What jQuery's `data` and
   superagent's `.send` hand a `GET` is its query
   (`fixtures/browser-gateway-address`, `fixtures/script-members`,
   `fixtures/script-wrappers`, `fixtures/script-ready-handlers`,
-  `fixtures/script-load-events`, `fixtures/script-tops-plugin-configs`).
+  `fixtures/script-load-events`, `fixtures/script-tops-plugin-configs`,
+  `fixtures/script-tops-built-configs`, `fixtures/wrapped-spread-providers-tops`).
 - **Bots.** Telegraf, both the decorator style and the imperative one, and a
   table of handlers the project keeps itself (`fixtures/nest-telegraf`,
   `fixtures/bot-registry`).
@@ -1497,31 +1557,40 @@ Known gaps in what it can read:
   deliberately not followed, because reading the wrong branch would invent an
   edge.
 - A channel whose name only exists as run-time data on both sides.
-- A receiver typed as nothing is followed through names, parameters and
-  fields of `this`, not through a member of an object, a function's answer
-  or an element of a list; an instance a framework's injector or renderer
-  makes (a component rendered from JSX, a provider a module lists) is not
-  read as the instance a method is called on, so such a request stays with
-  whoever makes one, with a row; and in plain JavaScript a field written
-  through an untyped parameter (`Object.assign(m, ...)`) is not followed to
-  its callers.
-- A Strapi plugin whose package ships only a bundled build is a row; one not
-  installed in a fresh clone is not known to be a plugin unless
-  `config/plugins` or an extension names it; and an extension that replaces
-  a plugin's controller whole is not read as the actions it answers.
-- A registry's keyed store written by an adding function (`routes[key] =
-  {...}`, read through `Object.entries`) is not bound to its keys, nor an
-  index key of `Object.entries` over a list, and a view step taking a pair's
-  entry apart with an object pattern is counted as not read.
-- In compose, `environment: [NAME]` with no value and a Makefile's own
-  `export` lines are not read; a port only a cluster `Secret` gives is not
-  known, by policy, so the request gets a row rather than a join; and a
-  server started by a program the list of start commands does not know takes
-  no port from the script's exports.
-- A linter plugin's `configs` built by a call or a spread are not read, and
-  the top of a plain script is a function of its own only where it writes a
-  call. The TypeScript checker's own module resolution still looks above a
-  repository for `node_modules` and `@types`, as the compiler does.
+- A class of the repository's own read for a client's base where its
+  instances are given different bases outside it: that is one reading of the
+  class, said in a row, not split per instance as an installed client's
+  instances are. A rest of a component's props stands for the whole props
+  for a member named beside it; a component written in place in a call it is
+  not the first argument of is not read as one; and a provider list built by
+  a function reached through an object (`Providers.all()`) is not read.
+- An application the framework's own maker makes is as sure as a typed one
+  only where nothing else can change what holds it; held by a property
+  anything may write or a parameter some caller may fill, it stays
+  `heuristic`, with every route mounted under it, and with nothing installed
+  one a constructor writes into a field declared with no initialiser is not
+  recognised at all.
+- A minified bundle that renames a bundler's helpers is a row saying where
+  the follow stopped, and a key enabling a Strapi plugin no package is named
+  after, beside several dependencies not installed, names each of them as a
+  candidate: the install is what tells which.
+- A registry's list pushed into across modules and read through
+  `.entries()` gives places the order modules are evaluated in decides, so
+  they are not read; and an entry an adding function hands on to another
+  with its own parameters is read at the outer call only where the inner one
+  hands it on as it is.
+- A port a cluster `Secret` gives is not known, by policy, so the request
+  gets a row rather than a join. A program's listen is found in its file and
+  the files it imports by a relative path, so one listening through a
+  package's import is not followed, and one a build writes is a row. Make's
+  `$(MAKECMDGOALS)`, `ifeq` and pattern-specific variables are not read, nor
+  a compose value interpolated from the shell (`NODE_ENV: ${MODE}`) or an
+  `env_file` for Bun's mode, nor Bun run as `node`.
+- In a linter plugin's `configs`, a key written before a spread of another
+  module's object is taken to be the spread's. Inside a checkout, a look up
+  the directories still climbs to the checkout's top when the run was given
+  a narrower root, and a tsconfig `extends` naming a package resolves only
+  from an install inside.
 
 What it does on the demo project is
 [measured at the top of this file](#measured-on-the-demo-project). Every figure

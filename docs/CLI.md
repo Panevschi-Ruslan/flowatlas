@@ -245,9 +245,12 @@ load handler, or only `new`s a constructor or builds an object holding a
 handler nothing keeps as a function of its own (`new Router({ '/items':
 function () { … } })`, P341): a function of its own named after its file
 (`boot.js:top`), a request or a handler written there drawn from it and a
-call there joined (`fixtures/script-members`, `fixtures/script-wrappers`,
+call there joined; a `new` in a plain script draws a call to the constructor
+function or the class's constructor (`Pulse.constructor`) it runs (P349)
+(`fixtures/script-members`, `fixtures/script-wrappers`,
 `fixtures/script-ready-handlers`, `fixtures/script-load-events`,
-`fixtures/script-tops-plugin-configs`, `fixtures/script-tops-built-configs`).
+`fixtures/script-tops-plugin-configs`, `fixtures/script-tops-built-configs`,
+`fixtures/wrapped-spread-providers-tops`).
 
 A client with a browser build needs no import or install where a page of the
 repository loads it by a script tag - a folder of the package's name or a file
@@ -269,7 +272,8 @@ configuration installed under `node_modules` by its short name (`shop` is
 configuration (`plugin:shop/browser` is `configs.browser` of
 `eslint-plugin-shop`, its `configs` spread from another object, built by
 `Object.assign` or written after the plugin is, the last write winning,
-P341), the linter's own not read - and a module a flat configuration takes
+P341, built by a function the plugin declares or written through
+`module.exports.configs.x` or `exports.configs.x`, P349), the linter's own not read - and a module a flat configuration takes
 in by a name it imports or requires and reads as a value (`...shared`,
 `[base, { … }]`, `tseslint.config(base, …)`; a named import, `import { base
 } from …`, reading that export alone, and members taken off the module,
@@ -362,9 +366,22 @@ are read too, each held by a fixture:
   framework's types resolve to nothing. The source still says what the value is —
   `import express from 'express'` and `const app = express()`, or
   `const express = require('express')` whole or destructured (P281) — so the
-  application is recognised from that, and every route read off it carries
-  `heuristic` confidence, because it rests on what the author wrote rather than
-  on what a compiler checked (`fixtures/express-not-installed`).
+  application is recognised from that. A route on an application the
+  framework's own maker made right there - `express()`, `Router()`,
+  `new Koa()`, `Fastify()`, `new Hono()`, imported or required from the
+  package itself, through a chain that answers with the application
+  (`express().disable(...)`), held by a `const`, a `let` nothing assigns
+  again, a field nothing but its own class's constructor writes or a
+  parameter whose maker default every caller leaves (P346, P350) - carries
+  what a typed route carries, and so do the joins on it: that call is the
+  value, not an account of it. Every other route read that way - off an
+  annotation, a destructured member, a class of the repository, a function's
+  answer, a parameter a caller may hand, a property - carries `heuristic`
+  confidence, because it rests on what the author wrote rather than on what a
+  compiler checked, and so does a route placed through a mount written on
+  one (`fixtures/express-not-installed`,
+  `fixtures/express-maker-direct-and-stated`,
+  `fixtures/script-modes-workspace-make-fields`).
 
 A path assembled at run time is reported rather than placed at a guessed
 address. A route under a mount whose path could not be read has a row of its own,
@@ -932,12 +949,22 @@ list's item, apart with an object pattern too (P344): `` ([slug, { Screen,
 base = '/docs' }]) => ({ path: `${base}/${slug}`, element: <Screen /> }) ``
 reads each name as the entry's own value under it, a nested pattern
 (`{ meta: { Screen } }`) in turn and a default where the entry writes none,
-and `({ to, Screen }) => ...` over a list the same. `Object.keys(...)` is a
-list of the keys the entries are kept under, a step reading each as its
-parameter and the entry looked up by it (`this.tools[name]`), and
-`Object.entries` or `Object.keys` over a list written in place - or a `const`
-holding one - keeps each item under its place (`Object.entries([Welcome,
-Finish])` binds `0` and `1`, up to the first spread). The entries of a view
+and `({ to, Screen }) => ...` over a list the same; a route or a link
+written straight over the pairs takes a pattern nested deeper than one key
+(`([slug, { meta: { view: { Screen } } }])`) as well, and a template or a
+sum reading a mapped item's key or member is read per entry (P351).
+`Object.keys(...)` is a list of the keys the entries are kept under, a step
+reading each as its parameter and the entry looked up by it
+(`this.tools[name]`), and a route or a link written straight over it
+(`Object.keys(PAGES).map((path) => <Route path={path}
+element={PAGES[path]} />)`) is one per key, the parameter the key and each
+`PAGES[path]` the entry under it (P351). `Object.entries` or `Object.keys`
+over a list written in place - or a `const` holding one, or a list a spread,
+a `concat`, a `map` or a function of the repository puts together from lists
+whose order is known (P351) - keeps each item under its place
+(`Object.entries([Welcome, Finish])` binds `0` and `1`); past a list read
+otherwise (a spread of a value read at run time) the places are said not
+known in the `route-entries-unread` row. The entries of a view
 made any other way (a function of its own handed to `map`, `flatMap` or
 `reduce`, a `reduce` from anything else, pairs taken apart otherwise) are
 not read and count toward `unplaced`.
@@ -989,7 +1016,12 @@ under their keys; read back through `Object.entries(this.pages)`, a `Map`'s
 `entries()` or keys, a step's key name spells each, an entry written as a
 component under a key being read as a pair's entry, and a reader looking an
 entry up by a parameter (`return this.pages[name]`) finds the one whose
-call wrote that key. A view the caller makes of what a reader hands back is read as
+call wrote that key. An object such a function writes into its store from
+its own parameters (`this.pages[name] = { Screen, title: name }`,
+`shelves.set(path, { Screen })`) is one entry per call, read with that
+call's arguments under the key it hands (P351,
+`fixtures/keyed-stores-pair-patterns`,
+`fixtures/key-reads-places-webpack-plugins`). A view the caller makes of what a reader hands back is read as
 the reader's own view is: `const pages = listPages().filter(...).map((page) =>
 ({ ...page, path: `/app${page.path}` }))` and then `pages.map((page) => <Route
 path={page.path} />)` places each page at `/app` and its path, as do a
@@ -1791,7 +1823,7 @@ imports the checker could not resolve: gateway (12) — check their tsconfig pat
 
   Most of a repository still reads without its dependencies — what its own
   source states, including the table a model class names and the application
-  `express()` makes (`fixtures/db-not-installed`,
+  `express()` makes, the latter as sure as a typed one (`fixtures/db-not-installed`,
   `fixtures/express-not-installed`) — so the sentence promises only what an
   install recovers: what a package declares, never what a package generates.
   It is never printed for a repository that has had an install.
@@ -6125,7 +6157,12 @@ it extends — under `frontend.localClientClasses` and nothing more is asked; ev
 verb it declares is then a request, and a class that declares none of its own
 answers to all seven. Requests carry `client` set to the class name and
 `localClient` set to `recognised` or `declared`, so a graph says which of the two
-happened.
+happened. The base such a class keeps in a field (`this.base`) is read with
+the writes on its instances outside the class too - `client.base = …`,
+`Object.assign(client, …)`, over a value typed or typed as nothing - a field
+the class only sets to nothing taking theirs; instances given different
+bases, or one not read, are an `api-client-base-unread` row at the class
+(P349, `fixtures/wrapped-spread-providers-tops`).
 
 Where a verb is called on a class of yours that could not be read as a client
 *and* the call writes an address — a path with a leading slash, or a URL — one
@@ -6223,8 +6260,18 @@ Next.js client code, Vue, Nuxt and Svelte alike:
   the method again) or the object it is written in: run where every value is
   one, undecided where some are, and nowhere where none is. The address and
   the instance are then followed out through it as through a typed receiver.
-  A member of an object (`options.reader.health()`), a value a function
-  answers and an element of a list are not followed this way.
+  It is followed through a member of an object (`options.reader.health()`,
+  `this.deps.client.get()`), a value a function answers (`make().health()`,
+  `const r = readerOf(api)`) and an element of a list (`readers[0]`,
+  `for (const r of readers)`, `readers.forEach(...)`, one `push`ed) too,
+  bounded in parts as in values, both to find a method's calls and to place
+  a request at its caller (P342); and to the instance the NestJS injector
+  hands a parameter typed as nothing - a class a module lists, `useClass`,
+  `useValue: new X()`, `useExisting` followed, `@Dependencies(...)` in plain
+  JavaScript, in provider lists spread in, held by a `const` or answered by a
+  function (P349). `function setup(m) { Object.assign(m, { queue }) }` and
+  `m.queue = ...` over a parameter typed as nothing count for the field of
+  the instances its callers hand it (P342).
 - **A method a framework calls** (P336). A request on instances with
   different bases in a method no code read calls, but a framework does - one
   a package's decorator marks, a lifecycle method of a class whose base or
@@ -6236,10 +6283,30 @@ Next.js client code, Vue, Nuxt and Svelte alike:
   decorator, in a list, a record, a function answering it or a `const`
   holding it. Where none is read, each function making an instance keeps it,
   with an `api-client-base-unread` row naming the framework that calls the
-  method on an instance no code read hands it. An instance the framework's
-  own injector or renderer makes (a component rendered from JSX, a provider
-  a module lists by its class) is not read as one
+  method on an instance no code read hands it
   (`fixtures/untyped-callers-framework-held-outside-writes`).
+- **An instance the framework makes** (P342, P349). An element written with
+  a component as its tag (`<Feed client={api} />`) is that component's
+  instance, its attributes the props: a request a function component makes
+  through a destructured `client` or `props.client`, or a class component
+  through `this.props.client` in `componentDidMount`, is placed at the
+  function rendering each element under the base of the client it hands. A
+  component a module keeps unexported under a capitalised name, wrapped in
+  `memo(...)`, `React.memo(...)`, `forwardRef(...)` or
+  `memo(forwardRef(...))`, is a component too. A prop handed through a
+  spread is followed where what is spread is read - a rest of the props
+  (`{ title, ...rest }`), the props whole (an attribute written after the
+  spread winning), an object written in place - and one not read is an
+  `api-client-base-unread` row at the request (`meta.spread`). A class a
+  NestJS module lists as a provider (`providers: [Poller]`, `{ provide:
+  Reader, useClass: StockReader }`) is the instance the injector makes, each
+  constructor parameter handed what the module provides for its
+  `@Inject(token)` or its type (`useValue`, what `useFactory` returns, a
+  class listed or `useClass`), a parameter handed on to `super(...)`
+  followed up to the field it fills; the Nest reader draws a call on a
+  `useValue: new X()` token to `X` and reads a provider list a function
+  answers with (`fixtures/framework-made-receiver-parts`,
+  `fixtures/wrapped-spread-providers-tops`).
 
 An Angular interceptor that puts a base in front of every request,
 `req.clone({ url: environment.apiUrl + req.url })` or the same as a template, is
@@ -7642,10 +7709,25 @@ directory enables it only with `enabled: true`; a key without `enabled`
 (`ratings: { config: {...} }`) is enabled by the dependency of that name. A
 plugin's server Strapi never loads - a `strapi-server.*` no key enables - is
 an info `plugin-not-enabled` row; a key enabling a plugin installed nowhere in
-the repository is a `route-registry-unread` row naming it. A plugin installed
+the repository is a `route-registry-unread` row naming it. A dependency not
+installed that the repository says is a Strapi plugin - by its name
+(`strapi-plugin-*`, `@strapi/plugin-*`, `@<scope>/strapi-plugin-*`) or its
+lockfile entry (a `strapi` keyword, a peer dependency on `@strapi/strapi`) -
+is such a row at `package.json` unless a key turns it off (P345); a key
+naming it otherwise - resolving its package, a `file:` directory, a name
+spelled alike (`mapView` for `strapi-plugin-map-view`) - is one row under the
+key, and a key naming no package names the dependencies not installed it may
+be (P351). A plugin installed
 under `node_modules` is read from its package, in a parse of its own: the
 source its `exports['./strapi-server']` ships (`source`), else the file
-`require` loads; its routes are ways in drawn at `package.json` with
+`require` loads. A build a bundler wrote is read through the bundler's own
+wrappers (P345, P351): rollup's `requireX()` functions and chunk exports,
+esbuild's and rolldown's `__commonJS` factories, `__esm` initializers and
+`__export`, webpack's table of modules (`__webpack_modules__`, webpack 4's
+bootstrap array, `__webpack_require__.d` and `.n`, an entry inlined in the
+bootstrap), interop helpers through and a `default` taken as Strapi takes
+it; what is still not read - a minified bundle renaming the helpers - is a
+`route-registry-unread` row naming the value the follow stopped at. Its routes are ways in drawn at `package.json` with
 `meta.package` and `meta.declaredIn`, and their handlers, policies and
 middlewares are the package's code (`handlerVia: "package"`, names only).
 Strapi's own plugins (upload, i18n, the content manager...) are not read. A
@@ -7664,7 +7746,15 @@ before its routes are registered, is read (P335): a route it pushes into
 `<plugin>.routes['<router>'].routes` (or `<plugin>.routes`, for a list) is
 served on that router of the plugin, and an action it writes,
 `<plugin>.controllers.<controller>.<action> = fn`, answers the routes naming
-it - an installed plugin's among them. What it does to the routes otherwise
+it - an installed plugin's among them. A controller it writes whole
+(`plugin.controllers.card = { find }`, or a factory) answers with the
+actions its object or factory writes, the plugin's own beside them where it
+spreads them (P345); one writing `plugin.controllers` itself - a fresh
+object, one spreading the plugin's, `Object.assign` - answers with the
+controllers it holds, the plugin's where it keeps them (P351); and each
+route on an action or a controller it drops is a `route-handler-unread` row
+naming the extension (`fixtures/bundled-plugins-unread-dependencies-whole-controllers`,
+`fixtures/key-reads-places-webpack-plugins`). What it does to the routes otherwise
 (`plugin.routes = ...`), or to a plugin not read, is a `route-mount-unread`
 row naming it.
 
@@ -8473,7 +8563,7 @@ construct a helper of the same file makes is placed at the helper's call.
 | `fn.addFunctionUrl()`, `new FunctionUrl` | the function URL |
 | `addEventSource(new SqsEventSource(q))`, `SnsEventSource`, `DynamoEventSource`, `KinesisEventSource`, `S3EventSource`, `new EventSourceMapping` | mappings, subscriptions and notifications onto the function |
 | `topic.addSubscription(new LambdaSubscription(fn))`, `SqsSubscription` | subscriptions |
-| `new events.Rule({ eventPattern, schedule, targets })`, `addTarget` | rules, the pattern's `detailType` as `detail-type` and `Match.prefix(...)` as a content filter; `Schedule.cron({ hour: '2' })` is `cron(* 2 * * ? *)` as the CDK writes it |
+| `new events.Rule({ eventPattern, schedule, targets })`, `addTarget` | rules, the pattern's `detailType` as `detail-type` and `Match.prefix(...)` as a content filter; `Schedule.cron({ hour: '2' })` is `cron(* 2 * * ? *)` as the CDK writes it, and one naming both `day` and `weekDay` is left unread, as the CDK refuses it (P348) |
 | `new scheduler.Schedule({ schedule, target })` | a schedule onto its target |
 | `deadLetterQueue: { queue }` | a redrive |
 | `bucket.addEventNotification(...)`, `eventBridgeEnabled` | notifications, and the bucket's events on the default bus |

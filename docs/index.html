@@ -300,9 +300,9 @@ flowatlas build          <span class="c"># read them all and join them</span></c
       <h3>ways in</h3>
       <ul>
         <li>NestJS controllers, message handlers and schedules, with their guards and pipes</li>
-        <li>Express, Fastify, Koa and Hono, where a route is registered by a call</li>
+        <li>Express, Fastify, Koa and Hono, where a route is registered by a call &mdash; as sure with nothing installed where the framework's own maker makes the application</li>
         <li>Next.js, Medusa, SvelteKit and Remix / React Router, where a route is the path of a file</li>
-        <li>Strapi's routes files and the plugins it enables, and Gatsby's functions</li>
+        <li>Strapi's routes files and the plugins it enables, bundled builds and extensions included, and Gatsby's functions</li>
         <li>Lambda functions, API Gateway routes and Step Functions, read from the Terraform, the Serverless Framework, the CDK, SAM or CloudFormation that deploys them</li>
         <li>tRPC and oRPC procedures, gRPC methods, GraphQL fields, and Telegraf bot commands, callbacks and events</li>
         <li>what each one takes and answers, failures included, field by field</li>
@@ -312,7 +312,7 @@ flowatlas build          <span class="c"># read them all and join them</span></c
       <h3>browsers</h3>
       <ul>
         <li>Angular templates, services and router, lazy routes included</li>
-        <li>React components and hooks, Vue and Svelte components, and the page each navigation shows</li>
+        <li>React components and hooks, the props each element hands, Vue and Svelte components, and the page each navigation shows</li>
         <li>a plain page and the scripts it loads, with no manifest and nothing that builds them</li>
         <li><code>fetch</code>, <code>XMLHttpRequest</code>, <code>axios</code>, jQuery, a wrapper or a client class of your own &mdash; each joined to the route that answers it, through the interceptors that rewrite its address</li>
       </ul>
@@ -337,9 +337,9 @@ flowatlas build          <span class="c"># read them all and join them</span></c
     <div>
       <h3>across repositories</h3>
       <ul>
-        <li>a monorepo's services with the workspace packages they use, on a fresh clone</li>
+        <li>a monorepo's services with the workspace packages they use, on a fresh clone, never resolved from an install above its checkout</li>
         <li>the port each server listens on, its framework's default a guess that places a request only where that server serves it</li>
-        <li>a container's environment from its image's Dockerfile, its env files and the compose files that start it</li>
+        <li>a container's environment from its image's Dockerfile, its env files and the compose files that start it, and a script's or a Makefile's exports followed into the program or the workspace package it runs</li>
         <li>where a cluster, a chart, a kustomization or a helmfile routes a request, and the address API Gateway serves an API at</li>
         <li>a service you have no source for, from its OpenAPI or AsyncAPI document</li>
         <li>every contract compared where one repository meets another</li>
