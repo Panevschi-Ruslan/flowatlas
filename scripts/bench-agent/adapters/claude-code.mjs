@@ -11,8 +11,9 @@
  *   stay in.
  * - `--strict-mcp-config`: the person's MCP servers stay out; the graph arms
  *   are handed the one server they are measuring.
- * - `--permission-mode dontAsk` with a list of reading tools: an arm can read
- *   and search, and nothing can write, fetch or run anything else.
+ * - `--permission-mode dontAsk` with reading tools granted for the workspace
+ *   only: an arm can read and search where it starts, and nothing can read
+ *   outside it, write, fetch or run anything else.
  * - `--no-session-persistence`: nothing is kept to resume from.
  *
  * It runs on the subscription the person is signed in with; nothing here
@@ -32,8 +33,17 @@ const command = () => {
   return named.endsWith('.mjs') ? { file: process.execPath, prefix: [named] } : { file: named, prefix: [] };
 };
 
-/** The tools every arm may use: reading and searching, by tool or by shell. */
-export const READING_TOOLS = ['Read', 'Grep', 'Glob', 'LS', 'Bash(grep:*)', 'Bash(rg:*)', 'Bash(find:*)', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(head:*)', 'Bash(tail:*)', 'Bash(wc:*)'];
+/**
+ * The tools every arm may use: reading and searching, inside the workspace only.
+ *
+ * Each grant is scoped to the folder the session starts in. A bare `Read` or
+ * `Grep`, or `Bash(grep:*)`, grants every path on the machine, and an arm
+ * given one repository then searched the others by absolute path or `..`;
+ * scoped, a read outside the workspace is refused, as `dontAsk` refuses
+ * whatever no rule allows. A read-only shell command inside the workspace
+ * (`grep -rn`, `ls`) needs no grant, and one reaching outside is refused.
+ */
+export const READING_TOOLS = ['Read(./**)', 'Grep(./**)', 'Glob(./**)', 'LS(./**)'];
 
 /** A usage limit says so in the result; the run stops there and resumes later. */
 const LIMIT = /usage limit|limit reached|rate limit|out of (?:usage|credits)|try again (?:at|in)\b/i;
