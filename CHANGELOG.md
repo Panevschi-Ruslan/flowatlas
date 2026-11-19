@@ -2156,6 +2156,13 @@ only one of them moved.
 
 ### Fixed
 
+- **`get_source` and `explain` return a decorated declaration whole.** Where a
+  declaration ends is found by counting braces from where it starts, and a
+  decorated method's or class's recorded start is its first decorator - one
+  that closes the braces of its own options (`@Guard({ roles: ['a'] })`, a
+  component's `@Component({ ... })`) on its own lines. The answer stopped
+  there, the decorator alone. A decorator's lines are now read as part of the
+  declaration rather than the whole of it.
 - **A server `Bun.serve` starts reads the files its script makes Bun load,
   and the CDK's version is looked for in the workspace (P348).** Bun's own
   files were taken as development's whatever the script running the server
