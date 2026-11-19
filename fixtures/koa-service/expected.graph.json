@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "repo": "koa-service",
-  "generatedAt": "2026-10-08T09:12:40.126Z",
+  "generatedAt": "2026-11-07T17:37:12.868Z",
   "nodes": [
     {
       "id": "db_query:koa-service#src/orders/orders.repository.ts:12:12",
@@ -352,7 +352,14 @@
           "entry": [
             "koa-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 22
+          }
+        ]
       }
     },
     {

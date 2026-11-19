@@ -39,6 +39,7 @@ import { cmp, edgeKey } from './order.js';
 const NOUNS: ReadonlyMap<string, string> = new Map([
   ['workflow', 'the workflow'],
   ['invoke', 'the function'],
+  ['task', 'the task'],
 ]);
 
 const describe = (reference: string): string => {

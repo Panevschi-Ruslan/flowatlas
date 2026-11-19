@@ -1,0 +1,105 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-07T17:36:42.924Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "channel:s3/club-notices-archive",
+        "to": "consumer:members#services/notices/serverless.yml:functions.archive-notice.events[0]",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:s3/club-notices-archive|consumes|consumer:members#services/notices/serverless.yml:functions.archive-notice.events[0]",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:s3/club-notices-archive is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "channel:sns/accounts-prod-lapsed",
+        "to": "consumer:members#services/accounts/serverless.ts:functions.lapse.events[0]",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:sns/accounts-prod-lapsed|consumes|consumer:members#services/accounts/serverless.ts:functions.lapse.events[0]",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:sns/accounts-prod-lapsed is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "channel:sqs/${…}@import.export.shared-audit-queue-arn",
+        "to": "consumer:members#services/notices/serverless.yml:functions.audit.events[0]",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:sqs/${…}@import.export.shared-audit-queue-arn|consumes|consumer:members#services/notices/serverless.yml:functions.audit.events[0]",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:sqs/${…}@import.export.shared-audit-queue-arn is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:members#services/notices/serverless.yml:functions.send-notice.destinations.onFailure",
+        "to": "channel:sqs/notices-prod-failed",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/notices-prod-failed|emits|producer:members#services/notices/serverless.yml:functions.send-notice.destinations.onFailure",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/notices-prod-failed is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:members#services/accounts/src/accounts/lapse.ts:8:9",
+        "to": "consumer:members#services/notices/serverless.yml:resources.Resources.LapsedRule.Targets[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:members#services/accounts/src/accounts/lapse.ts:8:9|emits|consumer:members#services/notices/serverless.yml:resources.Resources.LapsedRule.Targets[0]",
+      "direction": "payload",
+      "reason": "message-undeclared",
+      "message": "members#services/notices/src/notices/digest.ts:handler declares no type for what is at detail of what it is handed",
+      "hint": "Type the handler's parameter with the message's own type inside it, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:members#services/notices/src/notices/digest.ts:7:9",
+        "to": "consumer:members#services/notices/serverless.yml:functions.send-notice.events[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:members#services/notices/src/notices/digest.ts:7:9|emits|consumer:members#services/notices/serverless.yml:functions.send-notice.events[0]",
+      "direction": "payload",
+      "reason": "message-unparsed",
+      "message": "members#services/notices/src/notices/send-notice.ts:handler does not parse the text at Records[].body of what it is handed into a declared type",
+      "hint": "Parse the message into a declared type where the handler reads it - `JSON.parse(text) as Order`, or into a variable declared with one - so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:members#services/notices/src/notices/welcome.ts:7:9",
+        "to": "consumer:members#services/notices/serverless.yml:functions.send-notice.events[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:members#services/notices/src/notices/welcome.ts:7:9|emits|consumer:members#services/notices/serverless.yml:functions.send-notice.events[0]",
+      "direction": "payload",
+      "reason": "message-unparsed",
+      "message": "members#services/notices/src/notices/send-notice.ts:handler does not parse the text at Records[].body of what it is handed into a declared type",
+      "hint": "Parse the message into a declared type where the handler reads it - `JSON.parse(text) as Order`, or into a variable declared with one - so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 7,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

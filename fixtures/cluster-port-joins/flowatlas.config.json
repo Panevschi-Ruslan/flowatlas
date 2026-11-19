@@ -1,0 +1,50 @@
+{
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express"
+    },
+    {
+      "name": "notify",
+      "repo": "./notify",
+      "type": "express"
+    },
+    {
+      "name": "search",
+      "repo": "./search",
+      "type": "express"
+    },
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "express"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "nestjs"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express"
+    }
+  ],
+  "output": ".flowatlas"
+}

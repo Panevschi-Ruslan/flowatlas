@@ -25,8 +25,12 @@
 import type { Confidence } from '@flowatlas/core';
 import type { SequenceStep } from '../diff/sequence.js';
 
-/** What a block names. `ref` is a mention in prose, with nothing generated. */
-export const DOC_KINDS = ['flow', 'channel', 'symbol', 'ref'] as const;
+/**
+ * What a block names. `ref` is a mention in prose, with nothing generated;
+ * `overview` names the whole project (P228), so it has no id: `flowatlas
+ * report`'s sections, checked by the project's structure.
+ */
+export const DOC_KINDS = ['flow', 'channel', 'symbol', 'ref', 'overview'] as const;
 export type DocKind = (typeof DOC_KINDS)[number];
 
 /** How a block's content is drawn. */
@@ -50,7 +54,12 @@ export interface DocOptions {
   maxNodes?: number;
   detail?: 0 | 1 | 2;
   service?: string;
+  /** An `overview` block's sections, as `sections="crossings,second-look"` names them (P228); every one when absent. */
+  sections?: string[];
 }
+
+/** The id an `overview` block stands for: the project, which needs no name. */
+export const OVERVIEW_ID = 'project';
 
 /** A step the closing marker recorded: what `diffSequences` compares, without where it is written. */
 export type RecordedStep = Pick<SequenceStep, 'kind' | 'from' | 'to' | 'label' | 'confidence' | 'params' | 'returns' | 'takes'>;
@@ -91,7 +100,10 @@ export interface ParsedDocs {
   problems: DocProblem[];
 }
 
-const OPEN_ATTRIBUTES: Readonly<Record<string, true>> = { id: true, view: true, depth: true, 'max-nodes': true, detail: true, service: true };
+const OPEN_ATTRIBUTES: Readonly<Record<string, true>> = { id: true, view: true, depth: true, 'max-nodes': true, detail: true, service: true, sections: true };
+
+/** What an `overview` marker may say: which sections, and which service. */
+const OVERVIEW_ATTRIBUTES: ReadonlySet<string> = new Set(['sections', 'service']);
 
 /** Every flowatlas comment, opening or closing; the body runs to the first `-->`. */
 const MARKER = /<!--\s*(\/?)flowatlas:([A-Za-z-]*)([\s\S]*?)-->/g;
@@ -314,7 +326,12 @@ export const parseDocs = (markdown: string): ParsedDocs => {
     // A mention inside generated content is the content's, and is rewritten with it.
     if (open !== undefined) continue;
 
-    const unknown = [...values.keys()].filter((name) => OPEN_ATTRIBUTES[name] !== true || (kind === 'ref' && name !== 'id'));
+    const unknown = [...values.keys()].filter(
+      (name) =>
+        OPEN_ATTRIBUTES[name] !== true ||
+        (kind === 'ref' && name !== 'id') ||
+        (kind === 'overview' ? !OVERVIEW_ATTRIBUTES.has(name) : name === 'sections'),
+    );
     if (unknown.length > 0) {
       problem(`unknown attribute ${unknown.map((name) => JSON.stringify(name)).join(', ')} on a ${kind} marker`);
       continue;
@@ -323,7 +340,7 @@ export const parseDocs = (markdown: string): ParsedDocs => {
       problem(`attribute ${repeated.map((name) => JSON.stringify(name)).join(', ')} written twice`);
       continue;
     }
-    const id = values.get('id')?.trim() ?? '';
+    const id = kind === 'overview' ? OVERVIEW_ID : (values.get('id')?.trim() ?? '');
     if (id === '') {
       problem(`a ${kind} marker without an id`);
       continue;
@@ -354,6 +371,11 @@ export const parseDocs = (markdown: string): ParsedDocs => {
       continue;
     }
     const service = values.get('service')?.trim();
+    const sections = values
+      .get('sections')
+      ?.split(',')
+      .map((name) => name.trim())
+      .filter((name) => name !== '');
     open = {
       kind: kind as Opened['kind'],
       id,
@@ -363,6 +385,7 @@ export const parseDocs = (markdown: string): ParsedDocs => {
         ...(maxNodes === undefined || maxNodes === null ? {} : { maxNodes }),
         ...(detail === undefined || detail === null ? {} : { detail: detail as 0 | 1 | 2 }),
         ...(service === undefined || service === '' ? {} : { service }),
+        ...(sections === undefined || sections.length === 0 ? {} : { sections }),
       },
       line,
       start,

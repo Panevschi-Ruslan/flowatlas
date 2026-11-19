@@ -1,0 +1,3 @@
+# The values `aws cloudformation deploy --parameter-overrides` is handed, as YAML.
+- ParameterKey: Stage
+  ParameterValue: prod

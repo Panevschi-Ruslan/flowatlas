@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T14:41:40.339Z",
+  "configHash": "a27cd8f77c0e",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nuxt",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 38,
+      "edges": 47,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 1021,
+      "packages": {
+        "name": "plugins-tasks-shop",
+        "runtime": [
+          "element-plus",
+          "nuxt"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 5,
+    "resolved": 5,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 6,
+    "called": 5,
+    "uncalled": [
+      "entry:shop:http:POST:/api/orders/expire"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "shop",
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "reference-not-found",
+      "message": "cron 0 3 * * * reaches the task db:backup, which no configured service declares",
+      "hint": "Add the repository that deploys it to the configuration, so this step reaches its code.",
+      "symbol": "entry:shop:cron:scheduledTasks 0 3 * * *",
+      "meta": {
+        "reference": "task:db:backup"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 38,
+    "edges": 55,
+    "types": 0,
+    "missed": 3,
+    "sites": 3,
+    "notes": 3,
+    "findings": 0,
+    "unresolved": 3
+  }
+}

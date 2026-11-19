@@ -7,6 +7,20 @@
       "line": 71,
       "kind": "channel",
       "state": "ok"
+    },
+    {
+      "file": "docs/adr/0001-orders-are-idempotent.md",
+      "line": 6,
+      "kind": "mention",
+      "state": "ok",
+      "heading": "Decision"
+    },
+    {
+      "file": "docs/architecture.md",
+      "line": 67,
+      "kind": "mention",
+      "state": "ok",
+      "heading": "Creating an order"
     }
   ],
   "next": [

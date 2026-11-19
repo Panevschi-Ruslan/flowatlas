@@ -1,0 +1,11 @@
+{
+  "name": "grpc-shared-contract-catalog",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "generate": "grpc_tools_node_protoc --ts_out=src/gen --grpc_out=src/gen -I ../proto ../proto/shop.proto"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.14.0"
+  }
+}

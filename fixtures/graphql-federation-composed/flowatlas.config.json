@@ -1,0 +1,52 @@
+{
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "baseUrlEnv": [
+        "ORDERS_URL"
+      ]
+    },
+    {
+      "name": "customers",
+      "repo": "./customers",
+      "type": "express"
+    },
+    {
+      "name": "router",
+      "document": {
+        "kind": "graphql",
+        "path": "router/supergraph.yaml"
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "apiBaseEnv": [
+        "VITE_API_URL"
+      ],
+      "apiTarget": {
+        "VITE_API_URL": "gateway"
+      }
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "react",
+      "apiBaseEnv": [
+        "VITE_ROUTER_URL"
+      ],
+      "apiTarget": {
+        "VITE_ROUTER_URL": "router"
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

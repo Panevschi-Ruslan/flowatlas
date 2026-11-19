@@ -199,6 +199,7 @@ const CALLER_LABEL: Readonly<Record<string, string>> = {
   scene_step: 'user',
   event: 'broker',
   cron: 'scheduler',
+  task: 'scheduler',
 };
 
 const CALLER = 'caller';

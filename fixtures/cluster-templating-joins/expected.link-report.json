@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T21:39:02.292Z",
+  "configHash": "e91e37df0d41",
+  "services": [
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 9,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2758,
+      "packages": {
+        "name": "cluster-templating-joins-jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2864,
+      "packages": {
+        "name": "cluster-templating-joins-orders",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "payments",
+      "repo": "./payments",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2813,
+      "packages": {
+        "name": "cluster-templating-joins-payments",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2902,
+      "packages": {
+        "name": "cluster-templating-joins-stock",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 4,
+    "linked": 4,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 3,
+    "uncalled": [
+      "entry:jobs:http:POST:/jobs/run"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "orders",
+      "file": "deploy/helmfile.d/10-shop.yaml.gotmpl",
+      "line": 7,
+      "reason": "release-need-undefined",
+      "message": "The release orders (deploy/helmfile.d/10-shop.yaml.gotmpl:7) needs cache, which no release of the helmfile is; helmfile refuses to apply it",
+      "hint": "Name a release the helmfile or a base it layers declares, written namespace/name where its namespace is not the one assumed, or remove the need.",
+      "symbol": "deploy/helmfile.d/10-shop.yaml.gotmpl:7"
+    }
+  ],
+  "totals": {
+    "nodes": 16,
+    "edges": 12,
+    "types": 2,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 1,
+    "unresolved": 0
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "services": [
+    {
+      "name": "library",
+      "repo": "./library",
+      "type": "lambda",
+      "infra": {
+        "options": {
+          "config_env": "prod"
+        }
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

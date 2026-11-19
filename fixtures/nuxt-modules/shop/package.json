@@ -1,0 +1,11 @@
+{
+  "name": "module-shop",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@nuxtjs/i18n": "^9.0.0",
+    "@vueuse/nuxt": "^13.0.0",
+    "audit-module": "workspace:*",
+    "nuxt": "^4.1.0"
+  }
+}

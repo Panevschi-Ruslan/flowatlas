@@ -1,0 +1,9 @@
+{
+  "name": "rpc-server-to-server-orders",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@orpc/server": "^1.0.0",
+    "express": "^4.21.2"
+  }
+}

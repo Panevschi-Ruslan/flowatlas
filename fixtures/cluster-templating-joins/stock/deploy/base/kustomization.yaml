@@ -1,0 +1,17 @@
+resources:
+  - stock.yaml
+vars:
+  - name: STOCK_PORT
+    objref:
+      kind: ConfigMap
+      name: stock-config
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.port
+  - name: STOCK_HOST
+    objref:
+      kind: ConfigMap
+      name: stock-config
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.host

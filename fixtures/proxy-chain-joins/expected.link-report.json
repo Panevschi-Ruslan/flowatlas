@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:14:07.021Z",
+  "configHash": "72110bdba2d9",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 7,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 6290,
+      "packages": {
+        "name": "proxy-chain-joins-admin",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 6763,
+      "packages": {
+        "name": "proxy-chain-joins-billing",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 6239,
+      "packages": {
+        "name": "proxy-chain-joins-catalog",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 6,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 7083,
+      "packages": {
+        "name": "proxy-chain-joins-gateway",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 3,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 6969,
+      "packages": {
+        "name": "proxy-chain-joins-jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 4,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 6760,
+      "packages": {
+        "name": "proxy-chain-joins-kiosk",
+        "runtime": [
+          "react"
+        ],
+        "dev": [
+          "vite"
+        ]
+      }
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 6950,
+      "packages": {
+        "name": "proxy-chain-joins-ledger",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 6335,
+      "packages": {
+        "name": "proxy-chain-joins-orders",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 10,
+      "edges": 8,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 6094,
+      "packages": {
+        "name": "proxy-chain-joins-web",
+        "runtime": [
+          "react"
+        ],
+        "dev": [
+          "vite"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 3,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 7,
+    "resolved": 6,
+    "unresolved": 1,
+    "byReason": {
+      "proxy-chain-unfollowed": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 8,
+    "called": 6,
+    "uncalled": [
+      "entry:jobs:http:POST:/jobs/sync",
+      "entry:orders:http:GET:/orders"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "gateway",
+      "file": "app/page.tsx",
+      "line": 3,
+      "reason": "server-request-without-origin",
+      "message": "gateway's server makes this request to /api/health with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
+      "hint": "Build the address from a setting that gives gateway's own address, call the code behind the route directly, or use a client that answers it in process.",
+      "symbol": "http_out:gateway#app/page.tsx:3:24"
+    },
+    {
+      "service": "gateway",
+      "file": "app/page.tsx",
+      "line": 4,
+      "reason": "server-request-without-origin",
+      "message": "gateway's server makes this request to /orders/today with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
+      "hint": "Build the address from a setting that gives gateway's own address, call the code behind the route directly, or use a client that answers it in process.",
+      "symbol": "http_out:gateway#app/page.tsx:4:23"
+    },
+    {
+      "service": "web",
+      "file": "src/Shop.tsx",
+      "line": 6,
+      "reason": "proxy-chain-unfollowed",
+      "message": "the request is forwarded by web, then kiosk, and back to web: the proxies forward it in a circle",
+      "hint": "One of the rules forwards to the server the request came from; check the targets of the rules named.",
+      "symbol": "ui_api_call:web#src/Shop.tsx:6:26"
+    }
+  ],
+  "totals": {
+    "nodes": 47,
+    "edges": 33,
+    "types": 2,
+    "missed": 2,
+    "sites": 2,
+    "notes": 0,
+    "findings": 2,
+    "unresolved": 2
+  }
+}

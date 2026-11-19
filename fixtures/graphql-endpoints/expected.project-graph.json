@@ -1,0 +1,2207 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T21:42:59.903Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "module",
+      "label": "GraphQLModule",
+      "repo": "api",
+      "file": "node_modules/@nestjs/graphql",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "external": true
+      }
+    },
+    {
+      "id": "api#src/admin/admin.module.ts:AdminModule",
+      "type": "module",
+      "label": "AdminModule",
+      "repo": "api",
+      "file": "src/admin/admin.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "StoresResolver"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/admin/admin.resolver.ts:StoresResolver",
+      "type": "provider",
+      "label": "StoresResolver",
+      "repo": "api",
+      "file": "src/admin/admin.resolver.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AdminModule"
+      }
+    },
+    {
+      "id": "api#src/admin/admin.resolver.ts:StoresResolver.stores",
+      "type": "method",
+      "label": "StoresResolver.stores",
+      "repo": "api",
+      "file": "src/admin/admin.resolver.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:api#Store[]"
+        }
+      }
+    },
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/graphql/admin-api.module.ts:AdminApiModule",
+      "type": "module",
+      "label": "AdminApiModule",
+      "repo": "api",
+      "file": "src/graphql/admin-api.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/graphql/settings-api.module.ts:SettingsApiModule",
+      "type": "module",
+      "label": "SettingsApiModule",
+      "repo": "api",
+      "file": "src/graphql/settings-api.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/graphql/store-graphql.config.ts:StoreGraphqlConfig",
+      "type": "provider",
+      "label": "StoreGraphqlConfig",
+      "repo": "api",
+      "file": "src/graphql/store-graphql.config.ts",
+      "line": 8,
+      "kind": "injectable"
+    },
+    {
+      "id": "api#src/graphql/store-graphql.config.ts:StoreGraphqlConfig.createGqlOptions",
+      "type": "method",
+      "label": "StoreGraphqlConfig.createGqlOptions",
+      "repo": "api",
+      "file": "src/graphql/store-graphql.config.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "api#src/reports/reports.module.ts:ReportsModule",
+      "type": "module",
+      "label": "ReportsModule",
+      "repo": "api",
+      "file": "src/reports/reports.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "ReportsResolver"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/reports/reports.resolver.ts:ReportsResolver",
+      "type": "provider",
+      "label": "ReportsResolver",
+      "repo": "api",
+      "file": "src/reports/reports.resolver.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "ReportsModule"
+      }
+    },
+    {
+      "id": "api#src/reports/reports.resolver.ts:ReportsResolver.ordersToday",
+      "type": "method",
+      "label": "ReportsResolver.ordersToday",
+      "repo": "api",
+      "file": "src/reports/reports.resolver.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "api#src/settings/settings.module.ts:SettingsModule",
+      "type": "module",
+      "label": "SettingsModule",
+      "repo": "api",
+      "file": "src/settings/settings.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "ShopSettingsResolver"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/settings/settings.resolver.ts:ShopSettingsResolver",
+      "type": "provider",
+      "label": "ShopSettingsResolver",
+      "repo": "api",
+      "file": "src/settings/settings.resolver.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "SettingsModule"
+      }
+    },
+    {
+      "id": "api#src/settings/settings.resolver.ts:ShopSettingsResolver.me",
+      "type": "method",
+      "label": "ShopSettingsResolver.me",
+      "repo": "api",
+      "file": "src/settings/settings.resolver.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:api#Operator"
+        }
+      }
+    },
+    {
+      "id": "api#src/settings/settings.resolver.ts:ShopSettingsResolver.renameShop",
+      "type": "method",
+      "label": "ShopSettingsResolver.renameShop",
+      "repo": "api",
+      "file": "src/settings/settings.resolver.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#ShopSettings"
+        }
+      }
+    },
+    {
+      "id": "api#src/settings/settings.resolver.ts:ShopSettingsResolver.shopSettings",
+      "type": "method",
+      "label": "ShopSettingsResolver.shopSettings",
+      "repo": "api",
+      "file": "src/settings/settings.resolver.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:api#ShopSettings"
+        }
+      }
+    },
+    {
+      "id": "api#src/store/store.module.ts:StoreModule",
+      "type": "module",
+      "label": "StoreModule",
+      "repo": "api",
+      "file": "src/store/store.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "StorefrontResolver"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/store/store.resolver.ts:StorefrontResolver",
+      "type": "provider",
+      "label": "StorefrontResolver",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "StoreModule"
+      }
+    },
+    {
+      "id": "api#src/store/store.resolver.ts:StorefrontResolver.addToCart",
+      "type": "method",
+      "label": "StorefrontResolver.addToCart",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "productId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#Cart"
+        }
+      }
+    },
+    {
+      "id": "api#src/store/store.resolver.ts:StorefrontResolver.me",
+      "type": "method",
+      "label": "StorefrontResolver.me",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:api#Shopper"
+        }
+      }
+    },
+    {
+      "id": "entry:api:graphql:Mutation.addToCart@/graphql",
+      "type": "entry",
+      "label": "Mutation.addToCart@/graphql",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 14,
+      "kind": "graphql",
+      "meta": {
+        "type": "Mutation",
+        "name": "addToCart",
+        "returns": "Cart!",
+        "args": {
+          "productId": {
+            "type": "ID!",
+            "required": true
+          }
+        },
+        "endpoint": "/graphql",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Mutation.renameShop@/settings",
+      "type": "entry",
+      "label": "Mutation.renameShop@/settings",
+      "repo": "api",
+      "file": "src/settings/settings.resolver.ts",
+      "line": 19,
+      "kind": "graphql",
+      "meta": {
+        "type": "Mutation",
+        "name": "renameShop",
+        "returns": "ShopSettings!",
+        "args": {
+          "name": {
+            "type": "String!",
+            "required": true
+          }
+        },
+        "endpoint": "/settings",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Query.me@/graphql",
+      "type": "entry",
+      "label": "Query.me@/graphql",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 9,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "me",
+        "returns": "Shopper!",
+        "endpoint": "/graphql",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Query.me@/settings",
+      "type": "entry",
+      "label": "Query.me@/settings",
+      "repo": "api",
+      "file": "src/settings/settings.resolver.ts",
+      "line": 9,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "me",
+        "returns": "Operator!",
+        "endpoint": "/settings",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Query.ordersToday",
+      "type": "entry",
+      "label": "Query.ordersToday",
+      "repo": "api",
+      "file": "src/reports/reports.resolver.ts",
+      "line": 6,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "ordersToday",
+        "returns": "Int!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Query.shopSettings@/settings",
+      "type": "entry",
+      "label": "Query.shopSettings@/settings",
+      "repo": "api",
+      "file": "src/settings/settings.resolver.ts",
+      "line": 14,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "shopSettings",
+        "returns": "ShopSettings!",
+        "endpoint": "/settings",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Query.stores@/admin",
+      "type": "entry",
+      "label": "Query.stores@/admin",
+      "repo": "api",
+      "file": "src/admin/admin.resolver.ts",
+      "line": 14,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "stores",
+        "returns": "[Store!]!",
+        "endpoint": "/admin",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/admin",
+      "type": "entry",
+      "label": "POST /admin",
+      "repo": "api",
+      "file": "src/graphql/admin-api.module.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/admin",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Store": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Operator": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "email": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "ShopSettings": {
+                "kind": "object",
+                "fields": {
+                  "name": {
+                    "type": "String!"
+                  },
+                  "currency": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Shopper": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Cart": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "items": {
+                    "type": "Int!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "stores": {
+                    "type": "[Store!]!"
+                  }
+                }
+              },
+              "Mutation": {
+                "kind": "object",
+                "fields": {}
+              }
+            }
+          },
+          "listen": [
+            {
+              "port": 3000,
+              "file": "src/main.ts",
+              "line": 7
+            }
+          ],
+          "fieldsAt": "/admin"
+        }
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Store": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Operator": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "email": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "ShopSettings": {
+                "kind": "object",
+                "fields": {
+                  "name": {
+                    "type": "String!"
+                  },
+                  "currency": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Shopper": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Cart": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "items": {
+                    "type": "Int!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "me": {
+                    "type": "Shopper!"
+                  }
+                }
+              },
+              "Mutation": {
+                "kind": "object",
+                "fields": {
+                  "addToCart": {
+                    "type": "Cart!",
+                    "args": {
+                      "productId": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "listen": [
+            {
+              "port": 3000,
+              "file": "src/main.ts",
+              "line": 7
+            }
+          ],
+          "fieldsAt": "/graphql",
+          "open": "its plugin useRecordQueries answers requests itself"
+        }
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/settings",
+      "type": "entry",
+      "label": "POST /settings",
+      "repo": "api",
+      "file": "src/graphql/settings-api.module.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/settings",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Store": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Operator": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "email": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "ShopSettings": {
+                "kind": "object",
+                "fields": {
+                  "name": {
+                    "type": "String!"
+                  },
+                  "currency": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Shopper": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Cart": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "items": {
+                    "type": "Int!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "me": {
+                    "type": "Operator!"
+                  },
+                  "shopSettings": {
+                    "type": "ShopSettings!"
+                  }
+                }
+              },
+              "Mutation": {
+                "kind": "object",
+                "fields": {
+                  "renameShop": {
+                    "type": "ShopSettings!",
+                    "args": {
+                      "name": {
+                        "type": "String!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "listen": [
+            {
+              "port": 3000,
+              "file": "src/main.ts",
+              "line": 7
+            }
+          ],
+          "fieldsAt": "/settings"
+        }
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 20,
+          "filesRead": 20,
+          "filesUnreadable": 0,
+          "classes": 17,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "graphql-resolvers"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
+          "functions": 11,
+          "components": 6,
+          "hooks": 2,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_action:web#src/settings/SettingsPage.tsx:29:11",
+      "type": "ui_action",
+      "label": "onSubmit={() => rename({ variables: { name: 'renamed' } })}",
+      "repo": "web",
+      "file": "src/settings/SettingsPage.tsx",
+      "line": 29,
+      "kind": "event",
+      "meta": {
+        "event": "onSubmit",
+        "handler": "() => rename({ variables: { name: 'renamed' } })",
+        "component": "web#src/settings/SettingsPage.tsx:SettingsPage",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/store/CartButton.tsx:37:13",
+      "type": "ui_action",
+      "label": "onClick={() => add({ variables: { productId } })}",
+      "repo": "web",
+      "file": "src/store/CartButton.tsx",
+      "line": 37,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => add({ variables: { productId } })",
+        "component": "web#src/store/CartButton.tsx:CartButton",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/admin/StoresPage.tsx:15:20",
+      "type": "ui_api_call",
+      "label": "query Stores /${…}/admin",
+      "repo": "web",
+      "file": "src/admin/StoresPage.tsx",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${…}/admin",
+        "path": "/${…}/admin",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "literal",
+        "graphql": {
+          "operation": "query",
+          "name": "Stores",
+          "fields": [
+            {
+              "field": "stores",
+              "line": 7,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 8
+                },
+                {
+                  "field": "name",
+                  "line": 9
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/admin/StoresPage.tsx",
+            "line": 6
+          },
+          "library": "apollo"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/reports/OrdersToday.tsx:11:20",
+      "type": "ui_api_call",
+      "label": "query OrdersToday ?",
+      "repo": "web",
+      "file": "src/reports/OrdersToday.tsx",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "literal",
+        "graphql": {
+          "operation": "query",
+          "name": "OrdersToday",
+          "fields": [
+            {
+              "field": "ordersToday",
+              "line": 5
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/reports/OrdersToday.tsx",
+            "line": 4
+          },
+          "library": "apollo"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/seed.ts:14:9@5:26",
+      "type": "ui_api_call",
+      "label": "POST /settings",
+      "repo": "web",
+      "file": "src/seed.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_SERVER_URL}/settings",
+        "path": "/settings",
+        "baseUrlEnv": "VITE_SERVER_URL",
+        "responseType": null,
+        "bodyType": "{query:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "query"
+        ],
+        "headerKeys": [
+          "content-type"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "through": "graphqlRequest",
+        "graphql": {
+          "operation": "mutation",
+          "name": "SeedShop",
+          "fields": [
+            {
+              "field": "renameShop",
+              "arguments": [
+                "name"
+              ],
+              "line": 17,
+              "selections": [
+                {
+                  "field": "name",
+                  "line": 18
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/seed.ts",
+            "line": 16
+          },
+          "library": "fetch"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/settings/SettingsPage.tsx:26:20",
+      "type": "ui_api_call",
+      "label": "query ShopSettings /${…}/settings",
+      "repo": "web",
+      "file": "src/settings/SettingsPage.tsx",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${…}/settings",
+        "path": "/${…}/settings",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "literal",
+        "graphql": {
+          "operation": "query",
+          "name": "ShopSettings",
+          "fields": [
+            {
+              "field": "me",
+              "line": 5,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 6
+                },
+                {
+                  "field": "email",
+                  "line": 7
+                }
+              ]
+            },
+            {
+              "field": "shopSettings",
+              "line": 9,
+              "selections": [
+                {
+                  "field": "name",
+                  "line": 10
+                },
+                {
+                  "field": "currency",
+                  "line": 11
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/settings/SettingsPage.tsx",
+            "line": 4
+          },
+          "library": "apollo"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/settings/SettingsPage.tsx:27:20",
+      "type": "ui_api_call",
+      "label": "mutation RenameShop /${…}/settings",
+      "repo": "web",
+      "file": "src/settings/SettingsPage.tsx",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${…}/settings",
+        "path": "/${…}/settings",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "literal",
+        "graphql": {
+          "operation": "mutation",
+          "name": "RenameShop",
+          "fields": [
+            {
+              "field": "renameShop",
+              "arguments": [
+                "name"
+              ],
+              "line": 18,
+              "selections": [
+                {
+                  "field": "name",
+                  "line": 19
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "name",
+              "type": "String!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/settings/SettingsPage.tsx",
+            "line": 17
+          },
+          "library": "apollo"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/store/CartButton.tsx:33:20",
+      "type": "ui_api_call",
+      "label": "query Shopper /${…}/graphql",
+      "repo": "web",
+      "file": "src/store/CartButton.tsx",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${…}/graphql",
+        "path": "/${…}/graphql",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "literal",
+        "graphql": {
+          "operation": "query",
+          "name": "Shopper",
+          "fields": [
+            {
+              "field": "me",
+              "line": 7,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 8
+                },
+                {
+                  "field": "name",
+                  "line": 9
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/store/CartButton.tsx",
+            "line": 6
+          },
+          "library": "apollo"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/store/CartButton.tsx:34:28",
+      "type": "ui_api_call",
+      "label": "query Products /${…}/graphql",
+      "repo": "web",
+      "file": "src/store/CartButton.tsx",
+      "line": 34,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${…}/graphql",
+        "path": "/${…}/graphql",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "literal",
+        "graphql": {
+          "operation": "query",
+          "name": "Products",
+          "fields": [
+            {
+              "field": "products",
+              "line": 24,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 25
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/store/CartButton.tsx",
+            "line": 23
+          },
+          "library": "apollo"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/store/CartButton.tsx:35:17",
+      "type": "ui_api_call",
+      "label": "mutation AddToCart /${…}/graphql",
+      "repo": "web",
+      "file": "src/store/CartButton.tsx",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${…}/graphql",
+        "path": "/${…}/graphql",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "literal",
+        "graphql": {
+          "operation": "mutation",
+          "name": "AddToCart",
+          "fields": [
+            {
+              "field": "addToCart",
+              "arguments": [
+                "productId"
+              ],
+              "line": 16,
+              "selections": [
+                {
+                  "field": "items",
+                  "line": 17
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "productId",
+              "type": "ID!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/store/CartButton.tsx",
+            "line": 15
+          },
+          "library": "apollo"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "web#src/admin/StoresPage.tsx:StoresPage",
+      "type": "ui_component",
+      "label": "StoresPage",
+      "repo": "web",
+      "file": "src/admin/StoresPage.tsx",
+      "line": 14,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/apollo/AppApolloProvider.tsx:AppApolloProvider",
+      "type": "ui_component",
+      "label": "AppApolloProvider",
+      "repo": "web",
+      "file": "src/apollo/AppApolloProvider.tsx",
+      "line": 8,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ children }",
+              "type": "{children:unknown}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/apollo/StoreClientProvider.tsx:StoreClientProvider",
+      "type": "ui_component",
+      "label": "StoreClientProvider",
+      "repo": "web",
+      "file": "src/apollo/StoreClientProvider.tsx",
+      "line": 9,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ children }",
+              "type": "{children:unknown}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/apollo/StoreClientProvider.tsx:useStoreClient",
+      "type": "function",
+      "label": "useStoreClient",
+      "repo": "web",
+      "file": "src/apollo/StoreClientProvider.tsx",
+      "line": 14,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/apollo/useClientFactory.ts:useClientFactory",
+      "type": "function",
+      "label": "useClientFactory",
+      "repo": "web",
+      "file": "src/apollo/useClientFactory.ts",
+      "line": 7,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "options",
+              "type": "{uri?:string}",
+              "optional": true
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/reports/OrdersToday.tsx:OrdersToday",
+      "type": "ui_component",
+      "label": "OrdersToday",
+      "repo": "web",
+      "file": "src/reports/OrdersToday.tsx",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ reportsClient }",
+              "type": "{reportsClient:unknown}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/seed.ts:graphqlRequest",
+      "type": "function",
+      "label": "graphqlRequest",
+      "repo": "web",
+      "file": "src/seed.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "endpoint",
+              "type": "string"
+            },
+            {
+              "name": "query",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/seed.ts:seedShop",
+      "type": "function",
+      "label": "seedShop",
+      "repo": "web",
+      "file": "src/seed.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/settings/SettingsPage.tsx:SettingsPage",
+      "type": "ui_component",
+      "label": "SettingsPage",
+      "repo": "web",
+      "file": "src/settings/SettingsPage.tsx",
+      "line": 25,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/store/CartButton.tsx:CartButton",
+      "type": "ui_component",
+      "label": "CartButton",
+      "repo": "web",
+      "file": "src/store/CartButton.tsx",
+      "line": 31,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ productId }",
+              "type": "{productId:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/app.module.ts:AppModule",
+      "to": "api#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "imports",
+      "confidence": "heuristic",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "api#src/app.module.ts:AppModule",
+      "to": "api#src/graphql/admin-api.module.ts:AdminApiModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12
+    },
+    {
+      "from": "api#src/app.module.ts:AppModule",
+      "to": "api#src/graphql/settings-api.module.ts:SettingsApiModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12
+    },
+    {
+      "from": "api#src/app.module.ts:AppModule",
+      "to": "api#src/reports/reports.module.ts:ReportsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12
+    },
+    {
+      "from": "api#src/app.module.ts:AppModule",
+      "to": "api#src/settings/settings.module.ts:SettingsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12
+    },
+    {
+      "from": "api#src/app.module.ts:AppModule",
+      "to": "api#src/store/store.module.ts:StoreModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12
+    },
+    {
+      "from": "api#src/graphql/admin-api.module.ts:AdminApiModule",
+      "to": "api#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "imports",
+      "confidence": "heuristic",
+      "file": "src/graphql/admin-api.module.ts",
+      "line": 8,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "api#src/graphql/admin-api.module.ts:AdminApiModule",
+      "to": "api#src/admin/admin.module.ts:AdminModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/graphql/admin-api.module.ts",
+      "line": 8
+    },
+    {
+      "from": "api#src/graphql/settings-api.module.ts:SettingsApiModule",
+      "to": "api#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "imports",
+      "confidence": "heuristic",
+      "file": "src/graphql/settings-api.module.ts",
+      "line": 7,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "entry:api:graphql:Mutation.addToCart@/graphql",
+      "to": "api#src/store/store.resolver.ts:StorefrontResolver.addToCart",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:api#Cart",
+      "file": "src/store/store.resolver.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:api:graphql:Mutation.renameShop@/settings",
+      "to": "api#src/settings/settings.resolver.ts:ShopSettingsResolver.renameShop",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:api#ShopSettings",
+      "file": "src/settings/settings.resolver.ts",
+      "line": 19
+    },
+    {
+      "from": "entry:api:graphql:Query.me@/graphql",
+      "to": "api#src/store/store.resolver.ts:StorefrontResolver.me",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:api#Shopper",
+      "file": "src/store/store.resolver.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:api:graphql:Query.me@/settings",
+      "to": "api#src/settings/settings.resolver.ts:ShopSettingsResolver.me",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:api#Operator",
+      "file": "src/settings/settings.resolver.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:api:graphql:Query.ordersToday",
+      "to": "api#src/reports/reports.resolver.ts:ReportsResolver.ordersToday",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "number",
+      "file": "src/reports/reports.resolver.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:api:graphql:Query.shopSettings@/settings",
+      "to": "api#src/settings/settings.resolver.ts:ShopSettingsResolver.shopSettings",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:api#ShopSettings",
+      "file": "src/settings/settings.resolver.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:api:graphql:Query.stores@/admin",
+      "to": "api#src/admin/admin.resolver.ts:StoresResolver.stores",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:api#Store[]",
+      "file": "src/admin/admin.resolver.ts",
+      "line": 14
+    },
+    {
+      "from": "ui_action:web#src/settings/SettingsPage.tsx:29:11",
+      "to": "web#src/settings/SettingsPage.tsx:SettingsPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/settings/SettingsPage.tsx",
+      "line": 29
+    },
+    {
+      "from": "ui_action:web#src/store/CartButton.tsx:37:13",
+      "to": "web#src/store/CartButton.tsx:CartButton",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/store/CartButton.tsx",
+      "line": 37
+    },
+    {
+      "from": "ui_api_call:web#src/admin/StoresPage.tsx:15:20",
+      "to": "entry:api:graphql:Query.stores@/admin",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/admin/StoresPage.tsx",
+      "line": 7,
+      "meta": {
+        "graphql": {
+          "operation": "Stores",
+          "field": "Query.stores"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/admin/StoresPage.tsx:15:20",
+      "to": "entry:api:http:POST:/admin",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/admin/StoresPage.tsx",
+      "line": 15,
+      "meta": {
+        "via": "graphql-path",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/seed.ts:14:9@5:26",
+      "to": "entry:api:graphql:Mutation.renameShop@/settings",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/seed.ts",
+      "line": 17,
+      "meta": {
+        "graphql": {
+          "operation": "SeedShop",
+          "field": "Mutation.renameShop"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/seed.ts:14:9@5:26",
+      "to": "entry:api:http:POST:/settings",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/seed.ts",
+      "line": 14,
+      "params": [
+        "{query:string}"
+      ],
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/settings/SettingsPage.tsx:26:20",
+      "to": "entry:api:graphql:Query.me@/settings",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/settings/SettingsPage.tsx",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "ShopSettings",
+          "field": "Query.me"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/settings/SettingsPage.tsx:26:20",
+      "to": "entry:api:graphql:Query.shopSettings@/settings",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/settings/SettingsPage.tsx",
+      "line": 9,
+      "meta": {
+        "graphql": {
+          "operation": "ShopSettings",
+          "field": "Query.shopSettings"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/settings/SettingsPage.tsx:26:20",
+      "to": "entry:api:http:POST:/settings",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/settings/SettingsPage.tsx",
+      "line": 26,
+      "meta": {
+        "via": "graphql-path",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/settings/SettingsPage.tsx:27:20",
+      "to": "entry:api:graphql:Mutation.renameShop@/settings",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/settings/SettingsPage.tsx",
+      "line": 18,
+      "meta": {
+        "graphql": {
+          "operation": "RenameShop",
+          "field": "Mutation.renameShop"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/settings/SettingsPage.tsx:27:20",
+      "to": "entry:api:http:POST:/settings",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/settings/SettingsPage.tsx",
+      "line": 27,
+      "meta": {
+        "via": "graphql-path",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/store/CartButton.tsx:33:20",
+      "to": "entry:api:graphql:Query.me@/graphql",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/store/CartButton.tsx",
+      "line": 7,
+      "meta": {
+        "graphql": {
+          "operation": "Shopper",
+          "field": "Query.me"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/store/CartButton.tsx:33:20",
+      "to": "entry:api:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/store/CartButton.tsx",
+      "line": 33,
+      "meta": {
+        "via": "graphql-path",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/store/CartButton.tsx:34:28",
+      "to": "entry:api:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/store/CartButton.tsx",
+      "line": 34,
+      "meta": {
+        "via": "graphql-path",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/store/CartButton.tsx:35:17",
+      "to": "entry:api:graphql:Mutation.addToCart@/graphql",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/store/CartButton.tsx",
+      "line": 16,
+      "meta": {
+        "graphql": {
+          "operation": "AddToCart",
+          "field": "Mutation.addToCart"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/store/CartButton.tsx:35:17",
+      "to": "entry:api:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/store/CartButton.tsx",
+      "line": 35,
+      "meta": {
+        "via": "graphql-path",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "web#src/admin/StoresPage.tsx:StoresPage",
+      "to": "ui_api_call:web#src/admin/StoresPage.tsx:15:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/admin/StoresPage.tsx",
+      "line": 15
+    },
+    {
+      "from": "web#src/apollo/AppApolloProvider.tsx:AppApolloProvider",
+      "to": "web#src/apollo/useClientFactory.ts:useClientFactory",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{uri?:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/apollo/AppApolloProvider.tsx",
+      "line": 9
+    },
+    {
+      "from": "web#src/apollo/StoreClientProvider.tsx:StoreClientProvider",
+      "to": "web#src/apollo/useClientFactory.ts:useClientFactory",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{uri?:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/apollo/StoreClientProvider.tsx",
+      "line": 10
+    },
+    {
+      "from": "web#src/reports/OrdersToday.tsx:OrdersToday",
+      "to": "ui_api_call:web#src/reports/OrdersToday.tsx:11:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/OrdersToday.tsx",
+      "line": 11
+    },
+    {
+      "from": "web#src/seed.ts:seedShop",
+      "to": "ui_api_call:web#src/seed.ts:14:9@5:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/seed.ts",
+      "line": 14
+    },
+    {
+      "from": "web#src/seed.ts:seedShop",
+      "to": "web#src/seed.ts:graphqlRequest",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/seed.ts",
+      "line": 14
+    },
+    {
+      "from": "web#src/settings/SettingsPage.tsx:SettingsPage",
+      "to": "ui_api_call:web#src/settings/SettingsPage.tsx:26:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/settings/SettingsPage.tsx",
+      "line": 26
+    },
+    {
+      "from": "web#src/settings/SettingsPage.tsx:SettingsPage",
+      "to": "ui_api_call:web#src/settings/SettingsPage.tsx:27:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/settings/SettingsPage.tsx",
+      "line": 27
+    },
+    {
+      "from": "web#src/store/CartButton.tsx:CartButton",
+      "to": "ui_api_call:web#src/store/CartButton.tsx:33:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/store/CartButton.tsx",
+      "line": 33
+    },
+    {
+      "from": "web#src/store/CartButton.tsx:CartButton",
+      "to": "ui_api_call:web#src/store/CartButton.tsx:34:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/store/CartButton.tsx",
+      "line": 34
+    },
+    {
+      "from": "web#src/store/CartButton.tsx:CartButton",
+      "to": "ui_api_call:web#src/store/CartButton.tsx:35:17",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/store/CartButton.tsx",
+      "line": 35
+    },
+    {
+      "from": "web#src/store/CartButton.tsx:CartButton",
+      "to": "web#src/apollo/StoreClientProvider.tsx:useStoreClient",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/store/CartButton.tsx",
+      "line": 32
+    }
+  ],
+  "types": {
+    "type:api#Cart": {
+      "name": "Cart",
+      "kind": "object",
+      "declaredIn": "api#src/store/store.model.ts",
+      "structuralHash": "6a626ad92ed50137",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "items",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:api#Operator": {
+      "name": "Operator",
+      "kind": "object",
+      "declaredIn": "api#src/settings/settings.model.ts",
+      "structuralHash": "f392a5918b5eac56",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:api#ShopSettings": {
+      "name": "ShopSettings",
+      "kind": "object",
+      "declaredIn": "api#src/settings/settings.model.ts",
+      "structuralHash": "08a47cbb8fa74926",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:api#Shopper": {
+      "name": "Shopper",
+      "kind": "object",
+      "declaredIn": "api#src/store/store.model.ts",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:api#Store": {
+      "name": "Store",
+      "kind": "object",
+      "declaredIn": "api#src/admin/admin.resolver.ts",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app.module.ts",
+      "line": 15,
+      "reason": "module-import-not-installed",
+      "hint": "GraphQLModule is a module of @nestjs/graphql, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
+      "symbol": "AppModule imports GraphQLModule",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "module": "GraphQLModule"
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/graphql/admin-api.module.ts",
+      "line": 11,
+      "reason": "module-import-not-installed",
+      "hint": "GraphQLModule is a module of @nestjs/graphql, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
+      "symbol": "AdminApiModule imports GraphQLModule",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "module": "GraphQLModule"
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/graphql/settings-api.module.ts",
+      "line": 10,
+      "reason": "module-import-not-installed",
+      "hint": "GraphQLModule is a module of @nestjs/graphql, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
+      "symbol": "SettingsApiModule imports GraphQLModule",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "module": "GraphQLModule"
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/graphql/store-graphql.config.ts",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "YogaDriverConfig",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@graphql-yoga/nestjs"
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/reports/reports.resolver.ts",
+      "line": 6,
+      "reason": "graphql-endpoint-unread",
+      "level": "action",
+      "message": "Query.ordersToday is answered here, and no endpoint of api was read to serve it: /graphql serves resolvers tagged store; /admin serves the modules it includes; /settings serves resolvers tagged settings",
+      "hint": "Tag the resolver with the scope of the schema that serves it, or include its module in that schema's options. Where a patch of the GraphQL library gives an untagged resolver a scope, commit the patch where the package manager applies it (a `patch:` dependency, `pnpm.patchedDependencies` or `patches/`) with `Reflect.getMetadata(KEY, …) || 'scope'` on a line it adds.",
+      "symbol": "Query.ordersToday",
+      "adapter": "graphql-resolvers",
+      "service": "api"
+    },
+    {
+      "file": "src/admin/StoresPage.tsx",
+      "line": 14,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/apollo/AppApolloProvider.tsx",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ReactNode",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "web"
+    },
+    {
+      "file": "src/apollo/AppApolloProvider.tsx",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/apollo/StoreClientProvider.tsx",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ReactNode",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "web"
+    },
+    {
+      "file": "src/apollo/StoreClientProvider.tsx",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/apollo/StoreClientProvider.tsx",
+      "line": 11,
+      "reason": "component-unresolved",
+      "level": "info",
+      "message": "<StoreClientContext.Provider> in src/apollo/StoreClientProvider.tsx names nothing the file declares or imports, so what it renders is not joined",
+      "hint": "Import the component, or correct its name.",
+      "symbol": "StoreClientProvider <StoreClientContext.Provider>",
+      "meta": {
+        "cause": "component-unresolved",
+        "why": "missing",
+        "tag": "StoreClientContext.Provider"
+      },
+      "service": "web"
+    },
+    {
+      "file": "src/apollo/StoreClientProvider.tsx",
+      "line": 14,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/apollo/useClientFactory.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/reports/OrdersToday.tsx",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ApolloClient<unknown>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@apollo/client"
+      },
+      "service": "web"
+    },
+    {
+      "file": "src/reports/OrdersToday.tsx",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/reports/OrdersToday.tsx",
+      "line": 11,
+      "reason": "graphql-client-unread",
+      "level": "action",
+      "message": "the operation is sent with a client this could not follow to its address: reportsClient is not bound to a client made in the repository",
+      "hint": "Make the client with its uri written where it is made, or hand it down through a context provider whose value is one, so the endpoint the operation reaches can be read.",
+      "symbol": "useQuery",
+      "service": "web"
+    },
+    {
+      "file": "src/settings/SettingsPage.tsx",
+      "line": 25,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "src/store/CartButton.tsx",
+      "line": 24,
+      "reason": "graphql-field-no-resolver",
+      "level": "info",
+      "message": "Products asks api at /graphql for Query.products, which no resolver of api declares; its plugin useRecordQueries answers requests itself, which may answer it",
+      "hint": "Resolve the field in the service if it is meant to be one, or correct the operation; a field only the server's own code answers is not read.",
+      "symbol": "ui_api_call:web#src/store/CartButton.tsx:34:28"
+    },
+    {
+      "file": "src/store/CartButton.tsx",
+      "line": 31,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    }
+  ]
+}

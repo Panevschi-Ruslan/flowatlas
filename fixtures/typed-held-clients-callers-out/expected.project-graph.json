@@ -1,0 +1,809 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T12:36:21.153Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/index.ts:GET /health@5",
+      "type": "function",
+      "label": "GET /health@5",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /latest@9",
+      "type": "function",
+      "label": "GET /latest@9",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/latest",
+      "type": "entry",
+      "label": "GET /latest",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/latest",
+        "rawPath": "/latest",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/levels",
+      "type": "entry",
+      "label": "GET /levels",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/levels",
+        "rawPath": "/levels",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4600,
+            "file": "src/index.ts",
+            "line": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "functions": 7,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4700,
+            "file": "src/index.ts",
+            "line": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop#src/api.ts:Reader.health",
+      "type": "function",
+      "label": "Reader.health",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 14
+    },
+    {
+      "id": "shop#src/api.ts:Reader.read",
+      "type": "function",
+      "label": "Reader.read",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 10
+    },
+    {
+      "id": "shop#src/api.ts:catalogBoard",
+      "type": "function",
+      "label": "catalogBoard",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:catalogUp",
+      "type": "function",
+      "label": "catalogUp",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:check",
+      "type": "function",
+      "label": "check",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reader",
+              "type": "type:shop#Reader"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:latestProducts",
+      "type": "function",
+      "label": "latestProducts",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:stockBoard",
+      "type": "function",
+      "label": "stockBoard",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:stockLevels",
+      "type": "function",
+      "label": "stockLevels",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:stockUp",
+      "type": "function",
+      "label": "stockUp",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /health@5",
+      "type": "function",
+      "label": "GET /health@5",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /levels@9",
+      "type": "function",
+      "label": "GET /levels@9",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:20:10@11:12",
+      "type": "ui_api_call",
+      "label": "GET /latest",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/latest",
+        "path": "/latest",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Reader.read",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:24:10@11:12",
+      "type": "ui_api_call",
+      "label": "GET /levels",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/levels",
+        "path": "/levels",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Reader.read",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:33:10@11:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Reader.read",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:38:10@11:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 38,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Reader.read",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:50:35@11:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 50,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Reader.read",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:52:33@11:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 52,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Reader.read",
+        "targetService": "stock"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:http:GET:/health",
+      "to": "catalog#src/index.ts:GET /health@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/latest",
+      "to": "catalog#src/index.ts:GET /latest@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/health",
+      "to": "stock#src/index.ts:GET /health@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/levels",
+      "to": "stock#src/index.ts:GET /levels@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "shop#src/api.ts:catalogBoard",
+      "to": "ui_api_call:shop#src/api.ts:50:35@11:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 50
+    },
+    {
+      "from": "shop#src/api.ts:catalogUp",
+      "to": "shop#src/api.ts:check",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:shop#Reader"
+      ],
+      "returns": "type:axios#AxiosResponse<unknown>",
+      "file": "src/api.ts",
+      "line": 33
+    },
+    {
+      "from": "shop#src/api.ts:catalogUp",
+      "to": "ui_api_call:shop#src/api.ts:33:10@11:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 33
+    },
+    {
+      "from": "shop#src/api.ts:latestProducts",
+      "to": "ui_api_call:shop#src/api.ts:20:10@11:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 20
+    },
+    {
+      "from": "shop#src/api.ts:stockBoard",
+      "to": "ui_api_call:shop#src/api.ts:52:33@11:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 52
+    },
+    {
+      "from": "shop#src/api.ts:stockLevels",
+      "to": "ui_api_call:shop#src/api.ts:24:10@11:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 24
+    },
+    {
+      "from": "shop#src/api.ts:stockUp",
+      "to": "shop#src/api.ts:check",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:shop#Reader"
+      ],
+      "returns": "type:axios#AxiosResponse<unknown>",
+      "file": "src/api.ts",
+      "line": 38
+    },
+    {
+      "from": "shop#src/api.ts:stockUp",
+      "to": "ui_api_call:shop#src/api.ts:38:10@11:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 38
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:20:10@11:12",
+      "to": "entry:catalog:http:GET:/latest",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 20,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:13"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:24:10@11:12",
+      "to": "entry:stock:http:GET:/levels",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 24,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:13"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:33:10@11:12",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 33,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:13"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:38:10@11:12",
+      "to": "entry:stock:http:GET:/health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 38,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:13"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:50:35@11:12",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 50,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:13"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:52:33@11:12",
+      "to": "entry:stock:http:GET:/health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 52,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:13"
+      }
+    }
+  ],
+  "types": {
+    "type:axios#AxiosResponse<unknown>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:shop#Reader": {
+      "name": "Reader",
+      "kind": "object",
+      "declaredIn": "shop#src/api.ts",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /health@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 6,
+                "symbol": "GET /health@5 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 10,
+                "symbol": "GET /latest@9 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /health@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 6,
+                "symbol": "GET /health@5 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 10,
+                "symbol": "GET /levels@9 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "stock"
+    }
+  ]
+}

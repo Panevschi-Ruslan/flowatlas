@@ -1,0 +1,141 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-08T17:04:42.289Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "channel:eventbridge/default/ledger/EntrySettled",
+        "to": "consumer:ledger#infra/main.tf:aws_cloudwatch_event_target.settled_jobs",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:eventbridge/default/ledger/EntrySettled|consumes|consumer:ledger#infra/main.tf:aws_cloudwatch_event_target.settled_jobs",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:eventbridge/default/ledger/EntrySettled is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "channel:kinesis/shop-prod-clicks",
+        "to": "consumer:ledger#infra/main.tf:aws_lambda_event_source_mapping.clicks",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:kinesis/shop-prod-clicks|consumes|consumer:ledger#infra/main.tf:aws_lambda_event_source_mapping.clicks",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:kinesis/shop-prod-clicks is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/ship.ts:9:9",
+        "to": "channel:sns/shop-prod-order-events",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sns/shop-prod-order-events|emits|producer:orders#src/ship.ts:9:9",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sns/shop-prod-order-events is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "channel:sqs/shop-prod-audit",
+        "to": "consumer:audit#lib/audit-stack.ts:shop-audit/Index/SqsEventSource:shop-audit/Audit",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:sqs/shop-prod-audit|consumes|consumer:audit#lib/audit-stack.ts:shop-audit/Index/SqsEventSource:shop-audit/Audit",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:sqs/shop-prod-audit is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:ledger#infra/main.tf:aws_lambda_event_source_mapping.clicks.on_failure",
+        "to": "channel:sqs/shop-prod-tally-failures",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/shop-prod-tally-failures|emits|producer:ledger#infra/main.tf:aws_lambda_event_source_mapping.clicks.on_failure",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/shop-prod-tally-failures is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:audit#src/index-audit.ts:13:9",
+        "to": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.jobs",
+        "type": "emits"
+      },
+      "edgeKey": "producer:audit#src/index-audit.ts:13:9|emits|consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.jobs",
+      "direction": "payload",
+      "reason": "message-unparsed",
+      "message": "platform#src/jobs.ts:handler does not parse the text at Records[].body of what it is handed into a declared type",
+      "hint": "Parse the message into a declared type where the handler reads it - `JSON.parse(text) as Order`, or into a variable declared with one - so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:audit#src/index-audit.ts:14:38",
+        "to": "consumer:platform#infra/main.tf:aws_sns_topic_subscription.alerts",
+        "type": "emits"
+      },
+      "edgeKey": "producer:audit#src/index-audit.ts:14:38|emits|consumer:platform#infra/main.tf:aws_sns_topic_subscription.alerts",
+      "direction": "payload",
+      "reason": "delivery-target-unread",
+      "message": "nothing consumer:platform#infra/main.tf:aws_sns_topic_subscription.alerts delivers to is code this project reads",
+      "hint": "The target is not code any configured service holds - an e-mail address, or a function no configured service deploys - so there is nothing to compare the message with. Configure the service that deploys it to compare it."
+    },
+    {
+      "edge": {
+        "from": "producer:ledger#infra/main.tf:aws_cloudwatch_event_target.settled_jobs",
+        "to": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.jobs",
+        "type": "emits"
+      },
+      "edgeKey": "producer:ledger#infra/main.tf:aws_cloudwatch_event_target.settled_jobs|emits|consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.jobs",
+      "direction": "payload",
+      "reason": "sender-forwards",
+      "message": "producer:ledger#infra/main.tf:aws_cloudwatch_event_target.settled_jobs hands on what it is given, and nothing declares its shape",
+      "hint": "Nothing to change at this end. A message forwarded from a channel is compared from the publisher that wrote it when the forwarding wrapping is known; a request a route sends straight to a channel has no declared shape."
+    },
+    {
+      "edge": {
+        "from": "producer:ledger#src/tally.ts:7:41",
+        "to": "consumer:platform#infra/main.tf:aws_sns_topic_subscription.alerts",
+        "type": "emits"
+      },
+      "edgeKey": "producer:ledger#src/tally.ts:7:41|emits|consumer:platform#infra/main.tf:aws_sns_topic_subscription.alerts",
+      "direction": "payload",
+      "reason": "delivery-target-unread",
+      "message": "nothing consumer:platform#infra/main.tf:aws_sns_topic_subscription.alerts delivers to is code this project reads",
+      "hint": "The target is not code any configured service holds - an e-mail address, or a function no configured service deploys - so there is nothing to compare the message with. Configure the service that deploys it to compare it."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/ship.ts:10:9",
+        "to": "consumer:billing#infra/billing.yaml:infra/billing.Resources.InvoicesMapping",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/ship.ts:10:9|emits|consumer:billing#infra/billing.yaml:infra/billing.Resources.InvoicesMapping",
+      "direction": "payload",
+      "reason": "message-unparsed",
+      "message": "billing#src/invoice.ts:handler does not parse the text at Records[].body of what it is handed into a declared type",
+      "hint": "Parse the message into a declared type where the handler reads it - `JSON.parse(text) as Order`, or into a variable declared with one - so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 10,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

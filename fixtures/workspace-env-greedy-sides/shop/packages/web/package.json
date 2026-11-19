@@ -1,0 +1,5 @@
+{
+  "name": "@shop/web",
+  "private": true,
+  "dependencies": { "axios": "^1.7.0", "react": "^18.3.0" }
+}

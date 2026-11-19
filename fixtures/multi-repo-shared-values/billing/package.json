@@ -1,0 +1,12 @@
+{
+  "name": "shop-billing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Billing for a shop, a plain stack deployed by rain.",
+  "scripts": {
+    "deploy": "rain deploy billing.yaml shop-billing --params Stage=prod --config billing-config.yaml --yes"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

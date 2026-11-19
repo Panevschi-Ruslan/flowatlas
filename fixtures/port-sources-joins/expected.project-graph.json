@@ -1,0 +1,2017 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T11:45:11.121Z",
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "koa",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "search",
+      "repo": "./search",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "notify",
+      "repo": "./notify",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "sveltekit",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "admin#src/app/app.component.ts:AppComponent",
+      "type": "ui_component",
+      "label": "AppComponent",
+      "repo": "admin",
+      "file": "src/app/app.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-root"
+      }
+    },
+    {
+      "id": "audit#src/server.ts:GET /events@6",
+      "type": "function",
+      "label": "GET /events@6",
+      "repo": "audit",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "billing#node_modules/@nestjs/config:ConfigModule",
+      "type": "module",
+      "label": "ConfigModule",
+      "repo": "billing",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "billing#src/app.config.ts:default.registerAs@4",
+      "type": "function",
+      "label": "default.registerAs@4",
+      "repo": "billing",
+      "file": "src/app.config.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{port:number}"
+        }
+      }
+    },
+    {
+      "id": "billing#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "billing",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "InvoicesController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "billing#src/invoices.controller.ts:InvoicesController",
+      "type": "provider",
+      "label": "InvoicesController",
+      "repo": "billing",
+      "file": "src/invoices.controller.ts",
+      "line": 3,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "billing#src/invoices.controller.ts:InvoicesController.list",
+      "type": "method",
+      "label": "InvoicesController.list",
+      "repo": "billing",
+      "file": "src/invoices.controller.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "billing#src/main.ts:bootstrap",
+      "type": "function",
+      "label": "bootstrap",
+      "repo": "billing",
+      "file": "src/main.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/app.ts:GET /products@7",
+      "type": "function",
+      "label": "GET /products@7",
+      "repo": "catalog",
+      "file": "src/app.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "config_key:billing#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "billing",
+      "file": "src/app.config.ts",
+      "line": 5,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:billing#app.port",
+      "type": "config_key",
+      "label": "app.port",
+      "repo": "billing",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "key": "app.port",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "entry:audit:http:GET:/events",
+      "type": "entry",
+      "label": "GET /events",
+      "repo": "audit",
+      "file": "src/server.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/events",
+        "rawPath": "/events",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:billing:http:GET:/invoices",
+      "type": "entry",
+      "label": "GET /invoices",
+      "repo": "billing",
+      "file": "src/invoices.controller.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/invoices",
+        "rawPath": "/invoices",
+        "controller": "InvoicesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/products",
+      "type": "entry",
+      "label": "GET /products",
+      "repo": "catalog",
+      "file": "src/app.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products",
+        "rawPath": "/products",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:jobs:http:POST:/jobs/run",
+      "type": "entry",
+      "label": "POST /jobs/run",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/jobs/run",
+        "rawPath": "/jobs/run",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:ledger:http:GET:/entries",
+      "type": "entry",
+      "label": "GET /entries",
+      "repo": "ledger",
+      "file": "src/server.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/entries",
+        "rawPath": "/entries",
+        "adapter": "koa-routes",
+        "registration": "router.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:notify:http:GET:/notices",
+      "type": "entry",
+      "label": "GET /notices",
+      "repo": "notify",
+      "file": "src/server.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/notices",
+        "rawPath": "/notices",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:search:http:GET:/search",
+      "type": "entry",
+      "label": "GET /search",
+      "repo": "search",
+      "file": "src/server.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/search",
+        "rawPath": "/search",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/basket",
+      "type": "entry",
+      "label": "GET /api/basket",
+      "repo": "shop",
+      "file": "src/routes/api/basket/+server.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/basket",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+server",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/stock/:param",
+      "type": "entry",
+      "label": "GET /stock/:param",
+      "repo": "stock",
+      "file": "src/server.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/stock/:param",
+        "rawPath": "/stock/:sku",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "external_api:localhost:5173",
+      "type": "external_api",
+      "label": "localhost:5173",
+      "repo": "web",
+      "meta": {
+        "host": "localhost:5173"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/server.ts:7:9",
+      "type": "http_out",
+      "label": "GET /orders",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 7,
+      "meta": {
+        "method": "GET",
+        "url": "http://orders:3000/orders",
+        "path": "/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "orders:3000",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/server.ts:8:9",
+      "type": "http_out",
+      "label": "GET /search",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "http://search:4000/search",
+        "path": "/search",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "search:4000",
+        "targetService": "search"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/server.ts:9:9",
+      "type": "http_out",
+      "label": "GET /api/basket",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 9,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:5174/api/basket",
+        "path": "/api/basket",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:5174",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "jobs#src/server.ts:POST /jobs/run@6",
+      "type": "function",
+      "label": "POST /jobs/run@6",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ledger#src/server.ts:GET /entries@10",
+      "type": "function",
+      "label": "GET /entries@10",
+      "repo": "ledger",
+      "file": "src/server.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify#src/server.ts:GET /notices@6",
+      "type": "function",
+      "label": "GET /notices@6",
+      "repo": "notify",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders#src/app.ts:GET /orders@6",
+      "type": "function",
+      "label": "GET /orders@6",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:admin",
+      "type": "repo",
+      "label": "admin",
+      "repo": "admin",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "templates": 1,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4300,
+            "file": "angular.json",
+            "line": 16,
+            "devServer": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:audit",
+      "type": "repo",
+      "label": "audit",
+      "repo": "audit",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "file": "src/server.ts",
+            "line": 10,
+            "setting": "AUDIT_PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:billing",
+      "type": "repo",
+      "label": "billing",
+      "repo": "billing",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3004,
+            "file": "src/main.ts",
+            "line": 9,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3003,
+            "file": "src/app.ts",
+            "line": 11
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "file": "src/server.ts",
+            "line": 13,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:ledger",
+      "type": "repo",
+      "label": "ledger",
+      "repo": "ledger",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "koa-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3005,
+            "file": "src/server.ts",
+            "line": 16,
+            "setting": "LEDGER_PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:notify",
+      "type": "repo",
+      "label": "notify",
+      "repo": "notify",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:search",
+      "type": "repo",
+      "label": "search",
+      "repo": "search",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 10,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@sveltejs/kit": 1
+          },
+          "functions": 1,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "svelte"
+          ],
+          "entry": [
+            "sveltekit-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 5174,
+            "file": "vite.config.ts",
+            "line": 7,
+            "devServer": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3002,
+            "file": "src/server.ts",
+            "line": 10,
+            "handed": "src/main.ts:3"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "functions": 1,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        },
+        "listen": [
+          {
+            "port": 4180,
+            "file": "package.json",
+            "line": 7,
+            "devServer": true
+          },
+          {
+            "port": 5173,
+            "file": "vite.config.ts",
+            "line": 7,
+            "default": true,
+            "devServer": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "search#src/server.ts:GET /search@6",
+      "type": "function",
+      "label": "GET /search@6",
+      "repo": "search",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/routes/api/basket/+server.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "shop",
+      "file": "src/routes/api/basket/+server.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "stock#src/server.ts:GET /stock/:sku@5",
+      "type": "function",
+      "label": "GET /stock/:sku@5",
+      "repo": "stock",
+      "file": "src/server.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:16:15",
+      "type": "ui_action",
+      "label": "onClick={loadOrders}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 16,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadOrders",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:17:15",
+      "type": "ui_action",
+      "label": "onClick={loadStock}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 17,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadStock",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:18:15",
+      "type": "ui_action",
+      "label": "onClick={loadProducts}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadProducts",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:19:15",
+      "type": "ui_action",
+      "label": "onClick={loadInvoices}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadInvoices",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:20:15",
+      "type": "ui_action",
+      "label": "onClick={loadEntries}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 20,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadEntries",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:21:15",
+      "type": "ui_action",
+      "label": "onClick={loadEvents}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadEvents",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:22:15",
+      "type": "ui_action",
+      "label": "onClick={loadSearch}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 22,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadSearch",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:23:15",
+      "type": "ui_action",
+      "label": "onClick={loadNotices}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 23,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadNotices",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:24:15",
+      "type": "ui_action",
+      "label": "onClick={loadBasket}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 24,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadBasket",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:25:15",
+      "type": "ui_action",
+      "label": "onClick={runJob}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 25,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "runJob",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:26:15",
+      "type": "ui_action",
+      "label": "onClick={proxied}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "proxied",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:10:29",
+      "type": "ui_api_call",
+      "label": "GET /notices",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3008/notices",
+        "path": "/notices",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:3008",
+        "targetService": "notify"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:11:28",
+      "type": "ui_api_call",
+      "label": "GET /api/basket",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:5174/api/basket",
+        "path": "/api/basket",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:5174",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:12:24",
+      "type": "ui_api_call",
+      "label": "POST /jobs/run",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "http://localhost:3009/jobs/run",
+        "path": "/jobs/run",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:3009",
+        "targetService": "jobs"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:13:25",
+      "type": "ui_api_call",
+      "label": "GET /products",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:5173/products",
+        "path": "/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:5173",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:3:28",
+      "type": "ui_api_call",
+      "label": "GET /orders",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3001/orders",
+        "path": "/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:3001",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:4:27",
+      "type": "ui_api_call",
+      "label": "GET /stock/ABC-1",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3002/stock/ABC-1",
+        "path": "/stock/ABC-1",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:3002",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:5:30",
+      "type": "ui_api_call",
+      "label": "GET /products",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3003/products",
+        "path": "/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:3003",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:6:30",
+      "type": "ui_api_call",
+      "label": "GET /invoices",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3004/invoices",
+        "path": "/invoices",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:3004",
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:7:29",
+      "type": "ui_api_call",
+      "label": "GET /entries",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3005/entries",
+        "path": "/entries",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:3005",
+        "targetService": "ledger"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:8:28",
+      "type": "ui_api_call",
+      "label": "GET /events",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3006/events",
+        "path": "/events",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:3006",
+        "targetService": "audit"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:9:28",
+      "type": "ui_api_call",
+      "label": "GET /search",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4007/search",
+        "path": "/search",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:4007",
+        "targetService": "search"
+      }
+    },
+    {
+      "id": "web#src/Dashboard.tsx:Dashboard",
+      "type": "ui_component",
+      "label": "Dashboard",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "billing#src/app.config.ts:default.registerAs@4",
+      "to": "config_key:billing#PORT",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/app.config.ts",
+      "line": 5
+    },
+    {
+      "from": "billing#src/app.module.ts:AppModule",
+      "to": "billing#node_modules/@nestjs/config:ConfigModule",
+      "type": "imports",
+      "confidence": "heuristic",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "billing#src/main.ts:bootstrap",
+      "to": "config_key:billing#app.port",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:audit:http:GET:/events",
+      "to": "audit#src/server.ts:GET /events@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:billing:http:GET:/invoices",
+      "to": "billing#src/invoices.controller.ts:InvoicesController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown[]",
+      "file": "src/invoices.controller.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:catalog:http:GET:/products",
+      "to": "catalog#src/app.ts:GET /products@7",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:jobs:http:POST:/jobs/run",
+      "to": "jobs#src/server.ts:POST /jobs/run@6",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:ledger:http:GET:/entries",
+      "to": "ledger#src/server.ts:GET /entries@10",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:notify:http:GET:/notices",
+      "to": "notify#src/server.ts:GET /notices@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/orders",
+      "to": "orders#src/app.ts:GET /orders@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:search:http:GET:/search",
+      "to": "search#src/server.ts:GET /search@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/basket",
+      "to": "shop#src/routes/api/basket/+server.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{items:undefined[]}",
+      "file": "src/routes/api/basket/+server.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/stock/:param",
+      "to": "stock#src/server.ts:GET /stock/:sku@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{sku:any;count:number}",
+      "file": "src/server.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "params": "{sku:string}"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/server.ts:7:9",
+      "to": "entry:orders:http:GET:/orders",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 7,
+      "meta": {
+        "via": "host",
+        "targetService": "orders",
+        "listensAt": "src/app.ts:10, in the container orders (docker-compose.yml)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/server.ts:8:9",
+      "to": "entry:search:http:GET:/search",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 8,
+      "meta": {
+        "via": "host",
+        "targetService": "search",
+        "listensAt": "src/server.ts:10 (PORT from docker-compose.yml (search)), in the container search (docker-compose.yml)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/server.ts:9:9",
+      "to": "entry:shop:http:GET:/api/basket",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 9,
+      "meta": {
+        "via": "host",
+        "targetService": "shop",
+        "listensAt": "vite.config.ts:7"
+      }
+    },
+    {
+      "from": "jobs#src/server.ts:POST /jobs/run@6",
+      "to": "http_out:jobs#src/server.ts:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 7
+    },
+    {
+      "from": "jobs#src/server.ts:POST /jobs/run@6",
+      "to": "http_out:jobs#src/server.ts:8:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 8
+    },
+    {
+      "from": "jobs#src/server.ts:POST /jobs/run@6",
+      "to": "http_out:jobs#src/server.ts:9:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:16:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 16
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:17:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 17
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:18:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 18
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:19:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 19
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:20:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 20
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:21:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 21
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:22:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 22
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:23:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 23
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:24:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 24
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:25:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 25
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:26:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 26
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:10:29",
+      "to": "entry:notify:http:GET:/notices",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/Dashboard.tsx",
+      "line": 10,
+      "meta": {
+        "via": "host",
+        "targetService": "notify"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:11:28",
+      "to": "entry:shop:http:GET:/api/basket",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 11,
+      "meta": {
+        "via": "host",
+        "targetService": "shop",
+        "listensAt": "vite.config.ts:7"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:12:24",
+      "to": "entry:jobs:http:POST:/jobs/run",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/Dashboard.tsx",
+      "line": 12,
+      "meta": {
+        "via": "host",
+        "targetService": "jobs",
+        "listensAt": "src/server.ts:13 (PORT from package.json (jobs-runner)), published as 3009 by package.json"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:13:25",
+      "to": "entry:catalog:http:GET:/products",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/Dashboard.tsx",
+      "line": 13,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:13:25",
+      "to": "external_api:localhost:5173",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 13
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:3:28",
+      "to": "entry:orders:http:GET:/orders",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/Dashboard.tsx",
+      "line": 3,
+      "meta": {
+        "via": "host",
+        "targetService": "orders",
+        "listensAt": "src/app.ts:10, published as 3001 by docker-compose.yml"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:4:27",
+      "to": "entry:stock:http:GET:/stock/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 4,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/server.ts:10 (handed at src/main.ts:3)"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:5:30",
+      "to": "entry:catalog:http:GET:/products",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 5,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/app.ts:11"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:6:30",
+      "to": "entry:billing:http:GET:/invoices",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/Dashboard.tsx",
+      "line": 6,
+      "meta": {
+        "via": "host",
+        "targetService": "billing",
+        "listensAt": "src/main.ts:9 (PORT)"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:7:29",
+      "to": "entry:ledger:http:GET:/entries",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/Dashboard.tsx",
+      "line": 7,
+      "meta": {
+        "via": "host",
+        "targetService": "ledger",
+        "listensAt": "src/server.ts:16 (LEDGER_PORT)"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:8:28",
+      "to": "entry:audit:http:GET:/events",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/Dashboard.tsx",
+      "line": 8,
+      "meta": {
+        "via": "host",
+        "targetService": "audit",
+        "listensAt": "src/server.ts:10 (AUDIT_PORT from .env.example)"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:9:28",
+      "to": "entry:search:http:GET:/search",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/Dashboard.tsx",
+      "line": 9,
+      "meta": {
+        "via": "host",
+        "targetService": "search",
+        "listensAt": "src/server.ts:10 (PORT from docker-compose.yml (search)), published as 4007 by docker-compose.yml"
+      }
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:10:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 10
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:11:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 11
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:12:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 12
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:13:25",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 13
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:3:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 3
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:4:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 4
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:5:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 5
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:6:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 6
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:7:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 7
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:8:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 8
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:9:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 9
+    }
+  ],
+  "types": {
+    "type:express#Request<any,any,any>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:koa#Context": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "koa",
+      "structuralHash": "002a3105e543026c",
+      "meta": {
+        "declKind": "external",
+        "package": "koa"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app.module.ts",
+      "line": 7,
+      "reason": "module-import-not-installed",
+      "hint": "ConfigModule is a module of @nestjs/config, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
+      "symbol": "AppModule imports ConfigModule",
+      "meta": {
+        "package": "@nestjs/config",
+        "module": "ConfigModule"
+      },
+      "service": "billing"
+    },
+    {
+      "service": "notify",
+      "file": "docker-compose.yml",
+      "line": 15,
+      "reason": "published-port-unheard",
+      "level": "info",
+      "message": "docker-compose.yml publishes port 8080 of notify (notify) as 3008, but notify's code listens on 3000 (src/server.ts:10)",
+      "hint": "Map the published port to the port the server listens on (3008:<that port>), or check that the container's environment gives the server 8080. A request to localhost:3008 is still joined to notify by the file.",
+      "symbol": "notify:3008:8080",
+      "meta": {
+        "published": 3008,
+        "container": 8080,
+        "listens": [
+          3000
+        ]
+      }
+    }
+  ]
+}

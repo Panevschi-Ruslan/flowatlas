@@ -1,0 +1,9 @@
+@  shop-reports-prod-close                                       reports/serverless.yml:11
+  -> handler                                                     reports/src/close-month.ts:6
+    $  INVOICES_QUEUE_URL                                        reports/src/close-month.ts:7
+    ~  message sqs/shop-prod-invoices                            reports/src/close-month.ts:7
+      ~  sqs/shop-prod-invoices                                  billing.yaml:37
+        => billing ~  mapping billing.Resources.InvoicesMapping  billing/billing.yaml:37
+          @  shop-prod-invoice                                   billing/billing.yaml:28
+            -> handler                                           billing/src/invoice.ts:4
+unresolved on this path: 0

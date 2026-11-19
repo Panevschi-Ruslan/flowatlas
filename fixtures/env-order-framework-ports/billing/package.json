@@ -1,0 +1,10 @@
+{
+  "name": "billing",
+  "private": true,
+  "scripts": {
+    "start": "NODE_ENV=production bun src/main.ts"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

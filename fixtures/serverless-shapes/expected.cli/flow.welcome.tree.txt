@@ -1,0 +1,11 @@
+~  event cognito/club-members/post_confirmation           members/services/notices/serverless.yml:59
+  -> handler                                              members/services/notices/src/notices/welcome.ts:6
+    $  NOTICES_QUEUE_URL                                  members/services/notices/src/notices/digest.ts:7
+    ~  message sqs/${…}@resources.Resources.NoticesQueue  members/services/notices/src/notices/welcome.ts:7
+      ~  sqs/${…}@resources.Resources.NoticesQueue        services/notices/serverless.yml:34
+        ~  mapping functions.send-notice.events[0]        members/services/notices/serverless.yml:34
+          @  notices-prod-send-notice                     members/services/notices/serverless.yml:31
+            -> handler                                    members/services/notices/src/notices/send-notice.ts:4
+            ~  message sqs/notices-prod-failed            members/services/notices/serverless.yml:40
+              ~  sqs/notices-prod-failed                  services/notices/serverless.yml:40
+unresolved on this path: 0

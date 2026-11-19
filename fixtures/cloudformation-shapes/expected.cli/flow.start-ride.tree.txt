@@ -1,0 +1,9 @@
+@  POST /rides                                               rides/stacks/rides.yaml:101
+  -> handler                                                 rides/src/rides/start-ride.ts:6
+    $  DOCKS_QUEUE_URL                                       rides/src/rides/start-ride.ts:7
+    ~  message sqs/${…}@stacks.docks.Resources.RecountQueue  rides/src/rides/start-ride.ts:7
+      ~  sqs/${…}@stacks.docks.Resources.RecountQueue        stacks/rides.yaml:174
+        ~  mapping stacks/rides.Resources.DockMapping        rides/stacks/rides.yaml:174
+          @  rides-harbour-dock                              rides/stacks/rides.yaml:51
+            -> handler                                       rides/src/docks/dock.ts:2
+unresolved on this path: 0

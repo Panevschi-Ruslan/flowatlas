@@ -1,0 +1,484 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T12:56:26.208Z",
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./apps/orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop",
+      "repo": "./apps/shop",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:order.placed",
+      "type": "channel",
+      "label": "order.placed",
+      "repo": "orders",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 11,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:orders#src/orders/orders.consumer.ts:OrdersConsumer.onPlaced",
+      "type": "consumer",
+      "label": "OrdersConsumer.onPlaced",
+      "repo": "orders",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 11,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:orders:event:order.placed"
+      }
+    },
+    {
+      "id": "entry:orders:event:order.placed",
+      "type": "entry",
+      "label": "event order.placed",
+      "repo": "orders",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 11,
+      "kind": "event",
+      "meta": {
+        "pattern": "order.placed",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/checkout",
+      "type": "entry",
+      "label": "POST /checkout",
+      "repo": "shop",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/checkout",
+        "rawPath": "/checkout",
+        "controller": "CheckoutController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "orders#src/orders.module.ts:OrdersModule",
+      "type": "module",
+      "label": "OrdersModule",
+      "repo": "orders",
+      "file": "src/orders.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersConsumer"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.consumer.ts:OrdersConsumer",
+      "type": "provider",
+      "label": "OrdersConsumer",
+      "repo": "orders",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.consumer.ts:OrdersConsumer.onPlaced",
+      "type": "method",
+      "label": "OrdersConsumer.onPlaced",
+      "repo": "orders",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:shop-workspace#OrderPlaced"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 3,
+      "kind": "injectable",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.record",
+      "type": "method",
+      "label": "OrdersService.record",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:shop#../../libs/order-events/src/order-events.ts:22:5",
+      "type": "producer",
+      "label": "event order.placed",
+      "repo": "shop",
+      "file": "../../libs/order-events/src/order-events.ts",
+      "line": 22,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "nestjs-microservice"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "@nestjs/microservices": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "nestjs-microservice"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop#../../libs/order-events/src/order-events.ts:OrderEvents",
+      "type": "provider",
+      "label": "OrderEvents",
+      "repo": "shop",
+      "file": "../../libs/order-events/src/order-events.ts",
+      "line": 17,
+      "kind": "injectable",
+      "meta": {
+        "module": "ShopModule"
+      }
+    },
+    {
+      "id": "shop#../../libs/order-events/src/order-events.ts:OrderEvents.placed",
+      "type": "method",
+      "label": "OrderEvents.placed",
+      "repo": "shop",
+      "file": "../../libs/order-events/src/order-events.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:shop-workspace#OrderPlaced"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "shop",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
+      "id": "shop#node_modules/@nestjs/microservices:ClientsModule",
+      "type": "module",
+      "label": "ClientsModule",
+      "repo": "shop",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
+      "id": "shop#src/checkout/checkout.controller.ts:CheckoutController",
+      "type": "provider",
+      "label": "CheckoutController",
+      "repo": "shop",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "ShopModule"
+      }
+    },
+    {
+      "id": "shop#src/checkout/checkout.controller.ts:CheckoutController.checkout",
+      "type": "method",
+      "label": "CheckoutController.checkout",
+      "repo": "shop",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{orderId:string;total:number}"
+            }
+          ],
+          "returns": "{accepted:boolean}"
+        }
+      }
+    },
+    {
+      "id": "shop#src/shop.module.ts:ShopModule",
+      "type": "module",
+      "label": "ShopModule",
+      "repo": "shop",
+      "file": "src/shop.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "CheckoutController"
+        ],
+        "providers": [
+          "OrderEvents"
+        ],
+        "exports": []
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:order.placed",
+      "to": "consumer:orders#src/orders/orders.consumer.ts:OrdersConsumer.onPlaced",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 11
+    },
+    {
+      "from": "consumer:orders#src/orders/orders.consumer.ts:OrdersConsumer.onPlaced",
+      "to": "orders#src/orders/orders.consumer.ts:OrdersConsumer.onPlaced",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:shop-workspace#OrderPlaced"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:orders:event:order.placed",
+      "to": "orders#src/orders/orders.consumer.ts:OrdersConsumer.onPlaced",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:shop-workspace#OrderPlaced"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:shop:http:POST:/checkout",
+      "to": "shop#src/checkout/checkout.controller.ts:CheckoutController.checkout",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{orderId:string;total:number}"
+      ],
+      "returns": "{accepted:boolean}",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 8,
+      "meta": {
+        "body": "{orderId:string;total:number}"
+      }
+    },
+    {
+      "from": "orders#src/orders/orders.consumer.ts:OrdersConsumer",
+      "to": "orders#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 9
+    },
+    {
+      "from": "orders#src/orders/orders.consumer.ts:OrdersConsumer.onPlaced",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.record",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 13
+    },
+    {
+      "from": "producer:shop#../../libs/order-events/src/order-events.ts:22:5",
+      "to": "channel:order.placed",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:shop-workspace#OrderPlaced"
+      ],
+      "file": "../../libs/order-events/src/order-events.ts",
+      "line": 22
+    },
+    {
+      "from": "shop#../../libs/order-events/src/order-events.ts:OrderEvents",
+      "to": "shop#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "../../libs/order-events/src/order-events.ts",
+      "line": 19
+    },
+    {
+      "from": "shop#../../libs/order-events/src/order-events.ts:OrderEvents.placed",
+      "to": "producer:shop#../../libs/order-events/src/order-events.ts:22:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../../libs/order-events/src/order-events.ts",
+      "line": 22
+    },
+    {
+      "from": "shop#src/checkout/checkout.controller.ts:CheckoutController",
+      "to": "shop#../../libs/order-events/src/order-events.ts:OrderEvents",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "shop#src/checkout/checkout.controller.ts:CheckoutController.checkout",
+      "to": "shop#../../libs/order-events/src/order-events.ts:OrderEvents.placed",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:shop-workspace#OrderPlaced"
+      ],
+      "returns": "void",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "shop#src/shop.module.ts:ShopModule",
+      "to": "shop#node_modules/@nestjs/microservices:ClientsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/shop.module.ts",
+      "line": 7,
+      "meta": {
+        "moduleKind": "external"
+      }
+    }
+  ],
+  "types": {
+    "type:shop-workspace#OrderPlaced": {
+      "name": "OrderPlaced",
+      "kind": "external",
+      "declaredIn": "shop-workspace",
+      "structuralHash": "281bceaef4d8f6e3",
+      "meta": {
+        "declKind": "external",
+        "package": "shop-workspace"
+      }
+    }
+  },
+  "unresolved": []
+}

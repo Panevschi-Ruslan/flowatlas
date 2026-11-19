@@ -24,10 +24,12 @@
  * is the altitude, which is above the core and below every framework.
  */
 import {
+  factoryMembers,
   isServiceSource,
   memberFunction,
   methodBodies,
   moduleFunctions,
+  onlyHandsBackMembers,
   placedFunction,
   type ClassMethod,
   type NamedFunction,
@@ -84,6 +86,13 @@ export interface Scope extends Holder {
    * declared inside another one would share (R156).
    */
   fn?: NamedFunction;
+  /**
+   * Parts of the body that are bodies of their own, read by their own scopes:
+   * the members of the object a factory hands back, where the factory does
+   * more than hand it back (P288). A walk of the body passes over them, so a
+   * call written in a member is held once, by the member.
+   */
+  leaveOut?: ReadonlySet<TsNode>;
 }
 
 /**
@@ -174,7 +183,24 @@ const moduleLevelFunctions = function* (
   for (const fn of moduleFunctions(source)) {
     if (seen.has(fn.declaration)) continue;
     seen.add(fn.declaration);
-    yield scopeOf(ctx, fn);
+    // A factory handing back an object of functions written whole: each member
+    // is a function of its own, which a call through the object lands on
+    // (P276). A factory that does nothing else is the members and nothing more,
+    // so what they hold is said once, by them; one that does more keeps its own
+    // body too.
+    const members = factoryMembers(fn).filter((member) => !seen.has(member.declaration));
+    for (const member of members) {
+      seen.add(member.declaration);
+      yield scopeOf(ctx, member);
+    }
+    if (members.length > 0 && onlyHandsBackMembers(fn)) {
+      // Named already, so not a function written in place either.
+      const written = fn.body.getParent();
+      if (written !== undefined) seen.add(written);
+      continue;
+    }
+    // One that does more keeps its own body, its members' parts left to them (P288).
+    yield members.length === 0 ? scopeOf(ctx, fn) : { ...scopeOf(ctx, fn), leaveOut: new Set(members.map((member) => member.declaration)) };
   }
 };
 

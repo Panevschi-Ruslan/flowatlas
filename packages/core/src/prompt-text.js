@@ -826,6 +826,8 @@ export const renderPrompt = (subject, limits = PROMPT_LIMITS) => {
   const body = [
     ...head,
     ...(isCheck && subject.task === 'close' ? promptSection('Task', promptTaskLines(subject)) : []),
+    // What the comment above it says about why (P234), in the author's words.
+    ...promptSection('Why', (subject.notes ?? []).map((note) => `- ${note}`)),
     ...promptSection('In front of it', promptAccessLines(subject.access)),
     ...(fails.length === 0 ? [] : promptSection(`Can fail with ${promptFailChips(fails).join(' · ')}`, promptFailLines(fails, bounds))),
     ...(subject.failuresSeen === undefined

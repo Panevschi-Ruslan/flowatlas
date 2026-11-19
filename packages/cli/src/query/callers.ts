@@ -124,6 +124,7 @@ const KIND_LABEL: Record<string, [string, string]> = {
   rpc: ['rpc entry', 'rpc entries'],
   cron: ['cron job', 'cron jobs'],
   workflow: ['workflow', 'workflows'],
+  task: ['task', 'tasks'],
 };
 
 export interface ReachableGroup {

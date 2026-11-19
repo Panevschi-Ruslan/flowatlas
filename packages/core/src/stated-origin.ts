@@ -1,5 +1,6 @@
+import { fieldRead, fieldsRead } from './adapters/locator.js';
 import { packageOfSpecifier } from './adapters/manifest.js';
-import { Node, SyntaxKind, type Node as TsNode } from 'ts-morph';
+import { Node, SyntaxKind, type Node as TsNode, type PropertyDeclaration } from 'ts-morph';
 
 /**
  * Which package and which class the source says a receiver is, when the checker
@@ -48,11 +49,36 @@ const constructedBy = (initializer: TsNode | undefined): TsNode | undefined => {
 };
 
 /**
+ * What a field declared with neither a type nor a value is given in its
+ * class's constructor, where the constructor gives it one value and nothing
+ * else in the class gives it another (P299): `private client;` beside
+ * `this.client = new Sdk.Store()`.
+ */
+const constructorAssignment = (declaration: PropertyDeclaration): TsNode | undefined => {
+  const owner = declaration.getParent();
+  if (declaration.isStatic() || (!Node.isClassDeclaration(owner) && !Node.isClassExpression(owner))) return undefined;
+  const name = declaration.getName();
+  const values: TsNode[] = [];
+  let elsewhere = false;
+  owner.forEachDescendant((node) => {
+    if (!Node.isBinaryExpression(node) || node.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) return;
+    const left = node.getLeft();
+    if (!Node.isPropertyAccessExpression(left) || !Node.isThisExpression(left.getExpression()) || left.getName() !== name) return;
+    if (node.getFirstAncestorByKind(SyntaxKind.Constructor)?.getParent() === owner) values.push(node.getRight());
+    else elsewhere = true;
+  });
+  return values.length === 1 && !elsewhere ? values[0] : undefined;
+};
+
+/**
  * Where a declaration states the class of what it holds: its annotation, or the
  * construction it was initialised with.
  */
 const statedBy = (declaration: TsNode): TsNode | undefined => {
-  if (Node.isVariableDeclaration(declaration) || Node.isPropertyDeclaration(declaration)) {
+  if (Node.isPropertyDeclaration(declaration)) {
+    return declaration.getTypeNode() ?? constructedBy(declaration.getInitializer() ?? constructorAssignment(declaration));
+  }
+  if (Node.isVariableDeclaration(declaration)) {
     return declaration.getTypeNode() ?? constructedBy(declaration.getInitializer());
   }
   if (Node.isParameterDeclaration(declaration) || Node.isPropertySignature(declaration)) {
@@ -124,6 +150,79 @@ export const importOf = (binding: TsNode): { module: string; exported?: string }
   return undefined;
 };
 
+/** The containers whose element type is their last type argument, read as written. */
+const KEYED_CONTAINERS: ReadonlySet<string> = new Set(['Record', 'Map', 'ReadonlyMap', 'Partial', 'Readonly']);
+const LISTS: ReadonlySet<string> = new Set(['Array', 'ReadonlyArray']);
+
+/**
+ * The type a container's annotation says each of its entries is.
+ *
+ * `Record<QueueName, Queue>`, `Map<string, Queue>`, `Queue[]`, `{ [name:
+ * string]: Queue }`: a registry of a library's clients keyed by what each one
+ * is for. A `Partial` or a `Readonly` of one is the same registry.
+ */
+const entryOf = (statement: TsNode | undefined, depth = 0): TsNode | undefined => {
+  if (statement === undefined || depth > 2) return undefined;
+  if (Node.isArrayTypeNode(statement)) return statement.getElementTypeNode();
+  if (Node.isTypeLiteral(statement)) {
+    const [index] = statement.getIndexSignatures();
+    return index?.getReturnTypeNode();
+  }
+  // `{ [name in QueueName]?: Queue }`: one entry per key of a union (P286).
+  if (Node.isMappedTypeNode(statement)) return statement.getTypeNode();
+  if (!Node.isTypeReference(statement)) return undefined;
+  const name = statement.getTypeName().getText();
+  const args = statement.getTypeArguments();
+  if (name === 'Partial' || name === 'Readonly') return entryOf(args[0], depth + 1);
+  if (KEYED_CONTAINERS.has(name)) return args.at(-1);
+  if (LISTS.has(name)) return args[0];
+  return undefined;
+};
+
+/** The declaration a name or `this.name` stands for, past an import. */
+const declaredAs = (node: TsNode): TsNode | undefined => {
+  const symbol = node.getSymbol();
+  return (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
+};
+
+/**
+ * A registry and the key a value is looked up in it by: `this.queues[name]`
+ * or `this.queues.get(name)`.
+ */
+export const registryOf = (receiver: TsNode): { registry: TsNode; key: TsNode } | undefined => {
+  if (Node.isElementAccessExpression(receiver)) {
+    const key = receiver.getArgumentExpression();
+    return key === undefined ? undefined : { registry: receiver.getExpression(), key };
+  }
+  if (!Node.isCallExpression(receiver)) return undefined;
+  const callee = receiver.getExpression();
+  const [key, ...rest] = receiver.getArguments();
+  if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'get' || key === undefined || rest.length > 0) return undefined;
+  return { registry: callee.getExpression(), key };
+};
+
+/** The entry of a registry a receiver is, as the registry's annotation states it. */
+const registryEntryOf = (receiver: TsNode): TsNode | undefined => {
+  const registry = registryOf(receiver)?.registry;
+  if (registry === undefined) return undefined;
+  if (!Node.isIdentifier(registry) && !Node.isPropertyAccessExpression(registry)) return undefined;
+  const declaration = declaredAs(registry);
+  if (declaration === undefined) return undefined;
+  if (!Node.isVariableDeclaration(declaration) && !Node.isPropertyDeclaration(declaration) && !Node.isParameterDeclaration(declaration)) {
+    return undefined;
+  }
+  const annotation = declaration.getTypeNode();
+  if (annotation !== undefined) return entryOf(annotation);
+  // `new Map<string, Queue>()`, or a value asserted to be one, says the same
+  // with no annotation.
+  const initial = declaration.getInitializer();
+  if (initial !== undefined && Node.isAsExpression(initial)) return entryOf(initial.getTypeNode());
+  if (initial === undefined || !Node.isNewExpression(initial)) return undefined;
+  const name = initial.getExpression().getText();
+  const args = initial.getTypeArguments();
+  return KEYED_CONTAINERS.has(name) ? args.at(-1) : LISTS.has(name) ? args[0] : undefined;
+};
+
 /** The node that states a receiver's class: its construction, or what declared it. */
 const statementOf = (receiver: TsNode): TsNode | undefined => {
   let current = receiver;
@@ -133,12 +232,20 @@ const statementOf = (receiver: TsNode): TsNode | undefined => {
       continue;
     }
     if (Node.isNewExpression(current)) return current.getExpression();
+    // An entry of a registry of clients is the class the registry says it
+    // holds: `this.queues[name].add(…)` on `queues: Record<QueueName, Queue>`
+    // is a call on a `Queue` whether or not the package is installed (P267).
+    // A field read by a key, `Registry[KEY]` or `this['queue']`, is the field (P328).
+    const keyed = Node.isElementAccessExpression(current) ? fieldRead(current) : undefined;
+    if (keyed !== undefined) return statedBy(keyed);
+    if (Node.isElementAccessExpression(current) || Node.isCallExpression(current)) return registryEntryOf(current);
     if (!Node.isIdentifier(current) && !Node.isPropertyAccessExpression(current)) return undefined;
     // A client constructed in one module of the repository and imported into
     // another is declared where it was constructed, and that module is the
     // repository's own, so the checker follows the import with nothing installed.
     const symbol = current.getSymbol();
-    const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
+    // A field read through what stands for its class under `any`, `R.queue`, is the field (P328).
+    const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0] ?? (Node.isPropertyAccessExpression(current) ? fieldRead(current) : undefined);
     return declaration === undefined ? undefined : statedBy(declaration);
   }
   return undefined;
@@ -146,7 +253,23 @@ const statementOf = (receiver: TsNode): TsNode | undefined => {
 
 export const statedOrigin = (receiver: TsNode): StatedOrigin | undefined => {
   const statement = statementOf(receiver);
-  if (statement === undefined) return undefined;
+  if (statement !== undefined) return originOf(statement);
+  // A read that may be the field of either of several classes, each declaring
+  // its own, states the class every one of those fields states (P332).
+  let read = receiver;
+  while (Node.isParenthesizedExpression(read) || Node.isNonNullExpression(read)) read = read.getExpression();
+  const fields = fieldsRead(read);
+  if (fields.length < 2) return undefined;
+  const origins = fields.map((field) => {
+    const stated = statedBy(field);
+    return stated === undefined ? undefined : originOf(stated);
+  });
+  const [first] = origins;
+  return first !== undefined && origins.every((each) => each?.package === first.package && each.typeName === first.typeName) ? first : undefined;
+};
+
+/** The class a statement names, as the package it is imported from exports it. */
+const originOf = (statement: TsNode): StatedOrigin | undefined => {
   const names = namesOf(statement);
   if (names === undefined) return undefined;
   const imported = importOf(names.root);

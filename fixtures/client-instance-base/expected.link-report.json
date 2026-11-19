@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-05T22:10:41.094Z",
+  "configHash": "663d3c50b3e8",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "vue",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 9,
+      "edges": 8,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 886,
+      "packages": {
+        "name": "client-instance-base-admin",
+        "runtime": [
+          "axios",
+          "ofetch",
+          "vue"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 2,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1121,
+      "packages": {
+        "name": "client-instance-base-billing",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 7,
+      "edges": 3,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 908,
+      "packages": {
+        "name": "client-instance-base-console",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 2,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1128,
+      "packages": {
+        "name": "client-instance-base-orders",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 14,
+      "edges": 12,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 888,
+      "packages": {
+        "name": "client-instance-base-shop",
+        "runtime": [
+          "axios",
+          "ky",
+          "ofetch",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 9,
+    "resolved": 8,
+    "unresolved": 1,
+    "byReason": {
+      "ambiguous-route-target": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 4,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 4,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "shop",
+      "file": "src/Items.tsx",
+      "line": 11,
+      "reason": "ambiguous-route-target",
+      "message": "billing and orders both answer GET /items",
+      "hint": "Set services[].apiTarget on the frontend to say which service its settings key names.",
+      "symbol": "ui_api_call:shop#src/Items.tsx:11:28"
+    }
+  ],
+  "totals": {
+    "nodes": 43,
+    "edges": 34,
+    "types": 4,
+    "missed": 2,
+    "sites": 2,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 2
+  }
+}

@@ -1,0 +1,595 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-09T21:50:45.004Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:13:12",
+        "to": "entry:storefront:http:GET:/api/basket",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:13:12|http_calls|entry:storefront:http:GET:/api/basket",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "storefront",
+        "typeId": "string|type:storefront#BasketItem[]|{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+        "symbol": "storefront#pages/api/basket.ts:handler"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "type:storefront#BasketItem[]",
+        "symbol": "storefront#gateways/api.gateway.ts:Api.getBasket"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:storefront#gateways/api.gateway.ts:13:12",
+            "to": "entry:storefront:http:GET:/api/basket",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:storefront#gateways/api.gateway.ts:13:12|http_calls|entry:storefront:http:GET:/api/basket",
+          "direction": "response",
+          "sender": {
+            "service": "storefront",
+            "typeId": "string|type:storefront#BasketItem[]|{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+            "symbol": "storefront#pages/api/basket.ts:handler"
+          },
+          "receiver": {
+            "service": "storefront",
+            "typeId": "type:storefront#BasketItem[]",
+            "symbol": "storefront#gateways/api.gateway.ts:Api.getBasket"
+          },
+          "typeId": "type:storefront#BasketItem[]",
+          "field": "",
+          "expected": "type:storefront#BasketItem[]",
+          "actual": "string",
+          "rule": null,
+          "message": "sender storefront sends `string` where receiver storefront expects `type:storefront#BasketItem[]`; on string, one of the 3 shapes this may answer with",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:storefront#gateways/api.gateway.ts:13:12",
+            "to": "entry:storefront:http:GET:/api/basket",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:storefront#gateways/api.gateway.ts:13:12|http_calls|entry:storefront:http:GET:/api/basket",
+          "direction": "response",
+          "sender": {
+            "service": "storefront",
+            "typeId": "string|type:storefront#BasketItem[]|{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+            "symbol": "storefront#pages/api/basket.ts:handler"
+          },
+          "receiver": {
+            "service": "storefront",
+            "typeId": "type:storefront#BasketItem[]",
+            "symbol": "storefront#gateways/api.gateway.ts:Api.getBasket"
+          },
+          "typeId": "type:storefront#BasketItem[]",
+          "field": "",
+          "expected": "type:storefront#BasketItem[]",
+          "actual": "{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+          "rule": null,
+          "message": "sender storefront sends `{items:type:storefront#BasketItem[];shipping:{cost:number}}` where receiver storefront expects `type:storefront#BasketItem[]`; on {items,shipping}, one of the 3 shapes this may answer with",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:16:12",
+        "to": "entry:storefront:http:POST:/api/basket",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:16:12|http_calls|entry:storefront:http:POST:/api/basket",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "storefront",
+        "typeId": "string|type:storefront#BasketItem[]|{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+        "symbol": "storefront#pages/api/basket.ts:handler"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "type:storefront#BasketItem[]",
+        "symbol": "storefront#gateways/api.gateway.ts:Api.addToBasket"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:storefront#gateways/api.gateway.ts:16:12",
+            "to": "entry:storefront:http:POST:/api/basket",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:storefront#gateways/api.gateway.ts:16:12|http_calls|entry:storefront:http:POST:/api/basket",
+          "direction": "response",
+          "sender": {
+            "service": "storefront",
+            "typeId": "string|type:storefront#BasketItem[]|{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+            "symbol": "storefront#pages/api/basket.ts:handler"
+          },
+          "receiver": {
+            "service": "storefront",
+            "typeId": "type:storefront#BasketItem[]",
+            "symbol": "storefront#gateways/api.gateway.ts:Api.addToBasket"
+          },
+          "typeId": "type:storefront#BasketItem[]",
+          "field": "",
+          "expected": "type:storefront#BasketItem[]",
+          "actual": "string",
+          "rule": null,
+          "message": "sender storefront sends `string` where receiver storefront expects `type:storefront#BasketItem[]`; on string, one of the 3 shapes this may answer with",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:storefront#gateways/api.gateway.ts:16:12",
+            "to": "entry:storefront:http:POST:/api/basket",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:storefront#gateways/api.gateway.ts:16:12|http_calls|entry:storefront:http:POST:/api/basket",
+          "direction": "response",
+          "sender": {
+            "service": "storefront",
+            "typeId": "string|type:storefront#BasketItem[]|{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+            "symbol": "storefront#pages/api/basket.ts:handler"
+          },
+          "receiver": {
+            "service": "storefront",
+            "typeId": "type:storefront#BasketItem[]",
+            "symbol": "storefront#gateways/api.gateway.ts:Api.addToBasket"
+          },
+          "typeId": "type:storefront#BasketItem[]",
+          "field": "",
+          "expected": "type:storefront#BasketItem[]",
+          "actual": "{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+          "rule": null,
+          "message": "sender storefront sends `{items:type:storefront#BasketItem[];shipping:{cost:number}}` where receiver storefront expects `type:storefront#BasketItem[]`; on {items,shipping}, one of the 3 shapes this may answer with",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:22:12",
+        "to": "entry:storefront:http:POST:/api/checkout",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:22:12|http_calls|entry:storefront:http:POST:/api/checkout",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "storefront",
+        "typeId": "{placed:boolean}",
+        "symbol": "storefront#pages/api/checkout.ts:placeOrder"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "{placed:boolean}",
+        "symbol": "storefront#gateways/api.gateway.ts:Api.placeOrder"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:25:12",
+        "to": "entry:storefront:http:ALL:/api/catalog",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:25:12|http_calls|entry:storefront:http:ALL:/api/catalog",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "storefront",
+        "typeId": "{id:string;name:string}[]",
+        "symbol": "storefront#pages/api/catalog/index.ts:ALL /api/catalog@6"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "{id:string;name:string}[]",
+        "symbol": "storefront#gateways/api.gateway.ts:Api.listProducts"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:28:12",
+        "to": "entry:storefront:http:GET:/api/stores",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:28:12|http_calls|entry:storefront:http:GET:/api/stores",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "storefront",
+        "typeId": "{id:string;city:string}[]",
+        "symbol": "storefront#app/api/stores/route.ts:readStores"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "{id:string;city:string}[]",
+        "symbol": "storefront#gateways/api.gateway.ts:Api.listStores"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:13:12",
+        "to": "entry:storefront:http:GET:/api/basket",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:13:12|http_calls|entry:storefront:http:GET:/api/basket",
+      "direction": "response",
+      "sender": {
+        "service": "storefront",
+        "typeId": "string|type:storefront#BasketItem[]|{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+        "symbol": "storefront#pages/api/basket.ts:handler"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "type:storefront#BasketItem[]",
+        "symbol": "storefront#gateways/api.gateway.ts:Api.getBasket"
+      },
+      "typeId": "type:storefront#BasketItem[]",
+      "field": "",
+      "expected": "type:storefront#BasketItem[]",
+      "actual": "string",
+      "rule": null,
+      "message": "sender storefront sends `string` where receiver storefront expects `type:storefront#BasketItem[]`; on string, one of the 3 shapes this may answer with",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:13:12",
+        "to": "entry:storefront:http:GET:/api/basket",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:13:12|http_calls|entry:storefront:http:GET:/api/basket",
+      "direction": "response",
+      "sender": {
+        "service": "storefront",
+        "typeId": "string|type:storefront#BasketItem[]|{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+        "symbol": "storefront#pages/api/basket.ts:handler"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "type:storefront#BasketItem[]",
+        "symbol": "storefront#gateways/api.gateway.ts:Api.getBasket"
+      },
+      "typeId": "type:storefront#BasketItem[]",
+      "field": "",
+      "expected": "type:storefront#BasketItem[]",
+      "actual": "{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+      "rule": null,
+      "message": "sender storefront sends `{items:type:storefront#BasketItem[];shipping:{cost:number}}` where receiver storefront expects `type:storefront#BasketItem[]`; on {items,shipping}, one of the 3 shapes this may answer with",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:16:12",
+        "to": "entry:storefront:http:POST:/api/basket",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:16:12|http_calls|entry:storefront:http:POST:/api/basket",
+      "direction": "response",
+      "sender": {
+        "service": "storefront",
+        "typeId": "string|type:storefront#BasketItem[]|{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+        "symbol": "storefront#pages/api/basket.ts:handler"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "type:storefront#BasketItem[]",
+        "symbol": "storefront#gateways/api.gateway.ts:Api.addToBasket"
+      },
+      "typeId": "type:storefront#BasketItem[]",
+      "field": "",
+      "expected": "type:storefront#BasketItem[]",
+      "actual": "string",
+      "rule": null,
+      "message": "sender storefront sends `string` where receiver storefront expects `type:storefront#BasketItem[]`; on string, one of the 3 shapes this may answer with",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:16:12",
+        "to": "entry:storefront:http:POST:/api/basket",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:16:12|http_calls|entry:storefront:http:POST:/api/basket",
+      "direction": "response",
+      "sender": {
+        "service": "storefront",
+        "typeId": "string|type:storefront#BasketItem[]|{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+        "symbol": "storefront#pages/api/basket.ts:handler"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "type:storefront#BasketItem[]",
+        "symbol": "storefront#gateways/api.gateway.ts:Api.addToBasket"
+      },
+      "typeId": "type:storefront#BasketItem[]",
+      "field": "",
+      "expected": "type:storefront#BasketItem[]",
+      "actual": "{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+      "rule": null,
+      "message": "sender storefront sends `{items:type:storefront#BasketItem[];shipping:{cost:number}}` where receiver storefront expects `type:storefront#BasketItem[]`; on {items,shipping}, one of the 3 shapes this may answer with",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:13:12",
+        "to": "entry:storefront:http:GET:/api/basket",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:13:12|http_calls|entry:storefront:http:GET:/api/basket",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#gateways/api.gateway.ts:Api.getBasket declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:16:12",
+        "to": "entry:storefront:http:POST:/api/basket",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:16:12|http_calls|entry:storefront:http:POST:/api/basket",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#gateways/api.gateway.ts:Api.addToBasket declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:19:12",
+        "to": "entry:storefront:http:DELETE:/api/basket",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:19:12|http_calls|entry:storefront:http:DELETE:/api/basket",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#gateways/api.gateway.ts:Api.emptyBasket declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:19:12",
+        "to": "entry:storefront:http:DELETE:/api/basket",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:19:12|http_calls|entry:storefront:http:DELETE:/api/basket",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "storefront#gateways/api.gateway.ts:Api.emptyBasket declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:22:12",
+        "to": "entry:storefront:http:POST:/api/checkout",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:22:12|http_calls|entry:storefront:http:POST:/api/checkout",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#gateways/api.gateway.ts:Api.placeOrder declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:25:12",
+        "to": "entry:storefront:http:ALL:/api/catalog",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:25:12|http_calls|entry:storefront:http:ALL:/api/catalog",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#gateways/api.gateway.ts:Api.listProducts declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#gateways/api.gateway.ts:28:12",
+        "to": "entry:storefront:http:GET:/api/stores",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#gateways/api.gateway.ts:28:12|http_calls|entry:storefront:http:GET:/api/stores",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#gateways/api.gateway.ts:Api.listStores declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#gateways/api.gateway.ts:13:12@15:26",
+        "to": "entry:storefront:http:GET:/api/basket",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#gateways/api.gateway.ts:13:12@15:26|hits|entry:storefront:http:GET:/api/basket",
+      "direction": "request",
+      "reason": "body-already-serialised",
+      "message": "storefront#gateways/api.gateway.ts:Api has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#gateways/api.gateway.ts:13:12@15:26",
+        "to": "entry:storefront:http:GET:/api/basket",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#gateways/api.gateway.ts:13:12@15:26|hits|entry:storefront:http:GET:/api/basket",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "storefront#gateways/api.gateway.ts:Api declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#gateways/api.gateway.ts:16:12@15:26",
+        "to": "entry:storefront:http:POST:/api/basket",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#gateways/api.gateway.ts:16:12@15:26|hits|entry:storefront:http:POST:/api/basket",
+      "direction": "request",
+      "reason": "body-already-serialised",
+      "message": "storefront#gateways/api.gateway.ts:Api has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#gateways/api.gateway.ts:16:12@15:26",
+        "to": "entry:storefront:http:POST:/api/basket",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#gateways/api.gateway.ts:16:12@15:26|hits|entry:storefront:http:POST:/api/basket",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "storefront#gateways/api.gateway.ts:Api declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#gateways/api.gateway.ts:19:12@15:26",
+        "to": "entry:storefront:http:DELETE:/api/basket",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#gateways/api.gateway.ts:19:12@15:26|hits|entry:storefront:http:DELETE:/api/basket",
+      "direction": "request",
+      "reason": "body-already-serialised",
+      "message": "storefront#gateways/api.gateway.ts:Api has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#gateways/api.gateway.ts:19:12@15:26",
+        "to": "entry:storefront:http:DELETE:/api/basket",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#gateways/api.gateway.ts:19:12@15:26|hits|entry:storefront:http:DELETE:/api/basket",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "storefront#gateways/api.gateway.ts:Api declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#gateways/api.gateway.ts:22:12@15:26",
+        "to": "entry:storefront:http:POST:/api/checkout",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#gateways/api.gateway.ts:22:12@15:26|hits|entry:storefront:http:POST:/api/checkout",
+      "direction": "request",
+      "reason": "no-type-on-receiver",
+      "message": "storefront#pages/api/checkout.ts:placeOrder reads no typed body from the request it is handed",
+      "hint": "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#gateways/api.gateway.ts:22:12@15:26",
+        "to": "entry:storefront:http:POST:/api/checkout",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#gateways/api.gateway.ts:22:12@15:26|hits|entry:storefront:http:POST:/api/checkout",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "storefront#gateways/api.gateway.ts:Api declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#gateways/api.gateway.ts:25:12@15:26",
+        "to": "entry:storefront:http:ALL:/api/catalog",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#gateways/api.gateway.ts:25:12@15:26|hits|entry:storefront:http:ALL:/api/catalog",
+      "direction": "request",
+      "reason": "no-type-on-receiver",
+      "message": "storefront#pages/api/catalog/index.ts:ALL /api/catalog@6 reads no typed body from the request it is handed",
+      "hint": "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#gateways/api.gateway.ts:25:12@15:26",
+        "to": "entry:storefront:http:ALL:/api/catalog",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#gateways/api.gateway.ts:25:12@15:26|hits|entry:storefront:http:ALL:/api/catalog",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "storefront#gateways/api.gateway.ts:Api declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#gateways/api.gateway.ts:28:12@15:26",
+        "to": "entry:storefront:http:GET:/api/stores",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#gateways/api.gateway.ts:28:12@15:26|hits|entry:storefront:http:GET:/api/stores",
+      "direction": "request",
+      "reason": "no-type-on-receiver",
+      "message": "storefront#app/api/stores/route.ts:readStores reads no typed body from the request it is handed",
+      "hint": "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#gateways/api.gateway.ts:28:12@15:26",
+        "to": "entry:storefront:http:GET:/api/stores",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#gateways/api.gateway.ts:28:12@15:26|hits|entry:storefront:http:GET:/api/stores",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "storefront#gateways/api.gateway.ts:Api declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 5,
+    "shared": 0,
+    "identical": 3,
+    "hash_differs": 2,
+    "unchecked": 19,
+    "errors": 4,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

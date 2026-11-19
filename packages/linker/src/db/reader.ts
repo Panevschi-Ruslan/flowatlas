@@ -520,6 +520,15 @@ export class GraphDb {
     };
   }
 
+  /**
+   * The database whole, as one file at `path` (P236): its write-ahead log
+   * folded in, which a copy of the file alone can miss. What a team's bundle
+   * carries.
+   */
+  copyTo(path: string): void {
+    this.#db.prepare('VACUUM INTO ?').run(path);
+  }
+
   close(): void {
     this.#db.close();
   }

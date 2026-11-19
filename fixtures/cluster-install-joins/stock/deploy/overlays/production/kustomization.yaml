@@ -1,0 +1,15 @@
+resources:
+  - ../../base
+patches:
+  - target:
+      kind: Service
+      name: stock
+    patch: |-
+      - op: replace
+        path: /spec/ports/0/port
+        value: 8080
+helmCharts:
+  - name: stock-admin
+    releaseName: stock-admin
+    valuesInline:
+      port: 9090

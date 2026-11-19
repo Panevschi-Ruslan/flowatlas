@@ -85,6 +85,26 @@ export const declarationOf = (node: TsNode): TsNode | undefined => {
 };
 
 /**
+ * The name a class is declared with, where an expression reads it: `SendMailJob.name`.
+ *
+ * A queue's jobs are named after the classes that handle them more often than
+ * by any word - `queue.add(SendMailJob.name, data)` beside
+ * `@Process(SendMailJob.name)` - and the class's declaration is the constant
+ * both ends read. Only a named class that declares no static `name` of its
+ * own, which would be what the expression reads instead (P267).
+ */
+const classNameRead = (node: TsNode): string | undefined => {
+  if (!Node.isPropertyAccessExpression(node) || node.getName() !== 'name') return undefined;
+  const symbol = node.getExpression().getSymbol();
+  const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
+  if (declaration === undefined || !Node.isClassDeclaration(declaration)) return undefined;
+  const name = declaration.getName();
+  if (name === undefined) return undefined;
+  const own = declaration.getStaticMember('name');
+  return own === undefined ? name : undefined;
+};
+
+/**
  * Reads a compile-time constant out of an expression.
  *
  * Two routes to an answer: the type checker, which already knows the value of
@@ -161,6 +181,9 @@ export const evaluateExpression = (expr: TsNode, depth = 0): StaticValue => {
       ? resolvedValue(left.value + right.value)
       : resolvedValue(`${left.value}${right.value}`);
   }
+
+  const className = classNameRead(node);
+  if (className !== undefined) return resolvedValue(className);
 
   // A literal type already carries the value: string enum members, `const`
   // bindings and `as const` all land here without any walking.

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T03:49:37.413Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T18:48:11.850Z",
   "services": [
     {
       "name": "circulation",
@@ -388,6 +388,15 @@
         "api": "library-circulation",
         "function": "library-create-loan",
         "declaredAs": "aws_apigatewayv2_route.create_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-circulation"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -407,6 +416,15 @@
         "api": "library-circulation",
         "function": "library-renew-loan",
         "declaredAs": "aws_apigatewayv2_route.renew_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-circulation"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

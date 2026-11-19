@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T11:02:03.825Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T18:48:30.959Z",
   "services": [
     {
       "name": "members",
@@ -205,6 +205,15 @@
         "api": "library-kiosk",
         "function": "library-members-kiosk",
         "declaredAs": "aws_lb_listener_rule.kiosk_checkout",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-kiosk"
+          }
+        ],
         "by": "load-balancer",
         "hosts": [
           "kiosk.library.example"

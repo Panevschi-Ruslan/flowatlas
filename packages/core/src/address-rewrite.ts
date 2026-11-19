@@ -1,0 +1,416 @@
+import type { Node as TsNode } from 'ts-morph';
+import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
+import { isSomewhere, underBase, type ReadAddress } from './under-base.js';
+
+/**
+ * A function that rewrites every request's address before it goes out, read
+ * the same way by every front-end reader (P239, P244).
+ *
+ * Two readers meet this shape: one where the framework's client is rewritten
+ * by a class or a function the injector runs, one where an installed client
+ * runs a function the repository hands it (a request interceptor, a hook run
+ * before each request). What the two must never disagree about is which
+ * conditions leave a rewrite certain and how a base is taken out of
+ * `base + address`, so both are said here, below both (I12).
+ */
+
+const unwrap = (node: TsNode): TsNode => {
+  let current = node;
+  while (Node.isParenthesizedExpression(current) || Node.isAsExpression(current) || Node.isNonNullExpression(current)) {
+    current = current.getExpression();
+  }
+  return current;
+};
+
+/**
+ * Whether a condition only asks whether the address is already absolute:
+ * `url.startsWith('http')`, `url.includes('://')`, `/^https?:/.test(url)`,
+ * alone, negated or joined. Such a guard changes nothing a reader records,
+ * because an absolute address is never put under a base anyway
+ * ({@link underBase}).
+ */
+export const asksAbsolute = (condition: TsNode, isAddress: (node: TsNode) => boolean): boolean => {
+  const target = unwrap(condition);
+  if (Node.isPrefixUnaryExpression(target) && target.getOperatorToken() === SyntaxKind.ExclamationToken) {
+    return asksAbsolute(target.getOperand(), isAddress);
+  }
+  if (Node.isBinaryExpression(target)) {
+    const operator = target.getOperatorToken().getKind();
+    if (operator === SyntaxKind.BarBarToken || operator === SyntaxKind.AmpersandAmpersandToken) {
+      return asksAbsolute(target.getLeft(), isAddress) && asksAbsolute(target.getRight(), isAddress);
+    }
+    return false;
+  }
+  if (!Node.isCallExpression(target)) return false;
+  const callee = target.getExpression();
+  if (!Node.isPropertyAccessExpression(callee)) return false;
+  const [argument] = target.getArguments();
+  if (argument === undefined) return false;
+  if (['startsWith', 'includes'].includes(callee.getName()) && isAddress(callee.getExpression())) {
+    return (Node.isStringLiteral(argument) || Node.isNoSubstitutionTemplateLiteral(argument)) && /^(https?:?(\/\/)?|:\/\/|\/\/)$/.test(argument.getLiteralText());
+  }
+  if (callee.getName() === 'test' && isAddress(argument)) {
+    const pattern = unwrap(callee.getExpression());
+    return Node.isRegularExpressionLiteral(pattern) && /http|:\\?\/\\?\//.test(pattern.getText());
+  }
+  return false;
+};
+
+/**
+ * The conditions a node sits behind inside a function: the branches around it
+ * and the guards written before it in the same block, which decide whether it
+ * is reached at all.
+ */
+export const conditionsAround = (node: TsNode, fn: TsNode): TsNode[] => {
+  const conditions: TsNode[] = [];
+  let child: TsNode = node;
+  for (let at = node.getParent(); at !== undefined && at !== fn; child = at, at = at.getParent()) {
+    if (Node.isIfStatement(at) && child !== at.getExpression()) conditions.push(at.getExpression());
+    if (Node.isConditionalExpression(at) && child !== at.getCondition()) conditions.push(at.getCondition());
+    if (Node.isBinaryExpression(at) && child === at.getRight()) {
+      const operator = at.getOperatorToken().getKind();
+      if (operator === SyntaxKind.AmpersandAmpersandToken || operator === SyntaxKind.BarBarToken || operator === SyntaxKind.QuestionQuestionToken) {
+        conditions.push(at.getLeft());
+      }
+    }
+    if (Node.isBlock(at)) {
+      for (const statement of at.getStatements()) {
+        if (statement === child) break;
+        if (Node.isIfStatement(statement)) conditions.push(statement.getExpression());
+      }
+    }
+  }
+  return conditions;
+};
+
+/** `scheme://host` and what follows it, in a base written as text. */
+const ABSOLUTE = /^([a-z][a-z0-9+.-]*):\/\/([^/?#]+)([^?#]*)/i;
+
+/**
+ * A base written as text, read as an address: `/api/v1` is a path, and
+ * `https://api.example.test/api` a host with a path after it (P280). Read as
+ * a path whole, the second put the scheme and the host in front of every
+ * route it was asked for, `/https:/api.example.test/api/orders`, and joined
+ * nothing.
+ */
+export const literalAddress = (text: string): ReadAddress => {
+  const absolute = ABSOLUTE.exec(text);
+  if (absolute === null) return { url: text, path: text, baseUrlEnv: null, host: null, via: 'literal', guessed: false };
+  return { url: text, path: absolute[3] === '' ? '/' : (absolute[3] ?? '/'), baseUrlEnv: null, host: (absolute[2] ?? '').toLowerCase(), via: 'literal', guessed: false };
+};
+
+/**
+ * The base a rewrite of the address puts in front of it: `base + address`, or
+ * `` `${base}${address}` `` with any text between the two. `isAddress` says
+ * which expression is the address the request already had, and `read` reads a
+ * base the way the asking reader reads every other one.
+ */
+export const prefixOfRewrite = (
+  written: TsNode,
+  isAddress: (node: TsNode) => boolean,
+  read: (node: TsNode) => ReadAddress,
+): ReadAddress | undefined => {
+  const value = unwrap(written);
+  if (Node.isBinaryExpression(value) && value.getOperatorToken().getKind() === SyntaxKind.PlusToken) {
+    if (!isAddress(value.getRight())) return undefined;
+    const base = read(value.getLeft());
+    return isSomewhere(base) ? base : undefined;
+  }
+  if (!Node.isTemplateExpression(value)) return undefined;
+  const spans = value.getTemplateSpans();
+  const last = spans[spans.length - 1];
+  if (last === undefined || !isAddress(last.getExpression()) || last.getLiteral().getLiteralText() !== '') return undefined;
+  const head = value.getHead().getLiteralText();
+  const before = spans.slice(0, -1);
+  if (before.length === 0) return head === '' ? undefined : literalAddress(head);
+  if (before.length > 1 || head !== '') return undefined;
+  const [span] = before;
+  if (span === undefined) return undefined;
+  const base = read(span.getExpression());
+  if (!isSomewhere(base)) return undefined;
+  const tail = span.getLiteral().getLiteralText();
+  return tail === '' || tail === '/' ? base : underBase(base, literalAddress(tail.startsWith('/') ? tail : `/${tail}`));
+};
+
+/**
+ * What a condition about the address a request writes says of one address:
+ * `true` or `false`, or `undefined` where the part it asks about is a hole
+ * nobody read (P280).
+ */
+export type AddressTest = (written: string) => boolean | undefined;
+
+/** The holes an address is written with: a span nobody read, a parameter. */
+const HOLE = /\$\{…\}|:param\b/;
+
+/** The text an address writes before its first hole, and after its last. */
+const readEnds = (written: string): { head: string; tail: string; whole: boolean } => {
+  const pieces = written.split(HOLE);
+  return { head: pieces[0] ?? '', tail: pieces[pieces.length - 1] ?? '', whole: !HOLE.test(written) };
+};
+
+const textOf = (node: TsNode | undefined): string | undefined => {
+  if (node === undefined) return undefined;
+  const target = unwrap(node);
+  return Node.isStringLiteral(target) || Node.isNoSubstitutionTemplateLiteral(target) ? target.getLiteralText() : undefined;
+};
+
+const STRING_TESTS: Readonly<Record<string, (written: string, text: string) => boolean | undefined>> = {
+  startsWith: (written, text) => {
+    const { head, whole } = readEnds(written);
+    if (whole || head.length >= text.length) return written.startsWith(text);
+    return text.startsWith(head) ? undefined : false;
+  },
+  endsWith: (written, text) => {
+    const { tail, whole } = readEnds(written);
+    if (whole || tail.length >= text.length) return written.endsWith(text);
+    return text.endsWith(tail) ? undefined : false;
+  },
+  includes: (written, text) => (written.split(HOLE).some((piece) => piece.includes(text)) ? true : HOLE.test(written) ? undefined : false),
+};
+
+/** A test turned round. */
+export const notTest = (test: AddressTest): AddressTest => (written) => {
+  const answer = test(written);
+  return answer === undefined ? undefined : !answer;
+};
+
+/** Tests joined: every one holds (`all`), or any one does. */
+export const joinedTests = (tests: readonly AddressTest[], all: boolean): AddressTest => (written) => {
+  const answers = tests.map((test) => test(written));
+  if (answers.includes(!all)) return !all;
+  return answers.includes(undefined) ? undefined : all;
+};
+
+/**
+ * A condition read as a test of the address a request writes (P280):
+ * `url.startsWith('/api')`, `url.endsWith('.json')`, `url.includes('/assets/')`,
+ * `/^\/api\//.test(url)`, `url === '/login'`, negated or joined with `&&` and
+ * `||`. `undefined` where any part of it asks about something else - a
+ * header, a flag, the time - since what that is for a request is not read.
+ */
+export const addressTestOf = (condition: TsNode, isAddress: (node: TsNode) => boolean): AddressTest | undefined => {
+  const target = unwrap(condition);
+  if (Node.isPrefixUnaryExpression(target) && target.getOperatorToken() === SyntaxKind.ExclamationToken) {
+    const inner = addressTestOf(target.getOperand(), isAddress);
+    return inner === undefined ? undefined : notTest(inner);
+  }
+  if (Node.isBinaryExpression(target)) {
+    const operator = target.getOperatorToken().getKind();
+    if (operator === SyntaxKind.AmpersandAmpersandToken || operator === SyntaxKind.BarBarToken) {
+      const left = addressTestOf(target.getLeft(), isAddress);
+      const right = addressTestOf(target.getRight(), isAddress);
+      if (left === undefined || right === undefined) return undefined;
+      return joinedTests([left, right], operator === SyntaxKind.AmpersandAmpersandToken);
+    }
+    const equal = [SyntaxKind.EqualsEqualsToken, SyntaxKind.EqualsEqualsEqualsToken].includes(operator);
+    const unequal = [SyntaxKind.ExclamationEqualsToken, SyntaxKind.ExclamationEqualsEqualsToken].includes(operator);
+    if (!equal && !unequal) return undefined;
+    const text = isAddress(target.getLeft()) ? textOf(target.getRight()) : isAddress(target.getRight()) ? textOf(target.getLeft()) : undefined;
+    if (text === undefined) return undefined;
+    return (written) => {
+      const { head, tail, whole } = readEnds(written);
+      // An address whose read ends cannot be the text's is not it, holes or not.
+      if (!whole) return text.startsWith(head) && text.endsWith(tail) ? undefined : !equal;
+      return (written === text) === equal;
+    };
+  }
+  if (!Node.isCallExpression(target)) return undefined;
+  const callee = target.getExpression();
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const [argument] = target.getArguments();
+  const test = STRING_TESTS[callee.getName()];
+  if (test !== undefined && isAddress(callee.getExpression())) {
+    const text = textOf(argument);
+    return text === undefined ? undefined : (written) => test(written, text);
+  }
+  if (callee.getName() === 'test' && argument !== undefined && isAddress(argument)) {
+    const pattern = unwrap(callee.getExpression());
+    if (!Node.isRegularExpressionLiteral(pattern)) return undefined;
+    const literal = /^\/(.*)\/([a-z]*)$/s.exec(pattern.getLiteralText());
+    if (literal === null) return undefined;
+    let compiled: RegExp;
+    try {
+      compiled = new RegExp(literal[1] ?? '', (literal[2] ?? '').replace(/[gy]/g, ''));
+    } catch {
+      return undefined;
+    }
+    return (written) => (HOLE.test(written) ? undefined : compiled.test(written));
+  }
+  return undefined;
+};
+
+/** Whether a statement always leaves where it is: `return`, `throw`, or a block ending in one. */
+const leaves = (statement: TsNode): boolean => {
+  if (Node.isReturnStatement(statement) || Node.isThrowStatement(statement)) return true;
+  if (Node.isBlock(statement)) {
+    const last = statement.getStatements().at(-1);
+    return last !== undefined && leaves(last);
+  }
+  return false;
+};
+
+/** A condition a node sits behind, and whether it holds where the node is reached. */
+export interface Guard {
+  readonly condition: TsNode;
+  /** `undefined` where the shape does not say: a guard before the node that does not leave. */
+  readonly holds: boolean | undefined;
+}
+
+/**
+ * The conditions a node sits behind inside a function, each with whether it
+ * holds where the node is reached (P280): `true` inside `if (c)`, `false`
+ * in its `else` and after `if (c) return`. The same conditions
+ * {@link conditionsAround} finds, with the side each is on.
+ */
+export const guardsAround = (node: TsNode, fn: TsNode): Guard[] => {
+  const guards: Guard[] = [];
+  let child: TsNode = node;
+  for (let at = node.getParent(); at !== undefined && at !== fn; child = at, at = at.getParent()) {
+    if (Node.isIfStatement(at) && child !== at.getExpression()) guards.push({ condition: at.getExpression(), holds: child === at.getThenStatement() });
+    if (Node.isConditionalExpression(at) && child !== at.getCondition()) guards.push({ condition: at.getCondition(), holds: child === at.getWhenTrue() });
+    if (Node.isBinaryExpression(at) && child === at.getRight()) {
+      const operator = at.getOperatorToken().getKind();
+      if (operator === SyntaxKind.AmpersandAmpersandToken) guards.push({ condition: at.getLeft(), holds: true });
+      if (operator === SyntaxKind.BarBarToken) guards.push({ condition: at.getLeft(), holds: false });
+      if (operator === SyntaxKind.QuestionQuestionToken) guards.push({ condition: at.getLeft(), holds: undefined });
+    }
+    if (Node.isBlock(at)) {
+      for (const statement of at.getStatements()) {
+        if (statement === child) break;
+        if (Node.isIfStatement(statement)) {
+          const exits = statement.getElseStatement() === undefined && leaves(statement.getThenStatement());
+          guards.push({ condition: statement.getExpression(), holds: exits ? false : undefined });
+        }
+      }
+    }
+  }
+  return guards;
+};
+
+/**
+ * The test a rewrite's conditions put to a request's address, where every one
+ * of them asks only about the address's form (P280): the rewrite is applied to
+ * the requests whose written address passes, `if (req.url.startsWith('/api'))`
+ * or after `if (req.url.startsWith('/assets')) return next(req)`. `null` where
+ * no condition is left once whether the address is absolute and the ones
+ * `ignore` names are set aside; `undefined` where one asks about anything else,
+ * or the shape does not say which side of it the rewrite is on.
+ */
+export const rewriteTestOf = (
+  at: TsNode,
+  fn: TsNode,
+  isAddress: (node: TsNode) => boolean,
+  ignore: (condition: TsNode) => boolean = () => false,
+): AddressTest | null | undefined => {
+  const guards = guardsAround(at, fn).filter(({ condition }) => !asksAbsolute(condition, isAddress) && !ignore(condition));
+  if (guards.length === 0) return null;
+  const tests: AddressTest[] = [];
+  for (const { condition, holds } of guards) {
+    const test = holds === undefined ? undefined : addressTestOf(condition, isAddress);
+    if (test === undefined) return undefined;
+    tests.push(holds ? test : notTest(test));
+  }
+  return joinedTests(tests, true);
+};
+
+/** One value a write may put, and the test of the address it is put under: `null` where it is under none. */
+export interface AddressSide {
+  readonly value: TsNode;
+  readonly test: AddressTest | null;
+}
+
+/** A test joined onto the one around it. */
+const within = (outer: AddressTest | null, inner: AddressTest): AddressTest => (outer === null ? inner : joinedTests([outer, inner], true));
+
+/** How far a `const` holding a branch is followed, and branches nested in one another. */
+const SIDES_DEPTH = 4;
+
+/**
+ * The branch a `const` the rewrite names holds, where its condition is a test
+ * of the address: `const base = req.url.includes('admin') ? '/admin' : '/shop'`.
+ * A `const` holding a branch on anything else is read as it was, a value.
+ */
+const heldBranch = (node: TsNode, isAddress: (node: TsNode) => boolean): TsNode | undefined => {
+  if (!Node.isIdentifier(node)) return undefined;
+  const declaration = node.getSymbol()?.getDeclarations()[0];
+  if (declaration === undefined || !Node.isVariableDeclaration(declaration)) return undefined;
+  if (declaration.getVariableStatement()?.getDeclarationKind() !== VariableDeclarationKind.Const) return undefined;
+  const initializer = declaration.getInitializer();
+  const value = initializer === undefined ? undefined : unwrap(initializer);
+  return value !== undefined && Node.isConditionalExpression(value) && addressTestOf(value.getCondition(), isAddress) !== undefined ? value : undefined;
+};
+
+/**
+ * The values a rewrite writes, each under the test of the address it is
+ * written for (P285, P293): a branch `c ? A : B` whose condition is a test of
+ * the address is each side under that test, joined with `test`, the one
+ * around the write; branches nest, and a `const` holding such a branch is
+ * the branch. `unread` names the condition of a branch on anything else,
+ * since which side a request goes out under is then not read. Read the same
+ * way by every reader of a rewrite, the framework's interceptors and an
+ * installed client's alike.
+ */
+export const addressSidesOf = (
+  written: TsNode,
+  isAddress: (node: TsNode) => boolean,
+  test: AddressTest | null = null,
+  depth = 0,
+): AddressSide[] | { readonly unread: TsNode } => {
+  const value = unwrap(written);
+  const branch = Node.isConditionalExpression(value) ? value : depth < SIDES_DEPTH ? heldBranch(value, isAddress) : undefined;
+  if (branch === undefined || !Node.isConditionalExpression(branch) || depth > SIDES_DEPTH) return [{ value: written, test }];
+  const chosen = addressTestOf(branch.getCondition(), isAddress);
+  if (chosen === undefined) return { unread: branch.getCondition() };
+  const sides: AddressSide[] = [];
+  for (const [side, holds] of [
+    [branch.getWhenTrue(), chosen],
+    [branch.getWhenFalse(), notTest(chosen)],
+  ] as const) {
+    const read = addressSidesOf(side, isAddress, within(test, holds), depth + 1);
+    if ('unread' in read) return read;
+    sides.push(...read);
+  }
+  return sides;
+};
+
+/** A base put in front of the address under its test, or `null` for a side that puts nothing there (`''`). */
+export interface PrefixSide {
+  readonly base: ReadAddress | null | undefined;
+  readonly test: AddressTest | null;
+}
+
+/** What stands in for the base while where it is written is looked for. */
+const SOMEWHERE = literalAddress('/base');
+
+/**
+ * The bases a rewrite `base + address` puts in front, where the base itself
+ * is chosen by a test of the address (P293):
+ * `(req.url.startsWith('/admin') ? adminApi : shopApi) + req.url`, or a
+ * `const` holding that branch. One side under no test where the base is no
+ * such branch, its base `undefined` where it is not read, as
+ * {@link prefixOfRewrite} answers; `unread` where the branch asks about
+ * anything else.
+ */
+export const prefixSidesOfRewrite = (
+  written: TsNode,
+  isAddress: (node: TsNode) => boolean,
+  read: (node: TsNode) => ReadAddress,
+): PrefixSide[] | { readonly unread: TsNode } => {
+  const where: { at?: TsNode } = {};
+  const probe = prefixOfRewrite(written, isAddress, (node) => {
+    where.at = node;
+    return SOMEWHERE;
+  });
+  const whole = (): PrefixSide[] => [{ base: prefixOfRewrite(written, isAddress, read), test: null }];
+  const { at } = where;
+  if (probe === undefined || at === undefined) return whole();
+  const sides = addressSidesOf(at, isAddress);
+  if ('unread' in sides) return sides;
+  if (sides.length === 1) return whole();
+  return sides.map(({ value, test }): PrefixSide => {
+    const text = unwrap(value);
+    // A side that puts nothing in front: the address goes out as written.
+    if ((Node.isStringLiteral(text) || Node.isNoSubstitutionTemplateLiteral(text)) && text.getLiteralText() === '') return { base: null, test };
+    return { base: prefixOfRewrite(written, isAddress, (node) => (node === at ? read(value) : read(node))), test };
+  });
+};

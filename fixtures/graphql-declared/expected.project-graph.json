@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-05T17:52:16.713Z",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": ".",
+      "type": "declared",
+      "extractor": "graphql-document"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#catalog.graphql:Query.product",
+      "type": "method",
+      "label": "Query.product",
+      "repo": "catalog",
+      "file": "catalog.graphql",
+      "line": 3,
+      "meta": {
+        "declaredBy": "catalog.graphql"
+      }
+    },
+    {
+      "id": "catalog#catalog.graphql:Query.products",
+      "type": "method",
+      "label": "Query.products",
+      "repo": "catalog",
+      "file": "catalog.graphql",
+      "line": 2,
+      "meta": {
+        "declaredBy": "catalog.graphql"
+      }
+    },
+    {
+      "id": "entry:catalog:graphql:Query.product",
+      "type": "entry",
+      "label": "Query.product",
+      "repo": "catalog",
+      "file": "catalog.graphql",
+      "line": 3,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "product",
+        "returns": "Product",
+        "args": {
+          "id": {
+            "type": "ID!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-schema",
+        "declaredBy": "catalog.graphql"
+      }
+    },
+    {
+      "id": "entry:catalog:graphql:Query.products",
+      "type": "entry",
+      "label": "Query.products",
+      "repo": "catalog",
+      "file": "catalog.graphql",
+      "line": 2,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "products",
+        "returns": "[Product!]!",
+        "adapter": "graphql-schema",
+        "declaredBy": "catalog.graphql"
+      }
+    },
+    {
+      "id": "entry:catalog:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "catalog",
+      "file": "catalog.graphql",
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-schema",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query"
+            },
+            "types": {
+              "Product": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  },
+                  "price": {
+                    "type": "Float!"
+                  },
+                  "reviews": {
+                    "type": "[Review!]!"
+                  },
+                  "ordered": {
+                    "type": "Int!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "products": {
+                    "type": "[Product!]!"
+                  },
+                  "product": {
+                    "type": "Product",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              },
+              "Review": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "stars": {
+                    "type": "Int!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "declaredBy": "catalog.graphql"
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 1,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "shop#src/Products.tsx:Products",
+      "type": "ui_component",
+      "label": "Products",
+      "repo": "shop",
+      "file": "src/Products.tsx",
+      "line": 13,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/Products.tsx:14:20",
+      "type": "ui_api_call",
+      "label": "query Products /graphql",
+      "repo": "shop",
+      "file": "src/Products.tsx",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_CATALOG_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_CATALOG_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Products",
+          "fields": [
+            {
+              "field": "products",
+              "line": 5,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 6
+                },
+                {
+                  "field": "name",
+                  "line": 7
+                },
+                {
+                  "field": "price",
+                  "line": 8
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/Products.tsx",
+            "line": 4
+          },
+          "library": "apollo"
+        },
+        "targetService": "catalog"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:graphql:Query.product",
+      "to": "catalog#catalog.graphql:Query.product",
+      "type": "handles",
+      "confidence": "declared",
+      "file": "catalog.graphql",
+      "meta": {
+        "declaredBy": "catalog.graphql"
+      }
+    },
+    {
+      "from": "entry:catalog:graphql:Query.products",
+      "to": "catalog#catalog.graphql:Query.products",
+      "type": "handles",
+      "confidence": "declared",
+      "file": "catalog.graphql",
+      "meta": {
+        "declaredBy": "catalog.graphql"
+      }
+    },
+    {
+      "from": "shop#src/Products.tsx:Products",
+      "to": "ui_api_call:shop#src/Products.tsx:14:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Products.tsx",
+      "line": 14
+    },
+    {
+      "from": "ui_api_call:shop#src/Products.tsx:14:20",
+      "to": "entry:catalog:graphql:Query.products",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/Products.tsx",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "Products",
+          "field": "Query.products"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Products.tsx:14:20",
+      "to": "entry:catalog:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/Products.tsx",
+      "line": 14,
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/Products.tsx",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    }
+  ]
+}

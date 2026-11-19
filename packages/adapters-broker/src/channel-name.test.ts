@@ -1,7 +1,7 @@
 import { parseConfig } from '@flowatlas/core';
 import { Project, type SourceFile } from 'ts-morph';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { isResolved, resolveChannelName } from './channel-name.js';
+import { isResolved, nameForKind, resolveChannelName } from './channel-name.js';
 
 const SHARED = `export const EVENTS = { orderShipped: 'order.shipped' } as const;
 export declare const ORDER_CHANNELS: readonly ['order.created', 'order.paid'];`;
@@ -92,7 +92,14 @@ export class Publisher {
   fromFallbackEmpty() { return process.env.ORDER_TOPIC ?? '' }
   fromTwoVariables() { return process.env.ORDER_TOPIC ?? process.env.OTHER_TOPIC ?? 'orders' }
   fromDestructuredDefault() { return BUS }
+  // A name looked up in a collection the code fills when it runs (P268).
+  fromLookup(team: string) {
+    const url = QUEUES.get(\`team-\${team}\`);
+    return url;
+  }
+  fromWrittenLookup() { return QUEUES.get('team-billing') }
 }
+declare const QUEUES: Map<string, string>;
 declare const process: { env: Record<string, string | undefined> };
 const ENV_TOPIC = (process.env.ORDER_TOPIC as string) ?? 'orders';
 const { RETURNS_QUEUE_URL } = process.env;
@@ -138,6 +145,20 @@ describe('resolving which channel a call addresses', () => {
     if (expression === undefined) throw new Error(`no return in ${methodName}`);
     return resolveChannelName(expression, config);
   };
+
+  describe('a name looked up in a collection (P268)', () => {
+    it('says which collection, and the key worked out when the code runs', () => {
+      expect(ofReturn('fromLookup')).toEqual({
+        unresolved: 'channel-dynamic',
+        text: 'url',
+        lookup: { collection: 'QUEUES', key: '`team-${team}`' },
+      });
+    });
+
+    it('says nothing of a lookup by a key the source writes', () => {
+      expect(of('fromWrittenLookup')).not.toHaveProperty('lookup');
+    });
+  });
 
   describe('a list of channels (R40)', () => {
     it('reads an array const out of a shared package, where only the type has the values', () => {
@@ -249,6 +270,21 @@ describe('resolving which channel a call addresses', () => {
 
   it('turns an object pattern into a stable name', () => {
     expect(of('objectPattern')).toEqual({ name: '{"cmd":"sum"}', names: ['{"cmd":"sum"}'], via: 'pattern' });
+  });
+
+  /**
+   * A queue is named by a word, so a record read where a queue is named is the
+   * options of whatever named it: `@Processor({ queueName, scope })` read whole
+   * was the channel `{"queueName":"cron-queue"}`, which no producer can reach
+   * (R181). Kept for a transport that matches patterns.
+   */
+  it('refuses a record as the name of a queue, and keeps it as a pattern', () => {
+    const record = of('objectPattern');
+    expect(nameForKind(record, 'topic')).toEqual(record);
+    expect(nameForKind(record, 'exchange')).toEqual(record);
+    expect(nameForKind(record, 'queue')).toEqual({ unresolved: 'channel-dynamic', text: '{"cmd":"sum"}' });
+    const word = of('literal');
+    expect(nameForKind(word, 'queue')).toEqual(word);
   });
 
   /**

@@ -1,0 +1,79 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-05T22:21:35.451Z",
+  "edges": [],
+  "findings": [
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "ui_api_call:web#src/CustomerNote.tsx:6:20",
+        "to": "entry:gateway:http:POST:/graphql",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/CustomerNote.tsx:6:20|hits|entry:gateway:http:POST:/graphql",
+      "direction": "response",
+      "sender": {
+        "service": "gateway",
+        "typeId": null,
+        "symbol": "entry:gateway:http:POST:/graphql"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": null,
+        "symbol": "ui_api_call:web#src/CustomerNote.tsx:6:20"
+      },
+      "typeId": "graphql:gateway#Customer",
+      "field": "customer.internalNote",
+      "expected": null,
+      "actual": "internalNote",
+      "rule": "graphql-field-inaccessible",
+      "message": "CustomerNote selects Customer.internalNote at src/queries.ts:47, which gateway's composition marks @inaccessible; the router does not serve it and refuses the whole operation",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "ui_api_call:web#src/OrderBadge.tsx:6:20",
+        "to": "entry:gateway:http:POST:/graphql",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/OrderBadge.tsx:6:20|hits|entry:gateway:http:POST:/graphql",
+      "direction": "response",
+      "sender": {
+        "service": "gateway",
+        "typeId": null,
+        "symbol": "entry:gateway:http:POST:/graphql"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": null,
+        "symbol": "ui_api_call:web#src/OrderBadge.tsx:6:20"
+      },
+      "typeId": "graphql:gateway#Order",
+      "field": "orders.discount",
+      "expected": null,
+      "actual": "discount",
+      "rule": "graphql-field-unknown",
+      "message": "OrderBadge selects Order.discount at src/queries.ts:39, and no subgraph gateway composes has Order.discount; the router refuses the whole operation",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 0,
+    "errors": 2,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

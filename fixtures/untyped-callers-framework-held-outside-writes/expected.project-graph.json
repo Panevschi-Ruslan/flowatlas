@@ -1,0 +1,4219 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T17:20:53.725Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "infra",
+      "repo": "./infra",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/index.ts:GET /health@5",
+      "type": "function",
+      "label": "GET /health@5",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /recent@9",
+      "type": "function",
+      "label": "GET /recent@9",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /ticks@13",
+      "type": "function",
+      "label": "GET /ticks@13",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "channel:notices",
+      "type": "channel",
+      "label": "notices",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 20,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:outbox",
+      "type": "channel",
+      "label": "outbox",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 8,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:urgent",
+      "type": "channel",
+      "label": "urgent",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 36,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "config_key:infra#RESTOCK_URL",
+      "type": "config_key",
+      "label": "RESTOCK_URL",
+      "repo": "infra",
+      "file": "src/move.ts",
+      "line": 7,
+      "meta": {
+        "key": "RESTOCK_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/recent",
+      "type": "entry",
+      "label": "GET /recent",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/recent",
+        "rawPath": "/recent",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/ticks",
+      "type": "entry",
+      "label": "GET /ticks",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/ticks",
+        "rawPath": "/ticks",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:infra:invoke:stock-move",
+      "type": "entry",
+      "label": "stock-move",
+      "repo": "infra",
+      "file": "lib/infra-stack.ts",
+      "line": 19,
+      "kind": "invoke",
+      "meta": {
+        "key": "stock-move",
+        "deployedBy": "cdk",
+        "name": "stock-move",
+        "runtime": "nodejs20.x",
+        "declaredAs": "InfraStack/Move",
+        "constructPath": "InfraStack/Move",
+        "handler": "src/move.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "queue",
+            "unread": "the context value restockQueue, which no file sets: the deployment gives it when the app is synthesized (-c restockQueue=...) or leaves it out",
+            "by": "grantSendMessages"
+          }
+        ],
+        "reads": {
+          "": "{sku:string;quantity:number}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/levels",
+      "type": "entry",
+      "label": "GET /levels",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/levels",
+        "rawPath": "/levels",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/recent",
+      "type": "entry",
+      "label": "GET /recent",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/recent",
+        "rawPath": "/recent",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/ticks",
+      "type": "entry",
+      "label": "GET /ticks",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/ticks",
+        "rawPath": "/ticks",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "infra#src/move.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "infra",
+      "file": "src/move.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{sku:string;quantity:number}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/senders.ts:Mailer",
+      "type": "provider",
+      "label": "Mailer",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 4,
+      "kind": "injectable"
+    },
+    {
+      "id": "jobs#src/senders.ts:Mailer.send",
+      "type": "method",
+      "label": "Mailer.send",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/senders.ts:Notifier",
+      "type": "provider",
+      "label": "Notifier",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 16,
+      "kind": "injectable"
+    },
+    {
+      "id": "jobs#src/senders.ts:Notifier.notify",
+      "type": "method",
+      "label": "Notifier.notify",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "user",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/senders.ts:Pusher",
+      "type": "provider",
+      "label": "Pusher",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 28,
+      "kind": "injectable"
+    },
+    {
+      "id": "jobs#src/senders.ts:Pusher.push",
+      "type": "method",
+      "label": "Pusher.push",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "producer:infra#src/move.ts:7:9",
+      "type": "producer",
+      "label": "message ?",
+      "repo": "infra",
+      "file": "src/move.ts",
+      "line": 7,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "unresolved",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "RESTOCK_URL",
+                "forms": [
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{sku:string;quantity:number}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "producer:jobs#src/senders.ts:20:12",
+      "type": "producer",
+      "label": "job notices",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 20,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "notify"
+      }
+    },
+    {
+      "id": "producer:jobs#src/senders.ts:36:12",
+      "type": "producer",
+      "label": "job urgent",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 36,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "push"
+      }
+    },
+    {
+      "id": "producer:jobs#src/senders.ts:8:12",
+      "type": "producer",
+      "label": "job outbox",
+      "repo": "jobs",
+      "file": "src/senders.ts",
+      "line": 8,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "send"
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4600,
+            "file": "src/index.ts",
+            "line": 17
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:infra",
+      "type": "repo",
+      "label": "infra",
+      "repo": "infra",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4700,
+            "file": "src/index.ts",
+            "line": 21
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "functions": 12,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "browser"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /health@5",
+      "type": "function",
+      "label": "GET /health@5",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /levels@9",
+      "type": "function",
+      "label": "GET /levels@9",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /recent@13",
+      "type": "function",
+      "label": "GET /recent@13",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /ticks@17",
+      "type": "function",
+      "label": "GET /ticks@17",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/elements.js:14:16@9:12",
+      "type": "ui_api_call",
+      "label": "GET /recent",
+      "repo": "web",
+      "file": "js/elements.js",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/recent",
+        "path": "/recent",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "RecentFeed.connectedCallback",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/elements.js:36:10@31:12",
+      "type": "ui_api_call",
+      "label": "GET /ticks",
+      "repo": "web",
+      "file": "js/elements.js",
+      "line": 36,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/ticks",
+        "path": "/ticks",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Ticker.connectedCallback",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/elements.js:40:10@31:12",
+      "type": "ui_api_call",
+      "label": "GET /ticks",
+      "repo": "web",
+      "file": "js/elements.js",
+      "line": 40,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/ticks",
+        "path": "/ticks",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Ticker.connectedCallback",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/health.js:22:10@8:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Reader.read",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/health.js:27:10@8:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Reader.read",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/health.js:36:10@8:12",
+      "type": "ui_api_call",
+      "label": "GET /levels",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 36,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/levels",
+        "path": "/levels",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Reader.read",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/health.js:51:10@8:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 51,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Reader.read",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/health.js:55:10@8:12",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 55,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Reader.read",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "web#js/elements.js:RecentFeed.connectedCallback",
+      "type": "function",
+      "label": "RecentFeed.connectedCallback",
+      "repo": "web",
+      "file": "js/elements.js",
+      "line": 8
+    },
+    {
+      "id": "web#js/elements.js:RecentFeed.constructor",
+      "type": "function",
+      "label": "RecentFeed.constructor",
+      "repo": "web",
+      "file": "js/elements.js",
+      "line": 3
+    },
+    {
+      "id": "web#js/elements.js:Ticker.connectedCallback",
+      "type": "function",
+      "label": "Ticker.connectedCallback",
+      "repo": "web",
+      "file": "js/elements.js",
+      "line": 30
+    },
+    {
+      "id": "web#js/elements.js:Ticker.constructor",
+      "type": "function",
+      "label": "Ticker.constructor",
+      "repo": "web",
+      "file": "js/elements.js",
+      "line": 25
+    },
+    {
+      "id": "web#js/elements.js:catalogTicker",
+      "type": "function",
+      "label": "catalogTicker",
+      "repo": "web",
+      "file": "js/elements.js",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:web#Ticker"
+        }
+      }
+    },
+    {
+      "id": "web#js/elements.js:previewFeed",
+      "type": "function",
+      "label": "previewFeed",
+      "repo": "web",
+      "file": "js/elements.js",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:web#RecentFeed"
+        }
+      }
+    },
+    {
+      "id": "web#js/elements.js:stockFeed",
+      "type": "function",
+      "label": "stockFeed",
+      "repo": "web",
+      "file": "js/elements.js",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:web#RecentFeed"
+        }
+      }
+    },
+    {
+      "id": "web#js/elements.js:stockTicker",
+      "type": "function",
+      "label": "stockTicker",
+      "repo": "web",
+      "file": "js/elements.js",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:web#Ticker"
+        }
+      }
+    },
+    {
+      "id": "web#js/health.js:Board.constructor",
+      "type": "function",
+      "label": "Board.constructor",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 41
+    },
+    {
+      "id": "web#js/health.js:Reader.constructor",
+      "type": "function",
+      "label": "Reader.constructor",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 3
+    },
+    {
+      "id": "web#js/health.js:Reader.health",
+      "type": "function",
+      "label": "Reader.health",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 11
+    },
+    {
+      "id": "web#js/health.js:Reader.read",
+      "type": "function",
+      "label": "Reader.read",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 7
+    },
+    {
+      "id": "web#js/health.js:catalogBoard",
+      "type": "function",
+      "label": "catalogBoard",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/health.js:catalogUp",
+      "type": "function",
+      "label": "catalogUp",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/health.js:check",
+      "type": "function",
+      "label": "check",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reader",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/health.js:levels",
+      "type": "function",
+      "label": "levels",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reader",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/health.js:stockBoard",
+      "type": "function",
+      "label": "stockBoard",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 54,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/health.js:stockLevels",
+      "type": "function",
+      "label": "stockLevels",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/health.js:stockUp",
+      "type": "function",
+      "label": "stockUp",
+      "repo": "web",
+      "file": "js/health.js",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:http:GET:/health",
+      "to": "catalog#src/index.ts:GET /health@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/recent",
+      "to": "catalog#src/index.ts:GET /recent@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/ticks",
+      "to": "catalog#src/index.ts:GET /ticks@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:infra:invoke:stock-move",
+      "to": "infra#src/move.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/move.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:stock:http:GET:/health",
+      "to": "stock#src/index.ts:GET /health@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/levels",
+      "to": "stock#src/index.ts:GET /levels@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/recent",
+      "to": "stock#src/index.ts:GET /recent@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/ticks",
+      "to": "stock#src/index.ts:GET /ticks@17",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 17,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "infra#src/move.ts:handler",
+      "to": "config_key:infra#RESTOCK_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/move.ts",
+      "line": 7
+    },
+    {
+      "from": "infra#src/move.ts:handler",
+      "to": "producer:infra#src/move.ts:7:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/move.ts",
+      "line": 7
+    },
+    {
+      "from": "jobs#src/senders.ts:Mailer.send",
+      "to": "producer:jobs#src/senders.ts:8:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/senders.ts",
+      "line": 8
+    },
+    {
+      "from": "jobs#src/senders.ts:Notifier.notify",
+      "to": "producer:jobs#src/senders.ts:20:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/senders.ts",
+      "line": 20
+    },
+    {
+      "from": "jobs#src/senders.ts:Pusher.push",
+      "to": "producer:jobs#src/senders.ts:36:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/senders.ts",
+      "line": 36
+    },
+    {
+      "from": "producer:jobs#src/senders.ts:20:12",
+      "to": "channel:notices",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{user:string}"
+      ],
+      "file": "src/senders.ts",
+      "line": 20
+    },
+    {
+      "from": "producer:jobs#src/senders.ts:36:12",
+      "to": "channel:urgent",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{item:string}"
+      ],
+      "file": "src/senders.ts",
+      "line": 36
+    },
+    {
+      "from": "producer:jobs#src/senders.ts:8:12",
+      "to": "channel:outbox",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{to:string}"
+      ],
+      "file": "src/senders.ts",
+      "line": 8
+    },
+    {
+      "from": "ui_api_call:web#js/elements.js:14:16@9:12",
+      "to": "entry:stock:http:GET:/recent",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/elements.js",
+      "line": 14,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/elements.js:36:10@31:12",
+      "to": "entry:catalog:http:GET:/ticks",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/elements.js",
+      "line": 36,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:17"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/elements.js:40:10@31:12",
+      "to": "entry:stock:http:GET:/ticks",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/elements.js",
+      "line": 40,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/health.js:22:10@8:12",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 22,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:17"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/health.js:27:10@8:12",
+      "to": "entry:stock:http:GET:/health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 27,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/health.js:36:10@8:12",
+      "to": "entry:stock:http:GET:/levels",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 36,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/health.js:51:10@8:12",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 51,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:17"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/health.js:55:10@8:12",
+      "to": "entry:stock:http:GET:/health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 55,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "web#js/elements.js:catalogTicker",
+      "to": "ui_api_call:web#js/elements.js:36:10@31:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/elements.js",
+      "line": 36
+    },
+    {
+      "from": "web#js/elements.js:catalogTicker",
+      "to": "web#js/elements.js:Ticker.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/elements.js",
+      "line": 36
+    },
+    {
+      "from": "web#js/elements.js:previewFeed",
+      "to": "web#js/elements.js:RecentFeed.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/elements.js",
+      "line": 20
+    },
+    {
+      "from": "web#js/elements.js:stockFeed",
+      "to": "ui_api_call:web#js/elements.js:14:16@9:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/elements.js",
+      "line": 14
+    },
+    {
+      "from": "web#js/elements.js:stockFeed",
+      "to": "web#js/elements.js:RecentFeed.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/elements.js",
+      "line": 14
+    },
+    {
+      "from": "web#js/elements.js:stockTicker",
+      "to": "ui_api_call:web#js/elements.js:40:10@31:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/elements.js",
+      "line": 40
+    },
+    {
+      "from": "web#js/elements.js:stockTicker",
+      "to": "web#js/elements.js:Ticker.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/elements.js",
+      "line": 40
+    },
+    {
+      "from": "web#js/health.js:catalogBoard",
+      "to": "ui_api_call:web#js/health.js:51:10@8:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 51
+    },
+    {
+      "from": "web#js/health.js:catalogBoard",
+      "to": "web#js/health.js:Board.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 51
+    },
+    {
+      "from": "web#js/health.js:catalogBoard",
+      "to": "web#js/health.js:Reader.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 51
+    },
+    {
+      "from": "web#js/health.js:catalogUp",
+      "to": "ui_api_call:web#js/health.js:22:10@8:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 22
+    },
+    {
+      "from": "web#js/health.js:catalogUp",
+      "to": "web#js/health.js:Reader.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 22
+    },
+    {
+      "from": "web#js/health.js:catalogUp",
+      "to": "web#js/health.js:check",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "js/health.js",
+      "line": 22
+    },
+    {
+      "from": "web#js/health.js:stockBoard",
+      "to": "ui_api_call:web#js/health.js:55:10@8:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 55
+    },
+    {
+      "from": "web#js/health.js:stockBoard",
+      "to": "web#js/health.js:Board.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 55
+    },
+    {
+      "from": "web#js/health.js:stockBoard",
+      "to": "web#js/health.js:Reader.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 55
+    },
+    {
+      "from": "web#js/health.js:stockLevels",
+      "to": "ui_api_call:web#js/health.js:36:10@8:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 36
+    },
+    {
+      "from": "web#js/health.js:stockLevels",
+      "to": "web#js/health.js:Reader.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 36
+    },
+    {
+      "from": "web#js/health.js:stockLevels",
+      "to": "web#js/health.js:levels",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "js/health.js",
+      "line": 36
+    },
+    {
+      "from": "web#js/health.js:stockUp",
+      "to": "ui_api_call:web#js/health.js:27:10@8:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 27
+    },
+    {
+      "from": "web#js/health.js:stockUp",
+      "to": "web#js/health.js:Reader.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/health.js",
+      "line": 26
+    },
+    {
+      "from": "web#js/health.js:stockUp",
+      "to": "web#js/health.js:check",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "js/health.js",
+      "line": 27
+    }
+  ],
+  "types": {
+    "type:web#RecentFeed": {
+      "name": "RecentFeed",
+      "kind": "object",
+      "declaredIn": "web#js/elements.js",
+      "structuralHash": "b77eca2943c31cb6",
+      "fields": [
+        {
+          "name": "accessKey",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "accessKeyLabel",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "autocapitalize",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "autocorrect",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "dir",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "draggable",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "hidden",
+          "type": "'until-found'|false|true",
+          "optional": false
+        },
+        {
+          "name": "inert",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "innerText",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "lang",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "offsetHeight",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "offsetLeft",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "offsetParent",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "offsetTop",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "offsetWidth",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "outerText",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "popover",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "spellcheck",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "translate",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "writingSuggestions",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "attributes",
+          "type": "NamedNodeMap",
+          "optional": false
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "clientHeight",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "clientLeft",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "clientTop",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "clientWidth",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "currentCSSZoom",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "customElementRegistry",
+          "type": "CustomElementRegistry|null",
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "innerHTML",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "localName",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "namespaceURI",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "onfullscreenchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onfullscreenerror",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "outerHTML",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "ownerDocument",
+          "type": "Document",
+          "optional": false
+        },
+        {
+          "name": "prefix",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "scrollHeight",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "scrollLeft",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "scrollTop",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "scrollWidth",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "shadowRoot",
+          "type": "ShadowRoot|null",
+          "optional": false
+        },
+        {
+          "name": "slot",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "tagName",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "baseURI",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "childNodes",
+          "type": "NodeListOf<ChildNode>",
+          "optional": false
+        },
+        {
+          "name": "firstChild",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "isConnected",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "lastChild",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "nextSibling",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "nodeName",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "nodeType",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "nodeValue",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "parentElement",
+          "type": "HTMLElement|null",
+          "optional": false
+        },
+        {
+          "name": "parentNode",
+          "type": "ParentNode|null",
+          "optional": false
+        },
+        {
+          "name": "previousSibling",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "ELEMENT_NODE",
+          "type": "1",
+          "optional": false
+        },
+        {
+          "name": "ATTRIBUTE_NODE",
+          "type": "2",
+          "optional": false
+        },
+        {
+          "name": "TEXT_NODE",
+          "type": "3",
+          "optional": false
+        },
+        {
+          "name": "CDATA_SECTION_NODE",
+          "type": "4",
+          "optional": false
+        },
+        {
+          "name": "ENTITY_REFERENCE_NODE",
+          "type": "5",
+          "optional": false
+        },
+        {
+          "name": "ENTITY_NODE",
+          "type": "6",
+          "optional": false
+        },
+        {
+          "name": "PROCESSING_INSTRUCTION_NODE",
+          "type": "7",
+          "optional": false
+        },
+        {
+          "name": "COMMENT_NODE",
+          "type": "8",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_NODE",
+          "type": "9",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_TYPE_NODE",
+          "type": "10",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_FRAGMENT_NODE",
+          "type": "11",
+          "optional": false
+        },
+        {
+          "name": "NOTATION_NODE",
+          "type": "12",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_DISCONNECTED",
+          "type": "1",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_PRECEDING",
+          "type": "2",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_FOLLOWING",
+          "type": "4",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_CONTAINS",
+          "type": "8",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_CONTAINED_BY",
+          "type": "16",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC",
+          "type": "32",
+          "optional": false
+        },
+        {
+          "name": "ariaActiveDescendantElement",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "ariaAtomic",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaAutoComplete",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaBrailleLabel",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaBrailleRoleDescription",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaBusy",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaChecked",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColCount",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColIndex",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColIndexText",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColSpan",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaControlsElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaCurrent",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDescribedByElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDescription",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDetailsElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDisabled",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaErrorMessageElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaExpanded",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaFlowToElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaHasPopup",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaHidden",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaInvalid",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaKeyShortcuts",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLabel",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLabelledByElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLevel",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLive",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaModal",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaMultiLine",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaMultiSelectable",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaOrientation",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaOwnsElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaPlaceholder",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaPosInSet",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaPressed",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaReadOnly",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRelevant",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRequired",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRoleDescription",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowCount",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowIndex",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowIndexText",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowSpan",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaSelected",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaSetSize",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaSort",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueMax",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueMin",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueNow",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueText",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "role",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "nextElementSibling",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "previousElementSibling",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "childElementCount",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "children",
+          "type": "HTMLCollection",
+          "optional": false
+        },
+        {
+          "name": "firstElementChild",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "lastElementChild",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "assignedSlot",
+          "type": "HTMLSlotElement|null",
+          "optional": false
+        },
+        {
+          "name": "attributeStyleMap",
+          "type": "StylePropertyMap",
+          "optional": false
+        },
+        {
+          "name": "contentEditable",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "enterKeyHint",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "inputMode",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "isContentEditable",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "onabort",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationcancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationiteration",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onauxclick",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onbeforeinput",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onbeforematch",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onbeforetoggle",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onblur",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncanplay",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncanplaythrough",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onclick",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onclose",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncommand",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncontextlost",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncontextmenu",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncontextrestored",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncopy",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncuechange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncut",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondblclick",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondrag",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragenter",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragleave",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragover",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondrop",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondurationchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onemptied",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onended",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onerror",
+          "type": "OnErrorEventHandlerNonNull",
+          "optional": false
+        },
+        {
+          "name": "onfocus",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onformdata",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ongotpointercapture",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oninput",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oninvalid",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onkeydown",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onkeypress",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onkeyup",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onload",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onloadeddata",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onloadedmetadata",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onloadstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onlostpointercapture",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmousedown",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseenter",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseleave",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmousemove",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseout",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseover",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseup",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpaste",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpause",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onplay",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onplaying",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointercancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerdown",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerenter",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerleave",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointermove",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerout",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerover",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerrawupdate",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerup",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onprogress",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onratechange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onreset",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onresize",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onscroll",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onscrollend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onsecuritypolicyviolation",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onseeked",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onseeking",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onselect",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onselectionchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onselectstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onslotchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onstalled",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onsubmit",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onsuspend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontimeupdate",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontoggle",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontouchcancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontouchend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontouchmove",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontouchstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontransitioncancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontransitionend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontransitionrun",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontransitionstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onvolumechange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwaiting",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkitanimationend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkitanimationiteration",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkitanimationstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkittransitionend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwheel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "autofocus",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "dataset",
+          "type": "DOMStringMap",
+          "optional": false
+        },
+        {
+          "name": "nonce",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "tabIndex",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": false,
+        "extends": [
+          "HTMLElement<this>"
+        ]
+      }
+    },
+    "type:web#Ticker": {
+      "name": "Ticker",
+      "kind": "object",
+      "declaredIn": "web#js/elements.js",
+      "structuralHash": "b77eca2943c31cb6",
+      "fields": [
+        {
+          "name": "accessKey",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "accessKeyLabel",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "autocapitalize",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "autocorrect",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "dir",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "draggable",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "hidden",
+          "type": "'until-found'|false|true",
+          "optional": false
+        },
+        {
+          "name": "inert",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "innerText",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "lang",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "offsetHeight",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "offsetLeft",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "offsetParent",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "offsetTop",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "offsetWidth",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "outerText",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "popover",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "spellcheck",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "translate",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "writingSuggestions",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "attributes",
+          "type": "NamedNodeMap",
+          "optional": false
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "clientHeight",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "clientLeft",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "clientTop",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "clientWidth",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "currentCSSZoom",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "customElementRegistry",
+          "type": "CustomElementRegistry|null",
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "innerHTML",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "localName",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "namespaceURI",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "onfullscreenchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onfullscreenerror",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "outerHTML",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "ownerDocument",
+          "type": "Document",
+          "optional": false
+        },
+        {
+          "name": "prefix",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "scrollHeight",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "scrollLeft",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "scrollTop",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "scrollWidth",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "shadowRoot",
+          "type": "ShadowRoot|null",
+          "optional": false
+        },
+        {
+          "name": "slot",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "tagName",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "baseURI",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "childNodes",
+          "type": "NodeListOf<ChildNode>",
+          "optional": false
+        },
+        {
+          "name": "firstChild",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "isConnected",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "lastChild",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "nextSibling",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "nodeName",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "nodeType",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "nodeValue",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "parentElement",
+          "type": "HTMLElement|null",
+          "optional": false
+        },
+        {
+          "name": "parentNode",
+          "type": "ParentNode|null",
+          "optional": false
+        },
+        {
+          "name": "previousSibling",
+          "type": "ChildNode|null",
+          "optional": false
+        },
+        {
+          "name": "ELEMENT_NODE",
+          "type": "1",
+          "optional": false
+        },
+        {
+          "name": "ATTRIBUTE_NODE",
+          "type": "2",
+          "optional": false
+        },
+        {
+          "name": "TEXT_NODE",
+          "type": "3",
+          "optional": false
+        },
+        {
+          "name": "CDATA_SECTION_NODE",
+          "type": "4",
+          "optional": false
+        },
+        {
+          "name": "ENTITY_REFERENCE_NODE",
+          "type": "5",
+          "optional": false
+        },
+        {
+          "name": "ENTITY_NODE",
+          "type": "6",
+          "optional": false
+        },
+        {
+          "name": "PROCESSING_INSTRUCTION_NODE",
+          "type": "7",
+          "optional": false
+        },
+        {
+          "name": "COMMENT_NODE",
+          "type": "8",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_NODE",
+          "type": "9",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_TYPE_NODE",
+          "type": "10",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_FRAGMENT_NODE",
+          "type": "11",
+          "optional": false
+        },
+        {
+          "name": "NOTATION_NODE",
+          "type": "12",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_DISCONNECTED",
+          "type": "1",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_PRECEDING",
+          "type": "2",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_FOLLOWING",
+          "type": "4",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_CONTAINS",
+          "type": "8",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_CONTAINED_BY",
+          "type": "16",
+          "optional": false
+        },
+        {
+          "name": "DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC",
+          "type": "32",
+          "optional": false
+        },
+        {
+          "name": "ariaActiveDescendantElement",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "ariaAtomic",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaAutoComplete",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaBrailleLabel",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaBrailleRoleDescription",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaBusy",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaChecked",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColCount",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColIndex",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColIndexText",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaColSpan",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaControlsElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaCurrent",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDescribedByElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDescription",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDetailsElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaDisabled",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaErrorMessageElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaExpanded",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaFlowToElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaHasPopup",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaHidden",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaInvalid",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaKeyShortcuts",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLabel",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLabelledByElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLevel",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaLive",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaModal",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaMultiLine",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaMultiSelectable",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaOrientation",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaOwnsElements",
+          "type": "Element[]|null",
+          "optional": false
+        },
+        {
+          "name": "ariaPlaceholder",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaPosInSet",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaPressed",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaReadOnly",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRelevant",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRequired",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRoleDescription",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowCount",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowIndex",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowIndexText",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaRowSpan",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaSelected",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaSetSize",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaSort",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueMax",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueMin",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueNow",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "ariaValueText",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "role",
+          "type": "string|null",
+          "optional": false
+        },
+        {
+          "name": "nextElementSibling",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "previousElementSibling",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "childElementCount",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "children",
+          "type": "HTMLCollection",
+          "optional": false
+        },
+        {
+          "name": "firstElementChild",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "lastElementChild",
+          "type": "Element|null",
+          "optional": false
+        },
+        {
+          "name": "assignedSlot",
+          "type": "HTMLSlotElement|null",
+          "optional": false
+        },
+        {
+          "name": "attributeStyleMap",
+          "type": "StylePropertyMap",
+          "optional": false
+        },
+        {
+          "name": "contentEditable",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "enterKeyHint",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "inputMode",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "isContentEditable",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "onabort",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationcancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationiteration",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onanimationstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onauxclick",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onbeforeinput",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onbeforematch",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onbeforetoggle",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onblur",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncanplay",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncanplaythrough",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onclick",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onclose",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncommand",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncontextlost",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncontextmenu",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncontextrestored",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncopy",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncuechange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oncut",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondblclick",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondrag",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragenter",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragleave",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragover",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondragstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondrop",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ondurationchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onemptied",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onended",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onerror",
+          "type": "OnErrorEventHandlerNonNull",
+          "optional": false
+        },
+        {
+          "name": "onfocus",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onformdata",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ongotpointercapture",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oninput",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "oninvalid",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onkeydown",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onkeypress",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onkeyup",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onload",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onloadeddata",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onloadedmetadata",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onloadstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onlostpointercapture",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmousedown",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseenter",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseleave",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmousemove",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseout",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseover",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onmouseup",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpaste",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpause",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onplay",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onplaying",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointercancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerdown",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerenter",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerleave",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointermove",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerout",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerover",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerrawupdate",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onpointerup",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onprogress",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onratechange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onreset",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onresize",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onscroll",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onscrollend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onsecuritypolicyviolation",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onseeked",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onseeking",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onselect",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onselectionchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onselectstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onslotchange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onstalled",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onsubmit",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onsuspend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontimeupdate",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontoggle",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontouchcancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontouchend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontouchmove",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontouchstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "ontransitioncancel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontransitionend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontransitionrun",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "ontransitionstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onvolumechange",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwaiting",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkitanimationend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkitanimationiteration",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkitanimationstart",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwebkittransitionend",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "onwheel",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}|null",
+          "optional": false
+        },
+        {
+          "name": "autofocus",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "dataset",
+          "type": "DOMStringMap",
+          "optional": false
+        },
+        {
+          "name": "nonce",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "tabIndex",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": false,
+        "extends": [
+          "HTMLElement<this>"
+        ]
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 3,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /health@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 3,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 6,
+                "symbol": "GET /health@5 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 10,
+                "symbol": "GET /recent@9 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 14,
+                "symbol": "GET /ticks@13 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "service": "infra",
+      "file": "src/move.ts",
+      "line": 7,
+      "reason": "environment-not-set",
+      "message": "the call at src/move.ts:7 sends to the value of RESTOCK_URL; stock-move runs it and is not deployed with RESTOCK_URL, so where it sends from there is not known",
+      "hint": "Set RESTOCK_URL in the environment stock-move is deployed with, or correct the name the code reads.",
+      "symbol": "producer:infra#src/move.ts:7:9",
+      "meta": {
+        "function": "entry:infra:invoke:stock-move",
+        "variable": "RESTOCK_URL"
+      }
+    },
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "jobs"
+    },
+    {
+      "file": "src/senders.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "jobs"
+    },
+    {
+      "file": "src/senders.ts",
+      "line": 19,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "jobs"
+    },
+    {
+      "file": "src/senders.ts",
+      "line": 35,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "jobs"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 4,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /health@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 4,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 6,
+                "symbol": "GET /health@5 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 10,
+                "symbol": "GET /levels@9 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 14,
+                "symbol": "GET /recent@13 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "stock"
+    },
+    {
+      "file": "js/elements.js",
+      "line": 13,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "sites": 2,
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "this",
+      "service": "web"
+    },
+    {
+      "file": "js/elements.js",
+      "line": 31,
+      "reason": "api-client-base-unread",
+      "hint": "The receiver is handed axios instances made with different bases, and the method the request is made in is called by the browser, as connectedCallback of a custom element, on an instance no code read hands it, so the request is placed at each function that makes an instance. Register the instance where the code makes it, or write one base.",
+      "symbol": "this.client.get('/ticks')",
+      "service": "web"
+    }
+  ]
+}

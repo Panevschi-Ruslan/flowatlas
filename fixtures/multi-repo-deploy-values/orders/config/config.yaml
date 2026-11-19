@@ -1,0 +1,5 @@
+project_code: shop
+region: eu-west-1
+# Every stack of the project is handed the prefix the pipeline sets.
+parameters:
+  Prefix: "{{ environment_variable.SHOP_PREFIX }}"

@@ -1,0 +1,35 @@
+@  POST /orders                                                           orders/lib/orders-api.ts:25
+  -> handler                                                              orders/src/orders/place-order.ts:16
+    $  ORDERS_TABLE                                                       orders/src/orders/get-order.ts:8
+    ~  write dynamodb/orders-dev-orders                                   orders/src/orders/place-order.ts:19
+      ~  dynamodb/orders-dev-orders                                       lib/orders-stack.ts:39
+        ~  mapping OrdersStack/OrderChangedFunction/DynamoEventSource:OrdersStack/Orders  orders/lib/orders-stack.ts:79
+          ~  event dynamodb/orders-dev-orders                             orders/lib/orders-stack.ts:79
+            -> handler                                                    orders/src/orders/order-changed.ts:6
+    $  ORDERS_QUEUE_URL                                                   orders/src/orders/place-order.ts:20
+    ~  message sqs/orders-dev-placed                                      orders/src/orders/place-order.ts:20
+      ~  sqs/orders-dev-placed                                            lib/orders-stack.ts:80
+        ~  message sqs/orders-dev-placed-dlq                              orders/lib/orders-stack.ts:46
+          ~  sqs/orders-dev-placed-dlq                                    lib/orders-stack.ts:46
+        ~  mapping OrdersStack/ShipOrderFunction/SqsEventSource:OrdersStack/Placed  orders/lib/orders-stack.ts:80
+          @  orders-dev-ship-order                                        orders/lib/orders-stack.ts:64
+            -> handler                                                    orders/src/shipping/ship-order.ts:14
+              $  INVOICES_BUCKET                                          orders/src/shipping/ship-order.ts:16
+              ~  s3:ObjectCreated:Put s3/orders-dev-invoices              orders/src/shipping/ship-order.ts:16
+                ~  s3/orders-dev-invoices                                 lib/orders-stack.ts:82
+              $  SHIPPED_TOPIC_ARN                                        orders/src/shipping/ship-order.ts:17
+              ~  message sns/orders-dev-shipped                           orders/src/shipping/ship-order.ts:17
+                ~  sns/orders-dev-shipped                                 lib/orders-stack.ts:81
+    ~  event eventbridge/orders-dev/orders.service/OrderPlaced            orders/src/orders/place-order.ts:21
+      ~  eventbridge/orders-dev/orders.service/OrderPlaced                lib/orders-stack.ts:106
+        ~  rule orders-dev-order-placed                                   orders/lib/orders-stack.ts:106
+          @  workflow orders-dev-shipping                                 orders/lib/orders-stack.ts:102
+            -> ReserveStock [Task lambda:invoke]                          orders/lib/orders-stack.ts:100
+              @  orders-dev-reserve-stock                                 orders/lib/orders-stack.ts:68
+                -> handler                                                orders/src/shipping/reserve-stock.ts:4
+              -> ChargePayment [Task lambda:invoke]                       orders/lib/orders-stack.ts:101
+                @  orders-dev-charge-payment                              orders/lib/orders-stack.ts:69
+                -> Done [Succeed]                                         orders/lib/orders-stack.ts:104
+    $  ORDERS_BUS_NAME                                                    orders/src/orders/cancel-order.ts:12
+... truncated: ≥3 more nodes (raise --depth)
+unresolved on this path: 0

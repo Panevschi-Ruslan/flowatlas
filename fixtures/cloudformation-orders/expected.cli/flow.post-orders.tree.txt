@@ -1,0 +1,35 @@
+@  POST /orders                                                    orders/stacks/orders.yaml:203
+  -> handler                                                       orders/src/orders/place-order.ts:16
+    $  ORDERS_TABLE                                                orders/src/orders/get-order.ts:8
+    ~  write dynamodb/orders-dev-orders                            orders/src/orders/place-order.ts:19
+      ~  dynamodb/orders-dev-orders                                stacks/storage.json:8
+        ~  mapping stacks/orders.Resources.OrderChangedMapping     orders/stacks/orders.yaml:346
+          ~  event dynamodb/orders-dev-orders                      orders/stacks/orders.yaml:346
+            -> handler                                             orders/src/orders/order-changed.ts:6
+    $  ORDERS_QUEUE_URL                                            orders/src/orders/place-order.ts:20
+    ~  message sqs/orders-dev-placed                               orders/src/orders/place-order.ts:20
+      ~  sqs/orders-dev-placed                                     stacks/orders.yaml:338
+        ~  message sqs/orders-dev-placed-dlq                       orders/stacks/storage.json:22
+          ~  sqs/orders-dev-placed-dlq                             stacks/storage.json:22
+        ~  mapping stacks/orders.Resources.ShipOrderPlacedMapping  orders/stacks/orders.yaml:338
+          @  orders-dev-ship-order                                 orders/stacks/orders.yaml:101
+            -> handler                                             orders/src/shipping/ship-order.ts:14
+              $  INVOICES_BUCKET                                   orders/src/shipping/ship-order.ts:16
+              ~  s3:ObjectCreated:Put s3/orders-dev-invoices       orders/src/shipping/ship-order.ts:16
+                ~  s3/orders-dev-invoices                          stacks/orders.yaml:405
+              $  SHIPPED_TOPIC_ARN                                 orders/src/shipping/ship-order.ts:17
+              ~  message sns/orders-dev-shipped                    orders/src/shipping/ship-order.ts:17
+                ~  sns/orders-dev-shipped                          stacks/orders.yaml:354
+    ~  event eventbridge/orders-dev/orders.service/OrderPlaced     orders/src/orders/place-order.ts:21
+      ~  eventbridge/orders-dev/orders.service/OrderPlaced         stacks/orders.yaml:382
+        ~  rule orders-dev-order-placed                            orders/stacks/orders.yaml:382
+          @  workflow orders-dev-shipping                          orders/statemachine/shipping.asl.json:1
+            -> ReserveStock [Task lambda:invoke]                   orders/statemachine/shipping.asl.json:5
+              @  orders-dev-reserve-stock                          orders/stacks/orders.yaml:115
+                -> handler                                         orders/src/shipping/reserve-stock.ts:4
+              -> ChargePayment [Task lambda:invoke]                orders/statemachine/shipping.asl.json:15
+                @  orders-dev-charge-payment                       orders/stacks/orders.yaml:124
+                -> Done [Succeed]                                  orders/statemachine/shipping.asl.json:25
+    $  ORDERS_BUS_NAME                                             orders/src/orders/cancel-order.ts:12
+... truncated: ≥3 more nodes (raise --depth)
+unresolved on this path: 0

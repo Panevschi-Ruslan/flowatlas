@@ -332,6 +332,10 @@ has something to fix, and the marker checks say what.
 
 ## A page tied to its flows (P120)
 
+`docs/adr/0001-orders-are-idempotent.md` is a decision record with no block: it mentions `POST /orders`,
+`OrdersService.create` and `order.created` in code, which link it to those nodes (P234), and the removed
+`POST /cart`, which `flowatlas docs` counts as naming something the graph does not hold.
+
 `docs/architecture.md` is the project's own page, with doc blocks that
 `flowatlas docs` checks against the graph: the gateway's `GET /orders/:param`
 as a tree and as a tour (with notes under two steps), `POST /orders` as a

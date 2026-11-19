@@ -1,5 +1,5 @@
 import { dirname, isAbsolute, join, posix } from 'node:path';
-import { isWithinDir, toPosixPath } from '@flowatlas/core';
+import { isNoRepositoryDir, isWithinDir, mayClimbTo, sharedTopOf, toPosixPath } from '@flowatlas/core';
 import type { Project, SourceFile } from 'ts-morph';
 
 /**
@@ -110,7 +110,8 @@ const found = new WeakMap<Project, Map<string, PrismaSchema | null>>();
  * a call is written in, because that is where the schema belongs: a scheduling app's
  * calls are in `apps/web` and its schema is beside the wrapper in
  * `packages/prisma`. The ascent stops at the checkout, so a schema of some
- * other repository above this one is never read as this one's.
+ * other repository above this one is never read as this one's; outside a
+ * checkout, at the directory the run was asked to read (P340).
  *
  * Read through the project's own file system, so that what a test holds in
  * memory and what a run reads off disk are read by the one path.
@@ -125,8 +126,16 @@ export const prismaSchemaFor = (file: SourceFile): PrismaSchema | undefined => {
   }
   const visited: string[] = [];
   let dir = dirname(file.getFilePath());
+  const asked = cache.get(dir);
+  if (asked !== undefined) return asked ?? undefined;
+  // Never above the checkout, nor, in none, above the directory the run was
+  // asked to read (P340); inside one, never above everything the run reads
+  // there taken together, where a schema its services share is kept (P357).
+  const ceiling = sharedTopOf(dir, (path) => fs.fileExistsSync(path) || fs.directoryExistsSync(path));
   let answer: PrismaSchema | null = null;
   for (let depth = 0; depth < MAX_ASCENT; depth += 1) {
+    // The home directory and the file system's root are no repository's (P334).
+    if (isNoRepositoryDir(dir) || (ceiling !== undefined && !mayClimbTo(dir, ceiling))) break;
     const known = cache.get(dir);
     if (known !== undefined) {
       answer = known;

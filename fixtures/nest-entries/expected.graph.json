@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "repo": "nest-entries",
-  "generatedAt": "2026-10-07T18:29:20.163Z",
+  "generatedAt": "2026-11-07T17:38:52.402Z",
   "nodes": [
     {
       "id": "channel:order.created",
@@ -433,7 +433,14 @@
             "nestjs-microservice",
             "nestjs-schedule"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 10
+          }
+        ]
       }
     }
   ],

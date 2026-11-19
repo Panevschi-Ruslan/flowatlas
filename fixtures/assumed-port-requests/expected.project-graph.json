@@ -1,0 +1,916 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-15T15:02:11.576Z",
+  "services": [
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "remix",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "server",
+      "repo": "./server",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "config_key:storefront#APP_URL",
+      "type": "config_key",
+      "label": "APP_URL",
+      "repo": "storefront",
+      "file": "app/lib/store.ts",
+      "line": 32,
+      "meta": {
+        "key": "APP_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:storefront#STORE_API_URL",
+      "type": "config_key",
+      "label": "STORE_API_URL",
+      "repo": "storefront",
+      "file": "app/lib/store.ts",
+      "line": 22,
+      "meta": {
+        "key": "STORE_API_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:server:graphql:Mutation.addToCart",
+      "type": "entry",
+      "label": "Mutation.addToCart",
+      "repo": "server",
+      "file": "src/store.resolver.ts",
+      "line": 25,
+      "kind": "graphql",
+      "meta": {
+        "type": "Mutation",
+        "name": "addToCart",
+        "returns": "Cart!",
+        "args": {
+          "productId": {
+            "type": "ID!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:server:graphql:Query.products",
+      "type": "entry",
+      "label": "Query.products",
+      "repo": "server",
+      "file": "src/store.resolver.ts",
+      "line": 20,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "products",
+        "returns": "[Product!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:server:http:POST:/store-api",
+      "type": "entry",
+      "label": "POST /store-api",
+      "repo": "server",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/store-api",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Product": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Cart": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "products": {
+                    "type": "[Product!]!"
+                  }
+                }
+              },
+              "Mutation": {
+                "kind": "object",
+                "fields": {
+                  "addToCart": {
+                    "type": "Cart!",
+                    "args": {
+                      "productId": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "listen": [
+            {
+              "port": 3000,
+              "file": "src/main.ts",
+              "line": 11,
+              "merged": "src/main.ts:8"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:storefront:http:GET:/api/cart",
+      "type": "entry",
+      "label": "GET /api/cart",
+      "repo": "storefront",
+      "file": "app/routes/api.cart.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/cart",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:storefront:http:GET:/products",
+      "type": "entry",
+      "label": "GET /products",
+      "repo": "storefront",
+      "file": "app/routes/products.tsx",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:storefront:http:POST:/products",
+      "type": "entry",
+      "label": "POST /products",
+      "repo": "storefront",
+      "file": "app/routes/products.tsx",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/products",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "http_out:storefront#app/lib/store.ts:22:10",
+      "type": "http_out",
+      "label": "query Products /",
+      "repo": "storefront",
+      "file": "app/lib/store.ts",
+      "line": 22,
+      "meta": {
+        "method": "POST",
+        "url": "${STORE_API_URL}",
+        "path": "/",
+        "baseUrlEnv": "STORE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "client": "graphql-request",
+        "graphql": {
+          "operation": "query",
+          "name": "Products",
+          "fields": [
+            {
+              "field": "products",
+              "line": 5,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 6
+                },
+                {
+                  "field": "name",
+                  "line": 7
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "app/lib/store.ts",
+            "line": 4
+          },
+          "library": "graphql-request"
+        },
+        "baseUrl": "http://localhost:3000/store-api",
+        "baseUrlFrom": ".env.example",
+        "targetService": "server"
+      }
+    },
+    {
+      "id": "http_out:storefront#app/lib/store.ts:27:10",
+      "type": "http_out",
+      "label": "mutation AddToCart /",
+      "repo": "storefront",
+      "file": "app/lib/store.ts",
+      "line": 27,
+      "meta": {
+        "method": "POST",
+        "url": "${STORE_API_URL}",
+        "path": "/",
+        "baseUrlEnv": "STORE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "client": "graphql-request",
+        "graphql": {
+          "operation": "mutation",
+          "name": "AddToCart",
+          "fields": [
+            {
+              "field": "addToCart",
+              "arguments": [
+                "productId"
+              ],
+              "line": 14,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 15
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "productId",
+              "type": "ID!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "app/lib/store.ts",
+            "line": 13
+          },
+          "library": "graphql-request"
+        },
+        "baseUrl": "http://localhost:3000/store-api",
+        "baseUrlFrom": ".env.example",
+        "targetService": "server"
+      }
+    },
+    {
+      "id": "http_out:storefront#app/lib/store.ts:32:21",
+      "type": "http_out",
+      "label": "GET /api/cart",
+      "repo": "storefront",
+      "file": "app/lib/store.ts",
+      "line": 32,
+      "meta": {
+        "method": "GET",
+        "url": "${APP_URL}/api/cart",
+        "path": "/api/cart",
+        "baseUrlEnv": "APP_URL",
+        "baseUrlDefault": "http://localhost:3000",
+        "responseType": null,
+        "bodyType": null,
+        "baseUrl": "http://localhost:3000",
+        "baseUrlFrom": "app/lib/store.ts (the code’s own fallback)",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "id": "repo:server",
+      "type": "repo",
+      "label": "server",
+      "repo": "server",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "graphql-resolvers"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 11,
+            "merged": "src/main.ts:8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:storefront",
+      "type": "repo",
+      "label": "storefront",
+      "repo": "storefront",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 7,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "remix-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 7,
+            "setting": "PORT",
+            "default": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "server#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "module",
+      "label": "GraphQLModule",
+      "repo": "server",
+      "file": "node_modules/@nestjs/graphql",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "external": true
+      }
+    },
+    {
+      "id": "server#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "server",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "StoreResolver"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "server#src/store.resolver.ts:StoreResolver",
+      "type": "provider",
+      "label": "StoreResolver",
+      "repo": "server",
+      "file": "src/store.resolver.ts",
+      "line": 18,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "server#src/store.resolver.ts:StoreResolver.addToCart",
+      "type": "method",
+      "label": "StoreResolver.addToCart",
+      "repo": "server",
+      "file": "src/store.resolver.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "productId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:server#Cart"
+        }
+      }
+    },
+    {
+      "id": "server#src/store.resolver.ts:StoreResolver.products",
+      "type": "method",
+      "label": "StoreResolver.products",
+      "repo": "server",
+      "file": "src/store.resolver.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:server#Product[]"
+        }
+      }
+    },
+    {
+      "id": "storefront#app/lib/store.ts:addToCart",
+      "type": "function",
+      "label": "addToCart",
+      "repo": "storefront",
+      "file": "app/lib/store.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "productId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#app/lib/store.ts:listProducts",
+      "type": "function",
+      "label": "listProducts",
+      "repo": "storefront",
+      "file": "app/lib/store.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#app/lib/store.ts:readCart",
+      "type": "function",
+      "label": "readCart",
+      "repo": "storefront",
+      "file": "app/lib/store.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "storefront#app/routes/api.cart.ts:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "storefront",
+      "file": "app/routes/api.cart.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "storefront#app/routes/products.tsx:Products",
+      "type": "ui_component",
+      "label": "Products",
+      "repo": "storefront",
+      "file": "app/routes/products.tsx",
+      "line": 12,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#app/routes/products.tsx:action",
+      "type": "function",
+      "label": "action",
+      "repo": "storefront",
+      "file": "app/routes/products.tsx",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ request }",
+              "type": "{request:Request}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#app/routes/products.tsx:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "storefront",
+      "file": "app/routes/products.tsx",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{products:unknown;cart:any}"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:server:graphql:Mutation.addToCart",
+      "to": "server#src/store.resolver.ts:StoreResolver.addToCart",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:server#Cart",
+      "file": "src/store.resolver.ts",
+      "line": 25
+    },
+    {
+      "from": "entry:server:graphql:Query.products",
+      "to": "server#src/store.resolver.ts:StoreResolver.products",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:server#Product[]",
+      "file": "src/store.resolver.ts",
+      "line": 20
+    },
+    {
+      "from": "entry:storefront:http:GET:/api/cart",
+      "to": "storefront#app/routes/api.cart.ts:loader",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "Response",
+      "file": "app/routes/api.cart.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:storefront:http:GET:/products",
+      "to": "storefront#app/routes/products.tsx:loader",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{products:unknown;cart:any}",
+      "file": "app/routes/products.tsx",
+      "line": 3,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:storefront:http:POST:/products",
+      "to": "storefront#app/routes/products.tsx:action",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/products.tsx",
+      "line": 7,
+      "meta": {
+        "requestRead": true,
+        "body": "FormData"
+      }
+    },
+    {
+      "from": "http_out:storefront#app/lib/store.ts:22:10",
+      "to": "entry:server:graphql:Query.products",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/lib/store.ts",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "Products",
+          "field": "Query.products"
+        }
+      }
+    },
+    {
+      "from": "http_out:storefront#app/lib/store.ts:22:10",
+      "to": "entry:server:http:POST:/store-api",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/lib/store.ts",
+      "line": 22,
+      "meta": {
+        "via": "graphqlPath",
+        "targetService": "server",
+        "baseUrl": "http://localhost:3000/store-api",
+        "baseUrlFrom": ".env.example"
+      }
+    },
+    {
+      "from": "http_out:storefront#app/lib/store.ts:27:10",
+      "to": "entry:server:graphql:Mutation.addToCart",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/lib/store.ts",
+      "line": 14,
+      "meta": {
+        "graphql": {
+          "operation": "AddToCart",
+          "field": "Mutation.addToCart"
+        }
+      }
+    },
+    {
+      "from": "http_out:storefront#app/lib/store.ts:27:10",
+      "to": "entry:server:http:POST:/store-api",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/lib/store.ts",
+      "line": 27,
+      "meta": {
+        "via": "graphqlPath",
+        "targetService": "server",
+        "baseUrl": "http://localhost:3000/store-api",
+        "baseUrlFrom": ".env.example"
+      }
+    },
+    {
+      "from": "http_out:storefront#app/lib/store.ts:32:21",
+      "to": "entry:storefront:http:GET:/api/cart",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/lib/store.ts",
+      "line": 32,
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "storefront",
+        "baseUrl": "http://localhost:3000",
+        "baseUrlFrom": "app/lib/store.ts (the code’s own fallback)"
+      }
+    },
+    {
+      "from": "server#src/app.module.ts:AppModule",
+      "to": "server#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "imports",
+      "confidence": "heuristic",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "storefront#app/lib/store.ts:addToCart",
+      "to": "config_key:storefront#STORE_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "app/lib/store.ts",
+      "line": 27
+    },
+    {
+      "from": "storefront#app/lib/store.ts:addToCart",
+      "to": "http_out:storefront#app/lib/store.ts:27:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/lib/store.ts",
+      "line": 27
+    },
+    {
+      "from": "storefront#app/lib/store.ts:listProducts",
+      "to": "config_key:storefront#STORE_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "app/lib/store.ts",
+      "line": 22
+    },
+    {
+      "from": "storefront#app/lib/store.ts:listProducts",
+      "to": "http_out:storefront#app/lib/store.ts:22:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/lib/store.ts",
+      "line": 22
+    },
+    {
+      "from": "storefront#app/lib/store.ts:readCart",
+      "to": "config_key:storefront#APP_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "app/lib/store.ts",
+      "line": 32
+    },
+    {
+      "from": "storefront#app/lib/store.ts:readCart",
+      "to": "http_out:storefront#app/lib/store.ts:32:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/lib/store.ts",
+      "line": 32
+    },
+    {
+      "from": "storefront#app/routes/products.tsx:action",
+      "to": "storefront#app/lib/store.ts:addToCart",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "app/routes/products.tsx",
+      "line": 9
+    },
+    {
+      "from": "storefront#app/routes/products.tsx:loader",
+      "to": "storefront#app/lib/store.ts:listProducts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "app/routes/products.tsx",
+      "line": 4
+    },
+    {
+      "from": "storefront#app/routes/products.tsx:loader",
+      "to": "storefront#app/lib/store.ts:readCart",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "app/routes/products.tsx",
+      "line": 4
+    }
+  ],
+  "types": {
+    "type:server#Cart": {
+      "name": "Cart",
+      "kind": "object",
+      "declaredIn": "server#src/store.resolver.ts",
+      "structuralHash": "f130d3628fd99765",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:server#Product": {
+      "name": "Product",
+      "kind": "object",
+      "declaredIn": "server#src/store.resolver.ts",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app.module.ts",
+      "line": 9,
+      "reason": "module-import-not-installed",
+      "hint": "GraphQLModule is a module of @nestjs/graphql, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
+      "symbol": "AppModule imports GraphQLModule",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "module": "GraphQLModule"
+      },
+      "service": "server"
+    },
+    {
+      "file": "app/lib/store.ts",
+      "line": 21,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "storefront"
+    },
+    {
+      "service": "storefront",
+      "file": "app/lib/store.ts",
+      "line": 22,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "STORE_API_URL is http://localhost:3000/store-api in .env.example, which is taken as server",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add STORE_API_URL to services[].baseUrlEnv of server to say so outright.",
+      "symbol": "http_out:storefront#app/lib/store.ts:22:10",
+      "meta": {
+        "variable": "STORE_API_URL",
+        "value": "http://localhost:3000/store-api",
+        "from": ".env.example"
+      },
+      "sites": 2
+    },
+    {
+      "file": "app/lib/store.ts",
+      "line": 26,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "storefront"
+    },
+    {
+      "service": "storefront",
+      "file": "app/lib/store.ts",
+      "line": 32,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "APP_URL is http://localhost:3000 in app/lib/store.ts (the code’s own fallback), which is taken as storefront",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add APP_URL to services[].baseUrlEnv of storefront to say so outright.",
+      "symbol": "http_out:storefront#app/lib/store.ts:32:21",
+      "meta": {
+        "variable": "APP_URL",
+        "value": "http://localhost:3000",
+        "from": "app/lib/store.ts (the code’s own fallback)"
+      }
+    },
+    {
+      "file": "app/routes/products.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "storefront"
+    },
+    {
+      "file": "app/routes/products.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "storefront"
+    },
+    {
+      "file": "app/routes/products.tsx",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "storefront"
+    }
+  ]
+}

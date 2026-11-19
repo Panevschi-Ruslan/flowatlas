@@ -97,6 +97,7 @@ export declare class Router {
   get(path: string, ...handlers: Middleware[]): Router;
   post(path: string, ...handlers: Middleware[]): Router;
   del(path: string, ...handlers: Middleware[]): Router;
+  register(path: string | string[], methods: string[], middleware: Middleware | Middleware[]): unknown;
   use(...handlers: Middleware[]): Router;
   use(path: string, ...handlers: Middleware[]): Router;
   prefix(path: string): Router;
@@ -722,6 +723,36 @@ describe('fastify routes', () => {
 });
 
 describe('koa routes', () => {
+  it('reads a route registered with its verbs as a list, the last handler answering (P270)', () => {
+    const read = koa(`
+      import Router from '@koa/router';
+      const router = new Router({ prefix: '/api' });
+      const validate = async (ctx, next) => next();
+      const run = async (ctx) => { ctx.body = 'ok'; };
+      router.register('jobs.:interval', ['get', 'post'], [validate, run]);
+      router.register(['maintenance.sweep', 'maintenance.purge'], ['post'], run);
+    `);
+    expect(ids(read)).toEqual([
+      'entry:api:http:GET:/api/jobs.:interval',
+      'entry:api:http:POST:/api/jobs.:interval',
+      'entry:api:http:POST:/api/maintenance.purge',
+      'entry:api:http:POST:/api/maintenance.sweep',
+    ]);
+    expect(middlewareOf(read, 'entry:api:http:GET:/api/jobs.:interval')).toEqual(['validate']);
+    expect(read.entries.find((entry) => entry.id === 'entry:api:http:POST:/api/maintenance.sweep')?.handler).toMatchObject({ functionName: 'run' });
+  });
+
+  it('names a list registration whose verbs are decided at run time, and draws nothing for it (P270)', () => {
+    const read = koa(`
+      import Router from '@koa/router';
+      const router = new Router();
+      const verbs = process.env.VERBS.split(',');
+      router.register('jobs.manual', verbs, async (ctx) => { ctx.body = 'ok'; });
+    `);
+    expect(read.entries).toEqual([]);
+    expect(read.unresolved.map((row) => row.reason)).toContain('route-verb-unread');
+  });
+
   it('takes the prefix from the router the constructor was given', () => {
     const read = koa(`
       import Router from '@koa/router';

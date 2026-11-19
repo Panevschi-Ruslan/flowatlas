@@ -7,6 +7,7 @@ import {
   type EnvironmentValue,
   type FlowatlasConfig,
   type GraphNode,
+  type HostAlias,
   type RepoSettings,
 } from '@flowatlas/core';
 import { wordsOf } from './api-choice.js';
@@ -49,12 +50,29 @@ export interface FoundValue {
   readonly namedOnly?: readonly string[];
   /** For a setting taken by its name: the values found, none of which named a configured service. */
   readonly unmatched?: readonly string[];
+  /** The service the value is an address of, where the deployment says so: an API another service publishes (P249). */
+  readonly service?: string;
+  /**
+   * For an address of an API the caller's own deployment serves, written out
+   * with an id the files do not tie to it (P268): the path it asks for on the
+   * API, after its stage, and the address as it is written.
+   */
+  readonly apiPath?: string;
+  readonly written?: string;
+  /** The address is built around a reference to the API, which says which API it is (P272). */
+  readonly referenced?: boolean;
 }
 
 /** What the values of a setting say a request's base address is. */
 export type BaseUrlAnswer =
   | { readonly kind: 'service'; readonly service: string; readonly found: FoundValue; readonly others: readonly FoundValue[] }
-  | { readonly kind: 'external'; readonly host: string; readonly found: FoundValue }
+  | {
+      readonly kind: 'external';
+      readonly host: string;
+      readonly found: FoundValue;
+      /** Every value found, among them those of this machine a third party's host outweighed (P281). */
+      readonly values?: readonly FoundValue[];
+    }
   | {
       readonly kind: 'unsettled';
       readonly values: readonly FoundValue[];
@@ -64,7 +82,7 @@ export type BaseUrlAnswer =
     };
 
 /** Every name a host is known by, and the services it names. */
-type HostIndex = ReadonlyMap<string, readonly string[]>;
+export type HostIndex = ReadonlyMap<string, readonly string[]>;
 
 const addTo = (index: Map<string, string[]>, host: string, service: string): void => {
   const key = host.toLowerCase();
@@ -89,8 +107,29 @@ export const hostIndexOf = (config: FlowatlasConfig, settings: Readonly<Record<s
   return index;
 };
 
+/**
+ * The hosts only an example environment file gives a service (P309): each
+ * host with the services every file placing them there at it is an example
+ * or a template of. Such a host is offered, not where a run is placed. So
+ * is one an environment file gives that nothing the code reader follows
+ * loads (P331): `PORT=4000` in a `.env.development` nothing is read loading
+ * is a value a run may or may not have, while the same file loaded by the
+ * code (`loaded`, the files the service's code ports are filled from) places
+ * the service firmly.
+ */
+export const offeredHostsOf = (settings: Readonly<Record<string, RepoSettings>>, loaded: (service: string, file: string) => boolean = () => false): HostIndex => {
+  const index = new Map<string, string[]>();
+  for (const [service, own] of Object.entries(settings)) {
+    const offers = (alias: HostAlias): boolean => alias.example === true || (alias.environmentFile === true && !loaded(service, alias.file));
+    const firm = new Set(own.hosts.filter((alias) => !offers(alias)).map((alias) => alias.host.toLowerCase()));
+    for (const alias of own.hosts) if (offers(alias) && !firm.has(alias.host.toLowerCase())) addTo(index, alias.host, service);
+  }
+  for (const list of index.values()) list.sort(cmp);
+  return index;
+};
+
 /** The services a value's host names, by every name it may be known by. */
-const servicesAt = (address: string, index: HostIndex): readonly string[] | 'external' | 'inner' | undefined => {
+export const servicesAt = (address: string, index: HostIndex): readonly string[] | 'external' | 'inner' | undefined => {
   const host = hostOf(address);
   if (host === undefined) return undefined;
   const named =
@@ -103,6 +142,16 @@ const servicesAt = (address: string, index: HostIndex): readonly string[] | 'ext
 const deployedValues = (variable: string, runners: readonly GraphNode[]): FoundValue[] =>
   runners.flatMap((fn) => {
     const set = (fn.meta?.[ENVIRONMENT_META] as Record<string, EnvironmentValue> | undefined)?.[variable];
+    // An API another service publishes, imported by its name: that service (P249).
+    if (set?.kind === 'api' && set.service !== undefined && set.value !== undefined) {
+      return [{ variable, value: set.value, from: `the environment ${fn.label} is deployed with`, deployed: true, service: set.service }];
+    }
+    // An address of an API the function's own deployment serves (P268): its service.
+    if (set?.kind === 'api' && set.path !== undefined && set.value !== undefined) {
+      return [
+        { variable, value: set.value, from: `the environment ${fn.label} is deployed with`, deployed: true, service: fn.repo, apiPath: set.path, written: set.written, ...(set.referenced === true ? { referenced: true } : {}) },
+      ];
+    }
     // A reference to something deployed is a function URL or a queue, which
     // their own joins answer; only a value the files settle as text is an address.
     if (set?.value === undefined || set.kind !== undefined) return [];
@@ -120,13 +169,224 @@ export interface BaseUrlInput {
   readonly settings?: RepoSettings;
   readonly hosts: HostIndex;
   /**
+   * The services an address on this machine reaches by its port, the ports
+   * their code listens on among them (P250, P254): asked before the hosts,
+   * so a value only the code places is placed (P292). Nothing for an address
+   * that is not this machine's, or a port nothing is known at.
+   */
+  readonly atPort?: (address: string) => readonly string[] | undefined;
+  /**
    * Every configured service, for a setting named after one; empty where a
-   * name is not to decide. A browser's request is told which service its key
-   * names by `apiTarget`, and a guess from the name there would answer the
-   * one question the configuration is meant to.
+   * name is not to decide. Asked for a browser's request as for one between
+   * services (P292), after `apiTarget`, which the configuration writes for it.
    */
   readonly services: readonly string[];
 }
+
+/**
+ * The settings a chain of `||` reads after the one a request is rooted at,
+ * in order (P296): `process.env.A || process.env.B || 'x'` goes to `B` where
+ * `A` is not set.
+ */
+export const settingsAfter = (call: GraphNode): readonly string[] => {
+  const also = call.meta?.['baseUrlAlso'];
+  return Array.isArray(also) ? also.filter((each): each is string => typeof each === 'string') : [];
+};
+
+/**
+ * The settings read after the opening tier in the tiers the reader groups
+ * them in, where it groups any (P325): `A || (isProd ? B : C)` is
+ * `[['B', 'C']]`, the condition's branches one tier after `A`. Nothing where
+ * the reader wrote no grouping, each later setting then a tier of its own.
+ */
+export const settingTiersAfter = (call: GraphNode): readonly (readonly string[])[] | undefined => {
+  const tiers = call.meta?.['baseUrlAlsoTiers'];
+  if (!Array.isArray(tiers)) return undefined;
+  const read = tiers.map((tier) => (Array.isArray(tier) ? tier.filter((each): each is string => typeof each === 'string') : [])).filter((tier) => tier.length > 0);
+  return read.length === 0 ? undefined : read;
+};
+
+/**
+ * The settings of a condition's branches nobody settles, the first branch's
+ * first (P309): `isProd ? process.env.A : process.env.B` is `['A', 'B']`,
+ * each as much the request's base as the other.
+ */
+export const settingsEither = (call: GraphNode): readonly string[] => {
+  const either = call.meta?.['baseUrlEither'];
+  return Array.isArray(either) ? either.filter((each): each is string => typeof each === 'string') : [];
+};
+
+/**
+ * The variable of the environment a settings factory builds a setting's key
+ * from (P77), for the key a request is rooted at and for each setting of a
+ * chain or a condition's branches after it (P313): `config.get('orders.url')`
+ * read from `ORDERS_URL`.
+ */
+export const variableOfSetting = (call: GraphNode, setting: string): string | undefined => {
+  if (setting === call.meta?.['baseUrlEnv']) {
+    const variable = call.meta?.['baseUrlVariable'];
+    if (typeof variable === 'string') return variable;
+  }
+  const variables = call.meta?.['baseUrlVariables'];
+  const variable = typeof variables === 'object' && variables !== null ? (variables as Record<string, unknown>)[setting] : undefined;
+  return typeof variable === 'string' ? variable : undefined;
+};
+
+/** Who claims a setting of a request's base: whoever claims its key, else whoever claims the variable its key is built from (P77, P313). */
+export const claimantsOfSetting = (call: GraphNode, setting: string, claimantsOf: (setting: string) => readonly string[]): readonly string[] => {
+  const own = claimantsOf(setting);
+  if (own.length > 0) return own;
+  const variable = variableOfSetting(call, setting);
+  return variable === undefined ? own : claimantsOf(variable);
+};
+
+/** A service a setting of a request's base reaches, with the settings of the base it claims. */
+export interface BranchClaim {
+  readonly service: string;
+  readonly settings: readonly string[];
+}
+
+/**
+ * The services a request's base may be, where its settings are claimed by
+ * more than one (P309, P313, P319), asked in tiers:
+ *
+ * - `either`: a condition's branches nobody settles, one tier, every
+ *   claimant of every branch's setting as much the base as another, a setting
+ *   several services claim naming each of them; a chain read after the
+ *   condition, `(isProd ? A : B) || C`, is a later tier per setting, as in a
+ *   plain chain (P319);
+ * - `chain`: `A || B`, `A ?? B`, one tier per setting someone claims, in the
+ *   order they are read, a service counted at the first setting it claims;
+ * - `claimed`: one setting several services claim, one tier (P319).
+ */
+export interface SettingCandidates {
+  readonly order: 'either' | 'chain' | 'claimed';
+  readonly tiers: readonly (readonly BranchClaim[])[];
+  /** The index of each later tier that holds a condition's branches, `A || (isProd ? B : C)` (P325). */
+  readonly conditions?: readonly number[];
+}
+
+const claimsOf = (call: GraphNode, settings: readonly string[], claimantsOf: (setting: string) => readonly string[], seen: ReadonlySet<string>): BranchClaim[] => {
+  const claims: { service: string; settings: string[] }[] = [];
+  for (const setting of settings) {
+    for (const service of claimantsOfSetting(call, setting, claimantsOf)) {
+      if (seen.has(service)) continue;
+      const claim = claims.find((each) => each.service === service);
+      if (claim === undefined) claims.push({ service, settings: [setting] });
+      else if (!claim.settings.includes(setting)) claim.settings.push(setting);
+    }
+  }
+  return claims;
+};
+
+/**
+ * Who may be a request's base among the settings it is read from (P313): a
+ * condition's branches as one tier, then each setting of a chain read after
+ * the condition (P319); else the settings of a chain, each its own tier, the
+ * first setting's several claimants a tier like any other (P319). Nothing
+ * where they name one service or none, so the setting the request is rooted
+ * at is looked up as it always was.
+ */
+export const settingCandidates = (call: GraphNode, claimantsOf: (setting: string) => readonly string[]): SettingCandidates | undefined => {
+  const either = settingsEither(call);
+  const env = call.meta?.['baseUrlEnv'];
+  const seen = new Set<string>();
+  const tiers: BranchClaim[][] = [];
+  const conditions: number[] = [];
+  const add = (settings: readonly string[]): boolean => {
+    const tier = claimsOf(call, settings, claimantsOf, seen);
+    if (tier.length === 0) return false;
+    for (const claim of tier) seen.add(claim.service);
+    if (settings.length > 1 && tiers.length > 0) conditions.push(tiers.length);
+    tiers.push(tier);
+    return true;
+  };
+  // The tiers after the opening one: as the reader groups them, a condition
+  // later in a chain one tier of its branches (P325); else each setting of
+  // the chain its own tier, in order.
+  const opening = either.length > 0 ? either : typeof env === 'string' ? [env] : [];
+  const later = settingTiersAfter(call) ?? settingsAfter(call).filter((setting) => !opening.includes(setting)).map((setting) => [setting]);
+  let fromEither = false;
+  if (either.length > 0) {
+    fromEither = add(either);
+    // `(isProd ? A : B) || C`: C is where the base is read where neither branch's setting is set.
+    for (const tier of later) add(tier);
+  } else if (typeof env === 'string') {
+    add([env]);
+    for (const tier of later) add(tier);
+  }
+  if (seen.size <= 1) return undefined;
+  const settings = new Set(tiers.flat().flatMap((claim) => claim.settings));
+  return { order: fromEither ? 'either' : settings.size === 1 ? 'claimed' : 'chain', tiers, ...(conditions.length === 0 ? {} : { conditions }) };
+};
+
+/**
+ * Who claims each setting of a condition's branches nobody settles (P309):
+ * every claimant of every branch's setting, each with the branch settings it
+ * claims, in the order the branches are written (P313). Nothing where they
+ * name one service or none.
+ */
+export const branchClaims = (call: GraphNode, claimantsOf: (setting: string) => readonly string[]): readonly BranchClaim[] | undefined => {
+  const candidates = settingCandidates(call, claimantsOf);
+  return candidates?.order === 'either' ? candidates.tiers[0] : undefined;
+};
+
+/** A claim as a row names it: `ORDERS_URL (orders)`. */
+export const branchSaid = (claim: BranchClaim): string => `${claim.settings.join(', ')} (${claim.service})`;
+
+/** The service a request's base was chosen as among its settings' claimants, or the several serving it. */
+export type SettingChoice<T> =
+  | { readonly kind: 'one'; readonly claim: BranchClaim; readonly found: T; readonly said: readonly string[]; readonly order: ChoiceOrder }
+  | {
+      readonly kind: 'several';
+      readonly serving: readonly { readonly claim: BranchClaim; readonly found: T }[];
+      readonly said: readonly string[];
+      readonly order: ChoiceOrder;
+    };
+
+/**
+ * How the tier a choice was made in is read: the candidates' own order for
+ * the opening tier, a chain's for a later one, and `chain-either` for a later
+ * tier holding a condition's branches (P325).
+ */
+export type ChoiceOrder = SettingCandidates['order'] | 'chain-either';
+
+/**
+ * The claimant serving the request among a request's base settings (P309,
+ * P313), `ask` answering for a service that serves it and nothing for one
+ * that does not. Tier by tier: the first tier anyone serves it in is the
+ * answer, one service the join, a guess, several a row. A first tier of one
+ * claimant serving it is the join it always was, so nothing; a first tier
+ * several services claim is asked like any other (P319), so one setting two
+ * services claim joins the one serving the request. Where nobody serves it,
+ * nothing, and the first claimant is asked as before. A choice made in the
+ * first tier says how that tier is read, one made after it a chain's.
+ */
+export const chooseAmongSettings = <T>(candidates: SettingCandidates, ask: (service: string) => T | undefined): SettingChoice<T> | undefined => {
+  const said = candidates.tiers.flat().map(branchSaid);
+  for (const [index, tier] of candidates.tiers.entries()) {
+    const serving = tier.flatMap((claim) => {
+      const found = ask(claim.service);
+      return found === undefined ? [] : [{ claim, found }];
+    });
+    if (serving.length === 0) continue;
+    if (index === 0 && tier.length === 1) return undefined;
+    const order = index === 0 ? candidates.order : candidates.conditions?.includes(index) === true ? 'chain-either' : 'chain';
+    const [only] = serving;
+    return only !== undefined && serving.length === 1 ? { kind: 'one', claim: only.claim, found: only.found, said, order } : { kind: 'several', serving, said, order };
+  }
+  return undefined;
+};
+
+/** How a row says the base was read from its settings: chosen by a condition, the first of a chain that is set, or one setting several claim. */
+export const howChosen = (order: ChoiceOrder): string =>
+  order === 'either'
+    ? 'chosen by a condition nobody settles'
+    : order === 'claimed'
+      ? 'a setting several services claim'
+      : order === 'chain-either'
+        ? 'read from the first of them that is set, a condition nobody settles choosing among the later ones'
+        : 'read from the first of them that is set';
 
 /** Every value the setting is found with, strongest first: the deployment's alone, where it says. */
 export const valuesOf = (input: BaseUrlInput): FoundValue[] => {
@@ -158,6 +418,9 @@ export const valuesOf = (input: BaseUrlInput): FoundValue[] => {
   return [...written, ...own];
 };
 
+/** The prefixes a build requires of the settings it hands the browser, which name no service. */
+const BROWSER_PREFIX = /^(?:NEXT_PUBLIC_|NUXT_PUBLIC_|EXPO_PUBLIC_|REACT_APP_|VUE_APP_|NG_APP_|GATSBY_|VITE_|PUBLIC_)(?=[A-Z0-9])/;
+
 /**
  * The one service a setting is named after: the words of its name, the
  * generic ones (`url`, `api`, `service`) left out, are the words of exactly
@@ -167,7 +430,9 @@ export const serviceNamed = (variables: readonly string[], services: readonly st
   const same = (a: ReadonlySet<string>, b: ReadonlySet<string>): boolean => a.size > 0 && a.size === b.size && [...a].every((word) => b.has(word));
   const matching = new Set<string>();
   for (const variable of variables) {
-    const asked = wordsOf(variable);
+    // The prefix a build requires of a setting the browser is handed says
+    // nothing of the service: `VITE_ORDERS_URL` is named after `orders` (P292).
+    const asked = wordsOf(variable.replace(BROWSER_PREFIX, ''));
     for (const service of services) if (same(asked, wordsOf(service))) matching.add(service);
   }
   return matching.size === 1 ? [...matching][0] : undefined;
@@ -201,7 +466,7 @@ export const baseUrlOf = (input: BaseUrlInput): BaseUrlAnswer | undefined => {
   const external = new Map<string, FoundValue>();
   const unsettled: string[] = [];
   for (const found of values) {
-    const at = servicesAt(found.value, input.hosts);
+    const at = found.service === undefined ? (input.atPort?.(found.value) ?? servicesAt(found.value, input.hosts)) : [found.service];
     if (Array.isArray(at)) {
       if (at.length === 1) byService.set(at[0] as string, [...(byService.get(at[0] as string) ?? []), found]);
       else unsettled.push(...at);
@@ -217,7 +482,7 @@ export const baseUrlOf = (input: BaseUrlInput): BaseUrlAnswer | undefined => {
   }
   if (byService.size === 0 && unsettled.length === 0 && external.size > 0) {
     const [[host, found]] = [...external.entries()].sort(([a], [b]) => cmp(a, b)) as [[string, FoundValue]];
-    return { kind: 'external', host, found };
+    return { kind: 'external', host, found, values };
   }
   const services = [...new Set([...byService.keys(), ...unsettled])].sort(cmp);
   // Values that name nothing configured - a port nobody is known to listen

@@ -220,3 +220,15 @@ describe('the nearest reasons to one nobody registered', () => {
     expect(nearestReasons('zzzz', ['route-unguarded'])).toEqual([]);
   });
 });
+
+describe("doctor's desync table for a request for a procedure (P256)", () => {
+  const RPC = join(ROOT, 'fixtures', 'rpc-contracts', 'flowatlas.config.json');
+
+  it('names the procedure and the setting its link is rooted at, where a route call has a verb and a path', () => {
+    const run = runDoctorCommand({ config: RPC, reason: ['unknown-base-url-env'] }, quiet);
+    const row = run.report.desync.rows.find((each) => each.call.includes('archive.client'));
+    expect(row).toMatchObject({ procedure: 'orders.store', protocol: 'rpc', baseUrlEnv: 'ARCHIVE_URL', method: null, path: null });
+    expect(run.text).toMatch(/rpc orders\.store/);
+    expect(run.text).not.toMatch(/ \? \? /);
+  });
+});

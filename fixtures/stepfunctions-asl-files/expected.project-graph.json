@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:28:33.582Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:41:22.501Z",
   "services": [
     {
       "name": "circulation",
@@ -1050,7 +1050,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 17
+          }
+        ]
       }
     },
     {
@@ -1072,7 +1079,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/server.ts",
+            "line": 17
+          }
+        ]
       }
     },
     {

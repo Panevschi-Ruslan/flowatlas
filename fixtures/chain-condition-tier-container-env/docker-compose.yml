@@ -1,0 +1,16 @@
+# The two services a developer runs in containers. Neither container's own
+# environment block gives the port its code reads: inventory's comes from the
+# environment file it is started with, billing's from its image.
+services:
+  inventory:
+    build: ./inventory
+    ports:
+      - "8080:4000"
+    env_file:
+      - ./inventory/.env
+  billing:
+    build:
+      context: ./billing
+      target: runtime
+    ports:
+      - "8081:4100"

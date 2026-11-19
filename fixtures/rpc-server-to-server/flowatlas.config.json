@@ -1,0 +1,22 @@
+{
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "baseUrlEnv": ["ORDERS_URL"]
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express",
+      "hosts": ["billing.internal"]
+    },
+    {
+      "name": "worker",
+      "repo": "./worker",
+      "type": "nestjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

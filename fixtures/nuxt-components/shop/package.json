@@ -1,0 +1,10 @@
+{
+  "name": "components-shop",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@nuxt/image": "^1.8.0",
+    "catalog-kit": "workspace:*",
+    "nuxt": "^4.1.0"
+  }
+}

@@ -1,0 +1,619 @@
+{
+  "seed": 5,
+  "resources": 3,
+  "keyRoutes": 133,
+  "answers": [
+    {
+      "question": "callers-backend-1",
+      "text": "Found them.\nANSWER: [\"GatewayBillingReceiptsClient.restore\",\"OrdersBillingClient.restoreReceipt\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "callers-backend-1",
+      "text": "ANSWER: [\"GatewayBillingReceiptsClient.restore\"]",
+      "expect": {
+        "score": 0.667,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "callers-backend-2",
+      "text": "Found them.\nANSWER: [\"OrdersNotifyClient.createPushe\",\"ShippingNotifyClient.createPushe\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "callers-backend-2",
+      "text": "ANSWER: [\"OrdersNotifyClient.createPushe\"]",
+      "expect": {
+        "score": 0.667,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "callers-gateway-1",
+      "text": "Found them.\nANSWER: [\"CatalogAttributesApiService.list\",\"listCatalogAttributes\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "callers-gateway-1",
+      "text": "ANSWER: [\"CatalogAttributesApiService.list\"]",
+      "expect": {
+        "score": 0.667,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "callers-gateway-2",
+      "text": "Found them.\nANSWER: [\"OrdersCouponsApiService.findOne\",\"findOneOrdersCoupons\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "callers-gateway-2",
+      "text": "ANSWER: [\"OrdersCouponsApiService.findOne\"]",
+      "expect": {
+        "score": 0.667,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "blast-1",
+      "text": "Found them.\nANSWER: [\"admin/src/app/catalog-attributes/catalog-attributes.component.ts\",\"web/src/catalog-attributes/CatalogAttributesPanel.tsx\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "blast-1",
+      "text": "ANSWER: [\"admin/src/app/catalog-attributes/catalog-attributes.component.ts\"]",
+      "expect": {
+        "score": 0.667,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "blast-2",
+      "text": "Found them.\nANSWER: [\"admin/src/app/orders-coupons/orders-coupons.component.ts\",\"web/src/orders-coupons/OrdersCouponsPanel.tsx\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "blast-2",
+      "text": "ANSWER: [\"admin/src/app/orders-coupons/orders-coupons.component.ts\"]",
+      "expect": {
+        "score": 0.667,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "blast-3",
+      "text": "Found them.\nANSWER: [\"admin/src/app/shipping-depots/shipping-depots.component.ts\",\"web/src/shipping-depots/ShippingDepotsPanel.tsx\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "blast-3",
+      "text": "ANSWER: [\"admin/src/app/shipping-depots/shipping-depots.component.ts\"]",
+      "expect": {
+        "score": 0.667,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "blast-4",
+      "text": "Found them.\nANSWER: [\"admin/src/app/billing-receipts/billing-receipts.component.ts\",\"web/src/billing-receipts/BillingReceiptsPanel.tsx\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "blast-4",
+      "text": "ANSWER: [\"admin/src/app/billing-receipts/billing-receipts.component.ts\"]",
+      "expect": {
+        "score": 0.667,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "handlers-1",
+      "text": "Found them.\nANSWER: [\"ShippingCategoryEvents.onCategoryUpdated\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "handlers-1",
+      "text": "ANSWER: [\"ShippingCategoryEvents.onCategoryUpdated\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "handlers-2",
+      "text": "Found them.\nANSWER: [\"ShippingNoteEvents.onNoteUpdated\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "handlers-2",
+      "text": "ANSWER: [\"ShippingNoteEvents.onNoteUpdated\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "handlers-unheard",
+      "text": "Found them.\nANSWER: []",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "handlers-unheard",
+      "text": "ANSWER: [\"Nothing.handles\"]",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "dead-nest",
+      "text": "Found them.\nANSWER: [\"DELETE /categories/:id\",\"DELETE /collections/:id\",\"GET /collections\",\"GET /collections/:id\",\"PATCH /categories/:id\",\"PATCH /collections/:id\",\"POST /attributes/:id/lock\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "dead-nest",
+      "text": "ANSWER: [\"DELETE /categories/:id\",\"DELETE /collections/:id\",\"GET /collections\",\"GET /collections/:id\"]",
+      "expect": {
+        "score": 0.727,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "dead-express",
+      "text": "Found them.\nANSWER: [\"DELETE /refunds/:id\",\"GET /receipts/:id\",\"GET /refunds/:id\",\"POST /credits/:id/export\",\"POST /receipts\",\"POST /refunds\",\"POST /refunds/:id/publish\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "dead-express",
+      "text": "ANSWER: [\"DELETE /refunds/:id\",\"GET /receipts/:id\",\"GET /refunds/:id\",\"POST /credits/:id/export\"]",
+      "expect": {
+        "score": 0.727,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "dead-lambda",
+      "text": "Found them.\nANSWER: [\"DELETE /broadcasts/:id\",\"DELETE /digests/:id\",\"DELETE /pushes/:id\",\"GET /broadcasts\",\"GET /broadcasts/:id\",\"GET /digests\",\"GET /digests/:id\",\"GET /pushes\",\"GET /pushes/:id\",\"PATCH /broadcasts/:id\",\"PATCH /digests/:id\",\"PATCH /pushes/:id\",\"POST /broadcasts\",\"POST /broadcasts/:id/restore\",\"POST /digests\",\"POST /digests/:id/verify\",\"POST /pushes/:id/verify\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "dead-lambda",
+      "text": "ANSWER: [\"DELETE /broadcasts/:id\",\"DELETE /digests/:id\",\"DELETE /pushes/:id\",\"GET /broadcasts\",\"GET /broadcasts/:id\",\"GET /digests\",\"GET /digests/:id\",\"GET /pushes\",\"GET /pushes/:id\"]",
+      "expect": {
+        "score": 0.692,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "contract-renamed",
+      "text": "It is in the code.\nANSWER: \"no\"",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "contract-renamed",
+      "text": "ANSWER: \"yes\"",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "contract-renamed",
+      "text": "No, from what the code shows.",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "patterns"
+      }
+    },
+    {
+      "question": "contract-kept-1",
+      "text": "It is in the code.\nANSWER: \"yes\"",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "contract-kept-1",
+      "text": "ANSWER: \"no\"",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "contract-kept-1",
+      "text": "Yes, from what the code shows.",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "patterns"
+      }
+    },
+    {
+      "question": "contract-kept-2",
+      "text": "It is in the code.\nANSWER: \"yes\"",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "contract-kept-2",
+      "text": "ANSWER: \"no\"",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "contract-kept-2",
+      "text": "Yes, from what the code shows.",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "patterns"
+      }
+    },
+    {
+      "question": "settings-object",
+      "text": "It is in the code.\nANSWER: \"catalog\"",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "settings-object",
+      "text": "ANSWER: \"unknown\"",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "settings-helper",
+      "text": "It is in the code.\nANSWER: \"orders\"",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "settings-helper",
+      "text": "ANSWER: \"unknown\"",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "settings-env",
+      "text": "It is in the code.\nANSWER: \"catalog\"",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "settings-env",
+      "text": "ANSWER: \"unknown\"",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "single-1",
+      "text": "Found them.\nANSWER: [\"CatalogCollectionsService.create\",\"CatalogCollectionsService.remove\",\"CatalogCollectionsService.update\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "single-1",
+      "text": "ANSWER: [\"CatalogCollectionsService.create\",\"CatalogCollectionsService.remove\"]",
+      "expect": {
+        "score": 0.8,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "single-2",
+      "text": "Found them.\nANSWER: [\"OrdersCouponsService.create\",\"OrdersCouponsService.export\",\"OrdersCouponsService.remove\",\"OrdersCouponsService.update\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "single-2",
+      "text": "ANSWER: [\"OrdersCouponsService.create\",\"OrdersCouponsService.export\"]",
+      "expect": {
+        "score": 0.667,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "single-3",
+      "text": "Found them.\nANSWER: [\"ShippingManifestsService.create\",\"ShippingManifestsService.merge\",\"ShippingManifestsService.remove\",\"ShippingManifestsService.update\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "single-3",
+      "text": "ANSWER: [\"ShippingManifestsService.create\",\"ShippingManifestsService.merge\"]",
+      "expect": {
+        "score": 0.667,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "single-4",
+      "text": "Found them.\nANSWER: [\"BillingReceiptsService.create\",\"BillingReceiptsService.remove\",\"BillingReceiptsService.update\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "single-4",
+      "text": "ANSWER: [\"BillingReceiptsService.create\",\"BillingReceiptsService.remove\"]",
+      "expect": {
+        "score": 0.8,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "text-1",
+      "text": "It is in the code.\nANSWER: \"73\"",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "text-1",
+      "text": "ANSWER: \"unknown\"",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "text-2",
+      "text": "It is in the code.\nANSWER: \"12\"",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "text-2",
+      "text": "ANSWER: \"unknown\"",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "text-3",
+      "text": "It is in the code.\nANSWER: \"29\"",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "text-3",
+      "text": "ANSWER: \"unknown\"",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "explain-retries",
+      "text": "It is in the code.\nANSWER: \"yes\"",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "explain-retries",
+      "text": "ANSWER: \"no\"",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "explain-retries",
+      "text": "Yes, from what the code shows.",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "patterns"
+      }
+    },
+    {
+      "question": "explain-once-1",
+      "text": "It is in the code.\nANSWER: \"no\"",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "explain-once-1",
+      "text": "ANSWER: \"yes\"",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "explain-once-1",
+      "text": "No, from what the code shows.",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "patterns"
+      }
+    },
+    {
+      "question": "explain-once-2",
+      "text": "It is in the code.\nANSWER: \"no\"",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "explain-once-2",
+      "text": "ANSWER: \"yes\"",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "explain-once-2",
+      "text": "No, from what the code shows.",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "patterns"
+      }
+    },
+    {
+      "question": "dead-nest",
+      "text": "I could not tell from here.",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "unscored"
+      }
+    },
+    {
+      "question": "dead-nest",
+      "text": "The ones nothing calls: DELETE /categories/:id, DELETE /collections/:id, GET /collections, GET /collections/:id, PATCH /categories/:id, PATCH /collections/:id, POST /attributes/:id/lock.",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "patterns"
+      }
+    }
+  ]
+}

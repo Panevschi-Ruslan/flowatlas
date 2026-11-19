@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T03:50:20.136Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:39:08.735Z",
   "services": [
     {
       "name": "nest-kafka",
@@ -1237,7 +1237,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 19
+          }
+        ]
       }
     }
   ],

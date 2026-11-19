@@ -1,0 +1,1966 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T18:29:15.619Z",
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "worker",
+      "repo": "./worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "portal",
+      "repo": "./portal",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "billing#src/router.ts:invoices.byOrder@18",
+      "type": "function",
+      "label": "invoices.byOrder@18",
+      "repo": "billing",
+      "file": "src/router.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string;total:number}[]"
+        }
+      }
+    },
+    {
+      "id": "billing#src/router.ts:invoices.create@17",
+      "type": "function",
+      "label": "invoices.create@17",
+      "repo": "billing",
+      "file": "src/router.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ input }",
+              "type": "{ctx:unknown;input:unknown}"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
+    },
+    {
+      "id": "billing#src/router.ts:invoices.void@19",
+      "type": "function",
+      "label": "invoices.void@19",
+      "repo": "billing",
+      "file": "src/router.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{voided:true}"
+        }
+      }
+    },
+    {
+      "id": "billing#src/server.ts:GET /health@7",
+      "type": "function",
+      "label": "GET /health@7",
+      "repo": "billing",
+      "file": "src/server.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "type:express#Response<unknown>"
+        }
+      }
+    },
+    {
+      "id": "config_key:worker#BILLING_URL",
+      "type": "config_key",
+      "label": "BILLING_URL",
+      "repo": "worker",
+      "file": "src/billing.module.ts",
+      "line": 10,
+      "meta": {
+        "key": "BILLING_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:billing:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "billing",
+      "file": "src/server.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:billing:rpc:invoices.byOrder",
+      "type": "entry",
+      "label": "rpc invoices.byOrder",
+      "repo": "billing",
+      "file": "src/router.ts",
+      "line": 18,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{orderId:string}"
+            }
+          ],
+          "returns": "{id:string;total:number}[]"
+        },
+        "key": "invoices.byOrder",
+        "adapter": "trpc-procedures",
+        "call": "query",
+        "registration": "router({ … })",
+        "input": "ByOrder",
+        "inputAt": "src/router.ts:18",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "src/server.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/trpc",
+            "file": "src/server.ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "TRPCError(BAD_REQUEST)",
+            "at": "entry:billing:rpc:invoices.byOrder",
+            "file": "src/router.ts",
+            "line": 18,
+            "source": "pipe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:billing:rpc:invoices.create",
+      "type": "entry",
+      "label": "rpc invoices.create",
+      "repo": "billing",
+      "file": "src/router.ts",
+      "line": 17,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{orderId:string}"
+            }
+          ],
+          "returns": "{id:string}"
+        },
+        "key": "invoices.create",
+        "adapter": "trpc-procedures",
+        "call": "mutation",
+        "registration": "router({ … })",
+        "input": "InvoiceFor",
+        "inputAt": "src/router.ts:17",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "src/server.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/trpc",
+            "file": "src/server.ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "TRPCError(BAD_REQUEST)",
+            "at": "entry:billing:rpc:invoices.create",
+            "file": "src/router.ts",
+            "line": 17,
+            "source": "pipe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:billing:rpc:invoices.void",
+      "type": "entry",
+      "label": "rpc invoices.void",
+      "repo": "billing",
+      "file": "src/router.ts",
+      "line": 19,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{invoiceId:string}"
+            }
+          ],
+          "returns": "{voided:true}"
+        },
+        "key": "invoices.void",
+        "adapter": "trpc-procedures",
+        "call": "mutation",
+        "registration": "router({ … })",
+        "input": "Voided",
+        "inputAt": "src/router.ts:19",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "src/server.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/trpc",
+            "file": "src/server.ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "TRPCError(BAD_REQUEST)",
+            "at": "entry:billing:rpc:invoices.void",
+            "file": "src/router.ts",
+            "line": 19,
+            "source": "pipe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:ledger:rpc:entries.record",
+      "type": "entry",
+      "label": "rpc entries.record",
+      "repo": "ledger",
+      "file": "src/router.ts",
+      "line": 11,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{orderId:string;amount:number}"
+            }
+          ],
+          "returns": "{recorded:true}"
+        },
+        "key": "entries.record",
+        "adapter": "trpc-procedures",
+        "call": "mutation",
+        "registration": "router({ … })",
+        "input": "Entry",
+        "inputAt": "src/router.ts:11",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "src/server.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/api",
+            "file": "src/server.ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "TRPCError(BAD_REQUEST)",
+            "at": "entry:ledger:rpc:entries.record",
+            "file": "src/router.ts",
+            "line": 11,
+            "source": "pipe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "orders",
+      "file": "src/server.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders:rpc:orders.count",
+      "type": "entry",
+      "label": "rpc orders.count",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 26,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        },
+        "key": "orders.count",
+        "adapter": "orpc-procedures",
+        "call": "handler",
+        "registration": "{ … }",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "src/server.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "rpc",
+            "prefix": "/rpc",
+            "file": "src/server.ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:orders:rpc:orders.get",
+      "type": "entry",
+      "label": "rpc orders.get",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 21,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "{id:string;sku:string;quantity:number}"
+        },
+        "key": "orders.get",
+        "adapter": "orpc-procedures",
+        "call": "handler",
+        "registration": "{ … }",
+        "input": "OrderId",
+        "inputAt": "src/router.ts:22",
+        "output": "Order",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "src/server.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "rpc",
+            "prefix": "/rpc",
+            "file": "src/server.ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "ORPCError(BAD_REQUEST)",
+            "at": "entry:orders:rpc:orders.get",
+            "file": "src/router.ts",
+            "line": 22,
+            "source": "pipe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:orders:rpc:orders.place",
+      "type": "entry",
+      "label": "rpc orders.place",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 17,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{sku:string;quantity:number}"
+            }
+          ],
+          "returns": "{id:string}"
+        },
+        "key": "orders.place",
+        "adapter": "orpc-procedures",
+        "call": "handler",
+        "registration": "{ … }",
+        "input": "NewOrder",
+        "inputAt": "src/router.ts:18",
+        "output": "PlacedOrder",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "src/server.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "rpc",
+            "prefix": "/rpc",
+            "file": "src/server.ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "ORPCError(BAD_REQUEST)",
+            "at": "entry:orders:rpc:orders.place",
+            "file": "src/router.ts",
+            "line": 18,
+            "source": "pipe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:worker:http:POST:/fulfil/:param",
+      "type": "entry",
+      "label": "POST /fulfil/:param",
+      "repo": "worker",
+      "file": "src/fulfil.controller.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/fulfil/:param",
+        "rawPath": "/fulfil/:sku",
+        "controller": "FulfilController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "http_out:worker#src/archive.client.ts:15:12",
+      "type": "http_out",
+      "label": "rpc orders.store",
+      "repo": "worker",
+      "file": "src/archive.client.ts",
+      "line": 15,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.store",
+        "call": "handler",
+        "operation": "call",
+        "client": "orpc-client",
+        "inputKeys": [
+          "orderId"
+        ],
+        "inputType": "{orderId:string}",
+        "outputType": "any",
+        "link": {
+          "protocol": "rpc",
+          "path": "/rpc",
+          "baseUrlEnv": "ARCHIVE_URL"
+        },
+        "baseUrlValues": [
+          "http://archive.shop.internal:7000"
+        ]
+      }
+    },
+    {
+      "id": "http_out:worker#src/billing.service.ts:18:12",
+      "type": "http_out",
+      "label": "rpc invoices.create",
+      "repo": "worker",
+      "file": "src/billing.service.ts",
+      "line": 18,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "invoices.create",
+        "call": "mutation",
+        "operation": "mutate",
+        "client": "trpc-client",
+        "inputKeys": [
+          "orderId"
+        ],
+        "inputType": "{orderId:string}",
+        "outputType": "any",
+        "link": {
+          "protocol": "trpc",
+          "path": "/trpc",
+          "baseUrlEnv": "BILLING_URL"
+        },
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "http_out:worker#src/billing.service.ts:23:12",
+      "type": "http_out",
+      "label": "rpc invoices.byOrder",
+      "repo": "worker",
+      "file": "src/billing.service.ts",
+      "line": 23,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "invoices.byOrder",
+        "call": "query",
+        "operation": "query",
+        "client": "trpc-client",
+        "inputKeys": [
+          "order"
+        ],
+        "inputType": "{order:string}",
+        "outputType": "any",
+        "link": {
+          "protocol": "trpc",
+          "path": "/trpc",
+          "baseUrlEnv": "BILLING_URL"
+        },
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "http_out:worker#src/billing.service.ts:28:12",
+      "type": "http_out",
+      "label": "rpc invoices.void",
+      "repo": "worker",
+      "file": "src/billing.service.ts",
+      "line": 28,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "invoices.void",
+        "call": "mutation",
+        "operation": "mutation",
+        "client": "trpc-client",
+        "inputKeys": [
+          "invoiceId"
+        ],
+        "inputType": "{invoiceId:string}",
+        "outputType": "unknown",
+        "link": {
+          "protocol": "trpc",
+          "path": "/trpc",
+          "baseUrlEnv": "BILLING_URL"
+        },
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "http_out:worker#src/ledger.client.ts:13:12",
+      "type": "http_out",
+      "label": "rpc entries.record",
+      "repo": "worker",
+      "file": "src/ledger.client.ts",
+      "line": 13,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "entries.record",
+        "call": "mutation",
+        "operation": "mutate",
+        "client": "trpc-client",
+        "inputKeys": [
+          "amount",
+          "orderId"
+        ],
+        "inputType": "{orderId:string;amount:number}",
+        "outputType": "any",
+        "link": {
+          "protocol": "trpc",
+          "path": "/trpc",
+          "baseUrlEnv": "LEDGER_URL"
+        },
+        "targetService": "ledger"
+      }
+    },
+    {
+      "id": "http_out:worker#src/orders.client.ts:17:12",
+      "type": "http_out",
+      "label": "rpc orders.place",
+      "repo": "worker",
+      "file": "src/orders.client.ts",
+      "line": 17,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.place",
+        "call": "handler",
+        "operation": "call",
+        "client": "orpc-client",
+        "inputKeys": [
+          "qty",
+          "sku"
+        ],
+        "inputType": "type:worker#NewOrder",
+        "outputType": "type:worker#PlacedOrder",
+        "link": {
+          "protocol": "rpc",
+          "path": "/rpc",
+          "baseUrlEnv": "ORDERS_URL"
+        },
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:worker#src/orders.client.ts:22:12",
+      "type": "http_out",
+      "label": "rpc orders.get",
+      "repo": "worker",
+      "file": "src/orders.client.ts",
+      "line": 22,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.get",
+        "call": "handler",
+        "operation": "call",
+        "client": "orpc-client",
+        "inputKeys": [
+          "id"
+        ],
+        "inputType": "{id:string}",
+        "outputType": "type:worker#Order",
+        "link": {
+          "protocol": "rpc",
+          "path": "/rpc",
+          "baseUrlEnv": "ORDERS_URL"
+        },
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:worker#src/orders.client.ts:27:12",
+      "type": "http_out",
+      "label": "rpc orders.count",
+      "repo": "worker",
+      "file": "src/orders.client.ts",
+      "line": 27,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.count",
+        "call": "handler",
+        "operation": "call",
+        "client": "orpc-client",
+        "inputKeys": [
+          "since"
+        ],
+        "inputType": "{since:string}",
+        "outputType": "number",
+        "link": {
+          "protocol": "rpc",
+          "path": "/rpc",
+          "baseUrlEnv": "ORDERS_URL"
+        },
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ledger#src/router.ts:entries.record@11",
+      "type": "function",
+      "label": "entries.record@11",
+      "repo": "ledger",
+      "file": "src/router.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{recorded:true}"
+        }
+      }
+    },
+    {
+      "id": "orders#src/router.ts:orders.count@26",
+      "type": "function",
+      "label": "orders.count@26",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "orders#src/router.ts:orders.get@24",
+      "type": "function",
+      "label": "orders.get@24",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ input }",
+              "type": "type:@orpc/server#HandlerOptions"
+            }
+          ],
+          "returns": "{id:any;sku:'sku-1';quantity:1}"
+        }
+      }
+    },
+    {
+      "id": "orders#src/router.ts:orders.place@20",
+      "type": "function",
+      "label": "orders.place@20",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ input }",
+              "type": "type:@orpc/server#HandlerOptions"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
+    },
+    {
+      "id": "orders#src/server.ts:GET /health@9",
+      "type": "function",
+      "label": "GET /health@9",
+      "repo": "orders",
+      "file": "src/server.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "type:express#Response<unknown>"
+        }
+      }
+    },
+    {
+      "id": "portal#src/app/invoices.service.ts:InvoicesService",
+      "type": "provider",
+      "label": "InvoicesService",
+      "repo": "portal",
+      "file": "src/app/invoices.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "portal#src/app/invoices.service.ts:InvoicesService.invoice",
+      "type": "method",
+      "label": "InvoicesService.invoice",
+      "repo": "portal",
+      "file": "src/app/invoices.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "portal#src/app/invoices.service.ts:InvoicesService.invoicesOf",
+      "type": "method",
+      "label": "InvoicesService.invoicesOf",
+      "repo": "portal",
+      "file": "src/app/invoices.service.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "repo:billing",
+      "type": "repo",
+      "label": "billing",
+      "repo": "billing",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes",
+            "trpc-procedures"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4000,
+            "file": "src/server.ts",
+            "line": 14
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:ledger",
+      "type": "repo",
+      "label": "ledger",
+      "repo": "ledger",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "trpc-procedures"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes",
+            "orpc-procedures"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 16
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:portal",
+      "type": "repo",
+      "label": "portal",
+      "repo": "portal",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "templates": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:worker",
+      "type": "repo",
+      "label": "worker",
+      "repo": "worker",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 7,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 5000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "ui_api_call:portal#src/app/invoices.service.ts:11:12",
+      "type": "ui_api_call",
+      "label": "rpc invoices.byOrder",
+      "repo": "portal",
+      "file": "src/app/invoices.service.ts",
+      "line": 11,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "invoices.byOrder",
+        "call": "query",
+        "operation": "query",
+        "client": "trpc-client",
+        "inputKeys": [
+          "orderId"
+        ],
+        "inputType": "{orderId:string}",
+        "outputType": "any",
+        "link": {
+          "protocol": "trpc",
+          "path": "/trpc"
+        },
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "ui_api_call:portal#src/app/invoices.service.ts:16:12",
+      "type": "ui_api_call",
+      "label": "rpc invoices.create",
+      "repo": "portal",
+      "file": "src/app/invoices.service.ts",
+      "line": 16,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "invoices.create",
+        "call": "mutation",
+        "operation": "mutate",
+        "client": "trpc-client",
+        "inputKeys": [
+          "orderId"
+        ],
+        "inputType": "{orderId:string}",
+        "outputType": "any",
+        "link": {
+          "protocol": "trpc",
+          "path": "/trpc"
+        },
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "worker#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "worker",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "FulfilController"
+        ],
+        "providers": [
+          "OrdersClient",
+          "LedgerClient",
+          "ArchiveClient"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "worker#src/archive.client.ts:ArchiveClient",
+      "type": "provider",
+      "label": "ArchiveClient",
+      "repo": "worker",
+      "file": "src/archive.client.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "worker#src/archive.client.ts:ArchiveClient.store",
+      "type": "method",
+      "label": "ArchiveClient.store",
+      "repo": "worker",
+      "file": "src/archive.client.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "worker#src/billing.module.ts:BILLING_CLIENT",
+      "type": "provider",
+      "label": "BILLING_CLIENT",
+      "repo": "worker",
+      "file": "src/billing.module.ts",
+      "line": 19,
+      "kind": "factory",
+      "meta": {
+        "token": "BILLING_CLIENT"
+      }
+    },
+    {
+      "id": "worker#src/billing.module.ts:BILLING_UNTYPED",
+      "type": "provider",
+      "label": "BILLING_UNTYPED",
+      "repo": "worker",
+      "file": "src/billing.module.ts",
+      "line": 23,
+      "kind": "factory",
+      "meta": {
+        "token": "BILLING_UNTYPED"
+      }
+    },
+    {
+      "id": "worker#src/billing.module.ts:BillingModule",
+      "type": "module",
+      "label": "BillingModule",
+      "repo": "worker",
+      "file": "src/billing.module.ts",
+      "line": 17,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "BILLING_CLIENT",
+          "BILLING_UNTYPED",
+          "BillingService"
+        ],
+        "exports": [
+          "BillingService"
+        ]
+      }
+    },
+    {
+      "id": "worker#src/billing.module.ts:untypedBilling",
+      "type": "function",
+      "label": "untypedBilling",
+      "repo": "worker",
+      "file": "src/billing.module.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@trpc/client#UntypedClient"
+        }
+      }
+    },
+    {
+      "id": "worker#src/billing.service.ts:BillingService",
+      "type": "provider",
+      "label": "BillingService",
+      "repo": "worker",
+      "file": "src/billing.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "BillingModule"
+      }
+    },
+    {
+      "id": "worker#src/billing.service.ts:BillingService.invoice",
+      "type": "method",
+      "label": "BillingService.invoice",
+      "repo": "worker",
+      "file": "src/billing.service.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "worker#src/billing.service.ts:BillingService.invoicesOf",
+      "type": "method",
+      "label": "BillingService.invoicesOf",
+      "repo": "worker",
+      "file": "src/billing.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "worker#src/billing.service.ts:BillingService.void",
+      "type": "method",
+      "label": "BillingService.void",
+      "repo": "worker",
+      "file": "src/billing.service.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "invoiceId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "worker#src/fulfil.controller.ts:FulfilController",
+      "type": "provider",
+      "label": "FulfilController",
+      "repo": "worker",
+      "file": "src/fulfil.controller.ts",
+      "line": 8,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "worker#src/fulfil.controller.ts:FulfilController.fulfil",
+      "type": "method",
+      "label": "FulfilController.fulfil",
+      "repo": "worker",
+      "file": "src/fulfil.controller.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "worker#src/ledger.client.ts:LedgerClient",
+      "type": "provider",
+      "label": "LedgerClient",
+      "repo": "worker",
+      "file": "src/ledger.client.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "worker#src/ledger.client.ts:LedgerClient.record",
+      "type": "method",
+      "label": "LedgerClient.record",
+      "repo": "worker",
+      "file": "src/ledger.client.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "amount",
+              "type": "number"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "worker#src/orders.client.ts:OrdersClient",
+      "type": "provider",
+      "label": "OrdersClient",
+      "repo": "worker",
+      "file": "src/orders.client.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "worker#src/orders.client.ts:OrdersClient.count",
+      "type": "method",
+      "label": "OrdersClient.count",
+      "repo": "worker",
+      "file": "src/orders.client.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "worker#src/orders.client.ts:OrdersClient.find",
+      "type": "method",
+      "label": "OrdersClient.find",
+      "repo": "worker",
+      "file": "src/orders.client.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:worker#Order"
+        }
+      }
+    },
+    {
+      "id": "worker#src/orders.client.ts:OrdersClient.place",
+      "type": "method",
+      "label": "OrdersClient.place",
+      "repo": "worker",
+      "file": "src/orders.client.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "quantity",
+              "type": "number"
+            }
+          ],
+          "returns": "type:worker#PlacedOrder"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:billing:http:GET:/health",
+      "to": "billing#src/server.ts:GET /health@7",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/server.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:billing:rpc:invoices.byOrder",
+      "to": "billing#src/router.ts:invoices.byOrder@18",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:billing:rpc:invoices.create",
+      "to": "billing#src/router.ts:invoices.create@17",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 17
+    },
+    {
+      "from": "entry:billing:rpc:invoices.void",
+      "to": "billing#src/router.ts:invoices.void@19",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 19
+    },
+    {
+      "from": "entry:ledger:rpc:entries.record",
+      "to": "ledger#src/router.ts:entries.record@11",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:orders:http:GET:/health",
+      "to": "orders#src/server.ts:GET /health@9",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/server.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:rpc:orders.count",
+      "to": "orders#src/router.ts:orders.count@26",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 26
+    },
+    {
+      "from": "entry:orders:rpc:orders.get",
+      "to": "orders#src/router.ts:orders.get@24",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 24
+    },
+    {
+      "from": "entry:orders:rpc:orders.place",
+      "to": "orders#src/router.ts:orders.place@20",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 20
+    },
+    {
+      "from": "entry:worker:http:POST:/fulfil/:param",
+      "to": "worker#src/fulfil.controller.ts:FulfilController.fulfil",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "any",
+      "file": "src/fulfil.controller.ts",
+      "line": 17,
+      "meta": {
+        "params": "{sku:string}"
+      }
+    },
+    {
+      "from": "http_out:worker#src/billing.service.ts:18:12",
+      "to": "entry:billing:rpc:invoices.create",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/billing.service.ts",
+      "line": 18,
+      "params": [
+        "{orderId:string}"
+      ],
+      "returns": "any",
+      "meta": {
+        "via": "link-url",
+        "targetService": "billing"
+      }
+    },
+    {
+      "from": "http_out:worker#src/billing.service.ts:23:12",
+      "to": "entry:billing:rpc:invoices.byOrder",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/billing.service.ts",
+      "line": 23,
+      "params": [
+        "{order:string}"
+      ],
+      "returns": "any",
+      "meta": {
+        "via": "link-url",
+        "targetService": "billing"
+      }
+    },
+    {
+      "from": "http_out:worker#src/billing.service.ts:28:12",
+      "to": "entry:billing:rpc:invoices.void",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/billing.service.ts",
+      "line": 28,
+      "params": [
+        "{invoiceId:string}"
+      ],
+      "returns": "unknown",
+      "meta": {
+        "via": "link-url",
+        "targetService": "billing"
+      }
+    },
+    {
+      "from": "http_out:worker#src/ledger.client.ts:13:12",
+      "to": "entry:ledger:rpc:entries.record",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/ledger.client.ts",
+      "line": 13,
+      "params": [
+        "{orderId:string;amount:number}"
+      ],
+      "returns": "any",
+      "meta": {
+        "via": "link-url",
+        "targetService": "ledger"
+      }
+    },
+    {
+      "from": "http_out:worker#src/orders.client.ts:17:12",
+      "to": "entry:orders:rpc:orders.place",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders.client.ts",
+      "line": 17,
+      "params": [
+        "type:worker#NewOrder"
+      ],
+      "returns": "type:worker#PlacedOrder",
+      "meta": {
+        "via": "link-url",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:worker#src/orders.client.ts:22:12",
+      "to": "entry:orders:rpc:orders.get",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders.client.ts",
+      "line": 22,
+      "params": [
+        "{id:string}"
+      ],
+      "returns": "type:worker#Order",
+      "meta": {
+        "via": "link-url",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:worker#src/orders.client.ts:27:12",
+      "to": "entry:orders:rpc:orders.count",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders.client.ts",
+      "line": 27,
+      "params": [
+        "{since:string}"
+      ],
+      "returns": "number",
+      "meta": {
+        "via": "link-url",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "portal#src/app/invoices.service.ts:InvoicesService.invoice",
+      "to": "ui_api_call:portal#src/app/invoices.service.ts:16:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/invoices.service.ts",
+      "line": 16
+    },
+    {
+      "from": "portal#src/app/invoices.service.ts:InvoicesService.invoicesOf",
+      "to": "ui_api_call:portal#src/app/invoices.service.ts:11:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/invoices.service.ts",
+      "line": 11
+    },
+    {
+      "from": "ui_api_call:portal#src/app/invoices.service.ts:11:12",
+      "to": "entry:billing:rpc:invoices.byOrder",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/invoices.service.ts",
+      "line": 11,
+      "params": [
+        "{orderId:string}"
+      ],
+      "returns": "any",
+      "meta": {
+        "via": "api-target",
+        "targetService": "billing"
+      }
+    },
+    {
+      "from": "ui_api_call:portal#src/app/invoices.service.ts:16:12",
+      "to": "entry:billing:rpc:invoices.create",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/invoices.service.ts",
+      "line": 16,
+      "params": [
+        "{orderId:string}"
+      ],
+      "returns": "any",
+      "meta": {
+        "via": "api-target",
+        "targetService": "billing"
+      }
+    },
+    {
+      "from": "worker#src/app.module.ts:AppModule",
+      "to": "worker#src/billing.module.ts:BillingModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 8
+    },
+    {
+      "from": "worker#src/archive.client.ts:ArchiveClient.store",
+      "to": "http_out:worker#src/archive.client.ts:15:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/archive.client.ts",
+      "line": 15
+    },
+    {
+      "from": "worker#src/billing.module.ts:untypedBilling",
+      "to": "config_key:worker#BILLING_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/billing.module.ts",
+      "line": 10
+    },
+    {
+      "from": "worker#src/billing.service.ts:BillingService",
+      "to": "worker#src/billing.module.ts:BILLING_CLIENT",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/billing.service.ts",
+      "line": 13,
+      "meta": {
+        "token": "BILLING_CLIENT",
+        "provider": "useFactory"
+      }
+    },
+    {
+      "from": "worker#src/billing.service.ts:BillingService",
+      "to": "worker#src/billing.module.ts:BILLING_UNTYPED",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/billing.service.ts",
+      "line": 14,
+      "meta": {
+        "token": "BILLING_UNTYPED",
+        "provider": "useFactory"
+      }
+    },
+    {
+      "from": "worker#src/billing.service.ts:BillingService.invoice",
+      "to": "http_out:worker#src/billing.service.ts:18:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/billing.service.ts",
+      "line": 18
+    },
+    {
+      "from": "worker#src/billing.service.ts:BillingService.invoicesOf",
+      "to": "http_out:worker#src/billing.service.ts:23:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/billing.service.ts",
+      "line": 23
+    },
+    {
+      "from": "worker#src/billing.service.ts:BillingService.void",
+      "to": "http_out:worker#src/billing.service.ts:28:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/billing.service.ts",
+      "line": 28
+    },
+    {
+      "from": "worker#src/fulfil.controller.ts:FulfilController",
+      "to": "worker#src/archive.client.ts:ArchiveClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/fulfil.controller.ts",
+      "line": 14
+    },
+    {
+      "from": "worker#src/fulfil.controller.ts:FulfilController",
+      "to": "worker#src/billing.service.ts:BillingService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/fulfil.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "worker#src/fulfil.controller.ts:FulfilController",
+      "to": "worker#src/ledger.client.ts:LedgerClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/fulfil.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "worker#src/fulfil.controller.ts:FulfilController",
+      "to": "worker#src/orders.client.ts:OrdersClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/fulfil.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "worker#src/fulfil.controller.ts:FulfilController.fulfil",
+      "to": "worker#src/archive.client.ts:ArchiveClient.store",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "any",
+      "file": "src/fulfil.controller.ts",
+      "line": 25
+    },
+    {
+      "from": "worker#src/fulfil.controller.ts:FulfilController.fulfil",
+      "to": "worker#src/billing.service.ts:BillingService.invoice",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "any",
+      "file": "src/fulfil.controller.ts",
+      "line": 22
+    },
+    {
+      "from": "worker#src/fulfil.controller.ts:FulfilController.fulfil",
+      "to": "worker#src/billing.service.ts:BillingService.invoicesOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "any",
+      "file": "src/fulfil.controller.ts",
+      "line": 26
+    },
+    {
+      "from": "worker#src/fulfil.controller.ts:FulfilController.fulfil",
+      "to": "worker#src/billing.service.ts:BillingService.void",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/fulfil.controller.ts",
+      "line": 23
+    },
+    {
+      "from": "worker#src/fulfil.controller.ts:FulfilController.fulfil",
+      "to": "worker#src/ledger.client.ts:LedgerClient.record",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "any",
+      "file": "src/fulfil.controller.ts",
+      "line": 24
+    },
+    {
+      "from": "worker#src/fulfil.controller.ts:FulfilController.fulfil",
+      "to": "worker#src/orders.client.ts:OrdersClient.count",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "number",
+      "file": "src/fulfil.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "worker#src/fulfil.controller.ts:FulfilController.fulfil",
+      "to": "worker#src/orders.client.ts:OrdersClient.find",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:worker#Order",
+      "file": "src/fulfil.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "worker#src/fulfil.controller.ts:FulfilController.fulfil",
+      "to": "worker#src/orders.client.ts:OrdersClient.place",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "type:worker#PlacedOrder",
+      "file": "src/fulfil.controller.ts",
+      "line": 19
+    },
+    {
+      "from": "worker#src/ledger.client.ts:LedgerClient.record",
+      "to": "http_out:worker#src/ledger.client.ts:13:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ledger.client.ts",
+      "line": 13
+    },
+    {
+      "from": "worker#src/orders.client.ts:OrdersClient.count",
+      "to": "http_out:worker#src/orders.client.ts:27:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders.client.ts",
+      "line": 27
+    },
+    {
+      "from": "worker#src/orders.client.ts:OrdersClient.find",
+      "to": "http_out:worker#src/orders.client.ts:22:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders.client.ts",
+      "line": 22
+    },
+    {
+      "from": "worker#src/orders.client.ts:OrdersClient.place",
+      "to": "http_out:worker#src/orders.client.ts:17:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders.client.ts",
+      "line": 17
+    }
+  ],
+  "types": {
+    "type:@orpc/server#HandlerOptions": {
+      "name": "HandlerOptions",
+      "kind": "external",
+      "declaredIn": "@orpc/server",
+      "structuralHash": "f774ac33e6a081ad",
+      "meta": {
+        "declKind": "external",
+        "package": "@orpc/server"
+      }
+    },
+    "type:@trpc/client#UntypedClient": {
+      "name": "UntypedClient",
+      "kind": "external",
+      "declaredIn": "@trpc/client",
+      "structuralHash": "0ca7526c8a97db9c",
+      "meta": {
+        "declKind": "external",
+        "package": "@trpc/client"
+      }
+    },
+    "type:express#Request<any,any,any>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:worker#NewOrder": {
+      "name": "NewOrder",
+      "kind": "object",
+      "declaredIn": "worker#src/orders.api.ts",
+      "structuralHash": "f8a8acd9ba59406f",
+      "fields": [
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "qty",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:worker#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "worker#src/orders.api.ts",
+      "structuralHash": "508e02c7e6d03031",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:worker#PlacedOrder": {
+      "name": "PlacedOrder",
+      "kind": "object",
+      "declaredIn": "worker#src/orders.api.ts",
+      "structuralHash": "e752b571a9fb0fb7",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app/invoices.service.ts",
+      "line": 7,
+      "reason": "inject-token-unresolved",
+      "level": "info",
+      "hint": "The token is not a class, so there is nothing to point an edge at. Expected for an InjectionToken.",
+      "symbol": "InvoicesService.trpc",
+      "service": "portal"
+    },
+    {
+      "service": "worker",
+      "file": "src/archive.client.ts",
+      "line": 15,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares ARCHIVE_URL; its value is http://archive.shop.internal:7000 in .env.example, and no configured service is reached at that host",
+      "hint": "Add ARCHIVE_URL to services[].baseUrlEnv of whichever service answers it, or the host to its services[].hosts.",
+      "symbol": "http_out:worker#src/archive.client.ts:15:12"
+    },
+    {
+      "service": "worker",
+      "file": "src/ledger.client.ts",
+      "line": 13,
+      "reason": "procedure-link-unserved",
+      "message": "entries.record is sent to /trpc and served over trpc at /api",
+      "hint": "Nothing answers a request sent there. Point the link at /api, or mount the tree where the link sends.",
+      "symbol": "http_out:worker#src/ledger.client.ts:13:12"
+    }
+  ]
+}

@@ -3,9 +3,9 @@
     "nodes": 130,
     "edges": 114,
     "types": 15,
-    "unresolved": 9,
-    "missed": 9,
-    "sites": 9,
+    "unresolved": 11,
+    "missed": 11,
+    "sites": 11,
     "notes": 0,
     "findings": 4
   },
@@ -52,15 +52,15 @@
   },
   "unresolvedByReason": {
     "ambiguous-route-target": 1,
-    "api-path-dynamic": 3,
-    "dynamic-http-url": 1,
+    "api-path-dynamic": 4,
+    "dynamic-http-url": 2,
     "target-route-not-found": 3,
     "unknown-base-url-env": 1
   },
   "unresolvedSites": {
     "ambiguous-route-target": 1,
-    "api-path-dynamic": 3,
-    "dynamic-http-url": 1,
+    "api-path-dynamic": 4,
+    "dynamic-http-url": 2,
     "target-route-not-found": 3,
     "unknown-base-url-env": 1
   },

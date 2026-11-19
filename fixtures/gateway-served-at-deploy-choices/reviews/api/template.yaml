@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: The reviews API, deployed to the stage its parent hands it.
+
+Parameters:
+  Stage:
+    Type: String
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    CodeUri: ../src/
+
+Resources:
+  ReviewsApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: shop-reviews
+      StageName: !Ref Stage
+
+  ListReviewsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: shop-list-reviews
+      Handler: list-reviews.handler
+      Events:
+        List:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ReviewsApi
+            Path: /reviews
+            Method: get

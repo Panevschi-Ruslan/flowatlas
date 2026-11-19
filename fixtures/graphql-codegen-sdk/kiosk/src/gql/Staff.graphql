@@ -1,0 +1,12 @@
+query StaffList {
+  staff {
+    id
+    name
+  }
+}
+
+mutation SignIn($email: String!) {
+  signIn(email: $email) {
+    id
+  }
+}

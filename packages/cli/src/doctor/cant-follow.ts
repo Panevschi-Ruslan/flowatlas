@@ -38,6 +38,8 @@ export interface CantFollowReport extends CantFollow {
   accepted?: { rows: number; sites: number; problem?: AcceptedProblem };
   /** Set when the rows had to be taken from the database. */
   note: string | null;
+  /** The questions in the log the causes' `asked` counts are out of (P235), when a log was read. */
+  questions?: number;
 }
 
 export const cantFollowReport = (
@@ -47,9 +49,10 @@ export const cantFollowReport = (
     note?: string;
     /** Said in the report; the rows handed in are already narrowed to them. */
     reasons?: readonly string[];
+    questions?: number;
   } = {},
 ): CantFollowReport => {
-  const { accepted, note, reasons, ...grouping } = options;
+  const { accepted, note, reasons, questions, ...grouping } = options;
   return {
     cantFollowFormatVersion: CANT_FOLLOW_FORMAT_VERSION,
     service: grouping.service ?? null,
@@ -59,6 +62,7 @@ export const cantFollowReport = (
     note: note ?? null,
     ...groupCantFollow(rows, grouping),
     ...(accepted === undefined || (accepted.rows === 0 && accepted.problem === undefined) ? {} : { accepted }),
+    ...(questions === undefined ? {} : { questions }),
   };
 };
 
@@ -97,9 +101,13 @@ export const renderCantFollowText = (
     lines.push('  nothing: every step that was read was followed');
     return `${lines.join('\n')}\n`;
   }
+  if (report.questions !== undefined) {
+    lines.push(`  ordered by how many of the ${plural(report.questions, 'logged question')} ran into each (questions.jsonl), then by places`);
+  }
   for (const cause of report.causes) {
     const services = cause.services.length === 0 ? '' : `  ${cause.services.length === 1 ? cause.services[0] : plural(cause.services.length, 'service')}`;
-    lines.push('', `  ${cause.label}: ${plural(cause.sites, 'place')}${services}`, `    ${cause.hint}`);
+    const asked = cause.asked === undefined || report.questions === undefined ? '' : `, asked by ${cause.asked} of ${report.questions}`;
+    lines.push('', `  ${cause.label}: ${plural(cause.sites, 'place')}${asked}${services}`, `    ${cause.hint}`);
     const reasons = cause.reasons.filter((reason) => reason !== cause.cause);
     if (reasons.length > 0) lines.push(`    rows: ${reasons.join(', ')}`);
     // A call on a wrapper of the project's own is what a pattern describes (P121).

@@ -49,6 +49,7 @@
   "dependencies": {
     "@flowatlas/adapters-entry": "workspace:*",
     "@flowatlas/core": "workspace:*",
+    "@flowatlas/graphql": "workspace:*",
     "ts-morph": "^28.0.0"
   },
   "private": true

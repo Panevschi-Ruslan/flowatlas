@@ -1,0 +1,15 @@
+apiVersion: builtin
+kind: LabelTransformer
+metadata:
+  name: labels
+labels:
+  app: orders
+fieldSpecs:
+  - path: metadata/labels
+    create: true
+  - kind: Service
+    path: spec/selector
+    create: true
+  - kind: Deployment
+    path: spec/template/metadata/labels
+    create: true

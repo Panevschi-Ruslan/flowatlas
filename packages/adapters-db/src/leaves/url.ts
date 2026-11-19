@@ -1,9 +1,24 @@
-import { choosesASegment, constantPropertyValue, holeIn, normalizePath, PARAM_PLACEHOLDER, UNREAD_SPAN } from '@flowatlas/core';
+import {
+  atPortPlace,
+  choosesASegment,
+  constantPropertyValue,
+  continuesHost,
+  endsAtHost,
+  holeIn,
+  normalizePath,
+  numberAfterHost,
+  PARAM_PLACEHOLDER,
+  UNREAD_SPAN,
+  writtenNumber,
+  writtenSpan,
+  type NumberAfterHost,
+} from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { evaluateExpression } from '@flowatlas/extractor-nestjs';
 import { readConfig } from './config.js';
 import { deref, rootConfigAddress, type SplitAddress } from './trace.js';
+import type { SettingAddress } from '@flowatlas/core';
 
 export interface UrlInfo {
   /** The address as written, with interpolations shown as `${…}`. */
@@ -17,9 +32,34 @@ export interface UrlInfo {
    * `process.env.ORDERS_URL ?? 'http://orders:3000'` (P77).
    */
   baseUrlDefault?: string;
+  /** The module that fallback is written in, as the compiler names it (P296). */
+  baseUrlDefaultFile?: string;
+  /** The settings a chain of `||` reads after that key, in order (P296). */
+  baseUrlAlso?: readonly string[];
+  /** The settings of a condition's branches nobody settles, as equal candidates (P309). */
+  baseUrlEither?: readonly string[];
+  /** The settings of `baseUrlAlso` in the tiers they are read in, where a tier holds more than one (P325). */
+  baseUrlAlsoTiers?: readonly (readonly string[])[];
   /** Host, when the address names one outright. */
   host: string | null;
+  /**
+   * A number written straight after the host with no colon before it, read
+   * as the address spells it - `localhost4600`, no port (P324).
+   */
+  portWithoutColon?: Pick<NumberAfterHost, 'number' | 'host'>;
 }
+
+/** The setting an address is rooted at, with what the code falls back to and the settings read after it. */
+type Root = Pick<SettingAddress, 'key' | 'otherwise' | 'otherwiseFile' | 'also' | 'either' | 'alsoTiers'> & { readonly prefix?: string };
+
+/** What a root says beyond its key, as an address carries it (P77, P296). */
+const extrasOf = (root: Omit<Root, 'key'>): Pick<UrlInfo, 'baseUrlDefault' | 'baseUrlDefaultFile' | 'baseUrlAlso' | 'baseUrlEither' | 'baseUrlAlsoTiers'> => ({
+  ...(root.otherwise === undefined ? {} : { baseUrlDefault: root.otherwise }),
+  ...(root.otherwise === undefined || root.otherwiseFile === undefined ? {} : { baseUrlDefaultFile: root.otherwiseFile }),
+  ...(root.also === undefined || root.also.length === 0 ? {} : { baseUrlAlso: root.also }),
+  ...(root.either === undefined || root.either.length === 0 ? {} : { baseUrlEither: root.either }),
+  ...(root.alsoTiers === undefined || root.alsoTiers.length === 0 ? {} : { baseUrlAlsoTiers: root.alsoTiers }),
+});
 
 const EMPTY: UrlInfo = { url: null, path: null, baseUrlEnv: null, host: null };
 
@@ -39,10 +79,28 @@ const HOLE = '${…}';
 const fromAbsolute = (text: string): UrlInfo | null => {
   const match = /^([a-z][a-z0-9+.-]*):\/\/([^/?#]+)([^?#]*)/i.exec(text);
   if (match === null) return null;
-  const host = (match[2] ?? '').toLowerCase();
+  const authority = match[2] ?? '';
   const path = match[3] ?? '';
-  return { url: text, path: routePathOf(path), baseUrlEnv: null, host };
+  // `'https://shop.example' + path`, `` `https://shop.example${path}` ``
+  // (P308): a value nobody read straight after the host, with nothing after
+  // it, is what follows the host - the path - and the path is unread, never
+  // the host's root. A host itself built from values is read as it was.
+  // A port's place, `https://shop.example:${port}`, and the middle of the
+  // host's name, `https://calendar.example.${region}`, are the host's (P312).
+  const before = authority.endsWith(UNREAD_SPAN) && path === '' ? authority.slice(0, -UNREAD_SPAN.length) : '';
+  if (before !== '' && endsAtHost(`${match[1] ?? ''}://${before}`)) return { url: text, path: UNREAD_SPAN, baseUrlEnv: null, host: before.toLowerCase() };
+  return { url: text, path: routePathOf(path), baseUrlEnv: null, host: authority.toLowerCase() };
 };
+
+/**
+ * The hole a value nobody read leaves straight after the host, a path
+ * written after it (P312): the opening of the path, unless everything the
+ * value is followed to is the host's own - its port, the rest of its name -
+ * then it is part of the host as before. The host is the text before a path
+ * or a value nothing reads.
+ */
+const holeAfterHost = (before: string, after: string, expression: TsNode): string | undefined =>
+  endsAtHost(before) && after.startsWith('/') && !continuesHost(expression) ? `/${UNREAD_SPAN}` : undefined;
 
 /**
  * Works out what address a call reaches.
@@ -53,6 +111,14 @@ const fromAbsolute = (text: string): UrlInfo | null => {
  * computed address is reported rather than guessed at.
  */
 export const analyzeUrl = (node: TsNode, options: { readonly whole?: boolean } = {}): UrlInfo => {
+  const info = readUrl(node, options);
+  // A number written straight after the host with no colon (P324): the
+  // address as it spells it, which is said.
+  const glued = info.host === null ? undefined : numberAfterHost(node);
+  return glued === undefined ? info : { ...info, portWithoutColon: { number: glued.number, host: glued.host } };
+};
+
+const readUrl = (node: TsNode, options: { readonly whole?: boolean }): UrlInfo => {
   // An address is often given a name before it is used; the name is not the
   // address, so follow it to what it was given.
   const argument = deref(node);
@@ -91,7 +157,7 @@ export const analyzeUrl = (node: TsNode, options: { readonly whole?: boolean } =
   const spans = argument.getTemplateSpans();
 
   let baseUrlEnv: string | null = null;
-  let baseUrlDefault: string | undefined;
+  let rooted: Root | null = null;
   let rest = head;
   let written = head;
   let start = 0;
@@ -105,9 +171,10 @@ export const analyzeUrl = (node: TsNode, options: { readonly whole?: boolean } =
     const root = rootOf(firstSpan.getExpression());
     if (root !== null) {
       baseUrlEnv = root.key;
-      baseUrlDefault = root.otherwise;
+      rooted = root;
       const key = root.key;
-      rest = firstSpan.getLiteral().getLiteralText();
+      // The path a constant writes after the setting it is rooted at is the address's too (P296).
+      rest = (root.prefix ?? '') + firstSpan.getLiteral().getLiteralText();
       written = `\${${key}}${rest}`;
       start = 1;
     }
@@ -118,24 +185,28 @@ export const analyzeUrl = (node: TsNode, options: { readonly whole?: boolean } =
     if (span === undefined) continue;
     const value = evaluateExpression(span.getExpression());
     const text = span.getLiteral().getLiteralText();
+    // A number in the host's port place, or straight after the whole host,
+    // is read as the address spells it (P324); in the path's place it is a
+    // value a route parameter takes.
     const read =
       value.resolved && typeof value.value === 'string'
         ? value.value
-        : constantPropertyValue(span.getExpression(), { allowHost: index === 0 && rest === '' });
+        : (constantPropertyValue(span.getExpression(), { allowHost: index === 0 && rest === '' }) ??
+          (atPortPlace(rest) || endsAtHost(rest) ? writtenNumber(span.getExpression()) : null));
     // A hole that fills a segment is a route parameter; one that could run over
     // a separator is a hole in what was read, and the address it sits in matches
     // no route at all. Both used to become `:param`, which is how an address
     // nobody could read became an edge marked `static`.
-    const hole = choosesASegment(span.getExpression())
-      ? UNREAD_SPAN
-      : holeIn(rest, text, index === spans.length - 1);
+    const hole =
+      holeAfterHost(rest, text, span.getExpression()) ??
+      (choosesASegment(span.getExpression()) ? UNREAD_SPAN : holeIn(rest, text, index === spans.length - 1));
     rest += (read ?? hole) + text;
     // The address as written keeps every hole a hole, whichever it turned out
     // to be. It is what a person reads; the path is what a route is matched on.
     written += (read ?? HOLE) + text;
   }
 
-  const fallback = baseUrlDefault === undefined ? {} : { baseUrlDefault };
+  const fallback = rooted === null ? {} : extrasOf(rooted);
   const absolute = fromAbsolute(rest);
   if (absolute !== null) return { ...absolute, url: written, baseUrlEnv, ...fallback };
   return { url: written, path: routePathOf(rest), baseUrlEnv, host: null, ...fallback };
@@ -145,16 +216,17 @@ export const analyzeUrl = (node: TsNode, options: { readonly whole?: boolean } =
  * The settings key a value is rooted at, read where it stands first and then
  * followed back, with what the code falls back to where it writes one.
  */
-const rootOf = (expression: TsNode): { key: string; otherwise?: string } | null => {
+const rootOf = (expression: TsNode): Root | null => {
   const direct = readConfig(expression);
   if (direct !== null && direct.dynamic !== true) {
     return {
       key: direct.key,
-      ...(typeof direct.defaultValue === 'string' && direct.defaultValue !== '' ? { otherwise: direct.defaultValue } : {}),
+      ...(typeof direct.defaultValue === 'string' && direct.defaultValue !== ''
+        ? { otherwise: direct.defaultValue, otherwiseFile: expression.getSourceFile().getFilePath() }
+        : {}),
     };
   }
-  const followed = rootConfigAddress(expression);
-  return followed === null ? null : { key: followed.key, ...(followed.otherwise === undefined ? {} : { otherwise: followed.otherwise }) };
+  return rootConfigAddress(expression);
 };
 
 /**
@@ -164,6 +236,12 @@ const rootOf = (expression: TsNode): { key: string; otherwise?: string } | null 
  */
 const fromConcatenation = (argument: TsNode): UrlInfo => {
   if (!Node.isBinaryExpression(argument) || argument.getOperatorToken().getText() !== '+') return EMPTY;
+  // `` `${process.env.CATALOG_URL}/search?` + params.toString() `` (P262): what
+  // is added after a `?` is the query, and the address the text before it.
+  if (!evaluateExpression(argument.getRight()).resolved) {
+    const before = analyzeUrl(argument.getLeft());
+    if (before.url !== null && before.path !== null && before.url.includes('?')) return { ...before, url: `${before.url}${HOLE}` };
+  }
   const root = rootOf(argument.getLeft());
   const rest = evaluateExpression(argument.getRight());
   if (root === null) return fromWrittenConcatenation(argument);
@@ -173,7 +251,7 @@ const fromConcatenation = (argument: TsNode): UrlInfo => {
     path: routePathOf(rest.value),
     baseUrlEnv: root.key,
     host: null,
-    ...(root.otherwise === undefined ? {} : { baseUrlDefault: root.otherwise }),
+    ...extrasOf(root),
   };
 };
 
@@ -205,7 +283,7 @@ const fromWrittenConcatenation = (argument: TsNode): UrlInfo => {
     const next = more[index + 1];
     const after = next === undefined ? undefined : evaluateExpression(next);
     const text = after?.resolved === true && typeof after.value === 'string' ? after.value : '';
-    rest += holeIn(rest, text, index === more.length - 1);
+    rest += holeAfterHost(rest, text, piece) ?? holeIn(rest, text, index === more.length - 1);
     written += HOLE;
   });
   const absolute = fromAbsolute(rest);
@@ -215,6 +293,22 @@ const fromWrittenConcatenation = (argument: TsNode): UrlInfo => {
 
 /** `scheme://host` at the start of an address, and the host inside it. */
 const ORIGIN = /^([a-z][a-z0-9+.-]*:\/\/([^/?#]+))/i;
+
+/** `scheme://` and whatever of the host is written before a value, nothing after it. */
+const HOST_OPEN = /^([a-z][a-z0-9+.-]*:\/\/)([^/?#]*)$/i;
+
+/**
+ * The text a caller hands, as it fills a hole in a host (P318): a number it
+ * hands, text with no setting behind it, or a constant a class keeps,
+ * `Ports.stock`, read as a span written in place is.
+ */
+const handedText = (info: UrlInfo, argument: TsNode | undefined): string | null => {
+  // A number, written or kept by a class, `Ports.stock` (P324).
+  const number = argument === undefined ? null : writtenNumber(argument);
+  if (number !== null) return number;
+  if (info.url !== null) return info.baseUrlEnv === null ? info.url : null;
+  return argument === undefined ? null : writtenSpan(argument, false);
+};
 
 /**
  * A caller's value as it fills the hole, which is the text it is and not a
@@ -243,9 +337,39 @@ const asWritten = (info: UrlInfo, path: string): string =>
  * request out to its caller says who made it, and must not cost the address the
  * request itself states (R175).
  */
-export const composeAddress = (info: UrlInfo, split?: SplitAddress): UrlInfo => {
+export const composeAddress = (info: UrlInfo, split?: SplitAddress, argument?: TsNode): UrlInfo => {
   if (split === undefined) return info;
   if (info.host !== null) return info;
+  // The caller fills part of the host (P318): a port's place,
+  // `http://localhost:${port}/health`, with a number or digits; the opening
+  // or the middle of the name, `https://${tenant}.shop.example/orders`; or,
+  // straight after a whole host, the host's port or the rest of its name,
+  // `:3000`, `.example` (P312) - a path there opens the path, below. One
+  // request per caller, at its host; a caller handing nothing that fits says
+  // nothing of the host, and the request stays where it is written.
+  const opening = HOST_OPEN.exec(split.before);
+  if (opening !== null) {
+    const [, scheme = '', written = ''] = opening;
+    const hostAfter = /^[^/?#]*/.exec(split.after)?.[0] ?? '';
+    const whole = written !== '' && !/[:.-]$/.test(written) && hostAfter === '';
+    const text = handedText(info, argument);
+    // Digits straight after the whole host, no colon (P324): the address as
+    // it spells it, `localhost4600`, which is no port and is said.
+    const glued = whole && text !== null && /^\d+$/.test(text);
+    const fits =
+      text !== null &&
+      (glued || (whole ? /^(:\d+|[.-][a-z0-9.-]*)$/i.test(text) : written.endsWith(':') ? /^\d+$/.test(text) : /^[a-z0-9.-]+$/i.test(text)));
+    if (fits) {
+      return {
+        url: `${scheme}${written}${text}${split.after}`,
+        path: routePathOf(split.after.slice(hostAfter.length)),
+        baseUrlEnv: null,
+        host: `${written}${text}${hostAfter}`.toLowerCase(),
+        ...(glued ? { portWithoutColon: { number: text, host: written.toLowerCase() } } : {}),
+      };
+    }
+    if (!whole) return EMPTY;
+  }
   const origin = ORIGIN.exec(split.before);
   const stated = origin?.[1] ?? '';
   const before = split.before.slice(stated.length);
@@ -261,13 +385,16 @@ export const composeAddress = (info: UrlInfo, split?: SplitAddress): UrlInfo => 
     };
   }
   const env = split.baseUrlEnv ?? info.baseUrlEnv;
-  const otherwise = split.baseUrlEnv === null ? info.baseUrlDefault : split.otherwise;
+  const extras =
+    split.baseUrlEnv === null
+      ? extrasOf({ otherwise: info.baseUrlDefault, otherwiseFile: info.baseUrlDefaultFile, also: info.baseUrlAlso, either: info.baseUrlEither, alsoTiers: info.baseUrlAlsoTiers })
+      : extrasOf(split);
   return {
     url: path === null ? info.url : `${env === null ? '' : `\${${env}}`}${path}`,
     path,
     baseUrlEnv: env,
     host: null,
-    ...(otherwise === undefined ? {} : { baseUrlDefault: otherwise }),
+    ...extras,
   };
 };
 

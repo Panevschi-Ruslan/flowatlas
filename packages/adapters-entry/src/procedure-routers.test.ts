@@ -329,3 +329,277 @@ describe('the description, which is data rather than code', () => {
     ]);
   });
 });
+
+describe('where a tRPC tree is served (P247)', () => {
+  const ROOT = `
+    import { procedure, router } from './trpc';
+    export const appRouter = router({ ping: procedure.query(() => 'pong') });
+  `;
+  const mountedOf = (files: Record<string, string>) => metaOf(read({ '/server/root.ts': ROOT, ...files }), 'ping')['mounted'];
+
+  it('reads the path of the use call the Express middleware is handed to, in place or by its name', () => {
+    expect(
+      mountedOf({
+        '/server/main.ts': `
+          import { createExpressMiddleware } from '@trpc/server/adapters/express';
+          import { appRouter } from './root';
+          declare const app: { use(...args: unknown[]): void };
+          app.use('/trpc/', createExpressMiddleware({ router: appRouter }));
+        `,
+      }),
+    ).toEqual([{ protocol: 'trpc', prefix: '/trpc', file: 'server/main.ts' }]);
+    expect(
+      mountedOf({
+        '/server/main.ts': `
+          import { createExpressMiddleware } from '@trpc/server/adapters/express';
+          import { appRouter } from './root';
+          declare const app: { use(...args: unknown[]): void };
+          const trpc = createExpressMiddleware({ router: appRouter });
+          app.use('/api/trpc', trpc);
+        `,
+      }),
+    ).toEqual([{ protocol: 'trpc', prefix: '/api/trpc', file: 'server/main.ts' }]);
+  });
+
+  it("reads the fetch adapter's endpoint, and the standalone server's basePath or its root", () => {
+    expect(
+      mountedOf({
+        '/server/worker.ts': `
+          import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
+          import { appRouter } from './root';
+          export default { fetch: (req: Request) => fetchRequestHandler({ endpoint: '/trpc', req, router: appRouter }) };
+        `,
+      }),
+    ).toEqual([{ protocol: 'trpc', prefix: '/trpc', file: 'server/worker.ts' }]);
+    expect(
+      mountedOf({
+        '/server/main.ts': `
+          import { createHTTPServer } from '@trpc/server/adapters/standalone';
+          import { appRouter } from './root';
+          createHTTPServer({ router: appRouter, basePath: '/api/' }).listen(3000);
+        `,
+      }),
+    ).toEqual([{ protocol: 'trpc', prefix: '/api', file: 'server/main.ts' }]);
+    expect(
+      mountedOf({
+        '/server/main.ts': `
+          import { createHTTPServer } from '@trpc/server/adapters/standalone';
+          import { appRouter } from './root';
+          createHTTPServer({ router: appRouter }).listen(3000);
+        `,
+      }),
+    ).toEqual([{ protocol: 'trpc', prefix: '/', file: 'server/main.ts' }]);
+  });
+
+  it("reads a Next.js handler's address from the file it is in, its last parameter taken off", () => {
+    expect(
+      mountedOf({
+        '/pages/api/trpc/[trpc].ts': `
+          import { createNextApiHandler } from '@trpc/server/adapters/next';
+          import { appRouter } from '../../../server/root';
+          export default createNextApiHandler({ router: appRouter });
+        `,
+      }),
+    ).toEqual([{ protocol: 'trpc', prefix: '/api/trpc', file: 'pages/api/trpc/[trpc].ts' }]);
+    expect(
+      mountedOf({
+        '/app/api/trpc/[trpc]/route.ts': `
+          import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
+          import { appRouter } from '../../../../server/root';
+          const handler = (req: Request) => fetchRequestHandler({ req, router: appRouter });
+          export { handler as GET, handler as POST };
+        `,
+      }),
+    ).toEqual([{ protocol: 'trpc', prefix: '/api/trpc', file: 'app/api/trpc/[trpc]/route.ts' }]);
+  });
+
+  it("reads Fastify's plugin from the register call it is handed to, its prefix or the root (P256)", () => {
+    const fastify = (options: string): unknown =>
+      mountedOf({
+        '/server/main.ts': `
+          import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify';
+          import { appRouter } from './root';
+          declare const server: { register(plugin: unknown, options?: unknown): void };
+          ${options}
+        `,
+      });
+    expect(fastify(`server.register(fastifyTRPCPlugin, { prefix: '/trpc', trpcOptions: { router: appRouter } });`)).toEqual([
+      { protocol: 'trpc', prefix: '/trpc', file: 'server/main.ts' },
+    ]);
+    expect(fastify(`const options = { trpcOptions: { router: appRouter } };\n server.register(fastifyTRPCPlugin, options);`)).toEqual([
+      { protocol: 'trpc', prefix: '/', file: 'server/main.ts' },
+    ]);
+    // Another plugin handed to the same call is not a mount.
+    expect(fastify(`declare const cors: unknown;\n server.register(cors, { trpcOptions: { router: appRouter } });`)).toBeUndefined();
+  });
+
+  it("reads Hono's middleware by its endpoint, or /trpc, and the fetch adapter inside a Hono handler (P256)", () => {
+    const hono = (written: string): unknown =>
+      mountedOf({
+        '/server/main.ts': `
+          import { trpcServer } from '@hono/trpc-server';
+          import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
+          import { appRouter } from './root';
+          declare const app: { use(path: string, handler: unknown): void; all(path: string, handler: (c: any) => unknown): void };
+          ${written}
+        `,
+      });
+    expect(hono(`app.use('/rpc/*', trpcServer({ router: appRouter, endpoint: '/rpc' }));`)).toEqual([
+      { protocol: 'trpc', prefix: '/rpc', file: 'server/main.ts' },
+    ]);
+    expect(hono(`app.use('/trpc/*', trpcServer({ router: appRouter }));`)).toEqual([{ protocol: 'trpc', prefix: '/trpc', file: 'server/main.ts' }]);
+    expect(
+      hono(`app.all('/legacy/*', (c) => fetchRequestHandler({ endpoint: '/legacy', req: c.req.raw, router: appRouter }));`),
+    ).toEqual([{ protocol: 'trpc', prefix: '/legacy', file: 'server/main.ts' }]);
+  });
+
+  it('reads no ways in from a tree a workspace package holds that this service serves nowhere, and the server that mounts it reads them (P256)', () => {
+    const tree = {
+      '/packages/router/src/index.ts': `
+        import { procedure, router } from '../../../server/trpc';
+        export const appRouter = router({ ping: procedure.query(() => 'pong') });
+        export type AppRouter = typeof appRouter;
+      `,
+    };
+    const client = { ...contextFor(tree, { '@trpc/server': '^11.0.0' }, []), repoDir: '/apps/web' };
+    expect(trpcProceduresAdapter.extractEntries(client)).toEqual([]);
+    // Nothing is said to be missing either: the tree was read, and is the server's.
+    expect(client.builder.build().unresolved).toEqual([]);
+    const server = {
+      ...contextFor(
+        {
+          ...tree,
+          '/apps/api/src/main.ts': `
+            import { createHTTPServer } from '@trpc/server/adapters/standalone';
+            import { appRouter } from '../../../packages/router/src/index';
+            createHTTPServer({ router: appRouter, basePath: '/trpc' });
+          `,
+        },
+        { '@trpc/server': '^11.0.0' },
+        [],
+      ),
+      repoDir: '/apps/api',
+    };
+    expect(trpcProceduresAdapter.extractEntries(server).map((entry) => entry.key)).toEqual(['ping']);
+  });
+
+  it("reads a workspace package's root as this service's ways in where the service mounts the trees it holds, each in a file of its own (R179)", () => {
+    const tree = {
+      '/packages/api/src/routers/orders/_router.ts': `
+        import { procedure, router } from '../../../../../server/trpc';
+        export const ordersRouter = router({ list: procedure.query(() => []) });
+      `,
+      '/packages/api/src/routers/catalog/_router.ts': `
+        import { procedure, router } from '../../../../../server/trpc';
+        export const catalogRouter = router({ get: procedure.query(() => ({})) });
+      `,
+      '/packages/api/src/routers/_app.ts': `
+        import { router } from '../../../../server/trpc';
+        import { ordersRouter } from './orders/_router';
+        import { catalogRouter } from './catalog/_router';
+        export const shopRouter = router({ orders: ordersRouter, catalog: catalogRouter });
+        export const appRouter = router({ shop: shopRouter });
+        export type AppRouter = typeof appRouter;
+      `,
+      '/packages/api/src/handler.ts': `
+        import { createNextApiHandler as handlerOf } from '@trpc/server/adapters/next';
+        export const createNextApiHandler = (router: unknown) => handlerOf({ router });
+      `,
+    };
+    // Only the per-feature trees are mounted, never the root they make up.
+    const web = {
+      ...contextFor(
+        {
+          ...tree,
+          '/apps/web/pages/api/trpc/orders/[trpc].ts': `
+            import { createNextApiHandler } from '../../../../../../packages/api/src/handler';
+            import { ordersRouter } from '../../../../../../packages/api/src/routers/orders/_router';
+            export default createNextApiHandler(ordersRouter);
+          `,
+        },
+        { '@trpc/server': '^11.0.0' },
+        [],
+      ),
+      repoDir: '/apps/web',
+    };
+    const entries = trpcProceduresAdapter.extractEntries(web);
+    // Named from the root, as the client typed from it writes them; one branch
+    // mounted is enough for the root to be this service's.
+    expect(entries.map((entry) => entry.key).sort()).toEqual(['shop.catalog.get', 'shop.orders.list']);
+    const served = (key: string): unknown => entries.find((entry) => entry.key === key)?.meta?.['served'];
+    expect(served('shop.orders.list')).toEqual(['pages/api/trpc/orders/[trpc].ts']);
+    expect(served('shop.catalog.get')).toBeUndefined();
+    expect(web.builder.build().unresolved).toEqual([]);
+  });
+
+  it('says so where the address cannot be read, and draws the mount with none', () => {
+    const found = read({
+      '/server/root.ts': ROOT,
+      '/server/main.ts': `
+        import { createExpressMiddleware } from '@trpc/server/adapters/express';
+        import { appRouter } from './root';
+        declare const app: { use(...args: unknown[]): void };
+        declare const base: string;
+        app.use(base, createExpressMiddleware({ router: appRouter }));
+      `,
+    });
+    expect(metaOf(found, 'ping')['mounted']).toEqual([{ protocol: 'trpc', file: 'server/main.ts' }]);
+    const row = found.unresolved.find((each) => each.reason === 'procedure-prefix-unread');
+    expect(row?.level).toBe('info');
+    expect(row?.message).toContain('whose path is not written as text');
+  });
+});
+
+describe("a procedure's input, as a caller hands it (P247)", () => {
+  it("is the schema's input side where the library says one apart from what the resolver gets", () => {
+    const found = read({
+      '/server/root.ts': `
+        import { procedure, router } from './trpc';
+        interface Schema<I, O> { readonly _input: I; readonly _output: O }
+        declare const Paging: Schema<{ page?: number }, { page: number }>;
+        export const appRouter = router({ list: procedure.input(Paging).query(() => []) });
+      `,
+    });
+    const [input] = found.entries.find((entry) => entry.key === 'list')?.signature?.params ?? [];
+    expect(input?.type.getText()).toContain('page?: number');
+  });
+});
+
+describe('ways in declared where nothing serves them (P270)', () => {
+  it('names a way in declared on its own that no tree holds and nothing names', () => {
+    const found = read({
+      '/server/root.ts': `
+        import { router, procedure } from './trpc';
+        import { stats } from './stats';
+        // A member spelled like the one declared alone is its own way in, not a mention of it.
+        export const appRouter = router({ ping: procedure.query(() => 'pong'), stats, orderTotals: procedure.query(() => 2) });
+      `,
+      '/server/stats.ts': `
+        import { procedure } from './trpc';
+        export const stats = procedure.query(() => 1);
+      `,
+      '/server/totals.ts': `
+        import { procedure } from './trpc';
+        export const orderTotals = procedure.query(() => 0);
+      `,
+    });
+    expect(found.entries.map((entry) => entry.key).sort()).toEqual(['orderTotals', 'ping', 'stats']);
+    const rows = found.unresolved.filter((row) => row.reason === 'procedure-unmounted');
+    expect(rows.map((row) => [row.file, row.symbol, row.level])).toEqual([['server/totals.ts', 'orderTotals', 'info']]);
+  });
+
+  it('does not name one anything else mentions, a type taken from it included', () => {
+    const found = read({
+      '/server/root.ts': `
+        import { router, procedure } from './trpc';
+        export const appRouter = router({ ping: procedure.query(() => 'pong') });
+      `,
+      '/server/totals.ts': `
+        import { procedure } from './trpc';
+        export const orderTotals = procedure.query(() => 0);
+        export type OrderTotals = typeof orderTotals;
+      `,
+    });
+    expect(found.unresolved.filter((row) => row.reason === 'procedure-unmounted')).toEqual([]);
+  });
+});

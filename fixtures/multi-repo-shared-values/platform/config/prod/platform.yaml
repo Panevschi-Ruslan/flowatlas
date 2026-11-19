@@ -1,0 +1,7 @@
+template_path: platform.yaml
+parameters:
+  Stage: prod
+  Prefix: shop
+  AccountId: '111122223333'
+  # Resolved by sceptre when the stack is launched; not read.
+  AlertsEmail: !environment_variable ALERTS_EMAIL

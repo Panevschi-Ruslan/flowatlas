@@ -1,5 +1,6 @@
 import type { Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
+import { takenMember } from '@flowatlas/core';
 import { evaluateExpression } from '@flowatlas/extractor-nestjs';
 
 /** How a configuration value was reached. */
@@ -36,6 +37,17 @@ const isConfigReceiver = (receiver: TsNode): boolean => {
  * one of them.
  */
 export const readConfig = (node: TsNode): ConfigRead | null => {
+  // `const { ORDERS_URL = 'http://orders:3000' } = process.env`: the read is
+  // spelled where the name is declared, and the name stands for it (P269).
+  const taken = takenMember(node);
+  if (taken !== undefined) {
+    const target = taken.from.getText();
+    const fallback = taken.fallback === undefined ? undefined : evaluateExpression(taken.fallback);
+    const withDefault = fallback?.resolved === true ? { defaultValue: fallback.value } : {};
+    if (target === 'process.env') return { key: taken.key, source: 'process.env', ...withDefault };
+    if ((target === 'env' || target.endsWith('.env')) && ENV_KEY.test(taken.key)) return { key: taken.key, source: 'binding', ...withDefault };
+    return null;
+  }
   if (Node.isCallExpression(node)) {
     const callee = node.getExpression();
     if (!Node.isPropertyAccessExpression(callee)) return null;

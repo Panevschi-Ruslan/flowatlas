@@ -1,0 +1,5 @@
+@  workflow club-dev-lapses                             club/statemachine/lapses.asl.json:1
+  -> ReadInbox [Task lambda:invoke]                     club/statemachine/lapses.asl.json:5
+    @  ClubStack/Reader (name generated when deployed)  club/lib/club-stack.ts:37
+      -> handler                                        club/src/mail/read.ts:4
+unresolved on this path: 0

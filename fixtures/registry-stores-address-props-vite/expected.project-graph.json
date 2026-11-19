@@ -1,0 +1,1184 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T12:33:29.216Z",
+  "services": [
+    {
+      "name": "docs",
+      "repo": "./docs",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "handbook",
+      "repo": "./handbook",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "store",
+      "repo": "./store",
+      "type": "remix",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "planner",
+      "repo": "./planner",
+      "type": "sveltekit",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "docs#src/App.tsx:App",
+      "type": "ui_component",
+      "label": "App",
+      "repo": "docs",
+      "file": "src/App.tsx",
+      "line": 9,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "docs#src/lib/entries.ts:entriesIn",
+      "type": "function",
+      "label": "entriesIn",
+      "repo": "docs",
+      "file": "src/lib/entries.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "store",
+              "type": "type:docs#Entry[]"
+            },
+            {
+              "name": "group",
+              "type": "string"
+            }
+          ],
+          "returns": "type:docs#Entry[]"
+        }
+      }
+    },
+    {
+      "id": "docs#src/lib/sections.ts:sectionsOf",
+      "type": "function",
+      "label": "sectionsOf",
+      "repo": "docs",
+      "file": "src/lib/sections.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "area",
+              "type": "string"
+            }
+          ],
+          "returns": "type:docs#Section[]"
+        }
+      }
+    },
+    {
+      "id": "docs#src/screens.tsx:Archive",
+      "type": "ui_component",
+      "label": "Archive",
+      "repo": "docs",
+      "file": "src/screens.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "docs#src/screens.tsx:Billing",
+      "type": "ui_component",
+      "label": "Billing",
+      "repo": "docs",
+      "file": "src/screens.tsx",
+      "line": 3,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "docs#src/screens.tsx:Guides",
+      "type": "ui_component",
+      "label": "Guides",
+      "repo": "docs",
+      "file": "src/screens.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/docs/guides"
+      }
+    },
+    {
+      "id": "docs#src/screens.tsx:Reports",
+      "type": "ui_component",
+      "label": "Reports",
+      "repo": "docs",
+      "file": "src/screens.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "docs#src/screens.tsx:Usage",
+      "type": "ui_component",
+      "label": "Usage",
+      "repo": "docs",
+      "file": "src/screens.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/dashboard/usage"
+      }
+    },
+    {
+      "id": "docs#src/screens.tsx:Users",
+      "type": "ui_component",
+      "label": "Users",
+      "repo": "docs",
+      "file": "src/screens.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/admin/users"
+      }
+    },
+    {
+      "id": "entry:jobs:http:POST:/warm",
+      "type": "entry",
+      "label": "POST /warm",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/warm",
+        "rawPath": "/warm",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:planner:http:GET:/api/plans",
+      "type": "entry",
+      "label": "GET /api/plans",
+      "repo": "planner",
+      "file": "src/routes/api/plans/+server.ts",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/plans",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+server",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:store:http:GET:/api/cart",
+      "type": "entry",
+      "label": "GET /api/cart",
+      "repo": "store",
+      "file": "app/routes/api.cart.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/cart",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "external_api:localhost:5173",
+      "type": "external_api",
+      "label": "localhost:5173",
+      "repo": "jobs",
+      "meta": {
+        "host": "localhost:5173"
+      }
+    },
+    {
+      "id": "handbook#src/app/[locale]/about/page.tsx:AboutPage",
+      "type": "ui_component",
+      "label": "AboutPage",
+      "repo": "handbook",
+      "file": "src/app/[locale]/about/page.tsx",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/:param/about"
+      }
+    },
+    {
+      "id": "handbook#src/app/[locale]/pricing/page.tsx:PricingPage",
+      "type": "ui_component",
+      "label": "PricingPage",
+      "repo": "handbook",
+      "file": "src/app/[locale]/pricing/page.tsx",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/:param/pricing"
+      }
+    },
+    {
+      "id": "handbook#src/app/orders/[id]/page.tsx:OrderPage",
+      "type": "ui_component",
+      "label": "OrderPage",
+      "repo": "handbook",
+      "file": "src/app/orders/[id]/page.tsx",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/orders/:param"
+      }
+    },
+    {
+      "id": "handbook#src/app/tags/[tag]/page.tsx:TagPage",
+      "type": "ui_component",
+      "label": "TagPage",
+      "repo": "handbook",
+      "file": "src/app/tags/[tag]/page.tsx",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/tags/:param"
+      }
+    },
+    {
+      "id": "handbook#src/components/Menu.tsx:Menu",
+      "type": "ui_component",
+      "label": "Menu",
+      "repo": "handbook",
+      "file": "src/components/Menu.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "handbook#src/components/NavLink.tsx:NavLink",
+      "type": "ui_component",
+      "label": "NavLink",
+      "repo": "handbook",
+      "file": "src/components/NavLink.tsx",
+      "line": 8,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ to, children }",
+              "type": "{to:string;children:unknown}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "handbook#src/components/OrderLink.tsx:OrderLink",
+      "type": "ui_component",
+      "label": "OrderLink",
+      "repo": "handbook",
+      "file": "src/components/OrderLink.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ id }",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "handbook#src/components/TagLink.tsx:TagLink",
+      "type": "ui_component",
+      "label": "TagLink",
+      "repo": "handbook",
+      "file": "src/components/TagLink.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ name }",
+              "type": "{name:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "handbook#src/components/use-locale.ts:useLocale",
+      "type": "function",
+      "label": "useLocale",
+      "repo": "handbook",
+      "file": "src/components/use-locale.ts",
+      "line": 6,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "http_out:jobs#src/index.ts:7:9",
+      "type": "http_out",
+      "label": "GET /api/cart",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 7,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:5173/api/cart",
+        "path": "/api/cart",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:5173",
+        "targetService": "store"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/index.ts:8:9",
+      "type": "http_out",
+      "label": "GET /api/plans",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:5173/api/plans",
+        "path": "/api/plans",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:5173",
+        "targetService": "planner"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/index.ts:9:9",
+      "type": "http_out",
+      "label": "GET /api/nothing",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:5173/api/nothing",
+        "path": "/api/nothing",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:5173"
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:POST /warm@6",
+      "type": "function",
+      "label": "POST /warm@6",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "planner#src/routes/api/plans/+server.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "planner",
+      "file": "src/routes/api/plans/+server.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "repo:docs",
+      "type": "repo",
+      "label": "docs",
+      "repo": "docs",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "functions": 11,
+          "components": 7,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:handbook",
+      "type": "repo",
+      "label": "handbook",
+      "repo": "handbook",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 9,
+          "components": 8,
+          "hooks": 1
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 6,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4600,
+            "file": "src/index.ts",
+            "line": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:planner",
+      "type": "repo",
+      "label": "planner",
+      "repo": "planner",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 1,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "svelte"
+          ],
+          "entry": [
+            "sveltekit-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 5173,
+            "file": "package.json",
+            "line": 6,
+            "default": true,
+            "devServer": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:store",
+      "type": "repo",
+      "label": "store",
+      "repo": "store",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 1,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "remix-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 5173,
+            "file": "package.json",
+            "line": 6,
+            "default": true,
+            "devServer": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "store#app/routes/api.cart.ts:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "store",
+      "file": "app/routes/api.cart.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "docs#src/App.tsx:App",
+      "to": "docs#src/lib/entries.ts:entriesIn",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:docs#Entry[]",
+        "string"
+      ],
+      "returns": "type:docs#Entry[]",
+      "file": "src/App.tsx",
+      "line": 21
+    },
+    {
+      "from": "docs#src/App.tsx:App",
+      "to": "docs#src/lib/sections.ts:sectionsOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:docs#Section[]",
+      "file": "src/App.tsx",
+      "line": 18
+    },
+    {
+      "from": "docs#src/App.tsx:App",
+      "to": "docs#src/screens.tsx:Guides",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/App.tsx",
+      "line": 13,
+      "meta": {
+        "navigates": "/docs/guides",
+        "route": "/docs/guides",
+        "page": "src/screens.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "docs#src/App.tsx:App",
+      "to": "docs#src/screens.tsx:Usage",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/App.tsx",
+      "line": 15,
+      "meta": {
+        "navigates": "/dashboard/usage",
+        "route": "/dashboard/usage",
+        "page": "src/screens.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "docs#src/App.tsx:App",
+      "to": "docs#src/screens.tsx:Users",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/App.tsx",
+      "line": 14,
+      "meta": {
+        "navigates": "/admin/users",
+        "route": "/admin/users",
+        "page": "src/screens.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "entry:jobs:http:POST:/warm",
+      "to": "jobs#src/index.ts:POST /warm@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:planner:http:GET:/api/plans",
+      "to": "planner#src/routes/api/plans/+server.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/api/plans/+server.ts",
+      "line": 3,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:store:http:GET:/api/cart",
+      "to": "store#app/routes/api.cart.ts:loader",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "Response",
+      "file": "app/routes/api.cart.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "handbook#src/components/Menu.tsx:Menu",
+      "to": "handbook#src/app/[locale]/about/page.tsx:AboutPage",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Menu.tsx",
+      "line": 10,
+      "meta": {
+        "navigates": "/${locale}/about",
+        "route": "/:param/about",
+        "page": "src/app/[locale]/about/page.tsx",
+        "link": "NavLink",
+        "wrapper": "NavLink"
+      }
+    },
+    {
+      "from": "handbook#src/components/Menu.tsx:Menu",
+      "to": "handbook#src/app/[locale]/pricing/page.tsx:PricingPage",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Menu.tsx",
+      "line": 9,
+      "meta": {
+        "navigates": "/${locale}/pricing",
+        "route": "/:param/pricing",
+        "page": "src/app/[locale]/pricing/page.tsx",
+        "link": "NavLink",
+        "wrapper": "NavLink"
+      }
+    },
+    {
+      "from": "handbook#src/components/Menu.tsx:Menu",
+      "to": "handbook#src/components/NavLink.tsx:NavLink",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{to:string;children:unknown}"
+      ],
+      "returns": "unknown",
+      "file": "src/components/Menu.tsx",
+      "line": 9,
+      "meta": {
+        "renders": "NavLink"
+      }
+    },
+    {
+      "from": "handbook#src/components/Menu.tsx:Menu",
+      "to": "handbook#src/components/OrderLink.tsx:OrderLink",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{id:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/components/Menu.tsx",
+      "line": 11,
+      "meta": {
+        "renders": "OrderLink"
+      }
+    },
+    {
+      "from": "handbook#src/components/Menu.tsx:Menu",
+      "to": "handbook#src/components/TagLink.tsx:TagLink",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{name:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/components/Menu.tsx",
+      "line": 12,
+      "meta": {
+        "renders": "TagLink"
+      }
+    },
+    {
+      "from": "handbook#src/components/NavLink.tsx:NavLink",
+      "to": "handbook#src/components/use-locale.ts:useLocale",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/components/NavLink.tsx",
+      "line": 9
+    },
+    {
+      "from": "handbook#src/components/OrderLink.tsx:OrderLink",
+      "to": "handbook#src/app/orders/[id]/page.tsx:OrderPage",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/OrderLink.tsx",
+      "line": 5,
+      "meta": {
+        "navigates": "/orders/${id}",
+        "route": "/orders/:param",
+        "page": "src/app/orders/[id]/page.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "handbook#src/components/TagLink.tsx:TagLink",
+      "to": "handbook#src/app/tags/[tag]/page.tsx:TagPage",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/TagLink.tsx",
+      "line": 5,
+      "meta": {
+        "navigates": "/tags/t-${name}",
+        "route": "/tags/:param",
+        "page": "src/app/tags/[tag]/page.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/index.ts:7:9",
+      "to": "entry:store:http:GET:/api/cart",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/index.ts",
+      "line": 7,
+      "meta": {
+        "via": "host",
+        "targetService": "store",
+        "listensAt": "package.json:6 (its default)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/index.ts:8:9",
+      "to": "entry:planner:http:GET:/api/plans",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/index.ts",
+      "line": 8,
+      "meta": {
+        "via": "host",
+        "targetService": "planner",
+        "listensAt": "package.json:6 (its default)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/index.ts:9:9",
+      "to": "external_api:localhost:5173",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9
+    },
+    {
+      "from": "jobs#src/index.ts:POST /warm@6",
+      "to": "http_out:jobs#src/index.ts:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 7
+    },
+    {
+      "from": "jobs#src/index.ts:POST /warm@6",
+      "to": "http_out:jobs#src/index.ts:8:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 8
+    },
+    {
+      "from": "jobs#src/index.ts:POST /warm@6",
+      "to": "http_out:jobs#src/index.ts:9:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9
+    }
+  ],
+  "types": {
+    "type:docs#Entry": {
+      "name": "Entry",
+      "kind": "object",
+      "declaredIn": "docs#src/lib/entries.ts",
+      "structuralHash": "997ec2c3a72ff027",
+      "fields": [
+        {
+          "name": "group",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "Screen",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:docs#Section": {
+      "name": "Section",
+      "kind": "object",
+      "declaredIn": "docs#src/lib/sections.ts",
+      "structuralHash": "ef0716c0bcc02407",
+      "fields": [
+        {
+          "name": "area",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "Screen",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/App.tsx",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "docs"
+    },
+    {
+      "file": "src/lib/entries.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ComponentType",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "docs"
+    },
+    {
+      "file": "src/lib/sections.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ComponentType",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "docs"
+    },
+    {
+      "file": "src/screens.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "docs"
+    },
+    {
+      "file": "src/screens.tsx",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "docs"
+    },
+    {
+      "file": "src/screens.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "docs"
+    },
+    {
+      "file": "src/screens.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "docs"
+    },
+    {
+      "file": "src/screens.tsx",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "docs"
+    },
+    {
+      "file": "src/screens.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "docs"
+    },
+    {
+      "file": "src/app/[locale]/about/page.tsx",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "handbook"
+    },
+    {
+      "file": "src/app/[locale]/pricing/page.tsx",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "handbook"
+    },
+    {
+      "file": "src/app/orders/[id]/page.tsx",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "handbook"
+    },
+    {
+      "file": "src/app/tags/[tag]/page.tsx",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "handbook"
+    },
+    {
+      "file": "src/components/Menu.tsx",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "handbook"
+    },
+    {
+      "file": "src/components/NavLink.tsx",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ReactNode",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "handbook"
+    },
+    {
+      "file": "src/components/NavLink.tsx",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "handbook"
+    },
+    {
+      "file": "src/components/OrderLink.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "handbook"
+    },
+    {
+      "file": "src/components/TagLink.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "handbook"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 10,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "POST /warm@6 -> res.sendStatus",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "jobs"
+    },
+    {
+      "file": "src/routes/api/plans/+server.ts",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "planner"
+    }
+  ]
+}

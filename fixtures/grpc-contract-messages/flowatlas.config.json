@@ -1,0 +1,21 @@
+{
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "express"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "grpc",
+      "baseUrlEnv": ["INVENTORY_ADDR"]
+    },
+    {
+      "name": "pricing",
+      "document": { "kind": "protobuf", "path": "./proto/store.proto", "services": ["store.PricingService"] },
+      "baseUrlEnv": ["PRICING_ADDR"]
+    }
+  ],
+  "output": ".flowatlas"
+}

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T16:39:50.692Z",
+  "configHash": "cab7c90028a4",
+  "services": [
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 30,
+      "edges": 24,
+      "types": 1,
+      "unresolved": 7,
+      "durationMs": 3595,
+      "packages": {
+        "name": "ledger",
+        "runtime": [
+          "@aws-sdk/client-dynamodb",
+          "@aws-sdk/client-kinesis",
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 4,
+    "linked": 3,
+    "noConsumers": [],
+    "noProducers": [
+      "channel:sqs/team-billing"
+    ]
+  },
+  "routes": {
+    "total": 1,
+    "called": 0,
+    "uncalled": [
+      "entry:ledger:http:POST:/entries"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 30,
+    "edges": 27,
+    "types": 1,
+    "missed": 4,
+    "sites": 9,
+    "notes": 2,
+    "findings": 1,
+    "unresolved": 4
+  }
+}

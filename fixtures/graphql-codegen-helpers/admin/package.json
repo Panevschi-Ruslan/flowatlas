@@ -1,0 +1,11 @@
+{
+  "name": "graphql-codegen-helpers-admin",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@urql/vue": "^1.4.0",
+    "graphql": "^16.9.0",
+    "react": "^19.0.0",
+    "urql": "^4.1.0"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-10T15:40:55.090Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:shop#src/orders.ts:15:12",
+        "to": "consumer:shop#template.yaml:Resources.OrderChanged.Events.Orders",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders.ts:15:12|emits|consumer:shop#template.yaml:Resources.OrderChanged.Events.Orders",
+      "direction": "payload",
+      "reason": "delivery-target-unread",
+      "message": "nothing consumer:shop#template.yaml:Resources.OrderChanged.Events.Orders delivers to is code this project reads",
+      "hint": "The target is not code any configured service holds - an e-mail address, or a function no configured service deploys - so there is nothing to compare the message with. Configure the service that deploys it to compare it."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/place-order.ts:9:9",
+        "to": "consumer:shop#template.yaml:Resources.AuditChanged.Events.Audit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/place-order.ts:9:9|emits|consumer:shop#template.yaml:Resources.AuditChanged.Events.Audit",
+      "direction": "payload",
+      "reason": "delivery-target-unread",
+      "message": "nothing consumer:shop#template.yaml:Resources.AuditChanged.Events.Audit delivers to is code this project reads",
+      "hint": "The target is not code any configured service holds - an e-mail address, or a function no configured service deploys - so there is nothing to compare the message with. Configure the service that deploys it to compare it."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/save-cart.ts:5:9",
+        "to": "consumer:shop#template.yaml:Resources.CartChanged.Events.Carts",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/save-cart.ts:5:9|emits|consumer:shop#template.yaml:Resources.CartChanged.Events.Carts",
+      "direction": "payload",
+      "reason": "delivery-target-unread",
+      "message": "nothing consumer:shop#template.yaml:Resources.CartChanged.Events.Carts delivers to is code this project reads",
+      "hint": "The target is not code any configured service holds - an e-mail address, or a function no configured service deploys - so there is nothing to compare the message with. Configure the service that deploys it to compare it."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 3,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

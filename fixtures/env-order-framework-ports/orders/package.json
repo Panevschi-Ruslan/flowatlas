@@ -1,0 +1,10 @@
+{
+  "name": "orders",
+  "private": true,
+  "scripts": {
+    "start": "node --env-file=.env --env-file=.env.local dist/main.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

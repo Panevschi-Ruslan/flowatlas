@@ -1,0 +1,141 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-10T15:22:47.834Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:worker#src/sync.controller.ts:7:24",
+        "to": "entry:api:http:GET:/api/catalog/items/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:worker#src/sync.controller.ts:7:24|http_calls|entry:api:http:GET:/api/catalog/items/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "worker#src/sync.controller.ts:SyncController.sync declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/sync.controller.ts:7:24",
+        "to": "entry:api:http:GET:/api/catalog/items/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:worker#src/sync.controller.ts:7:24|http_calls|entry:api:http:GET:/api/catalog/items/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/sync.controller.ts:SyncController.sync declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages/AccountPage.tsx:11:11",
+        "to": "entry:api:http:GET:/office-rest/admin/users",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages/AccountPage.tsx:11:11|hits|entry:api:http:GET:/office-rest/admin/users",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages/AccountPage.tsx:AccountPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages/AccountPage.tsx:11:11",
+        "to": "entry:api:http:GET:/office-rest/admin/users",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages/AccountPage.tsx:11:11|hits|entry:api:http:GET:/office-rest/admin/users",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/pages/AccountPage.tsx:AccountPage declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages/AccountPage.tsx:12:11",
+        "to": "entry:api:http:GET:/store-rest/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages/AccountPage.tsx:12:11|hits|entry:api:http:GET:/store-rest/products",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages/AccountPage.tsx:AccountPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages/AccountPage.tsx:12:11",
+        "to": "entry:api:http:GET:/store-rest/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages/AccountPage.tsx:12:11|hits|entry:api:http:GET:/store-rest/products",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/pages/AccountPage.tsx:AccountPage declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages/AccountPage.tsx:15:11",
+        "to": "entry:api:http:GET:/exports/orders.csv",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages/AccountPage.tsx:15:11|hits|entry:api:http:GET:/exports/orders.csv",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages/AccountPage.tsx:AccountPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages/AccountPage.tsx:15:11",
+        "to": "entry:api:http:GET:/exports/orders.csv",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages/AccountPage.tsx:15:11|hits|entry:api:http:GET:/exports/orders.csv",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/pages/AccountPage.tsx:AccountPage declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages/AccountPage.tsx:16:11",
+        "to": "entry:api:http:GET:/store-rest/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages/AccountPage.tsx:16:11|hits|entry:api:http:GET:/store-rest/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages/AccountPage.tsx:AccountPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages/AccountPage.tsx:16:11",
+        "to": "entry:api:http:GET:/store-rest/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages/AccountPage.tsx:16:11|hits|entry:api:http:GET:/store-rest/orders",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/pages/AccountPage.tsx:AccountPage declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 10,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

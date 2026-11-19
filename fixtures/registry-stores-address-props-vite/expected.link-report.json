@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-15T14:55:00.764Z",
+  "configHash": "7c524233745c",
+  "services": [
+    {
+      "name": "docs",
+      "repo": "./docs",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 10,
+      "edges": 5,
+      "types": 2,
+      "unresolved": 9,
+      "durationMs": 0,
+      "packages": {
+        "name": "registry-stores-address-props-vite-docs",
+        "runtime": [
+          "react",
+          "react-dom",
+          "react-router-dom"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "handbook",
+      "repo": "./handbook",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 10,
+      "edges": 8,
+      "types": 0,
+      "unresolved": 9,
+      "durationMs": 0,
+      "packages": {
+        "name": "registry-stores-address-props-vite-handbook",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "registry-stores-address-props-vite-jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "planner",
+      "repo": "./planner",
+      "type": "sveltekit",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "registry-stores-address-props-vite-planner",
+        "runtime": [],
+        "dev": [
+          "@sveltejs/kit",
+          "svelte",
+          "vite"
+        ]
+      }
+    },
+    {
+      "name": "store",
+      "repo": "./store",
+      "type": "remix",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "registry-stores-address-props-vite-store",
+        "runtime": [
+          "@remix-run/node",
+          "@remix-run/react",
+          "react"
+        ],
+        "dev": [
+          "@remix-run/dev",
+          "vite"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 2,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 1,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 2,
+    "uncalled": [
+      "entry:jobs:http:POST:/warm"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 33,
+    "edges": 22,
+    "types": 2,
+    "missed": 20,
+    "sites": 20,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 20
+  }
+}

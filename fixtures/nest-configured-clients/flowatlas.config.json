@@ -1,0 +1,22 @@
+{
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./apps/orders",
+      "type": "express",
+      "baseUrlEnv": ["ORDERS_URL"]
+    },
+    {
+      "name": "ledger",
+      "repo": "./apps/ledger",
+      "type": "express",
+      "baseUrlEnv": ["LEDGER_URL"]
+    },
+    {
+      "name": "worker",
+      "repo": "./apps/worker",
+      "type": "nestjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

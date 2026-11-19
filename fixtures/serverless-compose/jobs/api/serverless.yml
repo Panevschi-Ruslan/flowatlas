@@ -1,0 +1,19 @@
+service: jobs-api
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: eu-west-1
+  # The REST API the shared service creates, handed over by the compose file.
+  apiGateway:
+    restApiId: ${param:restApiId}
+    restApiRootResourceId: ${param:restApiRootResourceId}
+
+functions:
+  submit:
+    handler: src/submit.handler
+    environment:
+      JOBS_QUEUE_URL: ${param:jobsQueueUrl}
+    events:
+      - http: POST jobs

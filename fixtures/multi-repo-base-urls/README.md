@@ -21,6 +21,11 @@ Every join is `heuristic` and carries `baseUrl` and `baseUrlFrom`, on the edge
 and on the request; each value taken is one `base-url-from-files` (or
 `base-url-from-name`) row at level `info`.
 
+The compose file publishes `payments-api`'s port 4000 as 4000, while the
+payments code listens on 3000 (`src/main.ts:7`): the mapping meets nothing the
+code listens on, which is the note `published-port-unheard` at
+`docker-compose.yml:15` (P254). The join by the published port stands.
+
 What is never kept, and the snapshot proves by not holding it: anything in
 `storefront/.env` but the names; `API_KEY`, whose name says it is a secret; the
 credentials and the query in `AUDIT_URL`; `DATABASE_URL`, which is not an

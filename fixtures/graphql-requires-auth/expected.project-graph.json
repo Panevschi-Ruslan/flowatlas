@@ -1,0 +1,1429 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T12:58:10.513Z",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shipping",
+      "repo": "./shipping",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "router",
+      "repo": "router",
+      "type": "declared",
+      "extractor": "graphql-document"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/index.ts:Product.__resolveReference@24",
+      "type": "function",
+      "label": "Product.__resolveReference@24",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reference",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "{id:string;name:'Green tea'}"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:Query.product@21",
+      "type": "function",
+      "label": "Query.product@21",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_",
+              "type": "unknown"
+            },
+            {
+              "name": "args",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "{id:string;name:'Green tea'}"
+        }
+      }
+    },
+    {
+      "id": "entry:catalog:graphql:Product.__resolveReference",
+      "type": "entry",
+      "label": "Product.__resolveReference",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 24,
+      "kind": "graphql",
+      "meta": {
+        "type": "Product",
+        "name": "__resolveReference",
+        "field": true,
+        "reference": true,
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:catalog:graphql:Query.product",
+      "type": "entry",
+      "label": "Query.product",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 21,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "product",
+        "returns": "Product",
+        "args": {
+          "id": {
+            "type": "ID!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:catalog:http:POST:/",
+      "type": "entry",
+      "label": "POST /",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Product": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  }
+                },
+                "directives": [
+                  "key"
+                ],
+                "federation": {
+                  "keys": [
+                    {
+                      "fields": "id"
+                    }
+                  ]
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "product": {
+                    "type": "Product",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "federation": 2
+          },
+          "subgraph": {
+            "federation": 2
+          },
+          "listen": [
+            {
+              "port": 4001,
+              "file": "src/index.ts",
+              "line": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:inventory:graphql:Product.__resolveReference",
+      "type": "entry",
+      "label": "Product.__resolveReference",
+      "repo": "inventory",
+      "file": "src/index.ts",
+      "line": 19,
+      "kind": "graphql",
+      "meta": {
+        "type": "Product",
+        "name": "__resolveReference",
+        "field": true,
+        "reference": true,
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:inventory:graphql:Product.weight",
+      "type": "entry",
+      "label": "Product.weight",
+      "repo": "inventory",
+      "file": "src/index.ts",
+      "line": 20,
+      "kind": "graphql",
+      "meta": {
+        "type": "Product",
+        "name": "weight",
+        "field": true,
+        "returns": "Int!",
+        "adapter": "graphql-resolvers",
+        "access": {
+          "guards": [
+            {
+              "id": "router#router/supergraph.graphql:@authenticated",
+              "name": "@authenticated",
+              "layer": "guard",
+              "where": "route",
+              "via": "@authenticated on Product.weight, checked by router",
+              "file": "router/supergraph.graphql",
+              "line": 40
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:inventory:http:POST:/",
+      "type": "entry",
+      "label": "POST /",
+      "repo": "inventory",
+      "file": "src/index.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Product": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "weight": {
+                    "type": "Int!",
+                    "federation": {
+                      "auth": [
+                        {
+                          "kind": "authenticated"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "directives": [
+                  "key"
+                ],
+                "federation": {
+                  "keys": [
+                    {
+                      "fields": "id"
+                    }
+                  ]
+                }
+              }
+            },
+            "federation": 2
+          },
+          "subgraph": {
+            "federation": 2
+          },
+          "listen": [
+            {
+              "port": 4002,
+              "file": "src/index.ts",
+              "line": 26
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:router:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "router",
+      "file": "router/supergraph.graphql",
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-schema",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "gateway": {
+            "subgraphs": [
+              {
+                "name": "catalog",
+                "file": "router/supergraph.graphql",
+                "line": 24,
+                "url": "http://localhost:4001/graphql",
+                "host": "localhost:4001",
+                "path": "/graphql"
+              },
+              {
+                "name": "inventory",
+                "file": "router/supergraph.graphql",
+                "line": 25,
+                "url": "http://localhost:4002/graphql",
+                "host": "localhost:4002",
+                "path": "/graphql"
+              },
+              {
+                "name": "shipping",
+                "file": "router/supergraph.graphql",
+                "line": 26,
+                "url": "http://localhost:4003/graphql",
+                "host": "localhost:4003",
+                "path": "/graphql"
+              }
+            ],
+            "composition": {
+              "roots": {
+                "query": "Query"
+              },
+              "subgraphs": [
+                "catalog",
+                "inventory",
+                "shipping"
+              ],
+              "types": {
+                "Product": {
+                  "kind": "object",
+                  "fields": {
+                    "id": {
+                      "type": "ID!",
+                      "owners": [
+                        {
+                          "subgraph": "catalog"
+                        },
+                        {
+                          "subgraph": "inventory"
+                        },
+                        {
+                          "subgraph": "shipping"
+                        }
+                      ],
+                      "line": 38
+                    },
+                    "name": {
+                      "type": "String!",
+                      "owners": [
+                        {
+                          "subgraph": "catalog"
+                        }
+                      ],
+                      "line": 39
+                    },
+                    "weight": {
+                      "type": "Int!",
+                      "owners": [
+                        {
+                          "subgraph": "inventory"
+                        }
+                      ],
+                      "line": 40,
+                      "auth": [
+                        {
+                          "kind": "authenticated"
+                        }
+                      ]
+                    },
+                    "estimate": {
+                      "type": "Int!",
+                      "owners": [
+                        {
+                          "subgraph": "shipping",
+                          "requires": "weight"
+                        }
+                      ],
+                      "line": 41
+                    },
+                    "fragile": {
+                      "type": "Boolean!",
+                      "owners": [
+                        {
+                          "subgraph": "shipping",
+                          "requires": "weight"
+                        }
+                      ],
+                      "line": 42,
+                      "auth": [
+                        {
+                          "kind": "authenticated"
+                        }
+                      ]
+                    }
+                  },
+                  "keys": {
+                    "catalog": [
+                      "id"
+                    ],
+                    "inventory": [
+                      "id"
+                    ],
+                    "shipping": [
+                      "id"
+                    ]
+                  }
+                },
+                "Query": {
+                  "kind": "object",
+                  "fields": {
+                    "product": {
+                      "type": "Product",
+                      "args": {
+                        "id": {
+                          "type": "ID!",
+                          "required": true
+                        }
+                      },
+                      "owners": [
+                        {
+                          "subgraph": "catalog"
+                        }
+                      ],
+                      "line": 30
+                    }
+                  }
+                }
+              }
+            },
+            "from": "router/supergraph.graphql"
+          },
+          "schema": {
+            "roots": {
+              "query": "Query"
+            },
+            "types": {
+              "Product": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  },
+                  "weight": {
+                    "type": "Int!"
+                  },
+                  "estimate": {
+                    "type": "Int!"
+                  },
+                  "fragile": {
+                    "type": "Boolean!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "product": {
+                    "type": "Product",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "declaredBy": "router/supergraph.graphql"
+      }
+    },
+    {
+      "id": "entry:shipping:graphql:Product.__resolveReference",
+      "type": "entry",
+      "label": "Product.__resolveReference",
+      "repo": "shipping",
+      "file": "src/index.ts",
+      "line": 21,
+      "kind": "graphql",
+      "meta": {
+        "type": "Product",
+        "name": "__resolveReference",
+        "field": true,
+        "reference": true,
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:shipping:graphql:Product.estimate",
+      "type": "entry",
+      "label": "Product.estimate",
+      "repo": "shipping",
+      "file": "src/index.ts",
+      "line": 22,
+      "kind": "graphql",
+      "meta": {
+        "type": "Product",
+        "name": "estimate",
+        "field": true,
+        "returns": "Int!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:shipping:graphql:Product.fragile",
+      "type": "entry",
+      "label": "Product.fragile",
+      "repo": "shipping",
+      "file": "src/index.ts",
+      "line": 23,
+      "kind": "graphql",
+      "meta": {
+        "type": "Product",
+        "name": "fragile",
+        "field": true,
+        "returns": "Boolean!",
+        "adapter": "graphql-resolvers",
+        "access": {
+          "guards": [
+            {
+              "id": "router#router/supergraph.graphql:@authenticated",
+              "name": "@authenticated",
+              "layer": "guard",
+              "where": "route",
+              "via": "@authenticated on Product.fragile, checked by router",
+              "file": "router/supergraph.graphql",
+              "line": 42
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:shipping:http:POST:/",
+      "type": "entry",
+      "label": "POST /",
+      "repo": "shipping",
+      "file": "src/index.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Product": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "weight": {
+                    "type": "Int!",
+                    "federation": {
+                      "external": true
+                    }
+                  },
+                  "estimate": {
+                    "type": "Int!",
+                    "federation": {
+                      "requires": "weight"
+                    }
+                  },
+                  "fragile": {
+                    "type": "Boolean!",
+                    "federation": {
+                      "requires": "weight",
+                      "auth": [
+                        {
+                          "kind": "authenticated"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "directives": [
+                  "key"
+                ],
+                "federation": {
+                  "keys": [
+                    {
+                      "fields": "id"
+                    }
+                  ]
+                }
+              }
+            },
+            "federation": 2
+          },
+          "subgraph": {
+            "federation": 2
+          },
+          "listen": [
+            {
+              "port": 4003,
+              "file": "src/index.ts",
+              "line": 29
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "inventory#src/index.ts:Product.__resolveReference@19",
+      "type": "function",
+      "label": "Product.__resolveReference@19",
+      "repo": "inventory",
+      "file": "src/index.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reference",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
+    },
+    {
+      "id": "inventory#src/index.ts:Product.weight@20",
+      "type": "function",
+      "label": "Product.weight@20",
+      "repo": "inventory",
+      "file": "src/index.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "graphql-resolvers"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4001,
+            "file": "src/index.ts",
+            "line": 30
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:inventory",
+      "type": "repo",
+      "label": "inventory",
+      "repo": "inventory",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "graphql-resolvers"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4002,
+            "file": "src/index.ts",
+            "line": 26
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shipping",
+      "type": "repo",
+      "label": "shipping",
+      "repo": "shipping",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "graphql-resolvers"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4003,
+            "file": "src/index.ts",
+            "line": 29
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "functions": 2,
+          "components": 2,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "router#router/supergraph.graphql:@authenticated",
+      "type": "guard",
+      "label": "@authenticated",
+      "repo": "router",
+      "file": "router/supergraph.graphql",
+      "line": 40,
+      "kind": "directive",
+      "meta": {
+        "graphql": {
+          "gateway": "router",
+          "requirement": {
+            "kind": "authenticated"
+          }
+        }
+      }
+    },
+    {
+      "id": "shipping#src/index.ts:Product.__resolveReference@21",
+      "type": "function",
+      "label": "Product.__resolveReference@21",
+      "repo": "shipping",
+      "file": "src/index.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reference",
+              "type": "{id:string;weight?:number}"
+            }
+          ],
+          "returns": "{id:string;weight?:number}"
+        }
+      }
+    },
+    {
+      "id": "shipping#src/index.ts:Product.estimate@22",
+      "type": "function",
+      "label": "Product.estimate@22",
+      "repo": "shipping",
+      "file": "src/index.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "product",
+              "type": "{weight:number}"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "shipping#src/index.ts:Product.fragile@23",
+      "type": "function",
+      "label": "Product.fragile@23",
+      "repo": "shipping",
+      "file": "src/index.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "product",
+              "type": "{weight:number}"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "shop#src/Shipping.tsx:Shipping",
+      "type": "ui_component",
+      "label": "Shipping",
+      "repo": "shop",
+      "file": "src/Shipping.tsx",
+      "line": 13,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ id }",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#src/Weight.tsx:Weight",
+      "type": "ui_component",
+      "label": "Weight",
+      "repo": "shop",
+      "file": "src/Weight.tsx",
+      "line": 13,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ id }",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/Shipping.tsx:14:20",
+      "type": "ui_api_call",
+      "label": "query Estimate /graphql",
+      "repo": "shop",
+      "file": "src/Shipping.tsx",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_ROUTER_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_ROUTER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Estimate",
+          "fields": [
+            {
+              "field": "product",
+              "arguments": [
+                "id"
+              ],
+              "line": 6,
+              "selections": [
+                {
+                  "field": "name",
+                  "line": 7
+                },
+                {
+                  "field": "estimate",
+                  "line": 8
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "id",
+              "type": "ID!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/Shipping.tsx",
+            "line": 5
+          },
+          "library": "apollo"
+        },
+        "targetService": "router"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/Weight.tsx:14:20",
+      "type": "ui_api_call",
+      "label": "query Weight /graphql",
+      "repo": "shop",
+      "file": "src/Weight.tsx",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_ROUTER_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_ROUTER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Weight",
+          "fields": [
+            {
+              "field": "product",
+              "arguments": [
+                "id"
+              ],
+              "line": 6,
+              "selections": [
+                {
+                  "field": "estimate",
+                  "line": 7
+                },
+                {
+                  "field": "weight",
+                  "line": 8
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "id",
+              "type": "ID!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/Weight.tsx",
+            "line": 5
+          },
+          "library": "apollo"
+        },
+        "targetService": "router"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:graphql:Product.__resolveReference",
+      "to": "catalog#src/index.ts:Product.__resolveReference@24",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 24
+    },
+    {
+      "from": "entry:catalog:graphql:Query.product",
+      "to": "catalog#src/index.ts:Query.product@21",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:inventory:graphql:Product.__resolveReference",
+      "to": "inventory#src/index.ts:Product.__resolveReference@19",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 19
+    },
+    {
+      "from": "entry:inventory:graphql:Product.weight",
+      "to": "inventory#src/index.ts:Product.weight@20",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 20
+    },
+    {
+      "from": "entry:inventory:graphql:Product.weight",
+      "to": "router#router/supergraph.graphql:@authenticated",
+      "type": "guarded_by",
+      "confidence": "declared",
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "@authenticated on Product.weight, checked by router",
+        "through": "router",
+        "graphql": {
+          "gateway": "router",
+          "field": "Product.weight"
+        }
+      }
+    },
+    {
+      "from": "entry:router:http:POST:/graphql",
+      "to": "entry:catalog:http:POST:/",
+      "type": "http_calls",
+      "confidence": "declared",
+      "file": "router/supergraph.graphql",
+      "line": 24,
+      "meta": {
+        "graphql": {
+          "subgraph": "catalog"
+        },
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "entry:router:http:POST:/graphql",
+      "to": "entry:inventory:http:POST:/",
+      "type": "http_calls",
+      "confidence": "declared",
+      "file": "router/supergraph.graphql",
+      "line": 25,
+      "meta": {
+        "graphql": {
+          "subgraph": "inventory"
+        },
+        "targetService": "inventory"
+      }
+    },
+    {
+      "from": "entry:router:http:POST:/graphql",
+      "to": "entry:shipping:http:POST:/",
+      "type": "http_calls",
+      "confidence": "declared",
+      "file": "router/supergraph.graphql",
+      "line": 26,
+      "meta": {
+        "graphql": {
+          "subgraph": "shipping"
+        },
+        "targetService": "shipping"
+      }
+    },
+    {
+      "from": "entry:shipping:graphql:Product.__resolveReference",
+      "to": "shipping#src/index.ts:Product.__resolveReference@21",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:shipping:graphql:Product.estimate",
+      "to": "shipping#src/index.ts:Product.estimate@22",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 22
+    },
+    {
+      "from": "entry:shipping:graphql:Product.fragile",
+      "to": "router#router/supergraph.graphql:@authenticated",
+      "type": "guarded_by",
+      "confidence": "declared",
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "@authenticated on Product.fragile, checked by router",
+        "through": "router",
+        "graphql": {
+          "gateway": "router",
+          "field": "Product.fragile"
+        }
+      }
+    },
+    {
+      "from": "entry:shipping:graphql:Product.fragile",
+      "to": "shipping#src/index.ts:Product.fragile@23",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 23
+    },
+    {
+      "from": "shop#src/Shipping.tsx:Shipping",
+      "to": "ui_api_call:shop#src/Shipping.tsx:14:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Shipping.tsx",
+      "line": 14
+    },
+    {
+      "from": "shop#src/Weight.tsx:Weight",
+      "to": "ui_api_call:shop#src/Weight.tsx:14:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Weight.tsx",
+      "line": 14
+    },
+    {
+      "from": "ui_api_call:shop#src/Shipping.tsx:14:20",
+      "to": "entry:catalog:graphql:Query.product",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/Shipping.tsx",
+      "line": 6,
+      "meta": {
+        "graphql": {
+          "operation": "Estimate",
+          "gateway": "router",
+          "subgraph": "catalog",
+          "field": "Query.product"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Shipping.tsx:14:20",
+      "to": "entry:inventory:graphql:Product.__resolveReference",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/Shipping.tsx",
+      "line": 8,
+      "meta": {
+        "graphql": {
+          "operation": "Estimate",
+          "gateway": "router",
+          "subgraph": "inventory",
+          "requiredBy": "Product.estimate",
+          "field": "Product.__resolveReference",
+          "hop": {
+            "entity": "Product",
+            "from": "catalog",
+            "for": "Product.weight"
+          }
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Shipping.tsx:14:20",
+      "to": "entry:inventory:graphql:Product.weight",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/Shipping.tsx",
+      "line": 8,
+      "meta": {
+        "graphql": {
+          "operation": "Estimate",
+          "gateway": "router",
+          "subgraph": "inventory",
+          "requiredBy": "Product.estimate",
+          "field": "Product.weight",
+          "hop": {
+            "entity": "Product",
+            "from": "catalog"
+          }
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Shipping.tsx:14:20",
+      "to": "entry:router:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/Shipping.tsx",
+      "line": 14,
+      "meta": {
+        "via": "api-target",
+        "targetService": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Shipping.tsx:14:20",
+      "to": "entry:shipping:graphql:Product.__resolveReference",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/Shipping.tsx",
+      "line": 8,
+      "meta": {
+        "graphql": {
+          "operation": "Estimate",
+          "gateway": "router",
+          "subgraph": "shipping",
+          "field": "Product.__resolveReference",
+          "hop": {
+            "entity": "Product",
+            "from": "catalog",
+            "for": "Product.estimate"
+          }
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Shipping.tsx:14:20",
+      "to": "entry:shipping:graphql:Product.estimate",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/Shipping.tsx",
+      "line": 8,
+      "meta": {
+        "graphql": {
+          "operation": "Estimate",
+          "gateway": "router",
+          "subgraph": "shipping",
+          "field": "Product.estimate",
+          "hop": {
+            "entity": "Product",
+            "from": "catalog"
+          }
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Weight.tsx:14:20",
+      "to": "entry:catalog:graphql:Query.product",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/Weight.tsx",
+      "line": 6,
+      "meta": {
+        "graphql": {
+          "operation": "Weight",
+          "gateway": "router",
+          "subgraph": "catalog",
+          "field": "Query.product"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Weight.tsx:14:20",
+      "to": "entry:inventory:graphql:Product.__resolveReference",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/Weight.tsx",
+      "line": 8,
+      "meta": {
+        "graphql": {
+          "operation": "Weight",
+          "gateway": "router",
+          "subgraph": "inventory",
+          "field": "Product.__resolveReference",
+          "hop": {
+            "entity": "Product",
+            "from": "catalog",
+            "for": "Product.weight"
+          }
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Weight.tsx:14:20",
+      "to": "entry:inventory:graphql:Product.weight",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/Weight.tsx",
+      "line": 8,
+      "meta": {
+        "graphql": {
+          "operation": "Weight",
+          "gateway": "router",
+          "subgraph": "inventory",
+          "field": "Product.weight",
+          "hop": {
+            "entity": "Product",
+            "from": "catalog"
+          }
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Weight.tsx:14:20",
+      "to": "entry:router:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/Weight.tsx",
+      "line": 14,
+      "meta": {
+        "via": "api-target",
+        "targetService": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Weight.tsx:14:20",
+      "to": "entry:shipping:graphql:Product.__resolveReference",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/Weight.tsx",
+      "line": 7,
+      "meta": {
+        "graphql": {
+          "operation": "Weight",
+          "gateway": "router",
+          "subgraph": "shipping",
+          "field": "Product.__resolveReference",
+          "hop": {
+            "entity": "Product",
+            "from": "catalog",
+            "for": "Product.estimate"
+          }
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Weight.tsx:14:20",
+      "to": "entry:shipping:graphql:Product.estimate",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/Weight.tsx",
+      "line": 7,
+      "meta": {
+        "graphql": {
+          "operation": "Weight",
+          "gateway": "router",
+          "subgraph": "shipping",
+          "field": "Product.estimate",
+          "hop": {
+            "entity": "Product",
+            "from": "catalog"
+          }
+        },
+        "through": "router"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "service": "router",
+      "file": "router/supergraph.graphql",
+      "line": 1,
+      "symbol": "entry:router:http:POST:/graphql",
+      "reason": "graphql-requires-auth-not-carried",
+      "level": "action",
+      "message": "shipping resolves Product.estimate with @requires(fields: \"weight\"), and Product.estimate does not carry @authenticated on Product.weight; the router checks the client's operation, not the fields it fetches for a @requires, so a request allowed Product.estimate is answered from fields it may not read, and composition (Federation 2.9 and later) refuses the supergraph for it",
+      "hint": "Put @authenticated on Product.estimate in shipping too, so the requiring field asks at least what the fields it requires ask.",
+      "meta": {
+        "field": "Product.estimate",
+        "subgraph": "shipping",
+        "requires": "weight",
+        "missing": [
+          "@authenticated"
+        ]
+      }
+    },
+    {
+      "file": "src/Shipping.tsx",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "src/Weight.tsx",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    }
+  ]
+}

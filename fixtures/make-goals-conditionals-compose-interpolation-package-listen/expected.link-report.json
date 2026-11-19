@@ -1,0 +1,251 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T16:54:17.664Z",
+  "configHash": "b5a0426b1e92",
+  "services": [
+    {
+      "name": "alerts",
+      "repo": "./alerts",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2775,
+      "packages": {
+        "name": "alerts",
+        "runtime": [
+          "hono"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2674,
+      "packages": {
+        "name": "billing",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2787,
+      "packages": {
+        "name": "catalog",
+        "runtime": [
+          "hono"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2748,
+      "packages": {
+        "name": "@shop/inventory",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 37,
+      "edges": 24,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2791,
+      "packages": {
+        "name": "jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "notices",
+      "repo": "./notices",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2792,
+      "packages": {
+        "name": "notices",
+        "runtime": [
+          "hono"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2778,
+      "packages": {
+        "name": "orders",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "pricing",
+      "repo": "./pricing",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2604,
+      "packages": {
+        "name": "pricing",
+        "runtime": [
+          "hono"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "search",
+      "repo": "./search",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2583,
+      "packages": {
+        "name": "search",
+        "runtime": [
+          "hono"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "tickets",
+      "repo": "./tickets",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2674,
+      "packages": {
+        "name": "tickets",
+        "runtime": [
+          "hono"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 12,
+    "linked": 12,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 9,
+    "called": 9,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "billing",
+      "file": "Makefile",
+      "line": 23,
+      "reason": "make-conditional-unsettled",
+      "level": "info",
+      "message": "Makefile:23 starts billing with PORT=4350 under ifdef CI (Makefile:22), which the files do not settle: each branch is read, and this is the port one of them gives",
+      "hint": "Set the variable the conditional tests in the Makefile, or give the port outside the conditional.",
+      "symbol": "Makefile:23"
+    },
+    {
+      "service": "billing",
+      "file": "Makefile",
+      "line": 25,
+      "reason": "make-conditional-unsettled",
+      "level": "info",
+      "message": "Makefile:25 starts billing with PORT=4351 under ifdef CI (Makefile:22), which the files do not settle: each branch is read, and this is the port one of them gives",
+      "hint": "Set the variable the conditional tests in the Makefile, or give the port outside the conditional.",
+      "symbol": "Makefile:25"
+    }
+  ],
+  "totals": {
+    "nodes": 52,
+    "edges": 33,
+    "types": 0,
+    "missed": 10,
+    "sites": 10,
+    "notes": 4,
+    "findings": 0,
+    "unresolved": 10
+  }
+}

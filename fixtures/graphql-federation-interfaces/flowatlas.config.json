@@ -1,0 +1,64 @@
+{
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "express"
+    },
+    {
+      "name": "media",
+      "repo": "./media",
+      "type": "express"
+    },
+    {
+      "name": "reviews",
+      "repo": "./reviews",
+      "type": "express"
+    },
+    {
+      "name": "accounts",
+      "repo": "./accounts",
+      "type": "nestjs"
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "express"
+    },
+    {
+      "name": "legacy",
+      "repo": "./legacy",
+      "type": "express"
+    },
+    {
+      "name": "router",
+      "document": {
+        "kind": "graphql",
+        "path": "router/supergraph.graphql"
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "apiBaseEnv": [
+        "VITE_API_URL"
+      ],
+      "apiTarget": {
+        "VITE_API_URL": "gateway"
+      }
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "react",
+      "apiBaseEnv": [
+        "VITE_ROUTER_URL"
+      ],
+      "apiTarget": {
+        "VITE_ROUTER_URL": "router"
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

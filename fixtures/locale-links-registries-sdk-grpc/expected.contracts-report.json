@@ -1,0 +1,74 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-14T17:49:44.563Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:checkout#src/app.ts:21:3",
+        "to": "entry:stock:rpc:grpc:stock.StockService/GetLevel",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:checkout#src/app.ts:21:3|hits|entry:stock:rpc:grpc:stock.StockService/GetLevel",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "checkout",
+        "typeId": "{productId:any;warehouseId:1}",
+        "symbol": "checkout#src/app.ts:GET /level/:id@20",
+        "writes": [
+          "productId",
+          "warehouseId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "stock",
+        "typeId": "type:stock#.stock.LevelRequest",
+        "symbol": "stock#index.js:getLevel"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:productId",
+        "proto-presence:productId",
+        "proto-presence:warehouseId"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:checkout#src/app.ts:21:3",
+        "to": "entry:stock:rpc:grpc:stock.StockService/GetLevel",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:checkout#src/app.ts:21:3|hits|entry:stock:rpc:grpc:stock.StockService/GetLevel",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "stock",
+        "typeId": "type:stock#.stock.Level",
+        "symbol": "stock#index.js:getLevel"
+      },
+      "receiver": {
+        "service": "checkout",
+        "typeId": "{unitsLeft:number;backOrder:boolean}",
+        "symbol": "checkout#src/app.ts:GET /level/:id@20"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [],
+  "summary": {
+    "edges": 2,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 2,
+    "unchecked": 0,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

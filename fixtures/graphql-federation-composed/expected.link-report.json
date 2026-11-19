@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T11:26:48.976Z",
+  "configHash": "7c9b844b735a",
+  "services": [
+    {
+      "name": "customers",
+      "repo": "./customers",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 5,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 941,
+      "packages": {
+        "name": "composed-customers",
+        "runtime": [
+          "@apollo/server",
+          "@apollo/subgraph",
+          "graphql"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1127,
+      "packages": {
+        "name": "composed-gateway",
+        "runtime": [
+          "@apollo/gateway",
+          "@nestjs/apollo",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/graphql",
+          "graphql"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 923,
+      "packages": {
+        "name": "composed-kiosk",
+        "runtime": [
+          "@apollo/client",
+          "graphql",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 12,
+      "edges": 6,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 947,
+      "packages": {
+        "name": "composed-orders",
+        "runtime": [
+          "@apollo/server",
+          "@apollo/subgraph",
+          "graphql",
+          "graphql-tag"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "router",
+      "repo": "router/supergraph.yaml",
+      "type": "declared",
+      "extractor": "graphql-document",
+      "nodes": 1,
+      "edges": 0,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 7
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 5,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 904,
+      "packages": {
+        "name": "composed-web",
+        "runtime": [
+          "@apollo/client",
+          "graphql",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 3,
+    "resolved": 3,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 4,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "gateway",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "symbol": "entry:gateway:http:POST:/graphql",
+      "reason": "graphql-composition-conflict",
+      "level": "action",
+      "message": "Query.status is resolved by customers and orders, and not every one of them marks it @shareable; composition refuses two owners of one field",
+      "hint": "Mark Query.status @shareable in every subgraph that resolves it, or move it to one of them with @override(from:)."
+    },
+    {
+      "service": "gateway",
+      "file": "src/app.module.ts",
+      "line": 15,
+      "reason": "graphql-subgraph-not-joined",
+      "level": "action",
+      "message": "gateway sends the subgraph reviews to http://reviews.internal:4003/graphql, and no configured service is reached at reviews.internal:4003; the fields it resolves are not joined",
+      "hint": "Add reviews.internal:4003 to services[].hosts of the service that is the subgraph reviews, or add that service to the project.",
+      "symbol": "entry:gateway:http:POST:/graphql"
+    },
+    {
+      "service": "router",
+      "file": "router/supergraph.yaml",
+      "line": 1,
+      "symbol": "entry:router:http:POST:/graphql",
+      "reason": "graphql-composition-conflict",
+      "level": "action",
+      "message": "Query.status is resolved by customers and orders, and not every one of them marks it @shareable; composition refuses two owners of one field",
+      "hint": "Mark Query.status @shareable in every subgraph that resolves it, or move it to one of them with @override(from:)."
+    },
+    {
+      "service": "web",
+      "file": "src/StatusBar.tsx",
+      "line": 5,
+      "reason": "graphql-shareable-choice",
+      "level": "info",
+      "message": "Status selects Query.status through gateway, which customers and orders each resolve; the router chooses one at run time, so each is drawn as a choice",
+      "hint": "Nothing is wrong. Which subgraph answers is the router's plan, decided by cost when the request arrives; both edges are heuristic for that reason.",
+      "symbol": "ui_api_call:web#src/StatusBar.tsx:10:20"
+    }
+  ],
+  "totals": {
+    "nodes": 34,
+    "edges": 30,
+    "types": 2,
+    "missed": 6,
+    "sites": 6,
+    "notes": 0,
+    "findings": 2,
+    "unresolved": 6
+  }
+}

@@ -1,0 +1,19 @@
+@  workflow library-prod-overdue                                        library/template.yaml:306
+  -> Remind [Task lambda:invoke]                                        library/template.yaml:309
+    @  Resources.LendFunction (name generated when deployed)            library/template.yaml:48
+      -> handler                                                        library/src/loans/lend.ts:6
+        $  HOLDS_QUEUE_URL                                              library/src/loans/lend.ts:7
+        ~  message sqs/${…}@Resources.HoldsQueue                        library/src/loans/lend.ts:7
+          ~  sqs/${…}@Resources.HoldsQueue                              template.yaml:81
+            ~  mapping Resources.HoldFunction.Events.Holds              library/template.yaml:81
+              @  library-prod-hold                                      library/template.yaml:75
+                -> handler                                              library/src/loans/hold.ts:2
+      ~  message sqs/library-prod-failed-loans                          library/template.yaml:63
+        ~  sqs/library-prod-failed-loans                                template.yaml:63
+    -> Notify [Task sns:publish]                                        library/template.yaml:316
+      ~  message sns/library-prod-lost-returns                          library/template.yaml:316
+        ~  sns/library-prod-lost-returns                                notices/template.yaml:20
+          ~  subscription Notices.Resources.SenderFunction.Events.Lost  library/notices/template.yaml:20
+            @  library-prod-notice-sender                               library/notices/template.yaml:12
+              -> handler                                                library/notices/src/sender.ts:2
+unresolved on this path: 1

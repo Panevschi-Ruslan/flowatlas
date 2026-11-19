@@ -1,5 +1,5 @@
 import type { Confidence, GraphEdge } from '@flowatlas/core';
-import { NODE_TYPES } from '@flowatlas/core';
+import { isNavigationEdge, NODE_TYPES } from '@flowatlas/core';
 import { weakest, type GraphDb } from '@flowatlas/linker';
 
 /** As much of a node as an analysis needs; the rest is fetched by id. */
@@ -91,6 +91,13 @@ export interface LoadOptions {
    * node with real ends.
    */
   collapseChannels?: boolean;
+  /**
+   * Leave out a navigation from one screen to another (P265), for a walk
+   * that looks for cycles: two pages linking to each other is how a front end
+   * is moved through, and no loop that never ends. Kept for every other
+   * walk, since a page a link reaches is reached.
+   */
+  withoutNavigations?: boolean;
 }
 
 const toEdge = (edge: GraphEdge): AnalysisEdge => ({
@@ -130,7 +137,9 @@ export const loadGraph = (db: GraphDb, options: LoadOptions): AnalysisGraph => {
 
   for (const node of nodes) {
     for (const edge of db.edgesFrom(node.id)) {
-      if (wanted.has(edge.type)) edges.push(toEdge(edge));
+      if (!wanted.has(edge.type)) continue;
+      if (options.withoutNavigations === true && isNavigationEdge(edge)) continue;
+      edges.push(toEdge(edge));
     }
   }
 

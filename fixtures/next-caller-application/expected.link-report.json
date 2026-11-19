@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:29:20.720Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T17:07:03.141Z",
   "configHash": "9864328032dc",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 467,
+      "durationMs": 629,
       "packages": {
         "name": "next-caller-application-admin",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 19,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 497,
+      "durationMs": 667,
       "packages": {
         "name": "next-caller-application-shop",
         "runtime": [
@@ -43,13 +43,13 @@
   ],
   "httpOut": {
     "total": 6,
-    "linked": 2,
+    "linked": 6,
     "byMarker": 0,
     "unknownEnv": 0,
     "noRoute": 0,
     "ambiguous": 0,
     "external": 0,
-    "dynamic": 4
+    "dynamic": 0
   },
   "ui": {
     "total": 7,
@@ -99,7 +99,7 @@
   ],
   "totals": {
     "nodes": 33,
-    "edges": 28,
+    "edges": 32,
     "types": 0,
     "missed": 2,
     "sites": 2,

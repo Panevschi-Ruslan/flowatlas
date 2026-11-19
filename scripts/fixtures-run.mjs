@@ -4,6 +4,7 @@
  * compare against.
  *
  *   node scripts/fixtures-run.mjs
+ *   node scripts/fixtures-run.mjs fixtures/<name> ...   (only those)
  *
  * `fixtures-check.mjs` validates a fixture that has not been run but cannot
  * compare it, and a snapshot nobody compares is not a gate. This produces the
@@ -40,7 +41,7 @@ const done = { repo: 0, project: 0, none: 0 };
 let declined = 0;
 const failures = [];
 
-for (const dir of fixtureDirs()) {
+for (const dir of fixtureDirs(process.argv.slice(2))) {
   const { kind, steps } = layoutOf(dir);
   done[kind] += 1;
   for (const { args, writes, mayDecline = false, when } of steps) {

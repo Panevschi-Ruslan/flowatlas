@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T11:39:16.263Z",
+  "configHash": "9b0abdd105ef",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./apps/api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1403,
+      "packages": {
+        "name": "@shop/api",
+        "runtime": [
+          "@shop/router",
+          "@trpc/server",
+          "fastify"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog",
+      "repo": "./apps/catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 28,
+      "edges": 18,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1455,
+      "packages": {
+        "name": "@shop/catalog",
+        "runtime": [
+          "@orpc/openapi",
+          "@orpc/server",
+          "zod"
+        ],
+        "dev": [
+          "vite"
+        ]
+      }
+    },
+    {
+      "name": "edge",
+      "repo": "./apps/edge",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1390,
+      "packages": {
+        "name": "@shop/edge",
+        "runtime": [
+          "@hono/trpc-server",
+          "@trpc/server",
+          "hono",
+          "zod"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./apps/web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 43,
+      "edges": 21,
+      "types": 7,
+      "unresolved": 0,
+      "durationMs": 1551,
+      "packages": {
+        "name": "@shop/web",
+        "runtime": [
+          "@shop/router",
+          "@trpc/client",
+          "axios",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "worker",
+      "repo": "./apps/worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 35,
+      "edges": 27,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1681,
+      "packages": {
+        "name": "@shop/worker",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@shop/clients",
+          "@shop/router",
+          "@trpc/client",
+          "axios"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 10,
+    "linked": 10,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 21,
+    "resolved": 21,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 11,
+    "called": 9,
+    "uncalled": [
+      "entry:catalog:http:POST:/api/reports/daily",
+      "entry:worker:http:POST:/fulfil"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 10,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/legacy.ts",
+      "line": 8,
+      "reason": "procedure-link-unserved",
+      "message": "orders.get is sent to /api/trpc and served over trpc at /trpc",
+      "hint": "Nothing answers a request sent there. Point the link at /trpc, or mount the tree where the link sends.",
+      "symbol": "ui_api_call:web#src/legacy.ts:8:10"
+    }
+  ],
+  "totals": {
+    "nodes": 116,
+    "edges": 101,
+    "types": 10,
+    "missed": 1,
+    "sites": 1,
+    "notes": 1,
+    "findings": 1,
+    "unresolved": 1
+  }
+}

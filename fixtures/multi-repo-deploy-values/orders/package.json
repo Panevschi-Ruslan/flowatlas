@@ -1,0 +1,13 @@
+{
+  "name": "shop-orders",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The orders of a shop, a sceptre project of two stacks, launched from a pipeline.",
+  "dependencies": {
+    "@aws-sdk/client-sns": "^3.700.0",
+    "@aws-sdk/client-sqs": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

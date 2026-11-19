@@ -1,0 +1,19 @@
+services:
+  orders:
+    build: ./orders
+    ports:
+      - "3001:3000"
+  search:
+    build: ./search
+    ports:
+      - "4007:4000"
+    environment:
+      PORT: 4000
+  notify:
+    build: ./notify
+    ports:
+      - "3008:8080"
+  db:
+    image: postgres:16
+    ports:
+      - "5432:5432"

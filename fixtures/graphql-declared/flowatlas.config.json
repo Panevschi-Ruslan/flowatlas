@@ -1,0 +1,23 @@
+{
+  "services": [
+    {
+      "name": "catalog",
+      "document": {
+        "kind": "graphql",
+        "path": "catalog.graphql"
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "apiBaseEnv": [
+        "VITE_CATALOG_URL"
+      ],
+      "apiTarget": {
+        "VITE_CATALOG_URL": "catalog"
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

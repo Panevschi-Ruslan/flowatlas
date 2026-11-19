@@ -1,0 +1,1715 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T18:07:26.876Z",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "reviews",
+      "repo": "./reviews",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "router",
+      "repo": "router",
+      "type": "declared",
+      "extractor": "graphql-document"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/books.ts:allBooks",
+      "type": "function",
+      "label": "allBooks",
+      "repo": "catalog",
+      "file": "src/books.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:catalog#Book[]"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/books.ts:bookById",
+      "type": "function",
+      "label": "bookById",
+      "repo": "catalog",
+      "file": "src/books.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:catalog#Book"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/books.ts:detailsOf",
+      "type": "function",
+      "label": "detailsOf",
+      "repo": "catalog",
+      "file": "src/books.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:catalog#Details"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:Book.details@18",
+      "type": "function",
+      "label": "Book.details@18",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "book",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "type:catalog#Details"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:Query.book@14",
+      "type": "function",
+      "label": "Query.book@14",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_",
+              "type": "unknown"
+            },
+            {
+              "name": "args",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "type:catalog#Book"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:Query.products@15",
+      "type": "function",
+      "label": "Query.products@15",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:catalog#Book[]"
+        }
+      }
+    },
+    {
+      "id": "entry:catalog:graphql:Book.details",
+      "type": "entry",
+      "label": "Book.details",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 18,
+      "kind": "graphql",
+      "meta": {
+        "type": "Book",
+        "name": "details",
+        "field": true,
+        "returns": "Details!",
+        "adapter": "graphql-resolvers",
+        "access": {
+          "guards": [
+            {
+              "id": "router#router/supergraph.graphql:@requiresScopes(catalog:staff)",
+              "name": "@requiresScopes(catalog:staff)",
+              "layer": "guard",
+              "where": "route",
+              "via": "@requiresScopes on Edition.year, which Book.details answers, checked by router",
+              "file": "router/supergraph.graphql",
+              "line": 61,
+              "for": [
+                "Edition.year"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:catalog:graphql:Query.book",
+      "type": "entry",
+      "label": "Query.book",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 14,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "book",
+        "returns": "Book",
+        "args": {
+          "id": {
+            "type": "ID!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers",
+        "access": {
+          "guards": [
+            {
+              "id": "router#router/supergraph.graphql:@authenticated",
+              "name": "@authenticated",
+              "layer": "guard",
+              "where": "route",
+              "via": "@authenticated on Book.price, which Query.book answers, checked by router",
+              "file": "router/supergraph.graphql",
+              "line": 49,
+              "for": [
+                "Book.price"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:catalog:graphql:Query.products",
+      "type": "entry",
+      "label": "Query.products",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 15,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "products",
+        "returns": "[Product!]!",
+        "adapter": "graphql-resolvers",
+        "access": {
+          "guards": [
+            {
+              "id": "router#router/supergraph.graphql:@authenticated",
+              "name": "@authenticated",
+              "layer": "guard",
+              "where": "route",
+              "via": "@authenticated on Book.price, which Query.products answers, checked by router",
+              "file": "router/supergraph.graphql",
+              "line": 49,
+              "for": [
+                "Book.price"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:catalog:http:POST:/",
+      "type": "entry",
+      "label": "POST /",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Book": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  },
+                  "price": {
+                    "type": "Float!",
+                    "federation": {
+                      "auth": [
+                        {
+                          "kind": "authenticated"
+                        }
+                      ]
+                    }
+                  },
+                  "cost": {
+                    "type": "Float!",
+                    "federation": {
+                      "inaccessible": true,
+                      "auth": [
+                        {
+                          "kind": "authenticated"
+                        }
+                      ]
+                    }
+                  },
+                  "details": {
+                    "type": "Details!"
+                  }
+                },
+                "directives": [
+                  "key"
+                ],
+                "federation": {
+                  "keys": [
+                    {
+                      "fields": "id"
+                    }
+                  ]
+                }
+              },
+              "Details": {
+                "kind": "object",
+                "fields": {
+                  "pages": {
+                    "type": "Int!"
+                  },
+                  "edition": {
+                    "type": "Edition!"
+                  }
+                }
+              },
+              "Edition": {
+                "kind": "object",
+                "fields": {
+                  "year": {
+                    "type": "Int!",
+                    "federation": {
+                      "auth": [
+                        {
+                          "kind": "scopes",
+                          "any": [
+                            [
+                              "catalog:staff"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "Product": {
+                "kind": "interface",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  }
+                },
+                "possible": [
+                  "Book"
+                ],
+                "directives": [
+                  "key"
+                ],
+                "federation": {
+                  "keys": [
+                    {
+                      "fields": "id"
+                    }
+                  ]
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "book": {
+                    "type": "Book",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  },
+                  "products": {
+                    "type": "[Product!]!"
+                  }
+                }
+              }
+            },
+            "federation": 2
+          },
+          "subgraph": {
+            "federation": 2
+          },
+          "listen": [
+            {
+              "port": 4001,
+              "file": "src/index.ts",
+              "line": 26
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:reviews:graphql:Product.__resolveReference",
+      "type": "entry",
+      "label": "Product.__resolveReference",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 30,
+      "kind": "graphql",
+      "meta": {
+        "type": "Product",
+        "name": "__resolveReference",
+        "field": true,
+        "reference": true,
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:reviews:graphql:Product.reviews",
+      "type": "entry",
+      "label": "Product.reviews",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 31,
+      "kind": "graphql",
+      "meta": {
+        "type": "Product",
+        "name": "reviews",
+        "field": true,
+        "returns": "[Review!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:reviews:graphql:Query.topProducts",
+      "type": "entry",
+      "label": "Query.topProducts",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 27,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "topProducts",
+        "returns": "[Product!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:reviews:http:POST:/",
+      "type": "entry",
+      "label": "POST /",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Product": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "reviews": {
+                    "type": "[Review!]!"
+                  }
+                },
+                "directives": [
+                  "interfaceObject",
+                  "key"
+                ],
+                "federation": {
+                  "keys": [
+                    {
+                      "fields": "id"
+                    }
+                  ],
+                  "interfaceObject": true
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "topProducts": {
+                    "type": "[Product!]!"
+                  }
+                }
+              },
+              "Review": {
+                "kind": "object",
+                "fields": {
+                  "score": {
+                    "type": "Int!"
+                  }
+                }
+              }
+            },
+            "federation": 2
+          },
+          "subgraph": {
+            "federation": 2
+          },
+          "listen": [
+            {
+              "port": 4002,
+              "file": "src/index.ts",
+              "line": 37
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:router:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "router",
+      "file": "router/supergraph.graphql",
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-schema",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "gateway": {
+            "subgraphs": [
+              {
+                "name": "catalog",
+                "file": "router/supergraph.graphql",
+                "line": 30,
+                "url": "http://localhost:4001/graphql",
+                "host": "localhost:4001",
+                "path": "/graphql"
+              },
+              {
+                "name": "reviews",
+                "file": "router/supergraph.graphql",
+                "line": 31,
+                "url": "http://localhost:4002/graphql",
+                "host": "localhost:4002",
+                "path": "/graphql"
+              }
+            ],
+            "composition": {
+              "roots": {
+                "query": "Query"
+              },
+              "subgraphs": [
+                "catalog",
+                "reviews"
+              ],
+              "types": {
+                "Book": {
+                  "kind": "object",
+                  "fields": {
+                    "id": {
+                      "type": "ID!",
+                      "owners": [
+                        {
+                          "subgraph": "catalog"
+                        },
+                        {
+                          "subgraph": "reviews",
+                          "as": "Product"
+                        }
+                      ],
+                      "line": 47
+                    },
+                    "name": {
+                      "type": "String!",
+                      "owners": [
+                        {
+                          "subgraph": "catalog"
+                        }
+                      ],
+                      "line": 48
+                    },
+                    "price": {
+                      "type": "Float!",
+                      "owners": [
+                        {
+                          "subgraph": "catalog"
+                        }
+                      ],
+                      "line": 49,
+                      "auth": [
+                        {
+                          "kind": "authenticated"
+                        }
+                      ]
+                    },
+                    "cost": {
+                      "type": "Float!",
+                      "owners": [
+                        {
+                          "subgraph": "catalog"
+                        }
+                      ],
+                      "inaccessible": true,
+                      "line": 50,
+                      "auth": [
+                        {
+                          "kind": "authenticated"
+                        }
+                      ]
+                    },
+                    "details": {
+                      "type": "Details!",
+                      "owners": [
+                        {
+                          "subgraph": "catalog"
+                        }
+                      ],
+                      "line": 51
+                    },
+                    "reviews": {
+                      "type": "[Review!]!",
+                      "owners": [
+                        {
+                          "subgraph": "reviews",
+                          "as": "Product"
+                        }
+                      ],
+                      "line": 52
+                    }
+                  },
+                  "keys": {
+                    "catalog": [
+                      "id"
+                    ]
+                  }
+                },
+                "Details": {
+                  "kind": "object",
+                  "fields": {
+                    "pages": {
+                      "type": "Int!",
+                      "owners": [
+                        {
+                          "subgraph": "catalog"
+                        }
+                      ],
+                      "line": 56
+                    },
+                    "edition": {
+                      "type": "Edition!",
+                      "owners": [
+                        {
+                          "subgraph": "catalog"
+                        }
+                      ],
+                      "line": 57
+                    }
+                  }
+                },
+                "Edition": {
+                  "kind": "object",
+                  "fields": {
+                    "year": {
+                      "type": "Int!",
+                      "owners": [
+                        {
+                          "subgraph": "catalog"
+                        }
+                      ],
+                      "line": 61,
+                      "auth": [
+                        {
+                          "kind": "scopes",
+                          "any": [
+                            [
+                              "catalog:staff"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                "Product": {
+                  "kind": "interface",
+                  "fields": {
+                    "id": {
+                      "type": "ID!",
+                      "owners": [
+                        {
+                          "subgraph": "catalog"
+                        },
+                        {
+                          "subgraph": "reviews"
+                        }
+                      ],
+                      "line": 41
+                    },
+                    "name": {
+                      "type": "String!",
+                      "owners": [
+                        {
+                          "subgraph": "catalog"
+                        }
+                      ],
+                      "line": 42
+                    },
+                    "reviews": {
+                      "type": "[Review!]!",
+                      "owners": [
+                        {
+                          "subgraph": "reviews"
+                        }
+                      ],
+                      "line": 43
+                    }
+                  },
+                  "keys": {
+                    "catalog": [
+                      "id"
+                    ],
+                    "reviews": [
+                      "id"
+                    ]
+                  },
+                  "possible": [
+                    "Book"
+                  ],
+                  "interfaceObjects": [
+                    "reviews"
+                  ]
+                },
+                "Query": {
+                  "kind": "object",
+                  "fields": {
+                    "book": {
+                      "type": "Book",
+                      "args": {
+                        "id": {
+                          "type": "ID!",
+                          "required": true
+                        }
+                      },
+                      "owners": [
+                        {
+                          "subgraph": "catalog"
+                        }
+                      ],
+                      "line": 35
+                    },
+                    "products": {
+                      "type": "[Product!]!",
+                      "owners": [
+                        {
+                          "subgraph": "catalog"
+                        }
+                      ],
+                      "line": 36
+                    },
+                    "topProducts": {
+                      "type": "[Product!]!",
+                      "owners": [
+                        {
+                          "subgraph": "reviews"
+                        }
+                      ],
+                      "line": 37
+                    }
+                  }
+                },
+                "Review": {
+                  "kind": "object",
+                  "fields": {
+                    "score": {
+                      "type": "Int!",
+                      "owners": [
+                        {
+                          "subgraph": "reviews"
+                        }
+                      ],
+                      "line": 65
+                    }
+                  }
+                }
+              }
+            },
+            "from": "router/supergraph.graphql"
+          },
+          "schema": {
+            "roots": {
+              "query": "Query"
+            },
+            "types": {
+              "Book": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  },
+                  "price": {
+                    "type": "Float!"
+                  },
+                  "cost": {
+                    "type": "Float!",
+                    "federation": {
+                      "inaccessible": true
+                    }
+                  },
+                  "details": {
+                    "type": "Details!"
+                  },
+                  "reviews": {
+                    "type": "[Review!]!"
+                  }
+                }
+              },
+              "Details": {
+                "kind": "object",
+                "fields": {
+                  "pages": {
+                    "type": "Int!"
+                  },
+                  "edition": {
+                    "type": "Edition!"
+                  }
+                }
+              },
+              "Edition": {
+                "kind": "object",
+                "fields": {
+                  "year": {
+                    "type": "Int!"
+                  }
+                }
+              },
+              "Product": {
+                "kind": "interface",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  },
+                  "reviews": {
+                    "type": "[Review!]!"
+                  }
+                },
+                "possible": [
+                  "Book"
+                ]
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "book": {
+                    "type": "Book",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  },
+                  "products": {
+                    "type": "[Product!]!"
+                  },
+                  "topProducts": {
+                    "type": "[Product!]!"
+                  }
+                }
+              },
+              "Review": {
+                "kind": "object",
+                "fields": {
+                  "score": {
+                    "type": "Int!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "declaredBy": "router/supergraph.graphql"
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "graphql-resolvers"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4001,
+            "file": "src/index.ts",
+            "line": 26
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:reviews",
+      "type": "repo",
+      "label": "reviews",
+      "repo": "reviews",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "graphql-resolvers"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4002,
+            "file": "src/index.ts",
+            "line": 37
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "functions": 2,
+          "components": 2,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "reviews#src/index.ts:Product.__resolveReference@30",
+      "type": "function",
+      "label": "Product.__resolveReference@30",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reference",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
+    },
+    {
+      "id": "reviews#src/index.ts:Product.reviews@31",
+      "type": "function",
+      "label": "Product.reviews@31",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "product",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "type:reviews#Review[]"
+        }
+      }
+    },
+    {
+      "id": "reviews#src/index.ts:Query.topProducts@27",
+      "type": "function",
+      "label": "Query.topProducts@27",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string}[]"
+        }
+      }
+    },
+    {
+      "id": "reviews#src/reviews.ts:reviewsOf",
+      "type": "function",
+      "label": "reviewsOf",
+      "repo": "reviews",
+      "file": "src/reviews.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:reviews#Review[]"
+        }
+      }
+    },
+    {
+      "id": "reviews#src/reviews.ts:topProducts",
+      "type": "function",
+      "label": "topProducts",
+      "repo": "reviews",
+      "file": "src/reviews.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string}[]"
+        }
+      }
+    },
+    {
+      "id": "router#router/supergraph.graphql:@authenticated",
+      "type": "guard",
+      "label": "@authenticated",
+      "repo": "router",
+      "file": "router/supergraph.graphql",
+      "line": 49,
+      "kind": "directive",
+      "meta": {
+        "graphql": {
+          "gateway": "router",
+          "requirement": {
+            "kind": "authenticated"
+          }
+        }
+      }
+    },
+    {
+      "id": "router#router/supergraph.graphql:@requiresScopes(catalog:staff)",
+      "type": "guard",
+      "label": "@requiresScopes(catalog:staff)",
+      "repo": "router",
+      "file": "router/supergraph.graphql",
+      "line": 61,
+      "kind": "directive",
+      "meta": {
+        "graphql": {
+          "gateway": "router",
+          "requirement": {
+            "kind": "scopes",
+            "any": [
+              [
+                "catalog:staff"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "shop#src/BookPage.tsx:BookPage",
+      "type": "ui_component",
+      "label": "BookPage",
+      "repo": "shop",
+      "file": "src/BookPage.tsx",
+      "line": 18,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ id }",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#src/TopBooks.tsx:TopBooks",
+      "type": "ui_component",
+      "label": "TopBooks",
+      "repo": "shop",
+      "file": "src/TopBooks.tsx",
+      "line": 18,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/BookPage.tsx:19:20",
+      "type": "ui_api_call",
+      "label": "query Book /graphql",
+      "repo": "shop",
+      "file": "src/BookPage.tsx",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_ROUTER_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_ROUTER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Book",
+          "fields": [
+            {
+              "field": "book",
+              "arguments": [
+                "id"
+              ],
+              "line": 5,
+              "selections": [
+                {
+                  "field": "name",
+                  "line": 6
+                },
+                {
+                  "field": "price",
+                  "line": 7
+                },
+                {
+                  "field": "details",
+                  "line": 8,
+                  "selections": [
+                    {
+                      "field": "pages",
+                      "line": 9
+                    },
+                    {
+                      "field": "edition",
+                      "line": 10,
+                      "selections": [
+                        {
+                          "field": "year",
+                          "line": 11
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "id",
+              "type": "ID!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/BookPage.tsx",
+            "line": 4
+          },
+          "library": "apollo"
+        },
+        "targetService": "router"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/TopBooks.tsx:19:20",
+      "type": "ui_api_call",
+      "label": "query TopBooks /graphql",
+      "repo": "shop",
+      "file": "src/TopBooks.tsx",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_ROUTER_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_ROUTER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "TopBooks",
+          "fields": [
+            {
+              "field": "topProducts",
+              "line": 5,
+              "selections": [
+                {
+                  "field": "reviews",
+                  "line": 6,
+                  "selections": [
+                    {
+                      "field": "score",
+                      "line": 7
+                    }
+                  ]
+                },
+                {
+                  "field": "details",
+                  "on": "Book",
+                  "line": 10,
+                  "selections": [
+                    {
+                      "field": "pages",
+                      "line": 11
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/TopBooks.tsx",
+            "line": 4
+          },
+          "library": "apollo"
+        },
+        "targetService": "router"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "catalog#src/index.ts:Book.details@18",
+      "to": "catalog#src/books.ts:detailsOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:catalog#Details",
+      "file": "src/index.ts",
+      "line": 18
+    },
+    {
+      "from": "catalog#src/index.ts:Query.book@14",
+      "to": "catalog#src/books.ts:bookById",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:catalog#Book",
+      "file": "src/index.ts",
+      "line": 14
+    },
+    {
+      "from": "catalog#src/index.ts:Query.products@15",
+      "to": "catalog#src/books.ts:allBooks",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:catalog#Book[]",
+      "file": "src/index.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:catalog:graphql:Book.details",
+      "to": "catalog#src/index.ts:Book.details@18",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:catalog:graphql:Book.details",
+      "to": "router#router/supergraph.graphql:@requiresScopes(catalog:staff)",
+      "type": "guarded_by",
+      "confidence": "declared",
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "@requiresScopes on Edition.year, which Book.details answers, checked by router",
+        "through": "router",
+        "for": [
+          "Edition.year"
+        ],
+        "graphql": {
+          "gateway": "router",
+          "answers": [
+            "Edition.year"
+          ]
+        }
+      }
+    },
+    {
+      "from": "entry:catalog:graphql:Query.book",
+      "to": "catalog#src/index.ts:Query.book@14",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:catalog:graphql:Query.book",
+      "to": "router#router/supergraph.graphql:@authenticated",
+      "type": "guarded_by",
+      "confidence": "declared",
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "@authenticated on Book.price, which Query.book answers, checked by router",
+        "through": "router",
+        "for": [
+          "Book.price"
+        ],
+        "graphql": {
+          "gateway": "router",
+          "answers": [
+            "Book.price"
+          ]
+        }
+      }
+    },
+    {
+      "from": "entry:catalog:graphql:Query.products",
+      "to": "catalog#src/index.ts:Query.products@15",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:catalog:graphql:Query.products",
+      "to": "router#router/supergraph.graphql:@authenticated",
+      "type": "guarded_by",
+      "confidence": "declared",
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "@authenticated on Book.price, which Query.products answers, checked by router",
+        "through": "router",
+        "for": [
+          "Book.price"
+        ],
+        "graphql": {
+          "gateway": "router",
+          "answers": [
+            "Book.price"
+          ]
+        }
+      }
+    },
+    {
+      "from": "entry:reviews:graphql:Product.__resolveReference",
+      "to": "reviews#src/index.ts:Product.__resolveReference@30",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 30
+    },
+    {
+      "from": "entry:reviews:graphql:Product.reviews",
+      "to": "reviews#src/index.ts:Product.reviews@31",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 31
+    },
+    {
+      "from": "entry:reviews:graphql:Query.topProducts",
+      "to": "reviews#src/index.ts:Query.topProducts@27",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 27
+    },
+    {
+      "from": "entry:router:http:POST:/graphql",
+      "to": "entry:catalog:http:POST:/",
+      "type": "http_calls",
+      "confidence": "declared",
+      "file": "router/supergraph.graphql",
+      "line": 30,
+      "meta": {
+        "graphql": {
+          "subgraph": "catalog"
+        },
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "entry:router:http:POST:/graphql",
+      "to": "entry:reviews:http:POST:/",
+      "type": "http_calls",
+      "confidence": "declared",
+      "file": "router/supergraph.graphql",
+      "line": 31,
+      "meta": {
+        "graphql": {
+          "subgraph": "reviews"
+        },
+        "targetService": "reviews"
+      }
+    },
+    {
+      "from": "reviews#src/index.ts:Product.reviews@31",
+      "to": "reviews#src/reviews.ts:reviewsOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:reviews#Review[]",
+      "file": "src/index.ts",
+      "line": 31
+    },
+    {
+      "from": "reviews#src/index.ts:Query.topProducts@27",
+      "to": "reviews#src/reviews.ts:topProducts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{id:string}[]",
+      "file": "src/index.ts",
+      "line": 27
+    },
+    {
+      "from": "shop#src/BookPage.tsx:BookPage",
+      "to": "ui_api_call:shop#src/BookPage.tsx:19:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/BookPage.tsx",
+      "line": 19
+    },
+    {
+      "from": "shop#src/TopBooks.tsx:TopBooks",
+      "to": "ui_api_call:shop#src/TopBooks.tsx:19:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/TopBooks.tsx",
+      "line": 19
+    },
+    {
+      "from": "ui_api_call:shop#src/BookPage.tsx:19:20",
+      "to": "entry:catalog:graphql:Book.details",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/BookPage.tsx",
+      "line": 8,
+      "meta": {
+        "graphql": {
+          "operation": "Book",
+          "gateway": "router",
+          "subgraph": "catalog",
+          "field": "Book.details"
+        },
+        "through": "router",
+        "answers": [
+          "Edition.year"
+        ]
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/BookPage.tsx:19:20",
+      "to": "entry:catalog:graphql:Query.book",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/BookPage.tsx",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "Book",
+          "gateway": "router",
+          "subgraph": "catalog",
+          "field": "Query.book"
+        },
+        "through": "router",
+        "answers": [
+          "Book.price"
+        ]
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/BookPage.tsx:19:20",
+      "to": "entry:router:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/BookPage.tsx",
+      "line": 19,
+      "meta": {
+        "via": "api-target",
+        "targetService": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/TopBooks.tsx:19:20",
+      "to": "entry:catalog:graphql:Book.details",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/TopBooks.tsx",
+      "line": 10,
+      "meta": {
+        "graphql": {
+          "operation": "TopBooks",
+          "gateway": "router",
+          "subgraph": "catalog",
+          "field": "Book.details",
+          "hop": {
+            "entity": "Product",
+            "from": "reviews",
+            "untyped": true
+          }
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/TopBooks.tsx:19:20",
+      "to": "entry:reviews:graphql:Product.reviews",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/TopBooks.tsx",
+      "line": 6,
+      "meta": {
+        "graphql": {
+          "operation": "TopBooks",
+          "gateway": "router",
+          "subgraph": "reviews",
+          "field": "Product.reviews"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/TopBooks.tsx:19:20",
+      "to": "entry:reviews:graphql:Query.topProducts",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/TopBooks.tsx",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "TopBooks",
+          "gateway": "router",
+          "subgraph": "reviews",
+          "field": "Query.topProducts"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/TopBooks.tsx:19:20",
+      "to": "entry:router:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/TopBooks.tsx",
+      "line": 19,
+      "meta": {
+        "via": "api-target",
+        "targetService": "router"
+      }
+    }
+  ],
+  "types": {
+    "type:catalog#Book": {
+      "name": "Book",
+      "kind": "object",
+      "declaredIn": "catalog#src/books.ts",
+      "structuralHash": "479a97af01838903",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "cost",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:catalog#Details": {
+      "name": "Details",
+      "kind": "object",
+      "declaredIn": "catalog#src/books.ts",
+      "structuralHash": "2a205a62e240169a",
+      "fields": [
+        {
+          "name": "pages",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "edition",
+          "type": "{year:number}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:reviews#Review": {
+      "name": "Review",
+      "kind": "object",
+      "declaredIn": "reviews#src/reviews.ts",
+      "structuralHash": "ebf22a11c476e658",
+      "fields": [
+        {
+          "name": "score",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "catalog",
+      "file": "src/index.ts",
+      "line": 22,
+      "reason": "graphql-entity-type-unsaid",
+      "level": "action",
+      "message": "catalog owns the entity interface Product, which reviews can make an entity call for, and writes neither Product.__resolveReference nor a type resolver for it; the call arrives as { __typename: \"Product\" }, an interface, so catalog cannot say which of its types (Book) the item is, and refuses it",
+      "hint": "Write Product.__resolveReference in catalog, answering with the item and its __typename, or a type resolver for Product (__resolveType, or __isTypeOf on each of its types).",
+      "symbol": "entry:catalog:http:POST:/",
+      "meta": {
+        "interface": "Product",
+        "subgraph": "catalog",
+        "callers": [
+          "reviews"
+        ]
+      }
+    },
+    {
+      "file": "src/BookPage.tsx",
+      "line": 18,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "src/TopBooks.tsx",
+      "line": 18,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    }
+  ]
+}

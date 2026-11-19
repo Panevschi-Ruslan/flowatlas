@@ -272,3 +272,18 @@ describe('a bucket notification and a service trigger (P52, P56)', () => {
     expect(entry?.meta?.['when']).toBeUndefined();
   });
 });
+
+describe('a delivery declared under a condition (P57)', () => {
+  it('is drawn as declared, and every edge out of it is heuristic', () => {
+    const drawn = draw(
+      delivery('rule.audit', 'rule', { kind: 'queue', name: 'audit' }, { kind: 'function', function: 0 }, { conditional: "process.env.WITH_AUDIT === 'yes'" }),
+    );
+    expect(drawn.edges.filter((edge) => edge.to === consumer('rule.audit'))).toEqual([expect.objectContaining({ type: 'consumes', confidence: 'heuristic' })]);
+    expect(edgesFrom(drawn, consumer('rule.audit'))).toEqual([expect.objectContaining({ to: LOANS, confidence: 'heuristic' })]);
+  });
+
+  it('stays static where nothing makes it conditional', () => {
+    const drawn = draw(delivery('rule.audit', 'rule', { kind: 'queue', name: 'audit' }, { kind: 'function', function: 0 }));
+    expect(edgesFrom(drawn, consumer('rule.audit'))).toEqual([expect.objectContaining({ to: LOANS, confidence: 'static' })]);
+  });
+});

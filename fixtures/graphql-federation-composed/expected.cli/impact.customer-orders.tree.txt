@@ -1,0 +1,6 @@
+@  Customer.orders                              orders/src/index.ts:36
+  => kiosk ^  query Board /graphql ?declared    kiosk/src/OrdersBoard.tsx:18
+    %  OrdersBoard                              kiosk/src/OrdersBoard.tsx:17
+  => web ^  query Customer /graphql ~heuristic  web/src/CustomerPage.tsx:16
+    %  CustomerPage                             web/src/CustomerPage.tsx:15
+Reachable from: no entry points. Also reaches kiosk, orders, web, where the chain stops before an entry point

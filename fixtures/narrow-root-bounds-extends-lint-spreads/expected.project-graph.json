@@ -1,0 +1,534 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T17:01:44.485Z",
+  "services": [
+    {
+      "name": "pages",
+      "repo": "./pages",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/index.ts:GET /items@5",
+      "type": "function",
+      "label": "GET /items@5",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /legacy@17",
+      "type": "function",
+      "label": "GET /legacy@17",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /orders@9",
+      "type": "function",
+      "label": "GET /orders@9",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /stock@13",
+      "type": "function",
+      "label": "GET /stock@13",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/legacy",
+      "type": "entry",
+      "label": "GET /legacy",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/legacy",
+        "rawPath": "/legacy",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/stock",
+      "type": "entry",
+      "label": "GET /stock",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/stock",
+        "rawPath": "/stock",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "pages#js/shop.js:items",
+      "type": "function",
+      "label": "items",
+      "repo": "pages",
+      "file": "js/shop.js",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "pages#js/shop.js:orders",
+      "type": "function",
+      "label": "orders",
+      "repo": "pages",
+      "file": "js/shop.js",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "pages#js/shop.js:stock",
+      "type": "function",
+      "label": "stock",
+      "repo": "pages",
+      "file": "js/shop.js",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4800,
+            "file": "src/index.ts",
+            "line": 21
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:pages",
+      "type": "repo",
+      "label": "pages",
+      "repo": "pages",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "functions": 4,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "browser"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:pages#js/shop.js:11:3",
+      "type": "ui_api_call",
+      "label": "GET /orders",
+      "repo": "pages",
+      "file": "js/shop.js",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4800/orders",
+        "path": "/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "superagent",
+        "client": "superagent",
+        "via": "const",
+        "host": "localhost:4800",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:pages#js/shop.js:15:10",
+      "type": "ui_api_call",
+      "label": "GET /stock",
+      "repo": "pages",
+      "file": "js/shop.js",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4800/stock",
+        "path": "/stock",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "const",
+        "host": "localhost:4800",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:pages#js/shop.js:7:10",
+      "type": "ui_api_call",
+      "label": "GET /items",
+      "repo": "pages",
+      "file": "js/shop.js",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4800/items",
+        "path": "/items",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "ky",
+        "client": "ky",
+        "via": "const",
+        "host": "localhost:4800",
+        "targetService": "catalog"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:http:GET:/items",
+      "to": "catalog#src/index.ts:GET /items@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/legacy",
+      "to": "catalog#src/index.ts:GET /legacy@17",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 17,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/orders",
+      "to": "catalog#src/index.ts:GET /orders@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/stock",
+      "to": "catalog#src/index.ts:GET /stock@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "pages#js/shop.js:items",
+      "to": "ui_api_call:pages#js/shop.js:7:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 7
+    },
+    {
+      "from": "pages#js/shop.js:orders",
+      "to": "ui_api_call:pages#js/shop.js:11:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 11
+    },
+    {
+      "from": "pages#js/shop.js:stock",
+      "to": "ui_api_call:pages#js/shop.js:15:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 15
+    },
+    {
+      "from": "ui_api_call:pages#js/shop.js:11:3",
+      "to": "entry:catalog:http:GET:/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 11,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "ui_api_call:pages#js/shop.js:15:10",
+      "to": "entry:catalog:http:GET:/stock",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 15,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:21"
+      }
+    },
+    {
+      "from": "ui_api_call:pages#js/shop.js:7:10",
+      "to": "entry:catalog:http:GET:/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 7,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:21"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 4,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /items@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 4,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 6,
+                "symbol": "GET /items@5 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 10,
+                "symbol": "GET /orders@9 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 14,
+                "symbol": "GET /stock@13 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "tsconfig.json",
+      "line": 3,
+      "reason": "tsconfig-not-read-above-root",
+      "message": "`include` names \"../../../shared-contracts/src/**/*.ts\" (../../../shared-contracts/src), above the directory this reading is bounded by: its code is not read",
+      "hint": "Name the directory as a service of its own, or give the run a root that holds it.",
+      "symbol": "../../../shared-contracts/src/**/*.ts",
+      "service": "catalog"
+    },
+    {
+      "file": "js/shop.js",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "pages"
+    },
+    {
+      "file": "js/shop.js",
+      "line": 14,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "pages"
+    },
+    {
+      "file": "js/shop.js",
+      "line": 19,
+      "reason": "api-client-global-undeclared",
+      "message": "$.get(…) calls $, the global jquery's browser build leaves, and nothing says the page has it, so it is not read as a request; the linter configuration names what was not followed: .eslintrc.json: plugin:shop/browser (./legacy configs is spread after browser and was not read (no such file): the browser written before it is taken); .eslintrc.json: plugin:shop/forms (./legacy configs is spread after forms and was not read (no such file): the forms written before it is taken); .eslintrc.json: plugin:shop/legacy (./legacy configs is spread after legacy and was not read (no such file): the legacy written before it is taken)",
+      "hint": "Nothing imports $, loads jquery or zepto by a script tag of a page, or declares the global - a /* global $ */ comment, or the globals of the linter configuration the script is under. Load the client by a script tag, import it, or declare the global, and the call is read as its request. A configuration the linter configuration names was not followed and may be what declares it: install it inside the repository, or name it by a path, an import or members that are read.",
+      "symbol": "$.get(CATALOG + '/legacy')",
+      "meta": {
+        "cause": "api-client-global-undeclared",
+        "client": "jquery",
+        "global": "$",
+        "unfollowedConfigs": [
+          ".eslintrc.json: plugin:shop/browser (./legacy configs is spread after browser and was not read (no such file): the browser written before it is taken)",
+          ".eslintrc.json: plugin:shop/forms (./legacy configs is spread after forms and was not read (no such file): the forms written before it is taken)",
+          ".eslintrc.json: plugin:shop/legacy (./legacy configs is spread after legacy and was not read (no such file): the legacy written before it is taken)"
+        ]
+      },
+      "service": "pages"
+    }
+  ]
+}

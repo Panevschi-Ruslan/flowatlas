@@ -1,0 +1,45 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-10T14:18:32.180Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#src/OrdersPage.tsx:20:34",
+        "to": "entry:api:http:GET:/v1/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#src/OrdersPage.tsx:20:34|hits|entry:api:http:GET:/v1/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#src/OrdersPage.tsx:checkHealth declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#src/OrdersPage.tsx:20:34",
+        "to": "entry:api:http:GET:/v1/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#src/OrdersPage.tsx:20:34|hits|entry:api:http:GET:/v1/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "storefront#src/OrdersPage.tsx:checkHealth declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 2,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

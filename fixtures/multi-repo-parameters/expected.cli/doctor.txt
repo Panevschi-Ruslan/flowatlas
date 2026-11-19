@@ -1,0 +1,29 @@
+unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+
+unresolved: 1 to act on · missed: 1 · notes: 1 · findings: 2
+  2 findings: 1 likely N+1, 1 stream nothing writes to
+  export-not-found: 1 row
+    Add the repository whose deployment writes that parameter to the configuration, or check the name on both sides.
+      catalog/stacks/catalog.yaml:69  import:parameter:/shop/flags
+  deployed-name-generated (note): 1 row
+    Give it a name of its own where other repositories reach it.
+      catalog/stacks/catalog.yaml:27  stacks.catalog.Resources.RestockTopic
+  query-in-loop (finding): 1 row
+    Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.
+      reports/src/build.ts:8  A `for-of` loop runs 1 publish once per item: likely N+1.  (1 way in)
+  stream-no-writer (finding): 1 row
+    Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.
+      orders/serverless.yml:24  dynamodb/shop-orders is read by a function and nothing in the configured services writes to it
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 4 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 1 now, +1)
+  no baseline at <root>/fixtures/multi-repo-parameters/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  export-not-found: 0 → 1 (+1)
+  new (1):
+    catalog|stacks/catalog.yaml|import:parameter:/shop/flags|export-not-found

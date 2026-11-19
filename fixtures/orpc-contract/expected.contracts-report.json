@@ -1,0 +1,138 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-08T12:55:57.469Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/orders.ts:10:44",
+        "to": "entry:orders:rpc:orders.cancel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/orders.ts:10:44|hits|entry:orders:rpc:orders.cancel",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "shop",
+        "typeId": "{id:string}",
+        "symbol": "shop#src/orders.ts:cancelOrder",
+        "writes": [
+          "id"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{id:string}",
+        "symbol": "orders#src/router.ts:orders.cancel@22"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/orders.ts:14:3",
+        "to": "entry:orders:http:DELETE:/api/shop/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/orders.ts:14:3|hits|entry:orders:http:DELETE:/api/shop/orders/:param",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop",
+        "typeId": "{id:unknown}",
+        "symbol": "shop#src/orders.ts:cancelByRoute",
+        "writes": [
+          "id"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{id:string}",
+        "symbol": "orders#src/router.ts:orders.cancel@22"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:id"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/orders.ts:8:45",
+        "to": "entry:orders:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/orders.ts:8:45|hits|entry:orders:rpc:orders.list",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "shop",
+        "typeId": "{sku:string}",
+        "symbol": "shop#src/orders.ts:listOrders",
+        "writes": [
+          "sku"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{sku:string}",
+        "symbol": "orders#src/store.ts:listOrders"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/orders.ts:10:44",
+        "to": "entry:orders:rpc:orders.cancel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/orders.ts:10:44|hits|entry:orders:rpc:orders.cancel",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/orders.ts:cancelOrder reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/orders.ts:14:3",
+        "to": "entry:orders:http:DELETE:/api/shop/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/orders.ts:14:3|hits|entry:orders:http:DELETE:/api/shop/orders/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/orders.ts:cancelByRoute declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/orders.ts:8:45",
+        "to": "entry:orders:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/orders.ts:8:45|hits|entry:orders:rpc:orders.list",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/orders.ts:listOrders reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    }
+  ],
+  "summary": {
+    "edges": 3,
+    "shared": 0,
+    "identical": 2,
+    "hash_differs": 1,
+    "unchecked": 3,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

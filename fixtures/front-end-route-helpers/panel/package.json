@@ -1,0 +1,9 @@
+{
+  "name": "front-end-route-helpers-panel",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "vue": "^3.5.0",
+    "vue-router": "^4.4.0"
+  }
+}

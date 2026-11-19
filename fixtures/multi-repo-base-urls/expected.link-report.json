@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:28:30.764Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T12:46:21.032Z",
   "configHash": "df4e82d2e373",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 877,
+      "durationMs": 0,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 884,
+      "durationMs": 0,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 880,
+      "durationMs": 0,
       "packages": {
         "name": "payments",
         "runtime": [
@@ -69,7 +69,7 @@
       "edges": 27,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 976,
+      "durationMs": 0,
       "packages": {
         "name": "storefront",
         "runtime": [
@@ -130,6 +130,23 @@
         "variable": "ORDERS_FEED_URL",
         "value": "http://localhost:3001",
         "from": "wrangler.toml"
+      }
+    },
+    {
+      "service": "payments",
+      "file": "docker-compose.yml",
+      "line": 15,
+      "reason": "published-port-unheard",
+      "level": "info",
+      "message": "docker-compose.yml publishes port 4000 of payments-api (payments) as 4000, but payments's code listens on 3000 (src/main.ts:7)",
+      "hint": "Map the published port to the port the server listens on (4000:<that port>), or check that the container's environment gives the server 4000. A request to localhost:4000 is still joined to payments by the file.",
+      "symbol": "payments-api:4000:4000",
+      "meta": {
+        "published": 4000,
+        "container": 4000,
+        "listens": [
+          3000
+        ]
       }
     },
     {
@@ -252,7 +269,7 @@
     "types": 0,
     "missed": 1,
     "sites": 1,
-    "notes": 8,
+    "notes": 9,
     "findings": 0,
     "unresolved": 1
   }

@@ -1,0 +1,1558 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T12:24:24.106Z",
+  "services": [
+    {
+      "name": "cms",
+      "repo": "./cms",
+      "type": "strapi",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "gatsby",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "fastify",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "edge",
+      "repo": "./edge",
+      "type": "fastify",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "workers",
+      "repo": "./workers",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "poller",
+      "repo": "./poller",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/main.ts:GET /health@17",
+      "type": "function",
+      "label": "GET /health@17",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cms#src/api/order/controllers/order.ts:api::order.order.health@2",
+      "type": "function",
+      "label": "api::order.order.health@2",
+      "repo": "cms",
+      "file": "src/api/order/controllers/order.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cms#src/extensions/ratings/strapi-server.ts:rating.create@3",
+      "type": "function",
+      "label": "rating.create@3",
+      "repo": "cms",
+      "file": "src/extensions/ratings/strapi-server.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cms#src/extensions/reviews/strapi-server.ts:review.top@4",
+      "type": "function",
+      "label": "review.top@4",
+      "repo": "cms",
+      "file": "src/extensions/reviews/strapi-server.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cms#src/index.ts:GET /ping@10",
+      "type": "function",
+      "label": "GET /ping@10",
+      "repo": "cms",
+      "file": "src/index.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cms#src/plugins/reviews/server/index.ts:review.latest@2",
+      "type": "function",
+      "label": "review.latest@2",
+      "repo": "cms",
+      "file": "src/plugins/reviews/server/index.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "edge#src/app.ts:GET /api/edge@5",
+      "type": "function",
+      "label": "GET /api/edge@5",
+      "repo": "edge",
+      "file": "src/app.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{ok:true}"
+        }
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/health",
+      "type": "entry",
+      "label": "GET /api/health",
+      "repo": "cms",
+      "file": "src/index.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/health",
+        "adapter": "strapi-server",
+        "registration": "strapi/server-routes",
+        "handlerVia": "inline",
+        "handlerName": "api::order.order.health",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/ratings/ratings",
+      "type": "entry",
+      "label": "GET /api/ratings/ratings",
+      "repo": "cms",
+      "file": "package.json",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/ratings/ratings",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "ratings",
+        "package": "strapi-plugin-ratings",
+        "declaredIn": "node_modules/strapi-plugin-ratings/server/routes/content-api.js",
+        "handlerVia": "package",
+        "handlerName": "rating.find",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/reviews/latest",
+      "type": "entry",
+      "label": "GET /api/reviews/latest",
+      "repo": "cms",
+      "file": "src/plugins/reviews/server/index.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/reviews/latest",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "reviews",
+        "handlerVia": "inline",
+        "handlerName": "review.latest",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/reviews/top",
+      "type": "entry",
+      "label": "GET /api/reviews/top",
+      "repo": "cms",
+      "file": "src/extensions/reviews/strapi-server.ts",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/reviews/top",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "reviews",
+        "handlerVia": "inline",
+        "handlerName": "review.top",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/ping",
+      "type": "entry",
+      "label": "GET /ping",
+      "repo": "cms",
+      "file": "src/index.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/ping",
+        "adapter": "strapi-server",
+        "registration": "strapi/server-routes",
+        "handlerVia": "inline",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/ratings/settings",
+      "type": "entry",
+      "label": "GET /ratings/settings",
+      "repo": "cms",
+      "file": "package.json",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/ratings/settings",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "ratings",
+        "package": "strapi-plugin-ratings",
+        "declaredIn": "node_modules/strapi-plugin-ratings/server/routes/admin.js",
+        "handlerVia": "package",
+        "handlerName": "rating.settings",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:POST:/api/ratings/ratings",
+      "type": "entry",
+      "label": "POST /api/ratings/ratings",
+      "repo": "cms",
+      "file": "package.json",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/ratings/ratings",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "ratings",
+        "package": "strapi-plugin-ratings",
+        "declaredIn": "node_modules/strapi-plugin-ratings/server/routes/content-api.js",
+        "handlerVia": "inline",
+        "handlerName": "rating.create",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:edge:http:GET:/api/edge",
+      "type": "entry",
+      "label": "GET /api/edge",
+      "repo": "edge",
+      "file": "src/app.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/edge",
+        "rawPath": "/api/edge",
+        "adapter": "fastify-routes",
+        "registration": "fastify.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:gateway:http:GET:/api/status",
+      "type": "entry",
+      "label": "GET /api/status",
+      "repo": "gateway",
+      "file": "src/app.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/status",
+        "rawPath": "/api/status",
+        "adapter": "fastify-routes",
+        "registration": "fastify.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:site:http:ALL:/api/gatsby-plugin-forms/submit",
+      "type": "entry",
+      "label": "ALL /api/gatsby-plugin-forms/submit",
+      "repo": "site",
+      "file": "gatsby-config.js",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/gatsby-plugin-forms/submit",
+        "adapter": "gatsby-functions",
+        "registration": "gatsby/function",
+        "plugin": "gatsby-plugin-forms",
+        "package": "gatsby-plugin-forms",
+        "declaredIn": "node_modules/gatsby-plugin-forms/src/api/gatsby-plugin-forms/submit.js",
+        "middlewareRead": false,
+        "handlerVia": "package"
+      }
+    },
+    {
+      "id": "entry:site:http:POST:/api/contact/send",
+      "type": "entry",
+      "label": "POST /api/contact/send",
+      "repo": "site",
+      "file": "vendor/contact/src/api/contact/send.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/contact/send",
+        "rawPath": "/api/contact/send",
+        "adapter": "gatsby-functions",
+        "registration": "gatsby/function",
+        "plugin": "contact",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:workers:http:GET:/api/work",
+      "type": "entry",
+      "label": "GET /api/work",
+      "repo": "workers",
+      "file": "src/server.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/work",
+        "rawPath": "/api/work",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "gateway#src/app.ts:GET /api/status@5",
+      "type": "function",
+      "label": "GET /api/status@5",
+      "repo": "gateway",
+      "file": "src/app.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{ok:true}"
+        }
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:12:29",
+      "type": "http_out",
+      "label": "GET /api/reviews/latest",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 12,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4510/api/reviews/latest",
+        "path": "/api/reviews/latest",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4510",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:13:26",
+      "type": "http_out",
+      "label": "GET /api/reviews/top",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 13,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4510/api/reviews/top",
+        "path": "/api/reviews/top",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4510",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:16:27",
+      "type": "http_out",
+      "label": "POST /api/contact/send",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 16,
+      "meta": {
+        "method": "POST",
+        "url": "http://localhost:8300/api/contact/send",
+        "path": "/api/contact/send",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:8300",
+        "targetService": "site"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:17:29",
+      "type": "http_out",
+      "label": "POST /api/gatsby-plugin-forms/submit",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 17,
+      "meta": {
+        "method": "POST",
+        "url": "http://localhost:8300/api/gatsby-plugin-forms/submit",
+        "path": "/api/gatsby-plugin-forms/submit",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:8300",
+        "targetService": "site"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:20:29",
+      "type": "http_out",
+      "label": "GET /api/status",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 20,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4520/api/status",
+        "path": "/api/status",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4520",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:21:27",
+      "type": "http_out",
+      "label": "GET /api/edge",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 21,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4530/api/edge",
+        "path": "/api/edge",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4530",
+        "targetService": "edge"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:24:32",
+      "type": "http_out",
+      "label": "GET /health",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 24,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4540/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4540",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:27:27",
+      "type": "http_out",
+      "label": "GET /api/work",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 27,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4550/api/work",
+        "path": "/api/work",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4550",
+        "targetService": "workers"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:2:29",
+      "type": "http_out",
+      "label": "GET /api/health",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 2,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4510/api/health",
+        "path": "/api/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4510",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:5:27",
+      "type": "http_out",
+      "label": "GET /ping",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 5,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4510/ping",
+        "path": "/ping",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4510",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:8:30",
+      "type": "http_out",
+      "label": "GET /api/ratings/ratings",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4510/api/ratings/ratings",
+        "path": "/api/ratings/ratings",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4510",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:9:40",
+      "type": "http_out",
+      "label": "POST /api/ratings/ratings",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 9,
+      "meta": {
+        "method": "POST",
+        "url": "http://localhost:4510/api/ratings/ratings",
+        "path": "/api/ratings/ratings",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "unknown",
+        "bodyFrom": "value",
+        "host": "localhost:4510",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:apiHealth",
+      "type": "function",
+      "label": "apiHealth",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:edge",
+      "type": "function",
+      "label": "edge",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:health",
+      "type": "function",
+      "label": "health",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:latest",
+      "type": "function",
+      "label": "latest",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:ping",
+      "type": "function",
+      "label": "ping",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:rate",
+      "type": "function",
+      "label": "rate",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:ratings",
+      "type": "function",
+      "label": "ratings",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:send",
+      "type": "function",
+      "label": "send",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:status",
+      "type": "function",
+      "label": "status",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:submit",
+      "type": "function",
+      "label": "submit",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:top",
+      "type": "function",
+      "label": "top",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:work",
+      "type": "function",
+      "label": "work",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4540,
+            "file": "src/main.ts",
+            "line": 20,
+            "handed": "src/main.ts:11"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:cms",
+      "type": "repo",
+      "label": "cms",
+      "repo": "cms",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "strapi-server"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4510,
+            "file": "config/server.ts",
+            "line": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:edge",
+      "type": "repo",
+      "label": "edge",
+      "repo": "edge",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "fastify-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4530,
+            "file": "fastify.config.ts",
+            "line": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:gateway",
+      "type": "repo",
+      "label": "gateway",
+      "repo": "gateway",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "fastify-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4520,
+            "file": "node_modules/@shop/gateway-config/index.cjs",
+            "line": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:poller",
+      "type": "repo",
+      "label": "poller",
+      "repo": "poller",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:site",
+      "type": "repo",
+      "label": "site",
+      "repo": "site",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 2,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "gatsby-functions"
+          ]
+        },
+        "listen": [
+          {
+            "port": 8300,
+            "file": "package.json",
+            "line": 5,
+            "devServer": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:workers",
+      "type": "repo",
+      "label": "workers",
+      "repo": "workers",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4550,
+            "file": "src/server.ts",
+            "line": 16,
+            "handed": "src/main.ts:15"
+          }
+        ]
+      }
+    },
+    {
+      "id": "site#vendor/contact/src/api/contact/send.ts:send",
+      "type": "function",
+      "label": "send",
+      "repo": "site",
+      "file": "vendor/contact/src/api/contact/send.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "workers#src/server.ts:GET /api/work@4",
+      "type": "function",
+      "label": "GET /api/work@4",
+      "repo": "workers",
+      "file": "src/server.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:api:http:GET:/health",
+      "to": "api#src/main.ts:GET /health@17",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/main.ts",
+      "line": 17,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:GET:/api/health",
+      "to": "cms#src/api/order/controllers/order.ts:api::order.order.health@2",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/api/order/controllers/order.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:GET:/api/reviews/latest",
+      "to": "cms#src/plugins/reviews/server/index.ts:review.latest@2",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/plugins/reviews/server/index.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:GET:/api/reviews/top",
+      "to": "cms#src/extensions/reviews/strapi-server.ts:review.top@4",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/extensions/reviews/strapi-server.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:GET:/ping",
+      "to": "cms#src/index.ts:GET /ping@10",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "string",
+      "file": "src/index.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:POST:/api/ratings/ratings",
+      "to": "cms#src/extensions/ratings/strapi-server.ts:rating.create@3",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{saved:boolean}",
+      "file": "src/extensions/ratings/strapi-server.ts",
+      "line": 3,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:edge:http:GET:/api/edge",
+      "to": "edge#src/app.ts:GET /api/edge@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:true}",
+      "file": "src/app.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:gateway:http:GET:/api/status",
+      "to": "gateway#src/app.ts:GET /api/status@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:true}",
+      "file": "src/app.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:site:http:POST:/api/contact/send",
+      "to": "site#vendor/contact/src/api/contact/send.ts:send",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{sent:boolean}",
+      "file": "vendor/contact/src/api/contact/send.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:workers:http:GET:/api/work",
+      "to": "workers#src/server.ts:GET /api/work@4",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:12:29",
+      "to": "entry:cms:http:GET:/api/reviews/latest",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 12,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:13:26",
+      "to": "entry:cms:http:GET:/api/reviews/top",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 13,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:16:27",
+      "to": "entry:site:http:POST:/api/contact/send",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 16,
+      "meta": {
+        "via": "host",
+        "targetService": "site",
+        "listensAt": "package.json:5"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:17:29",
+      "to": "entry:site:http:ALL:/api/gatsby-plugin-forms/submit",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 17,
+      "meta": {
+        "via": "host",
+        "targetService": "site",
+        "listensAt": "package.json:5"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:20:29",
+      "to": "entry:gateway:http:GET:/api/status",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/poll.ts",
+      "line": 20,
+      "meta": {
+        "via": "host",
+        "targetService": "gateway",
+        "listensAt": "node_modules/@shop/gateway-config/index.cjs:4"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:21:27",
+      "to": "entry:edge:http:GET:/api/edge",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/poll.ts",
+      "line": 21,
+      "meta": {
+        "via": "host",
+        "targetService": "edge",
+        "listensAt": "fastify.config.ts:2"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:24:32",
+      "to": "entry:api:http:GET:/health",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 24,
+      "meta": {
+        "via": "host",
+        "targetService": "api",
+        "listensAt": "src/main.ts:20 (handed at src/main.ts:11)"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:27:27",
+      "to": "entry:workers:http:GET:/api/work",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 27,
+      "meta": {
+        "via": "host",
+        "targetService": "workers",
+        "listensAt": "src/server.ts:16 (handed at src/main.ts:15)"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:2:29",
+      "to": "entry:cms:http:GET:/api/health",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 2,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:5:27",
+      "to": "entry:cms:http:GET:/ping",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 5,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:8:30",
+      "to": "entry:cms:http:GET:/api/ratings/ratings",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 8,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:9:40",
+      "to": "entry:cms:http:POST:/api/ratings/ratings",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 9,
+      "params": [
+        "unknown"
+      ],
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "poller#src/poll.ts:apiHealth",
+      "to": "http_out:poller#src/poll.ts:24:32",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 24
+    },
+    {
+      "from": "poller#src/poll.ts:edge",
+      "to": "http_out:poller#src/poll.ts:21:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 21
+    },
+    {
+      "from": "poller#src/poll.ts:health",
+      "to": "http_out:poller#src/poll.ts:2:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 2
+    },
+    {
+      "from": "poller#src/poll.ts:latest",
+      "to": "http_out:poller#src/poll.ts:12:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 12
+    },
+    {
+      "from": "poller#src/poll.ts:ping",
+      "to": "http_out:poller#src/poll.ts:5:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 5
+    },
+    {
+      "from": "poller#src/poll.ts:rate",
+      "to": "http_out:poller#src/poll.ts:9:40",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 9
+    },
+    {
+      "from": "poller#src/poll.ts:ratings",
+      "to": "http_out:poller#src/poll.ts:8:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 8
+    },
+    {
+      "from": "poller#src/poll.ts:send",
+      "to": "http_out:poller#src/poll.ts:16:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 16
+    },
+    {
+      "from": "poller#src/poll.ts:status",
+      "to": "http_out:poller#src/poll.ts:20:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 20
+    },
+    {
+      "from": "poller#src/poll.ts:submit",
+      "to": "http_out:poller#src/poll.ts:17:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 17
+    },
+    {
+      "from": "poller#src/poll.ts:top",
+      "to": "http_out:poller#src/poll.ts:13:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 13
+    },
+    {
+      "from": "poller#src/poll.ts:work",
+      "to": "http_out:poller#src/poll.ts:27:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 27
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/main.ts",
+      "line": 18,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /health@17 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/plugins/drafts/strapi-server.ts",
+      "line": 1,
+      "reason": "plugin-not-enabled",
+      "level": "info",
+      "message": "src/plugins/drafts/strapi-server.ts is the server of a Strapi plugin no key of config/plugins enables - Strapi loads a plugin of the repository only where a key resolves its directory with enabled: true - so its routes are not served and not drawn.",
+      "hint": "Enable the plugin in config/plugins, { '<name>': { enabled: true, resolve: './<its directory>' } }, to have it served.",
+      "symbol": "drafts",
+      "adapter": "strapi-server",
+      "service": "cms"
+    },
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "poller"
+    },
+    {
+      "file": "vendor/contact/src/api/contact/send.ts",
+      "line": 3,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 3,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "send -> res.status(405).end",
+      "meta": {
+        "causes": [
+          {
+            "cause": "untyped-parameter",
+            "sites": 3,
+            "samples": [
+              {
+                "file": "vendor/contact/src/api/contact/send.ts",
+                "line": 3,
+                "symbol": "send -> res.status(405).end"
+              },
+              {
+                "file": "vendor/contact/src/api/contact/send.ts",
+                "line": 3,
+                "symbol": "send -> res.status"
+              },
+              {
+                "file": "vendor/contact/src/api/contact/send.ts",
+                "line": 6,
+                "symbol": "send -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/server.ts",
+      "line": 5,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /api/work@4 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 5,
+                "symbol": "GET /api/work@4 -> res.json"
+              }
+            ]
+          },
+          {
+            "cause": "module-not-installed",
+            "package": "express",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 16,
+                "symbol": "Server.start -> app.listen"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "workers"
+    }
+  ]
+}

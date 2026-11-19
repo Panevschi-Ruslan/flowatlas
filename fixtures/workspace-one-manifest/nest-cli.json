@@ -1,0 +1,38 @@
+{
+  "collection": "@nestjs/schematics",
+  "monorepo": true,
+  "root": "apps/shop",
+  "sourceRoot": "apps/shop/src",
+  "compilerOptions": {
+    "tsConfigPath": "apps/shop/tsconfig.app.json"
+  },
+  "projects": {
+    "shop": {
+      "type": "application",
+      "root": "apps/shop",
+      "entryFile": "main",
+      "sourceRoot": "apps/shop/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/shop/tsconfig.app.json"
+      }
+    },
+    "orders": {
+      "type": "application",
+      "root": "apps/orders",
+      "entryFile": "main",
+      "sourceRoot": "apps/orders/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/orders/tsconfig.app.json"
+      }
+    },
+    "order-events": {
+      "type": "library",
+      "root": "libs/order-events",
+      "entryFile": "index",
+      "sourceRoot": "libs/order-events/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/order-events/tsconfig.lib.json"
+      }
+    }
+  }
+}

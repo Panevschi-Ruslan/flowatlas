@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:16:06.297Z",
+  "configHash": "e187e7f2c153",
+  "services": [
+    {
+      "name": "library",
+      "repo": "./library",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 76,
+      "edges": 60,
+      "types": 0,
+      "unresolved": 11,
+      "durationMs": 8987,
+      "packages": {
+        "name": "library-desk",
+        "runtime": [
+          "@aws-sdk/client-eventbridge",
+          "@aws-sdk/client-sns",
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 2,
+    "linked": 2,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 8,
+    "linked": 2,
+    "noConsumers": [
+      "channel:sqs/library-prod-failed-loans"
+    ],
+    "noProducers": [
+      "channel:eventbridge/default/library.loans/LoanOverdue",
+      "channel:eventbridge/default/library.loans/LoanRenewed",
+      "channel:kinesis/library-prod-returns",
+      "channel:sns/${…}@import.export.shared-notices-topic-arn",
+      "channel:sqs/library-prod-fiction-shelf"
+    ]
+  },
+  "routes": {
+    "total": 7,
+    "called": 2,
+    "uncalled": [
+      "entry:library:http:ALL:/*",
+      "entry:library:http:GET:/books/:param",
+      "entry:library:http:GET:/branches/:param",
+      "entry:library:http:POST:/loans",
+      "entry:library:http:POST:/notices/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "library",
+      "file": "template.yaml",
+      "line": 118,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "kinesis/library-prod-returns is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:kinesis/library-prod-returns"
+    },
+    {
+      "service": "library",
+      "file": "template.yaml",
+      "line": 211,
+      "reason": "export-not-found",
+      "message": "the topic Resources.DoorFunction.Events.Shared subscribes to is the export shared-notices-topic-arn, which no configured service publishes, so what it names is not joined",
+      "hint": "Add the repository whose deployment declares that output to the configuration, or check the name on both sides.",
+      "symbol": "import:export:shared-notices-topic-arn",
+      "meta": {
+        "key": "export:shared-notices-topic-arn"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 76,
+    "edges": 67,
+    "types": 0,
+    "missed": 11,
+    "sites": 11,
+    "notes": 3,
+    "findings": 1,
+    "unresolved": 11
+  }
+}

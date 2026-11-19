@@ -1,0 +1,349 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-17T21:03:49.207Z",
+  "configHash": "0a8241ab0356",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2570,
+      "packages": {
+        "name": "unloaded-env-image-environment-api",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2461,
+      "packages": {
+        "name": "unloaded-env-image-environment-audit",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "bare",
+      "repo": "./bare",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2462,
+      "packages": {
+        "name": "unloaded-env-image-environment-bare",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 3,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2461,
+      "packages": {
+        "name": "unloaded-env-image-environment-billing",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2472,
+      "packages": {
+        "name": "unloaded-env-image-environment-catalog",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2478,
+      "packages": {
+        "name": "unloaded-env-image-environment-inventory",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2447,
+      "packages": {
+        "name": "unloaded-env-image-environment-ledger",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "loaded",
+      "repo": "./loaded",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2455,
+      "packages": {
+        "name": "unloaded-env-image-environment-loaded",
+        "runtime": [
+          "dotenv",
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2554,
+      "packages": {
+        "name": "unloaded-env-image-environment-orders",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2518,
+      "packages": {
+        "name": "unloaded-env-image-environment-stock",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 29,
+      "edges": 20,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 2628,
+      "packages": {
+        "name": "unloaded-env-image-environment-web",
+        "runtime": [],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 11,
+    "linked": 9,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 2,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 10,
+    "called": 9,
+    "uncalled": [
+      "entry:bare:http:GET:/things"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "billing",
+      "file": "src/app.ts",
+      "line": 7,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "CATALOG_URL is http://catalog:3000 in docker-compose.yml (billing), which is taken as catalog",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add CATALOG_URL to services[].baseUrlEnv of catalog to say so outright.",
+      "symbol": "http_out:billing#src/app.ts:7:26",
+      "meta": {
+        "variable": "CATALOG_URL",
+        "value": "http://catalog:3000",
+        "from": "docker-compose.yml (billing)"
+      }
+    },
+    {
+      "service": "ledger",
+      "file": "k8s/ledger.yaml",
+      "line": 29,
+      "reason": "container-image-unread",
+      "level": "info",
+      "message": "k8s/ledger.yaml runs ledger (ledger) from the image ledger; nothing in the project builds it, and an image is never fetched, so the environment the image gives is not read: it may set PORT (src/app.ts:9), which ledger's code reads its port from; the port there is taken as 3000, where nothing read gives the setting",
+      "hint": "Build the image in the project (docker build -t, a compose build:, a Skaffold artifact) so its Dockerfile is read, or give the setting in the container's own environment.",
+      "symbol": "ledger:ledger",
+      "meta": {
+        "image": "ledger",
+        "settings": [
+          "PORT"
+        ]
+      }
+    },
+    {
+      "service": "ledger",
+      "file": "k8s/ledger.yaml",
+      "line": 29,
+      "reason": "published-port-unheard",
+      "level": "info",
+      "message": "k8s/ledger.yaml routes ledger:80 to port 6000 of ledger's containers, but ledger's code listens on 3000 (src/app.ts:9)",
+      "hint": "Route the name to the port the server listens on (targetPort), or check that the containers' environment gives the server 6000. A request to ledger:80 is still joined to ledger by the file.",
+      "symbol": "ledger:80:6000",
+      "meta": {
+        "routed": 80,
+        "container": 6000,
+        "listens": [
+          3000
+        ]
+      }
+    },
+    {
+      "service": "orders",
+      "file": "docker-compose.yml",
+      "line": 8,
+      "reason": "container-image-unread",
+      "level": "info",
+      "message": "docker-compose.yml runs orders (orders) from the image registry.example.test/shop/orders:1.2; nothing in the project builds it, and an image is never fetched, so the environment the image gives is not read: it may set PORT (src/app.ts:9), which orders's code reads its port from; the port there is taken as 3000, where nothing read gives the setting",
+      "hint": "Build the image in the project (docker build -t, a compose build:, a Skaffold artifact) so its Dockerfile is read, or give the setting in the container's own environment.",
+      "symbol": "orders:registry.example.test/shop/orders:1.2",
+      "meta": {
+        "image": "registry.example.test/shop/orders:1.2",
+        "settings": [
+          "PORT"
+        ]
+      }
+    },
+    {
+      "service": "orders",
+      "file": "docker-compose.yml",
+      "line": 8,
+      "reason": "published-port-unheard",
+      "level": "info",
+      "message": "docker-compose.yml publishes port 4000 of orders (orders) as 8080, but orders's code listens on 3000 (src/app.ts:9)",
+      "hint": "Map the published port to the port the server listens on (8080:<that port>), or check that the container's environment gives the server 4000. A request to localhost:8080 is still joined to orders by the file.",
+      "symbol": "orders:8080:4000",
+      "meta": {
+        "published": 8080,
+        "container": 4000,
+        "listens": [
+          3000
+        ]
+      }
+    },
+    {
+      "service": "web",
+      "file": "src/calls.ts",
+      "line": 4,
+      "reason": "target-route-not-found",
+      "message": "target service api has no route GET /nowhere",
+      "hint": "Route renamed? Check api's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:web#src/calls.ts:4:35"
+    },
+    {
+      "service": "web",
+      "file": "src/calls.ts",
+      "line": 5,
+      "reason": "target-route-not-found",
+      "message": "target service audit has no route GET /things",
+      "hint": "Route renamed? Check audit's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:web#src/calls.ts:5:29"
+    }
+  ],
+  "totals": {
+    "nodes": 55,
+    "edges": 33,
+    "types": 2,
+    "missed": 2,
+    "sites": 2,
+    "notes": 5,
+    "findings": 0,
+    "unresolved": 2
+  }
+}

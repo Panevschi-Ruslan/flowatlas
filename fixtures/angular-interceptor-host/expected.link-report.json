@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T14:22:04.214Z",
+  "configHash": "cac6119013e8",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 5,
+      "edges": 2,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1621,
+      "packages": {
+        "name": "interceptor-host-admin",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 12,
+      "edges": 10,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1579,
+      "packages": {
+        "name": "interceptor-host-api",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 15,
+      "edges": 12,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1549,
+      "packages": {
+        "name": "interceptor-host-web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 7,
+    "resolved": 6,
+    "unresolved": 1,
+    "byReason": {
+      "target-route-not-found": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 5,
+    "called": 5,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 5,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/app/catalog.service.ts",
+      "line": 38,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /assets/labels.json",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /assets/labels.json */.",
+      "symbol": "ui_api_call:web#src/app/catalog.service.ts:38:12"
+    }
+  ],
+  "totals": {
+    "nodes": 32,
+    "edges": 30,
+    "types": 5,
+    "missed": 1,
+    "sites": 1,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 1
+  }
+}

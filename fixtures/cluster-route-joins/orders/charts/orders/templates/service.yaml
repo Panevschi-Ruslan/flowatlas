@@ -1,0 +1,19 @@
+{{- if .Capabilities.APIVersions.Has "v1/Service" }}
+apiVersion: v1
+{{- else }}
+apiVersion: v1
+{{- end }}
+kind: Service
+metadata:
+  name: {{ include "orders.fullname" . }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "orders.labels" . | nindent 4 }}
+  ports:
+    - name: web
+      port: {{ .Values.service.port }}
+      targetPort: http
+      {{- if eq .Values.service.type "NodePort" }}
+      nodePort: {{ .Values.service.nodePort }}
+      {{- end }}

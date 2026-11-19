@@ -17,6 +17,7 @@ import { makeSymbolId } from './ids.js';
 import { wasMissed, type Unresolved, type UnresolvedLevel } from './model/graph.js';
 import type { FollowCause } from './follow-cause.js';
 import { SEEN_NOT_IN_CODE, type BlindSpot } from './blind-spots.js';
+import { gapIdOf } from './accepted.js';
 
 /** The key on a row's `meta` naming why its step could not be followed. */
 export const CAUSE_META = 'cause';
@@ -34,6 +35,12 @@ export interface CauseSample {
   line: number;
   symbol?: string;
   service?: string;
+  /**
+   * What this place's row says that the folded row cannot say for all of
+   * them (P338): the keys of its `meta` the rows folded together write
+   * differently - a navigation's own prefix. Written only where there is one.
+   */
+  meta?: Record<string, unknown>;
 }
 
 /** The places one cause, into one package, stands for within a row. */
@@ -42,6 +49,27 @@ export interface CausePart {
   package?: string;
   sites: number;
   samples: CauseSample[];
+  /**
+   * Every other file its places are in, beyond the samples' own (P255), so a
+   * reader by file - the read gate - finds a fourth place of one cause in one
+   * repository as it finds the first three. Written only where there is one.
+   */
+  files?: string[];
+  /**
+   * What the places past the samples write that none of the samples does
+   * (P344), for the keys the folded rows write differently: each distinct
+   * value once, with how many places write it and the first of them, its
+   * own values in its `meta` - so no place's value is said only by its own
+   * unfolded reading, and places that write one value are one item. Written
+   * only where there is one.
+   */
+  differing?: DifferingValue[];
+}
+
+/** One value places past a cause's samples write that none of the samples does, how many write it, and the first (P344). */
+export interface DifferingValue {
+  sites: number;
+  first: CauseSample;
 }
 
 /** The `meta` a row carries for its cause. */
@@ -86,9 +114,26 @@ const samplesOf = (value: unknown): CauseSample[] =>
     ? value.flatMap((item): CauseSample[] => {
         const sample = item as Partial<CauseSample> | null;
         if (sample === null || typeof sample.file !== 'string' || typeof sample.line !== 'number') return [];
-        return [{ file: sample.file, line: sample.line, ...(typeof sample.symbol === 'string' ? { symbol: sample.symbol } : {}) }];
+        return [{
+          file: sample.file,
+          line: sample.line,
+          ...(typeof sample.symbol === 'string' ? { symbol: sample.symbol } : {}),
+          ...(sample.meta !== null && typeof sample.meta === 'object' ? { meta: sample.meta } : {}),
+        }];
       })
     : [];
+
+/** The values a part's places past its samples write that none of them does, as read back from a row (P344). */
+const differingOf = (value: unknown): { differing?: DifferingValue[] } => {
+  if (!Array.isArray(value)) return {};
+  const read = value.flatMap((item): DifferingValue[] => {
+    const each = item as { sites?: unknown; first?: unknown } | null;
+    if (each === null || typeof each !== 'object' || typeof each.sites !== 'number') return [];
+    const [first] = samplesOf([each.first]);
+    return first === undefined ? [] : [{ sites: each.sites, first }];
+  });
+  return read.length === 0 ? {} : { differing: read };
+};
 
 /** What a row stands for, cause by cause. A row of one place is one part. */
 export const causePartsOf = (row: {
@@ -109,6 +154,8 @@ export const causePartsOf = (row: {
         ...(typeof part.package === 'string' ? { package: part.package } : {}),
         sites: part.sites,
         samples: samplesOf(part.samples),
+        ...(Array.isArray(part.files) ? { files: part.files.filter((file): file is string => typeof file === 'string') } : {}),
+        ...differingOf(part.differing),
       }];
     });
     if (parts.length > 0) return parts;
@@ -136,6 +183,10 @@ const partKey = (part: { cause: string; package?: string }): string => `${part.c
  */
 export class CauseTally {
   readonly #parts = new Map<string, CausePart>();
+  /** The meta of the row each sample was taken from, for what the fold cannot say for all (P338). */
+  readonly #metaOf = new Map<CauseSample, Record<string, unknown>>();
+  /** Each place past a part's samples, with its row's meta, so a value none of the samples writes is still said (P344). */
+  readonly #later = new Map<string, Array<{ readonly sample: CauseSample; readonly meta: Record<string, unknown> }>>();
   #recorded = false;
 
   add(row: Unresolved): void {
@@ -145,8 +196,20 @@ export class CauseTally {
     const part = this.#parts.get(key) ?? { ...own, sites: 0, samples: [] };
     this.#parts.set(key, part);
     part.sites += row.sites ?? 1;
+    const sample: CauseSample = { file: row.file, line: row.line, ...(row.symbol === undefined ? {} : { symbol: row.symbol }) };
     if (part.samples.length < CAUSE_SAMPLES) {
-      part.samples.push({ file: row.file, line: row.line, ...(row.symbol === undefined ? {} : { symbol: row.symbol }) });
+      part.samples.push(sample);
+      if (row.meta !== undefined) this.#metaOf.set(sample, row.meta);
+      return;
+    }
+    if (row.meta !== undefined) {
+      const later = this.#later.get(key) ?? [];
+      this.#later.set(key, later);
+      later.push({ sample, meta: row.meta });
+    }
+    if (row.file !== '' && !part.samples.some((each) => each.file === row.file) && !(part.files ?? []).includes(row.file)) {
+      // A place past the samples is still in a file somebody reads by (P255).
+      part.files = [...(part.files ?? []), row.file];
     }
   }
 
@@ -155,9 +218,41 @@ export class CauseTally {
     return this.#recorded;
   }
 
-  /** The parts, most places first, then by cause and package. */
-  parts(): CausePart[] {
-    return [...this.#parts.values()].sort(
+  /**
+   * The parts, most places first, then by cause and package; the other files
+   * in name order. Each sample carries its own row's value of every key
+   * `own` names - those the rows folded together write differently (P338).
+   */
+  parts(own: ReadonlySet<string> = new Set()): CausePart[] {
+    const ownOf = (sample: CauseSample, meta: Record<string, unknown> | undefined): CauseSample => {
+      const kept = meta === undefined ? [] : [...own].filter((key) => meta[key] !== undefined).map((key) => [key, meta[key]] as const);
+      return kept.length === 0 ? sample : { ...sample, meta: Object.fromEntries(kept) };
+    };
+    const written = (meta: Record<string, unknown> | undefined, key: string): string => JSON.stringify(meta?.[key]) ?? '';
+    /**
+     * What the places past a part's samples write, for the keys the rows
+     * write differently, that none of the samples does (P344): each distinct
+     * value once - all those keys' values together - with how many places
+     * write it and the first, in the order the places were folded.
+     */
+    const differing = (key: string, part: CausePart): Pick<CausePart, 'differing'> => {
+      if (own.size === 0) return {};
+      const names = [...own];
+      const valueOf = (meta: Record<string, unknown> | undefined): string => names.map((name) => written(meta, name)).join('\u0000');
+      const sampled = new Set(part.samples.map((sample) => valueOf(this.#metaOf.get(sample))));
+      const found = new Map<string, DifferingValue>();
+      for (const { sample, meta } of this.#later.get(key) ?? []) {
+        const value = valueOf(meta);
+        if (sampled.has(value)) continue;
+        const known = found.get(value);
+        if (known !== undefined) known.sites += 1;
+        else found.set(value, { sites: 1, first: ownOf(sample, meta) });
+      }
+      return found.size === 0 ? {} : { differing: [...found.values()] };
+    };
+    return [...this.#parts.entries()]
+      .map(([key, part]) => ({ ...part, samples: part.samples.map((sample) => ownOf(sample, this.#metaOf.get(sample))), ...differing(key, part) }))
+      .map((part) => (part.files === undefined ? part : { ...part, files: [...part.files].sort(cmp) })).sort(
       (a, b) => b.sites - a.sites || cmp(a.cause, b.cause) || cmp(a.package ?? '', b.package ?? ''),
     );
   }
@@ -192,6 +287,8 @@ export interface CantFollowCause {
   packages: CantFollowPackage[];
   /** Packages left out by `top`. */
   truncated?: number;
+  /** How many logged questions ran into its rows (P235), when a question log was read. */
+  asked?: number;
   /**
    * Under `seen-not-in-code` (P110): what traffic reached that no reader drew,
    * one group per service and kind, most spans first. Its rows name no file,
@@ -243,6 +340,12 @@ export interface CantFollowOptions {
   package?: string;
   /** Causes to skip before the first one listed, to read the list a page at a time (P93). Default 0. */
   offset?: number;
+  /**
+   * How many logged questions ran into each gap, by gap id (P235). Given, each
+   * cause says how many questions its rows were on, and the causes the most
+   * questions ran into come first: what people ask about is fixed first.
+   */
+  asked?: ReadonlyMap<string, number>;
 }
 
 /**
@@ -300,6 +403,8 @@ interface Acc {
   hint?: string;
   packages: Map<string, { package: string | null; sites: number; samples: CantFollowSample[] }>;
   seen: BlindSpot[];
+  /** The gap ids of its rows, for the questions that ran into them. */
+  gaps: Set<string>;
 }
 
 /** A blind-spot group a row carries (P110), when it is one. */
@@ -344,8 +449,12 @@ export const groupCantFollow = (rows: readonly CantFollowRow[], options: CantFol
         services: new Set<string>(),
         packages: new Map(),
         seen: [],
+        gaps: new Set<string>(),
       };
       causes.set(part.cause, acc);
+      if (options.asked !== undefined) {
+        acc.gaps.add(gapIdOf({ reason: row.reason, ...(row.service ? { service: row.service } : {}), ...(row.file ? { file: row.file } : {}) }));
+      }
       acc.sites += part.sites;
       acc.reasons.add(row.reason);
       if (row.service !== undefined && row.service !== null && row.service !== '') acc.services.add(row.service);
@@ -378,7 +487,11 @@ export const groupCantFollow = (rows: readonly CantFollowRow[], options: CantFol
     }
   }
 
-  const ranked = [...causes.values()].sort((a, b) => b.sites - a.sites || cmp(a.cause, b.cause));
+  const askedOf = (acc: Acc): number => [...acc.gaps].reduce((sum, gap) => sum + (options.asked?.get(gap) ?? 0), 0);
+  // With a question log, what was asked about first; then most places, as without one.
+  const ranked = [...causes.values()].sort(
+    (a, b) => (options.asked === undefined ? 0 : askedOf(b) - askedOf(a)) || b.sites - a.sites || cmp(a.cause, b.cause),
+  );
   const offset = Math.min(options.offset ?? 0, ranked.length);
   const listed: CantFollowCause[] = ranked.slice(offset, offset + top).map((acc) => {
     const byPkg = [...acc.packages.values()].sort(
@@ -394,6 +507,7 @@ export const groupCantFollow = (rows: readonly CantFollowRow[], options: CantFol
       services: [...acc.services].sort(cmp),
       packages: byPkg.slice(0, top),
       ...(byPkg.length > top ? { truncated: byPkg.length - top } : {}),
+      ...(options.asked === undefined ? {} : { asked: askedOf(acc) }),
       ...(acc.seen.length === 0
         ? {}
         : {

@@ -91,8 +91,23 @@ export interface SubscriberPattern {
   channelArg: number;
   /** Where the channel is written, when it is not one plain argument. */
   channel?: readonly NameLocator[];
-  /** Argument holding the handler, when the same call takes one. */
+  /**
+   * Argument holding the handler, when the same call takes one. Counted from
+   * the end where it is negative: `-1` is the last, for a call whose earlier
+   * arguments are optional (`queue.process('job', 5, handler)`).
+   */
   handlerArg?: number;
+  /**
+   * The class whose construction starts receiving, in place of a method:
+   * `new Worker('mail', processor)` (P271). The channel and the handler are
+   * the constructor's arguments, and the class is the transport's where it is
+   * imported from one of `receiverPackages`.
+   */
+  constructs?: string;
+  /** Argument naming the one unit of work the handler takes, where it is a string. */
+  nameArg?: number;
+  /** Where the message sits in what the handler is handed, as on a decorated handler (R133). */
+  payloadPath?: readonly string[];
   /** Method that registers a handler separately, e.g. an event listener. */
   listenerMethod?: string;
   /** Event name that listener is registered for. */

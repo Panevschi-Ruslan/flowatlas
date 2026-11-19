@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: The ledger of a shop, tallying the platform's clicks; what it gives up on goes where the platform says.
+
+Resources:
+  TallyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+
+  Tally:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: shop-ledger-tally
+      Runtime: nodejs20.x
+      Handler: tally.handler
+      Role: !GetAtt TallyRole.Arn
+      Code: ../src
+
+  # The platform's clicks, and the queue for what is given up on: both
+  # parameters the platform writes, neither saying what kind of thing it is.
+  Clicks:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: '{{resolve:ssm:/shop/clicks}}'
+      FunctionName: !Ref Tally
+      StartingPosition: LATEST
+      DestinationConfig:
+        OnFailure:
+          Destination: '{{resolve:ssm:/shop/failed}}'

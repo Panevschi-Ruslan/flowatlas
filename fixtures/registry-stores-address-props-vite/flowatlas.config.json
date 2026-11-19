@@ -1,0 +1,30 @@
+{
+  "services": [
+    {
+      "name": "docs",
+      "repo": "./docs",
+      "type": "react"
+    },
+    {
+      "name": "handbook",
+      "repo": "./handbook",
+      "type": "nextjs"
+    },
+    {
+      "name": "store",
+      "repo": "./store",
+      "type": "remix"
+    },
+    {
+      "name": "planner",
+      "repo": "./planner",
+      "type": "sveltekit"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express"
+    }
+  ],
+  "output": ".flowatlas"
+}

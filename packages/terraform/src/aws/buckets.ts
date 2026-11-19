@@ -1,7 +1,8 @@
 import { DEFAULT_EVENT_BUS, S3_DETAIL_TYPES, S3_EVENT_SOURCE } from '@flowatlas/aws';
+import type { DeployedKind } from '@flowatlas/core';
 import { asText, type Because, type Instance, type Value } from '../eval/values.js';
 import { argument, blocksNamed, entryOf, siteOf, textOf, unreadRow, whyNot } from './arguments.js';
-import { deployedInText, deployedOf, deployedOfValue, isBecause, targetOf } from './deployed.js';
+import { deliverAt, deployedInText, deployedOf, deployedOfValue, isBecause } from './deployed.js';
 import type { ResourceReader, ResourceReading } from './reading.js';
 
 /**
@@ -24,11 +25,11 @@ import type { ResourceReader, ResourceReading } from './reading.js';
  * naming no version is matched as the delete marker it leaves.
  */
 
-/** The block of each kind of target, and the argument that names it. */
-const TARGET_BLOCKS: ReadonlyMap<string, string> = new Map([
-  ['lambda_function', 'lambda_function_arn'],
-  ['queue', 'queue_arn'],
-  ['topic', 'topic_arn'],
+/** The block of each kind of target, the argument that names it, and what it names. */
+const TARGET_BLOCKS: ReadonlyMap<string, readonly [arn: string, kind: DeployedKind]> = new Map([
+  ['lambda_function', ['lambda_function_arn', 'function']],
+  ['queue', ['queue_arn', 'queue']],
+  ['topic', ['topic_arn', 'topic']],
 ]);
 
 /** The bucket a resource is of: by reference, by ARN, or by its name written out. */
@@ -74,7 +75,7 @@ const readTarget = (
   bucket: string,
   versioned: boolean,
   block: string,
-  arn: string,
+  [arn, kind]: readonly [string, DeployedKind],
   value: Value,
   index: number,
   reading: ResourceReading,
@@ -98,23 +99,28 @@ const readTarget = (
     return;
   }
   const target = value.entries.get(arn);
-  const to = targetOf(target === undefined ? undefined : deployedOfValue(target, `${arn} of ${address}`, reading), notification, `what ${address} notifies`, reading);
   const id = asText(value.entries.get('id') ?? { kind: 'null' });
-  reading.deliveries.push({
-    ...siteOf(notification),
-    address,
-    by: 'notification',
-    ...(id === undefined ? {} : { name: id }),
-    from: {
-      kind: 'bucket',
-      name: bucket,
-      events,
-      ...(typeof prefix === 'string' ? { prefix } : {}),
-      ...(typeof suffix === 'string' ? { suffix } : {}),
-      ...(versioned ? { versioned } : {}),
+  deliverAt(
+    reading,
+    notification,
+    {
+      ...siteOf(notification),
+      address,
+      by: 'notification',
+      ...(id === undefined ? {} : { name: id }),
+      from: {
+        kind: 'bucket',
+        name: bucket,
+        events,
+        ...(typeof prefix === 'string' ? { prefix } : {}),
+        ...(typeof suffix === 'string' ? { suffix } : {}),
+        ...(versioned ? { versioned } : {}),
+      },
     },
-    ...(to === undefined ? {} : { to }),
-  });
+    target === undefined ? undefined : deployedOfValue(target, `${arn} of ${address}`, reading),
+    [kind],
+    `what ${address} notifies`,
+  );
 };
 
 /** The bucket's events on the default bus, one delivery per family a write fires. */
@@ -144,8 +150,8 @@ const readNotification = (notification: Instance, reading: ResourceReading): voi
     return;
   }
   const versioned = isVersioned(bucket, reading);
-  for (const [block, arn] of TARGET_BLOCKS) {
-    blocksNamed(notification, block).forEach((value, index) => readTarget(notification, bucket, versioned, block, arn, value, index, reading));
+  for (const [block, [arn, kind]] of TARGET_BLOCKS) {
+    blocksNamed(notification, block).forEach((value, index) => readTarget(notification, bucket, versioned, block, [arn, kind], value, index, reading));
   }
   readEventBridge(notification, bucket, reading);
 };

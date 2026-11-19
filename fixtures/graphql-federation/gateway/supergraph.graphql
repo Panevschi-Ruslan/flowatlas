@@ -1,0 +1,80 @@
+schema
+  @link(url: "https://specs.apollo.dev/link/v1.0")
+  @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION)
+  @link(url: "https://specs.apollo.dev/inaccessible/v0.2", for: SECURITY)
+{
+  query: Query
+  mutation: Mutation
+}
+
+directive @inaccessible on FIELD_DEFINITION | OBJECT | INTERFACE | UNION | ARGUMENT_DEFINITION | SCALAR | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
+
+directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
+
+directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+directive @join__graph(name: String!, url: String!) on ENUM_VALUE
+
+directive @join__implements(graph: join__Graph!, interface: String!) repeatable on OBJECT | INTERFACE
+
+directive @join__type(graph: join__Graph!, key: join__FieldSet, extension: Boolean! = false, resolvable: Boolean! = true, isInterfaceObject: Boolean! = false) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+
+directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on UNION
+
+directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
+
+scalar join__FieldSet
+
+scalar link__Import
+
+enum join__Graph {
+  CUSTOMERS @join__graph(name: "customers", url: "http://customers:4002/graphql")
+  ORDERS @join__graph(name: "orders", url: "http://orders:4001/graphql")
+}
+
+enum link__Purpose {
+  SECURITY
+  EXECUTION
+}
+
+type Customer
+  @join__type(graph: CUSTOMERS, key: "id")
+  @join__type(graph: ORDERS, key: "id")
+{
+  id: ID!
+  name: String! @join__field(graph: CUSTOMERS)
+  email: String! @join__field(graph: CUSTOMERS)
+  internalNote: String @join__field(graph: CUSTOMERS) @inaccessible
+  orders: [Order!]! @join__field(graph: ORDERS)
+}
+
+type Mutation
+  @join__type(graph: ORDERS)
+{
+  placeOrder(input: PlaceOrderInput!): Order!
+}
+
+type Order
+  @join__type(graph: ORDERS, key: "id")
+{
+  id: ID!
+  total: Float!
+  status: String!
+  customer: Customer!
+}
+
+input PlaceOrderInput
+  @join__type(graph: ORDERS)
+{
+  customerId: ID!
+  total: Float!
+}
+
+type Query
+  @join__type(graph: CUSTOMERS)
+  @join__type(graph: ORDERS)
+{
+  customer(id: ID!): Customer @join__field(graph: CUSTOMERS)
+  orders: [Order!]! @join__field(graph: ORDERS)
+  regions: [String!]!
+}

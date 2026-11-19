@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-15T17:39:52.494Z",
+  "configHash": "7286652157e2",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 905,
+      "packages": {
+        "name": "catalog",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 19,
+      "edges": 12,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 890,
+      "packages": {
+        "name": "jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "legacy",
+      "repo": "./legacy",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 918,
+      "packages": {
+        "name": "legacy",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 891,
+      "packages": {
+        "name": "orders",
+        "runtime": [
+          "dotenv",
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "search",
+      "repo": "./search",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 893,
+      "packages": {
+        "name": "search",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 2,
+      "edges": 0,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 870,
+      "packages": {
+        "name": "site",
+        "runtime": [
+          "@astrojs/react",
+          "astro",
+          "react",
+          "react-dom"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 6,
+    "linked": 5,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 1,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 5,
+    "called": 4,
+    "uncalled": [
+      "entry:legacy:http:GET:/api/archive"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 30,
+    "edges": 17,
+    "types": 0,
+    "missed": 7,
+    "sites": 9,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 7
+  }
+}

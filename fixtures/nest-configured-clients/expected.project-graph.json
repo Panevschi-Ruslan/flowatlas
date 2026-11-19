@@ -1,0 +1,639 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T14:25:10.014Z",
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./apps/orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "ledger",
+      "repo": "./apps/ledger",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "worker",
+      "repo": "./apps/worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:ledger:rpc:entries.record",
+      "type": "entry",
+      "label": "rpc entries.record",
+      "repo": "ledger",
+      "file": "src/index.ts",
+      "line": 11,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{orderId:string;amount:number}"
+            }
+          ],
+          "returns": "{recorded:true}"
+        },
+        "key": "entries.record",
+        "adapter": "trpc-procedures",
+        "call": "mutation",
+        "registration": "router({ … })",
+        "input": "z.object({ orderId: z.string(), amount: ",
+        "inputAt": "src/index.ts:11",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "src/index.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/rpc",
+            "file": "src/index.ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "TRPCError(BAD_REQUEST)",
+            "at": "entry:ledger:rpc:entries.record",
+            "file": "src/index.ts",
+            "line": 11,
+            "source": "pipe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:orders:rpc:orders.place",
+      "type": "entry",
+      "label": "rpc orders.place",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 11,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{sku:string;quantity:number}"
+            }
+          ],
+          "returns": "{id:string}"
+        },
+        "key": "orders.place",
+        "adapter": "trpc-procedures",
+        "call": "mutation",
+        "registration": "router({ … })",
+        "input": "z.object({ sku: z.string(), quantity: z.",
+        "inputAt": "src/index.ts:11",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "src/index.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/trpc",
+            "file": "src/index.ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "TRPCError(BAD_REQUEST)",
+            "at": "entry:orders:rpc:orders.place",
+            "file": "src/index.ts",
+            "line": 11,
+            "source": "pipe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:worker:http:POST:/fulfil",
+      "type": "entry",
+      "label": "POST /fulfil",
+      "repo": "worker",
+      "file": "src/fulfil.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/fulfil",
+        "rawPath": "/fulfil",
+        "controller": "FulfilController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "http_out:worker#src/fulfil.service.ts:19:26",
+      "type": "http_out",
+      "label": "rpc orders.place",
+      "repo": "worker",
+      "file": "src/fulfil.service.ts",
+      "line": 19,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.place",
+        "call": "mutation",
+        "operation": "mutate",
+        "client": "trpc-client",
+        "inputKeys": [
+          "quantity",
+          "sku"
+        ],
+        "inputType": "{sku:string;quantity:number}",
+        "outputType": "any",
+        "link": {
+          "protocol": "trpc",
+          "path": "/trpc",
+          "baseUrlEnv": "ORDERS_URL"
+        },
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:worker#src/fulfil.service.ts:20:11",
+      "type": "http_out",
+      "label": "rpc entries.record",
+      "repo": "worker",
+      "file": "src/fulfil.service.ts",
+      "line": 20,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "entries.record",
+        "call": "mutation",
+        "operation": "mutate",
+        "client": "trpc-client",
+        "inputKeys": [
+          "amount",
+          "orderId"
+        ],
+        "inputType": "{orderId:any;amount:number}",
+        "outputType": "any",
+        "link": {
+          "protocol": "trpc",
+          "path": "/rpc",
+          "baseUrlEnv": "LEDGER_URL"
+        },
+        "targetService": "ledger"
+      }
+    },
+    {
+      "id": "ledger#src/index.ts:entries.record@11",
+      "type": "function",
+      "label": "entries.record@11",
+      "repo": "ledger",
+      "file": "src/index.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{recorded:true}"
+        }
+      }
+    },
+    {
+      "id": "orders#src/index.ts:orders.place@11",
+      "type": "function",
+      "label": "orders.place@11",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ input }",
+              "type": "{ctx:unknown;input:{sku:string;quantity:number}}"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
+    },
+    {
+      "id": "repo:ledger",
+      "type": "repo",
+      "label": "ledger",
+      "repo": "ledger",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "hono-routes",
+            "trpc-procedures"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "hono-routes",
+            "trpc-procedures"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:worker",
+      "type": "repo",
+      "label": "worker",
+      "repo": "worker",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4300,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "worker#../../packages/clients/src/index.ts:AUDIT_CLIENT",
+      "type": "provider",
+      "label": "AUDIT_CLIENT",
+      "repo": "worker",
+      "file": "../../packages/clients/src/index.ts",
+      "line": 64,
+      "kind": "value",
+      "meta": {
+        "token": "AUDIT_CLIENT"
+      }
+    },
+    {
+      "id": "worker#../../packages/clients/src/index.ts:AuditModule",
+      "type": "module",
+      "label": "AuditModule",
+      "repo": "worker",
+      "file": "../../packages/clients/src/index.ts",
+      "line": 59,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "worker#../../packages/clients/src/index.ts:ORDERS_CLIENT",
+      "type": "provider",
+      "label": "ORDERS_CLIENT",
+      "repo": "worker",
+      "file": "../../packages/clients/src/index.ts",
+      "line": 40,
+      "kind": "factory",
+      "meta": {
+        "token": "ORDERS_CLIENT"
+      }
+    },
+    {
+      "id": "worker#../../packages/clients/src/index.ts:OrdersClientModule",
+      "type": "module",
+      "label": "OrdersClientModule",
+      "repo": "worker",
+      "file": "../../packages/clients/src/index.ts",
+      "line": 25,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "worker#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "worker",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "FulfilController"
+        ],
+        "providers": [
+          "FulfilService",
+          "LEDGER_CLIENT"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "worker#src/app.module.ts:LEDGER_CLIENT",
+      "type": "provider",
+      "label": "LEDGER_CLIENT",
+      "repo": "worker",
+      "file": "src/app.module.ts",
+      "line": 15,
+      "kind": "factory",
+      "meta": {
+        "token": "LEDGER_CLIENT"
+      }
+    },
+    {
+      "id": "worker#src/fulfil.controller.ts:FulfilController",
+      "type": "provider",
+      "label": "FulfilController",
+      "repo": "worker",
+      "file": "src/fulfil.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "worker#src/fulfil.controller.ts:FulfilController.fulfil",
+      "type": "method",
+      "label": "FulfilController.fulfil",
+      "repo": "worker",
+      "file": "src/fulfil.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{sku:string;quantity:number}"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "worker#src/fulfil.service.ts:FulfilService",
+      "type": "provider",
+      "label": "FulfilService",
+      "repo": "worker",
+      "file": "src/fulfil.service.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "worker#src/fulfil.service.ts:FulfilService.fulfil",
+      "type": "method",
+      "label": "FulfilService.fulfil",
+      "repo": "worker",
+      "file": "src/fulfil.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "quantity",
+              "type": "number"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:ledger:rpc:entries.record",
+      "to": "ledger#src/index.ts:entries.record@11",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:orders:rpc:orders.place",
+      "to": "orders#src/index.ts:orders.place@11",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:worker:http:POST:/fulfil",
+      "to": "worker#src/fulfil.controller.ts:FulfilController.fulfil",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{sku:string;quantity:number}"
+      ],
+      "returns": "any",
+      "file": "src/fulfil.controller.ts",
+      "line": 8,
+      "meta": {
+        "body": "{sku:string;quantity:number}"
+      }
+    },
+    {
+      "from": "http_out:worker#src/fulfil.service.ts:19:26",
+      "to": "entry:orders:rpc:orders.place",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/fulfil.service.ts",
+      "line": 19,
+      "params": [
+        "{sku:string;quantity:number}"
+      ],
+      "returns": "any",
+      "meta": {
+        "via": "link-url",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:worker#src/fulfil.service.ts:20:11",
+      "to": "entry:ledger:rpc:entries.record",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/fulfil.service.ts",
+      "line": 20,
+      "params": [
+        "{orderId:any;amount:number}"
+      ],
+      "returns": "any",
+      "meta": {
+        "via": "link-url",
+        "targetService": "ledger"
+      }
+    },
+    {
+      "from": "worker#src/app.module.ts:AppModule",
+      "to": "worker#../../packages/clients/src/index.ts:AuditModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "moduleKind": "dynamic"
+      }
+    },
+    {
+      "from": "worker#src/app.module.ts:AppModule",
+      "to": "worker#../../packages/clients/src/index.ts:OrdersClientModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "moduleKind": "dynamic"
+      }
+    },
+    {
+      "from": "worker#src/fulfil.controller.ts:FulfilController",
+      "to": "worker#src/fulfil.service.ts:FulfilService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/fulfil.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "worker#src/fulfil.controller.ts:FulfilController.fulfil",
+      "to": "worker#src/fulfil.service.ts:FulfilService.fulfil",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "any",
+      "file": "src/fulfil.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "worker#src/fulfil.service.ts:FulfilService",
+      "to": "worker#../../packages/clients/src/index.ts:AUDIT_CLIENT",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/fulfil.service.ts",
+      "line": 14,
+      "meta": {
+        "token": "AUDIT_CLIENT",
+        "provider": "useValue"
+      }
+    },
+    {
+      "from": "worker#src/fulfil.service.ts:FulfilService",
+      "to": "worker#../../packages/clients/src/index.ts:ORDERS_CLIENT",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/fulfil.service.ts",
+      "line": 12,
+      "meta": {
+        "token": "ORDERS_CLIENT",
+        "provider": "useFactory"
+      }
+    },
+    {
+      "from": "worker#src/fulfil.service.ts:FulfilService",
+      "to": "worker#src/app.module.ts:LEDGER_CLIENT",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/fulfil.service.ts",
+      "line": 13,
+      "meta": {
+        "token": "LEDGER_CLIENT",
+        "provider": "useFactory"
+      }
+    },
+    {
+      "from": "worker#src/fulfil.service.ts:FulfilService.fulfil",
+      "to": "http_out:worker#src/fulfil.service.ts:19:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/fulfil.service.ts",
+      "line": 19
+    },
+    {
+      "from": "worker#src/fulfil.service.ts:FulfilService.fulfil",
+      "to": "http_out:worker#src/fulfil.service.ts:20:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/fulfil.service.ts",
+      "line": 20
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-routes-unmatched",
+      "level": "info",
+      "message": "1 call is written on a type the hono-routes reader names, and none of them spelled a verb and a path this could read.",
+      "hint": "The types match and the routes do not: routes here are declared through something written around hono rather than on it, and no reader here knows that shape.",
+      "symbol": "hono-routes",
+      "adapter": "hono-routes",
+      "service": "ledger"
+    },
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-routes-unmatched",
+      "level": "info",
+      "message": "1 call is written on a type the hono-routes reader names, and none of them spelled a verb and a path this could read.",
+      "hint": "The types match and the routes do not: routes here are declared through something written around hono rather than on it, and no reader here knows that shape.",
+      "symbol": "hono-routes",
+      "adapter": "hono-routes",
+      "service": "orders"
+    },
+    {
+      "file": "src/fulfil.service.ts",
+      "line": 15,
+      "reason": "di-token-unknown",
+      "hint": "No module in this repository provides REPORTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
+      "symbol": "FulfilService.constructor[3]",
+      "service": "worker"
+    }
+  ]
+}

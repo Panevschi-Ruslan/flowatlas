@@ -1,0 +1,11 @@
+{
+  "name": "port-sources-joins-jobs",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "docker": "docker build -t jobs . && docker run --rm -p 3009:3000 --name jobs-runner -e PORT=3000 jobs"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

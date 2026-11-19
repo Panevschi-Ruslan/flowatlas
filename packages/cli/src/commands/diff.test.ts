@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { parseSpecDiff } from '@flowatlas/linker';
+import { openGraphDb, parseSpecDiff } from '@flowatlas/linker';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { EXIT } from '../exit.js';
 import { runDiff, type DiffRun } from './diff.js';
@@ -202,6 +202,18 @@ describe('what a revision changed, across four repositories', () => {
     const strict = await runDiff('HEAD~1', undefined, { config, generatedAt: FIXED, failOnRuleBreak: true }, quiet);
     expect(strict.exitCode).toBe(EXIT.failed);
     expect(strict.failedOn).toEqual(['rule']);
+  }, 300_000);
+
+  it('keeps the head side\'s graph where --head-db says, for docs --check to read the branch (P231)', async () => {
+    const headDb = join(scratch, 'kept', 'head.db');
+    await runDiff('HEAD~1', undefined, { config, generatedAt: FIXED, headDb }, quiet);
+    const graph = openGraphDb(headDb, { readonly: true });
+    try {
+      // The consumer the head revision added, which the base side does not have.
+      expect(graph.allNodes().map((node) => node.id)).toContain('consumer:billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped');
+    } finally {
+      graph.close();
+    }
   }, 300_000);
 
   it('prints only the sections asked for, and refuses them with another format', async () => {

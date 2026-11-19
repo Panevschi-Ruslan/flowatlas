@@ -1,0 +1,9 @@
+releases:
+  - name: payments
+    namespace: shop
+    chart: ../charts/payments
+    needs:
+      - shop/stock
+    values:
+      - service:
+          port: 8082

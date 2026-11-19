@@ -1,0 +1,15 @@
+{
+  "services": [
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "react"
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "nextjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

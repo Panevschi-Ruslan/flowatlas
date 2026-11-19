@@ -1,0 +1,12 @@
+{
+  "name": "tickets",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "bun --bun run serve",
+    "serve": "NODE_ENV=production node src/index.js"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  }
+}

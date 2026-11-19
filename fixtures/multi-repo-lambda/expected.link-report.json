@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:28:37.205Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T21:47:28.007Z",
   "configHash": "c86d8fb4c4cb",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 3,
       "unresolved": 2,
-      "durationMs": 510,
+      "durationMs": 1469,
       "packages": {
         "name": "lending-library-holds",
         "runtime": [],
@@ -26,11 +26,11 @@
       "repo": "./loans",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 14,
-      "edges": 12,
+      "nodes": 15,
+      "edges": 13,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 527
+      "durationMs": 1512
     },
     {
       "name": "platform",
@@ -41,7 +41,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 337
+      "durationMs": 1205
     }
   ],
   "httpOut": {
@@ -84,8 +84,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 27,
-    "edges": 22,
+    "nodes": 28,
+    "edges": 23,
     "types": 4,
     "missed": 2,
     "sites": 2,

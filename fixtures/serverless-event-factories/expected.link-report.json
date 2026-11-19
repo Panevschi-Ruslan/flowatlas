@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T16:40:31.478Z",
+  "configHash": "7f536a683122",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 40,
+      "edges": 39,
+      "types": 0,
+      "unresolved": 5,
+      "durationMs": 0,
+      "packages": {
+        "name": "shop",
+        "runtime": [
+          "@aws-sdk/client-eventbridge"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 1,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 4,
+    "linked": 4,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 1,
+    "uncalled": [
+      "entry:shop:http:POST:/orders",
+      "entry:shop:http:POST:/orders/:param/ship",
+      "entry:shop:http:POST:/refunds"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "shop",
+      "file": "src/stock/reserve.ts",
+      "line": 6,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "LEDGER_URL is \"https://a1b2c3d4e5.execute-api.eu-west-1.amazonaws.com/dev/ledger\" in the environment shop-dev-reserveStock is deployed with: an API Gateway address in the region and at the stage shop serves its API dev-shop at, whose id is written out rather than read from the deployment, so it is taken as that API and the request as one for /ledger on it",
+      "hint": "Write the value as a reference to the API - its id or its ServiceEndpoint output - and the deployment says so outright; an address of another API of the same region and stage would read the same.",
+      "symbol": "http_out:shop#src/stock/reserve.ts:6:9",
+      "meta": {
+        "variable": "LEDGER_URL",
+        "value": "dev-shop",
+        "from": "the environment shop-dev-reserveStock is deployed with"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 40,
+    "edges": 40,
+    "types": 0,
+    "missed": 5,
+    "sites": 5,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 5
+  }
+}

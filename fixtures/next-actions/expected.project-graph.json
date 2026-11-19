@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:24.509Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-14T17:52:27.746Z",
   "services": [
     {
       "name": "shop",
@@ -83,7 +83,17 @@
           "entry": [
             "nextjs-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 1,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
+        "ownOrigin": true
       }
     },
     {

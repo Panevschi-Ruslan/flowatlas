@@ -1,0 +1,9 @@
+{
+  "services": [
+    { "name": "web", "repo": "./shop/packages/web", "type": "react" },
+    { "name": "api", "repo": "./shop/packages/api", "type": "express" },
+    { "name": "store", "repo": "./store", "type": "remix" },
+    { "name": "files", "repo": "./files", "type": "lambda" }
+  ],
+  "output": ".flowatlas"
+}

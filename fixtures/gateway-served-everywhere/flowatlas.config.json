@@ -1,0 +1,10 @@
+{
+  "services": [
+    { "name": "catalog", "repo": "./catalog", "type": "lambda" },
+    { "name": "loans", "repo": "./loans", "type": "lambda" },
+    { "name": "stock", "repo": "./stock", "type": "lambda" },
+    { "name": "reviews", "repo": "./reviews", "type": "lambda" },
+    { "name": "web", "repo": "./web", "type": "browser" }
+  ],
+  "output": ".flowatlas"
+}

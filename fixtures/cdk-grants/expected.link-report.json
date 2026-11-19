@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T22:30:55.330Z",
+  "configHash": "f12d467d3a76",
+  "services": [
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 10,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1057,
+      "packages": {
+        "name": "stock",
+        "runtime": [
+          "@aws-sdk/client-sqs",
+          "aws-cdk-lib",
+          "constructs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "stock",
+      "file": "src/move.ts",
+      "line": 9,
+      "reason": "channel-from-grant",
+      "level": "info",
+      "message": "the call at src/move.ts:9 does not say where it sends: reasons.get(event.reason) is looked up in reasons by event.reason, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere; stock-move runs it and is granted only sqs/stock-restock, sqs/stock-write-off, so it is drawn to each",
+      "hint": "A grant is where the function may send, not where it does: each edge is a guess. Write the address, or one value of the environment the deployment sets, and it is read instead.",
+      "symbol": "producer:stock#src/move.ts:9:9",
+      "meta": {
+        "granted": [
+          "sqs/stock-restock",
+          "sqs/stock-write-off"
+        ],
+        "functions": [
+          "stock-move"
+        ],
+        "unread": [
+          "channel-dynamic"
+        ]
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 10,
+    "edges": 9,
+    "types": 0,
+    "missed": 0,
+    "sites": 0,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 0
+  }
+}

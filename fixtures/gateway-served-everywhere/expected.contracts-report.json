@@ -1,0 +1,161 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-12T18:46:15.276Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "ui_api_call:web#js/rate.js:3:3",
+        "to": "entry:catalog:http:POST:/books/:param/ratings",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#js/rate.js:3:3|hits|entry:catalog:http:POST:/books/:param/ratings",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{stars:any;comment:any}",
+        "symbol": "web#js/rate.js:rateBook",
+        "writes": [
+          "comment",
+          "stars"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "type:catalog#Rating",
+        "symbol": "catalog#src/rate-book.ts:handler",
+        "claimed": true
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:comment",
+        "any-unknown-skip:stars"
+      ]
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:web#js/books.js:2:24",
+        "to": "entry:catalog:http:GET:/books",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#js/books.js:2:24|hits|entry:catalog:http:GET:/books",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#js/books.js:listBooks declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#js/books.js:2:24",
+        "to": "entry:catalog:http:GET:/books",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#js/books.js:2:24|hits|entry:catalog:http:GET:/books",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#js/books.js:listBooks declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#js/borrow.js:6:3",
+        "to": "entry:loans:http:POST:/loans",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#js/borrow.js:6:3|hits|entry:loans:http:POST:/loans",
+      "direction": "request",
+      "reason": "no-type-on-receiver",
+      "message": "loans#src/borrow.ts:handler reads no typed body from the request it is handed",
+      "hint": "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#js/borrow.js:6:3",
+        "to": "entry:loans:http:POST:/loans",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#js/borrow.js:6:3|hits|entry:loans:http:POST:/loans",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#js/borrow.js:borrowBook declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#js/copies.js:2:24",
+        "to": "entry:stock:http:GET:/copies/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#js/copies.js:2:24|hits|entry:stock:http:GET:/copies/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#js/copies.js:countCopies declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#js/copies.js:2:24",
+        "to": "entry:stock:http:GET:/copies/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#js/copies.js:2:24|hits|entry:stock:http:GET:/copies/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#js/copies.js:countCopies declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#js/rate.js:3:3",
+        "to": "entry:catalog:http:POST:/books/:param/ratings",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#js/rate.js:3:3|hits|entry:catalog:http:POST:/books/:param/ratings",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#js/rate.js:rateBook declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#js/reviews.js:2:24",
+        "to": "entry:reviews:http:GET:/reviews",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#js/reviews.js:2:24|hits|entry:reviews:http:GET:/reviews",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#js/reviews.js:latestReviews declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#js/reviews.js:2:24",
+        "to": "entry:reviews:http:GET:/reviews",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#js/reviews.js:2:24|hits|entry:reviews:http:GET:/reviews",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#js/reviews.js:latestReviews declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 1,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 1,
+    "unchecked": 9,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

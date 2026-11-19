@@ -1,0 +1,35 @@
+@  POST /orders                                                 orders/serverless.yml:26
+  -> handler                                                    orders/src/orders/place-order.ts:16
+    $  ORDERS_TABLE                                             orders/src/orders/get-order.ts:8
+    ~  write dynamodb/orders-dev-orders                         orders/src/orders/place-order.ts:19
+      ~  dynamodb/orders-dev-orders                             serverless.yml:158
+        ~  mapping functions.order-changed.events[0]            orders/serverless.yml:57
+          ~  event dynamodb/orders-dev-orders                   orders/serverless.yml:57
+            -> handler                                          orders/src/orders/order-changed.ts:6
+    $  ORDERS_QUEUE_URL                                         orders/src/orders/place-order.ts:20
+    ~  message sqs/orders-dev-placed                            orders/src/orders/place-order.ts:20
+      ~  sqs/orders-dev-placed                                  serverless.yml:68
+        ~  mapping functions.ship-order.events[0]               orders/serverless.yml:68
+          @  orders-dev-ship-order                              orders/serverless.yml:62
+            -> handler                                          orders/src/shipping/ship-order.ts:14
+              $  INVOICES_BUCKET                                orders/src/shipping/ship-order.ts:16
+              ~  s3:ObjectCreated:Put s3/orders-dev-invoices    orders/src/shipping/ship-order.ts:16
+                ~  s3/orders-dev-invoices                       serverless.yml:106
+              $  SHIPPED_TOPIC_ARN                              orders/src/shipping/ship-order.ts:17
+              ~  message sns/orders-dev-shipped                 orders/src/shipping/ship-order.ts:17
+                ~  sns/orders-dev-shipped                       serverless.yml:81
+        ~  message sqs/orders-dev-placed-dlq                    orders/serverless.yml:177
+          ~  sqs/orders-dev-placed-dlq                          serverless.yml:177
+    ~  event eventbridge/orders-dev/orders.service/OrderPlaced  orders/src/orders/place-order.ts:21
+      ~  eventbridge/orders-dev/orders.service/OrderPlaced      serverless.yml:126
+        ~  rule stepFunctions.stateMachines.shipping.events[0]  orders/serverless.yml:126
+          @  workflow orders-dev-shipping                       orders/serverless.yml:133
+            -> ReserveStock [Task lambda:invoke]                orders/serverless.yml:137
+              @  orders-dev-reserve-stock                       orders/serverless.yml:72
+                -> handler                                      orders/src/shipping/reserve-stock.ts:4
+              -> ChargePayment [Task lambda:invoke]             orders/serverless.yml:145
+                @  orders-dev-charge-payment                    orders/serverless.yml:75
+                -> Done [Succeed]                               orders/serverless.yml:153
+    $  ORDERS_BUS_NAME                                          orders/src/orders/cancel-order.ts:12
+... truncated: ≥3 more nodes (raise --depth)
+unresolved on this path: 0

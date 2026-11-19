@@ -16,6 +16,7 @@
 import type { ClassDeclaration, ImportDeclaration, Node as TsNode, SourceFile, Type } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { packageOfSpecifier } from './adapters/manifest.js';
+import { frameworkModuleOf } from './conventions.js';
 import { packageOfPath } from './origin.js';
 
 /** A cause code, and the package or module it points into when it points into one. */
@@ -58,6 +59,10 @@ const unresolvedImport = (declaration: ImportDeclaration): FollowCause | undefin
   // however many `../` it starts with.
   const intoPackage = packageOfPath(specifier.startsWith('/') ? specifier : `/${specifier}`);
   if (intoPackage !== null) return { cause: 'module-not-installed', package: intoPackage };
+  // A module the framework provides by a name no package has (P240) is the
+  // framework's package, which is what an install would bring.
+  const framework = frameworkModuleOf(declaration.getProject(), specifier);
+  if (framework !== undefined) return { cause: 'module-not-installed', package: framework };
   if (isRelative(specifier) || isPathAlias(specifier, declaration.getSourceFile())) {
     return { cause: 'import-unresolved', package: specifier };
   }

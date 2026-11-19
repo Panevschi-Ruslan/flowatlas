@@ -1,0 +1,40 @@
+{
+  "services": [
+    {
+      "name": "cms",
+      "repo": "./cms",
+      "type": "strapi"
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "gatsby"
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "fastify"
+    },
+    {
+      "name": "edge",
+      "repo": "./edge",
+      "type": "fastify"
+    },
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express"
+    },
+    {
+      "name": "workers",
+      "repo": "./workers",
+      "type": "express"
+    },
+    {
+      "name": "poller",
+      "repo": "./poller",
+      "type": "express"
+    }
+  ],
+  "output": ".flowatlas"
+}

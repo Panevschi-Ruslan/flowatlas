@@ -172,6 +172,39 @@ describe('a base address from the value its setting is given (P77)', () => {
     });
   });
 
+  it('joins a request to the API its own deployment serves, at the path after the stage, as a guess (P268)', () => {
+    const fn: GraphNode = {
+      id: 'entry:payments:invoke:refund',
+      type: 'entry',
+      kind: 'invoke',
+      label: 'refund',
+      repo: 'payments',
+      meta: {
+        [ENVIRONMENT_META]: {
+          LEDGER_URL: { written: '"https://a1b2c3d4e5.execute-api.eu-west-1.amazonaws.com/dev/payments"', value: 'dev-payments', kind: 'api', path: '/payments' },
+        },
+      },
+    };
+    const request: GraphNode = {
+      id: 'http_out:payments#src/refund.ts:4:9',
+      type: 'http_out',
+      label: 'POST ',
+      repo: 'payments',
+      file: 'src/refund.ts',
+      line: 4,
+      meta: { method: 'POST', path: '', url: '${LEDGER_URL}', baseUrlEnv: 'LEDGER_URL' },
+    };
+    const result = linkGraphs(
+      [graph('payments', [route('payments', 'POST', '/payments'), fn, request], [{ from: fn.id, to: request.id, type: 'calls', confidence: 'static' }])],
+      config(),
+      { builtAt: FIXED, settings: {} },
+    );
+    expect(callsOut(result)[0]).toMatchObject({ to: 'entry:payments:http:POST:/payments', confidence: 'heuristic' });
+    const row = result.project.unresolved.find((each) => each.reason === 'base-url-from-files');
+    expect(row?.message).toContain('whose id is written out rather than read from the deployment');
+    expect(reasons(result)).not.toContain('unknown-base-url-env');
+  });
+
   it('says what was found where the values settle nothing', () => {
     const local = link([call('BACKEND_URL')], files({ BACKEND_URL: [{ value: 'http://localhost:9999', file: '.env.example' }] }));
     expect(local.project.unresolved).toEqual([
@@ -210,6 +243,10 @@ describe('a base address from the value its setting is given (P77)', () => {
     expect(serviceNamed(['ORDERS_URL'], ['orders', 'orders-admin'])).toBe('orders');
     expect(serviceNamed(['ORDER_URL'], ['orders'])).toBeUndefined();
     expect(serviceNamed(['API_URL'], ['api'])).toBeUndefined();
+    // The prefix a build requires of a browser's setting names no service (P292).
+    expect(serviceNamed(['VITE_ORDERS_URL'], ['orders', 'web'])).toBe('orders');
+    expect(serviceNamed(['NEXT_PUBLIC_ORDERS_API_URL'], ['orders', 'web'])).toBe('orders');
+    expect(serviceNamed(['PUBLIC_URL'], ['public'])).toBeUndefined();
   });
 
   it('joins a key a settings factory builds to whoever claims the variable behind it', () => {

@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T16:45:31.031Z",
+  "configHash": "661177013669",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 32,
+      "edges": 16,
+      "types": 5,
+      "unresolved": 5,
+      "durationMs": 1044,
+      "packages": {
+        "name": "graphql-endpoints-api",
+        "runtime": [
+          "@graphql-yoga/nestjs",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/graphql",
+          "graphql"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 21,
+      "edges": 14,
+      "types": 0,
+      "unresolved": 13,
+      "durationMs": 806,
+      "packages": {
+        "name": "graphql-endpoints-web",
+        "runtime": [
+          "@apollo/client",
+          "graphql",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 8,
+    "resolved": 7,
+    "unresolved": 1,
+    "byReason": {
+      "api-path-dynamic": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 3,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 5,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/store/CartButton.tsx",
+      "line": 24,
+      "reason": "graphql-field-no-resolver",
+      "level": "info",
+      "message": "Products asks api at /graphql for Query.products, which no resolver of api declares; its plugin useRecordQueries answers requests itself, which may answer it",
+      "hint": "Resolve the field in the service if it is meant to be one, or correct the operation; a field only the server's own code answers is not read.",
+      "symbol": "ui_api_call:web#src/store/CartButton.tsx:34:28"
+    }
+  ],
+  "totals": {
+    "nodes": 53,
+    "edges": 44,
+    "types": 5,
+    "missed": 19,
+    "sites": 19,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 19
+  }
+}

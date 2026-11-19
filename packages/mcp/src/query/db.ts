@@ -23,8 +23,17 @@ export interface DbHandleOptions {
  * the next question sees the new graph, which is as fresh as anything needs to
  * be here.
  */
+/** Where `flowatlas pull` installs the team's graph, inside the output directory (P236). */
+export const PULLED_DIR = 'pulled';
+
 export class DbHandle implements SourceRoots {
   readonly path: string;
+  /**
+   * Called when an answer finds files it cites changed since the build, when
+   * the server was told to rebuild then (`mcp.rebuild: on-change`, P230);
+   * returns whether a rebuild was started or is under way.
+   */
+  onStale: (() => boolean) | undefined;
   readonly config: FlowatlasConfig | undefined;
   /** The configuration file read, when one was: what a configuration error names. */
   readonly configPath: string | undefined;
@@ -46,7 +55,10 @@ export class DbHandle implements SourceRoots {
       for (const service of loaded.config.services) {
         this.#repoDirs.set(service.name, loaded.repoDir(service));
       }
-      dbPath ??= resolve(loaded.outputDir, 'graph.db');
+      // No graph built here, and the team's pulled (P236): that one is asked.
+      const built = resolve(loaded.outputDir, 'graph.db');
+      const pulled = resolve(loaded.outputDir, PULLED_DIR, 'graph.db');
+      dbPath ??= !existsSync(built) && existsSync(pulled) ? pulled : built;
     }
     if (dbPath === undefined) throw new Error('neither a database nor a configuration was given');
     this.path = isAbsolute(dbPath) ? dbPath : resolve(dbPath);

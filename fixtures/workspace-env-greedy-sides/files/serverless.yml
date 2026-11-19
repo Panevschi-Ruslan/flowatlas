@@ -1,0 +1,17 @@
+service: files
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+
+functions:
+  serve:
+    handler: src/serve.handler
+    events:
+      - http:
+          method: get
+          path: files/{proxy+}
+  session:
+    handler: src/session.handler
+    events:
+      - http: GET files/session/{id}

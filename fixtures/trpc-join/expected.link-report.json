@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:29:50.321Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T12:56:11.649Z",
   "configHash": "6770c6354ded",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 524,
+      "durationMs": 1060,
       "packages": {
         "name": "trpc-join-admin",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 541,
+      "durationMs": 1074,
       "packages": {
         "name": "trpc-join-api",
         "runtime": [
@@ -49,11 +49,11 @@
       "repo": "./web",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 11,
-      "edges": 7,
+      "nodes": 12,
+      "edges": 8,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 515,
+      "durationMs": 974,
       "packages": {
         "name": "trpc-join-web",
         "runtime": [
@@ -92,10 +92,8 @@
   },
   "routes": {
     "total": 1,
-    "called": 0,
-    "uncalled": [
-      "entry:api:http:ALL:/api/trpc/:param"
-    ],
+    "called": 1,
+    "uncalled": [],
     "duplicated": []
   },
   "types": {
@@ -123,8 +121,8 @@
     }
   ],
   "totals": {
-    "nodes": 24,
-    "edges": 17,
+    "nodes": 25,
+    "edges": 18,
     "types": 0,
     "missed": 7,
     "sites": 7,

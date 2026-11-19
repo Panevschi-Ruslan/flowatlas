@@ -1,3 +1,6 @@
+import type { Unresolved } from './model/graph.js';
+import type { ProxyRule } from './proxy-rule.js';
+
 /**
  * Values a repository's own files give its settings (P77).
  *
@@ -38,6 +41,187 @@ export interface HostAlias {
   /** Lower case, with the port where one is part of it. */
   readonly host: string;
   readonly file: string;
+  /**
+   * Where the host is one side of a container's port mapping (P254):
+   * `localhost:3001` is the `published` side of `3001:3000`, `orders:3000`
+   * the `container` side, which the container's network reaches it at. A
+   * name a cluster's network routes to the containers behind it (P257) is the
+   * `routed` side: `orders:80` reaches port 3000 of the containers, and
+   * `published` is then the port of the name, not of this machine.
+   */
+  readonly mapped?: { readonly published: number; readonly container: number; readonly side: 'published' | 'container' | 'routed' };
+  /**
+   * The host is a port an example environment file gives (`PORT=` in
+   * `.env.example`, a template): a value offered to whoever runs the service,
+   * not one a run is given, so it places the service only as a guess (P309).
+   */
+  readonly example?: true;
+  /**
+   * The host is a port an environment file of the service gives on this
+   * machine (`PORT=` in `.env.development`), no example: a run has the value
+   * only where something loads the file (P331). The linker places the
+   * service there firmly where the code is read loading the file, and offers
+   * it as a guess, as an example's is, where nothing is.
+   */
+  readonly environmentFile?: true;
+}
+
+/** A port a container publishes on the machine running it, and the port inside it that it reaches (P254). */
+export interface PublishedPort {
+  /** On the machine: `3001` of `3001:3000`. */
+  readonly published: number;
+  /** Inside the container: `3000` of `3001:3000`. */
+  readonly container: number;
+  readonly file: string;
+  readonly line: number;
+}
+
+/**
+ * A container a service is run in, as a compose file or a `docker run` in a
+ * script starts it (P254): the names its network reaches it by, the ports it
+ * publishes, and the ports its environment gives a setting.
+ */
+export interface ContainerRun {
+  /** The compose service's key, or the name `--name` gives it, or the image's. */
+  readonly name: string;
+  /** Every name the container's network reaches it by, lower case. */
+  readonly names: readonly string[];
+  readonly file: string;
+  readonly ports: readonly PublishedPort[];
+  /**
+   * The port each setting is given in the container's environment: `PORT:
+   * 3000`. What the image's Dockerfile sets (`ENV`), under what each
+   * environment file the container is started with sets, a later file over
+   * an earlier, under what is written for the container itself (P325).
+   */
+  readonly environment: Readonly<Record<string, number>>;
+  /**
+   * The file each setting of `environment` is from, where that is not
+   * `file`: an environment file the container is started with, or its
+   * image's Dockerfile (P325).
+   */
+  readonly environmentFiles?: Readonly<Record<string, string>>;
+  /**
+   * How the published port reaches the container, where it is not a
+   * container's own mapping (P260): a port this machine forwards to a
+   * cluster's object (`forwarded`), or the port every node of a cluster
+   * opens for a service object (`node-port`).
+   */
+  readonly via?: 'forwarded' | 'node-port';
+  /** Where the environment is written, where that is not `file`: the manifest of the pods a port is forwarded to (P260). */
+  readonly environmentFrom?: string;
+  /** The image the container runs, where its Dockerfile is not read (P331). */
+  readonly imageUnread?: ImageUnread;
+  /**
+   * The settings a `Secret` gives the container (P337), by name only: a
+   * secret's value is never read, so where one gives the setting the code
+   * reads its port from, where it listens there is not known.
+   */
+  readonly environmentSecret?: readonly string[];
+  /** Where each setting of `environmentSecret` is from: the Secret and its key (P343). */
+  readonly environmentSecretFrom?: Readonly<Record<string, SecretSource>>;
+}
+
+/**
+ * Where a setting a `Secret` gives a container is from (P343): the Secret's
+ * name and the key whose value the setting is, and the file that writes the
+ * Secret where the manifests read hold it - so a row can say where to look,
+ * the value itself never being read.
+ */
+export interface SecretSource {
+  /** The Secret's name: `ledger-secrets`. */
+  readonly secret: string;
+  /** Its key the setting takes: `ADMIN_PORT`, or `port` of a `secretKeyRef`. */
+  readonly key: string;
+  /** The manifest that writes the Secret, where one read does. */
+  readonly file?: string;
+}
+
+/**
+ * An image a container runs whose environment is not read (P331): pulled
+ * from a registry (`image:` with no `build:`), built by no command the
+ * project holds, or built from a Dockerfile that is not in the project. Its
+ * `ENV` may give the setting the code reads its port from, so where the
+ * environment read does not, the port there is said to be open, never
+ * fetched.
+ */
+export interface ImageUnread {
+  /** The image as written: `registry.example.test/shop/orders:1.4`. */
+  readonly image: string;
+  /** Why it is not read, as a row says it: `nothing in the project builds it, and an image is never fetched`. */
+  readonly why: string;
+}
+
+/**
+ * A way in from outside a cluster's network to a service's containers
+ * (P260): a request to a public host whose path a rule matches is sent to a
+ * name the cluster routes (`rule.target`, `http://orders:80`) at the path the
+ * rule rewrites it to.
+ */
+export interface IngressRoute {
+  /** The public host, lower case; `*.shop.example.test` for any one label under it. */
+  readonly host: string;
+  readonly rule: ProxyRule;
+  /** The object the rule is written in, `ingress/shop` or `http-route/shop`. */
+  readonly object: string;
+}
+
+/** A port a name on a cluster's network routes to a port of the containers behind it (P257): `80` to `3000`. */
+export interface RoutedPort {
+  /** The port the name is reached at: `80` of `orders:80`. */
+  readonly port: number;
+  /** The containers' port it reaches, a named one resolved to its number where the workload names it. */
+  readonly target: number;
+  readonly file: string;
+  readonly line: number;
+}
+
+/**
+ * A name a cluster's network reaches a service's containers by (P257): a
+ * service object of a manifest that selects the service's workload, with
+ * every spelling of the name its network resolves (`orders`,
+ * `orders.shop`, `orders.shop.svc.cluster.local`), the ports it routes, and
+ * the ports the workload's container environment gives a setting.
+ */
+export interface RoutedName {
+  readonly name: string;
+  /** Every spelling of the name, lower case. */
+  readonly names: readonly string[];
+  readonly file: string;
+  readonly ports: readonly RoutedPort[];
+  /** The port each setting is given in the environment of the containers behind it: `PORT: 3000`. */
+  readonly environment: Readonly<Record<string, number>>;
+  /** Where that environment is written, where it is not `file`: a workload's manifest, or the patch that gave it (P260). */
+  readonly environmentFrom?: string;
+  /**
+   * The file each setting of `environment` is from, where that is not
+   * `environmentFrom`: the Dockerfile of the image the containers run, built
+   * by the project, under the manifest's own environment (P331).
+   */
+  readonly environmentFiles?: Readonly<Record<string, string>>;
+  /** The image the containers run, where its Dockerfile is not read (P331). */
+  readonly imageUnread?: ImageUnread;
+  /** The settings a `Secret` gives the containers, by name only (P337). */
+  readonly environmentSecret?: readonly string[];
+  /** Where each setting of `environmentSecret` is from: the Secret and its key (P343). */
+  readonly environmentSecretFrom?: Readonly<Record<string, SecretSource>>;
+}
+
+/** A port one of a service's own files gives a setting, on the machine a developer runs it on (P254). */
+export interface PortValue {
+  readonly port: number;
+  readonly file: string;
+  readonly environment?: string;
+  /** The file is an example or a template, which offers the value rather than giving it (P309). */
+  readonly example?: true;
+  /**
+   * The value is the environment a command of the project starts the server
+   * with (P337) - `export PORT=4000` earlier in the script that then runs
+   * `npm start`, or `PORT=4000 node dist/main.js` - so a run started that way
+   * listens there: firm, as a file the code loads is, and `file` is where the
+   * command is written.
+   */
+  readonly started?: true;
 }
 
 /** Everything a service's own files say about its settings. */
@@ -59,6 +243,24 @@ export interface RepoSettings {
   readonly bindings?: readonly ServiceBinding[];
   /** The names this service is deployed under, as its own deployment files write them (P91). */
   readonly deployedAs?: readonly string[];
+  /** The containers the service is run in (P254). Absent when no file starts one. */
+  readonly containers?: readonly ContainerRun[];
+  /** The names a cluster's network routes to the service's containers (P257). Absent when no manifest does. */
+  readonly routes?: readonly RoutedName[];
+  /** The ways in from outside a cluster that reach the service (P260). Absent when no manifest writes one. */
+  readonly ingress?: readonly IngressRoute[];
+  /**
+   * What the service's files, or the project's files about it, write in a
+   * way the readers do not follow (P260): a template whose conditions nothing
+   * decides, overlays nothing chooses among. Absent when there is nothing.
+   */
+  readonly rows?: readonly Unresolved[];
+  /**
+   * The ports the service's own example environment files give a setting, by
+   * setting name (P254): what fills a port its code reads from the setting
+   * alone. A secret-named setting is never kept. Absent when none does.
+   */
+  readonly ports?: Readonly<Record<string, readonly PortValue[]>>;
 }
 
 /** A binding a deployment declares to another deployed service, by the name the code reads it under. */
@@ -175,6 +377,23 @@ const decodeURIComponentSafe = (text: string): string => {
 /** The value a setting may be kept with, or nothing: a secret's name, or a value that is not an address. */
 export const keptValue = (name: string, raw: string): string | undefined =>
   looksSecret(name) ? undefined : addressOnly(raw);
+
+/**
+ * What a file whose values are never read (`.env`, P77) may lend a compose
+ * file's interpolation (P331): only what the graph keeps of a value anyway,
+ * and nothing under a secret's name - a port, an address cut as
+ * `addressOnly` cuts it, or a host's name (`orders`, `db.internal`) that does
+ * not read like a token. Anything else is left out, so the placeholder that
+ * names it stays unsettled.
+ */
+export const interpolationValue = (name: string, raw: string): string | undefined => {
+  if (looksSecret(name)) return undefined;
+  const text = raw.trim();
+  if (portOf(text) !== undefined) return text;
+  const address = addressOnly(text);
+  if (address !== undefined) return address;
+  return /^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,62}[A-Za-z0-9])?$/.test(text) && !tokenLike(text) && !/^\d+$/.test(text) ? text : undefined;
+};
 
 /** A port, as a file writes one. */
 export const portOf = (raw: string | number): number | undefined => {

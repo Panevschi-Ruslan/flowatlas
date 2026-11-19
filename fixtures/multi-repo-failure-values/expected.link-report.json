@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T11:28:20.121Z",
+  "configHash": "100974a675fc",
+  "services": [
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 17,
+      "edges": 17,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1042,
+      "packages": {
+        "name": "shop-audit",
+        "runtime": [
+          "@aws-sdk/client-sns",
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 15,
+      "edges": 15,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 928,
+      "packages": {
+        "name": "shop-ledger",
+        "runtime": [
+          "@aws-sdk/client-sns",
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 5,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 970,
+      "packages": {
+        "name": "shop-orders",
+        "runtime": [
+          "@aws-sdk/client-sns",
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "platform",
+      "repo": "./platform",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 14,
+      "edges": 9,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 931,
+      "packages": {
+        "name": "shop-platform",
+        "runtime": [
+          "@aws-sdk/client-sns",
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 9,
+      "types": 0,
+      "unresolved": 4,
+      "durationMs": 941,
+      "packages": {
+        "name": "shop-stock",
+        "runtime": [
+          "@aws-sdk/client-sns",
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 4,
+    "linked": 3,
+    "noConsumers": [],
+    "noProducers": [
+      "channel:kinesis/shop-prod-clicks"
+    ]
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "platform",
+      "file": "infra/main.tf",
+      "line": 24,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "kinesis/shop-prod-clicks is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:kinesis/shop-prod-clicks"
+    },
+    {
+      "service": "stock",
+      "file": "src/count.ts",
+      "line": 12,
+      "reason": "environment-value-unread",
+      "message": "the call at src/count.ts:12 sends to the value of SPILL_QUEUE_URL, which shop-stock-count is deployed with as a value not known from the files, and that is not read: which queue it names depends on a condition the files do not decide: data.aws_ssm_parameter.prefix.value is known only once it has been created",
+      "hint": "Write the value so the files settle it: a literal, or a reference to the queue, topic or bus the deployment declares.",
+      "symbol": "producer:stock#src/count.ts:12:29",
+      "meta": {
+        "function": "entry:stock:invoke:shop-stock-count",
+        "variable": "SPILL_QUEUE_URL"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 48,
+    "edges": 46,
+    "types": 2,
+    "missed": 1,
+    "sites": 1,
+    "notes": 0,
+    "findings": 2,
+    "unresolved": 1
+  }
+}

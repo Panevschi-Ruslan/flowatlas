@@ -1,0 +1,16 @@
+{
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda",
+      "infra": {
+        "options": {
+          "Stage": "dev",
+          "region": "eu-west-1"
+        }
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

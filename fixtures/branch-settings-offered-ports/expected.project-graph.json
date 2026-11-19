@@ -1,0 +1,1030 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-15T16:03:37.112Z",
+  "services": [
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "legacy",
+      "repo": "./legacy",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/app.ts:GET /items@10",
+      "type": "function",
+      "label": "GET /items@10",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "config_key:jobs#LEGACY_URL",
+      "type": "config_key",
+      "label": "LEGACY_URL",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 5,
+      "meta": {
+        "key": "LEGACY_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:jobs#ORDERS_URL",
+      "type": "config_key",
+      "label": "ORDERS_URL",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 5,
+      "meta": {
+        "key": "ORDERS_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:legacy:http:GET:/archive",
+      "type": "entry",
+      "label": "GET /archive",
+      "repo": "legacy",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/archive",
+        "rawPath": "/archive",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:legacy:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "legacy",
+      "file": "src/app.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/open",
+      "type": "entry",
+      "label": "GET /orders/open",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/open",
+        "rawPath": "/orders/open",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/cart",
+      "type": "entry",
+      "label": "GET /api/cart",
+      "repo": "shop",
+      "file": "src/app/api/cart/route.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/cart",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "external_api:localhost:3000",
+      "type": "external_api",
+      "label": "localhost:3000",
+      "repo": "jobs",
+      "meta": {
+        "host": "localhost:3000"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:11:37",
+      "type": "http_out",
+      "label": "GET /archive",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 11,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/archive",
+        "path": "/archive",
+        "baseUrlEnv": "ORDERS_URL",
+        "baseUrlAlso": [
+          "LEGACY_URL"
+        ],
+        "baseUrlEither": [
+          "ORDERS_URL",
+          "LEGACY_URL"
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "legacy"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:14:35",
+      "type": "http_out",
+      "label": "GET /health",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 14,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/health",
+        "path": "/health",
+        "baseUrlEnv": "ORDERS_URL",
+        "baseUrlAlso": [
+          "LEGACY_URL"
+        ],
+        "baseUrlEither": [
+          "ORDERS_URL",
+          "LEGACY_URL"
+        ],
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:17:36",
+      "type": "http_out",
+      "label": "GET /nowhere",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 17,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/nowhere",
+        "path": "/nowhere",
+        "baseUrlEnv": "ORDERS_URL",
+        "baseUrlAlso": [
+          "LEGACY_URL"
+        ],
+        "baseUrlEither": [
+          "ORDERS_URL",
+          "LEGACY_URL"
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:20:27",
+      "type": "http_out",
+      "label": "GET /api/cart",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 20,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3000/api/cart",
+        "path": "/api/cart",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:3000",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:23:28",
+      "type": "http_out",
+      "label": "GET /items",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 23,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3000/items",
+        "path": "/items",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:3000",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:26:28",
+      "type": "http_out",
+      "label": "GET /stray",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 26,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3000/stray",
+        "path": "/stray",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:3000",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:8:33",
+      "type": "http_out",
+      "label": "GET /orders/open",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/orders/open",
+        "path": "/orders/open",
+        "baseUrlEnv": "ORDERS_URL",
+        "baseUrlAlso": [
+          "LEGACY_URL"
+        ],
+        "baseUrlEither": [
+          "ORDERS_URL",
+          "LEGACY_URL"
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:archivedOrders",
+      "type": "function",
+      "label": "archivedOrders",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:cart",
+      "type": "function",
+      "label": "cart",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:items",
+      "type": "function",
+      "label": "items",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:openOrders",
+      "type": "function",
+      "label": "openOrders",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:ordersBase",
+      "type": "function",
+      "label": "ordersBase",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:ordersHealth",
+      "type": "function",
+      "label": "ordersHealth",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:ordersNowhere",
+      "type": "function",
+      "label": "ordersNowhere",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:stray",
+      "type": "function",
+      "label": "stray",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "legacy#src/app.ts:GET /archive@6",
+      "type": "function",
+      "label": "GET /archive@6",
+      "repo": "legacy",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "legacy#src/app.ts:GET /health@10",
+      "type": "function",
+      "label": "GET /health@10",
+      "repo": "legacy",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders#src/app.ts:GET /health@10",
+      "type": "function",
+      "label": "GET /health@10",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders#src/app.ts:GET /orders/open@6",
+      "type": "function",
+      "label": "GET /orders/open@6",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "file": "src/app.ts",
+            "line": 14,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:legacy",
+      "type": "repo",
+      "label": "legacy",
+      "repo": "legacy",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4200,
+            "file": "src/app.ts",
+            "line": 14
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4100,
+            "file": "src/app.ts",
+            "line": 14
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 1,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 6,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "shop#src/app/api/cart/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "shop",
+      "file": "src/app/api/cart/route.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:api:http:GET:/items",
+      "to": "api#src/app.ts:GET /items@10",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:legacy:http:GET:/archive",
+      "to": "legacy#src/app.ts:GET /archive@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:legacy:http:GET:/health",
+      "to": "legacy#src/app.ts:GET /health@10",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{status:string}",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/health",
+      "to": "orders#src/app.ts:GET /health@10",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{status:string}",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/orders/open",
+      "to": "orders#src/app.ts:GET /orders/open@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/cart",
+      "to": "shop#src/app/api/cart/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{items:undefined[]}",
+      "file": "src/app/api/cart/route.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:11:37",
+      "to": "entry:legacy:http:GET:/archive",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/calls.ts",
+      "line": 11,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "legacy",
+        "chosenAmong": [
+          "ORDERS_URL (orders)",
+          "LEGACY_URL (legacy)"
+        ]
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:20:27",
+      "to": "entry:shop:http:GET:/api/cart",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/calls.ts",
+      "line": 20,
+      "meta": {
+        "via": "host",
+        "targetService": "shop",
+        "listensAt": "package.json:6 (PORT) (its default)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:23:28",
+      "to": "entry:api:http:GET:/items",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/calls.ts",
+      "line": 23,
+      "meta": {
+        "via": "host",
+        "targetService": "api",
+        "listensAt": "src/app.ts:14 (PORT from .env.example)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:26:28",
+      "to": "external_api:localhost:3000",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 26
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:8:33",
+      "to": "entry:orders:http:GET:/orders/open",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/calls.ts",
+      "line": 8,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders",
+        "chosenAmong": [
+          "ORDERS_URL (orders)",
+          "LEGACY_URL (legacy)"
+        ]
+      }
+    },
+    {
+      "from": "jobs#src/calls.ts:archivedOrders",
+      "to": "http_out:jobs#src/calls.ts:11:37",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 11
+    },
+    {
+      "from": "jobs#src/calls.ts:archivedOrders",
+      "to": "jobs#src/calls.ts:ordersBase",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/calls.ts",
+      "line": 11
+    },
+    {
+      "from": "jobs#src/calls.ts:cart",
+      "to": "http_out:jobs#src/calls.ts:20:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 20
+    },
+    {
+      "from": "jobs#src/calls.ts:items",
+      "to": "http_out:jobs#src/calls.ts:23:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 23
+    },
+    {
+      "from": "jobs#src/calls.ts:openOrders",
+      "to": "http_out:jobs#src/calls.ts:8:33",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 8
+    },
+    {
+      "from": "jobs#src/calls.ts:openOrders",
+      "to": "jobs#src/calls.ts:ordersBase",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/calls.ts",
+      "line": 8
+    },
+    {
+      "from": "jobs#src/calls.ts:ordersBase",
+      "to": "config_key:jobs#LEGACY_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 5
+    },
+    {
+      "from": "jobs#src/calls.ts:ordersBase",
+      "to": "config_key:jobs#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 5
+    },
+    {
+      "from": "jobs#src/calls.ts:ordersHealth",
+      "to": "http_out:jobs#src/calls.ts:14:35",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 14
+    },
+    {
+      "from": "jobs#src/calls.ts:ordersHealth",
+      "to": "jobs#src/calls.ts:ordersBase",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/calls.ts",
+      "line": 14
+    },
+    {
+      "from": "jobs#src/calls.ts:ordersNowhere",
+      "to": "http_out:jobs#src/calls.ts:17:36",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 17
+    },
+    {
+      "from": "jobs#src/calls.ts:ordersNowhere",
+      "to": "jobs#src/calls.ts:ordersBase",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/calls.ts",
+      "line": 17
+    },
+    {
+      "from": "jobs#src/calls.ts:stray",
+      "to": "http_out:jobs#src/calls.ts:26:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 26
+    }
+  ],
+  "types": {
+    "type:express#Request<any,any,any>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "jobs"
+    },
+    {
+      "file": "src/calls.ts",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "jobs"
+    },
+    {
+      "service": "jobs",
+      "file": "src/calls.ts",
+      "line": 14,
+      "reason": "ambiguous-route-target",
+      "message": "the request's base is one of ORDERS_URL (orders) and LEGACY_URL (legacy), chosen by a condition nobody settles, and orders and legacy each serve GET /health",
+      "hint": "Read the base from one setting, or annotate the call with @CallsService naming the service it reaches.",
+      "symbol": "http_out:jobs#src/calls.ts:14:35"
+    },
+    {
+      "service": "jobs",
+      "file": "src/calls.ts",
+      "line": 17,
+      "reason": "target-route-not-found",
+      "message": "target service orders has no route GET /nowhere",
+      "hint": "Route renamed? Check orders's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:jobs#src/calls.ts:17:36"
+    },
+    {
+      "service": "jobs",
+      "file": "src/calls.ts",
+      "line": 26,
+      "reason": "target-route-not-found",
+      "message": "target service api has no route GET /stray",
+      "hint": "Route renamed? Check api's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:jobs#src/calls.ts:26:28"
+    }
+  ]
+}

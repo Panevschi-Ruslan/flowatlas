@@ -1,0 +1,15 @@
+{
+  "name": "nest-prisma-base-url",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@prisma/adapter-pg": "^7.0.0",
+    "@prisma/client": "^7.0.0",
+    "fp-ts": "^2.16.0"
+  },
+  "devDependencies": {
+    "prisma": "^7.0.0"
+  }
+}

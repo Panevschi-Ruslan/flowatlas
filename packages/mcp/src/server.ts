@@ -1,8 +1,9 @@
+import { agentQuestionsLine } from '@flowatlas/core';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { registerPrompts } from './prompts.js';
 import { DbHandle, type DbHandleOptions } from './query/db.js';
-import { registerResources, type ReasonHint } from './resources.js';
+import { registerResources, type OverviewWriter, type ReasonHint } from './resources.js';
 import { registerCantFollow } from './tools/cant-follow.js';
 import { registerChanges } from './tools/changes.js';
 import { registerChannels } from './tools/channels.js';
@@ -36,6 +37,8 @@ export const SERVER_NAME = 'flowatlas';
  */
 export const INSTRUCTIONS = [
   'A map of every repository in this project, already joined. Ask it what reaches what instead of reading files.',
+  // The same questions the files `flowatlas agents install` writes list (P227).
+  agentQuestionsLine(),
   'Begin with start_here: counts per service, the most common gaps, and entry ids to start from.',
   'Every row carries an `id` that the next tool accepts as it is, and every answer ends with `next`, the calls that take those ids. The chains:',
   '- entry: list_entries -> get_flow({entry: id}) -> get_source({symbol: id}) on the step that matters.',
@@ -54,7 +57,7 @@ export const INSTRUCTIONS = [
   'describe_for_prompt({id}) writes any of these as Markdown to hand on; `scope` class, file or service writes the whole of one. Every list tool takes the same optional `service` filter, a service name, to keep only its rows.',
   'Every answer is bounded; get_source is the only one that returns code, and says `truncated` with the `fromLine` to read on from when a declaration is longer than one answer.',
   '`maxNodes` is the most rows an answer holds. A list that was cut says `total` and `nextOffset`: ask the same call again with `offset: nextOffset` for the next page, and `next` writes that call first.',
-  'get_flow writes each node once: met again it is `{id, ref: true, seenAt}`, seenAt the row its subtree is under. It stops at `maxNodes` (60) or about `maxChars` (12000) characters, says which in `stoppedBy`, and lists the crossings it did not follow in `crossingsLeft`: ask get_flow on one.',
+  'get_flow writes each node once: met again it is `{id, ref: true, seenAt}`, seenAt the row its subtree is under. It stops at `maxNodes` (60) or about `maxChars` (12000) characters, says which in `stoppedBy`, and lists the crossings it did not follow in `crossingsLeft`: ask get_flow on one. With `to` (any node, and `entry` any node too) it keeps only the shortest ways there; none says `searched`, and `reverse` when the other way round holds.',
   'who_calls says `stoppedBy` and the `frontier` ids when depth cut it, and `topOfChain` with `gapsInFile` on a node nothing calls: dead, or called from behind a gap (dead({id}) says which it is likely to be). On a class it answers for its methods. A route said aloud (`GET /orders/123`) resolves to the most specific route, naming the others under `alsoAnswers`. A failed call is `isError` and names the nearest under `suggestions`.',
   'Prompts before-rename, pr-review and trace-route write out the calls those reviews take, ids resolved; resources flowatlas://reasons (why a step was not followed) and flowatlas://services/{name} read without asking. what_changed({verdict: true}) says safe, unsafe or unknown, and why.',
   'Only the tools this project can answer are listed: the run-time ones after flowatlas observe, check_rules with rules configured, what_changed after flowatlas diff, the channel and type tools once the graph holds one. start_here says what is not listed in `hidden`; the list changes as the project does.',
@@ -72,6 +75,8 @@ export interface ServerOptions extends DbHandleOptions {
   reasonCatalog?: readonly ReasonHint[];
   /** The pattern tester, when the readers are there to run it (P121). */
   patternTester?: PatternTester;
+  /** Draws the project's overview for `flowatlas://overview`, from the command line, which owns it (P228). */
+  overview?: OverviewWriter;
   /** The directories that look like each repository probably missing, when the command line can look (P122). */
   missingCandidates?: MissingCandidates;
   /** A route's traffic shapes against its code, when the contracts package is installed (P113). */
@@ -84,7 +89,17 @@ export interface ServerOptions extends DbHandleOptions {
   allTools?: boolean;
   /** How often, in ms, a connected server looks for a graph, observed file or diff that changed; 0 never. */
   toolsPollMs?: number;
+  /**
+   * Starts a background build, from the command line, which this package
+   * cannot run (P230): called when an answer finds its files changed and the
+   * configuration says `mcp.rebuild: on-change`, at most once every
+   * `REBUILD_EVERY_MS`.
+   */
+  rebuild?: () => void;
 }
+
+/** The shortest time between two background builds the server starts: `build --background` coalesces the rest. */
+export const REBUILD_EVERY_MS = 10_000;
 
 /**
  * The server, with every tool registered and those the project can answer
@@ -99,6 +114,18 @@ export interface ServerOptions extends DbHandleOptions {
  */
 export const createFlowatlasServer = (options: ServerOptions = {}): McpServer => {
   const handle = new DbHandle(options);
+  const rebuild = options.rebuild;
+  if (rebuild !== undefined && handle.config?.mcp?.rebuild === 'on-change') {
+    let last = 0;
+    handle.onStale = () => {
+      const now = Date.now();
+      if (now - last >= REBUILD_EVERY_MS) {
+        last = now;
+        rebuild();
+      }
+      return true;
+    };
+  }
   const settings = listingSettingsOf(handle.config?.mcp, {
     ...(options.allTools === undefined ? {} : { allTools: options.allTools }),
     ...(handle.configPath === undefined ? {} : { configPath: handle.configPath }),
@@ -129,7 +156,7 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
 
   listing.capture(() => registerTools(server, context));
   registerPrompts(server, context);
-  registerResources(server, context, options.reasonCatalog);
+  registerResources(server, context, options.reasonCatalog, options.overview);
 
   // A closed connection lets go of the database (P199). On Windows a file held
   // open can be neither removed nor replaced, so a server that kept it after

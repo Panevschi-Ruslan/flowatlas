@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "repo": "db-not-installed",
-  "generatedAt": "2026-10-16T15:10:40.830Z",
+  "generatedAt": "2026-11-07T17:36:31.478Z",
   "nodes": [
     {
       "id": "db-not-installed#src/app.module.ts:AppModule",
@@ -280,7 +280,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {

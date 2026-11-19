@@ -1,0 +1,237 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-09T11:43:30.154Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:10:9",
+        "to": "entry:stock:http:GET:/stock",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:10:9|http_calls|entry:stock:http:GET:/stock",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/server.ts:POST /jobs/run@6 declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:10:9",
+        "to": "entry:stock:http:GET:/stock",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:10:9|http_calls|entry:stock:http:GET:/stock",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "stock#src/server.ts:GET /stock@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:11:9",
+        "to": "entry:catalog:http:GET:/catalog/products",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:11:9|http_calls|entry:catalog:http:GET:/catalog/products",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/server.ts:POST /jobs/run@6 declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:11:9",
+        "to": "entry:catalog:http:GET:/catalog/products",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:11:9|http_calls|entry:catalog:http:GET:/catalog/products",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/server.ts:GET /catalog/products@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:12:9",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:12:9|http_calls|entry:orders:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/server.ts:POST /jobs/run@6 declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:12:9",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:12:9|http_calls|entry:orders:http:GET:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/server.ts:GET /orders@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:13:9",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:13:9|http_calls|entry:orders:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/server.ts:POST /jobs/run@6 declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:13:9",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:13:9|http_calls|entry:orders:http:GET:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/server.ts:GET /orders@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:7:9",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:7:9|http_calls|entry:orders:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/server.ts:POST /jobs/run@6 declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:7:9",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:7:9|http_calls|entry:orders:http:GET:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/server.ts:GET /orders@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:8:9",
+        "to": "entry:catalog:http:GET:/catalog/products",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:8:9|http_calls|entry:catalog:http:GET:/catalog/products",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/server.ts:POST /jobs/run@6 declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:8:9",
+        "to": "entry:catalog:http:GET:/catalog/products",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:8:9|http_calls|entry:catalog:http:GET:/catalog/products",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/server.ts:GET /catalog/products@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:9:9",
+        "to": "entry:stock:http:GET:/stock",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:9:9|http_calls|entry:stock:http:GET:/stock",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/server.ts:POST /jobs/run@6 declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:9:9",
+        "to": "entry:stock:http:GET:/stock",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:9:9|http_calls|entry:stock:http:GET:/stock",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "stock#src/server.ts:GET /stock@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Shop.tsx:3:28",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Shop.tsx:3:28|hits|entry:orders:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Shop.tsx:Shop declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Shop.tsx:3:28",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Shop.tsx:3:28|hits|entry:orders:http:GET:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/server.ts:GET /orders@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Shop.tsx:4:30",
+        "to": "entry:catalog:http:GET:/catalog/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Shop.tsx:4:30|hits|entry:catalog:http:GET:/catalog/products",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Shop.tsx:Shop declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Shop.tsx:4:30",
+        "to": "entry:catalog:http:GET:/catalog/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Shop.tsx:4:30|hits|entry:catalog:http:GET:/catalog/products",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/server.ts:GET /catalog/products@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 18,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

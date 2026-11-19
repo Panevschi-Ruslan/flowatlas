@@ -31,6 +31,32 @@ export interface CompareOptions {
    * not decorate. Read from the route's wrapping, never assumed.
    */
   whitelist?: boolean;
+  /**
+   * Whether a sender's `{}` at the top is an object written with no keys -
+   * a request that sends nothing at all (P256) - rather than a type that says
+   * nothing about its shape. What the receiver requires is then missing.
+   */
+  emptyIsWritten?: boolean;
+  /**
+   * Fields where a sender's `{}` is an object written with no keys, as
+   * {@link emptyIsWritten} is at the top: a `detailed` input's `headers` a
+   * call sends none of the procedure's (P262).
+   */
+  emptyWrittenAt?: readonly string[];
+  /**
+   * Names under a field whose absence on the sender's side is said with a
+   * rule of its own (P265): a response header a caller reads that the
+   * procedure's output does not declare, which something else may still set.
+   */
+  missingRules?: readonly MissingRule[];
+}
+
+/** A rule a `missing_required` takes at some names of one field, with the note that says why. */
+export interface MissingRule {
+  readonly path: string;
+  readonly names: readonly string[];
+  readonly rule: string;
+  readonly note: string;
 }
 
 export interface CompareResult {
@@ -45,6 +71,12 @@ interface Walk {
   disable: readonly string[];
   /** The receiver strips what its validated class does not decorate. */
   whitelist: boolean;
+  /** The sender's `{}` at the top was written with no keys (P256). */
+  emptyIsWritten: boolean;
+  /** Fields where the sender's `{}` was written with no keys (P262). */
+  emptyWrittenAt: readonly string[];
+  /** Names whose absence takes a rule of its own (P265). */
+  missingRules: readonly MissingRule[];
   diffs: FieldDiff[];
   rules: Set<string>;
   /** Pairs of types already being compared further up this path. */
@@ -542,6 +574,9 @@ const isOpaqueEntry = (entry: TypeEntry | undefined): boolean =>
  *
  * Those are the only shapes worth walking once the hashes have already matched.
  */
+/** A message or a choice of a gRPC contract, registered by the `.proto` reader (P287). */
+const isProtobufEntry = (entry: TypeEntry): boolean => entry.meta?.['declaredBy'] === 'protobuf';
+
 export const hasWireAnnotation = (entry: TypeEntry | undefined): boolean =>
   (entry?.fields ?? []).some(
     (field) =>
@@ -595,7 +630,9 @@ const compareRefs = (
 
   // Neither declaration says what is in there, so there is nothing to compare
   // and nothing that could be wrong.
-  if (makesNoClaim(senderAst) || makesNoClaim(receiverAst)) {
+  const writtenEmpty =
+    (path === '' ? walk.emptyIsWritten : walk.emptyWrittenAt.includes(path)) && senderAst.kind === 'object' && senderAst.fields.length === 0;
+  if ((makesNoClaim(senderAst) && !writtenEmpty) || makesNoClaim(receiverAst)) {
     walk.rules.add(at('any-unknown-skip', path));
     return;
   }
@@ -762,13 +799,15 @@ const compareFields = (
       // A field the sender has and never sends is a different story from one it
       // does not have, and which rule took it off the wire is the story.
       const took = have?.rules.find((rule) => DROPS.has(rule));
+      // A name whose absence something else may make up for says so (P265).
+      const ruled = took === undefined ? walk.missingRules.find((each) => each.path === path && each.names.includes(want.name)) : undefined;
       record(walk, {
         kind: 'missing_required',
         path: here,
         expected: formatTypeRef(want.type),
         actual: null,
-        rule: took ?? null,
-        ...(took === undefined ? {} : { note: DROPS.get(took) as string }),
+        rule: took ?? ruled?.rule ?? null,
+        ...(took === undefined ? (ruled === undefined ? {} : { note: ruled.note }) : { note: DROPS.get(took) as string }),
       });
       continue;
     }
@@ -789,7 +828,8 @@ const compareFields = (
     // and its presence was never in question.
     if (have.opaque || want.opaque) continue;
 
-    if (have.optional !== want.optional) {
+    // A gRPC field may always be left out (P287): its optionality is no question.
+    if (have.optional !== want.optional && !want.rules.includes('proto-presence')) {
       record(walk, {
         kind: 'optionality_mismatch',
         path: here,
@@ -934,7 +974,10 @@ const compareEntries = (
   // useful than either guessing or going quiet (I5).
   if (depth <= 0) {
     walk.rules.add(at('depth-cap', path));
-    if (sameShape) return;
+    // A gRPC message's hash can never equal a language's type for it - a
+    // 64-bit integer is `number | string` to the one and `number` to the
+    // other - so below the cut it says nothing either way (P287).
+    if (sameShape || isProtobufEntry(senderEntry) || isProtobufEntry(receiverEntry)) return;
     record(walk, {
       kind: 'type_mismatch',
       path,
@@ -1015,6 +1058,9 @@ export const diffTypes = (
     resolve,
     disable: options.disableRules ?? [],
     whitelist: options.whitelist === true,
+    emptyIsWritten: options.emptyIsWritten === true,
+    emptyWrittenAt: options.emptyWrittenAt ?? [],
+    missingRules: options.missingRules ?? [],
     diffs: [],
     rules: new Set(),
     open: new Set(),
@@ -1041,6 +1087,9 @@ export const diffRefs = (
     resolve,
     disable: options.disableRules ?? [],
     whitelist: options.whitelist === true,
+    emptyIsWritten: options.emptyIsWritten === true,
+    emptyWrittenAt: options.emptyWrittenAt ?? [],
+    missingRules: options.missingRules ?? [],
     diffs: [],
     rules: new Set(),
     open: new Set(),

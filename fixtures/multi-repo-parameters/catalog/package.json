@@ -1,0 +1,13 @@
+{
+  "name": "shop-catalog",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The catalog service of a shop whose services share values through parameters of the account.",
+  "dependencies": {
+    "@aws-sdk/client-sns": "^3.700.0",
+    "@aws-sdk/client-sqs": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

@@ -1,6 +1,6 @@
-unresolved: total=10 (skipped) · markers: errors=0 warnings=0 · desync=4 · contracts: errors=0 ignored=0 · rules: errors=4 new=5 · exit=0
+unresolved: total=12 (skipped) · markers: errors=0 warnings=0 · desync=4 · contracts: errors=0 ignored=0 · rules: errors=4 new=5 · exit=0
 
-unresolved: 10 to act on · missed: 8 · notes: 0 · findings: 4
+unresolved: 12 to act on · missed: 10 · notes: 0 · findings: 4
   2 missed places static reading cannot see, folded into 2 rows
   4 findings: 4 routes with no guard
   Probably missing: a repository for "payments" — 1 kind of evidence, 1 place
@@ -12,6 +12,14 @@ unresolved: 10 to act on · missed: 8 · notes: 0 · findings: 4
       orders/src/orders/orders.controller.ts:25  GET /orders/:param
       orders/src/orders/orders.controller.ts:31  POST /orders
       orders/src/orders/orders.controller.ts:42  POST /orders/:param/archive
+  api-path-dynamic: 3 rows
+    The address is built at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.
+      web/src/app/orders-api.service.ts:48  GET /orders/${…}-summary is built in part at run time, and no route is joined across the part (`${…}`) nobody read
+        ↳ The address is built at run time. Annotate the method with /** @flowatlas-calls GET /<path> */.
+      web/src/app/orders-api.service.ts:139  this.http.post<unknown>(this.opaque(), {})
+        ↳ This method carries 1 annotation and 2 requests whose address is built at run time, so nothing here says which annotation describes which. Write one per request, or move each request into its own method.
+      web/src/app/orders-api.service.ts:140  this.http.get<unknown>(this.opaque())
+        ↳ This method carries 1 annotation and 2 requests whose address is built at run time, so nothing here says which annotation describes which. Write one per request, or move each request into its own method.
   target-route-not-found: 3 rows
     The target service serves no such route. Check its controllers for a rename, or annotate the call with @CallsService.
       gateway/src/clients/orders.client.ts:44  target service orders has no route POST /orders/:param/cancel
@@ -20,10 +28,9 @@ unresolved: 10 to act on · missed: 8 · notes: 0 · findings: 4
         ↳ Route renamed? Check gateway's controllers, or annotate the method with /** @flowatlas-calls GET /orders/:param/receipt */.
       web/src/app/orders-api.service.ts:106  POST /orders/:param/hold reaches no route, though /orders/:param/resume does
         ↳ The segment is written as a closed set of values and one of them has no route. A renamed or missing handler looks exactly like this; check the ones named.
-  api-path-dynamic: 2 rows
-    This method carries 1 annotation and 2 requests whose address is built at run time, so nothing here says which annotation describes which. Write one per request, or move each request into its own method.
-      web/src/app/orders-api.service.ts:139  this.http.post<unknown>(this.opaque(), {})
-      web/src/app/orders-api.service.ts:140  this.http.get<unknown>(this.opaque())
+  dynamic-http-url: 1 row
+    The address is built at run time. Annotate the calling method with @CallsService('orders', '<METHOD> /<path>') to say where it goes.
+      gateway/src/clients/orders.client.ts:59  GET /orders/${…}${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read
   unknown-base-url-env: 1 row
     Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.
       gateway/src/clients/payments.client.ts:24  no service declares PAYMENTS_URL

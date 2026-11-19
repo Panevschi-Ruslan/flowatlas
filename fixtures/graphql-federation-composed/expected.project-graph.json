@@ -1,0 +1,1646 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T11:41:29.102Z",
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "customers",
+      "repo": "./customers",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "router",
+      "repo": "router",
+      "type": "declared",
+      "extractor": "graphql-document"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "customers#src/customers.ts:customerById",
+      "type": "function",
+      "label": "customerById",
+      "repo": "customers",
+      "file": "src/customers.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:customers#Customer"
+        }
+      }
+    },
+    {
+      "id": "customers#src/index.ts:Customer.__resolveReference@16",
+      "type": "function",
+      "label": "Customer.__resolveReference@16",
+      "repo": "customers",
+      "file": "src/index.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reference",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "type:customers#Customer"
+        }
+      }
+    },
+    {
+      "id": "customers#src/index.ts:Query.customer@12",
+      "type": "function",
+      "label": "Query.customer@12",
+      "repo": "customers",
+      "file": "src/index.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_parent",
+              "type": "unknown"
+            },
+            {
+              "name": "args",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "type:customers#Customer"
+        }
+      }
+    },
+    {
+      "id": "customers#src/index.ts:Query.status@13",
+      "type": "function",
+      "label": "Query.status@13",
+      "repo": "customers",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "entry:customers:graphql:Customer.__resolveReference",
+      "type": "entry",
+      "label": "Customer.__resolveReference",
+      "repo": "customers",
+      "file": "src/index.ts",
+      "line": 16,
+      "kind": "graphql",
+      "meta": {
+        "type": "Customer",
+        "name": "__resolveReference",
+        "field": true,
+        "reference": true,
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:customers:graphql:Query.customer",
+      "type": "entry",
+      "label": "Query.customer",
+      "repo": "customers",
+      "file": "src/index.ts",
+      "line": 12,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "customer",
+        "returns": "Customer",
+        "args": {
+          "id": {
+            "type": "ID!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:customers:graphql:Query.status",
+      "type": "entry",
+      "label": "Query.status",
+      "repo": "customers",
+      "file": "src/index.ts",
+      "line": 13,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "status",
+        "returns": "String!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:customers:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "customers",
+      "file": "src/index.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Customer": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  },
+                  "email": {
+                    "type": "String!"
+                  }
+                },
+                "directives": [
+                  "key"
+                ],
+                "federation": {
+                  "keys": [
+                    {
+                      "fields": "id"
+                    }
+                  ]
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "customer": {
+                    "type": "Customer",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  },
+                  "status": {
+                    "type": "String!"
+                  }
+                }
+              }
+            },
+            "federation": 2
+          },
+          "subgraph": {
+            "federation": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "entry:gateway:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "gateway",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "gateway": {
+            "subgraphs": [
+              {
+                "name": "orders",
+                "file": "src/app.module.ts",
+                "line": 13,
+                "path": "",
+                "baseUrlEnv": "ORDERS_URL"
+              },
+              {
+                "name": "customers",
+                "file": "src/app.module.ts",
+                "line": 14,
+                "url": "http://customers:4002/graphql",
+                "host": "customers:4002",
+                "path": "/graphql"
+              },
+              {
+                "name": "reviews",
+                "file": "src/app.module.ts",
+                "line": 15,
+                "url": "http://reviews.internal:4003/graphql",
+                "host": "reviews.internal:4003",
+                "path": "/graphql"
+              }
+            ]
+          },
+          "listen": [
+            {
+              "port": 4000,
+              "file": "src/main.ts",
+              "line": 7
+            }
+          ],
+          "schema": {
+            "roots": {
+              "query": "Query"
+            },
+            "types": {
+              "Customer": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  },
+                  "email": {
+                    "type": "String!"
+                  },
+                  "orders": {
+                    "type": "[Order!]!"
+                  }
+                }
+              },
+              "Order": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "total": {
+                    "type": "Float!"
+                  },
+                  "customer": {
+                    "type": "Customer!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "customer": {
+                    "type": "Customer",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  },
+                  "status": {
+                    "type": "String!"
+                  },
+                  "orders": {
+                    "type": "[Order!]!"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "entry:orders:graphql:Customer.orders",
+      "type": "entry",
+      "label": "Customer.orders",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 36,
+      "kind": "graphql",
+      "meta": {
+        "type": "Customer",
+        "name": "orders",
+        "field": true,
+        "returns": "[Order!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:orders:graphql:Order.customer",
+      "type": "entry",
+      "label": "Order.customer",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 33,
+      "kind": "graphql",
+      "meta": {
+        "type": "Order",
+        "name": "customer",
+        "field": true,
+        "returns": "Customer!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:orders:graphql:Query.orders",
+      "type": "entry",
+      "label": "Query.orders",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 29,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "orders",
+        "returns": "[Order!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:orders:graphql:Query.status",
+      "type": "entry",
+      "label": "Query.status",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 30,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "status",
+        "returns": "String!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/",
+      "type": "entry",
+      "label": "POST /",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 40,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Customer": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!",
+                    "federation": {
+                      "external": true
+                    }
+                  },
+                  "orders": {
+                    "type": "[Order!]!"
+                  }
+                },
+                "directives": [
+                  "key"
+                ],
+                "federation": {
+                  "keys": [
+                    {
+                      "fields": "id"
+                    }
+                  ],
+                  "extension": true
+                }
+              },
+              "Order": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "total": {
+                    "type": "Float!"
+                  },
+                  "customer": {
+                    "type": "Customer!"
+                  }
+                },
+                "directives": [
+                  "key"
+                ],
+                "federation": {
+                  "keys": [
+                    {
+                      "fields": "id"
+                    }
+                  ]
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "orders": {
+                    "type": "[Order!]!"
+                  },
+                  "status": {
+                    "type": "String!"
+                  }
+                }
+              }
+            },
+            "federation": 1
+          },
+          "subgraph": {
+            "federation": 1
+          },
+          "listen": [
+            {
+              "port": 4001,
+              "file": "src/index.ts",
+              "line": 42
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:router:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "router",
+      "file": "router/supergraph.yaml",
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-schema",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "gateway": {
+            "subgraphs": [
+              {
+                "name": "orders",
+                "file": "router/router.yaml",
+                "line": 5,
+                "url": "http://orders:4001/graphql",
+                "host": "orders:4001",
+                "path": "/graphql"
+              },
+              {
+                "name": "customers",
+                "file": "router/supergraph.yaml",
+                "line": 7,
+                "url": "http://customers:4002/graphql",
+                "host": "customers:4002",
+                "path": "/graphql",
+                "schema": {
+                  "roots": {
+                    "query": "Query"
+                  },
+                  "federation": 2,
+                  "types": {
+                    "Customer": {
+                      "kind": "object",
+                      "fields": {
+                        "id": {
+                          "type": "ID!"
+                        },
+                        "name": {
+                          "type": "String!"
+                        },
+                        "email": {
+                          "type": "String!"
+                        }
+                      },
+                      "directives": [
+                        "key"
+                      ],
+                      "federation": {
+                        "keys": [
+                          {
+                            "fields": "id"
+                          }
+                        ]
+                      }
+                    },
+                    "Query": {
+                      "kind": "object",
+                      "fields": {
+                        "customer": {
+                          "type": "Customer",
+                          "args": {
+                            "id": {
+                              "type": "ID!",
+                              "required": true
+                            }
+                          }
+                        },
+                        "status": {
+                          "type": "String!"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "from": "router/supergraph.yaml"
+          },
+          "schema": {
+            "roots": {
+              "query": "Query"
+            },
+            "types": {
+              "Customer": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  },
+                  "email": {
+                    "type": "String!"
+                  },
+                  "orders": {
+                    "type": "[Order!]!"
+                  }
+                }
+              },
+              "Order": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "total": {
+                    "type": "Float!"
+                  },
+                  "customer": {
+                    "type": "Customer!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "customer": {
+                    "type": "Customer",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  },
+                  "status": {
+                    "type": "String!"
+                  },
+                  "orders": {
+                    "type": "[Order!]!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "declaredBy": "router/supergraph.yaml"
+      }
+    },
+    {
+      "id": "gateway#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "module",
+      "label": "GraphQLModule",
+      "repo": "gateway",
+      "file": "node_modules/@nestjs/graphql",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "external": true
+      }
+    },
+    {
+      "id": "gateway#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "gateway",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "kiosk#src/OrdersBoard.tsx:OrdersBoard",
+      "type": "ui_component",
+      "label": "OrdersBoard",
+      "repo": "kiosk",
+      "file": "src/OrdersBoard.tsx",
+      "line": 17,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "orders#src/index.ts:Customer.orders@36",
+      "type": "function",
+      "label": "Customer.orders@36",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customer",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "type:orders#Order[]"
+        }
+      }
+    },
+    {
+      "id": "orders#src/index.ts:Order.customer@33",
+      "type": "function",
+      "label": "Order.customer@33",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "{customerId:string}"
+            }
+          ],
+          "returns": "{__typename:'Customer';id:string}"
+        }
+      }
+    },
+    {
+      "id": "orders#src/index.ts:Query.orders@29",
+      "type": "function",
+      "label": "Query.orders@29",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:orders#Order[]"
+        }
+      }
+    },
+    {
+      "id": "orders#src/index.ts:Query.status@30",
+      "type": "function",
+      "label": "Query.status@30",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "orders",
+      "file": "src/orders.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:orders#Order[]"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders.ts:ordersOf",
+      "type": "function",
+      "label": "ordersOf",
+      "repo": "orders",
+      "file": "src/orders.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customerId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:orders#Order[]"
+        }
+      }
+    },
+    {
+      "id": "repo:customers",
+      "type": "repo",
+      "label": "customers",
+      "repo": "customers",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "graphql-resolvers"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:gateway",
+      "type": "repo",
+      "label": "gateway",
+      "repo": "gateway",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "graphql-resolvers"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:kiosk",
+      "type": "repo",
+      "label": "kiosk",
+      "repo": "kiosk",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 1,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "graphql-resolvers"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4001,
+            "file": "src/index.ts",
+            "line": 42
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "functions": 2,
+          "components": 2,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:kiosk#src/OrdersBoard.tsx:18:20",
+      "type": "ui_api_call",
+      "label": "query Board /graphql",
+      "repo": "kiosk",
+      "file": "src/OrdersBoard.tsx",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_ROUTER_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_ROUTER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Board",
+          "fields": [
+            {
+              "field": "orders",
+              "line": 5,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 6
+                },
+                {
+                  "field": "customer",
+                  "line": 7,
+                  "selections": [
+                    {
+                      "field": "name",
+                      "line": 8
+                    },
+                    {
+                      "field": "orders",
+                      "line": 9,
+                      "selections": [
+                        {
+                          "field": "id",
+                          "line": 10
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/OrdersBoard.tsx",
+            "line": 4
+          },
+          "library": "apollo"
+        },
+        "targetService": "router"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/CustomerPage.tsx:16:20",
+      "type": "ui_api_call",
+      "label": "query Customer /graphql",
+      "repo": "web",
+      "file": "src/CustomerPage.tsx",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Customer",
+          "fields": [
+            {
+              "field": "customer",
+              "arguments": [
+                "id"
+              ],
+              "line": 5,
+              "selections": [
+                {
+                  "field": "name",
+                  "line": 6
+                },
+                {
+                  "field": "orders",
+                  "line": 7,
+                  "selections": [
+                    {
+                      "field": "id",
+                      "line": 8
+                    },
+                    {
+                      "field": "total",
+                      "line": 9
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "id",
+              "type": "ID!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/CustomerPage.tsx",
+            "line": 4
+          },
+          "library": "apollo"
+        },
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/StatusBar.tsx:10:20",
+      "type": "ui_api_call",
+      "label": "query Status /graphql",
+      "repo": "web",
+      "file": "src/StatusBar.tsx",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Status",
+          "fields": [
+            {
+              "field": "status",
+              "line": 5
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/StatusBar.tsx",
+            "line": 4
+          },
+          "library": "apollo"
+        },
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "web#src/CustomerPage.tsx:CustomerPage",
+      "type": "ui_component",
+      "label": "CustomerPage",
+      "repo": "web",
+      "file": "src/CustomerPage.tsx",
+      "line": 15,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ id }",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/StatusBar.tsx:StatusBar",
+      "type": "ui_component",
+      "label": "StatusBar",
+      "repo": "web",
+      "file": "src/StatusBar.tsx",
+      "line": 9,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "customers#src/index.ts:Customer.__resolveReference@16",
+      "to": "customers#src/customers.ts:customerById",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:customers#Customer",
+      "file": "src/index.ts",
+      "line": 16
+    },
+    {
+      "from": "customers#src/index.ts:Query.customer@12",
+      "to": "customers#src/customers.ts:customerById",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:customers#Customer",
+      "file": "src/index.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:customers:graphql:Customer.__resolveReference",
+      "to": "customers#src/index.ts:Customer.__resolveReference@16",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 16
+    },
+    {
+      "from": "entry:customers:graphql:Query.customer",
+      "to": "customers#src/index.ts:Query.customer@12",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:customers:graphql:Query.status",
+      "to": "customers#src/index.ts:Query.status@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:gateway:http:POST:/graphql",
+      "to": "entry:customers:http:POST:/graphql",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 14,
+      "meta": {
+        "graphql": {
+          "subgraph": "customers"
+        },
+        "targetService": "customers"
+      }
+    },
+    {
+      "from": "entry:gateway:http:POST:/graphql",
+      "to": "entry:orders:http:POST:/",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 13,
+      "meta": {
+        "graphql": {
+          "subgraph": "orders"
+        },
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "entry:orders:graphql:Customer.orders",
+      "to": "orders#src/index.ts:Customer.orders@36",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 36
+    },
+    {
+      "from": "entry:orders:graphql:Order.customer",
+      "to": "orders#src/index.ts:Order.customer@33",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 33
+    },
+    {
+      "from": "entry:orders:graphql:Query.orders",
+      "to": "orders#src/index.ts:Query.orders@29",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 29
+    },
+    {
+      "from": "entry:orders:graphql:Query.status",
+      "to": "orders#src/index.ts:Query.status@30",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 30
+    },
+    {
+      "from": "entry:router:http:POST:/graphql",
+      "to": "entry:customers:http:POST:/graphql",
+      "type": "http_calls",
+      "confidence": "declared",
+      "file": "router/supergraph.yaml",
+      "line": 7,
+      "meta": {
+        "graphql": {
+          "subgraph": "customers"
+        },
+        "targetService": "customers"
+      }
+    },
+    {
+      "from": "entry:router:http:POST:/graphql",
+      "to": "entry:orders:http:POST:/",
+      "type": "http_calls",
+      "confidence": "declared",
+      "file": "router/router.yaml",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "subgraph": "orders"
+        },
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "gateway#src/app.module.ts:AppModule",
+      "to": "gateway#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "imports",
+      "confidence": "heuristic",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "kiosk#src/OrdersBoard.tsx:OrdersBoard",
+      "to": "ui_api_call:kiosk#src/OrdersBoard.tsx:18:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/OrdersBoard.tsx",
+      "line": 18
+    },
+    {
+      "from": "orders#src/index.ts:Customer.orders@36",
+      "to": "orders#src/orders.ts:ordersOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:orders#Order[]",
+      "file": "src/index.ts",
+      "line": 36
+    },
+    {
+      "from": "orders#src/index.ts:Query.orders@29",
+      "to": "orders#src/orders.ts:listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:orders#Order[]",
+      "file": "src/index.ts",
+      "line": 29
+    },
+    {
+      "from": "ui_api_call:kiosk#src/OrdersBoard.tsx:18:20",
+      "to": "entry:customers:graphql:Customer.__resolveReference",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/OrdersBoard.tsx",
+      "line": 8,
+      "meta": {
+        "graphql": {
+          "operation": "Board",
+          "gateway": "router",
+          "subgraph": "customers",
+          "field": "Customer.__resolveReference",
+          "hop": {
+            "entity": "Customer",
+            "from": "orders",
+            "for": "Customer.name"
+          }
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/OrdersBoard.tsx:18:20",
+      "to": "entry:orders:graphql:Customer.orders",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/OrdersBoard.tsx",
+      "line": 9,
+      "meta": {
+        "graphql": {
+          "operation": "Board",
+          "gateway": "router",
+          "subgraph": "orders",
+          "field": "Customer.orders"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/OrdersBoard.tsx:18:20",
+      "to": "entry:orders:graphql:Order.customer",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/OrdersBoard.tsx",
+      "line": 7,
+      "meta": {
+        "graphql": {
+          "operation": "Board",
+          "gateway": "router",
+          "subgraph": "orders",
+          "field": "Order.customer"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/OrdersBoard.tsx:18:20",
+      "to": "entry:orders:graphql:Query.orders",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/OrdersBoard.tsx",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "Board",
+          "gateway": "router",
+          "subgraph": "orders",
+          "field": "Query.orders"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/OrdersBoard.tsx:18:20",
+      "to": "entry:router:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/OrdersBoard.tsx",
+      "line": 18,
+      "meta": {
+        "via": "api-target",
+        "targetService": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/CustomerPage.tsx:16:20",
+      "to": "entry:customers:graphql:Query.customer",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/CustomerPage.tsx",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "Customer",
+          "gateway": "gateway",
+          "subgraph": "customers",
+          "field": "Query.customer"
+        },
+        "through": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/CustomerPage.tsx:16:20",
+      "to": "entry:gateway:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/CustomerPage.tsx",
+      "line": 16,
+      "meta": {
+        "via": "api-target",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/CustomerPage.tsx:16:20",
+      "to": "entry:orders:graphql:Customer.orders",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/CustomerPage.tsx",
+      "line": 7,
+      "meta": {
+        "graphql": {
+          "operation": "Customer",
+          "gateway": "gateway",
+          "subgraph": "orders",
+          "field": "Customer.orders",
+          "hop": {
+            "entity": "Customer",
+            "from": "customers"
+          }
+        },
+        "through": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/StatusBar.tsx:10:20",
+      "to": "entry:customers:graphql:Query.status",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/StatusBar.tsx",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "Status",
+          "gateway": "gateway",
+          "subgraph": "customers",
+          "choice": [
+            "customers",
+            "orders"
+          ],
+          "field": "Query.status"
+        },
+        "through": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/StatusBar.tsx:10:20",
+      "to": "entry:gateway:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/StatusBar.tsx",
+      "line": 10,
+      "meta": {
+        "via": "api-target",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/StatusBar.tsx:10:20",
+      "to": "entry:orders:graphql:Query.status",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/StatusBar.tsx",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "Status",
+          "gateway": "gateway",
+          "subgraph": "orders",
+          "choice": [
+            "customers",
+            "orders"
+          ],
+          "field": "Query.status"
+        },
+        "through": "gateway"
+      }
+    },
+    {
+      "from": "web#src/CustomerPage.tsx:CustomerPage",
+      "to": "ui_api_call:web#src/CustomerPage.tsx:16:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/CustomerPage.tsx",
+      "line": 16
+    },
+    {
+      "from": "web#src/StatusBar.tsx:StatusBar",
+      "to": "ui_api_call:web#src/StatusBar.tsx:10:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/StatusBar.tsx",
+      "line": 10
+    }
+  ],
+  "types": {
+    "type:customers#Customer": {
+      "name": "Customer",
+      "kind": "object",
+      "declaredIn": "customers#src/customers.ts",
+      "structuralHash": "7ba724f9b85c4def",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "orders#src/orders.ts",
+      "structuralHash": "980fca0c01d1261e",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "gateway",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "symbol": "entry:gateway:http:POST:/graphql",
+      "reason": "graphql-composition-conflict",
+      "level": "action",
+      "message": "Query.status is resolved by customers and orders, and not every one of them marks it @shareable; composition refuses two owners of one field",
+      "hint": "Mark Query.status @shareable in every subgraph that resolves it, or move it to one of them with @override(from:)."
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 8,
+      "reason": "module-import-not-installed",
+      "hint": "GraphQLModule is a module of @nestjs/graphql, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
+      "symbol": "AppModule imports GraphQLModule",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "module": "GraphQLModule"
+      },
+      "service": "gateway"
+    },
+    {
+      "service": "gateway",
+      "file": "src/app.module.ts",
+      "line": 15,
+      "reason": "graphql-subgraph-not-joined",
+      "level": "action",
+      "message": "gateway sends the subgraph reviews to http://reviews.internal:4003/graphql, and no configured service is reached at reviews.internal:4003; the fields it resolves are not joined",
+      "hint": "Add reviews.internal:4003 to services[].hosts of the service that is the subgraph reviews, or add that service to the project.",
+      "symbol": "entry:gateway:http:POST:/graphql"
+    },
+    {
+      "file": "src/OrdersBoard.tsx",
+      "line": 17,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "kiosk"
+    },
+    {
+      "service": "router",
+      "file": "router/supergraph.yaml",
+      "line": 1,
+      "symbol": "entry:router:http:POST:/graphql",
+      "reason": "graphql-composition-conflict",
+      "level": "action",
+      "message": "Query.status is resolved by customers and orders, and not every one of them marks it @shareable; composition refuses two owners of one field",
+      "hint": "Mark Query.status @shareable in every subgraph that resolves it, or move it to one of them with @override(from:)."
+    },
+    {
+      "file": "src/CustomerPage.tsx",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "src/StatusBar.tsx",
+      "line": 5,
+      "reason": "graphql-shareable-choice",
+      "level": "info",
+      "message": "Status selects Query.status through gateway, which customers and orders each resolve; the router chooses one at run time, so each is drawn as a choice",
+      "hint": "Nothing is wrong. Which subgraph answers is the router's plan, decided by cost when the request arrives; both edges are heuristic for that reason.",
+      "symbol": "ui_api_call:web#src/StatusBar.tsx:10:20"
+    },
+    {
+      "file": "src/StatusBar.tsx",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    }
+  ]
+}

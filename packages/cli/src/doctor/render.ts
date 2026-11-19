@@ -289,7 +289,9 @@ const desyncSection = (report: DoctorReport, file?: string): string[] => {
         { header: 'where', value: (row) => `${row.service} ${at(row.file, row.line)}` },
         {
           header: 'call',
-          value: (row) => `${row.method ?? '?'} ${row.path ?? '?'}`,
+          // A procedure request names its procedure where a route call has a verb and a path (P256).
+          value: (row) =>
+            row.procedure !== undefined ? `${row.protocol ?? 'rpc'} ${row.procedure}` : `${row.method ?? '?'} ${row.path ?? '?'}`,
         },
         { header: 'target', value: (row) => row.targetService ?? row.baseUrlEnv ?? '?' },
         { header: 'to do', value: (row) => row.hint },

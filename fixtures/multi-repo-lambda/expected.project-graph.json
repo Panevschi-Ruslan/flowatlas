@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-08T09:12:52.088Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T17:16:51.768Z",
   "services": [
     {
       "name": "platform",
@@ -256,6 +256,15 @@
         "api": "lending-library",
         "invokes": "library-dev-list-borrower-loans",
         "declaredAs": "aws_api_gateway_method.list_borrower_loans",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "lending-library"
+          }
+        ],
         "adapter": "aws-lambda",
         "function": "library-dev-list-borrower-loans",
         "functionService": "loans"
@@ -366,6 +375,26 @@
       }
     },
     {
+      "id": "loans#functions/create-loan/index.ts:logged",
+      "type": "function",
+      "label": "logged",
+      "repo": "loans",
+      "file": "functions/create-loan/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{before:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 7
+          }
+        ]
+      }
+    },
+    {
       "id": "loans#functions/create-loan/index.ts:logged()",
       "type": "middleware",
       "label": "logged()",
@@ -436,7 +465,7 @@
               "type": "string"
             }
           ],
-          "returns": "type:@flowatlas/fixtures#Loan|undefined"
+          "returns": "type:loans#Loan|undefined"
         }
       }
     },
@@ -455,7 +484,7 @@
               "type": "string"
             }
           ],
-          "returns": "type:@flowatlas/fixtures#Loan[]"
+          "returns": "type:loans#Loan[]"
         }
       }
     },
@@ -471,10 +500,10 @@
           "params": [
             {
               "name": "loan",
-              "type": "type:@flowatlas/fixtures#Loan"
+              "type": "type:loans#Loan"
             }
           ],
-          "returns": "type:@flowatlas/fixtures#Loan"
+          "returns": "type:loans#Loan"
         }
       }
     },
@@ -560,6 +589,30 @@
             "api": "lending-library",
             "file": "outputs.tf",
             "line": 5,
+            "deployedBy": "terraform"
+          }
+        ],
+        "exports": [
+          {
+            "keys": [
+              "parameter:/lending-library/api/id"
+            ],
+            "address": "aws_ssm_parameter.api_id",
+            "file": "api.tf",
+            "line": 15,
+            "kind": "api",
+            "value": "lending-library",
+            "deployedBy": "terraform"
+          },
+          {
+            "keys": [
+              "state:s3:bucket=lending-library-terraform-state,key=platform/terraform.tfstate#rest_api_id"
+            ],
+            "address": "output.rest_api_id",
+            "file": "outputs.tf",
+            "line": 1,
+            "kind": "api",
+            "value": "lending-library",
             "deployedBy": "terraform"
           }
         ]
@@ -670,7 +723,7 @@
       "to": "loans#functions/create-loan/index.ts:createLoan",
       "type": "handles",
       "confidence": "static",
-      "returns": "type:@flowatlas/fixtures#Loan",
+      "returns": "type:loans#Loan",
       "file": "functions/create-loan/index.ts",
       "line": 11,
       "meta": {
@@ -803,11 +856,24 @@
       "type": "calls",
       "confidence": "static",
       "params": [
-        "type:@flowatlas/fixtures#Loan"
+        "type:loans#Loan"
       ],
-      "returns": "type:@flowatlas/fixtures#Loan",
+      "returns": "type:loans#Loan",
       "file": "functions/create-loan/index.ts",
       "line": 13
+    },
+    {
+      "from": "loans#functions/create-loan/index.ts:logged()",
+      "to": "loans#functions/create-loan/index.ts:logged",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{before:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "functions/create-loan/index.ts",
+      "line": 17,
+      "meta": {
+        "wrapper": true
+      }
     },
     {
       "from": "loans#functions/get-loan/index.ts:handler",
@@ -817,7 +883,7 @@
       "params": [
         "string"
       ],
-      "returns": "type:@flowatlas/fixtures#Loan|undefined",
+      "returns": "type:loans#Loan|undefined",
       "file": "functions/get-loan/index.ts",
       "line": 5
     },
@@ -829,22 +895,12 @@
       "params": [
         "string"
       ],
-      "returns": "type:@flowatlas/fixtures#Loan[]",
+      "returns": "type:loans#Loan[]",
       "file": "functions/list-borrower-loans/index.ts",
       "line": 5
     }
   ],
   "types": {
-    "type:@flowatlas/fixtures#Loan": {
-      "name": "Loan",
-      "kind": "external",
-      "declaredIn": "@flowatlas/fixtures",
-      "structuralHash": "23b3bf1dc666e869",
-      "meta": {
-        "declKind": "external",
-        "package": "@flowatlas/fixtures"
-      }
-    },
     "type:@types/aws-lambda#APIGatewayProxyEvent": {
       "name": "APIGatewayProxyEvent",
       "kind": "external",
@@ -883,6 +939,38 @@
         },
         {
           "name": "isbn",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:loans#Loan": {
+      "name": "Loan",
+      "kind": "object",
+      "declaredIn": "loans#shared/loans-table.ts",
+      "structuralHash": "bc3ee3324cb89af0",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "dueOn",
           "type": "string",
           "optional": false
         }

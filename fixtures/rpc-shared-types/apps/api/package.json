@@ -1,0 +1,10 @@
+{
+  "name": "@shop/api",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@shop/router": "workspace:*",
+    "@trpc/server": "^11.0.0",
+    "fastify": "^5.2.1"
+  }
+}

@@ -16,6 +16,7 @@ import {
   recordStatedSignatures,
   type EntryHandler,
   type EntryNode,
+  type EntryWrapping,
   type NamedFunction,
   type TypeRef,
 } from '@flowatlas/core';
@@ -86,6 +87,30 @@ const resolveHandler = (
   ctx.ensureMethodNode(method);
   const id = ctx.methodIdOf(method);
   return { ...(id === undefined ? {} : { id }), owner, method };
+};
+
+/**
+ * The body of each wrapper in front of a way in that names a function of this
+ * repository, walked as a handler's is (P276): `withTracing` of
+ * `export default withTracing(handler)` runs on every request, and what it
+ * reaches - a session it reads, a call it makes - is on the route's walk through
+ * its node, which is drawn calling the function.
+ */
+const walkWrappers = (ctx: NestExtractContext, wrapping: readonly EntryWrapping[]): void => {
+  for (const one of wrapping) {
+    if (one.runs === undefined || one.label === '' || one.file === '') continue;
+    const resolved = resolveHandler(ctx, one.runs);
+    if (resolved.id === undefined) continue;
+    ctx.builder.addEdge({
+      from: makeSymbolId(ctx.repo, one.file, one.label),
+      to: resolved.id,
+      type: 'calls',
+      confidence: 'static',
+      file: one.file,
+      ...(one.line === undefined ? {} : { line: one.line }),
+      meta: { wrapper: true },
+    });
+  }
 };
 
 /** Type references that say nothing about a shape, which are not worth recording. */
@@ -168,6 +193,7 @@ export const entriesPass = definePass('entries', (ctx: NestExtractContext) => {
       // a chain a decorator declared are one shape in the graph (R109).
       if (entry.wrapping !== undefined) {
         addEntryWrapping(ctx.builder, ctx.repo, entry.id, entry.wrapping);
+        walkWrappers(ctx, entry.wrapping);
       }
       // A way in that is not a function says what it takes where it is declared (P35).
       if (entry.signature !== undefined) recordStatedSignatures(ctx.builder, ctx.types, [[entry.id, entry.signature]]);

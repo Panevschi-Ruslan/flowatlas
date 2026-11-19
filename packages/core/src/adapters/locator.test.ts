@@ -313,3 +313,40 @@ class CommentsStore {
     expect(texts(callTo(file, 'find'), COLLECTION)).toEqual([]);
   });
 });
+
+describe('the key of a registry of clients made with their own key (P267)', () => {
+  const registry = (writes: string): string => `declare class Queue { constructor(name: string); add(job: string, data: unknown): void }
+class Driver {
+  private readonly queues: Record<string, Queue> = {};
+  private readonly byName = new Map<string, Queue>();
+  register(name: string): void { ${writes} }
+  send(queueName: string, job: string): void { this.queues[queueName].add(job, {}); }
+  sendByName(queueName: string, job: string): void { this.byName.get(queueName).enqueue(job, {}); }
+}`;
+  const locator: NameLocator = { kind: 'receiver-registry-key', class: 'Queue' };
+
+  it('reads the key the receiver is looked up by', () => {
+    const file = parse(registry('this.queues[name] = new Queue(name);'));
+    expect(texts(callTo(file, 'add'), [locator])).toEqual(['queueName']);
+  });
+
+  it('reads a registry filled with set and read with get', () => {
+    const file = parse(registry('this.byName.set(name, new Queue(name));'));
+    expect(texts(callTo(file, 'enqueue'), [locator])).toEqual(['queueName']);
+  });
+
+  it('stops at the receiver where an entry is made with something else', () => {
+    const file = parse(registry("this.queues[name] = new Queue('shared');"));
+    expect(texts(callTo(file, 'add'), [locator])).toEqual(['this.queues[queueName]']);
+  });
+
+  it('stops at the receiver where an entry is not made from the class', () => {
+    const file = parse(registry('this.queues[name] = undefined as unknown as Queue;'));
+    expect(texts(callTo(file, 'add'), [locator])).toEqual(['this.queues[queueName]']);
+  });
+
+  it('reaches nothing for a registry nothing writes into', () => {
+    const file = parse(registry(''));
+    expect(texts(callTo(file, 'add'), [locator])).toEqual([]);
+  });
+});

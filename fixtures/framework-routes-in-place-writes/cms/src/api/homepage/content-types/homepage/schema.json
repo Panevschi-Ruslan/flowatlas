@@ -1,0 +1,6 @@
+{
+  "kind": "singleType",
+  "collectionName": "homepages",
+  "info": { "singularName": "homepage", "pluralName": "homepages", "displayName": "Homepage" },
+  "attributes": { "headline": { "type": "string" } }
+}

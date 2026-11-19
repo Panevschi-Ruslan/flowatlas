@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T04:50:37.421Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T13:21:03.933Z",
   "services": [
     {
       "name": "catalog",
@@ -1165,7 +1165,7 @@
       "label": "AppModule",
       "repo": "ledger",
       "file": "src/app.module.ts",
-      "line": 11,
+      "line": 12,
       "kind": "static",
       "meta": {
         "controllers": [
@@ -1297,7 +1297,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -1321,7 +1328,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -1346,7 +1360,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 10
+          }
+        ]
       }
     },
     {
@@ -2109,7 +2130,7 @@
     },
     {
       "file": "src/app.module.ts",
-      "line": 13,
+      "line": 14,
       "reason": "module-providers-unread",
       "hint": "List the providers, or a name that leads to an array of them in this repository. A guard registered as APP_GUARD among providers that cannot be read is in front of every route, and nothing here can see it.",
       "symbol": "AppModule providers extraProviders()",

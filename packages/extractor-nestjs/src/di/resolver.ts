@@ -1,24 +1,33 @@
 import {
   getDecorator,
+  lineOf,
   makeSymbolId,
+  providerIndex,
   type DiResolution,
   type DiResolverOptions,
+  type ProviderIndex,
   type TokenProviderKind,
 } from '@flowatlas/core';
-import type { ClassDeclaration, ParameterDeclaration } from 'ts-morph';
+import type { ClassDeclaration, Expression, Node as TsNode, ParameterDeclaration } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
 import type { ProviderRegistration } from '../modules-index.js';
 import { NEST_COMMON } from '../index-classes.js';
-import { unwrapClassExpression } from '../util/resolve-class.js';
+import { tokenOf } from '../passes/module-tokens.js';
+import { resolveClassExpression, unwrapClassExpression } from '../util/resolve-class.js';
+import { settingsProviderOf } from './settings-tokens.js';
 
 const NEST_INJECT = ['@nestjs/common'] as const;
 
+/** How many aliases a token is followed through. */
+const MOST_HOPS = 4;
+
+/** The expression `@Inject(...)` names its token by. */
+const injectArgument = (parameter: ParameterDeclaration): TsNode | undefined => getDecorator(parameter, 'Inject', NEST_INJECT)?.getArguments()[0];
+
 /** The token named by `@Inject(...)`, as written. */
 const tokenOfInject = (parameter: ParameterDeclaration): string | undefined => {
-  const decorator = getDecorator(parameter, 'Inject', NEST_INJECT);
-  if (decorator === undefined) return undefined;
-  const [argument] = decorator.getArguments();
+  const argument = injectArgument(parameter);
   if (argument === undefined) return undefined;
   const expr = unwrapClassExpression(argument);
   if (Node.isStringLiteral(expr) || Node.isNoSubstitutionTemplateLiteral(expr)) {
@@ -50,10 +59,13 @@ const resolveToken = (
   ctx: NestExtractContext,
   token: string,
   parameter: ParameterDeclaration,
+  /** The token as written, where it is not the parameter's own `@Inject`: an alias's target (P261). */
+  written?: TsNode,
+  hops = 0,
 ): DiResolution => {
   const seen = new Set<string>();
   let current = token;
-  for (let hop = 0; hop < 4; hop += 1) {
+  for (let hop = 0; hop < MOST_HOPS; hop += 1) {
     if (seen.has(current)) break;
     seen.add(current);
     const registrations = ctx.modules.registrationsOf(current);
@@ -117,12 +129,78 @@ const resolveToken = (
     break;
   }
 
+  // A token no module lists may still be provided by a configuring method a
+  // module imports - `ClientModule.forRootAsync(...)` in a package of the
+  // workspace - which is found where the procedure reader finds it (P259).
+  const argument = current === token ? (written ?? injectArgument(parameter)) : undefined;
+  const found = argument === undefined ? undefined : writtenProvider(ctx, argument, current, parameter, hops);
+  if (found !== undefined) return found;
+
   return {
     kind: 'unresolved',
     reason: 'di-token-unknown',
     hint: `No module in this repository provides ${current}. Register it with { provide, useClass } or force the adapter that does.`,
     text: `@Inject(${token}) ${parameter.getName()}`,
   };
+};
+
+/** The providers each extraction's sources write, read once per extraction. */
+const indexes = new WeakMap<NestExtractContext, ProviderIndex>();
+
+/** The sources of the repository a token's provider may be written in: its own and its workspace's, not what is installed. */
+const sourcesOf = (ctx: NestExtractContext) => ctx.project.getSourceFiles().filter((file) => !file.isInNodeModules() && !file.isDeclarationFile());
+
+/** A provider node where a token's provider is written, and the token resolved to it. */
+const providerNode = (ctx: NestExtractContext, at: TsNode, token: string, provider: TokenProviderKind): DiResolution => {
+  const file = ctx.fileOf(at);
+  const id = makeSymbolId(ctx.repo, file, token);
+  ctx.builder.addNode({
+    id,
+    type: 'provider',
+    label: token,
+    repo: ctx.repo,
+    file,
+    line: lineOf(at),
+    kind: provider === 'useValue' ? 'value' : 'factory',
+    meta: { token },
+  });
+  return { kind: 'token', id, token, provider };
+};
+
+/**
+ * What a provider the repository writes for a token, and makes - outside any
+ * function, or in one it calls - hands it (P259): the class `useClass` names,
+ * else the factory or the value, as a provider node of its own where it is
+ * written. An alias (`useExisting`) is the token it names, resolved as any
+ * token is (P261), and a token nothing provides behind an alias is said so.
+ * A settings object's token (`appConfig.KEY`) is provided by the factory the
+ * application loads (P261).
+ */
+const writtenProvider = (ctx: NestExtractContext, argument: TsNode, token: string, parameter: ParameterDeclaration, hops: number): DiResolution | undefined => {
+  let index = indexes.get(ctx);
+  if (index === undefined) {
+    index = providerIndex(() => sourcesOf(ctx));
+    indexes.set(ctx, index);
+  }
+  const [first] = index.of(argument);
+  if (first === undefined) {
+    const settings = settingsProviderOf(argument, () => sourcesOf(ctx));
+    return settings === undefined ? undefined : providerNode(ctx, settings, token, 'useFactory');
+  }
+  if (first.existing !== undefined && hops < MOST_HOPS) {
+    const aliased = first.existing;
+    const named = resolveClassExpression(aliased);
+    const indexed = named.kind === 'local' ? ctx.classes.get(named.declaration) : undefined;
+    if (indexed !== undefined && named.kind === 'local') return { kind: 'class', id: indexed.id, declaration: named.declaration };
+    const resolved = resolveToken(ctx, tokenOf(aliased as Expression), parameter, aliased, hops + 1);
+    if (resolved.kind !== 'unresolved') return resolved;
+    return { ...resolved, hint: `${token} is provided as ${tokenOf(aliased as Expression)} (useExisting), which nothing in this repository provides. Register ${tokenOf(aliased as Expression)} with { provide, useClass }, or point the alias at a token that is.` };
+  }
+  const target = first.useClass === undefined ? undefined : resolveClassExpression(first.useClass);
+  const indexed = target?.kind === 'local' ? ctx.classes.get(target.declaration) : undefined;
+  if (indexed !== undefined && target?.kind === 'local') return { kind: 'class', id: indexed.id, declaration: target.declaration };
+  const provider: TokenProviderKind = first.given !== undefined ? 'useValue' : first.factory !== undefined ? 'useFactory' : first.existing !== undefined ? 'useExisting' : 'useClass';
+  return providerNode(ctx, first.object, token, provider);
 };
 
 /**

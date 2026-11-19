@@ -1,0 +1,15 @@
+{
+  "/billing": {
+    "target": "http://localhost:3004",
+    "secure": false,
+    "pathRewrite": {
+      "^/billing": ""
+    }
+  },
+  "/catalog": {
+    "target": "http://localhost:3003",
+    "pathRewrite": {
+      "^/catalog/v\\d+": ""
+    }
+  }
+}

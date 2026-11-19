@@ -1,6 +1,57 @@
 {
-  "docsFormatVersion": 1,
+  "docsFormatVersion": 2,
+  "mentions": [
+    {
+      "file": "docs/adr/0001-orders-are-idempotent.md",
+      "line": 5,
+      "text": "POST /orders",
+      "node": "entry:orders:http:POST:/orders",
+      "kind": "mention",
+      "heading": "Decision"
+    },
+    {
+      "file": "docs/adr/0001-orders-are-idempotent.md",
+      "line": 6,
+      "text": "OrdersService.create",
+      "node": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "kind": "mention",
+      "heading": "Decision"
+    },
+    {
+      "file": "docs/adr/0001-orders-are-idempotent.md",
+      "line": 6,
+      "text": "order.created",
+      "node": "channel:order.created",
+      "kind": "mention",
+      "heading": "Decision"
+    },
+    {
+      "file": "docs/architecture.md",
+      "line": 66,
+      "text": "OrdersService.create",
+      "node": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "kind": "mention",
+      "heading": "Creating an order"
+    },
+    {
+      "file": "docs/architecture.md",
+      "line": 67,
+      "text": "order.created",
+      "node": "channel:order.created",
+      "kind": "mention",
+      "heading": "Creating an order"
+    }
+  ],
+  "deadMentions": [
+    {
+      "file": "docs/adr/0001-orders-are-idempotent.md",
+      "line": 10,
+      "text": "POST /cart",
+      "near": []
+    }
+  ],
   "files": [
+    "docs/adr/0001-orders-are-idempotent.md",
     "docs/architecture.md"
   ],
   "blocks": [

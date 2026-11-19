@@ -1,0 +1,15 @@
+{
+  "Comment": "Charges every finished ride once a day.",
+  "StartAt": "Charge",
+  "States": {
+    "Charge": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${charge_arn}",
+        "Payload.$": "$"
+      },
+      "End": true
+    }
+  }
+}

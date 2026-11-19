@@ -2,9 +2,11 @@
 
 **A command-line tool that reads several TypeScript repositories without running
 them, joins them into one graph, and answers questions about it.** It knows
-NestJS and Angular, React and Next.js, SvelteKit and Remix, Express, Fastify,
-Koa and Hono, Medusa, tRPC and Telegraf; AWS Lambda, API Gateway, Step Functions, EventBridge, SQS
-and SNS as Terraform deploys them; TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Kysely, Knex,
+NestJS and Angular, React and Next.js, Vue and Nuxt, Svelte and SvelteKit,
+Remix, plain pages and the scripts they load, GraphQL, gRPC, Express, Fastify,
+Koa and Hono, Medusa, Strapi, Gatsby, tRPC, oRPC and Telegraf; AWS Lambda, API Gateway, Step
+Functions, EventBridge, SQS and SNS as Terraform, the Serverless Framework, the
+CDK, SAM and CloudFormation deploy them; TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Kysely, Knex,
 MongoDB and node-postgres; Redis, Kafka, RabbitMQ, BullMQ and socket.io; and
 OpenAPI and AsyncAPI documents for the services whose source you do not have. It
 also serves the graph to a coding agent over the Model Context Protocol.
@@ -35,7 +37,7 @@ That is one `(click)` in an Angular template, followed through a gateway, into
 an orders service, down to the row it reads. Three repositories, and
 `unresolved on this path: 0` says nothing along the way was guessed.
 
-**[The walkthrough](https://panevschi-ruslan.github.io/flowatlas/)** does all ten
+**[The walkthrough](https://panevschi-ruslan.github.io/flowatlas/)** does all eleven
 steps with a recording of each.
 
 ---
@@ -47,30 +49,46 @@ steps with a recording of each.
 - NestJS controllers, message handlers and schedules, with their guards and pipes,
   app-wide guards and opt-out decorators included, and what each route can fail
   with
-- Express, Fastify, Koa and Hono, where a route is registered by a call
+- Express, Fastify, Koa and Hono, where a route is registered by a call - as
+  sure with nothing installed where the framework's own maker makes the
+  application
 - Next.js, Medusa, SvelteKit and Remix / React Router, where a route is the path
   of a file - a SvelteKit page's `load` and form actions included
-- tRPC procedures, and Telegraf bot commands, callbacks and events
+- Strapi's routes files, with their policies and middlewares, and the routes
+  of the plugins it enables, a bundled build and an extension's controllers
+  included; Gatsby's functions, a plugin's included
+- tRPC and oRPC procedures - an oRPC one under an OpenAPI handler as its REST
+  route too - gRPC methods named by the repository's `.proto` files, and
+  Telegraf bot commands, callbacks and events
+- GraphQL fields a resolver answers, and the operations a client or a
+  generated SDK sends
 - what a request carries and what it answers, in every one of them: a
   validator, a typed request or reply, or a helper of your own that builds the
   answer - with each route's failures (`400 → Problem`) beside its success
-- what every function, method, component, directive, pipe and tRPC procedure
+- what every function, method, component, directive, pipe and procedure
   takes and gives back, field by field
 
 **Serverless on AWS**
 
-- Lambda functions and API Gateway routes, read from the Terraform that deploys
-  them, modules and variable files included
+- Lambda functions and API Gateway routes, read from the Terraform, the
+  Serverless Framework, the CDK, SAM or CloudFormation that deploys them, with
+  the address API Gateway serves each at
 - Step Functions state machines as ways in whose states are steps
 - EventBridge, SQS and SNS from the SDK call to the rule or mapping it meets
 - code that starts a workflow or invokes a function by its deployed name
+- a send only the running code addresses, drawn to what its function is
+  granted
 
 **Browsers**
 
 - Angular templates, services and router, lazy routes included
-- React components and hooks
-- `fetch`, `axios`, a wrapper or a client class of your own, each joined to the
-  route that answers it
+- React components and hooks, the props each element hands, Vue and Svelte
+  components, and the page each navigation shows
+- a plain page and the scripts it loads, with no manifest and nothing that
+  builds them
+- `fetch`, `XMLHttpRequest`, `axios`, jQuery, a wrapper or a client class of
+  your own, each joined to the route that answers it, through the
+  interceptors that rewrite its address
 
 **Data**
 
@@ -83,15 +101,24 @@ steps with a recording of each.
 
 **Messages**
 
-- Kafka, RabbitMQ, BullMQ, Redis pub/sub and socket.io, from both ends
+- Kafka, RabbitMQ, BullMQ, Redis pub/sub and socket.io, from both ends, and a
+  queue behind a layer of your own where each caller names it
 - an in-house bus, described in the configuration
 - the payload and the reply of a request, compared across the boundary
 
 **Across repositories**
 
-- a monorepo's services with the workspace packages they use, on a fresh clone
+- a monorepo's services with the workspace packages they use, on a fresh
+  clone, never resolved from an install above its checkout
 - a base address no setting claims, read from the repository's own example
   env, compose and deployment files, keeping only the address
+- the port each server listens on, its framework's default a guess that
+  places a request only where that server serves it
+- a container's environment from its image's Dockerfile, its env files and
+  the compose files that start it, a script's or a Makefile's exports followed
+  into the program or the workspace package it runs, and a cluster
+  workload's config maps
+- where a cluster, a chart, a kustomization or a helmfile routes a request
 - a service you have no source for, from its OpenAPI or AsyncAPI document
 - every contract compared where one repository meets another
 
@@ -99,11 +126,11 @@ steps with a recording of each.
 
 - a row saying why, and the one change that would read it
 - what could not be followed, grouped by cause and by the package it points into
-- an address or a table decided at run time is reported, never guessed
+- an address or a table decided at run time is reported, and drawn only as a guess marked `heuristic` where what its function is granted narrows it
 - test code left out, and every test directory named so you can see it
 
 Every shape above is held by a fixture: a small repository written to prove it,
-compared on every push. There are 168 of them, and
+compared on every push. There are 323 of them, and
 [the fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
 lists them all, generated from their READMEs.
 
@@ -131,7 +158,7 @@ lists them all, generated from their READMEs.
 | `flowatlas observe <file...>` | which joins real traffic went through, from trace files you already have, or `--listen` for exporters posting to `127.0.0.1:4318` |
 | `flowatlas mcp` | serve it to an agent over stdio |
 
-`flowatlas --help` lists all thirty commands, and `flowatlas help <command>` the options of one.
+`flowatlas --help` lists all thirty-seven commands, and `flowatlas help <command>` the options of one.
 
 ---
 

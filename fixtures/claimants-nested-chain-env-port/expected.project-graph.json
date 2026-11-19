@@ -1,0 +1,1413 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-17T18:30:10.712Z",
+  "services": [
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "legacy",
+      "repo": "./legacy",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "archive",
+      "repo": "./archive",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "reports",
+      "repo": "./reports",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/app.ts:GET /items@9",
+      "type": "function",
+      "label": "GET /items@9",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "archive#src/app.ts:GET /exports@6",
+      "type": "function",
+      "label": "GET /exports@6",
+      "repo": "archive",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "audit#src/app.ts:GET /audit/log@6",
+      "type": "function",
+      "label": "GET /audit/log@6",
+      "repo": "audit",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/app.ts:GET /products@6",
+      "type": "function",
+      "label": "GET /products@6",
+      "repo": "catalog",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "config_key:jobs#ARCHIVE_URL",
+      "type": "config_key",
+      "label": "ARCHIVE_URL",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 17,
+      "meta": {
+        "key": "ARCHIVE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:jobs#CATALOG_URL",
+      "type": "config_key",
+      "label": "CATALOG_URL",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 17,
+      "meta": {
+        "key": "CATALOG_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:jobs#STOCK_URL",
+      "type": "config_key",
+      "label": "STOCK_URL",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 17,
+      "meta": {
+        "key": "STOCK_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:archive:http:GET:/exports",
+      "type": "entry",
+      "label": "GET /exports",
+      "repo": "archive",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/exports",
+        "rawPath": "/exports",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:audit:http:GET:/audit/log",
+      "type": "entry",
+      "label": "GET /audit/log",
+      "repo": "audit",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/audit/log",
+        "rawPath": "/audit/log",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/products",
+      "type": "entry",
+      "label": "GET /products",
+      "repo": "catalog",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products",
+        "rawPath": "/products",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:legacy:http:GET:/status",
+      "type": "entry",
+      "label": "GET /status",
+      "repo": "legacy",
+      "file": "src/app.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/status",
+        "rawPath": "/status",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:legacy:http:GET:/v1/orders",
+      "type": "entry",
+      "label": "GET /v1/orders",
+      "repo": "legacy",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/v1/orders",
+        "rawPath": "/v1/orders",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/open",
+      "type": "entry",
+      "label": "GET /orders/open",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/open",
+        "rawPath": "/orders/open",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/status",
+      "type": "entry",
+      "label": "GET /status",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/status",
+        "rawPath": "/status",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:reports:http:GET:/reports",
+      "type": "entry",
+      "label": "GET /reports",
+      "repo": "reports",
+      "file": "src/app.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/reports",
+        "rawPath": "/reports",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/levels",
+      "type": "entry",
+      "label": "GET /levels",
+      "repo": "stock",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/levels",
+        "rawPath": "/levels",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:11:35",
+      "type": "http_out",
+      "label": "GET /status",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 11,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/status",
+        "path": "/status",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:14:36",
+      "type": "http_out",
+      "label": "GET /nowhere",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 14,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/nowhere",
+        "path": "/nowhere",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:20:31",
+      "type": "http_out",
+      "label": "GET /products",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 20,
+      "meta": {
+        "method": "GET",
+        "url": "${CATALOG_URL}/products",
+        "path": "/products",
+        "baseUrlEnv": "CATALOG_URL",
+        "baseUrlAlso": [
+          "STOCK_URL",
+          "ARCHIVE_URL"
+        ],
+        "baseUrlEither": [
+          "CATALOG_URL",
+          "STOCK_URL"
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:23:34",
+      "type": "http_out",
+      "label": "GET /exports",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 23,
+      "meta": {
+        "method": "GET",
+        "url": "${CATALOG_URL}/exports",
+        "path": "/exports",
+        "baseUrlEnv": "CATALOG_URL",
+        "baseUrlAlso": [
+          "STOCK_URL",
+          "ARCHIVE_URL"
+        ],
+        "baseUrlEither": [
+          "CATALOG_URL",
+          "STOCK_URL"
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "archive"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:26:28",
+      "type": "http_out",
+      "label": "GET /items",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 26,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4000/items",
+        "path": "/items",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4000",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:29:38",
+      "type": "http_out",
+      "label": "GET /items",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 29,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3000/items",
+        "path": "/items",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:3000",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:32:31",
+      "type": "http_out",
+      "label": "GET /audit/log",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 32,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3100/audit/log",
+        "path": "/audit/log",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:3100",
+        "targetService": "audit"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:8:35",
+      "type": "http_out",
+      "label": "GET /v1/orders",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/v1/orders",
+        "path": "/v1/orders",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "legacy"
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:auditLog",
+      "type": "function",
+      "label": "auditLog",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:exportsList",
+      "type": "function",
+      "label": "exportsList",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:items",
+      "type": "function",
+      "label": "items",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:itemsAtFallback",
+      "type": "function",
+      "label": "itemsAtFallback",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:legacyOrders",
+      "type": "function",
+      "label": "legacyOrders",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:ordersNowhere",
+      "type": "function",
+      "label": "ordersNowhere",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:ordersStatus",
+      "type": "function",
+      "label": "ordersStatus",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:products",
+      "type": "function",
+      "label": "products",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:shelfBase",
+      "type": "function",
+      "label": "shelfBase",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "legacy#src/app.ts:GET /status@10",
+      "type": "function",
+      "label": "GET /status@10",
+      "repo": "legacy",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "legacy#src/app.ts:GET /v1/orders@6",
+      "type": "function",
+      "label": "GET /v1/orders@6",
+      "repo": "legacy",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders#src/app.ts:GET /orders/open@6",
+      "type": "function",
+      "label": "GET /orders/open@6",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders#src/app.ts:GET /status@10",
+      "type": "function",
+      "label": "GET /status@10",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 13,
+            "setting": "API_PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:archive",
+      "type": "repo",
+      "label": "archive",
+      "repo": "archive",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4105,
+            "file": "src/app.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:audit",
+      "type": "repo",
+      "label": "audit",
+      "repo": "audit",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3100,
+            "file": "src/app.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4103,
+            "file": "src/app.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:legacy",
+      "type": "repo",
+      "label": "legacy",
+      "repo": "legacy",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4102,
+            "file": "src/app.ts",
+            "line": 14
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4101,
+            "file": "src/app.ts",
+            "line": 14
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:reports",
+      "type": "repo",
+      "label": "reports",
+      "repo": "reports",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3100,
+            "file": "src/app.ts",
+            "line": 13,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4104,
+            "file": "src/app.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports#src/app.ts:GET /reports@9",
+      "type": "function",
+      "label": "GET /reports@9",
+      "repo": "reports",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/app.ts:GET /levels@6",
+      "type": "function",
+      "label": "GET /levels@6",
+      "repo": "stock",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:api:http:GET:/items",
+      "to": "api#src/app.ts:GET /items@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:archive:http:GET:/exports",
+      "to": "archive#src/app.ts:GET /exports@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:audit:http:GET:/audit/log",
+      "to": "audit#src/app.ts:GET /audit/log@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/products",
+      "to": "catalog#src/app.ts:GET /products@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:legacy:http:GET:/status",
+      "to": "legacy#src/app.ts:GET /status@10",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{status:string}",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:legacy:http:GET:/v1/orders",
+      "to": "legacy#src/app.ts:GET /v1/orders@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/orders/open",
+      "to": "orders#src/app.ts:GET /orders/open@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/status",
+      "to": "orders#src/app.ts:GET /status@10",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{status:string}",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:reports:http:GET:/reports",
+      "to": "reports#src/app.ts:GET /reports@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/levels",
+      "to": "stock#src/app.ts:GET /levels@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:20:31",
+      "to": "entry:catalog:http:GET:/products",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/calls.ts",
+      "line": 20,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "catalog",
+        "chosenAmong": [
+          "CATALOG_URL (catalog)",
+          "STOCK_URL (stock)",
+          "ARCHIVE_URL (archive)"
+        ]
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:23:34",
+      "to": "entry:archive:http:GET:/exports",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/calls.ts",
+      "line": 23,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "archive",
+        "chosenAmong": [
+          "CATALOG_URL (catalog)",
+          "STOCK_URL (stock)",
+          "ARCHIVE_URL (archive)"
+        ]
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:26:28",
+      "to": "entry:api:http:GET:/items",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/calls.ts",
+      "line": 26,
+      "meta": {
+        "via": "host",
+        "targetService": "api",
+        "listensAt": "src/app.ts:13 (API_PORT from .env.development) (a file nothing is read loading)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:29:38",
+      "to": "entry:api:http:GET:/items",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/calls.ts",
+      "line": 29,
+      "meta": {
+        "via": "host",
+        "targetService": "api",
+        "listensAt": "src/app.ts:13 (API_PORT)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:32:31",
+      "to": "entry:audit:http:GET:/audit/log",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 32,
+      "meta": {
+        "via": "host",
+        "targetService": "audit",
+        "listensAt": "src/app.ts:10"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:8:35",
+      "to": "entry:legacy:http:GET:/v1/orders",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/calls.ts",
+      "line": 8,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "legacy",
+        "chosenAmong": [
+          "ORDERS_URL (orders)",
+          "ORDERS_URL (legacy)"
+        ]
+      }
+    },
+    {
+      "from": "jobs#src/calls.ts:auditLog",
+      "to": "http_out:jobs#src/calls.ts:32:31",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 32
+    },
+    {
+      "from": "jobs#src/calls.ts:exportsList",
+      "to": "http_out:jobs#src/calls.ts:23:34",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 23
+    },
+    {
+      "from": "jobs#src/calls.ts:exportsList",
+      "to": "jobs#src/calls.ts:shelfBase",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/calls.ts",
+      "line": 23
+    },
+    {
+      "from": "jobs#src/calls.ts:items",
+      "to": "http_out:jobs#src/calls.ts:26:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 26
+    },
+    {
+      "from": "jobs#src/calls.ts:itemsAtFallback",
+      "to": "http_out:jobs#src/calls.ts:29:38",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 29
+    },
+    {
+      "from": "jobs#src/calls.ts:legacyOrders",
+      "to": "http_out:jobs#src/calls.ts:8:35",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 8
+    },
+    {
+      "from": "jobs#src/calls.ts:ordersNowhere",
+      "to": "http_out:jobs#src/calls.ts:14:36",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 14
+    },
+    {
+      "from": "jobs#src/calls.ts:ordersStatus",
+      "to": "http_out:jobs#src/calls.ts:11:35",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 11
+    },
+    {
+      "from": "jobs#src/calls.ts:products",
+      "to": "http_out:jobs#src/calls.ts:20:31",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 20
+    },
+    {
+      "from": "jobs#src/calls.ts:products",
+      "to": "jobs#src/calls.ts:shelfBase",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/calls.ts",
+      "line": 20
+    },
+    {
+      "from": "jobs#src/calls.ts:shelfBase",
+      "to": "config_key:jobs#ARCHIVE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 17
+    },
+    {
+      "from": "jobs#src/calls.ts:shelfBase",
+      "to": "config_key:jobs#CATALOG_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 17
+    },
+    {
+      "from": "jobs#src/calls.ts:shelfBase",
+      "to": "config_key:jobs#STOCK_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 17
+    }
+  ],
+  "types": {
+    "type:express#Request<any,any,any>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "jobs"
+    },
+    {
+      "service": "jobs",
+      "file": "src/calls.ts",
+      "line": 11,
+      "reason": "ambiguous-route-target",
+      "message": "the request's base is one of ORDERS_URL (orders) and ORDERS_URL (legacy), a setting several services claim, and orders and legacy each serve GET /status",
+      "hint": "Read the base from one setting, or annotate the call with @CallsService naming the service it reaches.",
+      "symbol": "http_out:jobs#src/calls.ts:11:35"
+    },
+    {
+      "service": "jobs",
+      "file": "src/calls.ts",
+      "line": 14,
+      "reason": "unknown-base-url-env",
+      "message": "ORDERS_URL is declared on services orders and legacy",
+      "hint": "Leave ORDERS_URL on the one service that answers it.",
+      "symbol": "http_out:jobs#src/calls.ts:14:36"
+    },
+    {
+      "file": "src/calls.ts",
+      "line": 17,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "jobs"
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-06T18:33:36.110Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:orders#src/orders/cancel-order.ts:10:9",
+        "to": "consumer:orders#template.yaml:Resources.RefundOrderFunction.Events.Cancelled",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/orders/cancel-order.ts:10:9|emits|consumer:orders#template.yaml:Resources.RefundOrderFunction.Events.Cancelled",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "{orderId:string}",
+        "symbol": "orders#src/orders/cancel-order.ts:handler"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{orderId:string}",
+        "symbol": "orders#src/refunds/refund-order.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/orders/place-order.ts:20:9",
+        "to": "consumer:orders#template.yaml:Resources.ShipOrderFunction.Events.Placed",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/orders/place-order.ts:20:9|emits|consumer:orders#template.yaml:Resources.ShipOrderFunction.Events.Placed",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#Order",
+        "symbol": "orders#src/orders/place-order.ts:handler"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#Order",
+        "symbol": "orders#src/shipping/ship-order.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:orders#template.yaml:Resources.PlacedQueue",
+        "to": "channel:sqs/orders-dev-placed-dlq",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/orders-dev-placed-dlq|emits|producer:orders#template.yaml:Resources.PlacedQueue",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/orders-dev-placed-dlq is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/orders/place-order.ts:19:9",
+        "to": "consumer:orders#template.yaml:Resources.OrderChangedFunction.Events.Changed",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/orders/place-order.ts:19:9|emits|consumer:orders#template.yaml:Resources.OrderChangedFunction.Events.Changed",
+      "direction": "payload",
+      "reason": "delivery-target-unread",
+      "message": "nothing consumer:orders#template.yaml:Resources.OrderChangedFunction.Events.Changed delivers to is code this project reads",
+      "hint": "The target is not code any configured service holds - an e-mail address, or a function no configured service deploys - so there is nothing to compare the message with. Configure the service that deploys it to compare it."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/orders/place-order.ts:21:9",
+        "to": "consumer:orders#template.yaml:Resources.ShippingStateMachine.Events.Placed",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/orders/place-order.ts:21:9|emits|consumer:orders#template.yaml:Resources.ShippingStateMachine.Events.Placed",
+      "direction": "payload",
+      "reason": "message-undeclared",
+      "message": "orders#statemachine/shipping.asl.json:orders-dev-shipping/ReserveStock declares no type for what is at detail of what it is handed",
+      "hint": "Type the handler's parameter with the message's own type inside it, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/shipping/ship-order.ts:16:9",
+        "to": "consumer:orders#template.yaml:Resources.IndexInvoiceFunction.Events.Uploaded",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/shipping/ship-order.ts:16:9|emits|consumer:orders#template.yaml:Resources.IndexInvoiceFunction.Events.Uploaded",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/shipping/ship-order.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/shipping/ship-order.ts:17:9",
+        "to": "consumer:orders#template.yaml:Resources.NotifyCustomerFunction.Events.Shipped",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/shipping/ship-order.ts:17:9|emits|consumer:orders#template.yaml:Resources.NotifyCustomerFunction.Events.Shipped",
+      "direction": "payload",
+      "reason": "message-unparsed",
+      "message": "orders#src/notices/notify-customer.ts:handler does not parse the text at Records[].Sns.Message of what it is handed into a declared type",
+      "hint": "Parse the message into a declared type where the handler reads it - `JSON.parse(text) as Order`, or into a variable declared with one - so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 2,
+    "shared": 0,
+    "identical": 2,
+    "hash_differs": 0,
+    "unchecked": 5,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

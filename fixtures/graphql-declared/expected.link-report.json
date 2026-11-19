@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-05T17:52:16.713Z",
+  "configHash": "67d10c150b78",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "catalog.graphql",
+      "type": "declared",
+      "extractor": "graphql-document",
+      "nodes": 5,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 4
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 596,
+      "packages": {
+        "name": "graphql-shop",
+        "runtime": [
+          "@apollo/client",
+          "graphql",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 1,
+    "resolved": 1,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 1,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 8,
+    "edges": 5,
+    "types": 0,
+    "missed": 1,
+    "sites": 1,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 1
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "pair-keys-instances",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Workspace root. Declares the one service, and holds no code of its own.",
+  "workspaces": [
+    "console"
+  ]
+}

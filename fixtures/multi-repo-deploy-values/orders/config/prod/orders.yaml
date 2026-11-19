@@ -1,0 +1,7 @@
+template_path: orders.yaml.j2
+sceptre_user_data:
+  handler: ship.handler
+parameters:
+  # The events stack of this project, and billing's stack, by their outputs.
+  EventsTopicName: !stack_output prod/events.yaml::TopicName
+  InvoicesQueueName: !stack_output_external shop-billing::InvoicesQueueName

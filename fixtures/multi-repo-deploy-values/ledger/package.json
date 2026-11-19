@@ -1,0 +1,13 @@
+{
+  "name": "shop-ledger",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The ledger of a shop, written with Terraform, reading the platform's parameters and the outputs of its state.",
+  "dependencies": {
+    "@aws-sdk/client-sns": "^3.700.0",
+    "@aws-sdk/client-sqs": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

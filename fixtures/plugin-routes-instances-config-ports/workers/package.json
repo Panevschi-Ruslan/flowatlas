@@ -1,0 +1,10 @@
+{
+  "name": "workers",
+  "private": true,
+  "scripts": {
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

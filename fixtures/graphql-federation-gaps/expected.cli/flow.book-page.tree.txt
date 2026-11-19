@@ -1,0 +1,14 @@
+%  BookPage                               shop/src/BookPage.tsx:18
+  ^  query Book /graphql                  shop/src/BookPage.tsx:19
+    => catalog @  Query.book ?declared    catalog/src/index.ts:14
+      !  @authenticated for Book.price
+      -> Query.book@14                    catalog/src/index.ts:14
+        -> bookById                       catalog/src/books.ts:17
+    => catalog @  Book.details ?declared  catalog/src/index.ts:18
+      !  @requiresScopes(catalog:staff) for Edition.year
+      -> Book.details@18                  catalog/src/index.ts:18
+        -> detailsOf                      catalog/src/books.ts:21
+    => router @  POST /graphql ?declared  router/router/supergraph.graphql
+      => catalog @  POST / ?declared      catalog/src/index.ts:22
+      => reviews @  POST / ?declared      reviews/src/index.ts:35
+unresolved on this path: 1

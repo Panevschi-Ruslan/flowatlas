@@ -7,12 +7,12 @@
       "entriesByKind": {
         "http": 8
       },
-      "gaps": 3
+      "gaps": 4
     }
   ],
   "counts": {
-    "gaps": 3,
-    "sites": 3,
+    "gaps": 4,
+    "sites": 4,
     "notes": 0,
     "findings": 0,
     "nothing": 0
@@ -20,7 +20,7 @@
   "topGaps": [
     {
       "reason": "dynamic-http-url",
-      "count": 1,
+      "count": 2,
       "services": [
         "gateway"
       ],

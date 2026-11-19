@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "repo": "nest-shared-failures",
-  "generatedAt": "2026-10-17T01:51:43.332Z",
+  "generatedAt": "2026-11-07T17:39:51.578Z",
   "nodes": [
     {
       "id": "entry:nest-shared-failures:http:DELETE:/billing/:param",
@@ -1767,7 +1767,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 9
+          }
+        ]
       }
     }
   ],

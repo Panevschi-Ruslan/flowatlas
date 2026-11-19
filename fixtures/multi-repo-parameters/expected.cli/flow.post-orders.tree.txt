@@ -1,0 +1,9 @@
+@  POST /orders                                                           orders/serverless.yml:18
+  -> handler                                                              orders/src/place-order.ts:7
+    $  PLACED_QUEUE_URL                                                   orders/src/place-order.ts:9
+    ~  message sqs/shop-orders-placed                                     orders/src/place-order.ts:9
+      ~  sqs/shop-orders-placed                                           stacks/catalog.yaml:73
+        => reports ~  mapping reports-worker/Tally/SqsEventSource:reports-worker/Placed  reports/lib/stacks.ts:53
+          @  reports-tally                                                reports/lib/stacks.ts:52
+            -> handler                                                    reports/src/tally.ts:2
+unresolved on this path: 0

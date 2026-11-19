@@ -35,6 +35,8 @@ describe('normalizePath', () => {
     ['/orders/:id?', '/orders/:param'],
     ['/orders/:id(\\d+)', '/orders/:param'],
     ['/files/*', '/files/*'],
+    ['/files/{proxy+}', '/files/*'],
+    ['{proxy+}', '/*'],
     ['/orders/:param', '/orders/:param'],
     ['/Orders/Items', '/Orders/Items'],
     ['  /orders/:id  ', '/orders/:param'],
@@ -245,5 +247,17 @@ describe('a path inside a directory, spelled either way (P199)', () => {
     expect(packageOfPath('C:/work/shop/node_modules/left-pad/index.d.ts')).toBe('left-pad');
     expect(isExternalFile('C:\\work\\shop\\node_modules\\left-pad\\index.d.ts')).toBe(true);
     expect(isExternalFile('C:\\work\\shop\\src\\main.ts')).toBe(false);
+  });
+});
+
+describe('the keys and addresses values shared between deployments are read by (P253)', () => {
+  it('spells a parameter of the account, one reading of a declaration, and a generated name of another repository', async () => {
+    const { alternativeAddress, alternativeOf, generatedName, ownedGeneratedName, parameterKey } = await import('./ids.js');
+    expect(parameterKey('/shop/orders/queue')).toBe('parameter:/shop/orders/queue');
+    const address = alternativeAddress('Resources.Mapping', 'table');
+    expect(alternativeOf(address)).toEqual({ address: 'Resources.Mapping', kind: 'table' });
+    expect(alternativeOf('Resources.Mapping')).toBeUndefined();
+    expect(ownedGeneratedName('catalog', generatedName('Resources.Topic'))).toBe('${…}@catalog@Resources.Topic');
+    expect(ownedGeneratedName('catalog', 'shop-topic')).toBe('shop-topic');
   });
 });

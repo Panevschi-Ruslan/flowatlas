@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-17T18:17:57.907Z",
+  "configHash": "b08112f32b05",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2139,
+      "packages": {
+        "name": "admin",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2025,
+      "packages": {
+        "name": "api",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "cms",
+      "repo": "./cms",
+      "type": "strapi",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 10,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 2123,
+      "packages": {
+        "name": "cms",
+        "runtime": [
+          "@strapi/strapi",
+          "react",
+          "react-dom"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "fastify",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 2044,
+      "packages": {
+        "name": "gateway",
+        "runtime": [
+          "fastify",
+          "fastify-cli"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2003,
+      "packages": {
+        "name": "jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "poller",
+      "repo": "./poller",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 23,
+      "edges": 16,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2038,
+      "packages": {
+        "name": "poller",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "gatsby",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 10,
+      "edges": 6,
+      "types": 0,
+      "unresolved": 8,
+      "durationMs": 2164,
+      "packages": {
+        "name": "site",
+        "runtime": [
+          "gatsby",
+          "react",
+          "react-dom"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 8,
+    "linked": 8,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 2,
+    "resolved": 2,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 13,
+    "called": 10,
+    "uncalled": [
+      "entry:cms:http:POST:/api/products",
+      "entry:cms:http:POST:/api/products/:param/archive",
+      "entry:cms:http:PUT:/api/products/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 48,
+    "edges": 29,
+    "types": 0,
+    "missed": 14,
+    "sites": 23,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 14
+  }
+}

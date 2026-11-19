@@ -1,0 +1,10 @@
+{
+  "name": "nuxt-startup-names",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Workspace root. Declares the application and the layer beside it, and holds no code of its own.",
+  "workspaces": [
+    "shop",
+    "brand"
+  ]
+}

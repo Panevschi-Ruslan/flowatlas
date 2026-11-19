@@ -1,0 +1,4 @@
+resources:
+  - orders.yaml
+transformers:
+  - transformers

@@ -1,0 +1,1230 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-17T21:21:46.884Z",
+  "services": [
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "console#src/App.tsx:App",
+      "type": "ui_component",
+      "label": "App",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 12,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:AreaEdit",
+      "type": "ui_component",
+      "label": "AreaEdit",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 3,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/areas/billing/edit"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Atlas",
+      "type": "ui_component",
+      "label": "Atlas",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 9,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/shelves/atlas"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:AtlasPrint",
+      "type": "ui_component",
+      "label": "AtlasPrint",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/shelves/atlas/print"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Audit",
+      "type": "ui_component",
+      "label": "Audit",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 8,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Backlog",
+      "type": "ui_component",
+      "label": "Backlog",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/tasks/backlog/board"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Billing",
+      "type": "ui_component",
+      "label": "Billing",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/areas/billing"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:FrontDesk",
+      "type": "ui_component",
+      "label": "FrontDesk",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 12,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/desks/front"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Hidden",
+      "type": "ui_component",
+      "label": "Hidden",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 14,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Kanban",
+      "type": "ui_component",
+      "label": "Kanban",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/boards/kanban/view"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Members",
+      "type": "ui_component",
+      "label": "Members",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/teams/members"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:MenuHome",
+      "type": "ui_component",
+      "label": "MenuHome",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 11,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/menu/home"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Start",
+      "type": "ui_component",
+      "label": "Start",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/guides/start"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Usage",
+      "type": "ui_component",
+      "label": "Usage",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 13,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/panels/usage"
+      }
+    },
+    {
+      "id": "console#src/lib/desks.ts:desks",
+      "type": "function",
+      "label": "desks",
+      "repo": "console",
+      "file": "src/lib/desks.ts",
+      "line": 19
+    },
+    {
+      "id": "console#src/lib/desks.ts:makeDesks",
+      "type": "function",
+      "label": "makeDesks",
+      "repo": "console",
+      "file": "src/lib/desks.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{items:type:console#Entry[]}"
+        }
+      }
+    },
+    {
+      "id": "console#src/lib/lists.ts:listAreas",
+      "type": "function",
+      "label": "listAreas",
+      "repo": "console",
+      "file": "src/lib/lists.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#Entry[]"
+        }
+      }
+    },
+    {
+      "id": "console#src/lib/lists.ts:listBoards",
+      "type": "function",
+      "label": "listBoards",
+      "repo": "console",
+      "file": "src/lib/lists.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#Entry[]"
+        }
+      }
+    },
+    {
+      "id": "console#src/lib/lists.ts:listTasks",
+      "type": "function",
+      "label": "listTasks",
+      "repo": "console",
+      "file": "src/lib/lists.ts",
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#Entry[]"
+        }
+      }
+    },
+    {
+      "id": "console#src/lib/lists.ts:listTeams",
+      "type": "function",
+      "label": "listTeams",
+      "repo": "console",
+      "file": "src/lib/lists.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#Entry[]"
+        }
+      }
+    },
+    {
+      "id": "console#src/lib/menu.ts:makeMenu",
+      "type": "function",
+      "label": "makeMenu",
+      "repo": "console",
+      "file": "src/lib/menu.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "object"
+        }
+      }
+    },
+    {
+      "id": "console#src/lib/menu.ts:menu",
+      "type": "function",
+      "label": "menu",
+      "repo": "console",
+      "file": "src/lib/menu.ts",
+      "line": 18
+    },
+    {
+      "id": "console#src/lib/menu.ts:spare",
+      "type": "function",
+      "label": "spare",
+      "repo": "console",
+      "file": "src/lib/menu.ts",
+      "line": 22
+    },
+    {
+      "id": "console#src/lib/shelves.ts:archive",
+      "type": "function",
+      "label": "archive",
+      "repo": "console",
+      "file": "src/lib/shelves.ts",
+      "line": 27
+    },
+    {
+      "id": "console#src/lib/shelves.ts:makeShelves",
+      "type": "function",
+      "label": "makeShelves",
+      "repo": "console",
+      "file": "src/lib/shelves.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#ShelfRegistry"
+        }
+      }
+    },
+    {
+      "id": "console#src/lib/shelves.ts:shelves",
+      "type": "function",
+      "label": "shelves",
+      "repo": "console",
+      "file": "src/lib/shelves.ts",
+      "line": 24
+    },
+    {
+      "id": "console#src/routes/PanelRoutes.tsx:PanelRoutes",
+      "type": "ui_component",
+      "label": "PanelRoutes",
+      "repo": "console",
+      "file": "src/routes/PanelRoutes.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ registry }",
+              "type": "{registry:type:console#PanelRegistry}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/routes/PanelRoutes.tsx:ShelfRoutes",
+      "type": "ui_component",
+      "label": "ShelfRoutes",
+      "repo": "console",
+      "file": "src/routes/PanelRoutes.tsx",
+      "line": 17,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "props",
+              "type": "{shelf:type:console#ShelfRegistry}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "repo:console",
+      "type": "repo",
+      "label": "console",
+      "repo": "console",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "functions": 29,
+          "components": 16,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:site",
+      "type": "repo",
+      "label": "site",
+      "repo": "site",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 9,
+          "components": 9,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 6,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "site#src/app/find/page.tsx:FindPage",
+      "type": "ui_component",
+      "label": "FindPage",
+      "repo": "site",
+      "file": "src/app/find/page.tsx",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/find"
+      }
+    },
+    {
+      "id": "site#src/app/help/page.tsx:HelpPage",
+      "type": "ui_component",
+      "label": "HelpPage",
+      "repo": "site",
+      "file": "src/app/help/page.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/help"
+      }
+    },
+    {
+      "id": "site#src/app/portal/page.tsx:PortalPage",
+      "type": "ui_component",
+      "label": "PortalPage",
+      "repo": "site",
+      "file": "src/app/portal/page.tsx",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/portal"
+      }
+    },
+    {
+      "id": "site#src/app/search/page.tsx:SearchPage",
+      "type": "ui_component",
+      "label": "SearchPage",
+      "repo": "site",
+      "file": "src/app/search/page.tsx",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/search"
+      }
+    },
+    {
+      "id": "site#src/components/FindLink.tsx:FindLink",
+      "type": "ui_component",
+      "label": "FindLink",
+      "repo": "site",
+      "file": "src/components/FindLink.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ terms, children }",
+              "type": "{terms:string;children:unknown}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "site#src/components/Footer.tsx:Footer",
+      "type": "ui_component",
+      "label": "Footer",
+      "repo": "site",
+      "file": "src/components/Footer.tsx",
+      "line": 8,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "site#src/components/PortalLink.tsx:PortalLink",
+      "type": "ui_component",
+      "label": "PortalLink",
+      "repo": "site",
+      "file": "src/components/PortalLink.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ href, children }",
+              "type": "{href:string;children:unknown}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "site#src/components/Recent.tsx:Recent",
+      "type": "ui_component",
+      "label": "Recent",
+      "repo": "site",
+      "file": "src/components/Recent.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "site#src/components/SearchLink.tsx:SearchLink",
+      "type": "ui_component",
+      "label": "SearchLink",
+      "repo": "site",
+      "file": "src/components/SearchLink.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ query, children }",
+              "type": "{query:string;children:unknown}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/lists.ts:listAreas",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#Entry[]",
+      "file": "src/App.tsx",
+      "line": 14
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/lists.ts:listBoards",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#Entry[]",
+      "file": "src/App.tsx",
+      "line": 18
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/lists.ts:listTasks",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#Entry[]",
+      "file": "src/App.tsx",
+      "line": 25
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/lists.ts:listTeams",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#Entry[]",
+      "file": "src/App.tsx",
+      "line": 22
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/routes/PanelRoutes.tsx:PanelRoutes",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{registry:type:console#PanelRegistry}"
+      ],
+      "returns": "unknown",
+      "file": "src/App.tsx",
+      "line": 65,
+      "meta": {
+        "renders": "PanelRoutes"
+      }
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/routes/PanelRoutes.tsx:ShelfRoutes",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{shelf:type:console#ShelfRegistry}"
+      ],
+      "returns": "unknown",
+      "file": "src/App.tsx",
+      "line": 66,
+      "meta": {
+        "renders": "ShelfRoutes"
+      }
+    },
+    {
+      "from": "console#src/lib/desks.ts:desks",
+      "to": "console#src/lib/desks.ts:makeDesks",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{items:type:console#Entry[]}",
+      "file": "src/lib/desks.ts",
+      "line": 19
+    },
+    {
+      "from": "console#src/lib/menu.ts:menu",
+      "to": "console#src/lib/menu.ts:makeMenu",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "object",
+      "file": "src/lib/menu.ts",
+      "line": 18
+    },
+    {
+      "from": "console#src/lib/menu.ts:spare",
+      "to": "console#src/lib/menu.ts:makeMenu",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "object",
+      "file": "src/lib/menu.ts",
+      "line": 22
+    },
+    {
+      "from": "console#src/lib/shelves.ts:archive",
+      "to": "console#src/lib/shelves.ts:makeShelves",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#ShelfRegistry",
+      "file": "src/lib/shelves.ts",
+      "line": 27
+    },
+    {
+      "from": "console#src/lib/shelves.ts:shelves",
+      "to": "console#src/lib/shelves.ts:makeShelves",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#ShelfRegistry",
+      "file": "src/lib/shelves.ts",
+      "line": 24
+    },
+    {
+      "from": "site#src/app/help/page.tsx:HelpPage",
+      "to": "site#src/components/Footer.tsx:Footer",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/app/help/page.tsx",
+      "line": 9,
+      "meta": {
+        "renders": "Footer"
+      }
+    },
+    {
+      "from": "site#src/app/help/page.tsx:HelpPage",
+      "to": "site#src/components/Recent.tsx:Recent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/app/help/page.tsx",
+      "line": 8,
+      "meta": {
+        "renders": "Recent"
+      }
+    },
+    {
+      "from": "site#src/components/Footer.tsx:Footer",
+      "to": "site#src/app/find/page.tsx:FindPage",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Footer.tsx",
+      "line": 12,
+      "meta": {
+        "navigates": "/find?q=shoes",
+        "route": "/find",
+        "page": "src/app/find/page.tsx",
+        "link": "FindLink",
+        "wrapper": "FindLink",
+        "alsoNavigates": [
+          "/find${search.get('again')}"
+        ]
+      }
+    },
+    {
+      "from": "site#src/components/Footer.tsx:Footer",
+      "to": "site#src/components/FindLink.tsx:FindLink",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{terms:string;children:unknown}"
+      ],
+      "returns": "unknown",
+      "file": "src/components/Footer.tsx",
+      "line": 12,
+      "meta": {
+        "renders": "FindLink"
+      }
+    },
+    {
+      "from": "site#src/components/Footer.tsx:Footer",
+      "to": "site#src/components/PortalLink.tsx:PortalLink",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{href:string;children:unknown}"
+      ],
+      "returns": "unknown",
+      "file": "src/components/Footer.tsx",
+      "line": 14,
+      "meta": {
+        "renders": "PortalLink"
+      }
+    },
+    {
+      "from": "site#src/components/Recent.tsx:Recent",
+      "to": "site#src/app/search/page.tsx:SearchPage",
+      "type": "calls",
+      "confidence": "heuristic",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/components/Recent.tsx",
+      "line": 9,
+      "meta": {
+        "navigates": "/search${search.get('last')}",
+        "route": "/search",
+        "page": "src/app/search/page.tsx",
+        "query": "guess",
+        "link": "SearchLink",
+        "wrapper": "SearchLink"
+      }
+    },
+    {
+      "from": "site#src/components/Recent.tsx:Recent",
+      "to": "site#src/components/SearchLink.tsx:SearchLink",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{query:string;children:unknown}"
+      ],
+      "returns": "unknown",
+      "file": "src/components/Recent.tsx",
+      "line": 9,
+      "meta": {
+        "renders": "SearchLink"
+      }
+    }
+  ],
+  "types": {
+    "type:console#Entry": {
+      "name": "Entry",
+      "kind": "object",
+      "declaredIn": "console#src/lib/lists.ts",
+      "structuralHash": "42dddeeb16fddd2a",
+      "fields": [
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "Screen",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:console#PanelRegistry": {
+      "name": "PanelRegistry",
+      "kind": "object",
+      "declaredIn": "console#src/lib/panels.ts",
+      "structuralHash": "89a612c1081a9984",
+      "fields": [
+        {
+          "name": "items",
+          "type": "type:console#Entry[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:console#ShelfRegistry": {
+      "name": "ShelfRegistry",
+      "kind": "object",
+      "declaredIn": "console#src/lib/shelves.ts",
+      "structuralHash": "89a612c1081a9984",
+      "fields": [
+        {
+          "name": "items",
+          "type": "type:console#Entry[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/App.tsx",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/App.tsx",
+      "line": 56,
+      "reason": "route-entries-unread",
+      "level": "info",
+      "message": "1 entry of logs, which a route of src/App.tsx is written over, is not read, so the screen it places is not placed (the list is mapped in a way not read: each [key, entry] pair is read otherwise than taken apart as [key, entry])",
+      "hint": "Write the entries as objects in place - in the list, or handed to the functions adding to a registry - with the path as text and the screen as a component of the repository, and map them, where they are mapped, to an object written over each.",
+      "symbol": "routes over logs",
+      "meta": {
+        "cause": "route-entries-unread",
+        "list": "logs",
+        "unread": 1,
+        "read": 0,
+        "why": [
+          "the list is mapped in a way not read: each [key, entry] pair is read otherwise than taken apart as [key, entry]"
+        ]
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 11,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 14,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/lib/lists.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ComponentType",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/routes/PanelRoutes.tsx",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/routes/PanelRoutes.tsx",
+      "line": 17,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/app/find/page.tsx",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/app/help/page.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/app/portal/page.tsx",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/app/search/page.tsx",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/components/FindLink.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ReactNode",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/components/FindLink.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/components/Footer.tsx",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/components/Footer.tsx",
+      "line": 14,
+      "reason": "navigation-unresolved",
+      "level": "info",
+      "sites": 2,
+      "message": "src/components/Footer.tsx navigates to an address under /portal/ whose rest is written as code (/portal/${search.get('to')}), so which page it shows is not read",
+      "hint": "Write the address as a literal or a template of one, or as `{ name: '...' }` with a literal name.",
+      "symbol": "Footer navigates to /portal/${search.get('to')}",
+      "meta": {
+        "why": "dynamic",
+        "causes": [
+          {
+            "cause": "navigation-unresolved",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/components/Footer.tsx",
+                "line": 14,
+                "symbol": "Footer navigates to /portal/${search.get('to')}",
+                "meta": {
+                  "navigates": "/portal/${search.get('to')}",
+                  "prefix": "/portal/"
+                }
+              },
+              {
+                "file": "src/components/Recent.tsx",
+                "line": 9,
+                "symbol": "Recent navigates to /search${search.get('last')}",
+                "meta": {
+                  "navigates": "/search${search.get('last')}",
+                  "prefix": "/search"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/components/PortalLink.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ReactNode",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/components/PortalLink.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/components/Recent.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
+    {
+      "file": "src/components/SearchLink.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ReactNode",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/components/SearchLink.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    }
+  ]
+}

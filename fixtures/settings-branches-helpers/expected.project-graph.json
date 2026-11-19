@@ -1,0 +1,1456 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T12:34:56.627Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/index.ts:GET /categories@9",
+      "type": "function",
+      "label": "GET /categories@9",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /items@5",
+      "type": "function",
+      "label": "GET /items@5",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "config_key:web#CATALOG_URL",
+      "type": "config_key",
+      "label": "CATALOG_URL",
+      "repo": "web",
+      "file": "lib/api.ts",
+      "line": 14,
+      "meta": {
+        "key": "CATALOG_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:web#NEXT_PUBLIC_CATALOG_URL",
+      "type": "config_key",
+      "label": "NEXT_PUBLIC_CATALOG_URL",
+      "repo": "web",
+      "file": "components/Orders.tsx",
+      "line": 8,
+      "meta": {
+        "key": "NEXT_PUBLIC_CATALOG_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:web#NEXT_PUBLIC_ORDERS_DEV_URL",
+      "type": "config_key",
+      "label": "NEXT_PUBLIC_ORDERS_DEV_URL",
+      "repo": "web",
+      "file": "components/Orders.tsx",
+      "line": 5,
+      "meta": {
+        "key": "NEXT_PUBLIC_ORDERS_DEV_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:web#NEXT_PUBLIC_ORDERS_URL",
+      "type": "config_key",
+      "label": "NEXT_PUBLIC_ORDERS_URL",
+      "repo": "web",
+      "file": "components/Orders.tsx",
+      "line": 5,
+      "meta": {
+        "key": "NEXT_PUBLIC_ORDERS_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:web#ORDERS_DEV_URL",
+      "type": "config_key",
+      "label": "ORDERS_DEV_URL",
+      "repo": "web",
+      "file": "lib/api.ts",
+      "line": 9,
+      "meta": {
+        "key": "ORDERS_DEV_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:web#ORDERS_URL",
+      "type": "config_key",
+      "label": "ORDERS_URL",
+      "repo": "web",
+      "file": "lib/api.ts",
+      "line": 8,
+      "meta": {
+        "key": "ORDERS_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/categories",
+      "type": "entry",
+      "label": "GET /categories",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/categories",
+        "rawPath": "/categories",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/late",
+      "type": "entry",
+      "label": "GET /orders/late",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/late",
+        "rawPath": "/orders/late",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/open",
+      "type": "entry",
+      "label": "GET /orders/open",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/open",
+        "rawPath": "/orders/open",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "http_out:web#server/orders.ts:12:21",
+      "type": "http_out",
+      "label": "GET /orders",
+      "repo": "web",
+      "file": "server/orders.ts",
+      "line": 12,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "ORDERS_URL",
+        "baseUrlAlso": [
+          "ORDERS_DEV_URL"
+        ],
+        "baseUrlEither": [
+          "ORDERS_URL",
+          "ORDERS_DEV_URL"
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "sameCall": "ui_api_call:web#server/orders.ts:12:21",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:web#server/orders.ts:18:21",
+      "type": "http_out",
+      "label": "GET /orders/late",
+      "repo": "web",
+      "file": "server/orders.ts",
+      "line": 18,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/orders/late",
+        "path": "/orders/late",
+        "baseUrlEnv": "ORDERS_URL",
+        "baseUrlAlso": [
+          "ORDERS_DEV_URL"
+        ],
+        "baseUrlEither": [
+          "ORDERS_URL",
+          "ORDERS_DEV_URL"
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "sameCall": "ui_api_call:web#server/orders.ts:18:21",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:web#server/orders.ts:24:21",
+      "type": "http_out",
+      "label": "GET /items",
+      "repo": "web",
+      "file": "server/orders.ts",
+      "line": 24,
+      "meta": {
+        "method": "GET",
+        "url": "${CATALOG_URL}/items",
+        "path": "/items",
+        "baseUrlEnv": "CATALOG_URL",
+        "baseUrlDefault": "http://localhost:4600",
+        "baseUrlDefaultFrom": "lib/api.ts",
+        "responseType": null,
+        "bodyType": null,
+        "sameCall": "ui_api_call:web#server/orders.ts:24:21",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "http_out:web#server/orders.ts:30:21",
+      "type": "http_out",
+      "label": "GET /categories",
+      "repo": "web",
+      "file": "server/orders.ts",
+      "line": 30,
+      "meta": {
+        "method": "GET",
+        "url": "${CATALOG_URL}/categories",
+        "path": "/categories",
+        "baseUrlEnv": "CATALOG_URL",
+        "responseType": null,
+        "bodyType": null,
+        "sameCall": "ui_api_call:web#server/orders.ts:30:21",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "http_out:web#server/orders.ts:6:21",
+      "type": "http_out",
+      "label": "GET /orders/open",
+      "repo": "web",
+      "file": "server/orders.ts",
+      "line": 6,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/orders/open",
+        "path": "/orders/open",
+        "baseUrlEnv": "ORDERS_URL",
+        "baseUrlAlso": [
+          "ORDERS_DEV_URL"
+        ],
+        "baseUrlEither": [
+          "ORDERS_URL",
+          "ORDERS_DEV_URL"
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "sameCall": "ui_api_call:web#server/orders.ts:6:21",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "orders#src/index.ts:GET /orders/late@13",
+      "type": "function",
+      "label": "GET /orders/late@13",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders#src/index.ts:GET /orders/open@9",
+      "type": "function",
+      "label": "GET /orders/open@9",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders#src/index.ts:GET /orders@5",
+      "type": "function",
+      "label": "GET /orders@5",
+      "repo": "orders",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4600,
+            "file": "src/index.ts",
+            "line": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4500,
+            "file": "src/index.ts",
+            "line": 17
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 11,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 6,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "ui_action:web#components/Orders.tsx:17:18",
+      "type": "ui_action",
+      "label": "onClick={load}",
+      "repo": "web",
+      "file": "components/Orders.tsx",
+      "line": 17,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "load",
+        "component": "web#components/Orders.tsx:Orders",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:web#components/Orders.tsx:14:11",
+      "type": "ui_api_call",
+      "label": "GET /orders",
+      "repo": "web",
+      "file": "components/Orders.tsx",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${NEXT_PUBLIC_ORDERS_URL}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "NEXT_PUBLIC_ORDERS_URL",
+        "baseUrlAlso": [
+          "NEXT_PUBLIC_ORDERS_DEV_URL"
+        ],
+        "baseUrlEither": [
+          "NEXT_PUBLIC_ORDERS_URL",
+          "NEXT_PUBLIC_ORDERS_DEV_URL"
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "guessed": true,
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:web#components/Orders.tsx:15:11",
+      "type": "ui_api_call",
+      "label": "GET /items",
+      "repo": "web",
+      "file": "components/Orders.tsx",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${NEXT_PUBLIC_CATALOG_URL}/items",
+        "path": "/items",
+        "baseUrlEnv": "NEXT_PUBLIC_CATALOG_URL",
+        "baseUrlDefault": "http://localhost:4600",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#server/orders.ts:12:21",
+      "type": "ui_api_call",
+      "label": "GET /orders",
+      "repo": "web",
+      "file": "server/orders.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "ORDERS_URL",
+        "baseUrlAlso": [
+          "ORDERS_DEV_URL"
+        ],
+        "baseUrlEither": [
+          "ORDERS_URL",
+          "ORDERS_DEV_URL"
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "guessed": true,
+        "sameCall": "http_out:web#server/orders.ts:12:21",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:web#server/orders.ts:18:21",
+      "type": "ui_api_call",
+      "label": "GET /orders/late",
+      "repo": "web",
+      "file": "server/orders.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/orders/late",
+        "path": "/orders/late",
+        "baseUrlEnv": "ORDERS_URL",
+        "baseUrlAlso": [
+          "ORDERS_DEV_URL"
+        ],
+        "baseUrlEither": [
+          "ORDERS_URL",
+          "ORDERS_DEV_URL"
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "guessed": true,
+        "sameCall": "http_out:web#server/orders.ts:18:21",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:web#server/orders.ts:24:21",
+      "type": "ui_api_call",
+      "label": "GET /items",
+      "repo": "web",
+      "file": "server/orders.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${CATALOG_URL}/items",
+        "path": "/items",
+        "baseUrlEnv": "CATALOG_URL",
+        "baseUrlDefault": "http://localhost:4600",
+        "baseUrlDefaultFrom": "lib/api.ts",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "sameCall": "http_out:web#server/orders.ts:24:21",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#server/orders.ts:30:21",
+      "type": "ui_api_call",
+      "label": "GET /categories",
+      "repo": "web",
+      "file": "server/orders.ts",
+      "line": 30,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${CATALOG_URL}/categories",
+        "path": "/categories",
+        "baseUrlEnv": "CATALOG_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "sameCall": "http_out:web#server/orders.ts:30:21",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#server/orders.ts:6:21",
+      "type": "ui_api_call",
+      "label": "GET /orders/open",
+      "repo": "web",
+      "file": "server/orders.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/orders/open",
+        "path": "/orders/open",
+        "baseUrlEnv": "ORDERS_URL",
+        "baseUrlAlso": [
+          "ORDERS_DEV_URL"
+        ],
+        "baseUrlEither": [
+          "ORDERS_URL",
+          "ORDERS_DEV_URL"
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "guessed": true,
+        "sameCall": "http_out:web#server/orders.ts:6:21",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "web#components/Orders.tsx:Orders",
+      "type": "ui_component",
+      "label": "Orders",
+      "repo": "web",
+      "file": "components/Orders.tsx",
+      "line": 12,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#components/Orders.tsx:catalogBase",
+      "type": "function",
+      "label": "catalogBase",
+      "repo": "web",
+      "file": "components/Orders.tsx",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#components/Orders.tsx:ordersBase",
+      "type": "function",
+      "label": "ordersBase",
+      "repo": "web",
+      "file": "components/Orders.tsx",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#lib/api.ts:catalogBase",
+      "type": "function",
+      "label": "catalogBase",
+      "repo": "web",
+      "file": "lib/api.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#lib/api.ts:ordersBase",
+      "type": "function",
+      "label": "ordersBase",
+      "repo": "web",
+      "file": "lib/api.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#lib/api.ts:ordersV1",
+      "type": "function",
+      "label": "ordersV1",
+      "repo": "web",
+      "file": "lib/api.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "web#lib/api.ts:urls.catalog",
+      "type": "function",
+      "label": "urls.catalog",
+      "repo": "web",
+      "file": "lib/api.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "section",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#server/orders.ts:allOrders",
+      "type": "function",
+      "label": "allOrders",
+      "repo": "web",
+      "file": "server/orders.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#server/orders.ts:categories",
+      "type": "function",
+      "label": "categories",
+      "repo": "web",
+      "file": "server/orders.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#server/orders.ts:items",
+      "type": "function",
+      "label": "items",
+      "repo": "web",
+      "file": "server/orders.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#server/orders.ts:lateOrders",
+      "type": "function",
+      "label": "lateOrders",
+      "repo": "web",
+      "file": "server/orders.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#server/orders.ts:openOrders",
+      "type": "function",
+      "label": "openOrders",
+      "repo": "web",
+      "file": "server/orders.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:http:GET:/categories",
+      "to": "catalog#src/index.ts:GET /categories@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/items",
+      "to": "catalog#src/index.ts:GET /items@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/orders",
+      "to": "orders#src/index.ts:GET /orders@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/orders/late",
+      "to": "orders#src/index.ts:GET /orders/late@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/orders/open",
+      "to": "orders#src/index.ts:GET /orders/open@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:web#server/orders.ts:12:21",
+      "to": "entry:orders:http:GET:/orders",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 12,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:web#server/orders.ts:18:21",
+      "to": "entry:orders:http:GET:/orders/late",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 18,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:web#server/orders.ts:24:21",
+      "to": "entry:catalog:http:GET:/items",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 24,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "http_out:web#server/orders.ts:30:21",
+      "to": "entry:catalog:http:GET:/categories",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 30,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "http_out:web#server/orders.ts:6:21",
+      "to": "entry:orders:http:GET:/orders/open",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 6,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_action:web#components/Orders.tsx:17:18",
+      "to": "web#components/Orders.tsx:Orders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "components/Orders.tsx",
+      "line": 17
+    },
+    {
+      "from": "ui_api_call:web#components/Orders.tsx:14:11",
+      "to": "entry:orders:http:GET:/orders",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "components/Orders.tsx",
+      "line": 14,
+      "meta": {
+        "via": "base-url-env",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_api_call:web#components/Orders.tsx:15:11",
+      "to": "entry:catalog:http:GET:/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "components/Orders.tsx",
+      "line": 15,
+      "meta": {
+        "via": "base-url-env",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#server/orders.ts:12:21",
+      "to": "entry:orders:http:GET:/orders",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "server/orders.ts",
+      "line": 12,
+      "meta": {
+        "via": "base-url-env",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_api_call:web#server/orders.ts:18:21",
+      "to": "entry:orders:http:GET:/orders/late",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "server/orders.ts",
+      "line": 18,
+      "meta": {
+        "via": "base-url-env",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_api_call:web#server/orders.ts:24:21",
+      "to": "entry:catalog:http:GET:/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 24,
+      "meta": {
+        "via": "base-url-env",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#server/orders.ts:30:21",
+      "to": "entry:catalog:http:GET:/categories",
+      "type": "hits",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 30,
+      "meta": {
+        "via": "base-url-env",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#server/orders.ts:6:21",
+      "to": "entry:orders:http:GET:/orders/open",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "server/orders.ts",
+      "line": 6,
+      "meta": {
+        "via": "base-url-env",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "web#components/Orders.tsx:Orders",
+      "to": "ui_api_call:web#components/Orders.tsx:14:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "components/Orders.tsx",
+      "line": 14
+    },
+    {
+      "from": "web#components/Orders.tsx:Orders",
+      "to": "ui_api_call:web#components/Orders.tsx:15:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "components/Orders.tsx",
+      "line": 15
+    },
+    {
+      "from": "web#components/Orders.tsx:Orders",
+      "to": "web#components/Orders.tsx:catalogBase",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "components/Orders.tsx",
+      "line": 15
+    },
+    {
+      "from": "web#components/Orders.tsx:Orders",
+      "to": "web#components/Orders.tsx:ordersBase",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "components/Orders.tsx",
+      "line": 14
+    },
+    {
+      "from": "web#components/Orders.tsx:catalogBase",
+      "to": "config_key:web#NEXT_PUBLIC_CATALOG_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "components/Orders.tsx",
+      "line": 8
+    },
+    {
+      "from": "web#components/Orders.tsx:ordersBase",
+      "to": "config_key:web#NEXT_PUBLIC_ORDERS_DEV_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "components/Orders.tsx",
+      "line": 5
+    },
+    {
+      "from": "web#components/Orders.tsx:ordersBase",
+      "to": "config_key:web#NEXT_PUBLIC_ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "components/Orders.tsx",
+      "line": 5
+    },
+    {
+      "from": "web#lib/api.ts:catalogBase",
+      "to": "config_key:web#CATALOG_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "lib/api.ts",
+      "line": 14
+    },
+    {
+      "from": "web#lib/api.ts:ordersBase",
+      "to": "config_key:web#ORDERS_DEV_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "lib/api.ts",
+      "line": 4
+    },
+    {
+      "from": "web#lib/api.ts:ordersBase",
+      "to": "config_key:web#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "lib/api.ts",
+      "line": 4
+    },
+    {
+      "from": "web#lib/api.ts:ordersV1",
+      "to": "config_key:web#ORDERS_DEV_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "lib/api.ts",
+      "line": 9
+    },
+    {
+      "from": "web#lib/api.ts:ordersV1",
+      "to": "config_key:web#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "lib/api.ts",
+      "line": 8
+    },
+    {
+      "from": "web#lib/api.ts:urls.catalog",
+      "to": "config_key:web#CATALOG_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "lib/api.ts",
+      "line": 19
+    },
+    {
+      "from": "web#server/orders.ts:allOrders",
+      "to": "http_out:web#server/orders.ts:12:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 12
+    },
+    {
+      "from": "web#server/orders.ts:allOrders",
+      "to": "ui_api_call:web#server/orders.ts:12:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 12
+    },
+    {
+      "from": "web#server/orders.ts:allOrders",
+      "to": "web#lib/api.ts:ordersBase",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "server/orders.ts",
+      "line": 12
+    },
+    {
+      "from": "web#server/orders.ts:categories",
+      "to": "http_out:web#server/orders.ts:30:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 30
+    },
+    {
+      "from": "web#server/orders.ts:categories",
+      "to": "ui_api_call:web#server/orders.ts:30:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 30
+    },
+    {
+      "from": "web#server/orders.ts:categories",
+      "to": "web#lib/api.ts:urls.catalog",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "server/orders.ts",
+      "line": 30
+    },
+    {
+      "from": "web#server/orders.ts:items",
+      "to": "http_out:web#server/orders.ts:24:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 24
+    },
+    {
+      "from": "web#server/orders.ts:items",
+      "to": "ui_api_call:web#server/orders.ts:24:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 24
+    },
+    {
+      "from": "web#server/orders.ts:items",
+      "to": "web#lib/api.ts:catalogBase",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "server/orders.ts",
+      "line": 24
+    },
+    {
+      "from": "web#server/orders.ts:lateOrders",
+      "to": "http_out:web#server/orders.ts:18:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 18
+    },
+    {
+      "from": "web#server/orders.ts:lateOrders",
+      "to": "ui_api_call:web#server/orders.ts:18:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 18
+    },
+    {
+      "from": "web#server/orders.ts:lateOrders",
+      "to": "web#lib/api.ts:ordersV1",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "server/orders.ts",
+      "line": 18
+    },
+    {
+      "from": "web#server/orders.ts:openOrders",
+      "to": "config_key:web#ORDERS_DEV_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 6
+    },
+    {
+      "from": "web#server/orders.ts:openOrders",
+      "to": "config_key:web#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 6
+    },
+    {
+      "from": "web#server/orders.ts:openOrders",
+      "to": "http_out:web#server/orders.ts:6:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 6
+    },
+    {
+      "from": "web#server/orders.ts:openOrders",
+      "to": "ui_api_call:web#server/orders.ts:6:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/orders.ts",
+      "line": 6
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /items@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 6,
+                "symbol": "GET /items@5 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 10,
+                "symbol": "GET /categories@9 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 3,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /orders@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 3,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 6,
+                "symbol": "GET /orders@5 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 10,
+                "symbol": "GET /orders/open@9 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 14,
+                "symbol": "GET /orders/late@13 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "orders"
+    },
+    {
+      "file": "components/Orders.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "components/Orders.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "components/Orders.tsx",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "lib/api.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "lib/api.ts",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "lib/api.ts",
+      "line": 19,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    }
+  ]
+}

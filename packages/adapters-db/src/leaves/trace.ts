@@ -1,7 +1,6 @@
 import type { Node as TsNode } from 'ts-morph';
 import {
   rootSettingAddress,
-  rootSettingKey as rootSettingKeyIn,
   type RootSettingOptions,
   type SettingAddress,
 } from '@flowatlas/core';
@@ -35,7 +34,3 @@ export const settingReader: RootSettingOptions = {
 
 /** The settings key a string value is rooted at, with what the code falls back to where it writes one (P77). */
 export const rootConfigAddress = (value: TsNode): SettingAddress | null => rootSettingAddress(value, settingReader);
-
-/** Follows a string value back to the settings key it is rooted at. */
-export const rootConfigKey = (value: TsNode, budget?: number): string | null =>
-  rootSettingKeyIn(value, budget === undefined ? settingReader : { ...settingReader, budget });

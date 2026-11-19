@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T22:45:46.583Z",
+  "configHash": "b5d161d861f0",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 13,
+      "edges": 15,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1659,
+      "packages": {
+        "name": "catalog",
+        "runtime": [
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 3,
+    "linked": 3,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 13,
+    "edges": 15,
+    "types": 0,
+    "missed": 0,
+    "sites": 0,
+    "notes": 1,
+    "findings": 1,
+    "unresolved": 0
+  }
+}

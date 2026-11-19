@@ -2,7 +2,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import {
   boundDeclaration,
+  EXPORTS_META,
   hasAnyDependency,
+  IMPORTS_META,
   makeEntryId,
   makeApiRouteEntryKey,
   makeHttpEntryKey,
@@ -18,20 +20,27 @@ import {
   type EntryHandler,
   type EntryNode,
   type EntryWrapping,
+  type ExportedValue,
   type ExtractContext,
+  type ImportedValue,
   type Unresolved,
   lineAndColumnAt,
   startLineOf,
   toPosixPath,
 } from '@flowatlas/core';
 import { ENVELOPES, GATEWAY_REQUEST } from '@flowatlas/aws';
+import { cdkReader } from '@flowatlas/cdk';
+import { cloudFormationReader, samReader } from '@flowatlas/sam';
+import { serverlessReader } from '@flowatlas/serverless';
 import { terraformReader, unreadDeploymentOf } from '@flowatlas/terraform';
 import { Node, ts, type CallExpression, type Node as TsNode, type SourceFile } from 'ts-morph';
-import { drawDeliveries, drawRouteSends, environmentMeta } from './deployed-channels.js';
+import { graphqlServerHandled } from '@flowatlas/graphql';
+import { drawDeliveries, drawRouteSends, environmentMeta, grantsMeta } from './deployed-channels.js';
+import { graphqlServedMeta } from './graphql-resolvers.js';
 import { drawDeployedWorkflows } from './deployed-workflows.js';
 import { readingOf } from './request-readings.js';
 import { builtByFactory, fileOfNode, isWrittenFunction, repoFunctionOf, unwrapValue } from './shared.js';
-import { boundCall, evidenceOf, functionArguments, wrappedBy, type Wrapped } from './wrapped-work.js';
+import { evidenceOf, functionArguments, label, unwrapChain, type Chain } from './wrapped-work.js';
 
 export const DEPLOYED_FUNCTIONS = 'aws-lambda';
 
@@ -39,10 +48,12 @@ export const DEPLOYED_FUNCTIONS = 'aws-lambda';
  * The readers of deployment descriptions, in the order they are asked.
  *
  * The adapter below is written against `DeploymentReader`, which names no
- * format, so a second reader - a SAM template, a Serverless Framework file, a
- * CDK synthesis - is a row here and nothing else. Only Terraform is read today.
+ * format, so a reader of another format is a row here and nothing else:
+ * Terraform, a Serverless Framework service file and an AWS CDK app (P57), an
+ * AWS SAM template (P246) and a plain CloudFormation template (P248). A
+ * repository may hold more than one, and each is read.
  */
-export const DEPLOYMENT_READERS: readonly DeploymentReader[] = [terraformReader];
+export const DEPLOYMENT_READERS: readonly DeploymentReader[] = [terraformReader, serverlessReader, cdkReader, samReader, cloudFormationReader];
 
 /** Packages a repository of Lambda handlers declares, any one of which gives it away. */
 export const LAMBDA_PACKAGES: readonly string[] = ['@types/aws-lambda', 'aws-lambda', '@middy/core'];
@@ -147,117 +158,13 @@ interface ResolvedHandler {
   wrapping: EntryWrapping[];
   confidence?: Confidence;
   meta: Record<string, unknown>;
+  /**
+   * True where the export is a GraphQL server made into a function (P269):
+   * the function runs no one handler, it answers every field the server's
+   * resolvers answer, and a route in front of it is that server's endpoint.
+   */
+  graphql?: boolean;
 }
-
-const label = (node: TsNode): string => {
-  const text = node.getText().replace(/\s+/g, ' ');
-  return text.length > 80 ? `${text.slice(0, 77)}...` : text;
-};
-
-/**
- * A function this repository declares, or one written in place, when the node
- * stands for one.
- */
-const workIn = (node: TsNode): TsNode | undefined => {
-  const value = unwrapValue(node);
-  if (isWrittenFunction(value)) return value;
-  if (repoFunctionOf(value) !== undefined) return value;
-  return undefined;
-};
-
-/** What taking the wrappers off a handler export found. */
-interface Chain {
-  inner?: TsNode;
-  wrapping: EntryWrapping[];
-  /** The wrappers taken off, for how far the landing can be trusted. */
-  through: Wrapped[];
-  /** The call the reading stopped at without finding a function, for the row. */
-  stopped?: CallExpression;
-}
-
-/**
- * The function a handler export wraps, and the chain in front of it.
- *
- * `middy(createLoan).use(jsonBodyParser()).use(httpErrorHandler())` and
- * `withLogging(traced('createLoan', createLoan))` are the two shapes: a chain of
- * method calls on an engine, whose arguments are middleware and whose engine is
- * not, and wrappers called one inside another, each of which is middleware
- * itself. A wrapper is whatever `wrappedBy` says it is - a call handed exactly
- * one function, wherever it sits among the arguments - which is the rule the
- * HTTP readers follow a handler by too, so no library is named here (R109,
- * R167). A name bound to a wrapped value is read through:
- * `middy(createLoanLogic)` with `const createLoanLogic = traced(…)`. A method
- * call that is handed the function itself - `middy().use(x).handler(fn)` -
- * names the function and nothing in front of it.
- */
-const unwrapChain = (start: TsNode, ctx: ExtractContext): Chain => {
-  // In the order things run: outside in. A chain of methods is read from its
-  // last call back to its engine, so its middleware is gathered back to front
-  // and placed when the engine is reached - before any wrapper inside it, which
-  // runs nearer the function: `middy(traced('x', fn)).use(a)` runs `a`, then
-  // `traced`, then `fn`.
-  const ordered: EntryWrapping[] = [];
-  let chained: EntryWrapping[] = [];
-  const through: Wrapped[] = [];
-  let inner: TsNode | undefined;
-  let stopped: CallExpression | undefined;
-  let expression = unwrapValue(start);
-  let viaMethods = false;
-  const wrapping = (node: TsNode, source: string, kind: string): EntryWrapping => ({
-    label: label(node),
-    layer: 'middleware',
-    scope: 'route',
-    source,
-    file: fileOfNode(node, ctx),
-    line: startLineOf(node),
-    kind,
-  });
-  for (let depth = 0; depth < 16 && Node.isCallExpression(expression); depth += 1) {
-    const callee = expression.getExpression();
-    const args = expression.getArguments();
-    if (Node.isPropertyAccessExpression(callee) && Node.isCallExpression(unwrapValue(callee.getExpression()))) {
-      viaMethods = true;
-      const method = callee.getName();
-      const written: EntryWrapping[] = [];
-      for (const arg of args) {
-        const work = workIn(arg);
-        if (work !== undefined && inner === undefined) {
-          inner = work;
-          continue;
-        }
-        written.push(wrapping(arg, method, Node.isCallExpression(arg) ? 'call' : 'function'));
-      }
-      chained.unshift(...written);
-      expression = unwrapValue(callee.getExpression());
-      continue;
-    }
-    const wrapped = wrappedBy(expression);
-    if (wrapped === undefined) {
-      stopped = expression;
-      break;
-    }
-    through.push(wrapped);
-    // The engine a chain of methods hangs from is not middleware; a wrapper
-    // called on its own is.
-    if (!viaMethods) ordered.push(wrapping(callee, label(callee), 'function'));
-    ordered.push(...chained);
-    chained = [];
-    viaMethods = false;
-    const work = workIn(wrapped.argument);
-    if (work !== undefined) {
-      inner ??= work;
-      break;
-    }
-    const next = unwrapValue(wrapped.argument);
-    expression = Node.isCallExpression(next) ? next : (boundCall(next) ?? next);
-  }
-  return {
-    ...(inner === undefined ? {} : { inner }),
-    wrapping: [...ordered, ...chained],
-    through,
-    ...(inner === undefined && stopped !== undefined ? { stopped } : {}),
-  };
-};
 
 /**
  * Why a call a handler export was built with names no function, in the words of
@@ -427,6 +334,17 @@ const resolveHandler = (
       if (factory !== undefined) {
         return done({ file: fileOfNode(factory.declaration, ctx), functionName: factory.name, line: factory.line }, 'call');
       }
+      // `new ApolloServer({ resolvers, typeDefs }).createHandler()`: no one
+      // function is the handler, every field a resolver answers is a way in of
+      // its own, and the graphql reader draws them (P269).
+      const server = graphqlServerHandled(built);
+      if (server !== undefined) {
+        return {
+          wrapping: [],
+          meta: { ...meta, handlerVia: 'graphql', graphqlServer: `${fileOfNode(server, ctx)}:${startLineOf(server)}` },
+          graphql: true,
+        };
+      }
       unreadCall = chain.stopped ?? built;
     }
   }
@@ -583,7 +501,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
           tool === undefined
             ? 'this repository declares Lambda packages and no deployment description this tool reads, so no function is an entry'
             : `this repository's functions are declared with ${tool}, which is not read yet, so no function is an entry`,
-        hint: 'Functions and routes are read from Terraform. The handlers are still read as code; nothing reaches them.',
+        hint: 'Functions and routes are read from Terraform, a Serverless Framework file, an AWS CDK app, an AWS SAM template or a CloudFormation template. The handlers are still read as code; nothing reaches them.',
         adapter: DEPLOYED_FUNCTIONS,
       });
       return [];
@@ -591,6 +509,8 @@ export const deployedFunctionsAdapter: EntryAdapter = {
 
     const entries: EntryNode[] = [];
     const roots: Array<Record<string, unknown>> = [];
+    const exported: ExportedValue[] = [];
+    const imported: ImportedValue[] = [];
     const deployments = readers.map((reader) => {
       const deployment: Deployment = reader.read({ repoDir: ctx.repoDir, service: ctx.service, config: ctx.config });
       return { reader, deployment };
@@ -619,7 +539,10 @@ export const deployedFunctionsAdapter: EntryAdapter = {
         entries.push({
           id,
           kind: 'invoke',
-          label: fn.name ?? `${fn.address} (name not read)`,
+          // A name the platform generates is not a name not read: nothing
+          // could have read it, and the function is still reached inside its
+          // deployment by its declaration (P57).
+          label: fn.name ?? `${fn.address} (${fn.meta?.['nameGenerated'] === true ? 'name generated when deployed' : 'name not read'})`,
           key,
           ...(reading.handler === undefined ? {} : { handler: reading.handler }),
           ...(reading.confidence === undefined ? {} : { handlerConfidence: reading.confidence }),
@@ -635,6 +558,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
             ...fn.meta,
             ...reading.meta,
             ...environmentMeta(fn),
+            ...grantsMeta(fn),
           },
         });
       });
@@ -681,6 +605,9 @@ export const deployedFunctionsAdapter: EntryAdapter = {
             path: route.path,
             rawPath: route.rawPath,
             deployedBy: reader.name,
+            // The route in front of a GraphQL server made into a function is
+            // that server's endpoint, with its schema (P269).
+            ...(reading?.graphql === true ? { handlerVia: 'graphql', graphql: graphqlServedMeta(ctx) } : {}),
             ...(route.api === undefined ? {} : { api: route.api }),
             ...(fn === undefined ? {} : { function: fn.name ?? fn.address }),
             ...(target !== undefined && 'name' in target ? { invokes: target.name } : {}),
@@ -723,6 +650,20 @@ export const deployedFunctionsAdapter: EntryAdapter = {
       );
 
       for (const root of deployment.roots) roots.push({ ...root, deployedBy: reader.name });
+      // What it publishes for other deployments to read, and where it reads theirs (P249).
+      for (const value of deployment.exports ?? []) {
+        exported.push({
+          keys: value.keys,
+          address: value.address,
+          file: value.file,
+          line: value.line,
+          ...(value.names === undefined ? {} : { kind: value.names.kind, value: value.names.name }),
+          ...(value.text === undefined ? {} : { text: value.text }),
+          ...(value.unread === undefined ? {} : { unread: value.unread }),
+          deployedBy: reader.name,
+        });
+      }
+      for (const value of deployment.imports ?? []) imported.push({ ...value });
       drawDeployedWorkflows(ctx, deployment.workflows, reader.name, DEPLOYED_FUNCTIONS, drawn);
       reportRows(ctx, rows, drawn);
     }
@@ -730,13 +671,17 @@ export const deployedFunctionsAdapter: EntryAdapter = {
     // What this repository publishes for other repositories' routes to hang
     // from is a fact about the repository rather than about any one entry, and
     // the linker reads it from the repository's own node.
-    if (roots.length > 0) {
+    if (roots.length > 0 || exported.length > 0 || imported.length > 0) {
       ctx.builder.addNode({
         id: `repo:${ctx.repo}`,
         type: 'repo',
         label: ctx.repo,
         repo: ctx.repo,
-        meta: { apiRoots: roots },
+        meta: {
+          ...(roots.length === 0 ? {} : { apiRoots: roots }),
+          ...(exported.length === 0 ? {} : { [EXPORTS_META]: exported }),
+          ...(imported.length === 0 ? {} : { [IMPORTS_META]: imported }),
+        },
       });
     }
     return entries;

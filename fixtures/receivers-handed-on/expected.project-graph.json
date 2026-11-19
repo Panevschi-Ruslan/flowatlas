@@ -1,0 +1,1611 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T13:16:03.405Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/index.ts:GET /health@22",
+      "type": "function",
+      "label": "GET /health@22",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /v1/products@14",
+      "type": "function",
+      "label": "GET /v1/products@14",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /v2/products@18",
+      "type": "function",
+      "label": "GET /v2/products@18",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:POST /notes@6",
+      "type": "function",
+      "label": "POST /notes@6",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:PUT /drafts@10",
+      "type": "function",
+      "label": "PUT /drafts@10",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 4,
+      "kind": "function"
+    },
+    {
+      "id": "entry:catalog:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/v1/products",
+      "type": "entry",
+      "label": "GET /v1/products",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/v1/products",
+        "rawPath": "/v1/products",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/v2/products",
+      "type": "entry",
+      "label": "GET /v2/products",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/v2/products",
+        "rawPath": "/v2/products",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:POST:/notes",
+      "type": "entry",
+      "label": "POST /notes",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/notes",
+        "rawPath": "/notes",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:PUT:/drafts",
+      "type": "entry",
+      "label": "PUT /drafts",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/drafts",
+        "rawPath": "/drafts",
+        "adapter": "express-routes",
+        "registration": "app.put",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:jobs:http:POST:/sync",
+      "type": "entry",
+      "label": "POST /sync",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/sync",
+        "rawPath": "/sync",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "external_api:ratings.example.test",
+      "type": "external_api",
+      "label": "ratings.example.test",
+      "repo": "web",
+      "meta": {
+        "host": "ratings.example.test"
+      }
+    },
+    {
+      "id": "external_api:reviews.example.test",
+      "type": "external_api",
+      "label": "reviews.example.test",
+      "repo": "web",
+      "meta": {
+        "host": "reviews.example.test"
+      }
+    },
+    {
+      "id": "external_api:shop.example.test",
+      "type": "external_api",
+      "label": "shop.example.test",
+      "repo": "web",
+      "meta": {
+        "host": "shop.example.test"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/index.ts:12:10",
+      "type": "http_out",
+      "label": "GET /v1/products",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 12,
+      "meta": {
+        "method": "GET",
+        "url": "https://shop.example.test/v1/products",
+        "path": "/v1/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "shop.example.test"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/index.ts:22:10",
+      "type": "http_out",
+      "label": "GET /health",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 22,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4600",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:POST /sync@25",
+      "type": "function",
+      "label": "POST /sync@25",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:healthHere",
+      "type": "function",
+      "label": "healthHere",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:productsV1",
+      "type": "function",
+      "label": "productsV1",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:readHealth",
+      "type": "function",
+      "label": "readHealth",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "port",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:readProducts",
+      "type": "function",
+      "label": "readProducts",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "version",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4600,
+            "file": "src/index.ts",
+            "line": 26
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4800,
+            "file": "src/index.ts",
+            "line": 29
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "functions": 16,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "browser"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/latest.js:11:10@3:10",
+      "type": "ui_api_call",
+      "label": "GET /latest",
+      "repo": "web",
+      "file": "js/latest.js",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://ratings.example.test/latest",
+        "path": "/latest",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "ratings.example.test",
+        "through": "latest"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/latest.js:25:21@21:12",
+      "type": "ui_api_call",
+      "label": "GET /recent",
+      "repo": "web",
+      "file": "js/latest.js",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/recent",
+        "path": "/recent",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "through": "Feed.recent"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/latest.js:7:10@3:10",
+      "type": "ui_api_call",
+      "label": "GET /latest",
+      "repo": "web",
+      "file": "js/latest.js",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://reviews.example.test/latest",
+        "path": "/latest",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "reviews.example.test",
+        "through": "latest"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/notes.js:17:3",
+      "type": "ui_api_call",
+      "label": "PUT /drafts",
+      "repo": "web",
+      "file": "js/notes.js",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "url": "https://shop.example.test/drafts",
+        "path": "/drafts",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{draft:any}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "draft"
+        ],
+        "package": null,
+        "client": "xhr",
+        "via": "literal",
+        "host": "shop.example.test",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/notes.js:3:3",
+      "type": "ui_api_call",
+      "label": "POST /notes",
+      "repo": "web",
+      "file": "js/notes.js",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "https://shop.example.test/notes",
+        "path": "/notes",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{text:any}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "text"
+        ],
+        "package": null,
+        "client": "xhr",
+        "via": "literal",
+        "host": "shop.example.test",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/products.js:11:10@3:10",
+      "type": "ui_api_call",
+      "label": "GET /v2/products",
+      "repo": "web",
+      "file": "js/products.js",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://shop.example.test/v2/products",
+        "path": "/v2/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "shop.example.test",
+        "through": "versioned",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/products.js:20:10@16:10",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "js/products.js",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "local",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/products.js:25:10",
+      "type": "ui_api_call",
+      "label": "GET /${…}/lost",
+      "repo": "web",
+      "file": "js/products.js",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://shop.example.test${…}/lost",
+        "path": "/${…}/lost",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "shop.example.test"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/products.js:7:10@3:10",
+      "type": "ui_api_call",
+      "label": "GET /v1/products",
+      "repo": "web",
+      "file": "js/products.js",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://shop.example.test/v1/products",
+        "path": "/v1/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "shop.example.test",
+        "through": "versioned",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "web#js/latest.js:Feed.constructor",
+      "type": "function",
+      "label": "Feed.constructor",
+      "repo": "web",
+      "file": "js/latest.js",
+      "line": 16
+    },
+    {
+      "id": "web#js/latest.js:Feed.recent",
+      "type": "function",
+      "label": "Feed.recent",
+      "repo": "web",
+      "file": "js/latest.js",
+      "line": 20
+    },
+    {
+      "id": "web#js/latest.js:latest",
+      "type": "function",
+      "label": "latest",
+      "repo": "web",
+      "file": "js/latest.js",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "client",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/latest.js:latest.js:top",
+      "type": "function",
+      "label": "latest.js:top",
+      "repo": "web",
+      "file": "js/latest.js",
+      "line": 25
+    },
+    {
+      "id": "web#js/latest.js:latestRatings",
+      "type": "function",
+      "label": "latestRatings",
+      "repo": "web",
+      "file": "js/latest.js",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/latest.js:latestReviews",
+      "type": "function",
+      "label": "latestReviews",
+      "repo": "web",
+      "file": "js/latest.js",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/notes.js:addNote",
+      "type": "function",
+      "label": "addNote",
+      "repo": "web",
+      "file": "js/notes.js",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "text",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#js/notes.js:begin",
+      "type": "function",
+      "label": "begin",
+      "repo": "web",
+      "file": "js/notes.js",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#js/notes.js:prepare",
+      "type": "function",
+      "label": "prepare",
+      "repo": "web",
+      "file": "js/notes.js",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#js/notes.js:saveDraft",
+      "type": "function",
+      "label": "saveDraft",
+      "repo": "web",
+      "file": "js/notes.js",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "draft",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#js/notes.js:send",
+      "type": "function",
+      "label": "send",
+      "repo": "web",
+      "file": "js/notes.js",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "any"
+            },
+            {
+              "name": "text",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#js/notes.js:start",
+      "type": "function",
+      "label": "start",
+      "repo": "web",
+      "file": "js/notes.js",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#js/products.js:checkLocal",
+      "type": "function",
+      "label": "checkLocal",
+      "repo": "web",
+      "file": "js/products.js",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/products.js:local",
+      "type": "function",
+      "label": "local",
+      "repo": "web",
+      "file": "js/products.js",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "port",
+              "type": "any"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/products.js:lost",
+      "type": "function",
+      "label": "lost",
+      "repo": "web",
+      "file": "js/products.js",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "segment",
+              "type": "any"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/products.js:productsV1",
+      "type": "function",
+      "label": "productsV1",
+      "repo": "web",
+      "file": "js/products.js",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/products.js:productsV2",
+      "type": "function",
+      "label": "productsV2",
+      "repo": "web",
+      "file": "js/products.js",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/products.js:versioned",
+      "type": "function",
+      "label": "versioned",
+      "repo": "web",
+      "file": "js/products.js",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "version",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:http:GET:/health",
+      "to": "catalog#src/index.ts:GET /health@22",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 22,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/health",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/v1/products",
+      "to": "catalog#src/index.ts:GET /v1/products@14",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 14,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/v1/products",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/v2/products",
+      "to": "catalog#src/index.ts:GET /v2/products@18",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 18,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/v2/products",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:catalog:http:POST:/notes",
+      "to": "catalog#src/index.ts:POST /notes@6",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{text:any}",
+      "file": "src/index.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:POST:/notes",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:catalog:http:PUT:/drafts",
+      "to": "catalog#src/index.ts:PUT /drafts@10",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:PUT:/drafts",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:jobs:http:POST:/sync",
+      "to": "jobs#src/index.ts:POST /sync@25",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{products:any;health:any}",
+      "file": "src/index.ts",
+      "line": 25,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:jobs#src/index.ts:12:10",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 12
+    },
+    {
+      "from": "http_out:jobs#src/index.ts:22:10",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 22,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:26"
+      }
+    },
+    {
+      "from": "jobs#src/index.ts:POST /sync@25",
+      "to": "jobs#src/index.ts:healthHere",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "src/index.ts",
+      "line": 26
+    },
+    {
+      "from": "jobs#src/index.ts:POST /sync@25",
+      "to": "jobs#src/index.ts:productsV1",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "src/index.ts",
+      "line": 26
+    },
+    {
+      "from": "jobs#src/index.ts:healthHere",
+      "to": "http_out:jobs#src/index.ts:22:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 22
+    },
+    {
+      "from": "jobs#src/index.ts:healthHere",
+      "to": "jobs#src/index.ts:readHealth",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "any",
+      "file": "src/index.ts",
+      "line": 22
+    },
+    {
+      "from": "jobs#src/index.ts:productsV1",
+      "to": "http_out:jobs#src/index.ts:12:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 12
+    },
+    {
+      "from": "jobs#src/index.ts:productsV1",
+      "to": "jobs#src/index.ts:readProducts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "any",
+      "file": "src/index.ts",
+      "line": 12
+    },
+    {
+      "from": "ui_api_call:web#js/latest.js:11:10@3:10",
+      "to": "external_api:ratings.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/latest.js",
+      "line": 11
+    },
+    {
+      "from": "ui_api_call:web#js/latest.js:7:10@3:10",
+      "to": "external_api:reviews.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/latest.js",
+      "line": 7
+    },
+    {
+      "from": "ui_api_call:web#js/notes.js:17:3",
+      "to": "entry:catalog:http:PUT:/drafts",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/notes.js",
+      "line": 17,
+      "params": [
+        "{draft:any}"
+      ],
+      "meta": {
+        "via": "unique-route",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/notes.js:17:3",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/notes.js",
+      "line": 17
+    },
+    {
+      "from": "ui_api_call:web#js/notes.js:3:3",
+      "to": "entry:catalog:http:POST:/notes",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/notes.js",
+      "line": 3,
+      "params": [
+        "{text:any}"
+      ],
+      "meta": {
+        "via": "unique-route",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/notes.js:3:3",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/notes.js",
+      "line": 3
+    },
+    {
+      "from": "ui_api_call:web#js/products.js:11:10@3:10",
+      "to": "entry:catalog:http:GET:/v2/products",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/products.js",
+      "line": 11,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/products.js:11:10@3:10",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/products.js",
+      "line": 11
+    },
+    {
+      "from": "ui_api_call:web#js/products.js:20:10@16:10",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/products.js",
+      "line": 20,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:26"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/products.js:25:10",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/products.js",
+      "line": 25
+    },
+    {
+      "from": "ui_api_call:web#js/products.js:7:10@3:10",
+      "to": "entry:catalog:http:GET:/v1/products",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/products.js",
+      "line": 7,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/products.js:7:10@3:10",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/products.js",
+      "line": 7
+    },
+    {
+      "from": "web#js/latest.js:latest.js:top",
+      "to": "ui_api_call:web#js/latest.js:25:21@21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/latest.js",
+      "line": 25
+    },
+    {
+      "from": "web#js/latest.js:latest.js:top",
+      "to": "web#js/latest.js:Feed.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/latest.js",
+      "line": 25
+    },
+    {
+      "from": "web#js/latest.js:latestRatings",
+      "to": "ui_api_call:web#js/latest.js:11:10@3:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/latest.js",
+      "line": 11
+    },
+    {
+      "from": "web#js/latest.js:latestRatings",
+      "to": "web#js/latest.js:latest",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "js/latest.js",
+      "line": 11
+    },
+    {
+      "from": "web#js/latest.js:latestReviews",
+      "to": "ui_api_call:web#js/latest.js:7:10@3:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/latest.js",
+      "line": 7
+    },
+    {
+      "from": "web#js/latest.js:latestReviews",
+      "to": "web#js/latest.js:latest",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "js/latest.js",
+      "line": 7
+    },
+    {
+      "from": "web#js/notes.js:addNote",
+      "to": "web#js/notes.js:send",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any",
+        "any"
+      ],
+      "returns": "void",
+      "file": "js/notes.js",
+      "line": 12
+    },
+    {
+      "from": "web#js/notes.js:begin",
+      "to": "ui_api_call:web#js/notes.js:17:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/notes.js",
+      "line": 17
+    },
+    {
+      "from": "web#js/notes.js:prepare",
+      "to": "web#js/notes.js:begin",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "void",
+      "file": "js/notes.js",
+      "line": 21
+    },
+    {
+      "from": "web#js/notes.js:saveDraft",
+      "to": "web#js/notes.js:prepare",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "void",
+      "file": "js/notes.js",
+      "line": 26
+    },
+    {
+      "from": "web#js/notes.js:send",
+      "to": "web#js/notes.js:start",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "void",
+      "file": "js/notes.js",
+      "line": 7
+    },
+    {
+      "from": "web#js/notes.js:start",
+      "to": "ui_api_call:web#js/notes.js:3:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/notes.js",
+      "line": 3
+    },
+    {
+      "from": "web#js/products.js:checkLocal",
+      "to": "ui_api_call:web#js/products.js:20:10@16:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/products.js",
+      "line": 20
+    },
+    {
+      "from": "web#js/products.js:checkLocal",
+      "to": "web#js/products.js:local",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "Response",
+      "file": "js/products.js",
+      "line": 20
+    },
+    {
+      "from": "web#js/products.js:lost",
+      "to": "ui_api_call:web#js/products.js:25:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/products.js",
+      "line": 25
+    },
+    {
+      "from": "web#js/products.js:productsV1",
+      "to": "ui_api_call:web#js/products.js:7:10@3:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/products.js",
+      "line": 7
+    },
+    {
+      "from": "web#js/products.js:productsV1",
+      "to": "web#js/products.js:versioned",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "js/products.js",
+      "line": 7
+    },
+    {
+      "from": "web#js/products.js:productsV2",
+      "to": "ui_api_call:web#js/products.js:11:10@3:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/products.js",
+      "line": 11
+    },
+    {
+      "from": "web#js/products.js:productsV2",
+      "to": "web#js/products.js:versioned",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "js/products.js",
+      "line": 11
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/index.ts",
+      "line": 7,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 7,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "POST /notes@6 -> res.status(201).json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 7,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 7,
+                "symbol": "POST /notes@6 -> res.status(201).json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 7,
+                "symbol": "POST /notes@6 -> res.status"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 11,
+                "symbol": "PUT /drafts@10 -> res.status(204).end"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 26,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "POST /sync@25 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "jobs"
+    },
+    {
+      "service": "web",
+      "file": "js/latest.js",
+      "line": 7,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /latest",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /latest */.",
+      "symbol": "ui_api_call:web#js/latest.js:7:10@3:10"
+    },
+    {
+      "service": "web",
+      "file": "js/latest.js",
+      "line": 11,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /latest",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /latest */.",
+      "symbol": "ui_api_call:web#js/latest.js:11:10@3:10"
+    },
+    {
+      "file": "js/latest.js",
+      "line": 21,
+      "reason": "api-client-base-unread",
+      "hint": "The receiver is handed 2 axios instances made with different bases in latest.js:top, which carries none of their bases alone, so the request is recorded under the path it writes. Hand each instance from a function of its own, or write one base.",
+      "symbol": "this.client.get('/recent')",
+      "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "js/latest.js",
+      "line": 25,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /recent",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /recent */.",
+      "symbol": "ui_api_call:web#js/latest.js:25:21@21:12"
+    },
+    {
+      "file": "js/products.js",
+      "line": 25,
+      "reason": "api-path-dynamic",
+      "message": "The path after shop.example.test is a value nothing here reads, and no caller hands it one that is read.",
+      "hint": "Call the function with the path written out, or annotate it with /** @flowatlas-calls METHOD /path */.",
+      "symbol": "fetch('https://shop.example.test' + segment + '/lost')",
+      "service": "web"
+    }
+  ]
+}

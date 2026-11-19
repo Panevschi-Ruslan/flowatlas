@@ -1,0 +1,20 @@
+{
+  "services": [
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "react"
+    },
+    {
+      "name": "cms",
+      "repo": "./cms",
+      "type": "strapi"
+    },
+    {
+      "name": "poller",
+      "repo": "./poller",
+      "type": "express"
+    }
+  ],
+  "output": ".flowatlas"
+}

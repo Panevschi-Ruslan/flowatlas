@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T14:25:09.008Z",
+  "configHash": "1ce3a97766e6",
+  "services": [
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 3,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "shop-billing",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 26,
+      "edges": 23,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 642,
+      "packages": {
+        "name": "shop-ledger",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 35,
+      "edges": 32,
+      "types": 0,
+      "unresolved": 3,
+      "durationMs": 0,
+      "packages": {
+        "name": "shop-orders",
+        "runtime": [
+          "@aws-sdk/client-sns",
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "platform",
+      "repo": "./platform",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 14,
+      "edges": 8,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "shop-platform",
+        "runtime": [
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "reports",
+      "repo": "./reports",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "shop-reports",
+        "runtime": [
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 10,
+    "linked": 5,
+    "noConsumers": [
+      "channel:sqs/shop-ledger-tally-failures"
+    ],
+    "noProducers": [
+      "channel:eventbridge/default/ledger/EntrySettled",
+      "channel:eventbridge/default/orders/OrderShipped",
+      "channel:kinesis/shop-prod-clicks",
+      "channel:sns/shop-ledger-entries"
+    ]
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "platform",
+      "file": "templates/platform.yaml",
+      "line": 85,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "kinesis/shop-prod-clicks is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:kinesis/shop-prod-clicks"
+    }
+  ],
+  "totals": {
+    "nodes": 52,
+    "edges": 44,
+    "types": 1,
+    "missed": 1,
+    "sites": 1,
+    "notes": 0,
+    "findings": 1,
+    "unresolved": 1
+  }
+}

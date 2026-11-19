@@ -34,12 +34,16 @@ export {
 export { deliveryEnvelope, ENVELOPES, ONWARD, STARTED, type DeliveryEnvelope } from './envelopes.js';
 export { GATEWAY_REQUEST } from './requests.js';
 export {
+  DEFAULT_STAGE,
   DEPLOYED_FORMS,
   deployedArn,
   deployedNameIn,
+  executeApiAddress,
+  executeApiServedAt,
   FUNCTION_NAME_FORMS,
   TABLE_CHANGES_FORMS,
   type DeployedName,
+  type ExecuteApiAddress,
 } from './deployed.js';
 export {
   BUCKET_CHANNEL,
@@ -53,3 +57,6 @@ export {
   type BucketWrite,
 } from './buckets.js';
 export { SDK_SENDS, SDK_WRITES, type SendingService, type SendOperation, type WriteOperation, type WritingService } from './sends.js';
+export { eventFilterOf, eventPatternOf, type PatternUnread } from './event-pattern.js';
+export { cognitoTriggerKey, destinationOf, READ_PRINCIPALS, RESULT_DETAIL_TYPES } from './triggers.js';
+export { grantedIn, isWildcardResource, kindsGranted, MANAGED_WRITE_POLICIES, managedPolicyName, WRITE_ACTIONS } from './grants.js';

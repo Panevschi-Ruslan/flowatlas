@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T21:31:23.194Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:38:41.864Z",
   "services": [
     {
       "name": "shop",
@@ -92,7 +92,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {

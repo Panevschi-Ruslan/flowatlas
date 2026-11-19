@@ -1,0 +1,11 @@
+{
+  "name": "stock",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A shop's stock moves under roles another account keeps, granted on the bus's own policy under a statement id the deployment may or may not hold.",
+  "dependencies": {
+    "@aws-sdk/client-eventbridge": "^3.700.0",
+    "aws-cdk-lib": "^2.150.0",
+    "constructs": "^10.4.0"
+  }
+}

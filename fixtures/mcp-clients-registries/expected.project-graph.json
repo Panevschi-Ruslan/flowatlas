@@ -1,0 +1,799 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T22:21:16.468Z",
+  "services": [
+    {
+      "name": "assistant",
+      "repo": "./assistant",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "concierge",
+      "repo": "./concierge",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "assistant#src/server.ts:resource catalog@15",
+      "type": "function",
+      "label": "resource catalog@15",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "uri",
+              "type": "any"
+            }
+          ],
+          "returns": "{contents:{uri:any;text:string}[]}"
+        }
+      }
+    },
+    {
+      "id": "assistant#src/server.ts:resource order@18",
+      "type": "function",
+      "label": "resource order@18",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "uri",
+              "type": "any"
+            },
+            {
+              "name": "{ id }",
+              "type": "object"
+            }
+          ],
+          "returns": "{contents:{uri:any;text:string}[]}"
+        }
+      }
+    },
+    {
+      "id": "assistant#src/server.ts:tool cancel_order@10",
+      "type": "function",
+      "label": "tool cancel_order@10",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ orderId }",
+              "type": "object"
+            }
+          ],
+          "returns": "{content:{type:string;text:string}[]}"
+        }
+      }
+    },
+    {
+      "id": "assistant#src/server.ts:tool find{collection}@45",
+      "type": "function",
+      "label": "tool find{collection}@45",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{content:{type:string;text:string}[]}"
+        }
+      }
+    },
+    {
+      "id": "assistant#src/tools/count-orders.ts:tool countOrders@4",
+      "type": "function",
+      "label": "tool countOrders@4",
+      "repo": "assistant",
+      "file": "src/tools/count-orders.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "object"
+            }
+          ],
+          "returns": "{content:{type:'text';text:string}[]}"
+        }
+      }
+    },
+    {
+      "id": "assistant#src/tools/refund-order.ts:refundOrder",
+      "type": "function",
+      "label": "refundOrder",
+      "repo": "assistant",
+      "file": "src/tools/refund-order.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "object"
+            }
+          ],
+          "returns": "type:assistant#ToolAnswer"
+        }
+      }
+    },
+    {
+      "id": "concierge#src/assistant-client.ts:cancel",
+      "type": "function",
+      "label": "cancel",
+      "repo": "concierge",
+      "file": "src/assistant-client.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "concierge#src/assistant-client.ts:countOrders",
+      "type": "function",
+      "label": "countOrders",
+      "repo": "concierge",
+      "file": "src/assistant-client.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "concierge#src/assistant-client.ts:findProducts",
+      "type": "function",
+      "label": "findProducts",
+      "repo": "concierge",
+      "file": "src/assistant-client.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "concierge#src/assistant-client.ts:order",
+      "type": "function",
+      "label": "order",
+      "repo": "concierge",
+      "file": "src/assistant-client.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "concierge#src/assistant-client.ts:run",
+      "type": "function",
+      "label": "run",
+      "repo": "concierge",
+      "file": "src/assistant-client.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "concierge#src/assistant-client.ts:summary",
+      "type": "function",
+      "label": "summary",
+      "repo": "concierge",
+      "file": "src/assistant-client.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "entry:assistant:rpc:mcp:resource:shop://catalog",
+      "type": "entry",
+      "label": "resource catalog",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 15,
+      "kind": "rpc",
+      "meta": {
+        "key": "mcp:resource:shop://catalog",
+        "call": "resource",
+        "resource": "catalog",
+        "primitive": "resource",
+        "uri": "shop://catalog",
+        "adapter": "mcp-server",
+        "registration": "McpServer.registerResource",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:assistant:rpc:mcp:resource:shop://orders/{id}",
+      "type": "entry",
+      "label": "resource order",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 18,
+      "kind": "rpc",
+      "meta": {
+        "key": "mcp:resource:shop://orders/{id}",
+        "call": "resource",
+        "resource": "order",
+        "primitive": "resource",
+        "uri": "shop://orders/{id}",
+        "keyPattern": "uri-template",
+        "adapter": "mcp-server",
+        "registration": "McpServer.registerResource",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:assistant:rpc:mcp:tool:cancel_order",
+      "type": "entry",
+      "label": "tool cancel_order",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 10,
+      "kind": "rpc",
+      "meta": {
+        "key": "mcp:tool:cancel_order",
+        "call": "tool",
+        "tool": "cancel_order",
+        "primitive": "tool",
+        "adapter": "mcp-server",
+        "registration": "McpServer.registerTool",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:assistant:rpc:mcp:tool:countOrders",
+      "type": "entry",
+      "label": "tool countOrders",
+      "repo": "assistant",
+      "file": "src/tools/count-orders.ts",
+      "line": 4,
+      "kind": "rpc",
+      "meta": {
+        "key": "mcp:tool:countOrders",
+        "call": "tool",
+        "tool": "countOrders",
+        "primitive": "tool",
+        "adapter": "mcp-server",
+        "registration": "McpServer.registerTool",
+        "registeredAt": [
+          "src/server.ts:29"
+        ],
+        "namedAt": "src/registry.ts:12",
+        "nameFrom": "record.wireName",
+        "servedWhen": "configuration",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:assistant:rpc:mcp:tool:find{collection}",
+      "type": "entry",
+      "label": "tool find{collection}",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 45,
+      "kind": "rpc",
+      "meta": {
+        "key": "mcp:tool:find{collection}",
+        "call": "tool",
+        "tool": "find{collection}",
+        "primitive": "tool",
+        "keyPattern": "name-template",
+        "adapter": "mcp-server",
+        "registration": "McpServer.registerTool",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:assistant:rpc:mcp:tool:refundOrder",
+      "type": "entry",
+      "label": "tool refundOrder",
+      "repo": "assistant",
+      "file": "src/tools/refund-order.ts",
+      "line": 8,
+      "kind": "rpc",
+      "meta": {
+        "key": "mcp:tool:refundOrder",
+        "call": "tool",
+        "tool": "refundOrder",
+        "primitive": "tool",
+        "adapter": "mcp-server",
+        "registration": "McpServer.registerTool",
+        "registeredAt": [
+          "src/server.ts:29"
+        ],
+        "namedAt": "src/registry.ts:13",
+        "nameFrom": "record.wireName",
+        "servedWhen": "configuration",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "http_out:concierge#src/assistant-client.ts:12:44",
+      "type": "http_out",
+      "label": "rpc mcp:tool:cancel_order",
+      "repo": "concierge",
+      "file": "src/assistant-client.ts",
+      "line": 12,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "mcp:tool:cancel_order",
+        "call": "tool",
+        "operation": "callTool",
+        "client": "mcp-client",
+        "inputKeys": [
+          "orderId"
+        ],
+        "inputType": "{orderId:string}",
+        "outputType": "any",
+        "link": {
+          "protocol": "mcp",
+          "path": "/mcp",
+          "baseUrlEnv": "ASSISTANT_URL"
+        },
+        "targetService": "assistant"
+      }
+    },
+    {
+      "id": "http_out:concierge#src/assistant-client.ts:15:34",
+      "type": "http_out",
+      "label": "rpc mcp:tool:countOrders",
+      "repo": "concierge",
+      "file": "src/assistant-client.ts",
+      "line": 15,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "mcp:tool:countOrders",
+        "call": "tool",
+        "operation": "callTool",
+        "client": "mcp-client",
+        "inputKeys": [],
+        "inputType": "{}",
+        "outputType": "any",
+        "link": {
+          "protocol": "mcp",
+          "path": "/mcp",
+          "baseUrlEnv": "ASSISTANT_URL"
+        },
+        "targetService": "assistant"
+      }
+    },
+    {
+      "id": "http_out:concierge#src/assistant-client.ts:18:35",
+      "type": "http_out",
+      "label": "rpc mcp:tool:findProducts",
+      "repo": "concierge",
+      "file": "src/assistant-client.ts",
+      "line": 18,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "mcp:tool:findProducts",
+        "call": "tool",
+        "operation": "callTool",
+        "client": "mcp-client",
+        "inputNone": true,
+        "outputType": "any",
+        "link": {
+          "protocol": "mcp",
+          "path": "/mcp",
+          "baseUrlEnv": "ASSISTANT_URL"
+        },
+        "targetService": "assistant"
+      }
+    },
+    {
+      "id": "http_out:concierge#src/assistant-client.ts:21:38",
+      "type": "http_out",
+      "label": "rpc mcp:resource:shop://orders/42",
+      "repo": "concierge",
+      "file": "src/assistant-client.ts",
+      "line": 21,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "mcp:resource:shop://orders/42",
+        "call": "resource",
+        "operation": "readResource",
+        "client": "mcp-client",
+        "inputLater": true,
+        "outputType": "any",
+        "link": {
+          "protocol": "mcp",
+          "path": "/mcp",
+          "baseUrlEnv": "ASSISTANT_URL"
+        },
+        "targetService": "assistant"
+      }
+    },
+    {
+      "id": "http_out:concierge#src/assistant-client.ts:24:30",
+      "type": "http_out",
+      "label": "rpc mcp:prompt:summarise_order",
+      "repo": "concierge",
+      "file": "src/assistant-client.ts",
+      "line": 24,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "mcp:prompt:summarise_order",
+        "call": "prompt",
+        "operation": "getPrompt",
+        "client": "mcp-client",
+        "inputNone": true,
+        "outputType": "any",
+        "link": {
+          "protocol": "mcp",
+          "path": "/mcp",
+          "baseUrlEnv": "ASSISTANT_URL"
+        }
+      }
+    },
+    {
+      "id": "http_out:concierge#src/assistant-client.ts:27:38",
+      "type": "http_out",
+      "label": "rpc [name]",
+      "repo": "concierge",
+      "file": "src/assistant-client.ts",
+      "line": 27,
+      "kind": "rpc",
+      "meta": {
+        "procedure": null,
+        "call": "tool",
+        "operation": "callTool",
+        "client": "mcp-client",
+        "inputKeys": [],
+        "inputType": "{}",
+        "outputType": "any",
+        "link": {
+          "protocol": "mcp",
+          "path": "/mcp",
+          "baseUrlEnv": "ASSISTANT_URL"
+        }
+      }
+    },
+    {
+      "id": "repo:assistant",
+      "type": "repo",
+      "label": "assistant",
+      "repo": "assistant",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "mcp-server"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:concierge",
+      "type": "repo",
+      "label": "concierge",
+      "repo": "concierge",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": []
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "concierge#src/assistant-client.ts:cancel",
+      "to": "http_out:concierge#src/assistant-client.ts:12:44",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assistant-client.ts",
+      "line": 12
+    },
+    {
+      "from": "concierge#src/assistant-client.ts:countOrders",
+      "to": "http_out:concierge#src/assistant-client.ts:15:34",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assistant-client.ts",
+      "line": 15
+    },
+    {
+      "from": "concierge#src/assistant-client.ts:findProducts",
+      "to": "http_out:concierge#src/assistant-client.ts:18:35",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assistant-client.ts",
+      "line": 18
+    },
+    {
+      "from": "concierge#src/assistant-client.ts:order",
+      "to": "http_out:concierge#src/assistant-client.ts:21:38",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assistant-client.ts",
+      "line": 21
+    },
+    {
+      "from": "concierge#src/assistant-client.ts:run",
+      "to": "http_out:concierge#src/assistant-client.ts:27:38",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/assistant-client.ts",
+      "line": 27
+    },
+    {
+      "from": "concierge#src/assistant-client.ts:summary",
+      "to": "http_out:concierge#src/assistant-client.ts:24:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assistant-client.ts",
+      "line": 24
+    },
+    {
+      "from": "entry:assistant:rpc:mcp:resource:shop://catalog",
+      "to": "assistant#src/server.ts:resource catalog@15",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:assistant:rpc:mcp:resource:shop://orders/{id}",
+      "to": "assistant#src/server.ts:resource order@18",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:assistant:rpc:mcp:tool:cancel_order",
+      "to": "assistant#src/server.ts:tool cancel_order@10",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:assistant:rpc:mcp:tool:countOrders",
+      "to": "assistant#src/tools/count-orders.ts:tool countOrders@4",
+      "type": "handles",
+      "confidence": "heuristic",
+      "file": "src/tools/count-orders.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:assistant:rpc:mcp:tool:find{collection}",
+      "to": "assistant#src/server.ts:tool find{collection}@45",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 45
+    },
+    {
+      "from": "entry:assistant:rpc:mcp:tool:refundOrder",
+      "to": "assistant#src/tools/refund-order.ts:refundOrder",
+      "type": "handles",
+      "confidence": "heuristic",
+      "file": "src/tools/refund-order.ts",
+      "line": 3
+    },
+    {
+      "from": "http_out:concierge#src/assistant-client.ts:12:44",
+      "to": "entry:assistant:rpc:mcp:tool:cancel_order",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/assistant-client.ts",
+      "line": 12,
+      "params": [
+        "{orderId:string}"
+      ],
+      "returns": "any",
+      "meta": {
+        "via": "link-url",
+        "targetService": "assistant"
+      }
+    },
+    {
+      "from": "http_out:concierge#src/assistant-client.ts:15:34",
+      "to": "entry:assistant:rpc:mcp:tool:countOrders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/assistant-client.ts",
+      "line": 15,
+      "params": [
+        "{}"
+      ],
+      "returns": "any",
+      "meta": {
+        "via": "link-url",
+        "targetService": "assistant"
+      }
+    },
+    {
+      "from": "http_out:concierge#src/assistant-client.ts:18:35",
+      "to": "entry:assistant:rpc:mcp:tool:find{collection}",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/assistant-client.ts",
+      "line": 18,
+      "returns": "any",
+      "meta": {
+        "via": "link-url",
+        "targetService": "assistant"
+      }
+    },
+    {
+      "from": "http_out:concierge#src/assistant-client.ts:21:38",
+      "to": "entry:assistant:rpc:mcp:resource:shop://orders/{id}",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/assistant-client.ts",
+      "line": 21,
+      "returns": "any",
+      "meta": {
+        "via": "link-url",
+        "targetService": "assistant"
+      }
+    }
+  ],
+  "types": {
+    "type:assistant#ToolAnswer": {
+      "name": "ToolAnswer",
+      "kind": "object",
+      "declaredIn": "assistant#src/tools/define.ts",
+      "structuralHash": "8a46cf8dd28a8158",
+      "fields": [
+        {
+          "name": "content",
+          "type": "{type:'text';text:string}[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/server.ts",
+      "line": 29,
+      "reason": "mcp-name-dynamic",
+      "level": "info",
+      "sites": 2,
+      "message": "server.registerTool(item.wireName, ...) registers each tool under the name its record carries: 2 read from the records the repository writes (countOrders, refundOrder), each drawn where it is defined; whether each is served, and any other name, is decided at run time by the configuration.",
+      "hint": "Nothing is wrong with the tools read. A name the configuration supplies cannot be followed; register it under a name written as text to have it drawn.",
+      "symbol": "registerTool(item.wireName)",
+      "adapter": "mcp-server",
+      "service": "assistant"
+    },
+    {
+      "file": "src/server.ts",
+      "line": 36,
+      "reason": "mcp-name-dynamic",
+      "message": "server.registerPrompt(item.wireName, ...) registers a prompt under a name decided at run time, so no way in was drawn for it and nothing says which prompts the server offers.",
+      "hint": "Register each prompt under a name written as text, so a client's request for it can be named and followed.",
+      "symbol": "registerPrompt(item.wireName)",
+      "adapter": "mcp-server",
+      "service": "assistant"
+    },
+    {
+      "file": "src/assistant-client.ts",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "concierge"
+    },
+    {
+      "file": "src/assistant-client.ts",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "concierge"
+    },
+    {
+      "file": "src/assistant-client.ts",
+      "line": 18,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "concierge"
+    },
+    {
+      "file": "src/assistant-client.ts",
+      "line": 21,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "concierge"
+    },
+    {
+      "service": "concierge",
+      "file": "src/assistant-client.ts",
+      "line": 24,
+      "reason": "procedure-not-found",
+      "message": "no procedure mcp:prompt:summarise_order in concierge or assistant",
+      "hint": "Renamed or removed? Check the tree this client is typed from, or add the service that declares it to services[] and name it in apiTarget.",
+      "symbol": "http_out:concierge#src/assistant-client.ts:24:30"
+    },
+    {
+      "file": "src/assistant-client.ts",
+      "line": 24,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "concierge"
+    },
+    {
+      "file": "src/assistant-client.ts",
+      "line": 27,
+      "reason": "procedure-path-dynamic",
+      "hint": "The name is computed, so the tool, prompt or resource it asks for cannot be named. Write the name as text where the request is made.",
+      "symbol": "assistant.callTool({ name, arguments: {} })",
+      "service": "concierge"
+    },
+    {
+      "file": "src/assistant-client.ts",
+      "line": 27,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "concierge"
+    }
+  ]
+}

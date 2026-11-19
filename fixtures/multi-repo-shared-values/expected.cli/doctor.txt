@@ -1,0 +1,21 @@
+unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+
+unresolved: 0 to act on · missed: 1 · notes: 0 · findings: 1
+  1 missed place static reading cannot see, folded into 1 row
+  1 finding: 1 stream nothing writes to
+  stream-no-writer (finding): 1 row
+    Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.
+      platform/templates/platform.yaml:85  kinesis/shop-prod-clicks is read by a function and nothing in the configured services writes to it
+  subscription-target-unread (info): 1 row
+    An e-mail, an HTTP endpoint or a phone is outside the map. Nothing to fix.
+      platform/templates/platform.yaml:77  templates/platform.Resources.AlertsTopic
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 12 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 0 now, +0)
+  no baseline at <root>/fixtures/multi-repo-shared-values/flowatlas.baseline.json; run flowatlas doctor --accept to write one

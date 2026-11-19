@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-17T20:48:35.518Z",
+  "configHash": "824d3cd40a8b",
+  "services": [
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "compose-include-shell-env-audit",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "compose-include-shell-env-billing",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "compose-include-shell-env-catalog",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "compose-include-shell-env-ledger",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "compose-include-shell-env-orders",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "compose-include-shell-env-stock",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 19,
+      "edges": 12,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "compose-include-shell-env-web",
+        "runtime": [],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 6,
+    "linked": 6,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 6,
+    "called": 6,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "audit",
+      "file": "deploy/charts/audit/templates/audit.yaml",
+      "line": 27,
+      "reason": "container-image-unread",
+      "level": "info",
+      "message": "deploy/charts/audit/templates/audit.yaml runs audit (audit) from the image {{ … }}:; its name is a template value the chart's values and the files do not settle, and an image is never fetched, so the environment the image gives is not read: it may set PORT (src/app.ts:9), which audit's code reads its port from; the port there is taken as 5000, where nothing read gives the setting",
+      "hint": "Build the image in the project (docker build -t, a compose build:, a Skaffold artifact) so its Dockerfile is read, or give the setting in the container's own environment.",
+      "symbol": "audit:{{ … }}:",
+      "meta": {
+        "image": "{{ … }}:",
+        "settings": [
+          "PORT"
+        ]
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 31,
+    "edges": 18,
+    "types": 2,
+    "missed": 0,
+    "sites": 0,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 0
+  }
+}

@@ -1,0 +1,357 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-08T12:47:44.104Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:7:9",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:7:9|http_calls|entry:orders:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/server.ts:POST /jobs/run@6 declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:7:9",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:7:9|http_calls|entry:orders:http:GET:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/app.ts:GET /orders@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:8:9",
+        "to": "entry:search:http:GET:/search",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:8:9|http_calls|entry:search:http:GET:/search",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/server.ts:POST /jobs/run@6 declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:8:9",
+        "to": "entry:search:http:GET:/search",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:8:9|http_calls|entry:search:http:GET:/search",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "search#src/server.ts:GET /search@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:9:9",
+        "to": "entry:shop:http:GET:/api/basket",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:9:9|http_calls|entry:shop:http:GET:/api/basket",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/server.ts:POST /jobs/run@6 declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:9:9",
+        "to": "entry:shop:http:GET:/api/basket",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:9:9|http_calls|entry:shop:http:GET:/api/basket",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "jobs#src/server.ts:POST /jobs/run@6 declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:10:29",
+        "to": "entry:notify:http:GET:/notices",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:10:29|hits|entry:notify:http:GET:/notices",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:10:29",
+        "to": "entry:notify:http:GET:/notices",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:10:29|hits|entry:notify:http:GET:/notices",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "notify#src/server.ts:GET /notices@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:11:28",
+        "to": "entry:shop:http:GET:/api/basket",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:11:28|hits|entry:shop:http:GET:/api/basket",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:11:28",
+        "to": "entry:shop:http:GET:/api/basket",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:11:28|hits|entry:shop:http:GET:/api/basket",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:12:24",
+        "to": "entry:jobs:http:POST:/jobs/run",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:12:24|hits|entry:jobs:http:POST:/jobs/run",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:12:24",
+        "to": "entry:jobs:http:POST:/jobs/run",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:12:24|hits|entry:jobs:http:POST:/jobs/run",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:13:25",
+        "to": "entry:catalog:http:GET:/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:13:25|hits|entry:catalog:http:GET:/products",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:13:25",
+        "to": "entry:catalog:http:GET:/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:13:25|hits|entry:catalog:http:GET:/products",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/app.ts:GET /products@7 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:3:28",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:3:28|hits|entry:orders:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:3:28",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:3:28|hits|entry:orders:http:GET:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/app.ts:GET /orders@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:4:27",
+        "to": "entry:stock:http:GET:/stock/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:4:27|hits|entry:stock:http:GET:/stock/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:4:27",
+        "to": "entry:stock:http:GET:/stock/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:4:27|hits|entry:stock:http:GET:/stock/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:5:30",
+        "to": "entry:catalog:http:GET:/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:5:30|hits|entry:catalog:http:GET:/products",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:5:30",
+        "to": "entry:catalog:http:GET:/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:5:30|hits|entry:catalog:http:GET:/products",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/app.ts:GET /products@7 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:6:30",
+        "to": "entry:billing:http:GET:/invoices",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:6:30|hits|entry:billing:http:GET:/invoices",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:6:30",
+        "to": "entry:billing:http:GET:/invoices",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:6:30|hits|entry:billing:http:GET:/invoices",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:7:29",
+        "to": "entry:ledger:http:GET:/entries",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:7:29|hits|entry:ledger:http:GET:/entries",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:7:29",
+        "to": "entry:ledger:http:GET:/entries",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:7:29|hits|entry:ledger:http:GET:/entries",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "ledger#src/server.ts:GET /entries@10 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:8:28",
+        "to": "entry:audit:http:GET:/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:8:28|hits|entry:audit:http:GET:/events",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:8:28",
+        "to": "entry:audit:http:GET:/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:8:28|hits|entry:audit:http:GET:/events",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "audit#src/server.ts:GET /events@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:9:28",
+        "to": "entry:search:http:GET:/search",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:9:28|hits|entry:search:http:GET:/search",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:9:28",
+        "to": "entry:search:http:GET:/search",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:9:28|hits|entry:search:http:GET:/search",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "search#src/server.ts:GET /search@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 28,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

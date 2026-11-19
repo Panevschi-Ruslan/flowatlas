@@ -1,0 +1,577 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-15T14:48:40.540Z",
+  "services": [
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:sqs/stock-restock",
+      "type": "channel",
+      "label": "sqs/stock-restock",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 56,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/stock-shipments",
+      "type": "channel",
+      "label": "sqs/stock-shipments",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 58,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/stock-write-off",
+      "type": "channel",
+      "label": "sqs/stock-write-off",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 57,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:stock#lib/stock-stack.ts:StockStack/Count/SqsEventSource:StockStack/Restock",
+      "type": "consumer",
+      "label": "mapping StockStack/Count/SqsEventSource:StockStack/Restock",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 56,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "StockStack/Count/SqsEventSource:StockStack/Restock",
+        "deployedBy": "cdk",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:stock#lib/stock-stack.ts:StockStack/Count/SqsEventSource:StockStack/Shipments",
+      "type": "consumer",
+      "label": "mapping StockStack/Count/SqsEventSource:StockStack/Shipments",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 58,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "StockStack/Count/SqsEventSource:StockStack/Shipments",
+        "deployedBy": "cdk",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:stock#lib/stock-stack.ts:StockStack/Count/SqsEventSource:StockStack/WriteOff",
+      "type": "consumer",
+      "label": "mapping StockStack/Count/SqsEventSource:StockStack/WriteOff",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 57,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "StockStack/Count/SqsEventSource:StockStack/WriteOff",
+        "deployedBy": "cdk",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "entry:stock:invoke:stock-count",
+      "type": "entry",
+      "label": "stock-count",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 51,
+      "kind": "invoke",
+      "meta": {
+        "key": "stock-count",
+        "deployedBy": "cdk",
+        "name": "stock-count",
+        "runtime": "nodejs20.x",
+        "declaredAs": "StockStack/Count",
+        "constructPath": "StockStack/Count",
+        "handler": "src/count.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{Records:{body:string}[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stock:invoke:stock-move",
+      "type": "entry",
+      "label": "stock-move",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 29,
+      "kind": "invoke",
+      "meta": {
+        "key": "stock-move",
+        "deployedBy": "cdk",
+        "name": "stock-move",
+        "runtime": "nodejs20.x",
+        "declaredAs": "StockStack/Move",
+        "constructPath": "StockStack/Move",
+        "handler": "src/move.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "queue",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "topic",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "bus",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "stream",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "table",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "bucket",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "function",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "workflow",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "queue",
+            "name": "stock-restock",
+            "by": "grantSendMessages"
+          },
+          {
+            "kind": "queue",
+            "name": "stock-write-off",
+            "by": "PolicyStatement"
+          }
+        ],
+        "reads": {
+          "": "{reason:string;sku:string;quantity:number}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stock:invoke:stock-ship",
+      "type": "entry",
+      "label": "stock-ship",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 44,
+      "kind": "invoke",
+      "meta": {
+        "key": "stock-ship",
+        "deployedBy": "cdk",
+        "name": "stock-ship",
+        "runtime": "nodejs20.x",
+        "declaredAs": "StockStack/Ship",
+        "constructPath": "StockStack/Ship",
+        "handler": "src/ship.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "CREDENTIALS": {
+            "written": "StockStack/ShipperCredentials.secretArn",
+            "unread": "it is a value known only once deployed"
+          }
+        },
+        "grants": [
+          {
+            "kind": "queue",
+            "name": "stock-shipments",
+            "by": "grantSendMessages"
+          }
+        ],
+        "reads": {
+          "": "{carrier:string;order:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "producer:stock#src/move.ts:9:9",
+      "type": "producer",
+      "label": "message ?",
+      "repo": "stock",
+      "file": "src/move.ts",
+      "line": 9,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "unresolved",
+        "method": "send",
+        "grantable": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "granted": "queue"
+              }
+            ],
+            "payload": "{reason:string;sku:string;quantity:number}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "producer:stock#src/ship.ts:9:9",
+      "type": "producer",
+      "label": "message sqs/stock-shipments",
+      "repo": "stock",
+      "file": "src/ship.ts",
+      "line": 9,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "grant",
+        "method": "send",
+        "grantable": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "granted": "queue"
+              }
+            ],
+            "payload": "{carrier:string;order:string}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "stock#src/count.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "stock",
+      "file": "src/count.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:{body:string}[]}"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "stock#src/move.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "stock",
+      "file": "src/move.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{reason:string;sku:string;quantity:number}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/ship.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "stock",
+      "file": "src/ship.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{carrier:string;order:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:sqs/stock-restock",
+      "to": "consumer:stock#lib/stock-stack.ts:StockStack/Count/SqsEventSource:StockStack/Restock",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/stock-stack.ts",
+      "line": 56,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/stock-shipments",
+      "to": "consumer:stock#lib/stock-stack.ts:StockStack/Count/SqsEventSource:StockStack/Shipments",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/stock-stack.ts",
+      "line": 58,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/stock-write-off",
+      "to": "consumer:stock#lib/stock-stack.ts:StockStack/Count/SqsEventSource:StockStack/WriteOff",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/stock-stack.ts",
+      "line": 57,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:stock#lib/stock-stack.ts:StockStack/Count/SqsEventSource:StockStack/Restock",
+      "to": "entry:stock:invoke:stock-count",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/stock-stack.ts",
+      "line": 56,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:stock#lib/stock-stack.ts:StockStack/Count/SqsEventSource:StockStack/Shipments",
+      "to": "entry:stock:invoke:stock-count",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/stock-stack.ts",
+      "line": 58,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:stock#lib/stock-stack.ts:StockStack/Count/SqsEventSource:StockStack/WriteOff",
+      "to": "entry:stock:invoke:stock-count",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/stock-stack.ts",
+      "line": 57,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:stock:invoke:stock-count",
+      "to": "stock#src/count.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/count.ts",
+      "line": 1
+    },
+    {
+      "from": "entry:stock:invoke:stock-move",
+      "to": "stock#src/move.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/move.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:stock:invoke:stock-ship",
+      "to": "stock#src/ship.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 8
+    },
+    {
+      "from": "producer:stock#src/ship.ts:9:9",
+      "to": "channel:sqs/stock-shipments",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/ship.ts",
+      "line": 9,
+      "params": [
+        "{carrier:string;order:string}"
+      ],
+      "meta": {
+        "via": "grant",
+        "grants": [
+          "grantSendMessages"
+        ],
+        "functions": [
+          "stock-ship"
+        ]
+      }
+    },
+    {
+      "from": "stock#src/move.ts:handler",
+      "to": "producer:stock#src/move.ts:9:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/move.ts",
+      "line": 9
+    },
+    {
+      "from": "stock#src/ship.ts:handler",
+      "to": "producer:stock#src/ship.ts:9:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/ship.ts",
+      "line": 9
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/move.ts",
+      "line": 9,
+      "reason": "channel-dynamic",
+      "message": "handler -> reasons.get(event.reason)",
+      "hint": "reasons.get(event.reason) is looked up in reasons by event.reason, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere. Send to an address the code or the deployment states, or annotate handler with the channels it may use. What its function is granted does not narrow it: stock-move is granted every queue by MoverRole on a resource not read (the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app), which bounds nothing.",
+      "symbol": "producer:stock#src/move.ts:9:9",
+      "service": "stock",
+      "meta": {
+        "grantedEvery": [
+          {
+            "function": "stock-move",
+            "resources": [
+              "a resource not read (the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app)"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "service": "stock",
+      "file": "src/ship.ts",
+      "line": 9,
+      "reason": "channel-from-grant",
+      "level": "info",
+      "message": "the call at src/ship.ts:9 does not say where it sends: carriers.get(event.carrier) is looked up in carriers by event.carrier, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere; stock-ship runs it and is granted only sqs/stock-shipments, so it is drawn to each",
+      "hint": "A grant is where the function may send, not where it does: each edge is a guess. Write the address, or one value of the environment the deployment sets, and it is read instead.",
+      "symbol": "producer:stock#src/ship.ts:9:9",
+      "meta": {
+        "granted": [
+          "sqs/stock-shipments"
+        ],
+        "functions": [
+          "stock-ship"
+        ],
+        "unread": [
+          "channel-dynamic"
+        ]
+      }
+    }
+  ]
+}

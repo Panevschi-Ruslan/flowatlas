@@ -1,0 +1,741 @@
+import {
+  hostOf,
+  innerServiceName,
+  LISTEN_META,
+  literalPort,
+  type ContainerRun,
+  type GraphNode,
+  type ListenPort,
+  type PortValue,
+  type RepoSettings,
+  type RoutedName,
+  type SecretSource,
+  type Unresolved,
+} from '@flowatlas/core';
+import { GRAPHQL_META } from '@flowatlas/graphql';
+import { servicesAt, type HostIndex } from './base-url-value.js';
+import type { Finding } from './http-link.js';
+import { cmp } from './order.js';
+import type { ServesRequest } from './request-served.js';
+
+/**
+ * Which service an address on this machine is, by the port it names (P250).
+ *
+ * `http://localhost:3001/orders` names no service, and the service listening
+ * on 3001 is the one it reaches. Three things can say which that is, and they
+ * are asked in this order:
+ *
+ * 1. the configuration: a host `services[].hosts` (or a name, an alias) gives
+ *    exactly one service wins, `static`, as it always did;
+ * 2. the code: the port each service's server is started on, as its
+ *    repository node keeps it (`meta.listen`), and the setting files: the
+ *    `localhost:<port>` a `PORT=` in an example environment file, a published
+ *    container port or a worker's dev port places (P77). Agreement, not
+ *    precedence (P77 D3): the services they name together must be one;
+ * 3. two or more is no answer, and the row names each and where it listens.
+ *
+ * The join from a port the code writes as a number is `static`: the server
+ * listens there wherever it runs. One that is only a setting's fallback, a
+ * library's default or a setting file's value is where a local run listens,
+ * which is the run an address on this machine is written for, and the join
+ * says it is a guess.
+ *
+ * What the code says and what the files say are put together where they meet
+ * (P254). A port the code reads from a setting alone (`process.env.PORT`) is
+ * where the service's example environment file says the setting is. A
+ * container that publishes `3001:3000` for a service listening on 3000 is
+ * one fact with two sides: the service is reached at `localhost:3001` on the
+ * machine running the container, through the mapping, and at `orders:3000` on
+ * the container's own network; inside the container, the port its
+ * environment gives the setting the code reads is the one it listens on. A
+ * mapping whose container side nothing in the code listens on is a note.
+ *
+ * A cluster's network is read the same way (P257): a name its manifests
+ * route to the service's containers (`orders:80` to 3000) is where the
+ * service is reached on that network, joined where the code listens on the
+ * port it routes to, a note where it does not. And a request on either
+ * network to a port the service is not reached at there - the port a
+ * container publishes on the machine, or the containers' own port behind a
+ * routed name - will not connect: it is a finding, never a join.
+ */
+
+/** One port a service listens on, and where its code says so. */
+export interface Listening {
+  readonly service: string;
+  readonly file: string;
+  readonly line: number;
+  readonly setting?: string;
+  readonly default?: true;
+  /** Where the port is handed to the function that starts the server (P254). */
+  readonly handed?: string;
+  /** A front end's dev server, which forwards what it does not serve (P254). */
+  readonly devServer?: true;
+  /**
+   * The file that gives the setting the code reads its port from alone its
+   * value (P254), or the environment file the framework loads, or an example
+   * of it, that moves its default (P305).
+   */
+  readonly valueFrom?: string;
+  /** The merge helper's call the port is read through, `file:line` (P305). */
+  readonly merged?: string;
+  /** The write not read that the value the port is read from passes, `file:line` (P321). */
+  readonly rewritten?: string;
+  /**
+   * `valueFrom` is an example environment file (`.env.example`, a template),
+   * which offers the value rather than giving it: a guess (P309).
+   */
+  readonly example?: true;
+  /**
+   * `valueFrom` is an environment file of the service's that is no example
+   * but that nothing the code reader follows loads (no dotenv, `--env-file`
+   * or framework loader names it), offering its value to a fallback the code
+   * writes rather than giving it: a guess beside the fallback, asked whether
+   * it serves the request (P325); and to a setting the code reads alone, a
+   * guess as an example's value is (P331). A file the reader finds loaded
+   * fills `valueFrom` on the code's own port instead, firm.
+   */
+  readonly unloaded?: true;
+  /**
+   * The published side of a container's mapping this port is reached through
+   * on the machine (P254); or a port this machine forwards to a cluster's
+   * object, or one every node of a cluster opens for it (P260), with the
+   * object it reaches.
+   */
+  readonly published?: { readonly port: number; readonly file: string; readonly via?: 'forwarded' | 'node-port'; readonly object?: string };
+  /** The container this is the port of, on the container's own network (P254). */
+  readonly inContainer?: { readonly name: string; readonly file: string };
+  /** The name a cluster's network routes to this port, and the port it is reached at (P257). */
+  readonly routed?: { readonly name: string; readonly port: number; readonly file: string };
+}
+
+/** A host on a container's or a cluster's network that names a service at a port it is not reached at there (P257). */
+export interface ClosedPort {
+  readonly service: string;
+  /** What the port is: published on the machine, or the containers' own behind a routed name. */
+  readonly kind: 'published' | 'behind';
+  /** The hosts the network does reach the service at, `orders:3000`. */
+  readonly reachable: readonly string[];
+  readonly file: string;
+}
+
+/** The ports a node says its service listens on: a repository node's, or a GraphQL endpoint's (P245). */
+const portsOf = (node: GraphNode): readonly ListenPort[] => {
+  if (node.type === 'repo') return (node.meta?.[LISTEN_META] as readonly ListenPort[] | undefined) ?? [];
+  if (node.type === 'entry' && node.kind === 'http') {
+    return (node.meta?.[GRAPHQL_META] as { listen?: readonly ListenPort[] } | undefined)?.listen ?? [];
+  }
+  return [];
+};
+
+/** Whether where a service listens is as sure as the code writing the port as a number, wherever it runs. */
+const isSure = (listening: Listening): boolean =>
+  literalPort(listening) && listening.valueFrom === undefined && listening.published === undefined && listening.routed === undefined;
+
+/**
+ * Whether a port is only the fallback the code writes for a setting,
+ * `process.env.PORT ?? 3000`, with nothing on this machine giving the setting
+ * where it is heard (P313): what the code assumes where nothing sets the
+ * setting, not where a run is placed. A port a file the framework loads gives
+ * the setting, or one a container publishes, is no fallback.
+ */
+const isFallback = (listening: Listening): boolean =>
+  listening.setting !== undefined &&
+  listening.default !== true &&
+  listening.merged === undefined &&
+  listening.rewritten === undefined &&
+  listening.valueFrom === undefined &&
+  listening.published === undefined &&
+  listening.routed === undefined &&
+  listening.inContainer === undefined;
+
+/**
+ * Whether a service is heard at a port only by a guess: its framework's or
+ * library's default (an example file's value kept as a candidate of it), a
+ * port read through a merge helper (P305), the value an example environment
+ * file offers the setting its code reads the port from (P309), or the
+ * fallback the code writes for a setting nothing gives (P313). A port the
+ * code writes as a number, a file the framework loads, or a published port is
+ * no guess.
+ */
+const isGuessed = (listening: Listening): boolean =>
+  listening.default === true ||
+  listening.merged !== undefined ||
+  listening.rewritten !== undefined ||
+  listening.example === true ||
+  listening.unloaded === true ||
+  isFallback(listening);
+
+/**
+ * One service listening at a port, kept once: the surer word where one
+ * service says the port twice, and a firm one over a guess (P313), so a
+ * published port is not lost behind the fallback it publishes.
+ */
+const addListening = (into: Map<number, Listening[]>, port: number, listening: Listening): void => {
+  const list = into.get(port) ?? [];
+  const seen = list.findIndex((each) => each.service === listening.service);
+  const kept = list[seen];
+  if (kept === undefined) list.push(listening);
+  else if ((!isSure(kept) && isSure(listening)) || (isGuessed(kept) && !isGuessed(listening))) list[seen] = listening;
+  into.set(port, list.sort((a, b) => cmp(a.service, b.service)));
+};
+
+const listeningOf = (service: string, port: ListenPort): Listening => ({
+  service,
+  file: port.file,
+  line: port.line,
+  ...(port.setting === undefined ? {} : { setting: port.setting }),
+  ...(port.default === undefined ? {} : { default: port.default }),
+  ...(port.handed === undefined ? {} : { handed: port.handed }),
+  ...(port.devServer === undefined ? {} : { devServer: port.devServer }),
+  ...(port.valueFrom === undefined ? {} : { valueFrom: port.valueFrom }),
+  ...(port.merged === undefined ? {} : { merged: port.merged }),
+  ...(port.rewritten === undefined ? {} : { rewritten: port.rewritten }),
+});
+
+/** Every port each service's code says it listens on, a setting alone included, by service. */
+const codePortsOf = (nodes: ReadonlyMap<string, GraphNode>): Map<string, ListenPort[]> => {
+  const out = new Map<string, ListenPort[]>();
+  for (const node of nodes.values()) {
+    const ports = portsOf(node);
+    if (ports.length > 0) out.set(node.repo, [...(out.get(node.repo) ?? []), ...ports]);
+  }
+  return out;
+};
+
+/**
+ * Whether the code of a service is read loading an environment file (P331):
+ * a port of its code is filled from the file (`valueFrom`, by dotenv,
+ * `--env-file` or a framework's loader, P315, P321).
+ */
+export const loadedFilesOf = (nodes: ReadonlyMap<string, GraphNode>): ((service: string, file: string) => boolean) => {
+  const loaded = new Set<string>();
+  for (const [service, ports] of codePortsOf(nodes)) for (const port of ports) if (port.valueFrom !== undefined) loaded.add(`${service}\0${port.valueFrom}`);
+  return (service, file) => loaded.has(`${service}\0${file}`);
+};
+
+/**
+ * The values a service's own environment files give the setting a port the
+ * code writes is the fallback of (P319): `process.env.PORT ?? 3000` with a
+ * `.env` of `PORT=4000`. Nothing for a port the code writes no setting for,
+ * a default, a merged port, or one a file the code loads already gave the
+ * reader (`valueFrom`), which is the port's firmly.
+ */
+const fallbackValues = (port: ListenPort, own: RepoSettings | undefined): readonly PortValue[] =>
+  port.port === undefined || port.setting === undefined || port.default === true || port.merged !== undefined || port.valueFrom !== undefined
+    ? []
+    : (own?.ports?.[port.setting] ?? []);
+
+/**
+ * How a value a service's own files give a setting is heard (P309, P331,
+ * P337): an example's is offered; one a command of the project starts the
+ * server with is firm, the run it starts listens there; any other file's,
+ * which nothing is read loading, is offered too.
+ */
+const offerOf = (value: PortValue): Pick<Listening, 'example' | 'unloaded'> =>
+  value.started === true ? {} : value.example === true ? { example: true as const } : { unloaded: true as const };
+
+/**
+ * Every port the servers of the project listen on, as their code writes it:
+ * each service's repository node (P250), and a GraphQL endpoint's own, which
+ * P245 carried first. A service is listed once per port.
+ *
+ * A port the code only falls back to where a setting is not given is a
+ * guess (P313), and each value the service's own environment files give the
+ * setting is offered beside it, a guess as well (P319, P325): an example
+ * file's (P309), and a file's nothing the code reader follows loads, which a
+ * run may or may not have in its environment. Only a file the reader finds
+ * loaded (dotenv, `--env-file`, a framework's loader) places the port firmly,
+ * and then the code's port is already the file's (`valueFrom`, P315, P321).
+ */
+export const listeningAt = (nodes: ReadonlyMap<string, GraphNode>, settings: Readonly<Record<string, RepoSettings>> = {}): Map<number, Listening[]> => {
+  const found = new Map<number, Listening[]>();
+  for (const [service, ports] of codePortsOf(nodes)) {
+    for (const port of ports) {
+      if (port.port === undefined) continue;
+      const listening = listeningOf(service, port);
+      addListening(found, port.port, listening);
+      for (const value of fallbackValues(port, settings[service])) {
+        // A run started with the fallback's own value listens there firmly (P337).
+        if (value.port === port.port && value.started !== true) continue;
+        addListening(found, value.port, { ...listening, valueFrom: value.file, ...offerOf(value) });
+      }
+    }
+  }
+  return found;
+};
+
+/** Where the project's services listen, the code and the files put together (P254). */
+export interface PortListening {
+  /** By port on this machine. */
+  readonly byPort: ReadonlyMap<number, readonly Listening[]>;
+  /** By `<name>:<port>` on a container's own network. */
+  readonly inNetwork: ReadonlyMap<string, readonly Listening[]>;
+  /** A mapping whose container side the code does not listen on, one row each. */
+  readonly rows: readonly Unresolved[];
+  /** By `<name>:<port>`: a port the network does not reach the service at (P257). */
+  readonly closed: ReadonlyMap<string, ClosedPort>;
+}
+
+/**
+ * The ports a service listens on inside a container: its environment's value
+ * for the setting the code reads, else the code's own. The container's
+ * environment is what it is started with - written for it, the environment
+ * files it is started with, its image's Dockerfile - and nothing else: an
+ * environment file of the service's own that none of those names is the
+ * machine's, not the container's (P319, P325). A value the environment gives
+ * is firm, named by the file it is from, and the code's fallback is not where
+ * the container listens.
+ */
+const insideContainer = (
+  service: string,
+  ports: readonly ListenPort[],
+  container: Pick<ContainerRun, 'name' | 'file' | 'environment' | 'environmentFrom' | 'environmentFiles' | 'environmentSecret'>,
+): Map<number, Listening> => {
+  const inside = new Map<number, Listening>();
+  for (const port of ports) {
+    // A setting a secret gives holds a value never read: the code's own
+    // fallback is not where it listens there, and nothing else is known (P337).
+    if (port.setting !== undefined && container.environmentSecret?.includes(port.setting) === true) continue;
+    const given = port.setting === undefined ? undefined : container.environment[port.setting];
+    const at = given ?? port.port;
+    if (at === undefined) continue;
+    const listening = listeningOf(service, port);
+    const from = (port.setting === undefined ? undefined : container.environmentFiles?.[port.setting]) ?? container.environmentFrom ?? container.file;
+    const read: Listening = given === undefined ? listening : { ...listening, valueFrom: `${from} (${container.name})` };
+    if (!inside.has(at) || isSure(read)) inside.set(at, read);
+  }
+  return inside;
+};
+
+/** Where a service's code says it listens, for the row about a mapping that misses it. */
+const portsSaid = (service: string, ports: readonly ListenPort[], environment: Readonly<Record<string, number>> = {}, secret: readonly string[] = [], secretFrom: Readonly<Record<string, SecretSource>> = {}): string => {
+  // A port the container's environment gives the setting the code reads is
+  // the one it listens on there, whatever the code's own fallback (P283).
+  const givenOf = (port: ListenPort): number | undefined => (port.setting === undefined ? undefined : environment[port.setting]);
+  const numbered = [
+    ...new Set(
+      ports.flatMap((port) => {
+        if (port.setting !== undefined && secret.includes(port.setting)) return [];
+        const given = givenOf(port);
+        if (given !== undefined) return [`${given} (${port.setting} as the container's environment gives it, ${port.file}:${port.line})`];
+        return port.port === undefined ? [] : [`${port.port} (${port.file}:${port.line})`];
+      }),
+    ),
+  ];
+  const isSecret = (port: ListenPort): boolean => port.setting !== undefined && secret.includes(port.setting);
+  const alone = [...new Set(ports.flatMap((port) => (port.port === undefined && port.setting !== undefined && givenOf(port) === undefined && !isSecret(port) ? [`${port.setting} (${port.file}:${port.line})`] : [])))];
+  // Which Secret and key gives each, and where that Secret is written, so a reader knows where to look (P343).
+  const sourceOf = (setting: string): string => {
+    const source = secretFrom[setting];
+    if (source === undefined) return 'a Secret';
+    return `the Secret ${source.secret} (its key ${source.key}${source.file === undefined ? ', a Secret no manifest read writes' : `, ${source.file}`})`;
+  };
+  const hidden = [...new Set(ports.flatMap((port) => (isSecret(port) ? [`${port.setting} (${port.file}:${port.line}), which ${sourceOf(port.setting as string)} gives`] : [])))];
+  const said = [
+    ...(numbered.length === 0 ? [] : [`listens on ${numbered.join(', ')}`]),
+    ...(alone.length === 0 ? [] : [`reads its port from ${alone.join(', ')}, which the container's environment does not give`]),
+    ...(hidden.length === 0 ? [] : [`reads its port from ${hidden.join('; ')}, and a secret's value is never read`]),
+  ];
+  return said.length === 0 ? `nothing in ${service}'s code is read listening on a port` : `${service}'s code ${said.join(' and ')}`;
+};
+
+/** The row for a routed name whose target port nothing in the service's code listens on (P257). */
+const unroutedRow = (service: string, routed: RoutedName, port: RoutedName['ports'][number], ports: readonly ListenPort[]): Unresolved => ({
+  service,
+  file: port.file,
+  line: port.line,
+  reason: 'published-port-unheard',
+  level: 'info',
+  message: `${port.file} routes ${routed.name}:${port.port} to port ${port.target} of ${service}'s containers, but ${portsSaid(service, ports, routed.environment, routed.environmentSecret, routed.environmentSecretFrom)}`,
+  hint: `Route the name to the port the server listens on (targetPort), or check that the containers' environment gives the server ${port.target}. A request to ${routed.name}:${port.port} is still joined to ${service} by the file.`,
+  symbol: `${routed.name}:${port.port}:${port.target}`,
+  meta: { routed: port.port, container: port.target, listens: [...new Set(ports.flatMap((each) => (each.port === undefined ? [] : [each.port])))].sort((a, b) => a - b) },
+});
+
+/**
+ * The row for a container whose image's environment is not read (P331) -
+ * pulled, built by nothing the project holds, or from a Dockerfile not found
+ * - where the port the service listens on there hangs on it: a setting the
+ * code reads its port from that what is read of the container's environment
+ * does not give, which the image's `ENV` may. Nothing where the environment
+ * read gives every such setting, or the code reads none.
+ */
+const imageUnreadRow = (
+  service: string,
+  container: Pick<ContainerRun, 'name' | 'file' | 'environment' | 'imageUnread' | 'environmentSecret' | 'environmentSecretFrom'> & { readonly line: number },
+  ports: readonly ListenPort[],
+): Unresolved | undefined => {
+  const unread = container.imageUnread;
+  if (unread === undefined) return undefined;
+  // A setting a secret gives is given, whatever the image sets (P337).
+  const hanging = ports.filter((port) => port.setting !== undefined && container.environment[port.setting] === undefined && container.environmentSecret?.includes(port.setting) !== true);
+  if (hanging.length === 0) return undefined;
+  const settings = [...new Set(hanging.map((port) => `${port.setting} (${port.file}:${port.line})`))];
+  const fallbacks = [...new Set(hanging.flatMap((port) => (port.port === undefined ? [] : [port.port])))].sort((a, b) => a - b);
+  return {
+    service,
+    file: container.file,
+    line: container.line,
+    reason: 'container-image-unread',
+    level: 'info',
+    message:
+      `${container.file} runs ${container.name} (${service}) from the image ${unread.image}; ${unread.why}, so the environment the image gives is not read: ` +
+      `it may set ${settings.join(', ')}, which ${service}'s code reads its port from` +
+      (fallbacks.length === 0 ? ', and no port is read there' : `; the port there is taken as ${fallbacks.join(', ')}, where nothing read gives the setting`),
+    hint: 'Build the image in the project (docker build -t, a compose build:, a Skaffold artifact) so its Dockerfile is read, or give the setting in the container\'s own environment.',
+    symbol: `${container.name}:${unread.image}`,
+    meta: { image: unread.image, settings: [...new Set(hanging.map((port) => port.setting as string))].sort() },
+  };
+};
+
+/** How a file makes a port of this machine reach a container's, as a row says it (P254, P260). */
+const publishing = (container: ContainerRun, mapping: ContainerRun['ports'][number], service: string): string =>
+  container.via === 'forwarded'
+    ? `${mapping.file} forwards port ${mapping.published} of this machine to ${container.name}, port ${mapping.container} of ${service}'s containers`
+    : container.via === 'node-port'
+      ? `${mapping.file} opens node port ${mapping.published} for ${container.name}, port ${mapping.container} of ${service}'s containers`
+      : `${mapping.file} publishes port ${mapping.container} of ${container.name} (${service}) as ${mapping.published}`;
+
+const unheardRow = (service: string, container: ContainerRun, mapping: ContainerRun['ports'][number], ports: readonly ListenPort[]): Unresolved => {
+  return {
+    service,
+    file: mapping.file,
+    line: mapping.line,
+    reason: 'published-port-unheard',
+    level: 'info',
+    message: `${publishing(container, mapping, service)}, but ${portsSaid(service, ports, container.environment, container.environmentSecret, container.environmentSecretFrom)}`,
+    hint: `Map the published port to the port the server listens on (${mapping.published}:<that port>), or check that the container's environment gives the server ${mapping.container}. A request to localhost:${mapping.published} is still joined to ${service} by the file.`,
+    symbol: `${container.name}:${mapping.published}:${mapping.container}`,
+    meta: { published: mapping.published, container: mapping.container, listens: [...new Set(ports.flatMap((port) => (port.port === undefined ? [] : [port.port])))].sort((a, b) => a - b) },
+  };
+};
+
+/**
+ * Where every service listens (P250), the code and the setting files put
+ * together (P254): the code's own ports; a port the code reads from a setting
+ * alone, at each value the service's example environment files give it; each
+ * container mapping whose container side the service listens on, at its
+ * published port and on the container's network; and a row for each mapping
+ * that meets nothing in the code.
+ */
+export const portsListening = (nodes: ReadonlyMap<string, GraphNode>, settings: Readonly<Record<string, RepoSettings>>): PortListening => {
+  const byPort = listeningAt(nodes, settings);
+  const inNetwork = new Map<string, Listening[]>();
+  const rows: Unresolved[] = [];
+  const closed = new Map<string, ClosedPort>();
+  const inNetworkAdd = (key: string, listening: Listening): void => {
+    const list = inNetwork.get(key) ?? [];
+    if (!list.some((each) => each.service === listening.service)) list.push(listening);
+    inNetwork.set(key, list);
+  };
+  const code = codePortsOf(nodes);
+  // One row for each image of a service whose environment is not read (P331).
+  const imagesSaid = new Set<string>();
+  const imageRow = (service: string, container: Parameters<typeof imageUnreadRow>[1], ports: readonly ListenPort[]): void => {
+    const row = imageUnreadRow(service, container, ports);
+    const key = `${service}\0${container.imageUnread?.image ?? ''}`;
+    if (row === undefined || imagesSaid.has(key)) return;
+    imagesSaid.add(key);
+    rows.push(row);
+  };
+  for (const [service, ports] of [...code.entries()].sort(([a], [b]) => cmp(a, b))) {
+    for (const port of ports) {
+      if (port.setting === undefined || port.valueFrom !== undefined) continue;
+      // A written fallback is offered its files' values where it is heard (P325).
+      if (fallbackValues(port, settings[service]).length > 0) continue;
+      // A default or a merged port is offered the value an example
+      // environment file gives the setting, as a guess beside it, as a
+      // setting read alone is (P321); another file nothing loads moves no
+      // default. A setting read alone is offered each file's value, an
+      // example's and a file's nothing is read loading alike (P331): a file
+      // the code loads has filled the port already (`valueFrom`), firm.
+      // A command that starts the server with the setting places it there
+      // firmly, whatever the code falls back to (P337).
+      const withFallback = port.port !== undefined;
+      for (const value of settings[service]?.ports?.[port.setting] ?? []) {
+        if (withFallback && value.started !== true && (value.example !== true || value.port === port.port)) continue;
+        addListening(byPort, value.port, { ...listeningOf(service, port), valueFrom: value.file, ...offerOf(value) });
+      }
+    }
+  }
+  for (const [service, own] of Object.entries(settings).sort(([a], [b]) => cmp(a, b))) {
+    const ports = code.get(service) ?? [];
+    for (const container of own.containers ?? []) {
+      imageRow(service, { ...container, line: container.ports[0]?.line ?? 1 }, ports);
+      const inside = insideContainer(service, ports, container);
+      for (const [port, listening] of inside) {
+        for (const name of container.names) inNetworkAdd(`${name}:${port}`, { ...listening, inContainer: { name: container.name, file: container.file } });
+      }
+      for (const mapping of container.ports) {
+        const listening = inside.get(mapping.container);
+        if (listening === undefined) rows.push(unheardRow(service, container, mapping, ports));
+        else {
+          const how = container.via === undefined ? {} : { via: container.via, object: container.name };
+          addListening(byPort, mapping.published, { ...listening, published: { port: mapping.published, file: mapping.file, ...how } });
+        }
+        // The published side is the machine's: on the container's network it is nothing.
+        if (inside.size === 0 || inside.has(mapping.published)) continue;
+        const reachable = [...inside.keys()].sort((a, b) => a - b);
+        for (const name of container.names) {
+          closed.set(`${name}:${mapping.published}`, { service, kind: 'published', reachable: reachable.map((port) => `${name}:${port}`), file: mapping.file });
+        }
+      }
+    }
+    for (const routed of own.routes ?? []) {
+      imageRow(service, { ...routed, line: routed.ports[0]?.line ?? 1 }, ports);
+      const inside = insideContainer(service, ports, routed);
+      const routes = new Set(routed.ports.map((port) => port.port));
+      for (const port of routed.ports) {
+        const listening = inside.get(port.target);
+        if (listening === undefined) {
+          rows.push(unroutedRow(service, routed, port, ports));
+          continue;
+        }
+        for (const name of routed.names) inNetworkAdd(`${name}:${port.port}`, { ...listening, routed: { name: routed.name, port: port.port, file: port.file } });
+        // The containers' own port is reached only through the name's port.
+        if (routes.has(port.target)) continue;
+        for (const name of routed.names) {
+          const reachable = routed.ports.filter((each) => each.target === port.target).map((each) => `${name}:${each.port}`);
+          closed.set(`${name}:${port.target}`, { service, kind: 'behind', reachable, file: port.file });
+        }
+      }
+    }
+  }
+  // A port a network reaches some other way is no closed one.
+  for (const key of inNetwork.keys()) closed.delete(key);
+  return { byPort, inNetwork, rows, closed };
+};
+
+/** The hosts an address on this machine is written with, and nothing else. */
+export const LOCAL_HOSTNAMES: ReadonlySet<string> = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]', '::1']);
+
+/** The port an address names on this machine: `http://localhost:4001/graphql` is 4001. */
+export const localPortOf = (address: string): number | undefined => {
+  const host = hostOf(address);
+  if (host === undefined || !LOCAL_HOSTNAMES.has(host.hostname)) return undefined;
+  const port = /:(\d+)$/.exec(host.host)?.[1];
+  return port === undefined ? undefined : Number(port);
+};
+
+/** How a port of this machine reaches the one a service listens on (P254, P260). */
+const publishedAs = (published: NonNullable<Listening['published']>): string =>
+  published.via === 'forwarded'
+    ? `, forwarded from ${published.port} to ${published.object} by ${published.file}`
+    : published.via === 'node-port'
+      ? `, at node port ${published.port} of ${published.object} (${published.file})`
+      : `, published as ${published.port} by ${published.file}`;
+
+/**
+ * Where a service listens, as a reader is told it: `src/main.ts:7`, with the
+ * setting a fallback is behind, where the setting's value is from, the call
+ * that hands the port in, the merge it is read through, and the side of a
+ * container's mapping it is reached through.
+ */
+export const whereListening = (listening: Listening): string =>
+  `${listening.file}:${listening.line}` +
+  (listening.setting === undefined ? '' : listening.valueFrom === undefined ? ` (${listening.setting})` : ` (${listening.setting} from ${listening.valueFrom})`) +
+  (listening.default !== true ? '' : listening.valueFrom === undefined ? ' (its default)' : ' (an example value)') +
+  (listening.unloaded === true ? ' (a file nothing is read loading)' : '') +
+  (listening.merged === undefined ? '' : ` (read through the merge at ${listening.merged})`) +
+  (listening.rewritten === undefined ? '' : ` (from before the write at ${listening.rewritten})`) +
+  (listening.handed === undefined ? '' : ` (handed at ${listening.handed})`) +
+  (listening.published === undefined ? '' : publishedAs(listening.published)) +
+  (listening.inContainer === undefined ? '' : `, in the container ${listening.inContainer.name} (${listening.inContainer.file})`) +
+  (listening.routed === undefined ? '' : `, behind ${listening.routed.name}:${listening.routed.port} (${listening.routed.file})`);
+
+/** Where a service listens, as a row naming two services says it: the place, and the mapping it is reached through. */
+const whereShort = (listening: Listening): string =>
+  `${listening.file}:${listening.line}${listening.published === undefined ? '' : `, published by ${listening.published.file}`}`;
+
+/**
+ * The services a port only guesses at answers a request with (P300, P307):
+ * those that serve it, defaults and guesses asked alike, the services an
+ * example environment file alone places there among them (P309); where none
+ * does, the fallbacks the code writes (P313), then the other guesses firmer
+ * than a default, which outrank them (P305); and where there are none,
+ * nobody, so the request is joined as with nobody heard.
+ */
+const guessedAt = (heard: readonly Listening[], offered: readonly string[], serves: ServesRequest | undefined): ReadonlySet<string> => {
+  const all = [...new Set([...heard.map((each) => each.service), ...offered])];
+  const served = serves === undefined ? [] : all.filter((service) => serves(service));
+  if (served.length > 0) return new Set(served);
+  const written = heard.filter(isFallback).map((each) => each.service);
+  if (written.length > 0) return new Set(written);
+  return new Set(all.filter((service) => offered.includes(service) || heard.some((each) => each.service === service && each.default !== true)));
+};
+
+/** What the port of an address on this machine says. */
+export type PortAnswer =
+  | {
+      readonly kind: 'service';
+      readonly service: string;
+      /** The configuration names it, or its code writes the port as a number. */
+      readonly sure: boolean;
+      /** Where its code starts the server on the port, when the code says. */
+      readonly listening?: Listening;
+    }
+  | {
+      readonly kind: 'shared';
+      readonly port: number;
+      readonly services: readonly string[];
+      /** Each service, with where it listens: `inventory (src/index.ts:22)`, `audit (its setting files)`. */
+      readonly said: readonly string[];
+    }
+  | {
+      /** A host on a network that names the service at a port it is not reached at there (P257). */
+      readonly kind: 'closed';
+      readonly host: string;
+      readonly closed: ClosedPort;
+    };
+
+export interface PortIndex {
+  /** The hosts the configuration gives: names, aliases, `services[].hosts`. */
+  readonly configured: HostIndex;
+  /** The same with the hosts the setting files give, where they are read. */
+  readonly all: HostIndex;
+  /**
+   * The hosts only an example environment file gives a service (`PORT=` in
+   * `.env.example`), which offers the port rather than placing the service
+   * there: a guess, as a framework's default is (P309); and those an
+   * environment file nothing the code is read loading gives (P331).
+   */
+  readonly offered?: HostIndex;
+  readonly listening: ReadonlyMap<number, readonly Listening[]>;
+  /** Where a service listens on a container's own network, by `<name>:<port>` (P254), or on a cluster's (P257). */
+  readonly inNetwork?: ReadonlyMap<string, readonly Listening[]>;
+  /** The hosts on a network at a port the service is not reached at there (P257). */
+  readonly closed?: ReadonlyMap<string, ClosedPort>;
+}
+
+/**
+ * The service an address on this machine reaches, by its port, or nothing
+ * where it names no port on this machine or nothing listens there.
+ *
+ * A port only a framework's assumed default answers - every service heard at
+ * it listening there by default, and no file or configuration placing one -
+ * is no evidence which service a request means (P300): it places the request
+ * only where that service serves it (`serves`), and nothing where it does
+ * not, or where nothing says what the request asks. The request is then
+ * joined as it would be with nobody heard at the port.
+ *
+ * A port read through a merge (P305) is a guess too, only firmer than a
+ * default: where every service heard at the port is placed there by a
+ * default or by such a guess, and none by a port the code or a file writes,
+ * a guess takes no request from a service that serves it (P307). The request
+ * goes where the services heard there serve it - one is the answer, several
+ * a row - and only where none does do the guesses outrank the defaults, as
+ * they did (P305). A port an example environment file offers - `PORT=` in
+ * `.env.example`, the value it gives a setting the code reads alone - is such
+ * a guess too (P309): the file is a candidate, not what a run is given. So is
+ * the fallback the code writes for a setting, `process.env.PORT ?? 3000`
+ * (P313): what the code assumes where nothing sets the setting, asked whether
+ * it serves the request like the others and outranking them where nobody
+ * does. A value an environment file gives that fallback's setting, where
+ * nothing the code reader follows loads the file, is offered beside it, a
+ * guess as an example's is (P325); so is its value for a setting the code
+ * reads alone, and a `PORT=` host such a file gives a service whatever its
+ * code reads (P331). A port a loaded environment file or a
+ * deployment gives the setting,
+ * and a port a container publishes, are written facts about where the
+ * service is reached, and stay firm. Where one is, it wins outright: a guess
+ * at the same port is dropped, never making the port shared (P319).
+ */
+export const atLocalPort = (address: string, index: PortIndex, serves?: ServesRequest): PortAnswer | undefined => {
+  const port = localPortOf(address);
+  if (port === undefined) return undefined;
+  const configured = servicesAt(address, index.configured);
+  if (Array.isArray(configured) && configured.length === 1) return { kind: 'service', service: configured[0] as string, sure: true };
+  // The files spell a published port three ways; `[::1]` is the same machine.
+  const local = `http:${'/'.repeat(2)}localhost:${port}`;
+  const filed = servicesAt(local, index.all);
+  const fromFiles = Array.isArray(filed) ? filed : [];
+  // A framework's or a library's own default is the weakest word for a port
+  // (P296): it yields to a service the code or the files place there, and
+  // only defaults left together are two services' at once.
+  const heard = index.listening.get(port) ?? [];
+  // A port an example environment file alone gives a service is offered, not
+  // placed (P309); so is one a file nothing is read loading gives a setting
+  // the code falls back from, `PORT=4000` in `.env` beside
+  // `process.env.PORT ?? 3000` (P325): the code says how the port is read.
+  const offeredAt = index.offered?.get(`localhost:${port}`) ?? [];
+  const unloaded = heard.filter((each) => each.unloaded === true).map((each) => each.service);
+  const offered = fromFiles.filter((service) => offeredAt.includes(service) || unloaded.includes(service));
+  const filedFirm = fromFiles.filter((service) => !offered.includes(service));
+  const firm = heard.some((each) => !isGuessed(each)) || filedFirm.length > 0;
+  const chosen = firm ? undefined : guessedAt(heard, offered, serves);
+  // Where a port is firmly somebody's, a guess at it is nobody's (P319): a
+  // default, a merged port, an example's offer or a written fallback never
+  // makes the port two services' at once.
+  const listening = chosen === undefined ? heard.filter((each) => !isGuessed(each) || filedFirm.includes(each.service)) : heard.filter((each) => chosen.has(each.service));
+  const filedHere = chosen === undefined ? filedFirm : fromFiles.filter((service) => chosen.has(service));
+  const services = [...new Set([...filedHere, ...listening.map((each) => each.service)])].sort(cmp);
+  if (services.length === 0) return undefined;
+  if (services.length === 1) {
+    const service = services[0] as string;
+    const where = listening.find((each) => each.service === service);
+    return { kind: 'service', service, sure: where !== undefined && isSure(where), ...(where === undefined ? {} : { listening: where }) };
+  }
+  const said = services.map((service) => {
+    const where = listening.find((each) => each.service === service);
+    return where === undefined ? `${service} (its setting files)` : `${service} (${whereShort(where)})`;
+  });
+  return { kind: 'shared', port, services, said };
+};
+
+/**
+ * The spellings a host on a network is looked up by: as written, with the
+ * port its scheme defaults to where it writes none (P257), and by the name a
+ * cluster gives a service under its own suffix (`orders.shop.svc.cluster.local`
+ * is `orders` there).
+ */
+const networkKeys = (host: string, defaultPort?: number): string[] => {
+  const written = host.toLowerCase();
+  const withPort = /:\d+$/.test(written) || defaultPort === undefined ? written : `${written}:${defaultPort}`;
+  const [name, port] = [withPort.replace(/:\d+$/, ''), /:(\d+)$/.exec(withPort)?.[1]];
+  const inner = innerServiceName(name);
+  return [...new Set([written, withPort, ...(inner === undefined || port === undefined ? [] : [`${inner}:${port}`])])];
+};
+
+/** Where a service listens on a container's or a cluster's network, for a host `orders:3000` that names it (P254, P257). */
+export const inNetworkAt = (host: string, service: string, index: PortIndex, defaultPort?: number): Listening | undefined => {
+  for (const key of networkKeys(host, defaultPort)) {
+    const found = index.inNetwork?.get(key)?.find((each) => each.service === service);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+};
+
+/**
+ * A port the network does not reach the named service at, for a host that
+ * names it there (P257): the service's own, or any service's where the host
+ * names none another way.
+ */
+export const closedAt = (host: string, service: string | undefined, index: PortIndex, defaultPort?: number): ClosedPort | undefined => {
+  for (const key of networkKeys(host, defaultPort)) {
+    if (index.inNetwork?.has(key) === true) return undefined;
+    const found = index.closed?.get(key);
+    if (found !== undefined && (service === undefined || found.service === service)) return found;
+  }
+  return undefined;
+};
+
+/** Why a request on a network to a port the service is not reached at there is not joined (P257). */
+export const portClosedFinding = (host: string, closed: ClosedPort): Finding => ({
+  reason: 'network-port-unreachable',
+  message:
+    closed.kind === 'published'
+      ? `${host} names ${closed.service} on its container's network at a port ${closed.file} publishes only on the machine running it, so the request will not connect` +
+        (closed.reachable.length === 0 ? '' : `; on that network it is reached at ${closed.reachable.join(', ')}`)
+      : `${host} names ${closed.service} on its cluster's network at its containers' own port, which ${closed.file} routes only through ${closed.reachable.join(', ')}, so the request will not connect`,
+  hint:
+    closed.kind === 'published'
+      ? `Inside the network, use the port the container listens on${closed.reachable.length === 0 ? '' : ` (${closed.reachable.join(', ')})`}; the published port is for the machine (localhost).`
+      : `Use the port the name routes (${closed.reachable.join(', ')}), or route this port too.`,
+});
+
+/** Why two services on one port leave a request unjoined, as a row says it. */
+export const portSharedFinding = (port: number, said: readonly string[]): Finding => ({
+  reason: 'local-port-shared',
+  message: `port ${port} on this machine is where ${said.join(' and ')} each listen, so it is not one service`,
+  hint: `Name the host under services[].hosts of the service this request means (localhost:${port}), or start the servers on different ports.`,
+});

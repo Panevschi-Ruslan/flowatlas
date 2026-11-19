@@ -1,0 +1,64 @@
+service: notices
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'eu-west-1'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - events:PutEvents
+          Resource:
+            - !GetAtt ShopBus.Arn
+
+# Given to the service when it is deployed, and by nothing in the repository.
+params:
+  prod:
+    retention: 14
+
+functions:
+  announce:
+    handler: src/announce.handler
+
+  onPlaced:
+    handler: src/handlers.onPlaced
+    events:
+      - eventBridge:
+          eventBus: !GetAtt ShopBus.Arn
+          pattern:
+            source:
+              - shop.orders
+            detail-type:
+              - OrderPlaced
+
+  alert:
+    handler: src/alert.handler
+    environment:
+      ALERTS_QUEUE_URL: ${param:alertsQueue}
+
+  fanout:
+    handler: src/fanout.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action: sqs:SendMessage
+        Resource: arn:aws:sqs:*:*:*
+
+  onAlert:
+    handler: src/handlers.onAlert
+    events:
+      - sqs:
+          arn: !GetAtt AlertsQueue.Arn
+
+resources:
+  Resources:
+    ShopBus:
+      Type: AWS::Events::EventBus
+      Properties:
+        Name: shop-bus
+    AlertsQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${param:alertsQueue}

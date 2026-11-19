@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: The catalog, a plain stack that reads what the other services write to parameters of the account.
+
+Parameters:
+  Stage:
+    Type: String
+  # Read from the account by name when the stack is deployed.
+  PlacedQueueArn:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /shop/orders/placed-arn
+  AuditQueueName:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /shop/audit/queue-name
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+
+  # A topic with no name of its own, written to a parameter for the platform.
+  RestockTopic:
+    Type: AWS::SNS::Topic
+
+  RestockTopicParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /shop/catalog/restock-topic-arn
+      Type: String
+      Value: !Ref RestockTopic
+
+  IndexFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub catalog-${Stage}-index
+      Runtime: nodejs20.x
+      Handler: index-order.handler
+      Code: ../src
+      Role: !GetAtt LambdaRole.Arn
+
+  # The orders service's table, by the parameter holding its stream: a
+  # stream or a table's changes, which only the orders service says.
+  IndexMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: '{{resolve:ssm:/shop/orders/stream-arn}}'
+      FunctionName: !Ref IndexFunction
+      StartingPosition: LATEST
+
+  RestockFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub catalog-${Stage}-restock
+      Runtime: nodejs20.x
+      Handler: restock.handler
+      Code: ../src
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          RESTOCK_TOPIC_ARN: !Ref RestockTopic
+          # The address of a queue whose name another service writes.
+          AUDIT_QUEUE_URL: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${AuditQueueName}
+          # Nobody configured writes this one.
+          FEATURE_FLAGS: '{{resolve:ssm:/shop/flags}}'
+
+  # Where a failed restock goes: a queue, a topic, a bus or a function, which
+  # only the platform says.
+  RestockFailures:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName: !Ref RestockFunction
+      Qualifier: $LATEST
+      DestinationConfig:
+        OnFailure:
+          Destination: !Ref PlacedQueueArn

@@ -1,0 +1,35 @@
+@  POST /orders                                                   orders/template.yaml:72
+  -> handler                                                      orders/src/orders/place-order.ts:16
+    $  ORDERS_TABLE                                               orders/src/orders/get-order.ts:8
+    ~  write dynamodb/orders-dev-orders                           orders/src/orders/place-order.ts:19
+      ~  dynamodb/orders-dev-orders                               template.yaml:254
+        ~  mapping Resources.OrderChangedFunction.Events.Changed  orders/template.yaml:135
+          ~  event dynamodb/orders-dev-orders                     orders/template.yaml:135
+            -> handler                                            orders/src/orders/order-changed.ts:6
+    $  ORDERS_QUEUE_URL                                           orders/src/orders/place-order.ts:20
+    ~  message sqs/orders-dev-placed                              orders/src/orders/place-order.ts:20
+      ~  sqs/orders-dev-placed                                    template.yaml:151
+        ~  mapping Resources.ShipOrderFunction.Events.Placed      orders/template.yaml:151
+          @  orders-dev-ship-order                                orders/template.yaml:141
+            -> handler                                            orders/src/shipping/ship-order.ts:14
+              $  INVOICES_BUCKET                                  orders/src/shipping/ship-order.ts:16
+              ~  s3:ObjectCreated:Put s3/orders-dev-invoices      orders/src/shipping/ship-order.ts:16
+                ~  s3/orders-dev-invoices                         template.yaml:213
+              $  SHIPPED_TOPIC_ARN                                orders/src/shipping/ship-order.ts:17
+              ~  message sns/orders-dev-shipped                   orders/src/shipping/ship-order.ts:17
+                ~  sns/orders-dev-shipped                         template.yaml:175
+        ~  message sqs/orders-dev-placed-dlq                      orders/template.yaml:273
+          ~  sqs/orders-dev-placed-dlq                            template.yaml:273
+    ~  event eventbridge/orders-dev/orders.service/OrderPlaced    orders/src/orders/place-order.ts:21
+      ~  eventbridge/orders-dev/orders.service/OrderPlaced        template.yaml:243
+        ~  rule orders-dev-order-placed                           orders/template.yaml:243
+          @  workflow orders-dev-shipping                         orders/statemachine/shipping.asl.json:1
+            -> ReserveStock [Task lambda:invoke]                  orders/statemachine/shipping.asl.json:5
+              @  orders-dev-reserve-stock                         orders/template.yaml:157
+                -> handler                                        orders/src/shipping/reserve-stock.ts:4
+              -> ChargePayment [Task lambda:invoke]               orders/statemachine/shipping.asl.json:15
+                @  orders-dev-charge-payment                      orders/template.yaml:163
+                -> Done [Succeed]                                 orders/statemachine/shipping.asl.json:25
+    $  ORDERS_BUS_NAME                                            orders/src/orders/cancel-order.ts:12
+... truncated: ≥3 more nodes (raise --depth)
+unresolved on this path: 0

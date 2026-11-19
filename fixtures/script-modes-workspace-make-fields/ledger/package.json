@@ -1,0 +1,11 @@
+{
+  "name": "@shop/ledger",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/app.ts"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

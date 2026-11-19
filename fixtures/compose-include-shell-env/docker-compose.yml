@@ -1,0 +1,14 @@
+include:
+  - deploy/catalog.compose.yaml
+services:
+  orders:
+    extends:
+      file: compose/common.yml
+      service: node
+    build: ./orders
+    ports:
+      - "${ORDERS_PORT:-8099}:3000"
+  billing:
+    build: ./billing
+    ports:
+      - "${BILLING_PORT:-8098}:3000"

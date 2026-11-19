@@ -1,0 +1,12 @@
+{
+  "root": true,
+  "env": { "browser": true, "jquery": true },
+  "globals": { "SHOP": "readonly", "superagent": "readonly" },
+  "overrides": [
+    {
+      "files": ["js/widgets/*.js"],
+      "excludedFiles": ["banner.js"],
+      "globals": { "ky": "readonly" }
+    }
+  ]
+}

@@ -1,0 +1,251 @@
+# The questions the benchmark asks (P238), fixed before any run.
+#
+# Each is a template over the key: `subject` names how its subject is chosen
+# (questions.mjs), `index` which one of the candidates, in the key's order.
+# `from` is the repository the question is asked from: the whole workspace
+# for arms A and D, that repository alone for B and C. `scorer` is how the
+# answer is marked: a set (precision and recall), an exact value, or yes/no.
+#
+# The kinds where flowatlas should not help (single-repo, code-text, explain)
+# are here on purpose, and reported like the rest. `pilot: true` marks the
+# eight the pilot runs: two of each group.
+#
+# Do not change a prompt after a recorded run: a changed prompt is a new
+# question, with a new id.
+
+questions:
+  - id: callers-backend-1
+    kind: cross-repo-callers
+    group: reach
+    subject: called-backend-route
+    index: 0
+    pilot: true
+    scorer: symbols
+    prompt: Which functions anywhere in this project send requests to `{route}` of the {service} service? Give each as Class.method, or as the function's name for a plain function.
+  - id: callers-backend-2
+    kind: cross-repo-callers
+    group: reach
+    subject: called-backend-route
+    index: 1
+    scorer: symbols
+    prompt: Which functions anywhere in this project send requests to `{route}` of the {service} service? Give each as Class.method, or as the function's name for a plain function.
+  - id: callers-gateway-1
+    kind: cross-repo-callers
+    group: reach
+    subject: called-gateway-route
+    index: 0
+    scorer: symbols
+    prompt: Which functions anywhere in this project send requests to `{route}` of the {service} service? Give each as Class.method, or as the function's name for a plain function.
+  - id: callers-gateway-2
+    kind: cross-repo-callers
+    group: reach
+    subject: called-gateway-route
+    index: 1
+    scorer: symbols
+    prompt: Which functions anywhere in this project send requests to `{route}` of the {service} service? Give each as Class.method, or as the function's name for a plain function.
+
+  - id: blast-1
+    kind: blast-radius
+    group: reach
+    subject: route-with-screens
+    index: 0
+    pilot: true
+    scorer: files
+    prompt: If the response of `{route}` in the {service} service changes shape, which screens of the storefront (web) and the back office (admin) could break? List the component files, the ones that draw the screen.
+  - id: blast-2
+    kind: blast-radius
+    group: reach
+    subject: route-with-screens
+    index: 1
+    scorer: files
+    prompt: If the response of `{route}` in the {service} service changes shape, which screens of the storefront (web) and the back office (admin) could break? List the component files, the ones that draw the screen.
+  - id: blast-3
+    kind: blast-radius
+    group: reach
+    subject: route-with-screens
+    index: 2
+    scorer: files
+    prompt: If the response of `{route}` in the {service} service changes shape, which screens of the storefront (web) and the back office (admin) could break? List the component files, the ones that draw the screen.
+  - id: blast-4
+    kind: blast-radius
+    group: reach
+    subject: route-with-screens
+    index: 3
+    scorer: files
+    prompt: If the response of `{route}` in the {service} service changes shape, which screens of the storefront (web) and the back office (admin) could break? List the component files, the ones that draw the screen.
+
+  - id: handlers-1
+    kind: event-handlers
+    group: async
+    subject: heard-event
+    index: 0
+    pilot: true
+    scorer: symbols
+    prompt: When the {service} service publishes the `{event}` event, which handlers run, in any service? Give each as Class.method.
+  - id: handlers-2
+    kind: event-handlers
+    group: async
+    subject: heard-event
+    index: 1
+    scorer: symbols
+    prompt: When the {service} service publishes the `{event}` event, which handlers run, in any service? Give each as Class.method.
+  - id: handlers-unheard
+    kind: event-handlers
+    group: async
+    subject: unheard-event
+    index: 0
+    scorer: symbols
+    prompt: When the {service} service publishes the `{event}` event, which handlers run, in any service? Give each as Class.method.
+
+  - id: dead-nest
+    kind: dead
+    group: async
+    subject: backend-of-kind
+    of: nestjs
+    index: 0
+    pilot: true
+    scorer: routes
+    prompt: Which HTTP routes of the {service} service does nothing in this project call? List each as METHOD /path, as the service declares it.
+  - id: dead-express
+    kind: dead
+    group: async
+    subject: backend-of-kind
+    of: express
+    index: 0
+    scorer: routes
+    prompt: Which HTTP routes of the {service} service does nothing in this project call? List each as METHOD /path, as the service declares it.
+  - id: dead-lambda
+    kind: dead
+    group: async
+    subject: backend-of-kind
+    of: lambda
+    index: 0
+    scorer: routes
+    prompt: Which HTTP routes of the {service} service does nothing in this project call? List each as METHOD /path, as the service declares it.
+
+  - id: contract-renamed
+    kind: contract
+    group: boundary
+    subject: renamed-field
+    index: 0
+    pilot: true
+    scorer: yesno
+    prompt: The gateway's `{caller}` sends a request body to `{route}` of the {service} service. Does the handler read every field the gateway sends, under the same name? Answer yes or no.
+  - id: contract-kept-1
+    kind: contract
+    group: boundary
+    subject: kept-field
+    index: 0
+    scorer: yesno
+    prompt: The gateway's `{caller}` sends a request body to `{route}` of the {service} service. Does the handler read every field the gateway sends, under the same name? Answer yes or no.
+  - id: contract-kept-2
+    kind: contract
+    group: boundary
+    subject: kept-field
+    index: 1
+    scorer: yesno
+    prompt: The gateway's `{caller}` sends a request body to `{route}` of the {service} service. Does the handler read every field the gateway sends, under the same name? Answer yes or no.
+
+  - id: settings-object
+    kind: settings
+    group: boundary
+    subject: client-via
+    via: settings
+    index: 0
+    pilot: true
+    scorer: exact
+    prompt: Which service answers the requests the gateway's `{client}` sends? Give the service's name as this project's repositories name it.
+  - id: settings-helper
+    kind: settings
+    group: boundary
+    subject: client-via
+    via: helper
+    index: 0
+    scorer: exact
+    prompt: Which service answers the requests the gateway's `{client}` sends? Give the service's name as this project's repositories name it.
+  - id: settings-env
+    kind: settings
+    group: boundary
+    subject: client-via
+    via: baseUrlEnv
+    index: 0
+    scorer: exact
+    prompt: Which service answers the requests the gateway's `{client}` sends? Give the service's name as this project's repositories name it.
+
+  - id: single-1
+    kind: single-repo
+    group: local
+    subject: service-class
+    index: 0
+    pilot: true
+    scorer: symbols
+    prompt: In the {service} service, which methods of `{class}` write to the database? Give each as Class.method.
+  - id: single-2
+    kind: single-repo
+    group: local
+    subject: service-class
+    index: 1
+    scorer: symbols
+    prompt: In the {service} service, which methods of `{class}` write to the database? Give each as Class.method.
+  - id: single-3
+    kind: single-repo
+    group: local
+    subject: service-class
+    index: 2
+    scorer: symbols
+    prompt: In the {service} service, which methods of `{class}` write to the database? Give each as Class.method.
+  - id: single-4
+    kind: single-repo
+    group: local
+    subject: service-class
+    index: 3
+    scorer: symbols
+    prompt: In the {service} service, which methods of `{class}` write to the database? Give each as Class.method.
+
+  - id: text-1
+    kind: code-text
+    group: local
+    subject: constant
+    index: 0
+    pilot: true
+    scorer: exact
+    prompt: In the {service} service, what is the value of `{name}`?
+  - id: text-2
+    kind: code-text
+    group: local
+    subject: constant
+    index: 1
+    scorer: exact
+    prompt: In the {service} service, what is the value of `{name}`?
+  - id: text-3
+    kind: code-text
+    group: local
+    subject: constant
+    index: 2
+    scorer: exact
+    prompt: In the {service} service, what is the value of `{name}`?
+
+  - id: explain-retries
+    kind: explain
+    group: local
+    subject: write-method
+    retries: true
+    index: 0
+    scorer: yesno
+    prompt: In the {service} service, does `{method}` try again when its database call fails? Answer yes or no.
+  - id: explain-once-1
+    kind: explain
+    group: local
+    subject: write-method
+    retries: false
+    index: 0
+    scorer: yesno
+    prompt: In the {service} service, does `{method}` try again when its database call fails? Answer yes or no.
+  - id: explain-once-2
+    kind: explain
+    group: local
+    subject: write-method
+    retries: false
+    index: 1
+    scorer: yesno
+    prompt: In the {service} service, does `{method}` try again when its database call fails? Answer yes or no.

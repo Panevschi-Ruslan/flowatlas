@@ -1,0 +1,9 @@
+{
+  "name": "startup-names-brand",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@primevue/nuxt-module": "^4.2.0",
+    "primevue": "^4.2.0"
+  }
+}

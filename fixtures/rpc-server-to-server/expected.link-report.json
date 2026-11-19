@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-06T18:10:18.352Z",
+  "configHash": "ced28449568d",
+  "services": [
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 14,
+      "edges": 8,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 848,
+      "packages": {
+        "name": "rpc-server-to-server-billing",
+        "runtime": [
+          "@trpc/server",
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 5,
+      "types": 3,
+      "unresolved": 0,
+      "durationMs": 835,
+      "packages": {
+        "name": "rpc-server-to-server-orders",
+        "runtime": [
+          "@orpc/server",
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "worker",
+      "repo": "./worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 31,
+      "edges": 19,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 1034,
+      "packages": {
+        "name": "rpc-server-to-server-worker",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "@orpc/client",
+          "@trpc/client"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 10,
+    "linked": 5,
+    "byMarker": 0,
+    "unknownEnv": 1,
+    "noRoute": 3,
+    "ambiguous": 0,
+    "external": 1,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 0,
+    "uncalled": [
+      "entry:billing:http:GET:/health",
+      "entry:orders:http:GET:/health",
+      "entry:worker:http:POST:/fulfil/:param",
+      "entry:worker:http:POST:/fulfil/:param/refund"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 3,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "worker",
+      "file": "src/billing.client.ts",
+      "line": 36,
+      "reason": "procedure-not-found",
+      "message": "no procedure invoices.paid in worker",
+      "hint": "billing declares it, and nothing says worker calls it. If it does, name it in services[].apiTarget of worker.",
+      "symbol": "http_out:worker#src/billing.client.ts:36:12"
+    },
+    {
+      "service": "worker",
+      "file": "src/orders.client.ts",
+      "line": 24,
+      "reason": "procedure-not-found",
+      "message": "no procedure orders.audit in worker or orders",
+      "hint": "Renamed or removed? Check the tree this client is typed from, or add the service that declares it to services[] and name it in apiTarget.",
+      "symbol": "http_out:worker#src/orders.client.ts:24:12"
+    },
+    {
+      "service": "worker",
+      "file": "src/refunds.ts",
+      "line": 12,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "PAYMENTS_URL is http://billing.internal:4000 in .env.example, which is taken as billing",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add PAYMENTS_URL to services[].baseUrlEnv of billing to say so outright.",
+      "symbol": "http_out:worker#src/refunds.ts:12:53",
+      "meta": {
+        "variable": "PAYMENTS_URL",
+        "value": "http://billing.internal:4000",
+        "from": ".env.example"
+      }
+    },
+    {
+      "service": "worker",
+      "file": "src/refunds.ts",
+      "line": 17,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares LEGACY_URL",
+      "hint": "Add LEGACY_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:worker#src/refunds.ts:17:35"
+    },
+    {
+      "service": "worker",
+      "file": "src/refunds.ts",
+      "line": 22,
+      "reason": "procedure-not-found",
+      "message": "no procedure orders.get in worker",
+      "hint": "orders declares it, and nothing says worker calls it. If it does, name it in services[].apiTarget of worker.",
+      "symbol": "http_out:worker#src/refunds.ts:22:48"
+    }
+  ],
+  "totals": {
+    "nodes": 55,
+    "edges": 38,
+    "types": 3,
+    "missed": 6,
+    "sites": 6,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 6
+  }
+}

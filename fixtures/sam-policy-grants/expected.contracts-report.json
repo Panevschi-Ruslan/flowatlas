@@ -1,0 +1,175 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-09T22:46:00.553Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:relay#src/checkout.ts:3:26",
+        "to": "entry:relay:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:relay#src/checkout.ts:3:26|http_calls|entry:relay:http:POST:/orders",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "relay",
+        "typeId": "{id:string}",
+        "symbol": "relay#src/checkout.ts:handler"
+      },
+      "receiver": {
+        "service": "relay",
+        "typeId": "{id:string}",
+        "symbol": "relay#src/orders.ts:place",
+        "claimed": true
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:relay#src/router.ts:9:9",
+        "to": "entry:relay:invoke:${…}@Resources.PlaceOrder",
+        "type": "calls"
+      },
+      "edgeKey": "producer:relay#src/router.ts:9:9|calls|entry:relay:invoke:${…}@Resources.PlaceOrder",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "relay",
+        "typeId": "{id:string}",
+        "symbol": "relay#src/router.ts:handler"
+      },
+      "receiver": {
+        "service": "relay",
+        "typeId": "{body?:string;id?:string}",
+        "symbol": "relay#src/orders.ts:place"
+      },
+      "findings": [
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:relay#src/router.ts:9:9",
+            "to": "entry:relay:invoke:${…}@Resources.PlaceOrder",
+            "type": "calls"
+          },
+          "edgeKey": "producer:relay#src/router.ts:9:9|calls|entry:relay:invoke:${…}@Resources.PlaceOrder",
+          "direction": "request",
+          "sender": {
+            "service": "relay",
+            "typeId": "{id:string}",
+            "symbol": "relay#src/router.ts:handler"
+          },
+          "receiver": {
+            "service": "relay",
+            "typeId": "{body?:string;id?:string}",
+            "symbol": "relay#src/orders.ts:place"
+          },
+          "typeId": "{body?:string;id?:string}",
+          "field": "id",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`id` is optional for receiver relay and not optional in the type sender relay declares",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:relay#src/router.ts:9:9",
+        "to": "entry:relay:invoke:${…}@Resources.PlaceOrder",
+        "type": "calls"
+      },
+      "edgeKey": "producer:relay#src/router.ts:9:9|calls|entry:relay:invoke:${…}@Resources.PlaceOrder",
+      "direction": "request",
+      "sender": {
+        "service": "relay",
+        "typeId": "{id:string}",
+        "symbol": "relay#src/router.ts:handler"
+      },
+      "receiver": {
+        "service": "relay",
+        "typeId": "{body?:string;id?:string}",
+        "symbol": "relay#src/orders.ts:place"
+      },
+      "typeId": "{body?:string;id?:string}",
+      "field": "id",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`id` is optional for receiver relay and not optional in the type sender relay declares",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:relay#src/checkout.ts:3:26",
+        "to": "entry:relay:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:relay#src/checkout.ts:3:26|http_calls|entry:relay:http:POST:/orders",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "relay#src/checkout.ts:handler declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "producer:relay#src/archiver.ts:9:9",
+        "to": "consumer:relay#template.yaml:Resources.ArchiveReader.Events.Archived",
+        "type": "emits"
+      },
+      "edgeKey": "producer:relay#src/archiver.ts:9:9|emits|consumer:relay#template.yaml:Resources.ArchiveReader.Events.Archived",
+      "direction": "payload",
+      "reason": "delivery-target-unread",
+      "message": "nothing consumer:relay#template.yaml:Resources.ArchiveReader.Events.Archived delivers to is code this project reads",
+      "hint": "The target is not code any configured service holds - an e-mail address, or a function no configured service deploys - so there is nothing to compare the message with. Configure the service that deploys it to compare it."
+    },
+    {
+      "edge": {
+        "from": "producer:relay#src/dispatcher.ts:19:9",
+        "to": "consumer:relay#template.yaml:Resources.OrdersWorker.Events.Orders",
+        "type": "emits"
+      },
+      "edgeKey": "producer:relay#src/dispatcher.ts:19:9|emits|consumer:relay#template.yaml:Resources.OrdersWorker.Events.Orders",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "relay#src/dispatcher.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:relay#src/dispatcher.ts:19:9",
+        "to": "consumer:relay#template.yaml:Resources.RefundsWorker.Events.Refunds",
+        "type": "emits"
+      },
+      "edgeKey": "producer:relay#src/dispatcher.ts:19:9|emits|consumer:relay#template.yaml:Resources.RefundsWorker.Events.Refunds",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "relay#src/dispatcher.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 2,
+    "shared": 0,
+    "identical": 1,
+    "hash_differs": 1,
+    "unchecked": 4,
+    "errors": 0,
+    "warnings": 1,
+    "infos": 0,
+    "ignored": 0
+  }
+}

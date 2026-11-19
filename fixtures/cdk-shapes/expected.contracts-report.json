@@ -1,0 +1,105 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-06T09:34:28.405Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "channel:eventbridge/default/club.accounts/MemberJoined",
+        "to": "consumer:club#lib/club-stack.ts:ClubStack/MemberJoined/Target0",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:eventbridge/default/club.accounts/MemberJoined|consumes|consumer:club#lib/club-stack.ts:ClubStack/MemberJoined/Target0",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:eventbridge/default/club.accounts/MemberJoined is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "channel:sns/club-dev-members",
+        "to": "consumer:club#lib/mailbox.ts:ClubStack/Members/Topic/ClubStack/Members/Handler",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:sns/club-dev-members|consumes|consumer:club#lib/mailbox.ts:ClubStack/Members/Topic/ClubStack/Members/Handler",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:sns/club-dev-members is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "channel:sns/club-dev-staff",
+        "to": "consumer:club#lib/mailbox.ts:ClubStack/Staff/Topic/ClubStack/Staff/Handler",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:sns/club-dev-staff|consumes|consumer:club#lib/mailbox.ts:ClubStack/Staff/Topic/ClubStack/Staff/Handler",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:sns/club-dev-staff is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "channel:sqs/club-dev-renewal",
+        "to": "consumer:club#lib/workers.ts:ClubStack/renewal-worker/SqsEventSource:ClubStack/renewal-queue",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:sqs/club-dev-renewal|consumes|consumer:club#lib/workers.ts:ClubStack/renewal-worker/SqsEventSource:ClubStack/renewal-queue",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:sqs/club-dev-renewal is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "channel:sqs/club-dev-welcome",
+        "to": "consumer:club#lib/workers.ts:ClubStack/welcome-worker/SqsEventSource:ClubStack/welcome-queue",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:sqs/club-dev-welcome|consumes|consumer:club#lib/workers.ts:ClubStack/welcome-worker/SqsEventSource:ClubStack/welcome-queue",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:sqs/club-dev-welcome is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:club#lib/club-stack.ts:84:1",
+        "to": "consumer:club#lib/club-stack.ts:ClubStack/Reader/SqsEventSource:ClubStack/Inbox",
+        "type": "emits"
+      },
+      "edgeKey": "producer:club#lib/club-stack.ts:84:1|emits|consumer:club#lib/club-stack.ts:ClubStack/Reader/SqsEventSource:ClubStack/Inbox",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "club#lib/club-stack.ts:ClubStack/Renewals/Remind declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:club#src/mail/send.ts:7:9",
+        "to": "consumer:club#lib/club-stack.ts:ClubStack/Reader/SqsEventSource:ClubStack/Inbox",
+        "type": "emits"
+      },
+      "edgeKey": "producer:club#src/mail/send.ts:7:9|emits|consumer:club#lib/club-stack.ts:ClubStack/Reader/SqsEventSource:ClubStack/Inbox",
+      "direction": "payload",
+      "reason": "message-unparsed",
+      "message": "club#src/mail/read.ts:handler does not parse the text at Records[].body of what it is handed into a declared type",
+      "hint": "Parse the message into a declared type where the handler reads it - `JSON.parse(text) as Order`, or into a variable declared with one - so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 7,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

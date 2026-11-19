@@ -1,0 +1,16 @@
+services:
+  catalog:
+    build: ./catalog
+    command: bun src/index.ts
+    environment:
+      NODE_ENV: ${CATALOG_MODE:-development}
+  search:
+    build: ./search
+    command: bun src/index.ts
+    environment:
+      - NODE_ENV=${SEARCH_MODE}
+  pricing:
+    build: ./pricing
+    command: ["bun", "src/index.ts"]
+    env_file:
+      - ./pricing/compose.env

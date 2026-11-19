@@ -262,10 +262,12 @@ footer {
   <p class="lede">A command-line tool that reads several TypeScript
     repositories with the compiler's own checker, <em>without running them</em>,
     and joins them into one graph you can query — from a terminal or from a
-    coding agent. It knows NestJS and Angular, React and Next.js, SvelteKit and
-    Remix, Express, Fastify, Koa and Hono, Medusa, tRPC and Telegraf; AWS Lambda,
-    API Gateway, Step Functions, EventBridge, SQS and SNS as Terraform deploys
-    them; TypeORM, Prisma, Drizzle,
+    coding agent. It knows NestJS and Angular, React and Next.js, Vue and Nuxt,
+    Svelte and SvelteKit, Remix, plain pages and the scripts they load, GraphQL,
+    gRPC, Express, Fastify, Koa and Hono, Medusa, Strapi, Gatsby, tRPC, oRPC and Telegraf; AWS
+    Lambda, API Gateway, Step Functions, EventBridge, SQS and SNS as Terraform,
+    the Serverless Framework, the CDK, SAM and CloudFormation deploy them;
+    TypeORM, Prisma, Drizzle,
     Mongoose, Sequelize, Kysely, Knex, MongoDB and node-postgres; Redis, Kafka,
     RabbitMQ, BullMQ and socket.io &mdash; and it can join to a service it
     cannot read at all, from its OpenAPI or AsyncAPI document.</p>
@@ -298,10 +300,11 @@ flowatlas build          <span class="c"># read them all and join them</span></c
       <h3>ways in</h3>
       <ul>
         <li>NestJS controllers, message handlers and schedules, with their guards and pipes</li>
-        <li>Express, Fastify, Koa and Hono, where a route is registered by a call</li>
+        <li>Express, Fastify, Koa and Hono, where a route is registered by a call &mdash; as sure with nothing installed where the framework's own maker makes the application</li>
         <li>Next.js, Medusa, SvelteKit and Remix / React Router, where a route is the path of a file</li>
-        <li>Lambda functions, API Gateway routes and Step Functions, read from the Terraform that deploys them</li>
-        <li>tRPC procedures, and Telegraf bot commands, callbacks and events</li>
+        <li>Strapi's routes files and the plugins it enables, bundled builds and extensions included, and Gatsby's functions</li>
+        <li>Lambda functions, API Gateway routes and Step Functions, read from the Terraform, the Serverless Framework, the CDK, SAM or CloudFormation that deploys them</li>
+        <li>tRPC and oRPC procedures, gRPC methods, GraphQL fields, and Telegraf bot commands, callbacks and events</li>
         <li>what each one takes and answers, failures included, field by field</li>
       </ul>
     </div>
@@ -309,8 +312,9 @@ flowatlas build          <span class="c"># read them all and join them</span></c
       <h3>browsers</h3>
       <ul>
         <li>Angular templates, services and router, lazy routes included</li>
-        <li>React components and hooks</li>
-        <li><code>fetch</code>, <code>axios</code>, a wrapper or a client class of your own &mdash; each joined to the route that answers it</li>
+        <li>React components and hooks, the props each element hands, Vue and Svelte components, and the page each navigation shows</li>
+        <li>a plain page and the scripts it loads, with no manifest and nothing that builds them</li>
+        <li><code>fetch</code>, <code>XMLHttpRequest</code>, <code>axios</code>, jQuery, a wrapper or a client class of your own &mdash; each joined to the route that answers it, through the interceptors that rewrite its address</li>
       </ul>
     </div>
     <div>
@@ -325,7 +329,7 @@ flowatlas build          <span class="c"># read them all and join them</span></c
     <div>
       <h3>messages</h3>
       <ul>
-        <li>Kafka, RabbitMQ, BullMQ, Redis pub/sub and socket.io, from both ends</li>
+        <li>Kafka, RabbitMQ, BullMQ, Redis pub/sub and socket.io, from both ends, and a queue behind a layer of your own where each caller names it</li>
         <li>an in-house bus, described in the configuration</li>
         <li>the payload and the reply of a request, compared across the boundary</li>
       </ul>
@@ -333,7 +337,10 @@ flowatlas build          <span class="c"># read them all and join them</span></c
     <div>
       <h3>across repositories</h3>
       <ul>
-        <li>a monorepo's services with the workspace packages they use, on a fresh clone</li>
+        <li>a monorepo's services with the workspace packages they use, on a fresh clone, never resolved from an install above its checkout</li>
+        <li>the port each server listens on, its framework's default a guess that places a request only where that server serves it</li>
+        <li>a container's environment from its image's Dockerfile, its env files and the compose files that start it, and a script's or a Makefile's exports followed into the program or the workspace package it runs</li>
+        <li>where a cluster, a chart, a kustomization or a helmfile routes a request, and the address API Gateway serves an API at</li>
         <li>a service you have no source for, from its OpenAPI or AsyncAPI document</li>
         <li>every contract compared where one repository meets another</li>
       </ul>
@@ -361,7 +368,7 @@ flowatlas build          <span class="c"># read them all and join them</span></c
       <h3>what it cannot read</h3>
       <ul>
         <li>a row saying why, and the one change that would read it</li>
-        <li>an address or a table decided at run time is reported, never guessed</li>
+        <li>an address or a table decided at run time is reported, and drawn only as a guess marked <code>heuristic</code> where what its function is granted narrows it</li>
         <li>test code left out, and every test directory named so you can see it</li>
       </ul>
     </div>

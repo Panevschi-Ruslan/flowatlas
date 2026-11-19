@@ -51,8 +51,10 @@ the TypeScript checker and closes the files.
 **Install each repository's dependencies if you can.** The checker follows a
 type into a package only when the package is on disk. A repository read without
 them is still read — the source says a great deal on its own, and what is read
-that way is marked `heuristic` — but a run over one opens with a sentence saying
-the read was partial, and means it.
+that way is marked `heuristic`, save an application the framework's own maker
+makes right there (`const app = express()`) — but a run over one opens with a
+sentence saying the read was partial, and means it. A package installed above
+the repository's checkout is never used in their place.
 
 ---
 
@@ -72,7 +74,9 @@ flowatlas init --dir .    # look under this directory instead
 > `init` with no `--dir` scans the *parent* directory, which is what you want
 > when the configuration lives inside one of the repositories. Pass `--dir .`
 > when it lives above them. It looks one level down, at each directory with a
-> `package.json`.
+> `package.json`, and at each directory of plain pages and the scripts they
+> load with no manifest and nothing that builds them, which it offers as
+> `browser`.
 
 Over a copy of `fixtures/multi-repo`, with its configuration deleted, it
 proposes this:
@@ -89,9 +93,11 @@ Wrote …/flowatlas.config.json with 4 service(s):
 Without `--yes` it asks about each one. The type is what decides which reader
 opens a repository, and it is read from the manifest: a server type wins over a
 browser type when a repository declares both, because the server reader reads
-the browser half too. A framework nothing here reads — Nuxt, Vue, plain
-Svelte — is named rather than silently skipped; SvelteKit and Remix are read
-for their file routes, loads and actions.
+the browser half too. A framework nothing here reads — Astro, Solid — is
+named rather than silently skipped; SvelteKit, Nuxt and Remix are read for
+their file routes, loads and actions, Strapi for its routes files and plugins,
+Gatsby for its functions, Vue and Svelte for their components, and a plain
+page for the requests its scripts make.
 
 **A monorepo is proposed as its applications.** A repository that declares a
 workspace, in `workspaces` or a `pnpm-workspace.yaml`, becomes one service per
@@ -119,14 +125,14 @@ One service, and one graph that runs from its route into the package:
       →  readOrders             web/../../packages/orders-lib/src/store.ts:13
         ⚙  ORDERS_UPSTREAM_URL  web/../../packages/orders-lib/src/store.ts:14
         ↗  GET /orders          web/../../packages/orders-lib/src/store.ts:16
-        ↗  GET /orders          web/../../packages/orders-lib/src/store.ts:16
-unresolved on this path: 2
+unresolved on this path: 1
 ```
 
-The request is there twice because one `fetch` is read by both halves of a
-repository that is a server and a browser at once, and the two rows are true: the
-far side is not in this configuration, and nothing declares
-`ORDERS_UPSTREAM_URL`.
+Both halves of a repository that is a server and a browser at once read that
+`fetch`, and it is drawn once, on the server, because what reaches it is a
+route's handler; a call a screen and a handler both reach is drawn on both
+sides, each naming the other. The one row is true: the far side is not in this
+configuration, and nothing declares `ORDERS_UPSTREAM_URL`.
 
 `flowatlas link ../gateway ../orders ../web` is the same thing with the
 repositories named rather than discovered, for when they are not all in one
@@ -160,7 +166,7 @@ channels: 3 total, 1 joined, 1 with no handler, 1 with no publisher
 routes: 15 total, 7 reached, 8 never called, 1 claimed by two handlers
 ways in: 17 found, 17 with a handler that was read, 0 without — only the second number is coverage of what happens after the request arrives
 types: 15 (4 from shared packages)
-missed: 9 · notes: 0 · findings: 4
+missed: 11 · notes: 0 · findings: 4
 ```
 
 A first build is rarely all joined, and it is not supposed to be. Nothing was
@@ -202,10 +208,10 @@ pnpm flowatlas doctor --config fixtures/multi-repo/flowatlas.config.json
 The first line is the verdict:
 
 ```
-unresolved: total=11 (missing) · markers: errors=0 warnings=0 · desync=5 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=13 (missing) · markers: errors=0 warnings=0 · desync=5 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 ```
 
-`total=11` is the rows somebody could act on. The places static reading cannot
+`total=13` is the rows somebody could act on. The places static reading cannot
 see at all are counted beside them and never added in, and neither are the
 places where nothing joins because there is nothing to join. `(missing)` says
 there is no baseline yet; `flowatlas doctor --accept` writes one, to commit like
@@ -386,6 +392,12 @@ to look for.
 | Fixture | What it shows |
 |---|---|
 | [`trpc-join`](../fixtures/trpc-join) | procedures on the server, and `trpc.orders.list.useQuery(…)` in a browser joined to them by path |
+| [`orpc-next`](../fixtures/orpc-next) | an oRPC router mounted for RPC and OpenAPI, its REST routes, and a client joined through its link's URL |
+| [`orpc-contract`](../fixtures/orpc-contract) | a contract-first oRPC service, its routes and failures read off the contract |
+| [`rpc-server-to-server`](../fixtures/rpc-server-to-server) | a NestJS worker's oRPC and tRPC clients joined to the procedures of two other services by their links' settings and hosts |
+| [`rpc-contracts`](../fixtures/rpc-contracts) | each procedure call's input and answer compared with the procedure's, a tRPC link checked against its mount, a client injected by a token, and an Angular client |
+| [`rpc-shared-types`](../fixtures/rpc-shared-types) | a plain request to a procedure's REST route compared field by field, a client typed from a workspace package's `AppRouter`, Fastify's and Hono's tRPC mounts, a client a module's `forRoot` / `forRootAsync` builds, and a lazy branch under a Vite alias |
+| [`graphql-requires-auth`](../fixtures/graphql-requires-auth) | the router's check not drawn on a field it fetches for a `@requires`, and a requiring field that does not carry its required fields' check |
 | [`next-caller-application`](../fixtures/next-caller-application) | one service holding three Next.js applications, and a request reaching its own application's route |
 | [`nest-two-applications`](../fixtures/nest-two-applications) | an API and a worker in one repository, each serving `GET /health` |
 | [`socket-namespaces`](../fixtures/socket-namespaces) | socket.io read from both ends, with the namespace opened by `io.of(…)` |
@@ -394,6 +406,26 @@ to look for.
 | [`nest-mount-empty`](../fixtures/nest-mount-empty) | a route behind a mount every environment file leaves empty, joined and marked as a guess |
 | [`express-not-installed`](../fixtures/express-not-installed) | an Express service with no `node_modules`, read from what its source states |
 | [`koa-react-full-stack`](../fixtures/koa-react-full-stack) | one directory that is a server and a browser, read by the reader that reads both |
+| [`script-wrappers`](../fixtures/script-wrappers) | a plain page with no manifest, its functions kept in wrappers, and jQuery, superagent and ky as globals a script tag or the linter declares |
+| [`script-ready-handlers`](../fixtures/script-ready-handlers) | a plain page whose code waits for the document to load, a CommonJS script requiring axios, and a server whose module exports name its functions |
+| [`script-load-events`](../fixtures/script-load-events) | requests at the top of a wrapper run at once, the page's other load events, superagent's sent query, globals a shared linter configuration declares, and a client's global nothing declares |
+| [`script-tops-plugin-configs`](../fixtures/script-tops-plugin-configs) | requests and calls at the very top of a script, a client's global called directly or through a wrapper's parameter asking for a declaration, globals a linter plugin's configuration declares, and a named import read for its export alone |
+| [`graphql-codegen-sdk`](../fixtures/graphql-codegen-sdk) | calls through the SDK GraphQL Code Generator writes, joined to the operations they send |
+| [`grpc-contract-messages`](../fixtures/grpc-contract-messages) | what a gRPC call sends compared with its contract's message, and a server that disagrees with its contract |
+| [`front-end-route-branches`](../fixtures/front-end-route-branches) | a route table written over a list, pages a condition chooses between, a locale prefix and Angular's guards |
+| [`assumed-port-requests`](../fixtures/assumed-port-requests) | two servers heard on one port only by guesses - a framework's default and a port read through a merge - each request placed at the one that serves it |
+| [`gateway-served-everywhere`](../fixtures/gateway-served-everywhere) | APIs deployed four ways, called by the address API Gateway serves each at |
+| [`job-queue-layers`](../fixtures/job-queue-layers) | BullMQ queues behind layers of the repository's own, read where each caller names them |
+| [`framework-routes-in-place-writes`](../fixtures/framework-routes-in-place-writes) | a Strapi application's routes files and a Gatsby site's functions as ways in, and servers whose port is changed in place or read per instance |
+| [`installed-plugins-server-routes-config-packages`](../fixtures/installed-plugins-server-routes-config-packages) | routes a Strapi application registers in code, plugins installed under `node_modules` and the extensions that add to them, and a `fastify start --config` naming a package |
+| [`compose-include-shell-env`](../fixtures/compose-include-shell-env) | a compose file filled from `COMPOSE_ENV_FILES`, its `include:` and `extends:`, a script's exported port, and a cluster workload's config map and secret |
+| [`untyped-callers-framework-held-outside-writes`](../fixtures/untyped-callers-framework-held-outside-writes) | requests through instances handed around with no types, elements the browser connects, and queues written onto instances from outside their classes |
+| [`pair-keys-instances`](../fixtures/pair-keys-instances) | routes spelled from the keys of `[key, entry]` pairs, and registries read per instance |
+| [`express-maker-direct-and-stated`](../fixtures/express-maker-direct-and-stated) | an Express service with nothing installed whose applications the framework's own maker makes, as sure as typed ones, beside routes that stay `heuristic` |
+| [`wrapped-spread-providers-tops`](../fixtures/wrapped-spread-providers-tops) | components wrapped in `memo` and `forwardRef` handed their client through spreads, and readers the NestJS injector makes from providers built by spreads and calls |
+| [`key-reads-places-webpack-plugins`](../fixtures/key-reads-places-webpack-plugins) | routes written over `Object.keys(...)` and over lists put together, objects a registry keeps per call, and Strapi plugins shipped as webpack bundles or not installed at all |
+| [`bundled-plugins-unread-dependencies-whole-controllers`](../fixtures/bundled-plugins-unread-dependencies-whole-controllers) | Strapi plugins shipped as rollup and esbuild bundles, dependencies a fresh clone has not installed, and extensions writing a controller whole |
+| [`script-modes-workspace-make-fields`](../fixtures/script-modes-workspace-make-fields) | a Makefile's included file, a script run in another package of the workspace, and Bun's mode however the environment gives it |
 
 A fixture with a `flowatlas.config.json` is a project:
 
@@ -510,7 +542,15 @@ flowatlas mcp --install       # register in every repository, merging what is th
 flowatlas mcp --install --dry-run
 ```
 
-After that, `claude mcp list` shows `flowatlas`.
+After that, `claude mcp list` shows `flowatlas`. To tell each assistant which
+questions to ask the graph rather than search for, and to have a search that
+names another repository's route say what it could not see:
+
+```sh
+flowatlas agents install --hook
+```
+
+([Tell the assistant when to ask](mcp.md#tell-the-assistant-when-to-ask).)
 
 ---
 
@@ -528,6 +568,8 @@ After that, `claude mcp list` shows `flowatlas`.
   and timings on the map.
 - [Coverage](coverage.md) — how the tool is measured against repositories nobody
   here wrote.
+- [The benchmark](benchmark.md) — whether an assistant answers better with it,
+  with and without the graph, against a key the tool did not write.
 - [The README](../README.md) — how the joining works, what it reads, and what it
   still cannot.
 

@@ -1,0 +1,635 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T12:43:49.595Z",
+  "services": [
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "console#src/App.tsx:App",
+      "type": "ui_component",
+      "label": "App",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 22,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:About",
+      "type": "ui_component",
+      "label": "About",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 17,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Billing",
+      "type": "ui_component",
+      "label": "Billing",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 9,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/book/billing"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Exporter",
+      "type": "ui_component",
+      "label": "Exporter",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 13,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/tools/export"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Extra",
+      "type": "ui_component",
+      "label": "Extra",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 15,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Finish",
+      "type": "ui_component",
+      "label": "Finish",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/wizard/1"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Guide",
+      "type": "ui_component",
+      "label": "Guide",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/docs/guide"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Help",
+      "type": "ui_component",
+      "label": "Help",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/links/help"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Home",
+      "type": "ui_component",
+      "label": "Home",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 11,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/book/home"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Overview",
+      "type": "ui_component",
+      "label": "Overview",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 8,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/book/overview"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Pricing",
+      "type": "ui_component",
+      "label": "Pricing",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/areas/pricing"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Reference",
+      "type": "ui_component",
+      "label": "Reference",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 3,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/guides/reference"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Settings",
+      "type": "ui_component",
+      "label": "Settings",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/book/settings"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:ShelfPage",
+      "type": "ui_component",
+      "label": "ShelfPage",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 14,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/shelves/01 /shelves/02 /shelves/03 /shelves/04 /shelves/05 /shelves/06 /shelves/07 /shelves/08 /shelves/09 /shelves/10 /shelves/11 /shelves/12"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Usage",
+      "type": "ui_component",
+      "label": "Usage",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 12,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/panels/usage"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Users",
+      "type": "ui_component",
+      "label": "Users",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 16,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/admin/users"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Welcome",
+      "type": "ui_component",
+      "label": "Welcome",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/wizard/0"
+      }
+    },
+    {
+      "id": "console#src/routes/ShelfRoutes.tsx:ShelfRoutes",
+      "type": "ui_component",
+      "label": "ShelfRoutes",
+      "repo": "console",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ shelf }",
+              "type": "{shelf:type:console#Shelf}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "repo:console",
+      "type": "repo",
+      "label": "console",
+      "repo": "console",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "functions": 19,
+          "components": 18,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/routes/ShelfRoutes.tsx:ShelfRoutes",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{shelf:type:console#Shelf}"
+      ],
+      "returns": "unknown",
+      "file": "src/App.tsx",
+      "line": 71,
+      "meta": {
+        "renders": "ShelfRoutes"
+      }
+    }
+  ],
+  "types": {
+    "type:console#Entry": {
+      "name": "Entry",
+      "kind": "object",
+      "declaredIn": "console#src/lib/tables.ts",
+      "structuralHash": "42dddeeb16fddd2a",
+      "fields": [
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "Screen",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:console#Shelf": {
+      "name": "Shelf",
+      "kind": "object",
+      "declaredIn": "console#src/lib/shelves.ts",
+      "structuralHash": "89a612c1081a9984",
+      "fields": [
+        {
+          "name": "items",
+          "type": "type:console#Entry[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/App.tsx",
+      "line": 22,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/App.tsx",
+      "line": 59,
+      "reason": "route-entries-unread",
+      "level": "info",
+      "sites": 5,
+      "message": "1 entry of EXTRA_A, which a route of src/App.tsx is written over, is not read, so the screen it places is not placed (an entry is not written as an object in place)",
+      "hint": "Write the entries as objects in place - in the list, or handed to the functions adding to a registry - with the path as text and the screen as a component of the repository, and map them, where they are mapped, to an object written over each.",
+      "symbol": "routes over EXTRA_A",
+      "meta": {
+        "unread": 1,
+        "causes": [
+          {
+            "cause": "route-entries-unread",
+            "sites": 5,
+            "samples": [
+              {
+                "file": "src/App.tsx",
+                "line": 59,
+                "symbol": "routes over EXTRA_A",
+                "meta": {
+                  "list": "EXTRA_A",
+                  "read": 0,
+                  "why": [
+                    "an entry is not written as an object in place"
+                  ]
+                }
+              },
+              {
+                "file": "src/App.tsx",
+                "line": 62,
+                "symbol": "routes over EXTRA_B",
+                "meta": {
+                  "list": "EXTRA_B",
+                  "read": 0,
+                  "why": [
+                    "an entry is not written as an object in place"
+                  ]
+                }
+              },
+              {
+                "file": "src/App.tsx",
+                "line": 65,
+                "symbol": "routes over EXTRA_C",
+                "meta": {
+                  "list": "EXTRA_C",
+                  "read": 0,
+                  "why": [
+                    "an entry is not written as an object in place"
+                  ]
+                }
+              }
+            ],
+            "files": [
+              "src/routes/ShelfRoutes.tsx"
+            ],
+            "differing": [
+              {
+                "sites": 1,
+                "first": {
+                  "file": "src/App.tsx",
+                  "line": 68,
+                  "symbol": "routes over EXTRA_D",
+                  "meta": {
+                    "list": "EXTRA_D",
+                    "read": 0,
+                    "why": [
+                      "an entry is not written as an object in place"
+                    ]
+                  }
+                }
+              },
+              {
+                "sites": 1,
+                "first": {
+                  "file": "src/routes/ShelfRoutes.tsx",
+                  "line": 9,
+                  "symbol": "routes over shelf.routes()",
+                  "meta": {
+                    "list": "shelf.routes()",
+                    "read": 12,
+                    "why": [
+                      "the registry's receiver may hold 13 instances, more than the 12 read: the other 1 is not read, each counted as one entry"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 11,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 14,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 16,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 17,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/lib/tables.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ComponentType",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    }
+  ]
+}

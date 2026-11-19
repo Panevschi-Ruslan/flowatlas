@@ -1,0 +1,40 @@
+{
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "express"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express"
+    },
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "express"
+    }
+  ],
+  "output": ".flowatlas"
+}

@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T13:16:07.210Z",
+  "configHash": "a2d21c501a57",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 16,
+      "edges": 14,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 790,
+      "packages": {
+        "name": "shop",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 4,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 743,
+      "packages": {
+        "name": "site",
+        "runtime": [
+          "@astrojs/react",
+          "astro",
+          "react",
+          "react-dom"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 20,
+      "edges": 21,
+      "types": 0,
+      "unresolved": 4,
+      "durationMs": 793
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 8,
+    "resolved": 8,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 7,
+    "called": 7,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 38,
+    "edges": 37,
+    "types": 0,
+    "missed": 6,
+    "sites": 14,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 6
+  }
+}

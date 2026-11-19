@@ -1,0 +1,17 @@
+{#- A function of the shop, handed the queues it sends to by name. -#}
+{% macro function(id, name, handler, queues) %}
+  {{ id }}:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: {{ name }}
+      Runtime: nodejs20.x
+      Handler: {{ handler }}
+      Role: !GetAtt FunctionRole.Arn
+      Code: ../src
+      Environment:
+        Variables:
+          JOBS_QUEUE_URL: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${JobsName}
+{%- for key, queue in queues.items() %}
+          {{ key | upper }}_QUEUE_URL: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/{{ queue }}
+{%- endfor %}
+{% endmacro %}

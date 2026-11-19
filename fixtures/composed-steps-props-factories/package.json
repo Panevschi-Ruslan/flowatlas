@@ -1,0 +1,10 @@
+{
+  "name": "composed-steps-props-factories",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Workspace root. Declares the two services, and holds no code of its own.",
+  "workspaces": [
+    "console",
+    "site"
+  ]
+}

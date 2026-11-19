@@ -1,0 +1,377 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T22:30:55.330Z",
+  "services": [
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:sqs/stock-restock",
+      "type": "channel",
+      "label": "sqs/stock-restock",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 30,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/stock-write-off",
+      "type": "channel",
+      "label": "sqs/stock-write-off",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 31,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:stock#lib/stock-stack.ts:StockStack/Count/SqsEventSource:StockStack/Restock",
+      "type": "consumer",
+      "label": "mapping StockStack/Count/SqsEventSource:StockStack/Restock",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 30,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "StockStack/Count/SqsEventSource:StockStack/Restock",
+        "deployedBy": "cdk",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:stock#lib/stock-stack.ts:StockStack/Count/SqsEventSource:StockStack/WriteOff",
+      "type": "consumer",
+      "label": "mapping StockStack/Count/SqsEventSource:StockStack/WriteOff",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 31,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "StockStack/Count/SqsEventSource:StockStack/WriteOff",
+        "deployedBy": "cdk",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "entry:stock:invoke:stock-count",
+      "type": "entry",
+      "label": "stock-count",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 29,
+      "kind": "invoke",
+      "meta": {
+        "key": "stock-count",
+        "deployedBy": "cdk",
+        "name": "stock-count",
+        "runtime": "nodejs20.x",
+        "declaredAs": "StockStack/Count",
+        "constructPath": "StockStack/Count",
+        "handler": "src/count.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{Records:{body:string}[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stock:invoke:stock-move",
+      "type": "entry",
+      "label": "stock-move",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 25,
+      "kind": "invoke",
+      "meta": {
+        "key": "stock-move",
+        "deployedBy": "cdk",
+        "name": "stock-move",
+        "runtime": "nodejs20.x",
+        "declaredAs": "StockStack/Move",
+        "constructPath": "StockStack/Move",
+        "handler": "src/move.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "queue",
+            "name": "stock-restock",
+            "by": "grantSendMessages"
+          },
+          {
+            "kind": "queue",
+            "name": "stock-write-off",
+            "by": "PolicyStatement"
+          }
+        ],
+        "reads": {
+          "": "{reason:string;sku:string;quantity:number}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "producer:stock#src/move.ts:9:9",
+      "type": "producer",
+      "label": "message sqs/stock-restock, sqs/stock-write-off",
+      "repo": "stock",
+      "file": "src/move.ts",
+      "line": 9,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "grant",
+        "method": "send",
+        "grantable": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "granted": "queue"
+              }
+            ],
+            "payload": "{reason:string;sku:string;quantity:number}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "stock#src/count.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "stock",
+      "file": "src/count.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:{body:string}[]}"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "stock#src/move.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "stock",
+      "file": "src/move.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{reason:string;sku:string;quantity:number}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:sqs/stock-restock",
+      "to": "consumer:stock#lib/stock-stack.ts:StockStack/Count/SqsEventSource:StockStack/Restock",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/stock-stack.ts",
+      "line": 30,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/stock-write-off",
+      "to": "consumer:stock#lib/stock-stack.ts:StockStack/Count/SqsEventSource:StockStack/WriteOff",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/stock-stack.ts",
+      "line": 31,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:stock#lib/stock-stack.ts:StockStack/Count/SqsEventSource:StockStack/Restock",
+      "to": "entry:stock:invoke:stock-count",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/stock-stack.ts",
+      "line": 30,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:stock#lib/stock-stack.ts:StockStack/Count/SqsEventSource:StockStack/WriteOff",
+      "to": "entry:stock:invoke:stock-count",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/stock-stack.ts",
+      "line": 31,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:stock:invoke:stock-count",
+      "to": "stock#src/count.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/count.ts",
+      "line": 1
+    },
+    {
+      "from": "entry:stock:invoke:stock-move",
+      "to": "stock#src/move.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/move.ts",
+      "line": 8
+    },
+    {
+      "from": "producer:stock#src/move.ts:9:9",
+      "to": "channel:sqs/stock-restock",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/move.ts",
+      "line": 9,
+      "params": [
+        "{reason:string;sku:string;quantity:number}"
+      ],
+      "meta": {
+        "via": "grant",
+        "grants": [
+          "grantSendMessages"
+        ],
+        "functions": [
+          "stock-move"
+        ]
+      }
+    },
+    {
+      "from": "producer:stock#src/move.ts:9:9",
+      "to": "channel:sqs/stock-write-off",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/move.ts",
+      "line": 9,
+      "params": [
+        "{reason:string;sku:string;quantity:number}"
+      ],
+      "meta": {
+        "via": "grant",
+        "grants": [
+          "PolicyStatement"
+        ],
+        "functions": [
+          "stock-move"
+        ]
+      }
+    },
+    {
+      "from": "stock#src/move.ts:handler",
+      "to": "producer:stock#src/move.ts:9:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/move.ts",
+      "line": 9
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "service": "stock",
+      "file": "src/move.ts",
+      "line": 9,
+      "reason": "channel-from-grant",
+      "level": "info",
+      "message": "the call at src/move.ts:9 does not say where it sends: reasons.get(event.reason) is looked up in reasons by event.reason, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere; stock-move runs it and is granted only sqs/stock-restock, sqs/stock-write-off, so it is drawn to each",
+      "hint": "A grant is where the function may send, not where it does: each edge is a guess. Write the address, or one value of the environment the deployment sets, and it is read instead.",
+      "symbol": "producer:stock#src/move.ts:9:9",
+      "meta": {
+        "granted": [
+          "sqs/stock-restock",
+          "sqs/stock-write-off"
+        ],
+        "functions": [
+          "stock-move"
+        ],
+        "unread": [
+          "channel-dynamic"
+        ]
+      }
+    }
+  ]
+}

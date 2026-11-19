@@ -1,0 +1,6 @@
+{
+  "services": [
+    { "name": "bookshop", "repo": "./bookshop", "type": "lambda", "baseUrlEnv": ["CATALOG_API_URL"] }
+  ],
+  "output": ".flowatlas"
+}

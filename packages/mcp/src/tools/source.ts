@@ -25,15 +25,40 @@ import { nextOutput, nodeOutput, READ_ONLY, withDb, type ToolContext } from './c
  */
 export const MAX_LINES = 400;
 
+/**
+ * A line a decorator ends on and nothing follows: `@Guard({ a: 1 })`, the `})`
+ * closing one written over several lines, or a bare `@Optional`.
+ */
+const DECORATOR_ENDS = /\)\s*$|^\s*@[\w.$]+\s*$/;
+
 export const endOfDeclaration = (lines: readonly string[], startIndex: number, limit = MAX_LINES): number => {
   let depth = 0;
   let seen = false;
+  let parens = 0;
+  let decorator = false;
   for (let index = startIndex; index < lines.length; index += 1) {
-    for (const character of lines[index] ?? '') {
+    const line = lines[index] ?? '';
+    if (parens <= 0 && depth <= 0 && /^\s*@/.test(line)) decorator = true;
+    for (const character of line) {
       if (character === '{') {
         depth += 1;
         seen = true;
       } else if (character === '}') depth -= 1;
+      else if (character === '(') parens += 1;
+      else if (character === ')') parens -= 1;
+    }
+    // A declaration's recorded start is its first decorator, and a decorator
+    // closes the braces of its own options (`@Guard({ roles: ['a'] })`, an
+    // Angular `@Component({ ... })`) before the declaration has begun: those
+    // lines belong to the answer and do not end it.
+    if (decorator && parens <= 0 && depth <= 0) {
+      decorator = false;
+      parens = 0;
+      if (DECORATOR_ENDS.test(line)) {
+        depth = 0;
+        seen = false;
+        continue;
+      }
     }
     if (seen && depth <= 0) return index;
     if (!seen && index > startIndex + 40) return index;
@@ -128,6 +153,14 @@ export const registerSource = (server: McpServer, ctx: ToolContext): void => {
           return { error: 'source unavailable', reason: `no repository configured for ${node.repo}`, file: node.file };
         }
         const path = join(root, node.file);
+        // A repository the team's graph holds and this machine has not checked out (P236).
+        if (!existsSync(root)) {
+          return {
+            error: 'source unavailable',
+            reason: `${node.repo} is not checked out here; the graph came from the team's (flowatlas pull)`,
+            file: `${node.repo}/${node.file}${node.line === undefined ? '' : `:${node.line}`}`,
+          };
+        }
         if (!existsSync(path)) return { error: 'source unavailable', file: path };
 
         // A file checked out with CRLF, as Windows does by default, is read

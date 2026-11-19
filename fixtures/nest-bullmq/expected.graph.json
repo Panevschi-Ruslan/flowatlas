@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "repo": "nest-bullmq",
-  "generatedAt": "2026-10-07T18:29:15.510Z",
+  "generatedAt": "2026-11-09T16:52:55.692Z",
   "nodes": [
     {
       "id": "channel:digest",
@@ -597,7 +597,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     }
   ],
@@ -1069,13 +1076,6 @@
   },
   "unresolved": [
     {
-      "file": "src/app.module.ts",
-      "line": 15,
-      "reason": "module-import-dynamic",
-      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
-      "symbol": "AppModule imports BullModule.registerQueue({ name: 'mail' }, { name: 'digest' })"
-    },
-    {
       "file": "src/mail/anonymous.processor.ts",
       "line": 11,
       "reason": "channel-dynamic",
@@ -1088,7 +1088,7 @@
       "reason": "channel-dynamic",
       "hint": "The channel name cannot be read here. Annotate MailService.enqueueReport with the channel it uses.",
       "symbol": "producer:nest-bullmq#src/mail/mail.service.ts:46:12",
-      "message": "MailService.enqueueReport -> queue"
+      "message": "MailService.enqueueReport -> queueName"
     }
   ]
 }

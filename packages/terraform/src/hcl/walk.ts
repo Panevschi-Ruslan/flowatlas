@@ -59,6 +59,76 @@ export function* referencesIn(expression: Expression): Generator<Extract<Express
   }
 }
 
+/**
+ * Every expression written inside one, itself first (P304): unlike
+ * `referencesIn`, the walk goes on into a reference - its source and the key
+ * of each index step - so `local.stages[terraform.workspace]` holds the
+ * workspace it is looked up by.
+ */
+export function* expressionsIn(expression: Expression): Generator<Expression> {
+  yield expression;
+  switch (expression.type) {
+    case 'traversal':
+    case 'splat':
+      yield* expressionsIn(expression.source);
+      for (const step of expression.steps) if (step.kind === 'index') yield* expressionsIn(step.key);
+      return;
+    case 'template':
+      yield* expressionsInParts(expression.parts);
+      return;
+    case 'tuple':
+      for (const item of expression.items) yield* expressionsIn(item);
+      return;
+    case 'object':
+      for (const item of expression.items) {
+        yield* expressionsIn(item.key);
+        yield* expressionsIn(item.value);
+      }
+      return;
+    case 'call':
+      for (const arg of expression.args) yield* expressionsIn(arg);
+      return;
+    case 'conditional':
+      yield* expressionsIn(expression.condition);
+      yield* expressionsIn(expression.then);
+      yield* expressionsIn(expression.otherwise);
+      return;
+    case 'binary':
+      yield* expressionsIn(expression.left);
+      yield* expressionsIn(expression.right);
+      return;
+    case 'unary':
+      yield* expressionsIn(expression.operand);
+      return;
+    case 'for':
+      yield* expressionsIn(expression.collection);
+      if (expression.key !== undefined) yield* expressionsIn(expression.key);
+      yield* expressionsIn(expression.value);
+      if (expression.condition !== undefined) yield* expressionsIn(expression.condition);
+      return;
+    case 'parens':
+      yield* expressionsIn(expression.inner);
+      return;
+    case 'literal':
+    case 'variable':
+      return;
+  }
+}
+
+function* expressionsInParts(parts: readonly TemplatePart[]): Generator<Expression> {
+  for (const part of parts) {
+    if (part.kind === 'interpolation') yield* expressionsIn(part.expression);
+    else if (part.kind === 'if') {
+      yield* expressionsIn(part.condition);
+      yield* expressionsInParts(part.then);
+      yield* expressionsInParts(part.otherwise);
+    } else if (part.kind === 'for') {
+      yield* expressionsIn(part.collection);
+      yield* expressionsInParts(part.body);
+    }
+  }
+}
+
 function* inParts(parts: readonly TemplatePart[]): Generator<Extract<Expression, { type: 'traversal' | 'splat' }>> {
   for (const part of parts) {
     if (part.kind === 'interpolation') yield* referencesIn(part.expression);

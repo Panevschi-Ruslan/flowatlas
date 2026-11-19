@@ -335,27 +335,43 @@ export interface TestProject {
   dbPath: string;
 }
 
+export interface TestProjectExtra {
+  unresolved?: readonly Unresolved[];
+  nodes?: readonly GraphNode[];
+  edges?: readonly GraphEdge[];
+}
+
 /**
- * A small project with everything a renderer has to survive.
+ * A small project with everything a renderer has to survive, written to
+ * `<name>.db` and not opened: for a test that hands the path on, so no handle
+ * of its own is left holding the file (on Windows a held file cannot be
+ * replaced or removed).
  *
  * Three repositories, a guard chain, a bot callback answered by the same
  * handler as a route, a cross-repo call, a channel with a handler and one
  * without, a cycle, and two declarations of one name that disagree. Written and
  * read the way the tool does it, so a query that passes here is a real query.
- * `extra.unresolved` adds check rows after the project's own.
+ * `extra.unresolved` adds check rows after the project's own, and
+ * `extra.nodes` and `extra.edges` add to the graph.
  */
-export const buildTestProject = (name = 'graph', extra: { unresolved?: readonly Unresolved[] } = {}): TestProject => {
+export const writeTestProject = (name = 'graph', extra: TestProjectExtra = {}): string => {
   const dbPath = join(directory, `${name}.db`);
   const project: ProjectGraph = {
     schemaVersion: SCHEMA_VERSION,
     builtAt: FIXED,
     services: SERVICES,
-    nodes: NODES,
-    edges: EDGES,
+    nodes: [...NODES, ...(extra.nodes ?? [])],
+    edges: [...EDGES, ...(extra.edges ?? [])],
     types: TYPES,
     unresolved: [...UNRESOLVED, ...(extra.unresolved ?? [])],
   };
   writeGraphDb(project, report(), dbPath);
+  return dbPath;
+};
+
+/** The same project, opened; the test closes `db` before the file is written again. */
+export const buildTestProject = (name = 'graph', extra: TestProjectExtra = {}): TestProject => {
+  const dbPath = writeTestProject(name, extra);
   return { db: openGraphDb(dbPath), dbPath };
 };
 

@@ -1,0 +1,9 @@
+~  event kinesis/shop-prod-clicks                                      ledger/infra/main.tf:68
+  -> handler                                                           ledger/src/tally.ts:6
+    $  ALERTS_TOPIC_ARN                                                ledger/src/tally.ts:7
+    ~  message sns/shop-prod-alerts                                    ledger/src/tally.ts:7
+      ~  sns/shop-prod-alerts                                          infra/main.tf:66
+        => platform ~  subscription aws_sns_topic_subscription.alerts  platform/infra/main.tf:66
+  ~  message sqs/shop-prod-tally-failures                              ledger/infra/main.tf:68
+    ~  sqs/shop-prod-tally-failures                                    infra/main.tf:68
+unresolved on this path: 1

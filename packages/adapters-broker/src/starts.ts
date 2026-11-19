@@ -2,6 +2,8 @@ import { builtinModules } from 'node:module';
 import { STARTED } from '@flowatlas/aws';
 import {
   AWAITING_META,
+  GRANTABLE_META,
+  type GrantableAddress,
   ENVELOPE_META,
   forwardedFrom,
   forwardNoWorse,
@@ -89,7 +91,7 @@ const surenessOf = (element: AddressedElement, table?: Readonly<Record<string, s
   return 'names' in named ? 2 : element.awaiting === undefined ? 0 : 1;
 };
 
-const NOUNS: Readonly<Record<StartedEntry['entry'], string>> = { workflow: 'workflow', invoke: 'function' };
+const NOUNS: Readonly<Record<StartedEntry['entry'], string>> = { workflow: 'workflow', invoke: 'function', task: 'task' };
 
 const isBuiltin = (specifier: string): boolean =>
   specifier.startsWith('node:') || builtinModules.includes(specifier.split('/')[0] ?? specifier);
@@ -347,6 +349,8 @@ export const startReader = (ctx: PassContext, holderAt: (site: TsNode) => Holder
     const declared = named.some((each) => 'names' in each && each.declared);
     const unread = named.flatMap((each) => ('unread' in each ? [each.unread] : []));
     const awaiting: AwaitedAddress[] = unread.flatMap((element) => (element.awaiting === undefined ? [] : [{ parts: element.awaiting }]));
+    // What a grant of the function that runs it may bound, where nothing names it (P272).
+    const grantable: GrantableAddress[] = names.length > 0 ? [] : unread.flatMap((element) => (element.grantable === undefined || element.awaiting !== undefined ? [] : [{ parts: element.grantable }]));
     // The call is what the code says it is; the name is the code's, unless a
     // table someone wrote gave it.
     const confidence: Confidence = evidence !== 'checked' ? 'heuristic' : declared ? 'declared' : 'static';
@@ -372,6 +376,7 @@ export const startReader = (ctx: PassContext, holderAt: (site: TsNode) => Holder
         confidence,
         ...(names.length === 0 ? {} : { [REACHES_META]: names.map((name) => makeDeployedReference(starts.entry, name)) }),
         ...(awaiting.length === 0 ? {} : { [AWAITING_META]: awaiting }),
+        ...(grantable.length === 0 ? {} : { [GRANTABLE_META]: grantable }),
         // Which rule of the project's patterns drew it, when one did (P121).
         ...(pattern.describedBy === undefined ? {} : { describedBy: pattern.describedBy }),
       },

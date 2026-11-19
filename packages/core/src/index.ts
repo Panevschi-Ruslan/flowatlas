@@ -6,7 +6,7 @@
  * the core only through the registry.
  */
 
-export { GraphBuilder } from './builder.js';
+export { EDGE_END_MISSING_REASON, GraphBuilder } from './builder.js';
 export type { GraphBuilderOptions, GraphCounts } from './builder.js';
 
 export {
@@ -30,6 +30,8 @@ export {
   REACHED_AS_META,
   RESULT_OF_META,
   STARTS_META,
+  NAVIGATES_META,
+  isNavigationEdge,
   STEP_OF_META,
   STEPS_META,
   isChannelId,
@@ -50,13 +52,25 @@ export {
   makeFunctionUrlEntryKey,
   makeApiRouteEntryKey,
   makeInvokeEntryKey,
+  makeTaskEntryKey,
   makeStateId,
   makeSymbolId,
   makeUnnamedInvokeKey,
+  generatedName,
+  isGeneratedName,
+  exportKey,
+  stackOutputKey,
+  parameterKey,
+  alternativeAddress,
+  alternativeOf,
+  ownedGeneratedName,
+  importedName,
+  isImportedName,
   makeUnnamedWorkflowKey,
   makeTypeId,
   makeWorkflowEntryKey,
   isBelowDir,
+  nameMadeUpFile,
   normalizeFilePath,
   normalizePath,
   pathKey,
@@ -66,9 +80,10 @@ export {
   wasRead,
 } from './ids.js';
 export type { DeployedEntryKind, HttpMethod, ReachedAs, SiteLeafType } from './ids.js';
+export { whenFree } from './when-free.js';
 
 export { ENTRY_KINDS, NODE_TYPES, isEntryKind } from './model/nodes.js';
-export { SENDS_META, wayInBodyRead } from './model/way-in.js';
+export { IMPLEMENTED_BY_META, SENDS_META, wayInBodyRead } from './model/way-in.js';
 export type { EntryKind, GraphNode, NodeType } from './model/nodes.js';
 
 export {
@@ -170,6 +185,8 @@ export {
   infraModuleSchema,
   loadConfig,
   mcpSettingsSchema,
+  remoteSettingsSchema,
+  logSettingsSchema,
   builtInShapesFor,
   packageSourcesFor,
   parseConfig,
@@ -239,6 +256,7 @@ export type {
   DeclaredStream,
   DeployedDelivery,
   DeployedFunction,
+  DeployedGrant,
   DeployedHandler,
   DeployedKind,
   DeployedRoute,
@@ -253,6 +271,8 @@ export type {
   MessagePattern,
   MessageTarget,
   PublishedRoot,
+  DeployedExport,
+  DeployedImport,
   RouteTarget,
   ValueFilter,
 } from './adapters/deployment.js';
@@ -264,6 +284,10 @@ export {
   CHANNEL_FORWARD_META,
   CHANNEL_PATTERN_META,
   ENVIRONMENT_META,
+  EXPORTS_META,
+  GRANTABLE_META,
+  GRANTS_META,
+  IMPORTS_META,
   forwardedName,
   matchChannelPattern,
   nameInForms,
@@ -275,12 +299,18 @@ export type {
   ChannelForward,
   ChannelPattern,
   EnvironmentValue,
+  ExportedValue,
+  GrantableAddress,
+  GrantablePart,
+  GrantValue,
+  ImportedValue,
   PatternMatch,
 } from './channel-pattern.js';
 export {
   addressOnly,
   hostOf,
   innerServiceName,
+  interpolationValue,
   isInnerHost,
   keptValue,
   localHostsOf,
@@ -288,7 +318,7 @@ export {
   NO_SETTINGS,
   portOf,
 } from './setting-files.js';
-export type { HostAlias, RepoSettings, ServiceBinding, SettingValue } from './setting-files.js';
+export type { ContainerRun, HostAlias, ImageUnread, IngressRoute, PortValue, PublishedPort, RepoSettings, RoutedName, RoutedPort, SecretSource, ServiceBinding, SettingValue } from './setting-files.js';
 export { GUESSED_META, isTaken, RECORDED_META, strongestTaken, TAKEN_BY_META, TAKES_META } from './takes.js';
 export type { Takes, Taken, TakenInstead } from './takes.js';
 export { OPERATION_VERBS, operationsOf } from './declared-operations.js';
@@ -303,6 +333,11 @@ export {
   shifted,
 } from './positioned-document.js';
 export type { DefinitionFormat, PathStep, PositionedDocument } from './positioned-document.js';
+export { grpcCallKind, grpcEntryKey, parseProto, sameMethodName } from './protobuf.js';
+export type { GrpcCallKind, ProtoEnum, ProtoField, ProtoFile, ProtoMessage, ProtoMethod, ProtoService } from './protobuf.js';
+export { GRPC_PACKAGE_CONTRACTS, protoJsonName, protoTypes } from './protobuf-types.js';
+export type { GrpcPackageContract, ProtoFieldNames, ProtoSource, ProtoTypes } from './protobuf-types.js';
+export { readExpressionDocument, UnreadMember } from './positioned-expression.js';
 
 export {
   applicationOfFile,
@@ -312,6 +347,22 @@ export {
   ROOT_APPLICATION,
 } from './adapters/applications.js';
 export type { ApplicationKeys, ApplicationMap } from './adapters/applications.js';
+export {
+  LISTEN_META,
+  isEnvironmentName,
+  listenAt,
+  listenCallsIn,
+  listeningOf,
+  listensIn,
+  literalPort,
+  placedPort,
+  portIn,
+  portUnreadRow,
+  portWritten,
+} from './listen-port.js';
+export type { ListenAt, ListenPort, PortReading, PortUnread, WrittenPort } from './listen-port.js';
+export { forwardedBy, IN_PROCESS_META, NO_PROXY, ORIGINLESS_META, OWN_ORIGIN_META, PROXY_META, SAME_CALL_META, proxiesOf, proxyPatternRule, proxyPrefixOf, proxyRule, proxySettingOf, proxySettingRule, proxyTargetOf, proxyUnreadRow } from './proxy-rule.js';
+export type { ProxyReading, ProxyRewrite, ProxyRule, ProxySetting } from './proxy-rule.js';
 export { LOG_LEVELS, createLogger, silentLogger } from './adapters/context.js';
 export type { ExtractContext, LogLevel, Logger } from './adapters/context.js';
 export {
@@ -375,18 +426,26 @@ export type { AddressPart, BrokerAdapter, CallPattern, ChannelKind, StartedEntry
 export {
   EVERY_ELEMENT,
   EVERY_KEY,
+  constructedNames,
+  fieldWrittenOutside,
+  fieldWritesOutside,
+  listOfElement,
   locatedExpressions,
   locatedSlots,
   locatorApplies,
   locatorIsCondition,
+  mapValuesOf,
   originsOf,
+  walkPath,
 } from './adapters/locator.js';
 export type {
+  Bindings,
   IsOperation,
   LocatedSlot,
   LocatorContext,
   LocatorSite,
   NameLocator,
+  OutsideWrite,
   ValueOrigin,
 } from './adapters/locator.js';
 export type { FrontendAdapter, FrontendExtractOptions } from './adapters/frontend.js';
@@ -425,8 +484,22 @@ export {
   workspaceGlobs,
   workspacePackages,
   workspaceRootOf,
+  workspaceRootsAbove,
+  widenServiceExtent,
+  scanCeilingOf,
+  boundWalksAt,
+  boundWalksBelow,
+  installCeilingOf,
+  readingCeilingOf,
 } from './workspace.js';
+export { addScanRoot, checkoutTopOf, forgetCheckouts, isNoRepositoryDir, mayClimbTo, pathsOf, scanRootOf, sharedTopOf, upwardCeilingOf } from './upward-walk.js';
+export { boundedInstalls } from './bounded-installs.js';
+export { boundedConfigHost, installsHiddenAbove } from './installs-above.js';
+export { extendedPackageConfig, tsconfigReachOf, type TsconfigReach } from './tsconfig-reach.js';
+export type { PathExists } from './upward-walk.js';
 export type { ExtentPackage, WorkspacePackage } from './workspace.js';
+export { applicationLibraryDirs, readServiceManifest, workspaceApplicationOf } from './workspace-application.js';
+export type { WorkspaceApplication } from './workspace-application.js';
 
 export {
   countSources,
@@ -436,12 +509,18 @@ export {
   installedFiles,
   listRepoSources,
   reportSkippedTestDirectories,
+  reportTsconfigReach,
   reportUnreadableSources,
   SKIPPED_TEST_DIRECTORY_REASON,
+  TSCONFIG_EXTENDS_ABOVE_REASON,
+  TSCONFIG_NOT_READ_ABOVE_REASON,
+  TSCONFIG_READ_ABOVE_REASON,
   skippedTestDirectories,
   sourceRootsOf,
   TSCONFIG_CANDIDATES,
   UNREADABLE_FILE_REASON,
+  packageSpecifierParts,
+  workspaceMemberEntries,
 } from './project.js';
 export type {
   CreateProjectOptions,
@@ -464,6 +543,8 @@ export {
 export type { DeclarationShape, ResolutionSource, ShapeFileReading } from './declaration-shapes.js';
 export { forgetPackageIndexes, NEVER_A_SOURCE, packageIndexOf, rangeIncludes, serviceDirOf } from './package-index.js';
 export type { PackageIndex, PackageIndexInput, PackageSource, PackageSourceOrigin } from './package-index.js';
+export { otherServiceDirs, withoutOtherServicesWaysIn } from './other-services.js';
+export type { OtherServicesOptions } from './other-services.js';
 export {
   closeStandIns,
   hashShapeFile,
@@ -515,7 +596,7 @@ export type {
 } from './stand-ins.js';
 export { RXJS_DECLARATION_SHAPE, RXJS_SHAPE } from './rxjs-shape.js';
 
-export { isTestDirectory, isTestFile } from './test-files.js';
+export { isTestDirectory, isTestFile, isTestName } from './test-files.js';
 
 export { docsAbove, jsDocCallsIn, jsDocCallsMarkers, namesGivenTo, takesNames, type JsDocCall } from './markers.js';
 export type { MarkerNames, RecordedMarker, RefusedArg } from './markers.js';
@@ -525,13 +606,18 @@ export type { ExtractorPass } from './passes.js';
 
 export { buildClassIndex, ClassIndex } from './class-index.js';
 export {
+  factoryMembers,
   functionAt,
   inlineFunction,
   memberFunction,
   moduleFunctions,
+  namedByProperty,
   namedFunction,
+  objectMemberFunction,
+  onlyHandsBackMembers,
   placedFunction,
   placeOf,
+  propertyNamedFunction,
 } from './functions.js';
 export {
   CARRIES_ON_META,
@@ -574,7 +660,7 @@ export {
 } from './static-value.js';
 export type { StaticValue } from './static-value.js';
 
-export { resolveStaticString, settingKeyIn } from './static-string.js';
+export { resolveStaticString, settingKeyIn, takenMember, type TakenMember } from './static-string.js';
 export type {
   SettingBehind,
   StaticString,
@@ -597,12 +683,16 @@ export type { DecoratorMatch } from './decorators.js';
 
 export { resolveConstructorInjection, resolveFieldInjection } from './di/constructor.js';
 export { resolveClassOfExpression, resolveClassOfType } from './di/class-ref.js';
+export { providerIndex, sameToken } from './di/providers.js';
+export { calledFunction, classOfListing, injectedInto, injectorMakes, providerListingsOf } from './di/injected.js';
+export type { ProviderIndex, WrittenProvider } from './di/providers.js';
 export type { ClassRef } from './di/class-ref.js';
 export {
   bodyOf,
   enclosingMethod,
   findMethod,
   forEachCall,
+  functionOf,
   methodBodies,
   methodNamedOn,
   methodsOfClass,
@@ -654,17 +744,40 @@ export {
   MOST_CHOICES,
   foldedChoices,
   literalChoices,
+  branchChoices,
   forwardedFrom,
   forwardNoWorse,
   isQueryTail,
+  continuesHost,
+  endsAtHost,
+  handedByEachCall,
   isReadable,
+  optionVerbAlong,
+  optionVerbOf,
+  memberBehind,
   parameterBehind,
   readsParameterOf,
   remembersParametersOf,
   returnedExpression,
+  returnedBy,
+  destructuredFrom,
+  restLacks,
+  componentHeldBy,
+  componentWrittenIn,
+  elementsOfTag,
+  untypedHoldsInstanceOf,
   rootSettingAddress,
-  rootSettingKey,
   splitAtParameter,
+  valueAfterHost,
+  valueAtPort,
+  atPortPlace,
+  numberAfterHost,
+  portWithoutColonRow,
+  gluedHostUnmeant,
+  writtenNumber,
+  writtenSpan,
+  type NumberAfterHost,
+  type SpanReader,
   verbAlong,
   verbParameterOf,
   verbsAtCallers,
@@ -680,6 +793,8 @@ export type {
   Forwarder,
   Forwarding,
   ForwardReader,
+  OptionVerb,
+  ParameterMember,
   RootSettingOptions,
   SettingAddress,
   SplitAddress,
@@ -695,9 +810,27 @@ export {
   requestVerbOf,
 } from './platform-fetch.js';
 export type { OptionsRequestShape } from './platform-fetch.js';
+export { isSomewhere, underBase } from './under-base.js';
+export {
+  addressSidesOf,
+  addressTestOf,
+  asksAbsolute,
+  conditionsAround,
+  guardsAround,
+  joinedTests,
+  literalAddress,
+  notTest,
+  prefixOfRewrite,
+  prefixSidesOfRewrite,
+  rewriteTestOf,
+} from './address-rewrite.js';
+export type { AddressSide, AddressTest, Guard, PrefixSide } from './address-rewrite.js';
+export type { ReadAddress } from './under-base.js';
 export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';
 export { callIndexOf, callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';
 export { BOUNDED_BY, boundedLoopOf, isMigrationFile } from './bounded-loop.js';
+export { loopOver, loopVariableOf, recordEntriesOf } from './loop-elements.js';
+export type { RecordEntries, LoopElement, LoopReading, TakenElement } from './loop-elements.js';
 export { rankByReach, waysInOf } from './model/row-reach.js';
 export type { BoundedBy, BoundedLoop, BoundedLoopOptions, MigrationMarks } from './bounded-loop.js';
 export { lineAndColumnAt, startLineOf } from './line-numbers.js';
@@ -891,6 +1024,8 @@ export {
   renderPrompt,
 } from './prompt-text.js';
 export { REMEDIES, remediesOf, remedyLinesOf } from './remedies.js';
+export { DEFAULT_PATH_CAP, DEFAULT_PATH_DEPTH, PATH_DEPTHS, shortestWays } from './shortest-ways.js';
+export type { ShortestWays, ShortestWaysOptions, WayStep } from './shortest-ways.js';
 export type {
   PromptAccess,
   PromptCheckPlace,
@@ -950,6 +1085,7 @@ export type {
   CantFollowSample,
   CausePart,
   CauseSample,
+  DifferingValue,
 } from './cant-follow.js';
 export {
   causeOfParameterType,
@@ -1013,3 +1149,53 @@ export {
   writeDeployed,
 } from './deployed.js';
 export type { Deployed, Pin, PinSource } from './deployed.js';
+export {
+  checkoutLine,
+  checkoutsMoved,
+  citedFiles,
+  contentHash,
+  FRESHNESS_FILE,
+  FRESHNESS_FORMAT_VERSION,
+  freshnessPathFor,
+  freshnessSchema,
+  headOf,
+  MAX_CITED_FILES,
+  readFreshness,
+  staleOf,
+} from './freshness.js';
+export type { Checkout, CheckoutMoved, CitedFile, Freshness, FreshnessService, Stale } from './freshness.js';
+export { AGENT_QUESTIONS, AGENT_RULES, agentQuestionsLine } from './agent-guide.js';
+export type { AgentQuestion } from './agent-guide.js';
+export { attachNotes, DEFAULT_NOTE_TAGS, leadingNotes, MAX_NOTE_CHARS, MAX_NOTES, NOTES_META, projectText } from './notes.js';
+export type { SourceText } from './notes.js';
+export { addEmbeddedScripts, blankOutside } from './embedded.js';
+export type { EmbeddedFile, EmbeddedFormat, EmbeddedScripts } from './embedded.js';
+export {
+  ALIASES_FROM_CONFIG_REASON,
+  ALIASES_FROM_CONVENTION_REASON,
+  IMPLICIT_IMPORT_AMBIGUOUS_REASON,
+  IMPLICIT_IMPORT_OVERRIDDEN_REASON,
+  IMPLICIT_IMPORTS_REASON,
+  addImplicitImports,
+  conventionExtentOf,
+  conventionFiles,
+  conventionsFor,
+  frameworkModuleOf,
+  implicitNamesUsed,
+  implicitSourcesOf,
+  reportConventions,
+  scriptFilesIn,
+} from './conventions.js';
+export type {
+  ConventionsOf,
+  FrameworkModule,
+  ImplicitImports,
+  ImplicitImportSource,
+  ProjectConventions,
+} from './conventions.js';
+export { ConfigPath, NotLiteral, configValueAt, exportedNamesOf, parseSyntax, readConfigLiteral } from './config-literal.js';
+export { builtQueryInAddress, builtQueryOf, PLATFORM_HEADERS, PLATFORM_QUERY, writtenHeaderNames, writtenKey, type BuiltQuery, type QueryBuilder } from './built-query.js';
+export { defaultHeadersWritten, headersAHookAdds, joinHookHeaders, NO_HOOK_HEADERS, type HookHanded, type HookHeaders } from './hook-headers.js';
+export { responseHeadersRead, type AnswerHanded, type ResponseHeadersRead } from './response-headers.js';
+export type { ConfigLiteral, ExportedNames } from './config-literal.js';
+export { atChosenHost, matchServedAt, SERVED_AT_META, servedAtOf, type ServedAt, type ServedMatch } from './served-at.js';

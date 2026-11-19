@@ -401,6 +401,8 @@ const META_FIELDS: ReadonlyArray<readonly [field: string, key: string, enumerate
   ['bodyKeys', 'bk', false],
   // When a schedule fires, and in which zone (P71).
   ['expression', 'ex', false],
+  // What a tagged comment above a declaration says (P234).
+  ['notes', 'nt', false],
   ['timeZone', 'tz', true],
   // How many steps a chain holds, which lengthens the walk under a prompt (P97).
   ['states', 'ss', false],

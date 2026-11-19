@@ -33,7 +33,12 @@ following a verb out of its class and through the module graph is a different
 and much larger question than reading one declaration. So the reading stops —
 and it says so, naming the class and the configuration key that would settle it.
 That row is the half of R87 that is not optional: a request through a wrapper
-nobody described used to be silence, and silence is the defect.
+nobody described used to be silence, and silence is the defect. The class is
+still no client; but its methods are callers like any function (P293), so the
+transport's request is followed out through them: `reports.get('/api/reports')`
+is read as the `fetch` it reaches, drawn from `OrdersPanel`, and each method
+carries the transport's own request with the verb it hands, as a function of
+the module that hands `send` its verb does.
 
 `src/api/billing.ts` is **declared**. `BillingClient` has exactly the shape that
 cannot be recognised, and the configuration names it under

@@ -74,7 +74,8 @@
     "bot_callback",
     "bot_event",
     "scene_step",
-    "invoke"
+    "invoke",
+    "task"
   ],
   "next": [
     "dead({id: \"entry:orders:http:GET:/a/:param\"})"

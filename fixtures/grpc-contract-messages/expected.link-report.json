@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:47:01.989Z",
+  "configHash": "1272a2a2a3d7",
+  "services": [
+    {
+      "name": "pricing",
+      "repo": "proto/store.proto",
+      "type": "declared",
+      "extractor": "protobuf-document",
+      "nodes": 2,
+      "edges": 1,
+      "types": 6,
+      "unresolved": 0,
+      "durationMs": 28
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "grpc",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 2,
+      "types": 7,
+      "unresolved": 0,
+      "durationMs": 2299,
+      "packages": {
+        "name": "grpc-contract-messages-stock",
+        "runtime": [
+          "@grpc/grpc-js",
+          "@grpc/proto-loader",
+          "@grpc/reflection",
+          "grpc-health-check"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 18,
+      "edges": 16,
+      "types": 4,
+      "unresolved": 1,
+      "durationMs": 2431,
+      "packages": {
+        "name": "grpc-contract-messages-web",
+        "runtime": [
+          "@grpc/grpc-js",
+          "express"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 4,
+    "linked": 3,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 1,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 0,
+    "uncalled": [
+      "entry:web:http:DELETE:/reservations/:param",
+      "entry:web:http:GET:/stock/:param",
+      "entry:web:http:POST:/quotes",
+      "entry:web:http:POST:/reservations"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 17,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/clients.ts",
+      "line": 27,
+      "reason": "procedure-not-found",
+      "message": "no procedure grpc:store.InventoryService/CountStock in web or stock",
+      "hint": "Renamed or removed? Check the tree this client is typed from, or add the service that declares it to services[] and name it in apiTarget.",
+      "symbol": "http_out:web#src/clients.ts:27:35"
+    },
+    {
+      "service": "web",
+      "file": "src/clients.ts",
+      "line": 27,
+      "reason": "grpc-method-unserved",
+      "message": "web calls store.InventoryService (CountStock), which ../proto/store.proto declares and no configured service implements",
+      "hint": "The service that answers it is not read here: written in another language, or not configured. Declare it by that file - a service with \"document\": { \"kind\": \"protobuf\", \"path\": ..., \"services\": [\"store.InventoryService\"] } - or add the repository that implements it to services[].",
+      "symbol": "http_out:web#src/clients.ts:27:35",
+      "meta": {
+        "grpcService": "store.InventoryService",
+        "contract": "../proto/store.proto",
+        "methods": [
+          "CountStock"
+        ]
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 29,
+    "edges": 22,
+    "types": 17,
+    "missed": 3,
+    "sites": 6,
+    "notes": 0,
+    "findings": 2,
+    "unresolved": 3
+  }
+}

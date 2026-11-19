@@ -1,0 +1,43 @@
+{
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "baseUrlEnv": [
+        "ORDERS_URL"
+      ]
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "baseUrlEnv": [
+        "CATALOG_URL"
+      ]
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "apiBaseEnv": [
+        "VITE_API_URL"
+      ],
+      "apiTarget": {
+        "VITE_API_URL": "orders"
+      }
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "apiBaseEnv": [
+        "apiUrl"
+      ],
+      "apiTarget": {
+        "apiUrl": "orders"
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

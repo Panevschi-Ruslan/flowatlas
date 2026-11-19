@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: The topic the orders of a shop are announced on.
+
+Parameters:
+  Prefix:
+    Type: String
+  Stage:
+    Type: String
+
+Resources:
+  Topic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${Prefix}-${Stage}-order-events
+
+Outputs:
+  TopicName:
+    Value: !GetAtt Topic.TopicName

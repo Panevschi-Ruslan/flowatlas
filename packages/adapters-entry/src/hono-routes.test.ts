@@ -338,7 +338,8 @@ describe('an application that is not served where it is declared', () => {
 
   it('refuses a route on an application that arrived from somewhere unread', () => {
     // The repository shifts bases elsewhere, so `/daily` on its own would be an
-    // address this service does not serve.
+    // address this service does not serve. Called by name, `registerReports(app)`
+    // would say where (P354); handed round a list, no caller can be read.
     const read = extract(
       `
       import { Hono } from 'hono';
@@ -346,7 +347,7 @@ describe('an application that is not served where it is declared', () => {
       const app = new Hono();
       const internal = app.basePath('/internal');
       internal.post('/reload', (c) => c.text('x'));
-      registerReports(app);
+      [registerReports].forEach((register) => register(app));
     `,
       {
         '/src/reports.ts':

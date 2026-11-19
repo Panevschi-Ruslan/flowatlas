@@ -178,7 +178,30 @@ interface Reached {
   /** The file each variable read from the repository's files came from (P77). */
   readonly fromFiles: Map<string, string>;
   readonly payload?: string;
+  /** Completed from a value every function of the deployment is deployed with, none seen running it (P299). */
+  everyFunction?: boolean;
 }
+
+/**
+ * The variables an address waits on that every function of a deployment is
+ * deployed with at one value (P299): `Globals.Function.Environment`, or the
+ * same value written on each. Code no function is seen running - reached
+ * through a container the call graph does not follow - still runs in one of
+ * them, and in each it reads that value. A function deployed without it, or
+ * with another, leaves the variable out.
+ */
+const sharedEnvironment = (functions: readonly GraphNode[], address: AwaitedAddress): Record<string, EnvironmentValue> => {
+  const shared: Record<string, EnvironmentValue> = {};
+  if (functions.length === 0) return shared;
+  for (const part of address.parts) {
+    if (typeof part === 'string') continue;
+    const values = functions.map((fn) => environmentOf(fn)[part.environment]);
+    const [first] = values;
+    if (first?.value === undefined) continue;
+    if (values.every((value) => value !== undefined && value.value === first.value && value.kind === first.kind)) shared[part.environment] = first;
+  }
+  return shared;
+};
 
 const at = (node: GraphNode): Pick<Unresolved, 'service' | 'file' | 'line'> => ({
   service: node.repo,
@@ -206,9 +229,11 @@ export const completeFromEnvironment = (
   }
 
   // A producer no deployed function runs is completed from its repository's
-  // files alone, where they settle every part it waits on (P77).
+  // files alone, where they settle every part it waits on (P77), or from a
+  // value every function of its deployment is deployed with (P299).
+  const deployedRepos = new Set(functions.map((fn) => fn.repo));
   const producers = [...nodes.values()]
-    .filter((node) => Array.isArray(node.meta?.[AWAITING_META]) && (reached.has(node.id) || settings[node.repo] !== undefined))
+    .filter((node) => Array.isArray(node.meta?.[AWAITING_META]) && (reached.has(node.id) || settings[node.repo] !== undefined || deployedRepos.has(node.repo)))
     .sort((a, b) => cmp(a.id, b.id));
   for (const producer of producers) {
     const runners = reached.get(producer.id) ?? [];
@@ -242,13 +267,19 @@ export const completeFromEnvironment = (
         ...(address.payload === undefined ? {} : { payload: address.payload }),
       };
     for (const address of addresses) {
-      // Nothing deployed runs it: the files are the only environment it has,
-      // and an address they leave a part of unsettled stays the extractor's row.
+      // Nothing deployed is seen running it: whichever function does, every
+      // function of its deployment is deployed with the same value of each
+      // variable it reads, where they all are (P299) - a value set for every
+      // function at once - and otherwise the files are the only environment it
+      // has; an address they leave a part of unsettled stays the extractor's row.
       if (runners.length === 0) {
-        const done = complete(address, {}, files);
-        if (!('name' in done) || done.fromFiles.length === 0) continue;
+        const everywhere = sharedEnvironment(functions.filter((fn) => fn.repo === producer.repo), address);
+        const done = complete(address, everywhere, files);
+        if (!('name' in done) || (done.fromFiles.length === 0 && done.variables.length === 0)) continue;
         const found = reachedFor(done.name, address);
+        for (const variable of done.variables) found.variables.add(variable);
         for (const variable of done.defaults) found.defaults.add(variable);
+        if (done.variables.length > 0) found.everyFunction = true;
         tookFromFiles(found, done, undefined);
         reachedChannels.set(done.name, found);
         continue;
@@ -285,7 +316,9 @@ export const completeFromEnvironment = (
                 hint:
                   done.value.files !== undefined
                     ? `The variable files set it differently (${Object.keys(done.value.files).join(', ')}). Choose the environment to read under services[].infra.vars.`
-                    : done.value.variable !== undefined
+                    : done.value.imported !== undefined
+                      ? 'The value is an output another deployment publishes: add the repository that declares it to the configuration, and it is joined to what it names.'
+                      : done.value.variable !== undefined
                       ? `Give var.${done.value.variable} a value the files settle: a default, or a variable file.`
                       : 'Write the value so the files settle it: a literal, or a reference to the queue, topic or bus the deployment declares.',
                 symbol: producer.id,
@@ -312,8 +345,9 @@ export const completeFromEnvironment = (
     producer.meta = { ...producer.meta, channelVia: 'environment' };
     for (const edge of callsInto.get(producer.id) ?? []) edge.confidence = calledAt;
     // A part read from a repository's files is a guess at what is deployed.
+    // So is one no function is seen running (P299).
     const sendsAt = (found: Reached): Confidence =>
-      found.fromFiles.size > 0 && CONFIDENCE_RANK[calledAt] > CONFIDENCE_RANK.heuristic ? 'heuristic' : calledAt;
+      (found.fromFiles.size > 0 || found.everyFunction === true) && CONFIDENCE_RANK[calledAt] > CONFIDENCE_RANK.heuristic ? 'heuristic' : calledAt;
     if (isDeployedEntryKind(starts)) {
       // Joined by its deployed name with every other reference, later.
       const reaches = (producer.meta[REACHES_META] as string[] | undefined) ?? [];
@@ -350,6 +384,7 @@ export const completeFromEnvironment = (
             ? {}
             : { fromFiles: Object.fromEntries([...found.fromFiles.entries()].sort(([a], [b]) => cmp(a, b))) }),
           functions: [...found.functions].sort(cmp),
+          ...(found.everyFunction === true ? { everyFunction: true } : {}),
         },
       };
       edges.set(edgeKey(edge), edge);

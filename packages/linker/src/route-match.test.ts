@@ -2,6 +2,7 @@ import type { GraphNode } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import {
   answeredOnlyByWildcard,
+  catchAllBehind,
   assumedMountOf,
   couldReach,
   isMatch,
@@ -517,5 +518,37 @@ describe('oneSegmentOff', () => {
   it('never lets a value the route takes swallow a literal the request names', () => {
     // `/orders/ship` is one off `/orders/:param/ship`, not `/orders/:param/archive`.
     expect(oneSegmentOff('POST', '/orders/ship', route('POST', '/orders/:param/archive'))).toBeUndefined();
+  });
+});
+
+/** A request read in part that a catch-all answers whatever its unread part holds (P279). */
+describe('catchAllBehind', () => {
+  const HOLE = '${…}';
+  const plugins = route('ALL', '/api/plugins/*');
+  const webhook = route('POST', '/api/plugins/billing/webhook');
+
+  it('joins the catch-all whose prefix the read segments spell out', () => {
+    expect(catchAllBehind('GET', `/api/plugins/:param/install${HOLE}`, [plugins, webhook])).toBe(plugins);
+  });
+
+  it('refuses where a route spelled out could answer too', () => {
+    const install = route('GET', '/api/plugins/:param/install-now');
+    expect(catchAllBehind('GET', `/api/plugins/:param/install${HOLE}`, [plugins, install])).toBeUndefined();
+  });
+
+  it('refuses where the hole falls inside the prefix, or nothing is asked past it', () => {
+    expect(catchAllBehind('GET', `/api/${HOLE}/plugins/x`, [plugins])).toBeUndefined();
+    expect(catchAllBehind('GET', `/${HOLE}`, [plugins])).toBeUndefined();
+  });
+
+  it('takes the longest prefix, and refuses two that tie', () => {
+    const api = route('ALL', '/api/*');
+    expect(catchAllBehind('GET', `/api/plugins/x${HOLE}`, [api, plugins])).toBe(plugins);
+    expect(catchAllBehind('GET', `/api/plugins/x${HOLE}`, [plugins, route('GET', '/api/:param/*')])).toBeUndefined();
+  });
+
+  it('answers only a request read in part, with a verb the catch-all answers', () => {
+    expect(catchAllBehind('GET', '/api/plugins/x/install', [plugins])).toBeUndefined();
+    expect(catchAllBehind('DELETE', `/api/plugins/x${HOLE}`, [route('GET', '/api/plugins/*')])).toBeUndefined();
   });
 });

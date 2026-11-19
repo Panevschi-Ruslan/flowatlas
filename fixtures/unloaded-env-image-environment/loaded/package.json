@@ -1,0 +1,9 @@
+{
+  "name": "unloaded-env-image-environment-loaded",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "express": "^4.21.2",
+    "dotenv": "^16.4.5"
+  }
+}

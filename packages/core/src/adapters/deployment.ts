@@ -70,7 +70,36 @@ export interface DeployedFunction {
    * set at all are two different things to tell the reader (P23).
    */
   readonly environment?: Readonly<Record<string, DeployedSetting>>;
+  /**
+   * What its deployment lets it send to, write to, invoke or start (P272):
+   * every grant read, a named one and one on everything of a kind alike,
+   * because a grant on a few things is an upper bound on where code that
+   * does not say where it sends can send, and a grant on everything bounds
+   * nothing - and the two are different things to tell a reader.
+   */
+  readonly grants?: readonly DeployedGrant[];
   readonly meta?: Record<string, unknown>;
+}
+
+/**
+ * One grant a function's deployment gives it on something it may send to,
+ * write to, invoke or start (P272): a policy template, a statement of a role
+ * it runs as, a grant of a construct.
+ *
+ * Exactly one of `name`, `any` and `unread` is set: the deployed name of the
+ * one thing granted; the resource as written where it is every one of its
+ * kind (a wildcard, as written); why the resource is not read.
+ */
+export interface DeployedGrant {
+  readonly kind: DeployedKind;
+  readonly name?: string;
+  readonly any?: string;
+  readonly unread?: string;
+  /** What grants it, for a person: a policy, a statement of one, a grant of a construct, as the deployment names it. */
+  readonly by: string;
+  /** Where it is written. */
+  readonly file: string;
+  readonly line: number;
 }
 
 /**
@@ -97,9 +126,27 @@ export interface DeployedSetting {
    * its URL, its ARN, its name. The name is the deployed name, which is what
    * everything joins on, so it is given even where the value itself - an ARN
    * the provider assigns - is not known until the thing is created. A `url`
-   * is a function's own address, named by the function (P54).
+   * is a function's own address, named by the function (P54); an `api` is an
+   * API's, named by the API (P249).
    */
-  readonly names?: { readonly kind: DeployedKind | 'url'; readonly name: string };
+  readonly names?: { readonly kind: DeployedKind | 'url' | 'api'; readonly name: string };
+  /**
+   * For an address of an API this deployment serves, written out with an id
+   * the files do not tie to it (P268): the path it asks for there, after the
+   * stage.
+   */
+  readonly path?: string;
+  /**
+   * The address of such an API is built around a reference to it, which says
+   * which API it is (P272), rather than written out with an id.
+   */
+  readonly referenced?: boolean;
+  /**
+   * The key of a value another deployment publishes, when this one is that:
+   * what it names is known only once the publisher is read, which the linker
+   * does (P249). `unread` then says what the value is waiting on.
+   */
+  readonly imported?: string;
   /** Why the value is not read, when it is not. */
   readonly unread?: {
     readonly text: string;
@@ -295,6 +342,61 @@ export interface PublishedRoot {
   readonly line: number;
 }
 
+/**
+ * A value this deployment publishes for other deployments to read: an output,
+ * by every key the files settle for it (P249).
+ *
+ * A deployment shares what it creates by writing it out under a name - the
+ * name the value is exported under, or the deployment's own name and the
+ * value's - and another deployment reads it back by that name. Neither side
+ * holds the other's files; both hold the name, and the linker joins on it as
+ * it joins a route to a published root.
+ */
+export interface DeployedExport {
+  /** Every key it is read by: `export:<name>`, `stack:<deployment>#<value>` (`exportKey`, `stackOutputKey`). */
+  readonly keys: readonly string[];
+  /** Where it is declared, in the deployment's own terms: unique per deployment. */
+  readonly address: string;
+  readonly file: string;
+  readonly line: number;
+  /** What the value names, when it names something deployed: a queue, a function's address, an API. */
+  readonly names?: { readonly kind: DeployedKind | 'url' | 'api'; readonly name: string };
+  /** The value, when it is text the files settle. */
+  readonly text?: string;
+  /** Why the value is not read, when it is not. */
+  readonly unread?: string;
+}
+
+/** One place this deployment uses a value another deployment publishes (P249). */
+export interface DeployedImport {
+  readonly key: string;
+  readonly file: string;
+  readonly line: number;
+  /** What it is used for, for a person: `the queue functions.ship.events[0] reads`. */
+  readonly what: string;
+  /** The kinds of thing it may name where it is used; absent where it may be anything. */
+  readonly kinds?: readonly (DeployedKind | 'url' | 'api')[];
+  /**
+   * Where the use does not say which of `kinds` it is: the declaration read
+   * once per kind, each under its own address (`alternativeAddress`), of which
+   * the linker keeps the one the publisher's value is (P253).
+   */
+  readonly alternatives?: readonly { readonly kind: DeployedKind; readonly address: string }[];
+  /**
+   * `name`: the value is the name of what it names, written into an address
+   * of that kind - an ARN built around it - so a value published as that
+   * name, as text, is what it names too (P253).
+   */
+  readonly as?: 'name';
+  /**
+   * Where the value is one part of a name built of several values other
+   * deployments publish, or of one and text (P259): the name, with each
+   * part's stand-in (`importedName`) in place. The linker writes the name
+   * where every part of it is joined, and leaves it as it is otherwise.
+   */
+  readonly within?: string;
+}
+
 /** Where something inside a document is written, 1-based, as an editor counts. */
 export interface DefinitionPosition {
   readonly line: number;
@@ -382,6 +484,10 @@ export interface Deployment {
   readonly deliveries: readonly DeployedDelivery[];
   /** The streams it declares, which a write in code publishes onto (P51). */
   readonly streams?: readonly DeclaredStream[];
+  /** The values it publishes for other deployments to read (P249). */
+  readonly exports?: readonly DeployedExport[];
+  /** Where it reads values other deployments publish (P249). */
+  readonly imports?: readonly DeployedImport[];
   /** What could not be read, with repo-relative files. */
   readonly rows: readonly Unresolved[];
 }

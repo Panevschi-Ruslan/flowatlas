@@ -1,0 +1,13 @@
+{
+  "name": "@shop/catalog",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@orpc/openapi": "^1.0.0",
+    "@orpc/server": "^1.0.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}

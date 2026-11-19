@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T14:25:10.014Z",
+  "configHash": "165ce2eef21e",
+  "services": [
+    {
+      "name": "ledger",
+      "repo": "./apps/ledger",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "@shop/ledger",
+        "runtime": [
+          "@hono/trpc-server",
+          "@trpc/server",
+          "hono",
+          "zod"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./apps/orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "@shop/orders",
+        "runtime": [
+          "@hono/trpc-server",
+          "@trpc/server",
+          "hono",
+          "zod"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "worker",
+      "repo": "./apps/worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 14,
+      "edges": 10,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "@shop/worker",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "@shop/clients",
+          "@trpc/client"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 2,
+    "linked": 2,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 0,
+    "uncalled": [
+      "entry:worker:http:POST:/fulfil"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 20,
+    "edges": 14,
+    "types": 0,
+    "missed": 3,
+    "sites": 3,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 3
+  }
+}

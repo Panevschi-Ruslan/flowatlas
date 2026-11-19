@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:29:05.207Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:38:06.637Z",
   "services": [
     {
       "name": "orders",
@@ -357,7 +357,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     }
   ],

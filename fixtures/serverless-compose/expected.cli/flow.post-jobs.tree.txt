@@ -1,0 +1,9 @@
+@  POST /jobs                                jobs/api/serverless.yml:19
+  -> handler                                 jobs/api/src/submit.ts:7
+    $  JOBS_QUEUE_URL                        jobs/api/src/submit.ts:8
+    ~  message sqs/jobs-queue                jobs/api/src/submit.ts:8
+      ~  sqs/jobs-queue                      shared/serverless.yml:18
+        ~  mapping functions.work.events[0]  jobs/shared/serverless.yml:18
+          @  jobs-shared-dev-work            jobs/shared/serverless.yml:15
+            -> handler                       jobs/shared/src/work.ts:4
+unresolved on this path: 0

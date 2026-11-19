@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:29:36.032Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T17:08:04.767Z",
   "configHash": "554932e24a02",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 16,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 496,
+      "durationMs": 640,
       "packages": {
         "name": "same-service",
         "runtime": [
@@ -25,13 +25,13 @@
   ],
   "httpOut": {
     "total": 3,
-    "linked": 0,
+    "linked": 2,
     "byMarker": 0,
     "unknownEnv": 0,
-    "noRoute": 0,
+    "noRoute": 1,
     "ambiguous": 0,
     "external": 0,
-    "dynamic": 3
+    "dynamic": 0
   },
   "ui": {
     "total": 3,
@@ -70,7 +70,7 @@
   ],
   "totals": {
     "nodes": 20,
-    "edges": 18,
+    "edges": 20,
     "types": 0,
     "missed": 2,
     "sites": 2,

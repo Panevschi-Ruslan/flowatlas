@@ -1,0 +1,932 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T14:18:31.669Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./apps/api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "storefront",
+      "repo": "./apps/storefront",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "backoffice",
+      "repo": "./apps/backoffice",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#../../packages/catalog/src/index.ts:CatalogController",
+      "type": "provider",
+      "label": "CatalogController",
+      "repo": "api",
+      "file": "../../packages/catalog/src/index.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#../../packages/catalog/src/index.ts:CatalogController.find",
+      "type": "method",
+      "label": "CatalogController.find",
+      "repo": "api",
+      "file": "../../packages/catalog/src/index.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "{sku:string}"
+        }
+      }
+    },
+    {
+      "id": "api#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "module",
+      "label": "GraphQLModule",
+      "repo": "api",
+      "file": "node_modules/@nestjs/graphql",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "external": true
+      }
+    },
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 10,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "HealthController",
+          "CatalogController"
+        ],
+        "providers": [
+          "OrdersResolver",
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/health.controller.ts:HealthController",
+      "type": "provider",
+      "label": "HealthController",
+      "repo": "api",
+      "file": "src/health.controller.ts",
+      "line": 3,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/health.controller.ts:HealthController.check",
+      "type": "method",
+      "label": "HealthController.check",
+      "repo": "api",
+      "file": "src/health.controller.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{ok:boolean}"
+        }
+      }
+    },
+    {
+      "id": "api#src/orders/orders.resolver.ts:OrdersResolver",
+      "type": "provider",
+      "label": "OrdersResolver",
+      "repo": "api",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.resolver.ts:OrdersResolver.cancelOrder",
+      "type": "method",
+      "label": "OrdersResolver.cancelOrder",
+      "repo": "api",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#Order"
+        }
+      }
+    },
+    {
+      "id": "api#src/orders/orders.resolver.ts:OrdersResolver.orders",
+      "type": "method",
+      "label": "OrdersResolver.orders",
+      "repo": "api",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:api#Order[]"
+        }
+      }
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "method",
+      "label": "OrdersService.cancel",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#Order"
+        }
+      }
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.list",
+      "type": "method",
+      "label": "OrdersService.list",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:api#Order[]"
+        }
+      }
+    },
+    {
+      "id": "backoffice#../../packages/formatting/src/index.ts:statusLabel",
+      "type": "function",
+      "label": "statusLabel",
+      "repo": "backoffice",
+      "file": "../../packages/formatting/src/index.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "status",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "backoffice#../api/src/orders/order-number.ts:orderNumber",
+      "type": "function",
+      "label": "orderNumber",
+      "repo": "backoffice",
+      "file": "../api/src/orders/order-number.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "backoffice#src/CancelButton.tsx:CancelButton",
+      "type": "ui_component",
+      "label": "CancelButton",
+      "repo": "backoffice",
+      "file": "src/CancelButton.tsx",
+      "line": 19,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ order }",
+              "type": "{order:type:@shop/api#Order}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "entry:api:graphql:Mutation.cancelOrder",
+      "type": "entry",
+      "label": "Mutation.cancelOrder",
+      "repo": "api",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 15,
+      "kind": "graphql",
+      "meta": {
+        "type": "Mutation",
+        "name": "cancelOrder",
+        "returns": "Order!",
+        "args": {
+          "id": {
+            "type": "ID!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Query.orders",
+      "type": "entry",
+      "label": "Query.orders",
+      "repo": "api",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 10,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "orders",
+        "returns": "[Order!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/v1/catalog/:param",
+      "type": "entry",
+      "label": "GET /v1/catalog/:param",
+      "repo": "api",
+      "file": "../../packages/catalog/src/index.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/v1/catalog/:param",
+        "rawPath": "/v1/catalog/:sku",
+        "globalPrefix": "v1",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/v1/health",
+      "type": "entry",
+      "label": "GET /v1/health",
+      "repo": "api",
+      "file": "src/health.controller.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/v1/health",
+        "rawPath": "/v1/health",
+        "globalPrefix": "v1",
+        "controller": "HealthController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Order": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "status": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "orders": {
+                    "type": "[Order!]!"
+                  }
+                }
+              },
+              "Mutation": {
+                "kind": "object",
+                "fields": {
+                  "cancelOrder": {
+                    "type": "Order!",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "listen": [
+            {
+              "port": 3000,
+              "file": "src/main.ts",
+              "line": 8
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
+          "classes": 6,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "globalPrefix": "v1",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "graphql-resolvers"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 8
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:backoffice",
+      "type": "repo",
+      "label": "backoffice",
+      "repo": "backoffice",
+      "meta": {
+        "stats": {
+          "files": 11,
+          "filesRead": 11,
+          "filesUnreadable": 0,
+          "functions": 4,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {
+            "@nestjs/core": 1,
+            "@nestjs/common": 2
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nestjs-http",
+            "graphql-resolvers"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "../api/src/main.ts",
+            "line": 8
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:storefront",
+      "type": "repo",
+      "label": "storefront",
+      "repo": "storefront",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 2,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "storefront#src/OrdersPage.tsx:OrdersPage",
+      "type": "ui_component",
+      "label": "OrdersPage",
+      "repo": "storefront",
+      "file": "src/OrdersPage.tsx",
+      "line": 15,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/OrdersPage.tsx:checkHealth",
+      "type": "function",
+      "label": "checkHealth",
+      "repo": "storefront",
+      "file": "src/OrdersPage.tsx",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "ui_action:backoffice#src/CancelButton.tsx:22:13",
+      "type": "ui_action",
+      "label": "onClick={() => cancel({ variables: { id: order.id } })}",
+      "repo": "backoffice",
+      "file": "src/CancelButton.tsx",
+      "line": 22,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => cancel({ variables: { id: order.id } })",
+        "component": "backoffice#src/CancelButton.tsx:CancelButton",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:backoffice#src/CancelButton.tsx:20:20",
+      "type": "ui_api_call",
+      "label": "mutation CancelOrder /graphql",
+      "repo": "backoffice",
+      "file": "src/CancelButton.tsx",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "mutation",
+          "name": "CancelOrder",
+          "fields": [
+            {
+              "field": "cancelOrder",
+              "arguments": [
+                "id"
+              ],
+              "line": 12,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 13
+                },
+                {
+                  "field": "status",
+                  "line": 14
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "id",
+              "type": "ID!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/CancelButton.tsx",
+            "line": 11
+          },
+          "library": "apollo"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#src/OrdersPage.tsx:16:20",
+      "type": "ui_api_call",
+      "label": "query Orders /graphql",
+      "repo": "storefront",
+      "file": "src/OrdersPage.tsx",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Orders",
+          "fields": [
+            {
+              "field": "orders",
+              "line": 7,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 8
+                },
+                {
+                  "field": "status",
+                  "line": 9
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/OrdersPage.tsx",
+            "line": 6
+          },
+          "library": "apollo"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#src/OrdersPage.tsx:20:34",
+      "type": "ui_api_call",
+      "label": "GET /v1/health",
+      "repo": "storefront",
+      "file": "src/OrdersPage.tsx",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/v1/health",
+        "path": "/v1/health",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/app.module.ts:AppModule",
+      "to": "api#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "imports",
+      "confidence": "heuristic",
+      "file": "src/app.module.ts",
+      "line": 10,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "api#src/orders/orders.resolver.ts:OrdersResolver",
+      "to": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 8
+    },
+    {
+      "from": "api#src/orders/orders.resolver.ts:OrdersResolver.cancelOrder",
+      "to": "api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:api#Order",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 17
+    },
+    {
+      "from": "api#src/orders/orders.resolver.ts:OrdersResolver.orders",
+      "to": "api#src/orders/orders.service.ts:OrdersService.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:api#Order[]",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 12
+    },
+    {
+      "from": "backoffice#src/CancelButton.tsx:CancelButton",
+      "to": "backoffice#../../packages/formatting/src/index.ts:statusLabel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/CancelButton.tsx",
+      "line": 23
+    },
+    {
+      "from": "backoffice#src/CancelButton.tsx:CancelButton",
+      "to": "backoffice#../api/src/orders/order-number.ts:orderNumber",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/CancelButton.tsx",
+      "line": 23
+    },
+    {
+      "from": "backoffice#src/CancelButton.tsx:CancelButton",
+      "to": "ui_api_call:backoffice#src/CancelButton.tsx:20:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/CancelButton.tsx",
+      "line": 20
+    },
+    {
+      "from": "entry:api:graphql:Mutation.cancelOrder",
+      "to": "api#src/orders/orders.resolver.ts:OrdersResolver.cancelOrder",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:api#Order",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:api:graphql:Query.orders",
+      "to": "api#src/orders/orders.resolver.ts:OrdersResolver.orders",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:api#Order[]",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:api:http:GET:/v1/catalog/:param",
+      "to": "api#../../packages/catalog/src/index.ts:CatalogController.find",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{sku:string}",
+      "file": "../../packages/catalog/src/index.ts",
+      "line": 6,
+      "meta": {
+        "params": "{sku:string}"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/v1/health",
+      "to": "api#src/health.controller.ts:HealthController.check",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "{ok:boolean}",
+      "file": "src/health.controller.ts",
+      "line": 5
+    },
+    {
+      "from": "storefront#src/OrdersPage.tsx:OrdersPage",
+      "to": "ui_api_call:storefront#src/OrdersPage.tsx:16:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/OrdersPage.tsx",
+      "line": 16
+    },
+    {
+      "from": "storefront#src/OrdersPage.tsx:checkHealth",
+      "to": "ui_api_call:storefront#src/OrdersPage.tsx:20:34",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/OrdersPage.tsx",
+      "line": 20
+    },
+    {
+      "from": "ui_action:backoffice#src/CancelButton.tsx:22:13",
+      "to": "backoffice#src/CancelButton.tsx:CancelButton",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/CancelButton.tsx",
+      "line": 22
+    },
+    {
+      "from": "ui_api_call:backoffice#src/CancelButton.tsx:20:20",
+      "to": "entry:api:graphql:Mutation.cancelOrder",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/CancelButton.tsx",
+      "line": 12,
+      "meta": {
+        "graphql": {
+          "operation": "CancelOrder",
+          "field": "Mutation.cancelOrder"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:backoffice#src/CancelButton.tsx:20:20",
+      "to": "entry:api:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/CancelButton.tsx",
+      "line": 20,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:storefront#src/OrdersPage.tsx:16:20",
+      "to": "entry:api:graphql:Query.orders",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/OrdersPage.tsx",
+      "line": 7,
+      "meta": {
+        "graphql": {
+          "operation": "Orders",
+          "field": "Query.orders"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:storefront#src/OrdersPage.tsx:16:20",
+      "to": "entry:api:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/OrdersPage.tsx",
+      "line": 16,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:storefront#src/OrdersPage.tsx:20:34",
+      "to": "entry:api:http:GET:/v1/health",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/OrdersPage.tsx",
+      "line": 20,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    }
+  ],
+  "types": {
+    "type:@shop/api#Order": {
+      "name": "Order",
+      "kind": "external",
+      "declaredIn": "@shop/api",
+      "structuralHash": "744611438ebc5344",
+      "meta": {
+        "declKind": "external",
+        "package": "@shop/api"
+      }
+    },
+    "type:api#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "api#src/orders/order.model.ts",
+      "structuralHash": "9b6c96ba536215ea",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app.module.ts",
+      "line": 12,
+      "reason": "module-import-not-installed",
+      "hint": "GraphQLModule is a module of @nestjs/graphql, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
+      "symbol": "AppModule imports GraphQLModule",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "module": "GraphQLModule"
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/CancelButton.tsx",
+      "line": 19,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "backoffice"
+    },
+    {
+      "file": "src/OrdersPage.tsx",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "storefront"
+    }
+  ]
+}

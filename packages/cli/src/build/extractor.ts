@@ -8,19 +8,20 @@ import {
   type SourceRootOptions,
 } from '@flowatlas/core';
 import { brokersPass, registerBrokerAdapters } from '@flowatlas/adapters-broker';
-import { leavesPass, registerDbAdapters } from '@flowatlas/adapters-db';
+import { graphqlCallsPass, grpcCallsPass, leavesPass, procedureCallsPass, registerDbAdapters } from '@flowatlas/adapters-db';
 import { deployedSourceDirectories, registerEntryAdapters } from '@flowatlas/adapters-entry';
 import {
   ANGULAR_SOURCE_ROOTS,
   registerFrontendAdapters as registerAngularFrontend,
 } from '@flowatlas/extractor-angular';
 import {
+  forcedFor,
   REACT_SOURCE_ROOTS,
   registerFrontendAdapters as registerReactFrontend,
 } from '@flowatlas/extractor-react';
 import type { NestExtractorPass } from '@flowatlas/extractor-nestjs';
 import { workflowsPass } from '@flowatlas/stepfunctions';
-import { ANGULAR_EXTRACTOR, halfOf, READERS, REACT_EXTRACTOR } from '../readers.js';
+import { ANGULAR_EXTRACTOR, halfOf, NESTJS_EXTRACTOR, READERS, REACT_EXTRACTOR } from '../readers.js';
 
 /**
  * Package that reads each kind of repository.
@@ -57,8 +58,11 @@ export const isFrontend = (type: string): boolean => halfOf(type) === 'browser';
  *
  * `workflowsPass` reads the state machine definitions a repository keeps beside
  * its code, so any service a server reader reads has its workflows drawn too.
+ * `procedureCallsPass` reads the procedures a server asks another service for
+ * through an oRPC or tRPC client (P242), and `grpcCallsPass` the gRPC methods
+ * it calls on another service (P274).
  */
-export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, brokersPass, workflowsPass];
+export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, graphqlCallsPass, procedureCallsPass, grpcCallsPass, brokersPass, workflowsPass];
 
 /** Every adapter the command line knows how to offer an extractor. */
 export const createRegistry = (): AdapterRegistry => {
@@ -91,10 +95,12 @@ export const adaptersBySlot = (
   pkg: PackageJson,
   config: FlowatlasConfig,
   repoDir?: string,
+  /** The service's type, where it chooses an adapter no manifest gives away (P284). */
+  type?: string,
 ): Record<AdapterSlot, string[]> => {
   const detected = registry.detect(
     pkg,
-    config.adapters.auto ? config.adapters.force : {},
+    forcedFor(type, config.adapters.auto ? config.adapters.force : {}),
     config,
     repoDir,
   );
@@ -108,8 +114,9 @@ export const adapterNames = (
   pkg: PackageJson,
   config: FlowatlasConfig,
   repoDir?: string,
+  type?: string,
 ): string[] => {
-  const bySlot = adaptersBySlot(registry, pkg, config, repoDir);
+  const bySlot = adaptersBySlot(registry, pkg, config, repoDir, type);
   const names = ADAPTER_SLOTS.flatMap((slot) => bySlot[slot]);
   return [...names, ...config.adapters.broker.custom.map((broker) => broker.name)].sort();
 };
@@ -156,7 +163,7 @@ export const declinedNote = (
 ): string | undefined => {
   const slot = decidingSlot(type);
   if (slot === undefined) return undefined;
-  const claimed = adaptersBySlot(createRegistry(), pkg, config, repoDir)[slot];
+  const claimed = adaptersBySlot(createRegistry(), pkg, config, repoDir, type)[slot];
   if (claimed.length > 0) return undefined;
   return (
     `no ${slot} adapter recognises it, so its reader walked the repository and had nowhere to put anything;` +
@@ -175,6 +182,9 @@ export const declinedNote = (
 const ROOTS_OF_READER: ReadonlyMap<string, SourceRootOptions> = new Map<string, SourceRootOptions>([
   [ANGULAR_EXTRACTOR, ANGULAR_SOURCE_ROOTS],
   [REACT_EXTRACTOR, REACT_SOURCE_ROOTS],
+  // A full-stack framework's components (Nuxt's, SvelteKit's) are read through
+  // the browser half the server reader hands them to, from these files (P233).
+  [NESTJS_EXTRACTOR, { companions: ['.vue', '.svelte'] }],
 ]);
 
 /** {@link ROOTS_OF_READER} for one reader, for a repository read with no service. */

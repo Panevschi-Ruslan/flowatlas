@@ -253,6 +253,8 @@ export interface PromptSubject {
   loc?: string;
   /** When a scheduled way in fires (P71). */
   schedule?: { expression: string; zone?: string };
+  /** What a tagged comment above it says (P234): `WHY: words`, in the author's words. */
+  notes?: string[];
   /** Times a way in was hit at run time, where a trace was imported. */
   hits?: number;
   /** The way in's own p95 and error rate beside its hits (P111). */

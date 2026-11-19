@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T12:12:25.637Z",
+  "configHash": "c1dfa39278cb",
+  "services": [
+    {
+      "name": "accounts",
+      "repo": "./accounts",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "container-script-environment-accounts",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "container-script-environment-admin",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "container-script-environment-api",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "container-script-environment-billing",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "container-script-environment-catalog",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "container-script-environment-jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "container-script-environment-ledger",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "container-script-environment-orders",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "container-script-environment-stock",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 25,
+      "edges": 16,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "container-script-environment-web",
+        "runtime": [],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 8,
+    "linked": 8,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 9,
+    "called": 8,
+    "uncalled": [
+      "entry:admin:http:GET:/users"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "accounts",
+      "file": "k8s/accounts.yaml",
+      "line": 32,
+      "reason": "published-port-unheard",
+      "level": "info",
+      "message": "k8s/accounts.yaml routes accounts:80 to port 7100 of accounts's containers, but accounts's code reads its port from PORT (src/app.ts:9), which the Secret accounts-ports (its key http, k8s/accounts-ports.yaml) gives, and a secret's value is never read",
+      "hint": "Route the name to the port the server listens on (targetPort), or check that the containers' environment gives the server 7100. A request to accounts:80 is still joined to accounts by the file.",
+      "symbol": "accounts:80:7100",
+      "meta": {
+        "routed": 80,
+        "container": 7100,
+        "listens": [
+          3000
+        ]
+      }
+    },
+    {
+      "service": "admin",
+      "file": "scripts/run-admin.sh",
+      "line": 3,
+      "reason": "server-start-unread",
+      "level": "info",
+      "message": "scripts/run-admin.sh:3 starts shop-admin with PORT=4820, but admin/dist/cli.js is not in the repository (what a build writes is not read), so where admin listens when started that way is not known",
+      "hint": "Start the server from its source (node, tsx) in the script, or give admin the port in a file its code loads.",
+      "symbol": "scripts/run-admin.sh:3"
+    },
+    {
+      "service": "billing",
+      "file": "docker-compose.yml",
+      "line": 15,
+      "reason": "published-port-unheard",
+      "level": "info",
+      "message": "docker-compose.yml publishes port 3000 of billing (billing) as 8202, but billing's code reads its port from BILLING_PORT (src/app.ts:9), which the container's environment does not give",
+      "hint": "Map the published port to the port the server listens on (8202:<that port>), or check that the container's environment gives the server 3000. A request to localhost:8202 is still joined to billing by the file.",
+      "symbol": "billing:8202:3000",
+      "meta": {
+        "published": 8202,
+        "container": 3000,
+        "listens": []
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 44,
+    "edges": 25,
+    "types": 2,
+    "missed": 0,
+    "sites": 0,
+    "notes": 3,
+    "findings": 0,
+    "unresolved": 0
+  }
+}

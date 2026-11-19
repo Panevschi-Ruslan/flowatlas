@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T05:29:47.634Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T21:46:52.042Z",
   "configHash": "374273ef0273",
   "services": [
     {
@@ -11,8 +11,8 @@
       "nodes": 86,
       "edges": 82,
       "types": 4,
-      "unresolved": 2,
-      "durationMs": 644,
+      "unresolved": 0,
+      "durationMs": 2327,
       "packages": {
         "name": "loops-worth-fixing-parcels",
         "runtime": [
@@ -84,10 +84,10 @@
     "nodes": 86,
     "edges": 82,
     "types": 4,
-    "missed": 2,
-    "sites": 2,
+    "missed": 0,
+    "sites": 0,
     "notes": 4,
     "findings": 3,
-    "unresolved": 2
+    "unresolved": 0
   }
 }

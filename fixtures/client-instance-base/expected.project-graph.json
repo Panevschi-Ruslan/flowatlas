@@ -1,0 +1,1236 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:36:22.309Z",
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "vue",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "admin#src/api/billing.ts:billing",
+      "type": "function",
+      "label": "billing",
+      "repo": "admin",
+      "file": "src/api/billing.ts",
+      "line": 4
+    },
+    {
+      "id": "admin#src/views/ItemsView.vue:ItemsView",
+      "type": "ui_component",
+      "label": "ItemsView",
+      "repo": "admin",
+      "file": "src/views/ItemsView.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/views/ItemsView.vue:addInvoice",
+      "type": "function",
+      "label": "addInvoice",
+      "repo": "admin",
+      "file": "src/views/ItemsView.vue",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "admin#src/views/ItemsView.vue:loadOrders",
+      "type": "function",
+      "label": "loadOrders",
+      "repo": "admin",
+      "file": "src/views/ItemsView.vue",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
+    },
+    {
+      "id": "billing#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "billing",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ItemsController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "billing#src/items.controller.ts:ItemsController",
+      "type": "provider",
+      "label": "ItemsController",
+      "repo": "billing",
+      "file": "src/items.controller.ts",
+      "line": 9,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "billing#src/items.controller.ts:ItemsController.create",
+      "type": "method",
+      "label": "ItemsController.create",
+      "repo": "billing",
+      "file": "src/items.controller.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{name:string}"
+            }
+          ],
+          "returns": "type:billing#Item"
+        }
+      }
+    },
+    {
+      "id": "billing#src/items.controller.ts:ItemsController.list",
+      "type": "method",
+      "label": "ItemsController.list",
+      "repo": "billing",
+      "file": "src/items.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:billing#Item[]"
+        }
+      }
+    },
+    {
+      "id": "console#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "console",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "console#src/app/items.service.ts:ItemsService",
+      "type": "provider",
+      "label": "ItemsService",
+      "repo": "console",
+      "file": "src/app/items.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "console#src/app/items.service.ts:ItemsService.create",
+      "type": "method",
+      "label": "ItemsService.create",
+      "repo": "console",
+      "file": "src/app/items.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:console#Item"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "console#src/app/items.service.ts:ItemsService.list",
+      "type": "method",
+      "label": "ItemsService.list",
+      "repo": "console",
+      "file": "src/app/items.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#Item[]"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "entry:billing:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "billing",
+      "file": "src/items.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:billing:http:POST:/items",
+      "type": "entry",
+      "label": "POST /items",
+      "repo": "billing",
+      "file": "src/items.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/items",
+        "rawPath": "/items",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "orders",
+      "file": "src/items.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/items",
+      "type": "entry",
+      "label": "POST /items",
+      "repo": "orders",
+      "file": "src/items.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/items",
+        "rawPath": "/items",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "orders#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "orders",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ItemsController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "orders#src/items.controller.ts:ItemsController",
+      "type": "provider",
+      "label": "ItemsController",
+      "repo": "orders",
+      "file": "src/items.controller.ts",
+      "line": 9,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/items.controller.ts:ItemsController.create",
+      "type": "method",
+      "label": "ItemsController.create",
+      "repo": "orders",
+      "file": "src/items.controller.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{name:string}"
+            }
+          ],
+          "returns": "type:orders#Item"
+        }
+      }
+    },
+    {
+      "id": "orders#src/items.controller.ts:ItemsController.list",
+      "type": "method",
+      "label": "ItemsController.list",
+      "repo": "orders",
+      "file": "src/items.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:orders#Item[]"
+        }
+      }
+    },
+    {
+      "id": "repo:admin",
+      "type": "repo",
+      "label": "admin",
+      "repo": "admin",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "functions": 4,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {
+            "ofetch": 1,
+            "axios": 3
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "vue"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:billing",
+      "type": "repo",
+      "label": "billing",
+      "repo": "billing",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:console",
+      "type": "repo",
+      "label": "console",
+      "repo": "console",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "templates": 0,
+          "skippedExternalCalls": {
+            "@angular/common": 2
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "functions": 4,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {
+            "axios": 5,
+            "ky": 2,
+            "ofetch": 1
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "shop#src/Items.tsx:Items",
+      "type": "ui_component",
+      "label": "Items",
+      "repo": "shop",
+      "file": "src/Items.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api/reports.ts:reports",
+      "type": "function",
+      "label": "reports",
+      "repo": "shop",
+      "file": "src/api/reports.ts",
+      "line": 4
+    },
+    {
+      "id": "ui_action:admin#src/views/ItemsView.vue:3:13",
+      "type": "ui_action",
+      "label": "@click=\"loadOrders\"",
+      "repo": "admin",
+      "file": "src/views/ItemsView.vue",
+      "line": 3,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "loadOrders",
+        "component": "admin#src/views/ItemsView.vue:ItemsView",
+        "template": "src/views/ItemsView.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:admin#src/views/ItemsView.vue:4:13",
+      "type": "ui_action",
+      "label": "@click=\"addInvoice\"",
+      "repo": "admin",
+      "file": "src/views/ItemsView.vue",
+      "line": 4,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "addInvoice",
+        "component": "admin#src/views/ItemsView.vue:ItemsView",
+        "template": "src/views/ItemsView.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#src/Items.tsx:14:15",
+      "type": "ui_action",
+      "label": "onClick={loadOrders}",
+      "repo": "shop",
+      "file": "src/Items.tsx",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadOrders",
+        "component": "shop#src/Items.tsx:Items",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:shop#src/Items.tsx:15:15",
+      "type": "ui_action",
+      "label": "onClick={addOrder}",
+      "repo": "shop",
+      "file": "src/Items.tsx",
+      "line": 15,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "addOrder",
+        "component": "shop#src/Items.tsx:Items",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:shop#src/Items.tsx:16:15",
+      "type": "ui_action",
+      "label": "onClick={loadInvoices}",
+      "repo": "shop",
+      "file": "src/Items.tsx",
+      "line": 16,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadInvoices",
+        "component": "shop#src/Items.tsx:Items",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:shop#src/Items.tsx:17:15",
+      "type": "ui_action",
+      "label": "onClick={addInvoice}",
+      "repo": "shop",
+      "file": "src/Items.tsx",
+      "line": 17,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "addInvoice",
+        "component": "shop#src/Items.tsx:Items",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:shop#src/Items.tsx:18:15",
+      "type": "ui_action",
+      "label": "onClick={loadLegacy}",
+      "repo": "shop",
+      "file": "src/Items.tsx",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadLegacy",
+        "component": "shop#src/Items.tsx:Items",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/views/ItemsView.vue:12:26",
+      "type": "ui_api_call",
+      "label": "GET /items",
+      "repo": "admin",
+      "file": "src/views/ItemsView.vue",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_ORDERS_URL}/items",
+        "path": "/items",
+        "baseUrlEnv": "VITE_ORDERS_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "template-env",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/views/ItemsView.vue:13:26",
+      "type": "ui_api_call",
+      "label": "POST /items",
+      "repo": "admin",
+      "file": "src/views/ItemsView.vue",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_BILLING_URL}/items",
+        "path": "/items",
+        "baseUrlEnv": "VITE_BILLING_URL",
+        "responseType": null,
+        "bodyType": "{name:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name"
+        ],
+        "package": null,
+        "client": "ofetch",
+        "via": "template-env",
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "ui_api_call:console#src/app/items.service.ts:15:12",
+      "type": "ui_api_call",
+      "label": "GET /items",
+      "repo": "console",
+      "file": "src/app/items.service.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/items",
+        "path": "/items",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:console#Item[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "baseFrom": "interceptor",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:console#src/app/items.service.ts:19:12",
+      "type": "ui_api_call",
+      "label": "POST /items",
+      "repo": "console",
+      "file": "src/app/items.service.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/items",
+        "path": "/items",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:console#Item",
+        "bodyType": "{name:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "baseFrom": "interceptor",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/Items.tsx:10:28",
+      "type": "ui_api_call",
+      "label": "POST /items",
+      "repo": "shop",
+      "file": "src/Items.tsx",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_BILLING_URL}/items",
+        "path": "/items",
+        "baseUrlEnv": "VITE_BILLING_URL",
+        "responseType": null,
+        "bodyType": "{name:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name"
+        ],
+        "package": null,
+        "client": "ofetch",
+        "via": "template-env",
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/Items.tsx:11:28",
+      "type": "ui_api_call",
+      "label": "GET /items",
+      "repo": "shop",
+      "file": "src/Items.tsx",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/items",
+        "path": "/items",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/Items.tsx:7:28",
+      "type": "ui_api_call",
+      "label": "GET /items",
+      "repo": "shop",
+      "file": "src/Items.tsx",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_ORDERS_URL}/items",
+        "path": "/items",
+        "baseUrlEnv": "VITE_ORDERS_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "template-env",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/Items.tsx:8:26",
+      "type": "ui_api_call",
+      "label": "POST /items",
+      "repo": "shop",
+      "file": "src/Items.tsx",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_ORDERS_URL}/items",
+        "path": "/items",
+        "baseUrlEnv": "VITE_ORDERS_URL",
+        "responseType": null,
+        "bodyType": "{name:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name"
+        ],
+        "package": "axios",
+        "client": "axios",
+        "via": "template-env",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/Items.tsx:9:30",
+      "type": "ui_api_call",
+      "label": "GET /items",
+      "repo": "shop",
+      "file": "src/Items.tsx",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://billing.example.test/items",
+        "path": "/items",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "ky",
+        "client": "ky",
+        "via": "literal",
+        "host": "billing.example.test",
+        "targetService": "billing"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "admin#src/views/ItemsView.vue:ItemsView",
+      "to": "admin#src/api/billing.ts:billing",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/views/ItemsView.vue",
+      "line": 13
+    },
+    {
+      "from": "admin#src/views/ItemsView.vue:ItemsView",
+      "to": "ui_api_call:admin#src/views/ItemsView.vue:12:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/views/ItemsView.vue",
+      "line": 12
+    },
+    {
+      "from": "admin#src/views/ItemsView.vue:ItemsView",
+      "to": "ui_api_call:admin#src/views/ItemsView.vue:13:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/views/ItemsView.vue",
+      "line": 13
+    },
+    {
+      "from": "admin#src/views/ItemsView.vue:addInvoice",
+      "to": "admin#src/api/billing.ts:billing",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/views/ItemsView.vue",
+      "line": 13
+    },
+    {
+      "from": "admin#src/views/ItemsView.vue:addInvoice",
+      "to": "ui_api_call:admin#src/views/ItemsView.vue:13:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/views/ItemsView.vue",
+      "line": 13
+    },
+    {
+      "from": "admin#src/views/ItemsView.vue:loadOrders",
+      "to": "ui_api_call:admin#src/views/ItemsView.vue:12:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/views/ItemsView.vue",
+      "line": 12
+    },
+    {
+      "from": "console#src/app/items.service.ts:ItemsService",
+      "to": "console#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 12
+    },
+    {
+      "from": "console#src/app/items.service.ts:ItemsService.create",
+      "to": "ui_api_call:console#src/app/items.service.ts:19:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 19
+    },
+    {
+      "from": "console#src/app/items.service.ts:ItemsService.list",
+      "to": "ui_api_call:console#src/app/items.service.ts:15:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:billing:http:GET:/items",
+      "to": "billing#src/items.controller.ts:ItemsController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:billing#Item[]",
+      "file": "src/items.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:billing:http:POST:/items",
+      "to": "billing#src/items.controller.ts:ItemsController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{name:string}"
+      ],
+      "returns": "type:billing#Item",
+      "file": "src/items.controller.ts",
+      "line": 18,
+      "meta": {
+        "body": "{name:string}"
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/items",
+      "to": "orders#src/items.controller.ts:ItemsController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:orders#Item[]",
+      "file": "src/items.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:orders:http:POST:/items",
+      "to": "orders#src/items.controller.ts:ItemsController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{name:string}"
+      ],
+      "returns": "type:orders#Item",
+      "file": "src/items.controller.ts",
+      "line": 18,
+      "meta": {
+        "body": "{name:string}"
+      }
+    },
+    {
+      "from": "shop#src/Items.tsx:Items",
+      "to": "shop#src/api/reports.ts:reports",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Items.tsx",
+      "line": 10
+    },
+    {
+      "from": "shop#src/Items.tsx:Items",
+      "to": "ui_api_call:shop#src/Items.tsx:10:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Items.tsx",
+      "line": 10
+    },
+    {
+      "from": "shop#src/Items.tsx:Items",
+      "to": "ui_api_call:shop#src/Items.tsx:11:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Items.tsx",
+      "line": 11
+    },
+    {
+      "from": "shop#src/Items.tsx:Items",
+      "to": "ui_api_call:shop#src/Items.tsx:7:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Items.tsx",
+      "line": 7
+    },
+    {
+      "from": "shop#src/Items.tsx:Items",
+      "to": "ui_api_call:shop#src/Items.tsx:8:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Items.tsx",
+      "line": 8
+    },
+    {
+      "from": "shop#src/Items.tsx:Items",
+      "to": "ui_api_call:shop#src/Items.tsx:9:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Items.tsx",
+      "line": 9
+    },
+    {
+      "from": "ui_action:admin#src/views/ItemsView.vue:3:13",
+      "to": "admin#src/views/ItemsView.vue:loadOrders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/views/ItemsView.vue",
+      "line": 3
+    },
+    {
+      "from": "ui_action:admin#src/views/ItemsView.vue:4:13",
+      "to": "admin#src/views/ItemsView.vue:addInvoice",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/views/ItemsView.vue",
+      "line": 4
+    },
+    {
+      "from": "ui_action:shop#src/Items.tsx:14:15",
+      "to": "shop#src/Items.tsx:Items",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Items.tsx",
+      "line": 14
+    },
+    {
+      "from": "ui_action:shop#src/Items.tsx:15:15",
+      "to": "shop#src/Items.tsx:Items",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Items.tsx",
+      "line": 15
+    },
+    {
+      "from": "ui_action:shop#src/Items.tsx:16:15",
+      "to": "shop#src/Items.tsx:Items",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Items.tsx",
+      "line": 16
+    },
+    {
+      "from": "ui_action:shop#src/Items.tsx:17:15",
+      "to": "shop#src/Items.tsx:Items",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Items.tsx",
+      "line": 17
+    },
+    {
+      "from": "ui_action:shop#src/Items.tsx:18:15",
+      "to": "shop#src/Items.tsx:Items",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Items.tsx",
+      "line": 18
+    },
+    {
+      "from": "ui_api_call:admin#src/views/ItemsView.vue:12:26",
+      "to": "entry:orders:http:GET:/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/views/ItemsView.vue",
+      "line": 12,
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/views/ItemsView.vue:13:26",
+      "to": "entry:billing:http:POST:/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/views/ItemsView.vue",
+      "line": 13,
+      "params": [
+        "{name:string}"
+      ],
+      "meta": {
+        "via": "api-target",
+        "targetService": "billing"
+      }
+    },
+    {
+      "from": "ui_api_call:console#src/app/items.service.ts:15:12",
+      "to": "entry:orders:http:GET:/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 15,
+      "returns": "type:console#Item[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_api_call:console#src/app/items.service.ts:19:12",
+      "to": "entry:orders:http:POST:/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 19,
+      "params": [
+        "{name:string}"
+      ],
+      "returns": "type:console#Item",
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Items.tsx:10:28",
+      "to": "entry:billing:http:POST:/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Items.tsx",
+      "line": 10,
+      "params": [
+        "{name:string}"
+      ],
+      "meta": {
+        "via": "api-target",
+        "targetService": "billing"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Items.tsx:7:28",
+      "to": "entry:orders:http:GET:/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Items.tsx",
+      "line": 7,
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Items.tsx:8:26",
+      "to": "entry:orders:http:POST:/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Items.tsx",
+      "line": 8,
+      "params": [
+        "{name:string}"
+      ],
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/Items.tsx:9:30",
+      "to": "entry:billing:http:GET:/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Items.tsx",
+      "line": 9,
+      "meta": {
+        "via": "host",
+        "targetService": "billing"
+      }
+    }
+  ],
+  "types": {
+    "type:axios#AxiosResponse<unknown>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:billing#Item": {
+      "name": "Item",
+      "kind": "object",
+      "declaredIn": "billing#src/items.controller.ts",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:console#Item": {
+      "name": "Item",
+      "kind": "object",
+      "declaredIn": "console#src/app/items.service.ts",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#Item": {
+      "name": "Item",
+      "kind": "object",
+      "declaredIn": "orders#src/items.controller.ts",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "shop",
+      "file": "src/Items.tsx",
+      "line": 11,
+      "reason": "ambiguous-route-target",
+      "message": "billing and orders both answer GET /items",
+      "hint": "Set services[].apiTarget on the frontend to say which service its settings key names.",
+      "symbol": "ui_api_call:shop#src/Items.tsx:11:28"
+    },
+    {
+      "file": "src/api/legacy.ts",
+      "line": 4,
+      "reason": "api-client-base-unread",
+      "hint": "The base of this axios instance: baseURL is written and could not be read. Requests through it are recorded under the path each call writes, and join by their route alone. Write the base as a literal, a settings key or a constant.",
+      "symbol": "localStorage.getItem('api-base') ?? ''",
+      "service": "shop"
+    }
+  ]
+}

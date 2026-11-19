@@ -1,0 +1,8 @@
+{
+  "services": [
+    { "name": "web", "repo": "./web", "type": "nextjs" },
+    { "name": "orders", "repo": "./orders", "type": "express", "baseUrlEnv": ["ORDERS_URL", "NEXT_PUBLIC_ORDERS_URL"] },
+    { "name": "catalog", "repo": "./catalog", "type": "express", "baseUrlEnv": ["CATALOG_URL", "NEXT_PUBLIC_CATALOG_URL"] }
+  ],
+  "output": ".flowatlas"
+}

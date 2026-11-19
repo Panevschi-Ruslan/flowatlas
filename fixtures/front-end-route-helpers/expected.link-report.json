@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T19:08:40.528Z",
+  "configHash": "bc7eb680f0b5",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 3135,
+      "packages": {
+        "name": "front-end-route-helpers-catalog",
+        "runtime": [
+          "axios",
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 9,
+      "edges": 5,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 3055,
+      "packages": {
+        "name": "front-end-route-helpers-console",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "desk",
+      "repo": "./desk",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 18,
+      "edges": 16,
+      "types": 0,
+      "unresolved": 8,
+      "durationMs": 3141,
+      "packages": {
+        "name": "front-end-route-helpers-desk",
+        "runtime": [
+          "history",
+          "mobx-react",
+          "react",
+          "react-dom",
+          "react-router-dom"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "panel",
+      "repo": "./panel",
+      "type": "vue",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 6,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 3054,
+      "packages": {
+        "name": "front-end-route-helpers-panel",
+        "runtime": [
+          "vue",
+          "vue-router"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "sites",
+      "repo": "./sites",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 6,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 5,
+      "durationMs": 3057,
+      "packages": {
+        "name": "front-end-route-helpers-sites",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stand",
+      "repo": "./stand",
+      "type": "sveltekit",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 6,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 3127,
+      "packages": {
+        "name": "front-end-route-helpers-stand",
+        "runtime": [],
+        "dev": [
+          "@sveltejs/kit",
+          "svelte"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 1,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 0,
+    "uncalled": [
+      "entry:catalog:http:ALL:/api/products"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "catalog",
+      "file": "gateways/products.gateway.ts",
+      "line": 11,
+      "reason": "target-route-not-found",
+      "message": "target service catalog has no route GET /products",
+      "hint": "Route renamed? Check catalog's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:catalog#gateways/products.gateway.ts:11:30"
+    }
+  ],
+  "totals": {
+    "nodes": 52,
+    "edges": 35,
+    "types": 0,
+    "missed": 18,
+    "sites": 19,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 18
+  }
+}

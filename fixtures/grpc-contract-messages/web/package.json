@@ -1,0 +1,9 @@
+{
+  "name": "grpc-contract-messages-web",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@grpc/grpc-js": "^1.14.0",
+    "express": "^4.21.2"
+  }
+}

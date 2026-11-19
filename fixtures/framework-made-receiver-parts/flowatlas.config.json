@@ -1,0 +1,9 @@
+{
+  "services": [
+    { "name": "web", "repo": "./web", "type": "react" },
+    { "name": "catalog", "repo": "./catalog", "type": "express" },
+    { "name": "stock", "repo": "./stock", "type": "express" },
+    { "name": "jobs", "repo": "./jobs", "type": "nestjs" }
+  ],
+  "output": ".flowatlas"
+}

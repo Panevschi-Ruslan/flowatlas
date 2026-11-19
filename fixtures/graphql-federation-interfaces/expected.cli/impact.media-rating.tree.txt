@@ -1,0 +1,8 @@
+@  Media.rating                                reviews/src/index.ts:35
+  => kiosk ^  query Movies /graphql ?declared  kiosk/src/MovieCard.tsx:15
+    %  MovieCard                               kiosk/src/MovieCard.tsx:14
+  => web ^  query Shelf /graphql               web/src/ShelfPage.tsx:22
+    %  ShelfPage                               web/src/ShelfPage.tsx:21
+  => web ^  query Top /graphql                 web/src/TopRated.tsx:16
+    %  TopRated                                web/src/TopRated.tsx:15
+Reachable from: no entry points. Also reaches kiosk, reviews, web, where the chain stops before an entry point

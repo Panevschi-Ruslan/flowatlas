@@ -1,0 +1,25 @@
+{
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "express"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "express"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express"
+    },
+    {
+      "name": "stock",
+      "repo": "./infra/stock",
+      "type": "lambda"
+    }
+  ],
+  "output": ".flowatlas"
+}

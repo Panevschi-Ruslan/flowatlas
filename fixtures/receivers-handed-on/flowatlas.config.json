@@ -1,0 +1,8 @@
+{
+  "services": [
+    { "name": "web", "repo": "./web", "type": "browser" },
+    { "name": "jobs", "repo": "./jobs", "type": "express" },
+    { "name": "catalog", "repo": "./catalog", "type": "express" }
+  ],
+  "output": ".flowatlas"
+}

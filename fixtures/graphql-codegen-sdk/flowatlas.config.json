@@ -1,0 +1,23 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react"
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "react",
+      "apiTarget": {
+        "VITE_OFFICE_URL": "api"
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

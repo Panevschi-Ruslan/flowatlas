@@ -1,0 +1,30 @@
+{
+  "services": [
+    {
+      "name": "platform",
+      "repo": "./platform",
+      "type": "lambda"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "lambda",
+      "infra": {
+        "options": {
+          "region": "eu-west-1"
+        }
+      }
+    },
+    {
+      "name": "reports",
+      "repo": "./reports",
+      "type": "lambda"
+    }
+  ],
+  "output": ".flowatlas"
+}

@@ -1,0 +1,13 @@
+@  shop-audit-index                                                    audit/lib/audit-stack.ts:25
+  -> handler                                                           audit/src/index-audit.ts:9
+    $  JOBS_QUEUE_URL                                                  audit/src/index-audit.ts:13
+    ~  message sqs/shop-prod-jobs                                      audit/src/index-audit.ts:13
+      ~  sqs/shop-prod-jobs                                            infra/main.tf:61
+        => platform ~  mapping aws_lambda_event_source_mapping.jobs    platform/infra/main.tf:61
+          @  shop-prod-jobs                                            platform/infra/main.tf:53
+            -> handler                                                 platform/src/jobs.ts:4
+    $  ALERTS_TOPIC_ARN                                                audit/src/index-audit.ts:14
+    ~  message sns/shop-prod-alerts                                    audit/src/index-audit.ts:14
+      ~  sns/shop-prod-alerts                                          infra/main.tf:66
+        => platform ~  subscription aws_sns_topic_subscription.alerts  platform/infra/main.tf:66
+unresolved on this path: 1

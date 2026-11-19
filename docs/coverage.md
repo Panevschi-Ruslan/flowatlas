@@ -126,7 +126,20 @@ name the file it must be in: an HTTP verb exported for a file-system router is
 counted in a file the router serves (`route.ts`, `+server.ts`) and not in the
 module it was imported from. A `file` probe counts a whole file once, which is
 how a router that keeps the address in the directory name is counted at all. Each probe belongs to one of
-five families: `routes`, `screens`, `clicks`, `data` and `models`.
+eight families: `routes`, `screens`, `clicks`, `requests`, `bases` (client
+instances and functions run before every request), `listens` (servers started
+on a port), `data` and `models`.
+
+A pattern is as narrow as the shape a person reads. A verb on an application or
+a router whose address is a name, `app.get(ORDERS, handler)`, is a route; the
+same verb handed one name and a trailing comma, `app.get(\n  Token,\n)` over
+three lines, is a lookup with no handler, and is not counted.
+
+A file a bundler wrote is not counted at all. A script (`.js`, `.jsx`, `.mjs`,
+`.cjs`) one of whose first two hundred lines is longer than 2,000 characters is
+a bundle's output whatever it is called: nobody writes such a line by hand, and
+the declarations in it - a minified framework committed as `index.mjs`, say -
+are somebody else's. `.min.js` says so by its name; this rule needs no name.
 
 **Every probe runs against every repository.** A probe that does not apply
 returns zero there, and that zero is part of the answer rather than a gap in it.
@@ -161,9 +174,104 @@ serves them, and the unresolved rows grouped by reason and level. Where the tool
 finds more than the rule can see, the figure is printed as a sentence rather
 than as a fraction above one.
 
+A call both halves of a full-stack application read - a browser request and a
+request between services at one place, each naming the other under
+`meta.sameCall` - is one call, and is counted once: in a row of its own,
+*requests read by both halves, counted once*, joined where either half joined.
+The browser and service rows leave it out, so the three add up to the calls
+found, and the comparison with the counting rule's request sites adds all three.
+
 Node and edge totals are deliberately absent. They move whenever any reader
 learns to record one more thing, which would make every report in the directory
 a diff with no news in it.
+
+## Whether a join is right: the hand labels
+
+Every figure above counts what was found and what joined. A join to the wrong
+way in counts exactly as a join to the right one does, so a reader that learned
+to match a request onto the nearest route with a similar path would raise every
+figure and lower the truth. Only a key written by somebody who read the code can
+tell the two apart.
+
+A target may have one: `scripts/coverage/labels/<target>.json`, gitignored like
+the list of targets because it names other people's files.
+[`scripts/coverage/labels.example.json`](../scripts/coverage/labels.example.json)
+shows the format. Each label is a call site - a file, the line its call starts
+on, optionally a column and a piece of the line's text - and the answer: the way
+in it reaches (`http POST /api/cart`, `graphql Mutation.placeOrder`,
+`rpc orders.get`, `channel mail` with a job name), `none` for a call that leaves
+the system and must join nothing, or `unread-ok` for one nothing can know
+statically, where a row is the right answer. Write the labels from the source,
+before looking at what the graph says: a key copied from the tool's output
+agrees with the tool and measures nothing.
+
+A report of a target with labels gains a section, *Against the hand labels*: per
+kind of label, how many came out right, right and also joined elsewhere, wrong,
+missed, falsely joined and not found, with precision (the right joins over every
+join made at a labelled site) and recall (the labels whose way in was reached
+over those expecting one), and then every label that was not right, by file and
+line, with what was expected and what was got. A label whose text has moved is
+followed to the nearest line still holding it, and says so; one whose file or
+text is gone is listed as a site not found rather than dropped, because a key
+that quietly shrinks measures less every run. `scripts/coverage/labels.mjs`
+holds the rules, and the labels are judged again by `coverage:render`.
+
+Two rules keep a label from being scored against the wrong half of an answer.
+A call both halves of a full-stack application read is judged against each half
+and takes the better outcome, so it is right where either half joined the right
+way in. And a GraphQL request whose document could not be read, joined only to
+the endpoint it goes through, is a call of nothing the graph names: for
+`unread-ok` it is right where a row stands at the site, as for a request joined
+to nothing - the row saying why the fields are unread, where the reader wrote
+one - and missed where none does, rather than falsely joined.
+
+The section is a finding, not a gate: a wrong join is a reader to fix, and a
+run that failed on one would get its labels deleted instead.
+
+## A system split across repositories
+
+A front end in one repository and its back end in another, or services each in
+a repository of its own, is one target written with `repositories` in place of
+`repository`, `commit`, `read` and `types`. Each entry has those four and a
+`name`, the directory its clone gets under the target's, so the repositories sit
+side by side and every read directory of every one of them is linked as one
+project - which is the only way a request in one can join the way in another
+serves. `--pin` pins each of them.
+
+Everything else speaks one spelling of a path: relative to the target's
+directory, so for such a target a path starts with the repository's `name`. The
+counting rule counts each repository over its own extent, worked out inside its
+own clone, because a workspace never reaches into the checkout beside it; the
+read gate, its exemptions and baseline, the hand labels and I14 use the same
+paths. The report names every repository with its commit and adds a section,
+*Across repositories*: per repository, its services, files, ways in and the
+counting rule's route sites, the requests it sends and how many joined a way in
+**of another repository**, and the messages it sends that another repository
+consumes. A call both halves of a full-stack application read is one request
+there too, counted at its browser half with what either half reached. A report
+of one repository gains neither section.
+
+## Services declared by a document
+
+A system written in several languages is read only as far as the readers go.
+A service in another language is configured the way a user configures it, by
+the contract the repository shares with it, so a target may list them:
+
+```json
+"documents": [
+  { "name": "cart", "kind": "protobuf", "path": "pb/shop.proto", "services": ["CartService"], "baseUrlEnv": ["CART_ADDR"] }
+]
+```
+
+Each entry becomes a service of the generated configuration, `document: {
+kind, path, services }` with `baseUrlEnv` and `hosts` beside it where given;
+`path` is relative to the target's directory, or, for a target of several
+repositories, written on the repository it is in and relative to its clone.
+It is configuration and not tuning: it says what the code cannot - which
+service answers a contract it never implements here - and the report lists
+each as `<kind> document` among the services it read by. A name that is not
+one plain word, a document with no `kind` or `path`, a name given twice, or a
+list that is empty is refused before anything is cloned.
 
 ## The read gate
 
@@ -180,11 +288,12 @@ this is a summary of it.
 
 | family | nodes | edges (through a node of the family) | row reasons |
 |---|---|---|---|
-| `routes` | `entry` | `handles`, `guarded_by` | a route, its application or module, its description, a procedure router (`route-path-dynamic`, `route-handler-unread`, `module-controllers-unread`, `procedure-router-unread`, ...) |
-| `screens` | `ui_component` | none | `route-config-unread`, `route-loader-unread` |
+| `routes` | `entry` | `handles`, `guarded_by` | a route, its application or module, its description, a procedure router, a gRPC service or a method its contract and its server disagree on (`route-path-dynamic`, `route-handler-unread`, `module-controllers-unread`, `procedure-router-unread`, `grpc-method-unimplemented`, ...) |
+| `screens` | `ui_component` | none | `route-config-unread`, `route-loader-unread`, `framework-layer-overridden` |
 | `clicks` | `ui_action` | `handles`, `triggers` | a template or its handler (`template-not-found`, `handler-not-found`, `route-link-dynamic`, ...) |
-| `data` | `db_query`, `cache_op` | `queries`, `caches` | the database reader (`unknown-db-package`, `dynamic-table-name`, `sql-parse-failed`, ...) |
-| `models` | `table` | not asked per file | not asked per file |
+| `requests` | `ui_api_call`, `http_out` | none | the request reader (`api-path-dynamic`, `api-client-base-unread`, `dynamic-http-url`, ...), anywhere in the graph |
+| `data` | `db_query`, `cache_op` | `queries`, `caches` | the database reader (`unknown-db-package`, `db-layer-unread`, `dynamic-table-name`, `sql-parse-failed`, ...) |
+| `models` | `table` | none | the database reader saying why no table could be named (`unknown-db-package`, `db-layer-unread`, `db-package-unread`, `dynamic-table-name`), anywhere in the graph |
 
 An edge speaks for a family only when its kind is that family's *and* one of its
 ends is a node of that family, so `handles` from an entry answers routes, from a
@@ -202,9 +311,16 @@ it is allowed to say so; a reader that said nothing at all is the defect. It
 catches the failure no count can: two controllers lost inside a repository whose
 other four hundred were read still leave a family that yielded nodes, and only a
 question asked file by file notices them. `routes`, `screens`, `clicks` and
-`data` are asked per file. `models` is asked only of the service as a whole,
-because a table node carries no file in this graph model: it records where a
-table is used, never where it is declared.
+`data` are asked per file. `requests` and `models` are asked only of the graph
+as a whole: a request is recorded where it is written, which is often a caller
+of the file the probe sees, and a table node carries no file in this graph
+model - it records where a table is used, never where it is declared. For those
+two, sites anywhere with neither a node of the family nor one of its rows
+anywhere is the failure. A row answers there as a node does on purpose: a model
+declared against a package no descriptor knows yields `unknown-db-package` rows
+and no table, which is the honest output where a table would be a guess, and
+the exemption that once stood in for it is gone. `bases` and `listens` are
+counted for the report and asked nothing.
 
 It runs in two places. Over the fixtures it reads every expected graph a fixture
 commits - `expected.graph.json`, `expected.project-graph.json`, or both - costs a

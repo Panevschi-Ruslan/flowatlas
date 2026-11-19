@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T22:48:57.003Z",
+  "configHash": "b675a12d6b6a",
+  "services": [
+    {
+      "name": "payments",
+      "repo": "./payments",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 13,
+      "edges": 9,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 2111,
+      "packages": {
+        "name": "payments",
+        "runtime": [
+          "@aws-sdk/client-sns",
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "payments",
+      "file": "src/settle.ts",
+      "line": 9,
+      "reason": "channel-from-grant",
+      "level": "info",
+      "message": "the call at src/settle.ts:9 does not say where it sends: outcomes.get(event.outcome) is looked up in outcomes by event.outcome, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere; payments-settle runs it and is granted only sqs/payments-refunded, sqs/payments-settled, so it is drawn to each",
+      "hint": "A grant is where the function may send, not where it does: each edge is a guess. Write the address, or one value of the environment the deployment sets, and it is read instead.",
+      "symbol": "producer:payments#src/settle.ts:9:9",
+      "meta": {
+        "granted": [
+          "sqs/payments-refunded",
+          "sqs/payments-settled"
+        ],
+        "functions": [
+          "payments-settle"
+        ],
+        "unread": [
+          "channel-dynamic"
+        ]
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 13,
+    "edges": 11,
+    "types": 0,
+    "missed": 1,
+    "sites": 1,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 1
+  }
+}

@@ -232,7 +232,7 @@ export const runSample = async (rule: PatternRule, compiled: CompiledRule, code:
         useInMemoryFileSystem: true,
         compilerOptions: { target: ts.ScriptTarget.ES2022, experimentalDecorators: true, strict: false, skipLibCheck: true, noLib: false },
       })
-    : createRepoProject({ rootDir: inService.repoDir, repo: inService.service.name, service: inService.service, config, configDir: inService.configDir });
+    : createRepoProject({ rootDir: inService.repoDir, repo: inService.service.name, service: inService.service, config, configDir: inService.configDir, registry: createRegistry() });
   const dir = inService === undefined ? SAMPLE_ROOT : sampleDirIn(project, inService.repoDir, firstType(rule));
   // Spelled as the compiler spells the files beside it, forward slashes on
   // every OS (P199), so its directory compares equal to theirs.

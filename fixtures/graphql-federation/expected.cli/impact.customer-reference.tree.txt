@@ -1,0 +1,4 @@
+@  Customer.__resolveReference     customers/src/customers/customers.resolver.ts:21
+  => web ^  query Orders /graphql  web/src/OrdersPage.tsx:6
+    %  OrdersPage                  web/src/OrdersPage.tsx:5
+Reachable from: no entry points. Also reaches customers, web, where the chain stops before an entry point

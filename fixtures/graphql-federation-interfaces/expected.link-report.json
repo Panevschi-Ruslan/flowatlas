@@ -1,0 +1,272 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T11:26:53.283Z",
+  "configHash": "5d3577024f80",
+  "services": [
+    {
+      "name": "accounts",
+      "repo": "./accounts",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 29,
+      "edges": 17,
+      "types": 2,
+      "unresolved": 1,
+      "durationMs": 1544,
+      "packages": {
+        "name": "interfaces-accounts",
+        "runtime": [
+          "@apollo/subgraph",
+          "@nestjs/apollo",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/graphql",
+          "graphql"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 2,
+      "edges": 0,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1262,
+      "packages": {
+        "name": "interfaces-gateway",
+        "runtime": [
+          "@apollo/gateway",
+          "@apollo/server",
+          "express",
+          "graphql"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1330,
+      "packages": {
+        "name": "interfaces-inventory",
+        "runtime": [
+          "@apollo/server",
+          "@apollo/subgraph",
+          "graphql",
+          "graphql-tag"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 7,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 3,
+      "durationMs": 1252,
+      "packages": {
+        "name": "interfaces-kiosk",
+        "runtime": [
+          "@apollo/client",
+          "graphql",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "legacy",
+      "repo": "./legacy",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1260,
+      "packages": {
+        "name": "interfaces-legacy",
+        "runtime": [
+          "graphql",
+          "graphql-yoga"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "media",
+      "repo": "./media",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 6,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1297,
+      "packages": {
+        "name": "interfaces-media",
+        "runtime": [
+          "@apollo/server",
+          "@apollo/subgraph",
+          "graphql"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "reviews",
+      "repo": "./reviews",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 13,
+      "edges": 8,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 1327,
+      "packages": {
+        "name": "interfaces-reviews",
+        "runtime": [
+          "@apollo/server",
+          "@apollo/subgraph",
+          "express",
+          "graphql",
+          "graphql-tag"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "router",
+      "repo": "router/supergraph.graphql",
+      "type": "declared",
+      "extractor": "graphql-document",
+      "nodes": 1,
+      "edges": 0,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 12
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 5,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 1260,
+      "packages": {
+        "name": "interfaces-web",
+        "runtime": [
+          "@apollo/client",
+          "graphql",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 5,
+    "resolved": 5,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 7,
+    "called": 6,
+    "uncalled": [
+      "entry:legacy:http:POST:/graphql"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 4,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "gateway",
+      "file": "src/index.ts",
+      "line": 18,
+      "symbol": "entry:gateway:http:POST:/graphql",
+      "reason": "graphql-auth-not-checked",
+      "level": "action",
+      "message": "gateway composes 3 fields the router's authorization directives guard (Media.rating @authenticated, Movie.director @requiresScopes(media:staff), User.email @policy(account:owner | support & staff)), and gateway is an Apollo Gateway, which does not check them: a request through it reaches them unchecked",
+      "hint": "Serve the graph with a router that checks the directives, or check who is asking in the subgraph's resolvers; on a gateway the directive alone guards nothing.",
+      "meta": {
+        "fields": [
+          "Media.rating @authenticated",
+          "Movie.director @requiresScopes(media:staff)",
+          "User.email @policy(account:owner | support & staff)"
+        ]
+      }
+    },
+    {
+      "service": "kiosk",
+      "file": "src/ItemCard.tsx",
+      "line": 7,
+      "reason": "graphql-context-not-reached",
+      "level": "info",
+      "message": "Item selects WishItem.price, whose argument currency the router fills from the context viewer, and no type above it in this selection sets viewer; what the argument needs is not planned",
+      "hint": "Select WishItem.price under a field that returns the type with @context(name: \"viewer\"), or pass the argument some other way; the router fills it only from an ancestor that sets the context.",
+      "symbol": "ui_api_call:kiosk#src/ItemCard.tsx:13:20",
+      "meta": {
+        "field": "WishItem.price",
+        "argument": "currency",
+        "context": "viewer"
+      }
+    },
+    {
+      "service": "router",
+      "file": "router/supergraph.graphql",
+      "line": 44,
+      "reason": "graphql-subgraph-not-joined",
+      "level": "action",
+      "message": "router sends the subgraph inventory to http://localhost:4004/graphql, and port 4004 on this machine is where inventory (src/index.ts:22) and legacy (src/server.ts:20) each listen, so it is not one service; the fields it resolves are not joined",
+      "hint": "Add localhost:4004 to services[].hosts of the service that is the subgraph inventory, or add that service to the project.",
+      "symbol": "entry:router:http:POST:/graphql"
+    }
+  ],
+  "totals": {
+    "nodes": 79,
+    "edges": 72,
+    "types": 4,
+    "missed": 10,
+    "sites": 10,
+    "notes": 0,
+    "findings": 1,
+    "unresolved": 10
+  }
+}

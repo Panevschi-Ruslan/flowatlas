@@ -1,0 +1,8 @@
+resources:
+  - orders.yaml
+generators:
+  - generators/settings.yaml
+transformers:
+  - transformers/prefix.yaml
+  - transformers/labels.yaml
+  - transformers/mesh.yaml

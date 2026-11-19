@@ -267,6 +267,95 @@ describe('ways in a Next.js repository declares by where its files are', () => {
     expect(ids(read)).toEqual(['entry:shop:http:ALL:/api/legacy-orders']);
   });
 
+  // `export default withTracing(handler)` is how a pages router file is written
+  // whenever anything runs in front of the handler. It read as a way in with
+  // nothing behind it; the handler is the function the wrapper is handed, the
+  // wrapper is in front of it, and the verbs are the ones it compares (P269).
+  const WRAPPER = `
+    export const withTracing = (handler: (req: any, res: any) => unknown) => async (req: any, res: any) => {
+      const started = Date.now();
+      try { await handler(req, res); } finally { console.log(Date.now() - started); }
+    };
+  `;
+
+  it('reads a default export a wrapper of this repository built as the function it was handed', () => {
+    const read = extract({
+      '/lib/with-tracing.ts': WRAPPER,
+      '/pages/api/basket.ts': `
+        import { withTracing } from '../../lib/with-tracing';
+        const handler = async ({ method }: any, res: any) => {
+          switch (method) {
+            case 'GET': return res.json([]);
+            case 'POST': return res.json({});
+            default: return res.status(405).send('');
+          }
+        };
+        export default withTracing(handler);
+      `,
+    });
+    expect(ids(read)).toEqual(['entry:shop:http:GET:/api/basket', 'entry:shop:http:POST:/api/basket']);
+    for (const entry of read.entries) {
+      expect(entry.handler !== undefined && isFunctionHandler(entry.handler) ? entry.handler.functionName : undefined).toBe('handler');
+      expect(entry.meta?.['handlerVia']).toBe('wrapped');
+      expect(entry.wrapping?.map((wrapper) => wrapper.label)).toEqual(['withTracing']);
+      expect(entry.handlerConfidence).toBeUndefined();
+    }
+    expect(read.unresolved.map((row) => row.reason)).not.toContain('route-handler-unread');
+  });
+
+  it('points at a handler written in place inside the wrapper by where it is', () => {
+    const read = extract({
+      '/lib/with-tracing.ts': WRAPPER,
+      '/pages/api/catalog.ts': `
+        import { withTracing } from '../../lib/with-tracing';
+        export default withTracing(async (req: any, res: any) => res.json([]));
+      `,
+    });
+    expect(ids(read)).toEqual(['entry:shop:http:ALL:/api/catalog']);
+    expect(read.entries[0]?.handler).toMatchObject({ inline: true, file: 'pages/api/catalog.ts', line: 3 });
+    expect(read.entries[0]?.meta?.['handlerVia']).toBe('inline');
+  });
+
+  it('lands through a package wrapper nobody installed as a guess that names the wrapper', () => {
+    const read = extract({
+      '/pages/api/reviews.ts': `
+        import { withMetrics } from 'metrics-kit';
+        async function listReviews(req: any, res: any) { if (req.method === 'GET') return res.json([]); }
+        export default withMetrics(listReviews);
+      `,
+    });
+    expect(ids(read)).toEqual(['entry:shop:http:GET:/api/reviews']);
+    expect(read.entries[0]?.handlerConfidence).toBe('heuristic');
+    expect(String(read.entries[0]?.meta?.['wrapperUnread'])).toContain('metrics-kit');
+  });
+
+  it('says a default export a package built out of values has nothing behind it', () => {
+    const read = extract({
+      '/pages/api/session.ts': `
+        import { sessionHandler } from 'auth-kit';
+        export default sessionHandler({ cookie: 'sid' });
+      `,
+    });
+    expect(ids(read)).toEqual(['entry:shop:http:ALL:/api/session']);
+    const [row] = read.unresolved.filter((each) => each.reason === 'route-handler-unread');
+    expect(row?.message).toContain('the value a call handed back');
+  });
+
+  it('lands a verb export a wrapper built on the function it was handed, in the newer router too', () => {
+    const read = extract({
+      '/lib/with-tracing.ts': WRAPPER,
+      '/app/api/stores/route.ts': `
+        import { withTracing } from '../../../lib/with-tracing';
+        async function readStores(req: any, res: any) { return null; }
+        export const GET = withTracing(readStores);
+      `,
+    });
+    const [entry] = read.entries;
+    expect(entry?.handler !== undefined && isFunctionHandler(entry.handler) ? entry.handler.functionName : undefined).toBe('readStores');
+    expect(entry?.meta?.['handlerVia']).toBe('wrapped');
+    expect(entry?.wrapping?.map((wrapper) => wrapper.label)).toEqual(['withTracing']);
+  });
+
   it('makes a way in of every function a module marks as a boundary', () => {
     const read = extract({
       '/app/actions/orders.ts': `

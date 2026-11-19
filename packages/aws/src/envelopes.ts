@@ -23,6 +23,8 @@ export type DeliveryEnvelope = keyof typeof ENVELOPES;
 export const STARTED: Readonly<Record<DeployedEntryKind, Envelope>> = {
   invoke: ENVELOPES.invoke,
   workflow: ENVELOPES.start,
+  // A task's `run` is handed `{ name, payload, context }`, the payload one key in (P258).
+  task: { at: ['payload'], text: false },
 };
 
 /** The input as it was sent, when nothing wraps it. */

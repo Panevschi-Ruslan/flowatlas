@@ -4,6 +4,7 @@ import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer, RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import type { DbHandle } from './query/db.js';
+import { loggedCall, questionLogSettings, type QuestionLogSettings } from './query/questions.js';
 import { nearWords } from './query/names.js';
 import { loadObservedCounts } from './query/observed.js';
 import { canAnswer, isToolName, NEEDS, TOOL_NAMES, TOOL_NEEDS, type Need, type ToolFacts, type ToolName } from './tool-needs.js';
@@ -98,6 +99,8 @@ export class ToolListing {
   /** Read once: the configuration is not read again while the server runs. */
   readonly #rules: boolean;
   readonly #pollMs: number;
+  /** Whether each call is logged (P235), read once as the rules are. */
+  readonly #log: QuestionLogSettings;
   readonly #tools = new Map<ToolName, RegisteredTool>();
   #graph: { generation: number; facts: NonNullable<ToolFacts['graph']> } | undefined;
   #facts: ToolFacts | undefined;
@@ -112,6 +115,7 @@ export class ToolListing {
     this.#tester = options.tester;
     this.#rules = options.handle.config !== undefined && ruleSetOf(options.handle.config).rules.length > 0;
     this.#pollMs = options.pollMs ?? LISTING_POLL_MS;
+    this.#log = questionLogSettings(options.handle.config);
     options.handle.onChange(() => this.refresh(true));
   }
 
@@ -266,11 +270,20 @@ export class ToolListing {
       }) as Handler;
     }
     if (schema === CallToolRequestSchema) {
-      return ((request: { params: { name: string } }, extra: never) => {
+      return ((request: { params: { name: string; arguments?: Record<string, unknown> } }, extra: never) => {
         this.refresh(true);
         this.start();
         const refused = this.refusal(request.params.name);
-        return refused === undefined ? handler(request as never, extra) : respond(refused);
+        if (refused !== undefined) return respond(refused);
+        if (!this.#log.enabled) return handler(request as never, extra);
+        // Logged here, once for every tool, so a tool added later is logged too (P235).
+        const handle = this.#handle;
+        const db = (): GraphDb | undefined => {
+          const opened = handle.open();
+          return 'db' in opened ? opened.db : undefined;
+        };
+        const call = { via: 'mcp' as const, tool: request.params.name, args: request.params.arguments ?? {} };
+        return loggedCall({ settings: this.#log, dbPath: handle.path, db }, call, () => handler(request as never, extra));
       }) as Handler;
     }
     return handler;

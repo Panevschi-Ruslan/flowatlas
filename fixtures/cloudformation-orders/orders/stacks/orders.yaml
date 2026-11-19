@@ -1,0 +1,450 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  The orders handlers of a small shop, their APIs and what runs them. The
+  table, the queues, the topic and the bus are the storage stack's, imported
+  by the names it exports them under.
+
+Parameters:
+  Stage:
+    Type: String
+    AllowedValues: [dev, prod]
+
+Resources:
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # ------------------------------------------------------- the functions
+
+  PlaceOrderFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-place-order
+      Runtime: nodejs20.x
+      Handler: orders/place-order.handler
+      Code: ../src
+      Role: !GetAtt FunctionRole.Arn
+      Environment:
+        Variables:
+          ORDERS_TABLE:
+            Fn::ImportValue: !Sub orders-${Stage}-table-name
+          ORDERS_QUEUE_URL:
+            Fn::ImportValue: !Sub orders-${Stage}-placed-queue-url
+          ORDERS_BUS_NAME:
+            Fn::ImportValue: !Sub orders-${Stage}-bus-name
+
+  GetOrderFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-get-order
+      Runtime: nodejs20.x
+      Handler: orders/get-order.handler
+      Code: ../src
+      Role: !GetAtt FunctionRole.Arn
+      Environment:
+        Variables:
+          ORDERS_TABLE:
+            Fn::ImportValue: !Sub orders-${Stage}-table-name
+
+  CancelOrderFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-cancel-order
+      Runtime: nodejs20.x
+      Handler: orders/cancel-order.handler
+      Code: ../src
+      Role: !GetAtt FunctionRole.Arn
+      Environment:
+        Variables:
+          ORDERS_BUS_NAME:
+            Fn::ImportValue: !Sub orders-${Stage}-bus-name
+
+  ListOrdersFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-list-orders
+      Runtime: nodejs20.x
+      Handler: orders/list-orders.handler
+      Code: ../src
+      Role: !GetAtt FunctionRole.Arn
+      Environment:
+        Variables:
+          ORDERS_TABLE:
+            Fn::ImportValue: !Sub orders-${Stage}-table-name
+
+  ReceiptFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-receipt
+      Runtime: nodejs20.x
+      Handler: orders/receipt.handler
+      Code: ../src
+      Role: !GetAtt FunctionRole.Arn
+
+  OrderChangedFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-order-changed
+      Runtime: nodejs20.x
+      Handler: orders/order-changed.handler
+      Code: ../src
+      Role: !GetAtt FunctionRole.Arn
+
+  ShipOrderFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-ship-order
+      Runtime: nodejs20.x
+      Handler: shipping/ship-order.handler
+      Code: ../src
+      Role: !GetAtt FunctionRole.Arn
+      Environment:
+        Variables:
+          INVOICES_BUCKET: !Ref InvoicesBucket
+          SHIPPED_TOPIC_ARN:
+            Fn::ImportValue: !Sub orders-${Stage}-shipped-topic
+
+  ReserveStockFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-reserve-stock
+      Runtime: nodejs20.x
+      Handler: shipping/reserve-stock.handler
+      Code: ../src
+      Role: !GetAtt FunctionRole.Arn
+
+  ChargePaymentFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-charge-payment
+      Runtime: nodejs20.x
+      Handler: shipping/charge-payment.handler
+      Code: ../src
+      Role: !GetAtt FunctionRole.Arn
+
+  NotifyCustomerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-notify-customer
+      Runtime: nodejs20.x
+      Handler: notices/notify-customer.handler
+      Code: ../src
+      Role: !GetAtt FunctionRole.Arn
+
+  RefundOrderFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-refund-order
+      Runtime: nodejs20.x
+      Handler: refunds/refund-order.handler
+      Code: ../src
+      Role: !GetAtt FunctionRole.Arn
+
+  NightlyReportFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-nightly-report
+      Runtime: nodejs20.x
+      Handler: reports/nightly-report.handler
+      Code: ../src
+      Role: !GetAtt FunctionRole.Arn
+      Environment:
+        Variables:
+          ORDERS_TABLE:
+            Fn::ImportValue: !Sub orders-${Stage}-table-name
+
+  IndexInvoiceFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-index-invoice
+      Runtime: nodejs20.x
+      Handler: invoices/index-invoice.handler
+      Code: ../src
+      Role: !GetAtt FunctionRole.Arn
+
+  LiveSocketFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-live-socket
+      Runtime: nodejs20.x
+      Handler: live/live-socket.handler
+      Code: ../src
+      Role: !GetAtt FunctionRole.Arn
+
+  # ------------------------------------------------------------ the REST API
+
+  OrdersApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub ${Stage}-orders
+
+  OrdersResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref OrdersApi
+      ParentId: !GetAtt OrdersApi.RootResourceId
+      PathPart: orders
+
+  OrderResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref OrdersApi
+      ParentId: !Ref OrdersResource
+      PathPart: '{id}'
+
+  PlaceOrderMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref OrdersApi
+      ResourceId: !Ref OrdersResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PlaceOrderFunction.Arn}/invocations
+
+  GetOrderMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref OrdersApi
+      ResourceId: !Ref OrderResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetOrderFunction.Arn}/invocations
+
+  CancelOrderMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref OrdersApi
+      ResourceId: !Ref OrderResource
+      HttpMethod: DELETE
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CancelOrderFunction.Arn}/invocations
+
+  OrdersApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: [PlaceOrderMethod, GetOrderMethod, CancelOrderMethod]
+    Properties:
+      RestApiId: !Ref OrdersApi
+
+  OrdersApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref OrdersApi
+      DeploymentId: !Ref OrdersApiDeployment
+      StageName: !Ref Stage
+
+  OrdersApiPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PlaceOrderFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${OrdersApi}/*
+
+  # ------------------------------------------------------------ the HTTP API
+
+  OrdersHttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${Stage}-orders
+      ProtocolType: HTTP
+
+  ListOrdersIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref OrdersHttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt ListOrdersFunction.Arn
+      PayloadFormatVersion: '2.0'
+
+  ListOrdersRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref OrdersHttpApi
+      RouteKey: GET /orders
+      Target: !Sub integrations/${ListOrdersIntegration}
+
+  OrdersHttpStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref OrdersHttpApi
+      StageName: $default
+      AutoDeploy: true
+
+  # ------------------------------------------------------- the WebSocket API
+
+  LiveApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${Stage}-orders-websockets
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: $request.body.action
+
+  LiveIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref LiveApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LiveSocketFunction.Arn}/invocations
+
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref LiveApi
+      RouteKey: $connect
+      Target: !Sub integrations/${LiveIntegration}
+
+  SubscribeRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref LiveApi
+      RouteKey: subscribe
+      Target: !Sub integrations/${LiveIntegration}
+
+  # ---------------------------------------------------- the function URL
+
+  ReceiptUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt ReceiptFunction.Arn
+      AuthType: NONE
+
+  ReceiptUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !Ref ReceiptFunction
+      Principal: '*'
+      FunctionUrlAuthType: NONE
+
+  # ------------------------------------------- what runs the other functions
+
+  ShipOrderPlacedMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn:
+        Fn::ImportValue: !Sub orders-${Stage}-placed-queue-arn
+      FunctionName: !Ref ShipOrderFunction
+      BatchSize: 10
+
+  OrderChangedMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn:
+        Fn::ImportValue: !Sub orders-${Stage}-table-stream
+      FunctionName: !Ref OrderChangedFunction
+      StartingPosition: LATEST
+
+  NotifyCustomerSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn:
+        Fn::ImportValue: !Sub orders-${Stage}-shipped-topic
+      Protocol: lambda
+      Endpoint: !GetAtt NotifyCustomerFunction.Arn
+
+  NotifyCustomerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref NotifyCustomerFunction
+      Principal: sns.amazonaws.com
+
+  OrderCancelledRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub orders-${Stage}-order-cancelled
+      EventBusName:
+        Fn::ImportValue: !Sub orders-${Stage}-bus-name
+      EventPattern:
+        source: [orders.service]
+        detail-type: [OrderCancelled]
+      Targets:
+        - Id: refund-order
+          Arn: !GetAtt RefundOrderFunction.Arn
+
+  OrderPlacedRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub orders-${Stage}-order-placed
+      EventBusName:
+        Fn::ImportValue: !Sub orders-${Stage}-bus-name
+      EventPattern:
+        source: [orders.service]
+        detail-type: [OrderPlaced]
+      Targets:
+        - Id: shipping
+          Arn: !Ref ShippingStateMachine
+          RoleArn: !GetAtt WorkflowRole.Arn
+
+  NightlyReportRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub orders-${Stage}-nightly-report
+      ScheduleExpression: cron(0 2 * * ? *)
+      Targets:
+        - Id: nightly-report
+          Arn: !GetAtt NightlyReportFunction.Arn
+
+  InvoicesBucket:
+    Type: AWS::S3::Bucket
+    DependsOn: IndexInvoicePermission
+    Properties:
+      BucketName: !Sub orders-${Stage}-invoices
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: invoices/
+                  - Name: suffix
+                    Value: .pdf
+            Function: !GetAtt IndexInvoiceFunction.Arn
+
+  IndexInvoicePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref IndexInvoiceFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub arn:aws:s3:::orders-${Stage}-invoices
+
+  # -------------------------------------------------------- the workflow
+
+  WorkflowRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: [states.amazonaws.com, events.amazonaws.com] }
+            Action: sts:AssumeRole
+
+  ShippingStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: !Sub orders-${Stage}-shipping
+      RoleArn: !GetAtt WorkflowRole.Arn
+      DefinitionS3Location: ../statemachine/shipping.asl.json
+      DefinitionSubstitutions:
+        reserve_stock_arn: !GetAtt ReserveStockFunction.Arn
+        charge_payment_arn: !GetAtt ChargePaymentFunction.Arn

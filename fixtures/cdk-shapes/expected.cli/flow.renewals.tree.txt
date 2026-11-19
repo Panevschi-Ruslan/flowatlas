@@ -1,0 +1,16 @@
+@  workflow ClubStack/Renewals                                          club/lib/club-stack.ts:85
+  -> Charge [Task lambda:invoke]                                        club/lib/club-stack.ts:81
+    @  ClubStack/Sender (name generated when deployed)                  club/lib/club-stack.ts:31
+      -> handler                                                        club/src/mail/send.ts:6
+        $  INBOX_URL                                                    club/src/mail/send.ts:7
+        ~  message sqs/${…}@ClubStack.Inbox                             club/src/mail/send.ts:7
+          ~  sqs/${…}@ClubStack.Inbox                                   lib/club-stack.ts:43
+            ~  mapping ClubStack/Reader/SqsEventSource:ClubStack/Inbox  club/lib/club-stack.ts:43
+              @  ClubStack/Reader (name generated when deployed)        club/lib/club-stack.ts:37
+                -> handler                                              club/src/mail/read.ts:4
+    -> Paid? [Choice]                                                   club/lib/club-stack.ts:82
+      -> Renewed [Succeed]                                              club/lib/club-stack.ts:83
+      -> Remind [Task sqs:sendMessage]                                  club/lib/club-stack.ts:84
+        ~  message sqs/${…}@ClubStack.Inbox                             club/lib/club-stack.ts:84
+          (again) sqs/${…}@ClubStack.Inbox
+unresolved on this path: 0

@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T19:00:04.635Z",
+  "configHash": "a20a8bb09035",
+  "services": [
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 7,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1262,
+      "packages": {
+        "name": "cluster-transformer-joins-jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1295,
+      "packages": {
+        "name": "cluster-transformer-joins-orders",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "payments",
+      "repo": "./payments",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1260,
+      "packages": {
+        "name": "cluster-transformer-joins-payments",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1317,
+      "packages": {
+        "name": "cluster-transformer-joins-stock",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 3,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 3,
+    "uncalled": [
+      "entry:jobs:http:POST:/jobs/run"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "orders",
+      "file": "deploy/transformers/mesh.yaml",
+      "line": 1,
+      "reason": "manifest-unread",
+      "message": "deploy/transformers/mesh.yaml configures the transformer SidecarInjector (mesh.example.test/v1), an exec or Go plugin kustomize runs; what it does to the resources is not read",
+      "hint": "Write what it does with a kustomization field or a built-in transformer (namePrefix, labels, patches, images, configMapGenerator), or annotate the request with the service it reaches (/** @flowatlas-calls <service> METHOD /path */).",
+      "symbol": "deploy/transformers/mesh.yaml:1"
+    },
+    {
+      "service": "stock",
+      "file": "deploy/apps/stock.yaml",
+      "line": 2,
+      "reason": "manifest-unread",
+      "message": "The release stock (deploy/apps/stock.yaml:2) runs a hook (presync), commands helmfile runs around the install; a hook is a program that is run, not read, so whatever it applies to the cluster is not drawn",
+      "hint": "Write what the hook applies as a manifest or a release of the helmfile, or annotate the request with the service it reaches (/** @flowatlas-calls <service> METHOD /path */).",
+      "symbol": "deploy/apps/stock.yaml:2"
+    },
+    {
+      "service": "stock",
+      "file": "deploy/charts/stock/Chart.yaml",
+      "line": 11,
+      "reason": "manifest-unread",
+      "message": "deploy/charts/stock/Chart.yaml depends on the chart queue 2.0.0 from https://charts.example.test, which nothing has fetched into the project (charts/ holds no queue); no chart repository is read, so its templates are not rendered",
+      "hint": "Keep the chart in the project (helm dependency build writes it to charts/), or annotate the request with the service it reaches (/** @flowatlas-calls <service> METHOD /path */).",
+      "symbol": "deploy/charts/stock/Chart.yaml:11"
+    }
+  ],
+  "totals": {
+    "nodes": 15,
+    "edges": 10,
+    "types": 2,
+    "missed": 3,
+    "sites": 3,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 3
+  }
+}

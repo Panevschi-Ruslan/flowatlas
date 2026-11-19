@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T03:49:36.315Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T18:48:09.802Z",
   "services": [
     {
       "name": "media",
@@ -266,6 +266,15 @@
         "api": "library-media",
         "function": "library-upload-cover",
         "declaredAs": "aws_apigatewayv2_route.upload_cover",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-media"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -285,6 +294,15 @@
         "api": "library-media",
         "function": "library-sign-cover",
         "declaredAs": "aws_apigatewayv2_route.sign_cover",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-media"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

@@ -1,0 +1,10 @@
+{
+  "services": [
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "react"
+    }
+  ],
+  "output": ".flowatlas"
+}

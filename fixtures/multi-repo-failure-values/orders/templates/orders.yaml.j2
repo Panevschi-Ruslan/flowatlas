@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: The orders of a shop, rendered by sceptre with the stack's sceptre_user_data.
+
+Parameters:
+  Prefix:
+    Type: String
+  JobsName:
+    Type: String
+  Owner:
+    Type: String
+  Build:
+    Type: String
+  Alerts:
+    Type: String
+    Default: shop-prod-alerts
+  Colour:
+    Type: String
+
+Resources:
+  ShipRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+
+  Ship:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${Prefix}-ship
+      Runtime: nodejs20.x
+      Handler: {{ sceptre_user_data.handler }}
+      Role: !GetAtt ShipRole.Arn
+      Code: ../src
+      Environment:
+        Variables:
+          JOBS_QUEUE_URL: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${JobsName}
+          ALERTS_TOPIC_ARN: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${Alerts}
+          OWNER: !Ref Owner
+          BUILD: !Ref Build
+          COLOUR: !Ref Colour
+{%- for name, value in sceptre_user_data.settings.items() %}
+          {{ name | upper }}: {{ value }}
+{%- endfor %}

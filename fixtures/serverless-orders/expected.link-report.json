@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-06T09:34:17.888Z",
+  "configHash": "183a5926c584",
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 67,
+      "edges": 54,
+      "types": 12,
+      "unresolved": 6,
+      "durationMs": 5572,
+      "packages": {
+        "name": "orders",
+        "runtime": [
+          "@aws-sdk/client-eventbridge",
+          "@aws-sdk/client-s3",
+          "@aws-sdk/client-sns",
+          "@aws-sdk/client-sqs",
+          "@aws-sdk/lib-dynamodb"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 7,
+    "linked": 6,
+    "noConsumers": [
+      "channel:sqs/orders-dev-placed-dlq"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 5,
+    "called": 0,
+    "uncalled": [
+      "entry:orders:http:ALL:/*@orders-dev-receipt",
+      "entry:orders:http:DELETE:/orders/:param",
+      "entry:orders:http:GET:/orders",
+      "entry:orders:http:GET:/orders/:param",
+      "entry:orders:http:POST:/orders"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 12,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 67,
+    "edges": 63,
+    "types": 12,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 0
+  }
+}

@@ -1,0 +1,9 @@
+query OrderSummary($id: ID!) {
+  order(id: $id) {
+    id
+    total
+    customer {
+      name
+    }
+  }
+}

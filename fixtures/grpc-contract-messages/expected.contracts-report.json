@@ -1,0 +1,364 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-10T15:47:04.018Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:web#src/clients.ts:17:35",
+        "to": "entry:stock:rpc:grpc:store.InventoryService/Reserve",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:web#src/clients.ts:17:35|hits|entry:stock:rpc:grpc:store.InventoryService/Reserve",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{sku:string;quantity:string}",
+        "symbol": "web#src/clients.ts:reserve",
+        "writes": [
+          "quantity",
+          "sku"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "stock",
+        "typeId": "type:stock#.store.ReserveRequest",
+        "symbol": "stock#index.js:reserve"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:web#src/clients.ts:17:35",
+            "to": "entry:stock:rpc:grpc:store.InventoryService/Reserve",
+            "type": "hits"
+          },
+          "edgeKey": "http_out:web#src/clients.ts:17:35|hits|entry:stock:rpc:grpc:store.InventoryService/Reserve",
+          "direction": "request",
+          "sender": {
+            "service": "web",
+            "typeId": "{sku:string;quantity:string}",
+            "symbol": "web#src/clients.ts:reserve",
+            "writes": [
+              "quantity",
+              "sku"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "stock",
+            "typeId": "type:stock#.store.ReserveRequest",
+            "symbol": "stock#index.js:reserve"
+          },
+          "typeId": "type:stock#.store.ReserveRequest",
+          "field": "quantity",
+          "expected": "number",
+          "actual": "string",
+          "rule": null,
+          "message": "sender web sends `quantity` as `string`; receiver stock declares it `number`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "proto-presence:quantity",
+        "proto-presence:sku",
+        "proto-presence:warehouseIds"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:web#src/clients.ts:22:35",
+        "to": "entry:stock:rpc:grpc:store.InventoryService/Release",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:web#src/clients.ts:22:35|hits|entry:stock:rpc:grpc:store.InventoryService/Release",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{reservationId:string;reason:'cancelled'}",
+        "symbol": "web#src/clients.ts:release",
+        "writes": [
+          "reason",
+          "reservationId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "stock",
+        "typeId": "type:stock#.store.ReleaseRequest",
+        "symbol": "stock#index.js:grpc store.InventoryService/Release@25"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:web#src/clients.ts:22:35",
+            "to": "entry:stock:rpc:grpc:store.InventoryService/Release",
+            "type": "hits"
+          },
+          "edgeKey": "http_out:web#src/clients.ts:22:35|hits|entry:stock:rpc:grpc:store.InventoryService/Release",
+          "direction": "request",
+          "sender": {
+            "service": "web",
+            "typeId": "{reservationId:string;reason:'cancelled'}",
+            "symbol": "web#src/clients.ts:release",
+            "writes": [
+              "reason",
+              "reservationId"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "stock",
+            "typeId": "type:stock#.store.ReleaseRequest",
+            "symbol": "stock#index.js:grpc store.InventoryService/Release@25"
+          },
+          "typeId": "type:stock#.store.ReleaseRequest",
+          "field": "reason",
+          "expected": null,
+          "actual": "'cancelled'",
+          "rule": null,
+          "message": "sender web sends `reason: 'cancelled'`; receiver stock declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "proto-presence:reservationId"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:web#src/clients.ts:32:5",
+        "to": "entry:pricing:rpc:grpc:store.PricingService/Quote",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:web#src/clients.ts:32:5|hits|entry:pricing:rpc:grpc:store.PricingService/Quote",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "type:web#QuoteRequest",
+        "symbol": "web#src/clients.ts:quote",
+        "writes": [
+          "couponCode",
+          "currencyCode",
+          "lines"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "pricing",
+        "typeId": "type:pricing#.store.QuoteRequest",
+        "symbol": "pricing#proto/store.proto:store.PricingService.Quote",
+        "declaredBy": "proto/store.proto"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "proto-presence:couponCode",
+        "proto-presence:currencyCode",
+        "proto-presence:lines"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:web#src/clients.ts:32:5",
+        "to": "entry:pricing:rpc:grpc:store.PricingService/Quote",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:web#src/clients.ts:32:5|hits|entry:pricing:rpc:grpc:store.PricingService/Quote",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "pricing",
+        "typeId": "type:pricing#.store.PriceQuote",
+        "symbol": "pricing#proto/store.proto:store.PricingService.Quote",
+        "declaredBy": "proto/store.proto"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#PriceQuote",
+        "symbol": "web#src/clients.ts:quote"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:web#src/clients.ts:32:5",
+            "to": "entry:pricing:rpc:grpc:store.PricingService/Quote",
+            "type": "hits"
+          },
+          "edgeKey": "http_out:web#src/clients.ts:32:5|hits|entry:pricing:rpc:grpc:store.PricingService/Quote",
+          "direction": "response",
+          "sender": {
+            "service": "pricing",
+            "typeId": "type:pricing#.store.PriceQuote",
+            "symbol": "pricing#proto/store.proto:store.PricingService.Quote",
+            "declaredBy": "proto/store.proto"
+          },
+          "receiver": {
+            "service": "web",
+            "typeId": "type:web#PriceQuote",
+            "symbol": "web#src/clients.ts:quote"
+          },
+          "typeId": "type:web#PriceQuote",
+          "field": "byLine",
+          "expected": null,
+          "actual": "object",
+          "rule": null,
+          "message": "sender pricing sends `byLine: object`; receiver web declares no such field; pricing was declared by proto/store.proto, not read",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "proto-presence:total.units"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:web#src/clients.ts:17:35",
+        "to": "entry:stock:rpc:grpc:store.InventoryService/Reserve",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:web#src/clients.ts:17:35|hits|entry:stock:rpc:grpc:store.InventoryService/Reserve",
+      "direction": "request",
+      "sender": {
+        "service": "web",
+        "typeId": "{sku:string;quantity:string}",
+        "symbol": "web#src/clients.ts:reserve",
+        "writes": [
+          "quantity",
+          "sku"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "stock",
+        "typeId": "type:stock#.store.ReserveRequest",
+        "symbol": "stock#index.js:reserve"
+      },
+      "typeId": "type:stock#.store.ReserveRequest",
+      "field": "quantity",
+      "expected": "number",
+      "actual": "string",
+      "rule": null,
+      "message": "sender web sends `quantity` as `string`; receiver stock declares it `number`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:web#src/clients.ts:22:35",
+        "to": "entry:stock:rpc:grpc:store.InventoryService/Release",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:web#src/clients.ts:22:35|hits|entry:stock:rpc:grpc:store.InventoryService/Release",
+      "direction": "request",
+      "sender": {
+        "service": "web",
+        "typeId": "{reservationId:string;reason:'cancelled'}",
+        "symbol": "web#src/clients.ts:release",
+        "writes": [
+          "reason",
+          "reservationId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "stock",
+        "typeId": "type:stock#.store.ReleaseRequest",
+        "symbol": "stock#index.js:grpc store.InventoryService/Release@25"
+      },
+      "typeId": "type:stock#.store.ReleaseRequest",
+      "field": "reason",
+      "expected": null,
+      "actual": "'cancelled'",
+      "rule": null,
+      "message": "sender web sends `reason: 'cancelled'`; receiver stock declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:web#src/clients.ts:32:5",
+        "to": "entry:pricing:rpc:grpc:store.PricingService/Quote",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:web#src/clients.ts:32:5|hits|entry:pricing:rpc:grpc:store.PricingService/Quote",
+      "direction": "response",
+      "sender": {
+        "service": "pricing",
+        "typeId": "type:pricing#.store.PriceQuote",
+        "symbol": "pricing#proto/store.proto:store.PricingService.Quote",
+        "declaredBy": "proto/store.proto"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#PriceQuote",
+        "symbol": "web#src/clients.ts:quote"
+      },
+      "typeId": "type:web#PriceQuote",
+      "field": "byLine",
+      "expected": null,
+      "actual": "object",
+      "rule": null,
+      "message": "sender pricing sends `byLine: object`; receiver web declares no such field; pricing was declared by proto/store.proto, not read",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:web#src/clients.ts:17:35",
+        "to": "entry:stock:rpc:grpc:store.InventoryService/Reserve",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:web#src/clients.ts:17:35|hits|entry:stock:rpc:grpc:store.InventoryService/Reserve",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:stock:rpc:grpc:store.InventoryService/Reserve answers reaches its caller through a callback or a stream whose answer the code does not type, so nothing at the call states it",
+      "hint": "Type the answer where it is read - the callback's parameter, or the client generated from the contract - so what the method answers is compared with what the caller reads."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#src/clients.ts:22:35",
+        "to": "entry:stock:rpc:grpc:store.InventoryService/Release",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:web#src/clients.ts:22:35|hits|entry:stock:rpc:grpc:store.InventoryService/Release",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:stock:rpc:grpc:store.InventoryService/Release answers reaches its caller through a callback or a stream whose answer the code does not type, so nothing at the call states it",
+      "hint": "Type the answer where it is read - the callback's parameter, or the client generated from the contract - so what the method answers is compared with what the caller reads."
+    }
+  ],
+  "summary": {
+    "edges": 4,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 4,
+    "unchecked": 2,
+    "errors": 1,
+    "warnings": 0,
+    "infos": 2,
+    "ignored": 0
+  }
+}

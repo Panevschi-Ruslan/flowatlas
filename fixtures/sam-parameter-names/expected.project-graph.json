@@ -1,0 +1,1252 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T18:57:11.010Z",
+  "services": [
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:dynamodb/${…}@Parameters.LedgerTableName",
+      "type": "channel",
+      "label": "dynamodb/${…}@Parameters.LedgerTableName",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 23,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-dynamodb"
+        ],
+        "declaredBy": "Resources.Ledger",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:kinesis/${…}@Parameters.ChangeStreamName",
+      "type": "channel",
+      "label": "kinesis/${…}@Parameters.ChangeStreamName",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 37,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-kinesis"
+        ],
+        "declaredBy": "Resources.Changes",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/${…}@Resources.AuditQueue",
+      "type": "channel",
+      "label": "sqs/${…}@Resources.AuditQueue",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 96,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/team-billing",
+      "type": "channel",
+      "label": "sqs/team-billing",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 106,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:ledger#AUDIT_QUEUE_URL",
+      "type": "config_key",
+      "label": "AUDIT_QUEUE_URL",
+      "repo": "ledger",
+      "file": "src/fanout.ts",
+      "line": 36,
+      "meta": {
+        "key": "AUDIT_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:ledger#CHANGE_STREAM",
+      "type": "config_key",
+      "label": "CHANGE_STREAM",
+      "repo": "ledger",
+      "file": "src/forwarder.ts",
+      "line": 15,
+      "meta": {
+        "key": "CHANGE_STREAM",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:ledger#LEDGER_TABLE",
+      "type": "config_key",
+      "label": "LEDGER_TABLE",
+      "repo": "ledger",
+      "file": "src/recorder.ts",
+      "line": 9,
+      "meta": {
+        "key": "LEDGER_TABLE",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:ledger#template.yaml:Resources.Auditor.Events.Audit",
+      "type": "consumer",
+      "label": "mapping Resources.Auditor.Events.Audit",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 96,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "Resources.Auditor.Events.Audit",
+        "deployedBy": "sam",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:ledger#template.yaml:Resources.Fanout.Events.Changes",
+      "type": "consumer",
+      "label": "mapping Resources.Fanout.Events.Changes",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 85,
+      "kind": "record",
+      "meta": {
+        "kind": "record",
+        "adapter": "aws-kinesis",
+        "by": "mapping",
+        "declaredAs": "Resources.Fanout.Events.Changes",
+        "deployedBy": "sam"
+      }
+    },
+    {
+      "id": "consumer:ledger#template.yaml:Resources.Forwarder.Events.Changes",
+      "type": "consumer",
+      "label": "mapping Resources.Forwarder.Events.Changes",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 74,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "by": "mapping",
+        "declaredAs": "Resources.Forwarder.Events.Changes",
+        "deployedBy": "sam"
+      }
+    },
+    {
+      "id": "consumer:ledger#template.yaml:Resources.TeamWorker.Events.Team",
+      "type": "consumer",
+      "label": "mapping Resources.TeamWorker.Events.Team",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 106,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "Resources.TeamWorker.Events.Team",
+        "deployedBy": "sam",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "entry:ledger:event:dynamodb/${…}@Parameters.LedgerTableName",
+      "type": "entry",
+      "label": "event dynamodb/${…}@Parameters.LedgerTableName",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 74,
+      "kind": "event",
+      "meta": {
+        "key": "dynamodb/${…}@Parameters.LedgerTableName",
+        "by": "mapping",
+        "declaredAs": "Resources.Forwarder.Events.Changes",
+        "deployedBy": "sam",
+        "changesOf": "table",
+        "name": "${…}@Parameters.LedgerTableName",
+        "function": "Resources.Forwarder",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:ledger:event:kinesis/${…}@Parameters.ChangeStreamName",
+      "type": "entry",
+      "label": "event kinesis/${…}@Parameters.ChangeStreamName",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 85,
+      "kind": "event",
+      "meta": {
+        "key": "kinesis/${…}@Parameters.ChangeStreamName",
+        "by": "mapping",
+        "declaredAs": "Resources.Fanout.Events.Changes",
+        "deployedBy": "sam",
+        "changesOf": "stream",
+        "name": "${…}@Parameters.ChangeStreamName",
+        "function": "Resources.Fanout",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:ledger:http:POST:/entries",
+      "type": "entry",
+      "label": "POST /entries",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 63,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/entries",
+        "rawPath": "/entries",
+        "deployedBy": "sam",
+        "function": "Resources.Recorder",
+        "declaredAs": "Resources.Recorder.Events.Record",
+        "stage": "Prod",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [
+              "Prod"
+            ],
+            "api": "ServerlessRestApi"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:ledger:invoke:${…}@Resources.Auditor",
+      "type": "entry",
+      "label": "Resources.Auditor (name generated when deployed)",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 91,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.Auditor",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.Auditor",
+        "logicalId": "Auditor",
+        "nameGenerated": true,
+        "handler": "auditor.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "AUDIT_QUEUE_URL": {
+            "written": "!Ref AuditQueue",
+            "value": "${…}@Resources.AuditQueue",
+            "kind": "queue"
+          },
+          "CHANGE_STREAM": {
+            "written": "${ChangeStreamName}",
+            "value": "${…}@Parameters.ChangeStreamName",
+            "kind": "stream"
+          },
+          "LEDGER_TABLE": {
+            "written": "${LedgerTableName}",
+            "value": "${…}@Parameters.LedgerTableName",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "{Records:{body:string}[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:ledger:invoke:${…}@Resources.Fanout",
+      "type": "entry",
+      "label": "Resources.Fanout (name generated when deployed)",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 80,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.Fanout",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.Fanout",
+        "logicalId": "Fanout",
+        "nameGenerated": true,
+        "handler": "fanout.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "AUDIT_QUEUE_URL": {
+            "written": "!Ref AuditQueue",
+            "value": "${…}@Resources.AuditQueue",
+            "kind": "queue"
+          },
+          "CHANGE_STREAM": {
+            "written": "${ChangeStreamName}",
+            "value": "${…}@Parameters.ChangeStreamName",
+            "kind": "stream"
+          },
+          "LEDGER_TABLE": {
+            "written": "${LedgerTableName}",
+            "value": "${…}@Parameters.LedgerTableName",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "{Records:{eventID:string;kinesis:{data:string}}[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:ledger:invoke:${…}@Resources.Forwarder",
+      "type": "entry",
+      "label": "Resources.Forwarder (name generated when deployed)",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 69,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.Forwarder",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.Forwarder",
+        "logicalId": "Forwarder",
+        "nameGenerated": true,
+        "handler": "forwarder.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "AUDIT_QUEUE_URL": {
+            "written": "!Ref AuditQueue",
+            "value": "${…}@Resources.AuditQueue",
+            "kind": "queue"
+          },
+          "CHANGE_STREAM": {
+            "written": "${ChangeStreamName}",
+            "value": "${…}@Parameters.ChangeStreamName",
+            "kind": "stream"
+          },
+          "LEDGER_TABLE": {
+            "written": "${LedgerTableName}",
+            "value": "${…}@Parameters.LedgerTableName",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "{Records:type:ledger#Change[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:ledger:invoke:${…}@Resources.Recorder",
+      "type": "entry",
+      "label": "Resources.Recorder (name generated when deployed)",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 58,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.Recorder",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.Recorder",
+        "logicalId": "Recorder",
+        "nameGenerated": true,
+        "handler": "recorder.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "AUDIT_QUEUE_URL": {
+            "written": "!Ref AuditQueue",
+            "value": "${…}@Resources.AuditQueue",
+            "kind": "queue"
+          },
+          "CHANGE_STREAM": {
+            "written": "${ChangeStreamName}",
+            "value": "${…}@Parameters.ChangeStreamName",
+            "kind": "stream"
+          },
+          "LEDGER_TABLE": {
+            "written": "${LedgerTableName}",
+            "value": "${…}@Parameters.LedgerTableName",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "{body:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:ledger:invoke:${…}@Resources.TeamWorker",
+      "type": "entry",
+      "label": "Resources.TeamWorker (name generated when deployed)",
+      "repo": "ledger",
+      "file": "template.yaml",
+      "line": 101,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.TeamWorker",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.TeamWorker",
+        "logicalId": "TeamWorker",
+        "nameGenerated": true,
+        "handler": "team-worker.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "AUDIT_QUEUE_URL": {
+            "written": "!Ref AuditQueue",
+            "value": "${…}@Resources.AuditQueue",
+            "kind": "queue"
+          },
+          "CHANGE_STREAM": {
+            "written": "${ChangeStreamName}",
+            "value": "${…}@Parameters.ChangeStreamName",
+            "kind": "stream"
+          },
+          "LEDGER_TABLE": {
+            "written": "${LedgerTableName}",
+            "value": "${…}@Parameters.LedgerTableName",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "{Records:{body:string}[]}",
+          "Records[].body": "{id:string;team:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "ledger#src/auditor.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "ledger",
+      "file": "src/auditor.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:{body:string}[]}"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "audit: {body}",
+            "at": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "ledger#src/fanout.ts:discover",
+      "type": "function",
+      "label": "discover",
+      "repo": "ledger",
+      "file": "src/fanout.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Map<string,string>"
+        }
+      }
+    },
+    {
+      "id": "ledger#src/fanout.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "ledger",
+      "file": "src/fanout.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:{eventID:string;kinesis:{data:string}}[]}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ledger#src/forwarder.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "ledger",
+      "file": "src/forwarder.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:type:ledger#Change[]}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ledger#src/recorder.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "ledger",
+      "file": "src/recorder.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{body:string}"
+            }
+          ],
+          "returns": "{statusCode:201;body:string}"
+        }
+      }
+    },
+    {
+      "id": "ledger#src/team-worker.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "ledger",
+      "file": "src/team-worker.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:{body:string}[]}"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "team {team}: {id}",
+            "at": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "producer:ledger#src/fanout.ts:31:11",
+      "type": "producer",
+      "label": "message ?",
+      "repo": "ledger",
+      "file": "src/fanout.ts",
+      "line": 31,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "unresolved",
+        "method": "send",
+        "grantable": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "granted": "queue"
+              }
+            ]
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "heuristic",
+        "batch": true
+      }
+    },
+    {
+      "id": "producer:ledger#src/fanout.ts:40:11",
+      "type": "producer",
+      "label": "message sqs/${…}@Resources.AuditQueue",
+      "repo": "ledger",
+      "file": "src/fanout.ts",
+      "line": 40,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "AUDIT_QUEUE_URL",
+                "forms": [
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "string"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "heuristic",
+        "batch": true
+      }
+    },
+    {
+      "id": "producer:ledger#src/forwarder.ts:21:11",
+      "type": "producer",
+      "label": "record kinesis/${…}@Parameters.ChangeStreamName",
+      "repo": "ledger",
+      "file": "src/forwarder.ts",
+      "line": 21,
+      "kind": "record",
+      "meta": {
+        "kind": "record",
+        "adapter": "aws-kinesis",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "kinesis",
+              {
+                "environment": "CHANGE_STREAM",
+                "forms": [
+                  "^arn:[^:]+:kinesis:[^:]*:[^:]*:stream/([^/]+)$"
+                ]
+              }
+            ],
+            "payload": "{id:string;team:string;amount:number}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "producer:ledger#src/recorder.ts:7:9",
+      "type": "producer",
+      "label": "write dynamodb/${…}@Parameters.LedgerTableName",
+      "repo": "ledger",
+      "file": "src/recorder.ts",
+      "line": 7,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "dynamodb",
+              {
+                "environment": "LEDGER_TABLE",
+                "forms": [
+                  "^arn:[^:]+:dynamodb:[^:]*:[^:]*:table/([^/]+)$"
+                ]
+              }
+            ],
+            "payload": "{id:{S:string};team:{S:string};amount:{N:string}}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "heuristic",
+        "whereDeclared": true
+      }
+    },
+    {
+      "id": "repo:ledger",
+      "type": "repo",
+      "label": "ledger",
+      "repo": "ledger",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "loopsBounded": {
+            "batch-call": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:dynamodb/${…}@Parameters.LedgerTableName",
+      "to": "consumer:ledger#template.yaml:Resources.Forwarder.Events.Changes",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 74,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:kinesis/${…}@Parameters.ChangeStreamName",
+      "to": "consumer:ledger#template.yaml:Resources.Fanout.Events.Changes",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 85,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/${…}@Resources.AuditQueue",
+      "to": "consumer:ledger#template.yaml:Resources.Auditor.Events.Audit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 96,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/team-billing",
+      "to": "consumer:ledger#template.yaml:Resources.TeamWorker.Events.Team",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 106,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:ledger#template.yaml:Resources.Auditor.Events.Audit",
+      "to": "entry:ledger:invoke:${…}@Resources.Auditor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 96,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:ledger#template.yaml:Resources.Fanout.Events.Changes",
+      "to": "entry:ledger:event:kinesis/${…}@Parameters.ChangeStreamName",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 85,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:ledger#template.yaml:Resources.Forwarder.Events.Changes",
+      "to": "entry:ledger:event:dynamodb/${…}@Parameters.LedgerTableName",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 74,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:ledger#template.yaml:Resources.TeamWorker.Events.Team",
+      "to": "entry:ledger:invoke:${…}@Resources.TeamWorker",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 106,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:ledger:event:dynamodb/${…}@Parameters.LedgerTableName",
+      "to": "ledger#src/forwarder.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/forwarder.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:ledger:event:kinesis/${…}@Parameters.ChangeStreamName",
+      "to": "ledger#src/fanout.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/fanout.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:ledger:http:POST:/entries",
+      "to": "ledger#src/recorder.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string}",
+      "file": "src/recorder.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "body": "{id:string;team:string;amount:number}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:ledger:invoke:${…}@Resources.Auditor",
+      "to": "ledger#src/auditor.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/auditor.ts",
+      "line": 1
+    },
+    {
+      "from": "entry:ledger:invoke:${…}@Resources.Fanout",
+      "to": "ledger#src/fanout.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/fanout.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:ledger:invoke:${…}@Resources.Forwarder",
+      "to": "ledger#src/forwarder.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/forwarder.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:ledger:invoke:${…}@Resources.Recorder",
+      "to": "ledger#src/recorder.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/recorder.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:ledger:invoke:${…}@Resources.TeamWorker",
+      "to": "ledger#src/team-worker.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/team-worker.ts",
+      "line": 1
+    },
+    {
+      "from": "ledger#src/fanout.ts:handler",
+      "to": "config_key:ledger#AUDIT_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/fanout.ts",
+      "line": 36,
+      "meta": {
+        "setBy": [
+          {
+            "function": "Resources.Fanout (name generated when deployed)",
+            "written": "!Ref AuditQueue",
+            "value": "${…}@Resources.AuditQueue"
+          }
+        ]
+      }
+    },
+    {
+      "from": "ledger#src/fanout.ts:handler",
+      "to": "ledger#src/fanout.ts:discover",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "Map<string,string>",
+      "file": "src/fanout.ts",
+      "line": 22
+    },
+    {
+      "from": "ledger#src/fanout.ts:handler",
+      "to": "producer:ledger#src/fanout.ts:31:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/fanout.ts",
+      "line": 31,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 30,
+          "bounded": "batch-call"
+        }
+      }
+    },
+    {
+      "from": "ledger#src/fanout.ts:handler",
+      "to": "producer:ledger#src/fanout.ts:40:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/fanout.ts",
+      "line": 40,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 39,
+          "bounded": "batch-call"
+        }
+      }
+    },
+    {
+      "from": "ledger#src/forwarder.ts:handler",
+      "to": "config_key:ledger#CHANGE_STREAM",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/forwarder.ts",
+      "line": 15,
+      "meta": {
+        "setBy": [
+          {
+            "function": "Resources.Forwarder (name generated when deployed)",
+            "written": "${ChangeStreamName}",
+            "value": "${…}@Parameters.ChangeStreamName"
+          }
+        ]
+      }
+    },
+    {
+      "from": "ledger#src/forwarder.ts:handler",
+      "to": "producer:ledger#src/forwarder.ts:21:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/forwarder.ts",
+      "line": 21,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 20
+        }
+      }
+    },
+    {
+      "from": "ledger#src/recorder.ts:handler",
+      "to": "config_key:ledger#LEDGER_TABLE",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/recorder.ts",
+      "line": 9,
+      "meta": {
+        "setBy": [
+          {
+            "function": "Resources.Recorder (name generated when deployed)",
+            "written": "${LedgerTableName}",
+            "value": "${…}@Parameters.LedgerTableName"
+          }
+        ]
+      }
+    },
+    {
+      "from": "ledger#src/recorder.ts:handler",
+      "to": "producer:ledger#src/recorder.ts:7:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/recorder.ts",
+      "line": 7
+    },
+    {
+      "from": "producer:ledger#src/fanout.ts:40:11",
+      "to": "channel:sqs/${…}@Resources.AuditQueue",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/fanout.ts",
+      "line": 40,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "AUDIT_QUEUE_URL"
+        ],
+        "functions": [
+          "Resources.Fanout (name generated when deployed)"
+        ]
+      }
+    },
+    {
+      "from": "producer:ledger#src/forwarder.ts:21:11",
+      "to": "channel:kinesis/${…}@Parameters.ChangeStreamName",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/forwarder.ts",
+      "line": 21,
+      "params": [
+        "{id:string;team:string;amount:number}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "CHANGE_STREAM"
+        ],
+        "functions": [
+          "Resources.Forwarder (name generated when deployed)"
+        ]
+      }
+    },
+    {
+      "from": "producer:ledger#src/recorder.ts:7:9",
+      "to": "channel:dynamodb/${…}@Parameters.LedgerTableName",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/recorder.ts",
+      "line": 7,
+      "params": [
+        "{id:{S:string};team:{S:string};amount:{N:string}}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "LEDGER_TABLE"
+        ],
+        "functions": [
+          "Resources.Recorder (name generated when deployed)"
+        ]
+      }
+    }
+  ],
+  "types": {
+    "type:ledger#Change": {
+      "name": "Change",
+      "kind": "object",
+      "declaredIn": "ledger#src/forwarder.ts",
+      "structuralHash": "234b0419ba5e4f89",
+      "fields": [
+        {
+          "name": "eventName",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "dynamodb",
+          "type": "{NewImage:object}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/fanout.ts",
+      "line": 15,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 6,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "discover -> sqs.send",
+      "meta": {
+        "causes": [
+          {
+            "cause": "module-not-installed",
+            "package": "@types/node",
+            "sites": 3,
+            "samples": [
+              {
+                "file": "src/fanout.ts",
+                "line": 25,
+                "symbol": "handler -> Buffer.from(record.kinesis.data, 'base64').toString"
+              },
+              {
+                "file": "src/fanout.ts",
+                "line": 25,
+                "symbol": "handler -> Buffer.from"
+              },
+              {
+                "file": "src/forwarder.ts",
+                "line": 17,
+                "symbol": "handler -> Buffer.from"
+              }
+            ]
+          },
+          {
+            "cause": "untyped-value",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/fanout.ts",
+                "line": 16,
+                "symbol": "discover -> url.split('/').pop"
+              },
+              {
+                "file": "src/fanout.ts",
+                "line": 16,
+                "symbol": "discover -> url.split"
+              }
+            ]
+          },
+          {
+            "cause": "module-not-installed",
+            "package": "@aws-sdk/client-sqs",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/fanout.ts",
+                "line": 15,
+                "symbol": "discover -> sqs.send"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "ledger"
+    },
+    {
+      "file": "src/fanout.ts",
+      "line": 31,
+      "reason": "channel-dynamic",
+      "message": "handler -> queueUrl",
+      "hint": "queueUrl is looked up in teamQueues by `team-${change.team}`, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere. Send to an address the code or the deployment states, or annotate handler with the channels it may use.",
+      "symbol": "producer:ledger#src/fanout.ts:31:11",
+      "service": "ledger"
+    },
+    {
+      "file": "src/forwarder.ts",
+      "line": 7,
+      "reason": "type-depth-exceeded",
+      "level": "info",
+      "hint": "Nesting is written out to 3 levels. Raise types.maxDepth to see further.",
+      "symbol": "Record<string, { S?: string; N?: string; }>",
+      "service": "ledger"
+    },
+    {
+      "file": "src/forwarder.ts",
+      "line": 20,
+      "reason": "query-in-loop",
+      "level": "info",
+      "sites": 1,
+      "message": "A `for-of` loop runs 1 publish once per item: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "ledger#src/forwarder.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 20
+        },
+        "reaches": [
+          {
+            "id": "producer:ledger#src/forwarder.ts:21:11",
+            "type": "producer",
+            "words": "publish"
+          }
+        ],
+        "severity": "likely",
+        "waysIn": 2,
+        "entries": [
+          "entry:ledger:event:dynamodb/${…}@Parameters.LedgerTableName",
+          "entry:ledger:invoke:${…}@Resources.Forwarder"
+        ]
+      },
+      "service": "ledger"
+    },
+    {
+      "file": "src/recorder.ts",
+      "line": 7,
+      "reason": "db-receiver-name-only",
+      "hint": "The type of db could not be resolved. Install the repository's dependencies, or name its base class under adapters.db.localBaseClasses.",
+      "symbol": "db.send",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@aws-sdk/client-dynamodb"
+      },
+      "service": "ledger"
+    },
+    {
+      "file": "template.yaml",
+      "line": 7,
+      "reason": "deployed-name-from-parameter",
+      "level": "info",
+      "sites": 2,
+      "message": "the table named by the parameter LedgerTableName is named by where the parameter is declared, Parameters.LedgerTableName, because the files give the parameter no value; what this deployment points at it by, or hands the parameter's value to, joins to it, and nothing outside it can",
+      "hint": "Give the parameter LedgerTableName a Default, a value in samconfig.toml's parameter_overrides, or one under services[].infra.options, and it is named by that value.",
+      "symbol": "Parameters.LedgerTableName",
+      "adapter": "aws-lambda",
+      "service": "ledger"
+    },
+    {
+      "file": "template.yaml",
+      "line": 58,
+      "reason": "deployed-name-generated",
+      "level": "info",
+      "sites": 6,
+      "message": "Resources.Recorder is a function with no name of its own, so it is named by where it is declared; what this file points at it by joins to it, and nothing outside this deployment can",
+      "hint": "Give it a name of its own where other repositories reach it.",
+      "symbol": "entry:ledger:invoke:${…}@Resources.Recorder",
+      "adapter": "aws-lambda",
+      "service": "ledger"
+    }
+  ]
+}

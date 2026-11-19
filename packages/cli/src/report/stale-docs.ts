@@ -12,8 +12,7 @@ import { readFileSync } from 'node:fs';
 import { isAbsolute, relative, sep } from 'node:path';
 import type { LoadedConfig } from '@flowatlas/core';
 import type { DocState, GraphDb } from '@flowatlas/linker';
-import { checkDocBlock } from '@flowatlas/mcp';
-import { docFiles, docsIn } from '../commands/docs.js';
+import { checkBlock, docFiles, docsIn } from '../commands/docs.js';
 import { sayChange } from '../docs/views.js';
 
 export interface StaleDoc {
@@ -110,7 +109,7 @@ export const staleDocsOf = (loaded: LoadedConfig, headRef: string | null, dbs: {
         ...(check.why === undefined ? {} : { why: check.why }),
         ...(check.near === undefined ? {} : { near: check.near }),
       };
-      (checkDocBlock(dbs.base, block).state === 'ok' ? madeStale : alreadyStale).push(stale);
+      (checkBlock(dbs.base, block).state === 'ok' ? madeStale : alreadyStale).push(stale);
     }
   }
   return {

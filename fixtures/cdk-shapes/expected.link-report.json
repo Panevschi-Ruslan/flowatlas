@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:32:43.964Z",
+  "configHash": "bdc4a0cf4303",
+  "services": [
+    {
+      "name": "club",
+      "repo": "./club",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 38,
+      "edges": 29,
+      "types": 2,
+      "unresolved": 2,
+      "durationMs": 810,
+      "packages": {
+        "name": "club",
+        "runtime": [
+          "@aws-sdk/client-sqs",
+          "aws-cdk-lib",
+          "constructs"
+        ],
+        "dev": [
+          "@types/aws-lambda",
+          "aws-cdk",
+          "tsx"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 6,
+    "linked": 1,
+    "noConsumers": [],
+    "noProducers": [
+      "channel:eventbridge/default/club.accounts/MemberJoined",
+      "channel:sns/club-dev-members",
+      "channel:sns/club-dev-staff",
+      "channel:sqs/club-dev-renewal",
+      "channel:sqs/club-dev-welcome"
+    ]
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "club",
+      "file": "lib/club-stack.ts",
+      "line": 37,
+      "reason": "export-not-found",
+      "message": "the value of SHARED_QUEUE_URL ClubStack/Reader is deployed with is the export club-shared-queue-url, which no configured service publishes, so what it names is not joined",
+      "hint": "Add the repository whose deployment declares that output to the configuration, or check the name on both sides.",
+      "symbol": "import:export:club-shared-queue-url",
+      "meta": {
+        "key": "export:club-shared-queue-url"
+      }
+    },
+    {
+      "service": "club",
+      "file": "lib/club-stack.ts",
+      "line": 67,
+      "reason": "subscription-matches-nothing",
+      "level": "info",
+      "message": "rule ClubStack/Audit/Target0 takes events by a pattern that no publisher in the configured services matches",
+      "hint": "A rule for events nothing here puts is a way in from outside - another account, a partner, the platform itself - or its publisher is in a repository the configuration does not name. Nothing to fix if it is the first.",
+      "symbol": "consumer:club#lib/club-stack.ts:ClubStack/Audit/Target0"
+    },
+    {
+      "service": "club",
+      "file": "lib/club-stack.ts",
+      "line": 75,
+      "reason": "reference-not-found",
+      "message": "rule ClubStack/MemberJoined/Target0 reaches the function club-billing-charge, which no configured service declares",
+      "hint": "Add the repository that deploys it to the configuration, so this step reaches its code.",
+      "symbol": "consumer:club#lib/club-stack.ts:ClubStack/MemberJoined/Target0",
+      "meta": {
+        "reference": "invoke:club-billing-charge"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 38,
+    "edges": 32,
+    "types": 2,
+    "missed": 3,
+    "sites": 3,
+    "notes": 3,
+    "findings": 1,
+    "unresolved": 3
+  }
+}

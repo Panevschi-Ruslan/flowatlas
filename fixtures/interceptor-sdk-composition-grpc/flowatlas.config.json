@@ -1,0 +1,31 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "grpc",
+      "baseUrlEnv": ["STOCK_ADDR"]
+    },
+    {
+      "name": "checkout",
+      "repo": "./checkout",
+      "type": "express"
+    }
+  ],
+  "output": ".flowatlas"
+}

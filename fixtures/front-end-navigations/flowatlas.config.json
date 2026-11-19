@@ -1,0 +1,30 @@
+{
+  "services": [
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "react"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs"
+    },
+    {
+      "name": "backoffice",
+      "repo": "./backoffice",
+      "type": "vue"
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "sveltekit"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular"
+    }
+  ],
+  "output": ".flowatlas"
+}

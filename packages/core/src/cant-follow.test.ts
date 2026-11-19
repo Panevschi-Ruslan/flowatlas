@@ -27,6 +27,19 @@ describe('folding keeps why', () => {
       ['dynamic-member', undefined, 1],
     ]);
     expect(causes[0]?.samples).toHaveLength(3);
+    // Every place past the samples is in a file the samples already name.
+    expect((causes[0] as { files?: string[] }).files).toBeUndefined();
+  });
+
+  it('names every other file the places of a cause are in, past its samples (P255)', () => {
+    const builder = new GraphBuilder({ repo: 'shop', generatedAt: 'fixed' });
+    for (const file of ['src/a.ts', 'src/b.ts', 'src/c.ts', 'src/e.ts', 'src/d.ts', 'src/a.ts', 'src/d.ts']) {
+      builder.addUnresolved(call(file, 1 + file.length, 'module-not-installed', '@shop/mailer'));
+    }
+    const [row] = builder.build().unresolved;
+    const [part] = row?.meta?.['causes'] as Array<{ samples: Array<{ file: string }>; files?: string[] }>;
+    expect(part?.samples.map((sample) => sample.file)).toEqual(['src/a.ts', 'src/b.ts', 'src/c.ts']);
+    expect(part?.files).toEqual(['src/d.ts', 'src/e.ts']);
   });
 
   it('adds nothing to a folded row whose places never said why', () => {

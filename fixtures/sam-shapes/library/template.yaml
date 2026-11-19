@@ -1,0 +1,419 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform:
+  - AWS::LanguageExtensions
+  - AWS::Serverless-2016-10-31
+Description: The lending desk of a town library.
+
+Parameters:
+  Stage:
+    Type: String
+  Prefix:
+    Type: String
+    Default: library
+  WithAudit:
+    Type: String
+    AllowedValues: ['yes', 'no']
+  Owner:
+    Type: String
+  Branches:
+    Type: CommaDelimitedList
+
+Mappings:
+  Rates:
+    prod:
+      Audit: rate(1 hour)
+    dev:
+      Audit: rate(1 day)
+
+Conditions:
+  IsProd: !Equals [!Ref Stage, prod]
+  IsDev: !Not [!Condition IsProd]
+  Audited: !And [!Condition IsProd, !Equals [!Ref WithAudit, 'yes']]
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    CodeUri: src/
+    Environment:
+      Variables:
+        STAGE: !Ref Stage
+  Api:
+    Auth:
+      ApiKeyRequired: true
+
+Resources:
+  # ------------------------------------------- names the platform generates
+
+  # No FunctionName: the platform names it, and it is named by its declaration.
+  LendFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: loans/lend.handler
+      Environment:
+        Variables:
+          HOLDS_QUEUE_URL: !Ref HoldsQueue
+      Events:
+        Lend:
+          Type: Api
+          Properties:
+            Path: /loans
+            Method: post
+      EventInvokeConfig:
+        DestinationConfig:
+          OnFailure:
+            Type: SQS
+            Destination: !GetAtt FailedLoansQueue.Arn
+
+  HoldsQueue:
+    Type: AWS::SQS::Queue
+
+  FailedLoansQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${Prefix}-${Stage}-failed-loans
+
+  HoldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Prefix}-${Stage}-hold
+      Handler: loans/hold.handler
+      Events:
+        Holds:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt HoldsQueue.Arn
+            FilterCriteria:
+              Filters:
+                - Pattern: '{"body": {"kind": ["hold"]}}'
+        Desk:
+          Type: HttpApi
+
+  LoansTable:
+    Type: AWS::Serverless::SimpleTable
+
+  # ------------------------------------------------- built and run otherwise
+
+  # Built with esbuild: the handler names the bundle, the entry point the source.
+  ReturnFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - returns/return-item.ts
+    Properties:
+      FunctionName: !Sub ${Prefix}-${Stage}-return-item
+      Handler: return-item.handler
+      Events:
+        Returned:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt ReturnsStream.Arn
+            StartingPosition: LATEST
+            DestinationConfig:
+              OnFailure:
+                Type: SNS
+                Destination: !Ref LostReturnsTopic
+
+  ReturnsStream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      Name: !Sub ${Prefix}-${Stage}-returns
+      ShardCount: 1
+
+  LostReturnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${Prefix}-${Stage}-lost-returns
+
+  # Deployed only where the template decides it: prod, with the audit on.
+  AuditFunction:
+    Type: AWS::Serverless::Function
+    Condition: Audited
+    Properties:
+      FunctionName: !If [IsProd, !Sub '${Prefix}-audit', !Sub '${Prefix}-${Stage}-audit']
+      Handler: audit/audit.handler
+      Events:
+        Hourly:
+          Type: ScheduleV2
+          Properties:
+            Name: !Sub ${Prefix}-${Stage}-audit
+            ScheduleExpression: !FindInMap [Rates, !Ref Stage, Audit]
+
+  # Never deployed under these parameters: not read.
+  DevSeedFunction:
+    Type: AWS::Serverless::Function
+    Condition: IsDev
+    Properties:
+      FunctionName: !Sub ${Prefix}-seed
+      Handler: dev/seed.handler
+
+  ReportFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Prefix}-${Stage}-report
+      Runtime: python3.12
+      Handler: report.handler
+      CodeUri: reports/
+      Events:
+        Weekly:
+          Type: Schedule
+          Properties:
+            Schedule: rate(7 days)
+
+  CoversFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Prefix}-${Stage}-covers
+      PackageType: Image
+      ImageUri: covers:latest
+
+  PingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Prefix}-${Stage}-ping
+      Handler: index.handler
+      InlineCode: "exports.handler = async () => 'pong';"
+
+  # A name nothing settles: Owner has no value anywhere.
+  OwnerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Owner}-${Stage}-owner
+      Handler: loans/owner.handler
+
+  # -------------------------------------------------------- other ways in
+
+  DoorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Prefix}-${Stage}-door
+      Handler: desk/door.handler
+      Environment:
+        Variables:
+          KIOSK_URL: !GetAtt KioskUrl.FunctionUrl
+          BOOK_URL: !GetAtt BookFunctionUrl.FunctionUrl
+      Events:
+        Door:
+          Type: IoTRule
+          Properties:
+            Sql: "SELECT * FROM 'library/doors/+'"
+        Joined:
+          Type: Cognito
+          Properties:
+            UserPool: !Ref MembersPool
+            Trigger: PostConfirmation
+        Logs:
+          Type: CloudWatchLogs
+          Properties:
+            LogGroupName: /library/desk
+            FilterPattern: ERROR
+        Shared:
+          Type: SNS
+          Properties:
+            Topic: !ImportValue shared-notices-topic-arn
+
+  MembersPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub ${Prefix}-members
+      LambdaConfig:
+        PreSignUp: !GetAtt DoorFunction.Arn
+
+  # An API whose routes are its OpenAPI body: in place, and in a file of its own.
+  CatalogApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${Prefix}-${Stage}-catalog
+      StageName: !Ref Stage
+      DefinitionBody:
+        openapi: '3.0.1'
+        paths:
+          /books/{isbn}:
+            get:
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                httpMethod: POST
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BookFunction.Arn}/invocations
+
+  BranchesApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${Prefix}-${Stage}-branches
+      StageName: !Ref Stage
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: api/branches.yaml
+
+  BookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Prefix}-${Stage}-book
+      Handler: catalog/book.handler
+      FunctionUrlConfig:
+        AuthType: AWS_IAM
+
+  BranchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Prefix}-${Stage}-branch
+      Handler: catalog/branch.handler
+
+  # A function written as plain CloudFormation, with its URL and its destinations beside it.
+  KioskFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${Prefix}-${Stage}-kiosk
+      Runtime: nodejs20.x
+      Handler: desk/kiosk.handler
+      Code: src/
+      Role: arn:aws:iam::111122223333:role/kiosk
+
+  KioskUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt KioskFunction.Arn
+      AuthType: AWS_IAM
+
+  KioskInvokeConfig:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName: !Ref KioskFunction
+      Qualifier: $LATEST
+      DestinationConfig:
+        OnSuccess:
+          Destination: !GetAtt FailedLoansQueue.Arn
+
+  NightlySchedule:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub ${Prefix}-${Stage}-nightly
+      ScheduleExpression: cron(0 3 * * ? *)
+      FlexibleTimeWindow:
+        Mode: 'OFF'
+      Target:
+        Arn: !GetAtt KioskFunction.Arn
+        RoleArn: arn:aws:iam::111122223333:role/scheduler
+
+  # ------------------------------------------------------------ workflows
+
+  OverdueStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub ${Prefix}-${Stage}-overdue
+      Definition:
+        StartAt: Remind
+        States:
+          Remind:
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters:
+              FunctionName: !GetAtt LendFunction.Arn
+              Payload.$: $
+            Next: Notify
+          Notify:
+            Type: Task
+            Resource: arn:aws:states:::sns:publish
+            Parameters:
+              TopicArn: ${LostTopicArn}
+              Message.$: $
+            End: true
+      DefinitionSubstitutions:
+        LostTopicArn: !Ref LostReturnsTopic
+      Events:
+        Daily:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 day)
+        Check:
+          Type: Api
+          Properties:
+            Path: /overdue
+            Method: post
+
+  # No Name: named by its declaration, and the rule below reaches it so.
+  RenewalsStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/renewals.asl.json
+      DefinitionSubstitutions:
+        HoldArn: !GetAtt HoldFunction.Arn
+      Events:
+        Renewed:
+          Type: EventBridgeRule
+          Properties:
+            Pattern:
+              source: [library.loans]
+              detail-type: [LoanRenewed]
+
+  # ------------------------------------------------ loops and nesting
+
+  # One queue per shelf, the shelves written out.
+  Fn::ForEach::Shelves:
+    - Shelf
+    - [fiction, history]
+    - ${Shelf}ShelfQueue:
+        Type: AWS::SQS::Queue
+        Properties:
+          QueueName: !Sub ${Prefix}-${Stage}-${Shelf}-shelf
+
+  # One queue per branch, the branches a parameter nothing sets.
+  Fn::ForEach::Branches:
+    - Branch
+    - !Ref Branches
+    - ${Branch}BranchQueue:
+        Type: AWS::SQS::Queue
+        Properties:
+          QueueName: !Sub ${Prefix}-${Branch}
+
+  ShelvingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Prefix}-${Stage}-shelving
+      Handler: loans/shelving.handler
+      Events:
+        Fiction:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt fictionShelfQueue.Arn
+
+  # Notices: a template of the repository, handed the topic it subscribes to.
+  Notices:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: notices/template.yaml
+      Parameters:
+        Stage: !Ref Stage
+        TopicArn: !Ref LostReturnsTopic
+
+  # Its sender is an output, which a rule here targets.
+  NoticeRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub ${Prefix}-${Stage}-notice
+      EventPattern:
+        source: [library.loans]
+        detail-type: [LoanOverdue]
+      Targets:
+        - Id: sender
+          Arn: !GetAtt Notices.Outputs.SenderArn
+
+  # Published elsewhere: not read.
+  Postcodes:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:us-east-1:111122223333:applications/postcodes
+        SemanticVersion: 1.2.0
+
+  SharedLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub ${Prefix}-shared
+      ContentUri: layers/shared/
+
+Outputs:
+  LendArn:
+    Value: !GetAtt LendFunction.Arn

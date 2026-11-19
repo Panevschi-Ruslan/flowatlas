@@ -1,0 +1,2350 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-18T16:46:50.805Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/index.ts:GET /board@5",
+      "type": "function",
+      "label": "GET /board@5",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /chart@9",
+      "type": "function",
+      "label": "GET /chart@9",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /frame@17",
+      "type": "function",
+      "label": "GET /frame@17",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /orders/recent@29",
+      "type": "function",
+      "label": "GET /orders/recent@29",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /row@13",
+      "type": "function",
+      "label": "GET /row@13",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /summary@33",
+      "type": "function",
+      "label": "GET /summary@33",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /v1/profile@21",
+      "type": "function",
+      "label": "GET /v1/profile@21",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /v1/summary@25",
+      "type": "function",
+      "label": "GET /v1/summary@25",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/board",
+      "type": "entry",
+      "label": "GET /board",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/board",
+        "rawPath": "/board",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/chart",
+      "type": "entry",
+      "label": "GET /chart",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/chart",
+        "rawPath": "/chart",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/frame",
+      "type": "entry",
+      "label": "GET /frame",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/frame",
+        "rawPath": "/frame",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/orders/recent",
+      "type": "entry",
+      "label": "GET /orders/recent",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/recent",
+        "rawPath": "/orders/recent",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/row",
+      "type": "entry",
+      "label": "GET /row",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/row",
+        "rawPath": "/row",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/summary",
+      "type": "entry",
+      "label": "GET /summary",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/summary",
+        "rawPath": "/summary",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/v1/profile",
+      "type": "entry",
+      "label": "GET /v1/profile",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/v1/profile",
+        "rawPath": "/v1/profile",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/v1/summary",
+      "type": "entry",
+      "label": "GET /v1/summary",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/v1/summary",
+        "rawPath": "/v1/summary",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/badge",
+      "type": "entry",
+      "label": "GET /badge",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/badge",
+        "rawPath": "/badge",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/board",
+      "type": "entry",
+      "label": "GET /board",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/board",
+        "rawPath": "/board",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/chart",
+      "type": "entry",
+      "label": "GET /chart",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/chart",
+        "rawPath": "/chart",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/levels",
+      "type": "entry",
+      "label": "GET /levels",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/levels",
+        "rawPath": "/levels",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/mirror",
+      "type": "entry",
+      "label": "GET /mirror",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/mirror",
+        "rawPath": "/mirror",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/v2/levels",
+      "type": "entry",
+      "label": "GET /v2/levels",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/v2/levels",
+        "rawPath": "/v2/levels",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/v2/summary",
+      "type": "entry",
+      "label": "GET /v2/summary",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/v2/summary",
+        "rawPath": "/v2/summary",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "jobs#src/readers.ts:Levels",
+      "type": "provider",
+      "label": "Levels",
+      "repo": "jobs",
+      "file": "src/readers.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "ReadersModule"
+      }
+    },
+    {
+      "id": "jobs#src/readers.ts:Levels.onModuleInit",
+      "type": "function",
+      "label": "Levels.onModuleInit",
+      "repo": "jobs",
+      "file": "src/readers.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/readers.ts:Mirror",
+      "type": "provider",
+      "label": "Mirror",
+      "repo": "jobs",
+      "file": "src/readers.ts",
+      "line": 25,
+      "kind": "injectable",
+      "meta": {
+        "module": "ReadersModule"
+      }
+    },
+    {
+      "id": "jobs#src/readers.ts:Mirror.onModuleInit",
+      "type": "function",
+      "label": "Mirror.onModuleInit",
+      "repo": "jobs",
+      "file": "src/readers.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/readers.ts:ReadersModule",
+      "type": "module",
+      "label": "ReadersModule",
+      "repo": "jobs",
+      "file": "src/readers.ts",
+      "line": 49,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "Levels",
+          "LEVELS_READER",
+          "Summary",
+          "SUMMARY_READER",
+          "Mirror",
+          "MIRROR_READER"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "jobs#src/readers.ts:Summary",
+      "type": "provider",
+      "label": "Summary",
+      "repo": "jobs",
+      "file": "src/readers.ts",
+      "line": 15,
+      "kind": "injectable",
+      "meta": {
+        "module": "ReadersModule"
+      }
+    },
+    {
+      "id": "jobs#src/readers.ts:Summary.onModuleInit",
+      "type": "function",
+      "label": "Summary.onModuleInit",
+      "repo": "jobs",
+      "file": "src/readers.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/shared.ts:Reader",
+      "type": "provider",
+      "label": "Reader",
+      "repo": "jobs",
+      "file": "src/shared.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "ReadersModule"
+      }
+    },
+    {
+      "id": "jobs#src/shared.ts:Reader.read",
+      "type": "function",
+      "label": "Reader.read",
+      "repo": "jobs",
+      "file": "src/shared.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/status.tsx:Status",
+      "type": "ui_component",
+      "label": "Status",
+      "repo": "jobs",
+      "file": "src/status.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4600,
+            "file": "src/index.ts",
+            "line": 37
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 6,
+          "skippedExternalCalls": {},
+          "functions": 3,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4700,
+            "file": "src/index.ts",
+            "line": 33
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "functions": 16,
+          "components": 10,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /badge@13",
+      "type": "function",
+      "label": "GET /badge@13",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /board@5",
+      "type": "function",
+      "label": "GET /board@5",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /chart@9",
+      "type": "function",
+      "label": "GET /chart@9",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /levels@25",
+      "type": "function",
+      "label": "GET /levels@25",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /mirror@29",
+      "type": "function",
+      "label": "GET /mirror@29",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /v2/levels@17",
+      "type": "function",
+      "label": "GET /v2/levels@17",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /v2/summary@21",
+      "type": "function",
+      "label": "GET /v2/summary@21",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:jobs#src/readers.ts:10:12@11:12",
+      "type": "ui_api_call",
+      "label": "GET /levels",
+      "repo": "jobs",
+      "file": "src/readers.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/levels",
+        "path": "/levels",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Reader.read",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:jobs#src/readers.ts:20:12@11:12",
+      "type": "ui_api_call",
+      "label": "GET /summary",
+      "repo": "jobs",
+      "file": "src/readers.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/summary",
+        "path": "/summary",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Reader.read",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:jobs#src/readers.ts:30:12@11:12",
+      "type": "ui_api_call",
+      "label": "GET /mirror",
+      "repo": "jobs",
+      "file": "src/readers.ts",
+      "line": 30,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/mirror",
+        "path": "/mirror",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Reader.read",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages.jsx:32:7",
+      "type": "ui_api_call",
+      "label": "GET /row",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 32,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/row",
+        "path": "/row",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages.jsx:42:5",
+      "type": "ui_api_call",
+      "label": "GET /frame",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 42,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/frame",
+        "path": "/frame",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages.jsx:55:17",
+      "type": "ui_api_call",
+      "label": "GET /badge",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 55,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/badge",
+        "path": "/badge",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages.jsx:63:14@13:5",
+      "type": "ui_api_call",
+      "label": "GET /board",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 63,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/board",
+        "path": "/board",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Board",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages.jsx:64:14@22:7",
+      "type": "ui_api_call",
+      "label": "GET /chart",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 64,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/chart",
+        "path": "/chart",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Chart",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages.jsx:74:14@13:5",
+      "type": "ui_api_call",
+      "label": "GET /board",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 74,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/board",
+        "path": "/board",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Board",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages.jsx:75:14@22:7",
+      "type": "ui_api_call",
+      "label": "GET /chart",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 75,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/chart",
+        "path": "/chart",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Chart",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/profile.jsx:21:5@16:10",
+      "type": "ui_api_call",
+      "label": "GET /v1/summary",
+      "repo": "web",
+      "file": "src/profile.jsx",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/v1/summary",
+        "path": "/v1/summary",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ApiClient",
+        "localClient": "recognised",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "loadSummary",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/profile.jsx:28:5@16:10",
+      "type": "ui_api_call",
+      "label": "GET /v2/summary",
+      "repo": "web",
+      "file": "src/profile.jsx",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/v2/summary",
+        "path": "/v2/summary",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ApiClient",
+        "localClient": "recognised",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "loadSummary",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/profile.jsx:40:10",
+      "type": "ui_api_call",
+      "label": "GET /any",
+      "repo": "web",
+      "file": "src/profile.jsx",
+      "line": 40,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/any",
+        "path": "/any",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ApiClient",
+        "localClient": "recognised",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/profile.jsx:7:5",
+      "type": "ui_api_call",
+      "label": "GET /v1/profile",
+      "repo": "web",
+      "file": "src/profile.jsx",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/v1/profile",
+        "path": "/v1/profile",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ApiClient",
+        "localClient": "recognised",
+        "via": "literal",
+        "host": "localhost:4600",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/profile.jsx:8:5",
+      "type": "ui_api_call",
+      "label": "GET /v2/levels",
+      "repo": "web",
+      "file": "src/profile.jsx",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/v2/levels",
+        "path": "/v2/levels",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ApiClient",
+        "localClient": "recognised",
+        "via": "literal",
+        "host": "localhost:4700",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/profile.jsx:9:5",
+      "type": "ui_api_call",
+      "label": "GET /orders/recent",
+      "repo": "web",
+      "file": "src/profile.jsx",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/orders/recent",
+        "path": "/orders/recent",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ApiClient",
+        "localClient": "recognised",
+        "via": "literal",
+        "host": "localhost:4600",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "web#src/pages.jsx:Badge",
+      "type": "ui_component",
+      "label": "Badge",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 53,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ client, label }",
+              "type": "object"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/pages.jsx:Board",
+      "type": "ui_component",
+      "label": "Board",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 11,
+      "kind": "function"
+    },
+    {
+      "id": "web#src/pages.jsx:CatalogPage",
+      "type": "ui_component",
+      "label": "CatalogPage",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 60,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/pages.jsx:Chart",
+      "type": "ui_component",
+      "label": "Chart",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 18,
+      "kind": "function"
+    },
+    {
+      "id": "web#src/pages.jsx:Frame",
+      "type": "ui_component",
+      "label": "Frame",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 40,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ client, title, ...rest }",
+              "type": "object"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/pages.jsx:Row",
+      "type": "ui_component",
+      "label": "Row",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 29,
+      "kind": "function"
+    },
+    {
+      "id": "web#src/pages.jsx:StockPage",
+      "type": "ui_component",
+      "label": "StockPage",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 71,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/pages.jsx:withOptions",
+      "type": "function",
+      "label": "withOptions",
+      "repo": "web",
+      "file": "src/pages.jsx",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "options",
+              "type": "any"
+            },
+            {
+              "name": "Component",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#src/profile.jsx:CatalogSummary",
+      "type": "ui_component",
+      "label": "CatalogSummary",
+      "repo": "web",
+      "file": "src/profile.jsx",
+      "line": 19,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/profile.jsx:Profile",
+      "type": "ui_component",
+      "label": "Profile",
+      "repo": "web",
+      "file": "src/profile.jsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/profile.jsx:StockSummary",
+      "type": "ui_component",
+      "label": "StockSummary",
+      "repo": "web",
+      "file": "src/profile.jsx",
+      "line": 26,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/profile.jsx:loadAny",
+      "type": "function",
+      "label": "loadAny",
+      "repo": "web",
+      "file": "src/profile.jsx",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "client",
+              "type": "type:web#ApiClient"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#src/profile.jsx:loadSummary",
+      "type": "function",
+      "label": "loadSummary",
+      "repo": "web",
+      "file": "src/profile.jsx",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "client",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:http:GET:/board",
+      "to": "catalog#src/index.ts:GET /board@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/chart",
+      "to": "catalog#src/index.ts:GET /chart@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/frame",
+      "to": "catalog#src/index.ts:GET /frame@17",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 17,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/orders/recent",
+      "to": "catalog#src/index.ts:GET /orders/recent@29",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 29,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/row",
+      "to": "catalog#src/index.ts:GET /row@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/summary",
+      "to": "catalog#src/index.ts:GET /summary@33",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 33,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/v1/profile",
+      "to": "catalog#src/index.ts:GET /v1/profile@21",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 21,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/v1/summary",
+      "to": "catalog#src/index.ts:GET /v1/summary@25",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 25,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/badge",
+      "to": "stock#src/index.ts:GET /badge@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/board",
+      "to": "stock#src/index.ts:GET /board@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/chart",
+      "to": "stock#src/index.ts:GET /chart@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/levels",
+      "to": "stock#src/index.ts:GET /levels@25",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 25,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/mirror",
+      "to": "stock#src/index.ts:GET /mirror@29",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 29,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/v2/levels",
+      "to": "stock#src/index.ts:GET /v2/levels@17",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 17,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/v2/summary",
+      "to": "stock#src/index.ts:GET /v2/summary@21",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 21,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "jobs#src/readers.ts:Levels",
+      "to": "jobs#src/shared.ts:Reader",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/readers.ts",
+      "line": 7
+    },
+    {
+      "from": "jobs#src/readers.ts:Levels.onModuleInit",
+      "to": "jobs#src/shared.ts:Reader.read",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "any",
+      "file": "src/readers.ts",
+      "line": 10
+    },
+    {
+      "from": "jobs#src/readers.ts:Levels.onModuleInit",
+      "to": "ui_api_call:jobs#src/readers.ts:10:12@11:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/readers.ts",
+      "line": 10
+    },
+    {
+      "from": "jobs#src/readers.ts:Mirror",
+      "to": "jobs#src/shared.ts:Reader",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/readers.ts",
+      "line": 27
+    },
+    {
+      "from": "jobs#src/readers.ts:Mirror.onModuleInit",
+      "to": "jobs#src/shared.ts:Reader.read",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "any",
+      "file": "src/readers.ts",
+      "line": 30
+    },
+    {
+      "from": "jobs#src/readers.ts:Mirror.onModuleInit",
+      "to": "ui_api_call:jobs#src/readers.ts:30:12@11:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/readers.ts",
+      "line": 30
+    },
+    {
+      "from": "jobs#src/readers.ts:Summary",
+      "to": "jobs#src/shared.ts:Reader",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/readers.ts",
+      "line": 17
+    },
+    {
+      "from": "jobs#src/readers.ts:Summary.onModuleInit",
+      "to": "jobs#src/shared.ts:Reader.read",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "any",
+      "file": "src/readers.ts",
+      "line": 20
+    },
+    {
+      "from": "jobs#src/readers.ts:Summary.onModuleInit",
+      "to": "ui_api_call:jobs#src/readers.ts:20:12@11:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/readers.ts",
+      "line": 20
+    },
+    {
+      "from": "ui_api_call:jobs#src/readers.ts:10:12@11:12",
+      "to": "entry:stock:http:GET:/levels",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/readers.ts",
+      "line": 10,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:33"
+      }
+    },
+    {
+      "from": "ui_api_call:jobs#src/readers.ts:20:12@11:12",
+      "to": "entry:catalog:http:GET:/summary",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/readers.ts",
+      "line": 20,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:37"
+      }
+    },
+    {
+      "from": "ui_api_call:jobs#src/readers.ts:30:12@11:12",
+      "to": "entry:stock:http:GET:/mirror",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/readers.ts",
+      "line": 30,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:33"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages.jsx:32:7",
+      "to": "entry:catalog:http:GET:/row",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 32,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:37"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages.jsx:42:5",
+      "to": "entry:catalog:http:GET:/frame",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 42,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:37"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages.jsx:55:17",
+      "to": "entry:stock:http:GET:/badge",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 55,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:33"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages.jsx:63:14@13:5",
+      "to": "entry:catalog:http:GET:/board",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 63,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:37"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages.jsx:64:14@22:7",
+      "to": "entry:catalog:http:GET:/chart",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 64,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:37"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages.jsx:74:14@13:5",
+      "to": "entry:stock:http:GET:/board",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 74,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:33"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages.jsx:75:14@22:7",
+      "to": "entry:stock:http:GET:/chart",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 75,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:33"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/profile.jsx:21:5@16:10",
+      "to": "entry:catalog:http:GET:/v1/summary",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/profile.jsx",
+      "line": 21,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:37"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/profile.jsx:28:5@16:10",
+      "to": "entry:stock:http:GET:/v2/summary",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/profile.jsx",
+      "line": 28,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:33"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/profile.jsx:7:5",
+      "to": "entry:catalog:http:GET:/v1/profile",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/profile.jsx",
+      "line": 7,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:37"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/profile.jsx:8:5",
+      "to": "entry:stock:http:GET:/v2/levels",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/profile.jsx",
+      "line": 8,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:33"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/profile.jsx:9:5",
+      "to": "entry:catalog:http:GET:/orders/recent",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/profile.jsx",
+      "line": 9,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:37"
+      }
+    },
+    {
+      "from": "web#src/pages.jsx:Badge",
+      "to": "ui_api_call:web#src/pages.jsx:55:17",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 55
+    },
+    {
+      "from": "web#src/pages.jsx:Board",
+      "to": "web#src/pages.jsx:withOptions",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any",
+        "any"
+      ],
+      "returns": "any",
+      "file": "src/pages.jsx",
+      "line": 11
+    },
+    {
+      "from": "web#src/pages.jsx:CatalogPage",
+      "to": "ui_api_call:web#src/pages.jsx:63:14@13:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 63
+    },
+    {
+      "from": "web#src/pages.jsx:CatalogPage",
+      "to": "ui_api_call:web#src/pages.jsx:64:14@22:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 64
+    },
+    {
+      "from": "web#src/pages.jsx:CatalogPage",
+      "to": "web#src/pages.jsx:Board",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 63,
+      "meta": {
+        "renders": "Board"
+      }
+    },
+    {
+      "from": "web#src/pages.jsx:CatalogPage",
+      "to": "web#src/pages.jsx:Chart",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 64,
+      "meta": {
+        "renders": "Chart"
+      }
+    },
+    {
+      "from": "web#src/pages.jsx:CatalogPage",
+      "to": "web#src/pages.jsx:Frame",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "unknown",
+      "file": "src/pages.jsx",
+      "line": 66,
+      "meta": {
+        "renders": "Frame"
+      }
+    },
+    {
+      "from": "web#src/pages.jsx:CatalogPage",
+      "to": "web#src/pages.jsx:Row",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 65,
+      "meta": {
+        "renders": "Row"
+      }
+    },
+    {
+      "from": "web#src/pages.jsx:Chart",
+      "to": "web#src/pages.jsx:withOptions",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any",
+        "any"
+      ],
+      "returns": "any",
+      "file": "src/pages.jsx",
+      "line": 18
+    },
+    {
+      "from": "web#src/pages.jsx:Frame",
+      "to": "ui_api_call:web#src/pages.jsx:42:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 42
+    },
+    {
+      "from": "web#src/pages.jsx:Frame",
+      "to": "web#src/pages.jsx:Badge",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "unknown",
+      "file": "src/pages.jsx",
+      "line": 47,
+      "meta": {
+        "renders": "Badge"
+      }
+    },
+    {
+      "from": "web#src/pages.jsx:Row",
+      "to": "ui_api_call:web#src/pages.jsx:32:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 32
+    },
+    {
+      "from": "web#src/pages.jsx:StockPage",
+      "to": "ui_api_call:web#src/pages.jsx:74:14@13:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 74
+    },
+    {
+      "from": "web#src/pages.jsx:StockPage",
+      "to": "ui_api_call:web#src/pages.jsx:75:14@22:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 75
+    },
+    {
+      "from": "web#src/pages.jsx:StockPage",
+      "to": "web#src/pages.jsx:Badge",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "unknown",
+      "file": "src/pages.jsx",
+      "line": 76,
+      "meta": {
+        "renders": "Badge"
+      }
+    },
+    {
+      "from": "web#src/pages.jsx:StockPage",
+      "to": "web#src/pages.jsx:Board",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 74,
+      "meta": {
+        "renders": "Board"
+      }
+    },
+    {
+      "from": "web#src/pages.jsx:StockPage",
+      "to": "web#src/pages.jsx:Chart",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages.jsx",
+      "line": 75,
+      "meta": {
+        "renders": "Chart"
+      }
+    },
+    {
+      "from": "web#src/profile.jsx:CatalogSummary",
+      "to": "ui_api_call:web#src/profile.jsx:21:5@16:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/profile.jsx",
+      "line": 21
+    },
+    {
+      "from": "web#src/profile.jsx:CatalogSummary",
+      "to": "web#src/profile.jsx:loadSummary",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "src/profile.jsx",
+      "line": 21
+    },
+    {
+      "from": "web#src/profile.jsx:Profile",
+      "to": "ui_api_call:web#src/profile.jsx:7:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/profile.jsx",
+      "line": 7
+    },
+    {
+      "from": "web#src/profile.jsx:Profile",
+      "to": "ui_api_call:web#src/profile.jsx:8:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/profile.jsx",
+      "line": 8
+    },
+    {
+      "from": "web#src/profile.jsx:Profile",
+      "to": "ui_api_call:web#src/profile.jsx:9:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/profile.jsx",
+      "line": 9
+    },
+    {
+      "from": "web#src/profile.jsx:StockSummary",
+      "to": "ui_api_call:web#src/profile.jsx:28:5@16:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/profile.jsx",
+      "line": 28
+    },
+    {
+      "from": "web#src/profile.jsx:StockSummary",
+      "to": "web#src/profile.jsx:loadSummary",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "src/profile.jsx",
+      "line": 28
+    },
+    {
+      "from": "web#src/profile.jsx:loadAny",
+      "to": "ui_api_call:web#src/profile.jsx:40:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/profile.jsx",
+      "line": 40
+    }
+  ],
+  "types": {
+    "type:web#ApiClient": {
+      "name": "ApiClient",
+      "kind": "object",
+      "declaredIn": "web#src/account.js",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 8,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /board@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 8,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 6,
+                "symbol": "GET /board@5 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 10,
+                "symbol": "GET /chart@9 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 14,
+                "symbol": "GET /row@13 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/main.ts",
+      "line": 1,
+      "reason": "bootstrap-not-found",
+      "hint": "Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.",
+      "symbol": "bootstrap",
+      "service": "jobs"
+    },
+    {
+      "file": "src/shared.ts",
+      "line": 8,
+      "reason": "di-type-unresolved",
+      "hint": "Inject a class, or name the provider with @Inject(TOKEN).",
+      "symbol": "Reader.constructor[0]",
+      "meta": {
+        "cause": "untyped-parameter"
+      },
+      "service": "jobs"
+    },
+    {
+      "file": "src/status.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "jobs"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 7,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /board@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 7,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 6,
+                "symbol": "GET /board@5 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 10,
+                "symbol": "GET /chart@9 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 14,
+                "symbol": "GET /badge@13 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "stock"
+    },
+    {
+      "file": "src/pages.jsx",
+      "line": 40,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/pages.jsx",
+      "line": 53,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/pages.jsx",
+      "line": 60,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/pages.jsx",
+      "line": 71,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/profile.jsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/profile.jsx",
+      "line": 19,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/profile.jsx",
+      "line": 26,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/profile.jsx",
+      "line": 40,
+      "reason": "api-client-base-unread",
+      "hint": "ApiClient's instances are each given their own base outside the class, and which instance this receiver holds could not be followed to where it is made, so the request is recorded under the path it writes. Hand the receiver an instance made where this reader can follow it, or give the class one base.",
+      "symbol": "client.get('/any')",
+      "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "src/profile.jsx",
+      "line": 40,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /any",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /any */.",
+      "symbol": "ui_api_call:web#src/profile.jsx:40:10"
+    }
+  ]
+}

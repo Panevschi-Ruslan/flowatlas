@@ -1,0 +1,10 @@
+{
+  "name": "front-end-route-helpers-sites",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^19.0.0"
+  }
+}

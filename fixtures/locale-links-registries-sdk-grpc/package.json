@@ -1,0 +1,7 @@
+{
+  "name": "locale-links-registries-sdk-grpc",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Workspace root. Declares the six services, and holds no code of its own.",
+  "workspaces": ["wiki", "site", "portal", "console", "stock", "checkout"]
+}

@@ -244,3 +244,109 @@ export class GoneComponent {}
     expect(rows(graph, 'handler-not-found')[0]?.hint).toContain('No method named save');
   });
 });
+
+describe("a class's navigations through the router (P276)", () => {
+  const files = {
+    'app.routes.ts': `import { provideRouter } from '@angular/router';
+import { ListComponent } from './list.component';
+import { ItemComponent } from './item.component';
+export const config = provideRouter([
+  { path: 'invoices', component: ListComponent },
+  { path: 'invoices/:id', component: ItemComponent },
+]);
+`,
+    'list.component.ts': `import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+@Component({ selector: 'app-list', template: '<ul></ul>' })
+export class ListComponent {
+  constructor(private readonly router: Router) {}
+  open(id: string) { this.router.navigate(['/invoices', id]); }
+  leave() { this.router.navigateByUrl('https://pay.example.com'); }
+  lost() { this.router.navigateByUrl('/archive'); }
+  sibling(id: string) { this.router.navigate([id], { relativeTo: this }); }
+}
+`,
+    'item.component.ts': `import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
+@Component({ selector: 'app-item', template: '<p></p>' })
+export class ItemComponent {
+  private readonly router = inject(Router);
+  back() { this.router.navigateByUrl('/invoices'); }
+}
+`,
+  };
+
+  it('joins `navigate([...])` and `navigateByUrl(...)` to the screen the route shows, and says the rest', () => {
+    const graph = extract(files);
+    const byId = new Map(graph.nodes.map((node) => [node.id, node]));
+    const drawn = graph.edges
+      .filter((edge) => edge.type === 'calls' && edge.meta?.['navigates'] !== undefined)
+      .map((edge) => `${String(byId.get(edge.from)?.label)} -> ${String(byId.get(edge.to)?.label)} (${String(edge.meta?.['navigates'])})`)
+      .sort();
+    expect(drawn).toEqual(['ItemComponent.back -> ListComponent (/invoices)', 'ListComponent.open -> ItemComponent (/invoices/:param)']);
+    expect(reasons(graph).filter((reason) => reason.startsWith('navigation-'))).toEqual(['navigation-external', 'navigation-unresolved', 'navigation-unresolved']);
+    const why = rows(graph, 'navigation-unresolved').map((row) => row.meta?.['why']).sort();
+    expect(why).toEqual(['dynamic', 'missing']);
+  });
+});
+
+describe("a template's and a guard's navigations (P288)", () => {
+  const files = {
+    'app.routes.ts': `import { provideRouter } from '@angular/router';
+import { authGuard } from './auth.guard';
+import { StartComponent } from './start.component';
+import { LoginComponent } from './login.component';
+import { QueueComponent } from './queue.component';
+export const config = provideRouter([
+  { path: '', component: StartComponent },
+  { path: 'login', component: LoginComponent },
+  { path: 'queue', component: QueueComponent, canActivate: [authGuard] },
+]);
+`,
+    'auth.guard.ts': `import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+export const authGuard = () => {
+  const router = inject(Router);
+  return localStorage.getItem('session') !== null ? true : router.createUrlTree(['/login']);
+};
+export function endedGuard() {
+  return inject(Router).parseUrl('/');
+}
+`,
+    'start.component.ts': `import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+@Component({
+  selector: 'app-start',
+  template: '<button (click)="router.navigate([\\'/queue\\'])">Q</button><button (click)="router.navigateByUrl(\\'/login\\')">L</button><button (click)="router.navigate([\\'/archive\\'])">A</button>',
+})
+export class StartComponent {
+  constructor(public readonly router: Router) {}
+}
+`,
+    'login.component.ts': `import { Component } from '@angular/core';
+@Component({ selector: 'app-login', template: '<form></form>' })
+export class LoginComponent {}
+`,
+    'queue.component.ts': `import { Component } from '@angular/core';
+@Component({ selector: 'app-queue', template: '<ul></ul>' })
+export class QueueComponent {}
+`,
+  };
+
+  it("joins a click's `navigate` to the screen it shows, and a functional guard's `createUrlTree` and `parseUrl` as redirects", () => {
+    const graph = extract(files);
+    const byId = new Map(graph.nodes.map((node) => [node.id, node]));
+    const clicks = graph.edges
+      .filter((edge) => edge.type === 'triggers' && edge.meta?.['navigates'] !== undefined)
+      .map((edge) => `${String(edge.meta?.['navigates'])} -> ${String(byId.get(edge.to)?.label)}`)
+      .sort();
+    expect(clicks).toEqual(['/login -> LoginComponent', '/queue -> QueueComponent']);
+    const guards = graph.edges
+      .filter((edge) => edge.type === 'calls' && edge.meta?.['navigates'] !== undefined)
+      .map((edge) => `${String(byId.get(edge.from)?.label)} -> ${String(byId.get(edge.to)?.label)} (${String(edge.meta?.['redirects'])})`)
+      .sort();
+    expect(guards).toEqual(['authGuard -> LoginComponent (true)', 'endedGuard -> StartComponent (true)']);
+    expect(rows(graph, 'navigation-unresolved').map((row) => row.symbol)).toEqual(['StartComponent (click) navigates to /archive']);
+    expect(reasons(graph)).not.toContain('handler-not-a-method');
+  });
+});

@@ -1,0 +1,117 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-12T19:17:19.580Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:market#app/lib/catalog.ts:12:21",
+        "to": "entry:ledger:http:GET:/api/entries",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:market#app/lib/catalog.ts:12:21|http_calls|entry:ledger:http:GET:/api/entries",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "market#app/lib/catalog.ts:readEntries declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:market#app/lib/catalog.ts:12:21",
+        "to": "entry:ledger:http:GET:/api/entries",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:market#app/lib/catalog.ts:12:21|http_calls|entry:ledger:http:GET:/api/entries",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "ledger#src/index.ts:GET /api/entries@5 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:market#app/lib/catalog.ts:6:21",
+        "to": "entry:inventory:http:GET:/api/listings",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:market#app/lib/catalog.ts:6:21|http_calls|entry:inventory:http:GET:/api/listings",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "market#app/lib/catalog.ts:readListings declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:market#app/lib/catalog.ts:6:21",
+        "to": "entry:inventory:http:GET:/api/listings",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:market#app/lib/catalog.ts:6:21|http_calls|entry:inventory:http:GET:/api/listings",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "inventory#src/index.ts:GET /api/listings@5 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:market#app/lib/catalog.ts:12:21",
+        "to": "entry:ledger:http:GET:/api/entries",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:market#app/lib/catalog.ts:12:21|hits|entry:ledger:http:GET:/api/entries",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "market#app/lib/catalog.ts:readEntries declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:market#app/lib/catalog.ts:12:21",
+        "to": "entry:ledger:http:GET:/api/entries",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:market#app/lib/catalog.ts:12:21|hits|entry:ledger:http:GET:/api/entries",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "ledger#src/index.ts:GET /api/entries@5 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:market#app/lib/catalog.ts:6:21",
+        "to": "entry:inventory:http:GET:/api/listings",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:market#app/lib/catalog.ts:6:21|hits|entry:inventory:http:GET:/api/listings",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "market#app/lib/catalog.ts:readListings declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:market#app/lib/catalog.ts:6:21",
+        "to": "entry:inventory:http:GET:/api/listings",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:market#app/lib/catalog.ts:6:21|hits|entry:inventory:http:GET:/api/listings",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "inventory#src/index.ts:GET /api/listings@5 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 8,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

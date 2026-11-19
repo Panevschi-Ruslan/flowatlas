@@ -1,0 +1,1038 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-17T18:25:17.229Z",
+  "services": [
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:billing",
+      "type": "channel",
+      "label": "billing",
+      "repo": "jobs",
+      "file": "src/signup.ts",
+      "line": 15,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:digests",
+      "type": "channel",
+      "label": "digests",
+      "repo": "jobs",
+      "file": "src/layers.ts",
+      "line": 27,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:eventbridge/stock-events/stock/StockCounted",
+      "type": "channel",
+      "label": "eventbridge/stock-events/stock/StockCounted",
+      "repo": "stock",
+      "file": "src/count.ts",
+      "line": 7,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:eventbridge/stock-events/stock/StockMoved",
+      "type": "channel",
+      "label": "eventbridge/stock-events/stock/StockMoved",
+      "repo": "stock",
+      "file": "src/move.ts",
+      "line": 7,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:mail",
+      "type": "channel",
+      "label": "mail",
+      "repo": "jobs",
+      "file": "src/signup.ts",
+      "line": 8,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 2,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "entry:gateway:http:GET:/v1/orders",
+      "type": "entry",
+      "label": "GET /v1/orders",
+      "repo": "gateway",
+      "file": "infra/main.tf",
+      "line": 45,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/v1/orders",
+        "rawPath": "/orders",
+        "deployedBy": "terraform",
+        "api": "shop-orders",
+        "function": "shop-orders",
+        "declaredAs": "aws_apigatewayv2_route.orders",
+        "basePath": "/v1",
+        "domains": [
+          "**.orders.shop.example.test"
+        ],
+        "stages": [
+          "$default"
+        ],
+        "servedAt": [
+          {
+            "host": "**.orders.shop.example.test",
+            "base": [],
+            "api": "shop-orders",
+            "chosenHost": "default.orders.shop.example.test",
+            "hostChosenBy": "the workspace"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:gateway:invoke:shop-orders",
+      "type": "entry",
+      "label": "shop-orders",
+      "repo": "gateway",
+      "file": "infra/main.tf",
+      "line": 24,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-orders",
+        "deployedBy": "terraform",
+        "name": "shop-orders",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.orders",
+        "handler": "orders.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stock:invoke:stock-count",
+      "type": "entry",
+      "label": "stock-count",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 35,
+      "kind": "invoke",
+      "meta": {
+        "key": "stock-count",
+        "deployedBy": "cdk",
+        "name": "stock-count",
+        "runtime": "nodejs20.x",
+        "declaredAs": "StockStack/Count",
+        "constructPath": "StockStack/Count",
+        "handler": "src/count.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "queue",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-counter is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "CounterRole"
+          },
+          {
+            "kind": "topic",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-counter is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "CounterRole"
+          },
+          {
+            "kind": "bus",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-counter is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "CounterRole"
+          },
+          {
+            "kind": "stream",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-counter is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "CounterRole"
+          },
+          {
+            "kind": "table",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-counter is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "CounterRole"
+          },
+          {
+            "kind": "bucket",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-counter is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "CounterRole"
+          },
+          {
+            "kind": "function",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-counter is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "CounterRole"
+          },
+          {
+            "kind": "workflow",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-counter is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "CounterRole"
+          },
+          {
+            "kind": "bus",
+            "name": "stock-events",
+            "by": "grantPutEventsTo, on the bus's own policy"
+          }
+        ],
+        "reads": {
+          "": "{sku:string;counted:number}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stock:invoke:stock-move",
+      "type": "entry",
+      "label": "stock-move",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 28,
+      "kind": "invoke",
+      "meta": {
+        "key": "stock-move",
+        "deployedBy": "cdk",
+        "name": "stock-move",
+        "runtime": "nodejs20.x",
+        "declaredAs": "StockStack/Move",
+        "constructPath": "StockStack/Move",
+        "handler": "src/move.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "queue",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "topic",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "bus",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "stream",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "table",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "bucket",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "function",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "workflow",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "bus",
+            "unread": "the bus's policy takes the grant only with a statement id, and the one it is handed is not read: the environment variable MOVER_SID is read when the app is run",
+            "by": "grantPutEventsTo"
+          }
+        ],
+        "reads": {
+          "": "{sku:string;quantity:number}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "gateway#src/orders.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "gateway",
+      "file": "src/orders.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/layers.ts:Digests",
+      "type": "provider",
+      "label": "Digests",
+      "repo": "jobs",
+      "file": "src/layers.ts",
+      "line": 19,
+      "kind": "injectable"
+    },
+    {
+      "id": "jobs#src/layers.ts:Digests.send",
+      "type": "method",
+      "label": "Digests.send",
+      "repo": "jobs",
+      "file": "src/layers.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/layers.ts:Notifier",
+      "type": "provider",
+      "label": "Notifier",
+      "repo": "jobs",
+      "file": "src/layers.ts",
+      "line": 4,
+      "kind": "injectable"
+    },
+    {
+      "id": "jobs#src/layers.ts:Notifier.notify",
+      "type": "method",
+      "label": "Notifier.notify",
+      "repo": "jobs",
+      "file": "src/layers.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/layers.ts:Settings",
+      "type": "provider",
+      "label": "Settings",
+      "repo": "jobs",
+      "file": "src/layers.ts",
+      "line": 32,
+      "kind": "injectable"
+    },
+    {
+      "id": "jobs#src/layers.ts:Settings.flush",
+      "type": "method",
+      "label": "Settings.flush",
+      "repo": "jobs",
+      "file": "src/layers.ts",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/signup.ts:charge",
+      "type": "function",
+      "label": "charge",
+      "repo": "jobs",
+      "file": "src/signup.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customer",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/signup.ts:remind",
+      "type": "function",
+      "label": "remind",
+      "repo": "jobs",
+      "file": "src/signup.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "target",
+              "type": "any"
+            },
+            {
+              "name": "to",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/signup.ts:remindAll",
+      "type": "function",
+      "label": "remindAll",
+      "repo": "jobs",
+      "file": "src/signup.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/signup.ts:welcome",
+      "type": "function",
+      "label": "welcome",
+      "repo": "jobs",
+      "file": "src/signup.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:jobs#src/layers.ts:12:11",
+      "type": "producer",
+      "label": "job ?",
+      "repo": "jobs",
+      "file": "src/layers.ts",
+      "line": 12,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "unresolved",
+        "method": "add",
+        "jobName": "notice"
+      }
+    },
+    {
+      "id": "producer:jobs#src/layers.ts:27:11",
+      "type": "producer",
+      "label": "job digests",
+      "repo": "jobs",
+      "file": "src/layers.ts",
+      "line": 27,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "digest"
+      }
+    },
+    {
+      "id": "producer:jobs#src/layers.ts:40:11",
+      "type": "producer",
+      "label": "job ?",
+      "repo": "jobs",
+      "file": "src/layers.ts",
+      "line": 40,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "unresolved",
+        "method": "add",
+        "jobName": "flush"
+      }
+    },
+    {
+      "id": "producer:jobs#src/signup.ts:15:9",
+      "type": "producer",
+      "label": "job billing",
+      "repo": "jobs",
+      "file": "src/signup.ts",
+      "line": 15,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "charge"
+      }
+    },
+    {
+      "id": "producer:jobs#src/signup.ts:19:45",
+      "type": "producer",
+      "label": "job mail",
+      "repo": "jobs",
+      "file": "src/signup.ts",
+      "line": 19,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "reminder"
+      }
+    },
+    {
+      "id": "producer:jobs#src/signup.ts:8:9",
+      "type": "producer",
+      "label": "job mail",
+      "repo": "jobs",
+      "file": "src/signup.ts",
+      "line": 8,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "welcome"
+      }
+    },
+    {
+      "id": "producer:stock#src/count.ts:7:9",
+      "type": "producer",
+      "label": "event eventbridge/stock-events/stock/StockCounted",
+      "repo": "stock",
+      "file": "src/count.ts",
+      "line": 7,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "literal",
+        "method": "send",
+        "batch": true
+      }
+    },
+    {
+      "id": "producer:stock#src/move.ts:7:9",
+      "type": "producer",
+      "label": "event eventbridge/stock-events/stock/StockMoved",
+      "repo": "stock",
+      "file": "src/move.ts",
+      "line": 7,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "literal",
+        "method": "send",
+        "batch": true
+      }
+    },
+    {
+      "id": "repo:gateway",
+      "type": "repo",
+      "label": "gateway",
+      "repo": "gateway",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "functions": 1,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "browser"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "stock#src/count.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "stock",
+      "file": "src/count.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{sku:string;counted:number}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/move.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "stock",
+      "file": "src/move.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{sku:string;quantity:number}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/shop.js:5:24",
+      "type": "ui_api_call",
+      "label": "GET /v1/orders",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://eu.staging.orders.shop.example.test/v1/orders",
+        "path": "/v1/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "eu.staging.orders.shop.example.test",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "web#js/shop.js:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:gateway:http:GET:/v1/orders",
+      "to": "gateway#src/orders.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:gateway:invoke:shop-orders",
+      "to": "gateway#src/orders.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:stock:invoke:stock-count",
+      "to": "stock#src/count.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/count.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:stock:invoke:stock-move",
+      "to": "stock#src/move.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/move.ts",
+      "line": 6
+    },
+    {
+      "from": "jobs#src/layers.ts:Digests.send",
+      "to": "producer:jobs#src/layers.ts:27:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/layers.ts",
+      "line": 27
+    },
+    {
+      "from": "jobs#src/layers.ts:Notifier.notify",
+      "to": "producer:jobs#src/layers.ts:12:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/layers.ts",
+      "line": 12
+    },
+    {
+      "from": "jobs#src/layers.ts:Settings.flush",
+      "to": "producer:jobs#src/layers.ts:40:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/layers.ts",
+      "line": 40
+    },
+    {
+      "from": "jobs#src/signup.ts:charge",
+      "to": "producer:jobs#src/signup.ts:15:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/signup.ts",
+      "line": 15
+    },
+    {
+      "from": "jobs#src/signup.ts:remind",
+      "to": "producer:jobs#src/signup.ts:19:45",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/signup.ts",
+      "line": 19
+    },
+    {
+      "from": "jobs#src/signup.ts:remindAll",
+      "to": "jobs#src/signup.ts:remind",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any",
+        "string"
+      ],
+      "returns": "any",
+      "file": "src/signup.ts",
+      "line": 22
+    },
+    {
+      "from": "jobs#src/signup.ts:welcome",
+      "to": "producer:jobs#src/signup.ts:8:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/signup.ts",
+      "line": 8
+    },
+    {
+      "from": "producer:jobs#src/layers.ts:27:11",
+      "to": "channel:digests",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "object"
+      ],
+      "file": "src/layers.ts",
+      "line": 27
+    },
+    {
+      "from": "producer:jobs#src/signup.ts:15:9",
+      "to": "channel:billing",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{customer:string}"
+      ],
+      "file": "src/signup.ts",
+      "line": 15
+    },
+    {
+      "from": "producer:jobs#src/signup.ts:19:45",
+      "to": "channel:mail",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{to:string}"
+      ],
+      "file": "src/signup.ts",
+      "line": 19
+    },
+    {
+      "from": "producer:jobs#src/signup.ts:8:9",
+      "to": "channel:mail",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{to:string}"
+      ],
+      "file": "src/signup.ts",
+      "line": 8
+    },
+    {
+      "from": "producer:stock#src/count.ts:7:9",
+      "to": "channel:eventbridge/stock-events/stock/StockCounted",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{sku:string;counted:number}"
+      ],
+      "file": "src/count.ts",
+      "line": 7
+    },
+    {
+      "from": "producer:stock#src/move.ts:7:9",
+      "to": "channel:eventbridge/stock-events/stock/StockMoved",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{sku:string;quantity:number}"
+      ],
+      "file": "src/move.ts",
+      "line": 7
+    },
+    {
+      "from": "stock#src/count.ts:handler",
+      "to": "producer:stock#src/count.ts:7:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/count.ts",
+      "line": 7
+    },
+    {
+      "from": "stock#src/move.ts:handler",
+      "to": "producer:stock#src/move.ts:7:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/move.ts",
+      "line": 7
+    },
+    {
+      "from": "ui_api_call:web#js/shop.js:5:24",
+      "to": "entry:gateway:http:GET:/v1/orders",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/shop.js",
+      "line": 5,
+      "meta": {
+        "via": "served-at",
+        "targetService": "gateway",
+        "servedApi": "shop-orders"
+      }
+    },
+    {
+      "from": "web#js/shop.js:listOrders",
+      "to": "ui_api_call:web#js/shop.js:5:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 5
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/orders.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyEventV2",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "gateway"
+    },
+    {
+      "file": "src/orders.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResultV2",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "gateway"
+    },
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "jobs"
+    },
+    {
+      "file": "src/layers.ts",
+      "line": 12,
+      "reason": "channel-const-unresolved",
+      "message": "Notifier.notify -> this.queue",
+      "hint": "The channel name cannot be read here. Annotate Notifier.notify with the channel it uses.",
+      "symbol": "producer:jobs#src/layers.ts:12:11",
+      "service": "jobs"
+    },
+    {
+      "file": "src/layers.ts",
+      "line": 40,
+      "reason": "channel-const-unresolved",
+      "message": "Settings.flush -> this.queue",
+      "hint": "The channel name cannot be read here. Annotate Settings.flush with the channel it uses.",
+      "symbol": "producer:jobs#src/layers.ts:40:11",
+      "service": "jobs"
+    },
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 5,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://eu.staging.orders.shop.example.test/v1/orders names its API by an id no file holds; it is taken as shop-orders of gateway, the API of the project served at **.orders.shop.example.test with a route for it, at whatever host the workspace names (default.orders.shop.example.test where none is given), and the request as one for /v1/orders on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:5:24"
+    }
+  ]
+}

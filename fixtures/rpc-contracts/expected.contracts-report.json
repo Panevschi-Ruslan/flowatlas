@@ -1,0 +1,712 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-07T17:43:56.689Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:worker#src/billing.service.ts:18:12",
+        "to": "entry:billing:rpc:invoices.create",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/billing.service.ts:18:12|hits|entry:billing:rpc:invoices.create",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "worker",
+        "typeId": "{orderId:string}",
+        "symbol": "worker#src/billing.service.ts:BillingService.invoice",
+        "writes": [
+          "orderId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "{orderId:string}",
+        "symbol": "billing#src/router.ts:invoices.create@17"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/billing.service.ts:23:12",
+        "to": "entry:billing:rpc:invoices.byOrder",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/billing.service.ts:23:12|hits|entry:billing:rpc:invoices.byOrder",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "worker",
+        "typeId": "{order:string}",
+        "symbol": "worker#src/billing.service.ts:BillingService.invoicesOf",
+        "writes": [
+          "order"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "{orderId:string}",
+        "symbol": "billing#src/router.ts:invoices.byOrder@18"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:worker#src/billing.service.ts:23:12",
+            "to": "entry:billing:rpc:invoices.byOrder",
+            "type": "hits"
+          },
+          "edgeKey": "http_out:worker#src/billing.service.ts:23:12|hits|entry:billing:rpc:invoices.byOrder",
+          "direction": "request",
+          "sender": {
+            "service": "worker",
+            "typeId": "{order:string}",
+            "symbol": "worker#src/billing.service.ts:BillingService.invoicesOf",
+            "writes": [
+              "order"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "billing",
+            "typeId": "{orderId:string}",
+            "symbol": "billing#src/router.ts:invoices.byOrder@18"
+          },
+          "typeId": "{orderId:string}",
+          "field": "order",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender worker sends `order: string`; receiver billing declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:worker#src/billing.service.ts:23:12",
+            "to": "entry:billing:rpc:invoices.byOrder",
+            "type": "hits"
+          },
+          "edgeKey": "http_out:worker#src/billing.service.ts:23:12|hits|entry:billing:rpc:invoices.byOrder",
+          "direction": "request",
+          "sender": {
+            "service": "worker",
+            "typeId": "{order:string}",
+            "symbol": "worker#src/billing.service.ts:BillingService.invoicesOf",
+            "writes": [
+              "order"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "billing",
+            "typeId": "{orderId:string}",
+            "symbol": "billing#src/router.ts:invoices.byOrder@18"
+          },
+          "typeId": "{orderId:string}",
+          "field": "orderId",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver billing requires `orderId: string`; sender worker does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/billing.service.ts:28:12",
+        "to": "entry:billing:rpc:invoices.void",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/billing.service.ts:28:12|hits|entry:billing:rpc:invoices.void",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "worker",
+        "typeId": "{invoiceId:string}",
+        "symbol": "worker#src/billing.service.ts:BillingService.void",
+        "writes": [
+          "invoiceId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "{invoiceId:string}",
+        "symbol": "billing#src/router.ts:invoices.void@19"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/ledger.client.ts:13:12",
+        "to": "entry:ledger:rpc:entries.record",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/ledger.client.ts:13:12|hits|entry:ledger:rpc:entries.record",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "worker",
+        "typeId": "{orderId:string;amount:number}",
+        "symbol": "worker#src/ledger.client.ts:LedgerClient.record",
+        "writes": [
+          "amount",
+          "orderId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "ledger",
+        "typeId": "{orderId:string;amount:number}",
+        "symbol": "ledger#src/router.ts:entries.record@11"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/orders.client.ts:17:12",
+        "to": "entry:orders:rpc:orders.place",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/orders.client.ts:17:12|hits|entry:orders:rpc:orders.place",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "worker",
+        "typeId": "type:worker#NewOrder",
+        "symbol": "worker#src/orders.client.ts:OrdersClient.place",
+        "writes": [
+          "qty",
+          "sku"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{sku:string;quantity:number}",
+        "symbol": "orders#src/router.ts:orders.place@20"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:worker#src/orders.client.ts:17:12",
+            "to": "entry:orders:rpc:orders.place",
+            "type": "hits"
+          },
+          "edgeKey": "http_out:worker#src/orders.client.ts:17:12|hits|entry:orders:rpc:orders.place",
+          "direction": "request",
+          "sender": {
+            "service": "worker",
+            "typeId": "type:worker#NewOrder",
+            "symbol": "worker#src/orders.client.ts:OrdersClient.place",
+            "writes": [
+              "qty",
+              "sku"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "{sku:string;quantity:number}",
+            "symbol": "orders#src/router.ts:orders.place@20"
+          },
+          "typeId": "{sku:string;quantity:number}",
+          "field": "qty",
+          "expected": null,
+          "actual": "number",
+          "rule": null,
+          "message": "sender worker sends `qty: number`; receiver orders declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:worker#src/orders.client.ts:17:12",
+            "to": "entry:orders:rpc:orders.place",
+            "type": "hits"
+          },
+          "edgeKey": "http_out:worker#src/orders.client.ts:17:12|hits|entry:orders:rpc:orders.place",
+          "direction": "request",
+          "sender": {
+            "service": "worker",
+            "typeId": "type:worker#NewOrder",
+            "symbol": "worker#src/orders.client.ts:OrdersClient.place",
+            "writes": [
+              "qty",
+              "sku"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "{sku:string;quantity:number}",
+            "symbol": "orders#src/router.ts:orders.place@20"
+          },
+          "typeId": "{sku:string;quantity:number}",
+          "field": "quantity",
+          "expected": "number",
+          "actual": null,
+          "rule": null,
+          "message": "receiver orders requires `quantity: number`; sender worker does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/orders.client.ts:17:12",
+        "to": "entry:orders:rpc:orders.place",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/orders.client.ts:17:12|hits|entry:orders:rpc:orders.place",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "{id:string}",
+        "symbol": "orders#src/router.ts:orders.place@20"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "type:worker#PlacedOrder",
+        "symbol": "worker#src/orders.client.ts:OrdersClient.place"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:worker#src/orders.client.ts:17:12",
+            "to": "entry:orders:rpc:orders.place",
+            "type": "hits"
+          },
+          "edgeKey": "http_out:worker#src/orders.client.ts:17:12|hits|entry:orders:rpc:orders.place",
+          "direction": "response",
+          "sender": {
+            "service": "orders",
+            "typeId": "{id:string}",
+            "symbol": "orders#src/router.ts:orders.place@20"
+          },
+          "receiver": {
+            "service": "worker",
+            "typeId": "type:worker#PlacedOrder",
+            "symbol": "worker#src/orders.client.ts:OrdersClient.place"
+          },
+          "typeId": "type:worker#PlacedOrder",
+          "field": "total",
+          "expected": "number",
+          "actual": null,
+          "rule": null,
+          "message": "receiver worker requires `total: number`; sender orders does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/orders.client.ts:22:12",
+        "to": "entry:orders:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/orders.client.ts:22:12|hits|entry:orders:rpc:orders.get",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "worker",
+        "typeId": "{id:string}",
+        "symbol": "worker#src/orders.client.ts:OrdersClient.find",
+        "writes": [
+          "id"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{id:string}",
+        "symbol": "orders#src/router.ts:orders.get@24"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/orders.client.ts:22:12",
+        "to": "entry:orders:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/orders.client.ts:22:12|hits|entry:orders:rpc:orders.get",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "{id:string;sku:string;quantity:number}",
+        "symbol": "orders#src/router.ts:orders.get@24"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "type:worker#Order",
+        "symbol": "worker#src/orders.client.ts:OrdersClient.find"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/orders.client.ts:27:12",
+        "to": "entry:orders:rpc:orders.count",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/orders.client.ts:27:12|hits|entry:orders:rpc:orders.count",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "number",
+        "symbol": "orders#src/router.ts:orders.count@26"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "number",
+        "symbol": "worker#src/orders.client.ts:OrdersClient.count"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:portal#src/app/invoices.service.ts:11:12",
+        "to": "entry:billing:rpc:invoices.byOrder",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:portal#src/app/invoices.service.ts:11:12|hits|entry:billing:rpc:invoices.byOrder",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "portal",
+        "typeId": "{orderId:string}",
+        "symbol": "portal#src/app/invoices.service.ts:InvoicesService.invoicesOf",
+        "writes": [
+          "orderId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "{orderId:string}",
+        "symbol": "billing#src/router.ts:invoices.byOrder@18"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:portal#src/app/invoices.service.ts:16:12",
+        "to": "entry:billing:rpc:invoices.create",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:portal#src/app/invoices.service.ts:16:12|hits|entry:billing:rpc:invoices.create",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "portal",
+        "typeId": "{orderId:string}",
+        "symbol": "portal#src/app/invoices.service.ts:InvoicesService.invoice",
+        "writes": [
+          "orderId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "{orderId:string}",
+        "symbol": "billing#src/router.ts:invoices.create@17"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:worker#src/billing.service.ts:23:12",
+        "to": "entry:billing:rpc:invoices.byOrder",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/billing.service.ts:23:12|hits|entry:billing:rpc:invoices.byOrder",
+      "direction": "request",
+      "sender": {
+        "service": "worker",
+        "typeId": "{order:string}",
+        "symbol": "worker#src/billing.service.ts:BillingService.invoicesOf",
+        "writes": [
+          "order"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "{orderId:string}",
+        "symbol": "billing#src/router.ts:invoices.byOrder@18"
+      },
+      "typeId": "{orderId:string}",
+      "field": "order",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender worker sends `order: string`; receiver billing declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "http_out:worker#src/billing.service.ts:23:12",
+        "to": "entry:billing:rpc:invoices.byOrder",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/billing.service.ts:23:12|hits|entry:billing:rpc:invoices.byOrder",
+      "direction": "request",
+      "sender": {
+        "service": "worker",
+        "typeId": "{order:string}",
+        "symbol": "worker#src/billing.service.ts:BillingService.invoicesOf",
+        "writes": [
+          "order"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "{orderId:string}",
+        "symbol": "billing#src/router.ts:invoices.byOrder@18"
+      },
+      "typeId": "{orderId:string}",
+      "field": "orderId",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver billing requires `orderId: string`; sender worker does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:worker#src/orders.client.ts:17:12",
+        "to": "entry:orders:rpc:orders.place",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/orders.client.ts:17:12|hits|entry:orders:rpc:orders.place",
+      "direction": "request",
+      "sender": {
+        "service": "worker",
+        "typeId": "type:worker#NewOrder",
+        "symbol": "worker#src/orders.client.ts:OrdersClient.place",
+        "writes": [
+          "qty",
+          "sku"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{sku:string;quantity:number}",
+        "symbol": "orders#src/router.ts:orders.place@20"
+      },
+      "typeId": "{sku:string;quantity:number}",
+      "field": "qty",
+      "expected": null,
+      "actual": "number",
+      "rule": null,
+      "message": "sender worker sends `qty: number`; receiver orders declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "http_out:worker#src/orders.client.ts:17:12",
+        "to": "entry:orders:rpc:orders.place",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/orders.client.ts:17:12|hits|entry:orders:rpc:orders.place",
+      "direction": "request",
+      "sender": {
+        "service": "worker",
+        "typeId": "type:worker#NewOrder",
+        "symbol": "worker#src/orders.client.ts:OrdersClient.place",
+        "writes": [
+          "qty",
+          "sku"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{sku:string;quantity:number}",
+        "symbol": "orders#src/router.ts:orders.place@20"
+      },
+      "typeId": "{sku:string;quantity:number}",
+      "field": "quantity",
+      "expected": "number",
+      "actual": null,
+      "rule": null,
+      "message": "receiver orders requires `quantity: number`; sender worker does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "http_out:worker#src/orders.client.ts:17:12",
+        "to": "entry:orders:rpc:orders.place",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/orders.client.ts:17:12|hits|entry:orders:rpc:orders.place",
+      "direction": "response",
+      "sender": {
+        "service": "orders",
+        "typeId": "{id:string}",
+        "symbol": "orders#src/router.ts:orders.place@20"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "type:worker#PlacedOrder",
+        "symbol": "worker#src/orders.client.ts:OrdersClient.place"
+      },
+      "typeId": "type:worker#PlacedOrder",
+      "field": "total",
+      "expected": "number",
+      "actual": null,
+      "rule": null,
+      "message": "receiver worker requires `total: number`; sender orders does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:worker#src/billing.service.ts:18:12",
+        "to": "entry:billing:rpc:invoices.create",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/billing.service.ts:18:12|hits|entry:billing:rpc:invoices.create",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/billing.service.ts:BillingService.invoice reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/billing.service.ts:23:12",
+        "to": "entry:billing:rpc:invoices.byOrder",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/billing.service.ts:23:12|hits|entry:billing:rpc:invoices.byOrder",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/billing.service.ts:BillingService.invoicesOf reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/billing.service.ts:28:12",
+        "to": "entry:billing:rpc:invoices.void",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/billing.service.ts:28:12|hits|entry:billing:rpc:invoices.void",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/billing.service.ts:BillingService.void reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/ledger.client.ts:13:12",
+        "to": "entry:ledger:rpc:entries.record",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/ledger.client.ts:13:12|hits|entry:ledger:rpc:entries.record",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/ledger.client.ts:LedgerClient.record reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/orders.client.ts:27:12",
+        "to": "entry:orders:rpc:orders.count",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/orders.client.ts:27:12|hits|entry:orders:rpc:orders.count",
+      "direction": "request",
+      "reason": "procedure-input-undeclared",
+      "message": "entry:orders:rpc:orders.count declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:portal#src/app/invoices.service.ts:11:12",
+        "to": "entry:billing:rpc:invoices.byOrder",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:portal#src/app/invoices.service.ts:11:12|hits|entry:billing:rpc:invoices.byOrder",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "portal#src/app/invoices.service.ts:InvoicesService.invoicesOf reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:portal#src/app/invoices.service.ts:16:12",
+        "to": "entry:billing:rpc:invoices.create",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:portal#src/app/invoices.service.ts:16:12|hits|entry:billing:rpc:invoices.create",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "portal#src/app/invoices.service.ts:InvoicesService.invoice reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    }
+  ],
+  "summary": {
+    "edges": 11,
+    "shared": 0,
+    "identical": 7,
+    "hash_differs": 4,
+    "unchecked": 7,
+    "errors": 3,
+    "warnings": 0,
+    "infos": 2,
+    "ignored": 0
+  }
+}

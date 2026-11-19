@@ -17,7 +17,7 @@
       "entriesByKind": {
         "http": 8
       },
-      "gaps": 3
+      "gaps": 4
     },
     {
       "service": "orders",
@@ -33,12 +33,12 @@
       "nodes": 32,
       "entries": 0,
       "entriesByKind": {},
-      "gaps": 6
+      "gaps": 7
     }
   ],
   "counts": {
-    "gaps": 9,
-    "sites": 9,
+    "gaps": 11,
+    "sites": 11,
     "notes": 0,
     "findings": 4,
     "nothing": 0
@@ -46,14 +46,15 @@
   "topGaps": [
     {
       "reason": "api-path-dynamic",
-      "count": 3,
+      "count": 4,
       "services": [
         "web"
       ],
       "example": {
-        "message": "this.http.get<unknown>(this.opaque())",
+        "message": "GET /orders/${…}-summary is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
         "service": "web",
-        "loc": "src/app/orders-api.service.ts:124"
+        "loc": "src/app/orders-api.service.ts:48",
+        "id": "ui_api_call:web#src/app/orders-api.service.ts:48:12"
       }
     },
     {
@@ -71,6 +72,18 @@
       }
     },
     {
+      "reason": "dynamic-http-url",
+      "count": 2,
+      "services": [
+        "gateway"
+      ],
+      "example": {
+        "message": "this.http.post<InvoiceDto>(this.registry.invoicesUrl(), {\n      orderId: order.i",
+        "service": "gateway",
+        "loc": "src/clients/billing.client.ts:33"
+      }
+    },
+    {
       "reason": "ambiguous-route-target",
       "count": 1,
       "services": [
@@ -81,18 +94,6 @@
         "service": "web",
         "loc": "src/app/orders-api.service.ts:34",
         "id": "ui_api_call:web#src/app/orders-api.service.ts:34:12"
-      }
-    },
-    {
-      "reason": "dynamic-http-url",
-      "count": 1,
-      "services": [
-        "gateway"
-      ],
-      "example": {
-        "message": "this.http.post<InvoiceDto>(this.registry.invoicesUrl(), {\n      orderId: order.i",
-        "service": "gateway",
-        "loc": "src/clients/billing.client.ts:33"
       }
     },
     {

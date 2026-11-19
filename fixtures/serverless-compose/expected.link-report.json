@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:36:38.267Z",
+  "configHash": "d5f21819587d",
+  "services": [
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 17,
+      "edges": 13,
+      "types": 3,
+      "unresolved": 3,
+      "durationMs": 0,
+      "packages": {
+        "name": "jobs",
+        "runtime": [
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 1,
+    "linked": 1,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:jobs:http:GET:/health",
+      "entry:jobs:http:POST:/jobs"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 3,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 17,
+    "edges": 15,
+    "types": 3,
+    "missed": 1,
+    "sites": 1,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 1
+  }
+}

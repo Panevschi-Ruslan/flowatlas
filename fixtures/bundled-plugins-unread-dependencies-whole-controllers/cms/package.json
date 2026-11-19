@@ -1,0 +1,16 @@
+{
+  "name": "cms",
+  "private": true,
+  "scripts": {
+    "develop": "strapi develop",
+    "start": "strapi start"
+  },
+  "dependencies": {
+    "@shop/strapi-plugin-reports": "^1.4.0",
+    "@strapi/plugin-users-permissions": "^5.10.0",
+    "@strapi/strapi": "^5.10.0",
+    "strapi-plugin-notes": "^0.9.0",
+    "strapi-plugin-tags": "^3.0.0",
+    "tagger-kit": "^1.0.0"
+  }
+}
