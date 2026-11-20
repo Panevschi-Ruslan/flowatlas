@@ -209,6 +209,8 @@ const FINDINGS: readonly string[] = [
   'subscription-matches-nothing',
   // A job added to a queue whose every handler names another (P271)
   'job-no-handler',
+  // A type of message published on a channel whose consumers choose by type, none choosing it (P358)
+  'message-type-unselected',
 ];
 
 // The reader could not follow something. Listed rather than left to the
@@ -325,6 +327,8 @@ const GAPS: readonly string[] = [
   // the screen, is not read (P359)
   'stream-relay-unread',
   'stream-handler-unread',
+  // The type of a message, at a publish or where a consumer chooses by it, not read (P358)
+  'message-type-unread',
   'start-from-environment',
   'start-name-unread',
   'starter-undescribed',
@@ -592,6 +596,7 @@ const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
       'stream-no-writer',
       'subscription-matches-nothing',
       'job-no-handler',
+      'message-type-unselected',
       // A status traffic answered that no failure declares (P106): an
       // exception nobody mapped to the status it should answer.
       'failure-seen-undeclared',

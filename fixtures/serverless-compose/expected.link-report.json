@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:36:38.267Z",
+  "builtAt": "2026-11-20T13:16:36.053Z",
   "configHash": "d5f21819587d",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 13,
       "types": 3,
       "unresolved": 3,
-      "durationMs": 0,
+      "durationMs": 685,
       "packages": {
         "name": "jobs",
         "runtime": [
@@ -61,8 +61,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 17,
-    "edges": 15,
+    "nodes": 18,
+    "edges": 16,
     "types": 3,
     "missed": 1,
     "sites": 1,

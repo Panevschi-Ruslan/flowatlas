@@ -1,0 +1,46 @@
+{
+  "query": "QUOTA_WARNING",
+  "counts": {
+    "messages": 1,
+    "gaps": 1
+  },
+  "results": {
+    "messages": [
+      {
+        "id": "channel:space:*:events#QUOTA_WARNING",
+        "type": "message_type",
+        "label": "QUOTA_WARNING",
+        "channel": "space:*:events",
+        "service": "docs-api",
+        "producers": [
+          "producer:docs-api#src/spaces/spaces.service.ts:37:5"
+        ],
+        "handlers": [],
+        "sites": 2,
+        "unselected": "no code that runs selects QUOTA_WARNING on space:*:events: only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types (ActivityFeed.onMessage, AuditTrail.record and 3 more); StreamRelay.forward passes every type on without choosing, and what takes them past it is not read"
+      }
+    ],
+    "gaps": [
+      {
+        "id": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+        "gapId": "gap:docs-api|src/spaces/spaces.service.ts|message-type-unselected",
+        "type": "gap",
+        "reason": "message-type-unselected",
+        "kind": "finding",
+        "service": "docs-api",
+        "loc": "src/spaces/spaces.service.ts:37",
+        "message": "no code that runs selects QUOTA_WARNING on space:*:events: only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types (ActivityFeed.onMessage, AuditTrail.record and 3 more); StreamRelay.forward passes every type on without choosing, and what takes them past it is not read",
+        "sites": 1,
+        "places": [
+          "src/spaces/spaces.service.ts:37"
+        ]
+      }
+    ]
+  },
+  "next": [
+    "who_consumes({channel: \"channel:space:*:events\", type: \"QUOTA_WARNING\"})",
+    "who_emits({channel: \"channel:space:*:events\", type: \"QUOTA_WARNING\"})",
+    "describe_for_prompt({id: \"gap:docs-api|src/spaces/spaces.service.ts|message-type-unselected\"})",
+    "get_source({symbol: \"producer:docs-api#src/spaces/spaces.service.ts:37:5\"})"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "channel": {
+    "id": "channel:space:*:events",
+    "type": "channel",
+    "label": "space:*:events",
+    "loc": "src/spaces/spaces.service.ts:16",
+    "service": "docs-api"
+  },
+  "producers": [],
+  "total": 0,
+  "type": "DOC_ARCHIVED",
+  "note": "nothing read publishes DOC_ARCHIVED on space:*:events; 1 publish on it sends a type not read, which may be it",
+  "maybe": [
+    {
+      "id": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+      "type": "producer",
+      "label": "event space:*:events",
+      "loc": "src/spaces/spaces.service.ts:46",
+      "service": "docs-api",
+      "kind": "event"
+    }
+  ],
+  "next": [
+    "who_consumes({channel: \"channel:space:*:events\", type: \"DOC_ARCHIVED\"})"
+  ]
+}

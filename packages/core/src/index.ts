@@ -1213,3 +1213,22 @@ export {
   type StreamHolding,
   type StreamListener,
 } from './event-stream.js';
+export {
+  DISCRIMINATOR_FIELDS,
+  DISCRIMINATOR_META,
+  isDiscriminatorField,
+  isMessageTypeNode,
+  makeMessageTypeId,
+  MESSAGE_TYPE_KIND,
+  MESSAGE_TYPE_UNREAD_META,
+  MESSAGE_TYPES_META,
+  messageTypesOf,
+  SELECTED_BY_META,
+  SELECTION_UNREAD_META,
+  selectionsOf,
+  SELECTS_META,
+  SELECTS_OTHERS_META,
+  type DiscriminatorField,
+  type Selection,
+  type SelectionVia,
+} from './message-types.js';

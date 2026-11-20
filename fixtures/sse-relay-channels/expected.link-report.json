@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-20T12:50:24.751Z",
+  "builtAt": "2026-11-20T13:41:26.812Z",
   "configHash": "9968b986e1bb",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 2,
       "unresolved": 3,
-      "durationMs": 0,
+      "durationMs": 1058,
       "packages": {
         "name": "edge",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 19,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 722,
       "packages": {
         "name": "portal",
         "runtime": [
@@ -49,7 +49,7 @@
       "edges": 31,
       "types": 0,
       "unresolved": 7,
-      "durationMs": 0,
+      "durationMs": 1202,
       "packages": {
         "name": "shipping",
         "runtime": [
@@ -84,7 +84,10 @@
     "total": 2,
     "linked": 2,
     "noConsumers": [],
-    "noProducers": []
+    "noProducers": [],
+    "unselectedTypes": [
+      "channel:workspace:*:events#COURIER_ASSIGNED"
+    ]
   },
   "routes": {
     "total": 8,
@@ -120,16 +123,30 @@
       "message": "target service shipping has no route GET /notices/stream",
       "hint": "Route renamed? Check shipping's controllers, or annotate the method with /** @flowatlas-calls GET /notices/stream */.",
       "symbol": "ui_api_call:portal#src/live/ticker.ts:30:18"
+    },
+    {
+      "file": "src/parcels/parcels.service.ts",
+      "line": 19,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects COURIER_ASSIGNED on workspace:*:events: 1 consumer chooses other types (handleParcelEvent); GET /live/:workspaceId@15, onTick and 1 more pass every type on without choosing, and what takes them past it is not read; CourierPanel not read (its handler is not code this reads)",
+      "symbol": "producer:shipping#src/parcels/parcels.service.ts:19:11",
+      "service": "shipping",
+      "meta": {
+        "type": "channel:workspace:*:events#COURIER_ASSIGNED",
+        "channel": "channel:workspace:*:events",
+        "messageType": "COURIER_ASSIGNED",
+        "sureness": "unsure"
+      }
     }
   ],
   "totals": {
-    "nodes": 69,
-    "edges": 66,
+    "nodes": 71,
+    "edges": 69,
     "types": 3,
     "missed": 12,
     "sites": 14,
     "notes": 0,
-    "findings": 0,
+    "findings": 1,
     "unresolved": 12
   }
 }

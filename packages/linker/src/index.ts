@@ -318,6 +318,9 @@ export type {
   TrafficOverlay,
 } from './analysis/never-seen.js';
 export { collectFindings, compareFindingKinds, FINDING_KINDS, findingKindOf, rankFindings } from './analysis/findings.js';
+export { messageTypeFacts, messageTypesOn, unreachedHandler, unselectedSaid } from './analysis/message-types.js';
+export type { ChannelReceiver, MessageTypeFacts, MessageTypeLookup, TypeSelector, Unselected } from './analysis/message-types.js';
+export { joinMessageTypes } from './message-types.js';
 export type {
   CollectedFindings,
   ContractBreak,

@@ -1,5 +1,8 @@
 import {
   AWAITING_META,
+  DISCRIMINATOR_META,
+  MESSAGE_TYPE_UNREAD_META,
+  MESSAGE_TYPES_META,
   GRANTABLE_META,
   type GrantableAddress,
   GUESSED_META,
@@ -77,6 +80,7 @@ import { endpointShapingAt, isUnreadable, unreadableEndpointRow, type EndpointSh
 import { pairKey, readBrokerMarkers } from './markers.js';
 import { rowAbout, type RowSite } from './row-site.js';
 import { isStartPattern, startReader } from './starts.js';
+import { readMessageType } from './message-type.js';
 
 const lineColOf = (node: TsNode): { line: number; column: number } =>
   lineAndColumnAt(node.getSourceFile(), node.getStart());
@@ -855,6 +859,9 @@ export const extractBrokers = (ctx: PassContext): void => {
     // Two of a layer's calls drawn at one caller - its `add` and its
     // `addBulk`, each reached on its own way out - are one publish there,
     // naming every job either names (P298).
+    // The type of message it sends, where its payload has one (P358): read
+    // at the caller a publish was followed out to, as its message is.
+    const typed = readMessageType(from !== undefined ? from.payload : messageAt(call, pattern, context));
     const prior = ctx.builder.getNode(producerId);
     if (prior?.type === 'producer' && prior.meta !== undefined && jobName !== undefined) mergeJobs(prior.meta, jobName, jobs.jobNames);
     ctx.builder.addNode({
@@ -892,6 +899,11 @@ export const extractBrokers = (ctx: PassContext): void => {
         ...(from === undefined ? {} : { through: [...from.through] }),
         // Which rule of the project's patterns drew it, when one did (P121).
         ...(pattern.describedBy === undefined ? {} : { describedBy: pattern.describedBy }),
+        ...(typed === undefined
+          ? {}
+          : 'types' in typed
+            ? { [MESSAGE_TYPES_META]: [...typed.types], [DISCRIMINATOR_META]: typed.field }
+            : { [MESSAGE_TYPE_UNREAD_META]: typed.why, [DISCRIMINATOR_META]: typed.field }),
       },
     });
     ctx.builder.addEdge({
@@ -908,6 +920,16 @@ export const extractBrokers = (ctx: PassContext): void => {
     // than spelling `Class.method` again is what lets a function be named as a
     // function rather than as a method of nothing.
     const site: RowSite = { named: ctx.builder.getNode(methodId)?.label ?? methodId, node: producerId };
+    if (typed !== undefined && 'why' in typed) {
+      ctx.report({
+        file,
+        line,
+        reason: 'message-type-unread',
+        level: 'info',
+        hint: `${typed.why} So this publish is drawn onto its channel and onto no type of message on it.`,
+        ...rowAbout(site, typed.field),
+      });
+    }
     if (!readable) {
       if (channelName === null) reportEndpoint(shaping, spec, file, line, site);
     } else {

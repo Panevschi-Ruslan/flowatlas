@@ -43,6 +43,7 @@ import {
 import { createReactContext } from './context.js';
 import { declaresReact, forcedFor } from './framework.js';
 import { COMPONENT_TAIL_NAME } from './sfc/formats.js';
+import { messageTypesPass } from '@flowatlas/adapters-broker';
 import { sfcPass } from './sfc/pass.js';
 import { buildReactFunctionIndex } from './index-functions.js';
 import { actionsPass } from './passes/actions.js';
@@ -157,6 +158,9 @@ export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   proceduresPass,
   markersPass,
   entriesPass,
+  // After every reader that draws a consumer: the types of message each
+  // chooses on (P358), the same reading a server's consumers get.
+  messageTypesPass,
   signaturesPass,
 ];
 

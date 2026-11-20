@@ -144,6 +144,18 @@ const HELPER_CASES = [
 ];
 
 /**
+ * Types of message on one channel (P358): the handlers that select a type,
+ * a type selected only in a class nothing builds, the publishes of a type,
+ * and a type found by its value.
+ */
+const MESSAGE_TYPE_CASES = [
+  ['who_consumes.type', 'who_consumes', { channel: 'space:<spaceId>:events', type: 'MEMBER_JOINED' }],
+  ['who_consumes.unselected', 'who_consumes', { channel: 'space:*:events', type: 'QUOTA_WARNING' }],
+  ['who_emits.type-unread', 'who_emits', { channel: 'space:*:events', type: 'DOC_ARCHIVED' }],
+  ['search.message', 'search', { query: 'QUOTA_WARNING' }],
+];
+
+/**
  * Loops that run a query per item (P89): searched busiest first, each saying
  * how sure it is, and written into the prompt with the ways in that reach it.
  */
@@ -453,6 +465,11 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'nest-check-through-helper'),
     outDir: join(root, 'fixtures', 'nest-check-through-helper', 'expected.mcp'),
     cases: HELPER_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'space-message-types'),
+    outDir: join(root, 'fixtures', 'space-message-types', 'expected.mcp'),
+    cases: MESSAGE_TYPE_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

@@ -31,6 +31,8 @@ export { endpointShapingAt, isUnreadable, unreadableEndpointRow } from './endpoi
 export type { Endpoint, EndpointShaping } from './endpoint.js';
 export { pairKey, readBrokerMarkers } from './markers.js';
 export { rowAbout } from './row-site.js';
+export { messageTypesPass, readMessageType, readMessageTypes, readSelections } from './message-type.js';
+export type { ChosenHandler, MessageTypeHost, MessageTypeReading, ReadSelection, SelectionLookup, SelectionReading } from './message-type.js';
 export type { RowSite } from './row-site.js';
 
 import type { AdapterRegistry } from '@flowatlas/core';

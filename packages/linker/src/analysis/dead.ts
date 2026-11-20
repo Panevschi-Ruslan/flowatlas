@@ -1,4 +1,5 @@
-import type { GraphNode } from '@flowatlas/core';
+import { isMessageTypeNode, type GraphNode } from '@flowatlas/core';
+import { messageTypeFacts, unreachedHandler, unselectedSaid } from './message-types.js';
 import type { GraphDb } from '../db/reader.js';
 import type { LinkReport } from '../report.js';
 import { matchesRoutePattern } from '../route-audit.js';
@@ -847,6 +848,17 @@ export const deadChannels = (
     });
   }
   for (const id of report.channels.noProducers) record(id, 'producer', () => ({ said: 'no producer in any repo', streams: false }));
+  // A type of message published on a channel whose consumers choose by type, and chosen by none (P358).
+  for (const id of report.channels.unselectedTypes ?? []) {
+    const node = db.node(id);
+    if (node === undefined) continue;
+    const answered = messageTypeAnswer(db, node);
+    const facts = messageTypeFacts(db, node);
+    const producers = servicesOf(db, facts.producers.map((producer) => producer.id));
+    const consumers = servicesOf(db, facts.receivers.map((receiver) => receiver.consumer.id));
+    if (options.service !== undefined && ![...producers, ...consumers].includes(options.service)) continue;
+    rows.set(id, { id, producers, consumers, reason: answered.reason, verdict: answered.verdict, evidence: answered.evidence });
+  }
 
   const traffic = trafficFor(db, options);
   return [...rows.values()]
@@ -1070,7 +1082,53 @@ const entryAnswer = (db: GraphDb, report: LinkReport | undefined, context: Route
   return { verdict: 'unknown', reason: `nothing in the graph reaches it, and a ${kind || 'way in'} of this kind is not judged`, evidence: {} };
 };
 
+/**
+ * A type of message on a channel (P358): alive when something publishes it
+ * and live code selects it. Published and selected by nothing is `dead` where
+ * every consumer of the channel chooses by type and `unknown` where one takes
+ * every type alike or was not read; selected and published by nothing read is
+ * `dead`, or `unknown` where a publish on the channel has a type not read.
+ */
+const messageTypeAnswer = (db: GraphDb, type: GraphNode): Answered => {
+  const facts = messageTypeFacts(db, type);
+  const live = facts.selectors.filter((selector) => selector.unreached === undefined);
+  if (facts.producers.length > 0) {
+    if (live.length > 0) return { verdict: 'alive', reason: 'published and selected', evidence: aliveBy(facts.producers.map((producer) => ({ from: producer.id }))) };
+    const said = unselectedSaid(facts);
+    return {
+      verdict: said?.sureness === 'unsure' ? 'unknown' : 'dead',
+      reason: said?.said ?? `no code selects ${facts.value}`,
+      evidence: { missing: 'consumer', ...(facts.channel === undefined ? {} : { via: facts.channel.id }) },
+    };
+  }
+  const unread = facts.unreadProducers.length;
+  return {
+    verdict: unread > 0 ? 'unknown' : 'dead',
+    reason:
+      `nothing read publishes ${facts.value}` +
+      (unread === 0 ? '' : `; ${unread} publish${unread === 1 ? '' : 'es'} on ${facts.channel?.label ?? 'its channel'} send${unread === 1 ? 's' : ''} a type not read`),
+    evidence: { missing: 'producer', ...(facts.channel === undefined ? {} : { via: facts.channel.id }) },
+  };
+};
+
+/**
+ * A consumer (P358): `dead` when its handler's class is built by nothing, and
+ * otherwise as the channels it consumes are - alive when one is published.
+ */
+const consumerAnswer = (db: GraphDb, report: LinkReport | undefined, consumer: GraphNode): Answered => {
+  const unreached = unreachedHandler(db, consumer);
+  if (unreached !== undefined) return { verdict: 'dead', reason: unreached, evidence: {} };
+  const channels = db.edgesTo(consumer.id, ['consumes']).flatMap((edge) => db.node(edge.from) ?? []);
+  const answers = channels.map((channel) => ({ channel, answered: channelAnswer(db, report, channel) }));
+  const published = answers.find(({ channel }) => db.edgesTo(channel.id, ['emits']).length > 0);
+  if (published !== undefined) return { verdict: 'alive', reason: 'something publishes what it consumes', evidence: { via: published.channel.id } };
+  const [first] = answers;
+  if (first === undefined) return { verdict: 'unknown', reason: 'it consumes no channel the graph holds', evidence: {} };
+  return { verdict: first.answered.verdict === 'alive' ? 'unknown' : first.answered.verdict, reason: first.answered.reason, evidence: { ...first.answered.evidence, via: first.channel.id } };
+};
+
 const channelAnswer = (db: GraphDb, report: LinkReport | undefined, channel: GraphNode): Answered => {
+  if (isMessageTypeNode(channel)) return messageTypeAnswer(db, channel);
   const producers = db.edgesTo(channel.id, ['emits']);
   const consumers = db.edgesFrom(channel.id, ['consumes']);
   if (producers.length > 0 && consumers.length > 0) {
@@ -1143,7 +1201,9 @@ export const deadVerdict = (
             ? methodAnswer(db, providers(), node)
             : node.type === 'function'
               ? functionAnswer(db, node)
-              : { verdict: 'unknown', reason: `dead judges ways in, channels, classes, methods and functions, not a ${node.type}`, evidence: {} };
+              : node.type === 'consumer'
+                ? consumerAnswer(db, report, node)
+                : { verdict: 'unknown', reason: `dead judges ways in, channels, consumers, classes, methods and functions, not a ${node.type}`, evidence: {} };
   const answered = withTraffic(statically, node.id, trafficFor(db, options));
   return {
     id: node.id,

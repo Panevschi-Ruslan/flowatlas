@@ -39,6 +39,7 @@ import {
 import { createAngularContext } from './context.js';
 import { declaresAngular } from './framework.js';
 import { buildAngularClassIndex } from './index-classes.js';
+import { messageTypesPass } from '@flowatlas/adapters-broker';
 import { callsPass } from './passes/calls.js';
 import { classesPass } from './passes/classes.js';
 import { graphqlPass } from './passes/graphql.js';
@@ -158,6 +159,8 @@ export const BUILT_IN_PASSES: readonly AngularExtractorPass[] = [
   ssePass,
   socketsPass,
   markersPass,
+  // After every reader that draws a consumer: the types of message each chooses on (P358).
+  messageTypesPass,
   signaturesPass,
 ];
 

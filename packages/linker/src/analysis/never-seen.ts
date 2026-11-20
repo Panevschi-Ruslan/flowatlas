@@ -1,4 +1,5 @@
 import {
+  isMessageTypeNode,
   joinIdOf,
   joinOfId,
   observedOver,
@@ -195,6 +196,7 @@ const candidatesOf = (db: GraphDb): Candidate[] => {
     found.push({ node: entry, service: entry.repo, family: `entry\u0000${entry.repo}\u0000${entry.kind ?? ''}`, reachableFrom: reached ? 'code' : 'outside' });
   }
   for (const channel of db.nodesByType('channel')) {
+    if (isMessageTypeNode(channel)) continue;
     const { service, produced } = channelService(db, channel);
     found.push({ node: channel, service, family: `channel\u0000${service}`, reachableFrom: produced ? 'code' : 'outside' });
   }

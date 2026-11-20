@@ -1,5 +1,5 @@
 import type { Confidence, GraphEdge } from '@flowatlas/core';
-import { isNavigationEdge, NODE_TYPES } from '@flowatlas/core';
+import { isMessageTypeNode, isNavigationEdge, NODE_TYPES } from '@flowatlas/core';
 import { weakest, type GraphDb } from '@flowatlas/linker';
 
 /** As much of a node as an analysis needs; the rest is fetched by id. */
@@ -144,7 +144,7 @@ export const loadGraph = (db: GraphDb, options: LoadOptions): AnalysisGraph => {
   }
 
   if (collapse) {
-    for (const channel of db.nodesByType('channel')) {
+    for (const channel of db.nodesByType('channel').filter((node) => !isMessageTypeNode(node))) {
       const producers = db.edgesTo(channel.id, ['emits']);
       const consumers = db.edgesFrom(channel.id, ['consumes']);
       for (const publish of producers) {

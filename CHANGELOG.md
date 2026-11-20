@@ -26,6 +26,28 @@ only one of them moved.
   from publisher to screen. A stream whose relayed channel is not read is a
   `stream-relay-unread` row, a stream with no handler found a
   `stream-handler-unread` row.
+- **Types of message on a channel, read at both ends (P358).** One channel
+  often carries many kinds of message told apart by a string field, and one
+  consumer takes them all and chooses by it. The type a publish writes is
+  read - a literal, a typed constant, an enum member, a constant object's
+  member, a helper's answer, a member of the union the payload is typed by -
+  and so are the choices any consumer's handler makes on it: a `switch`, an
+  `if` and its `else if`s, a guard returning early, a record or map of
+  handlers looked up by the type, a decorator naming the type on a method a
+  registry finds, each with the handler it runs, one call deep. Each type is
+  a node of its own, `channel:<name>#<value>` of kind `message_type`, so
+  `who_consumes` and `who_emits` take a `type`, `search` finds a type by its
+  value under `messages` with its publishes and handlers, and `dead` and
+  `impact` answer per type. A type no code that runs selects is answered as
+  such, with which consumers choose other types, which pass every type on and
+  which were not read, and how sure that is; one published where consumers
+  choose by type and chosen by none is the finding `message-type-unselected`.
+  A selection in a class nothing builds carries why it never runs. A type not
+  read is a `message-type-unread` row, never dropped. No schema change: a type
+  is a channel node with a kind. The choice is read in whatever function a
+  consumer runs, found by its node or by where it is written, in a server's,
+  an Angular and a React reading alike; `dead` now judges a consumer too
+  (dead where nothing builds its class, otherwise as what it consumes).
 
 - **A narrower root bounds a reading inside its checkout too, and what a
   tsconfig names above it is said (P357).** A configuration kept beside or

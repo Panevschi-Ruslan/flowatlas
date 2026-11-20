@@ -7,7 +7,7 @@ import {
   type ServiceConfig,
   type SourceRootOptions,
 } from '@flowatlas/core';
-import { brokersPass, registerBrokerAdapters, streamRelaysPass } from '@flowatlas/adapters-broker';
+import { brokersPass, messageTypesPass, registerBrokerAdapters, streamRelaysPass } from '@flowatlas/adapters-broker';
 import { graphqlCallsPass, grpcCallsPass, leavesPass, procedureCallsPass, registerDbAdapters } from '@flowatlas/adapters-db';
 import { deployedSourceDirectories, registerEntryAdapters } from '@flowatlas/adapters-entry';
 import {
@@ -60,9 +60,11 @@ export const isFrontend = (type: string): boolean => halfOf(type) === 'browser';
  * its code, so any service a server reader reads has its workflows drawn too.
  * `procedureCallsPass` reads the procedures a server asks another service for
  * through an oRPC or tRPC client (P242), and `grpcCallsPass` the gRPC methods
- * it calls on another service (P274).
+ * it calls on another service (P274). `messageTypesPass` reads the types of
+ * message each consumer the channel reader drew chooses on (P358), so it runs
+ * after it.
  */
-export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, graphqlCallsPass, procedureCallsPass, grpcCallsPass, brokersPass, streamRelaysPass, workflowsPass];
+export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, graphqlCallsPass, procedureCallsPass, grpcCallsPass, brokersPass, streamRelaysPass, messageTypesPass, workflowsPass];
 
 /** Every adapter the command line knows how to offer an extractor. */
 export const createRegistry = (): AdapterRegistry => {

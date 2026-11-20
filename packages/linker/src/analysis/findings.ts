@@ -1,4 +1,4 @@
-import { rowKindOf, waysInOf, type GraphNode } from '@flowatlas/core';
+import { isMessageTypeNode, rowKindOf, waysInOf, type GraphNode } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, GraphDb } from '../db/reader.js';
 import type { LinkReport } from '../report.js';
 import type { RuleViolation } from '../rules/types.js';
@@ -160,6 +160,8 @@ export const collectFindings = (db: GraphDb, sources: FindingSources): Collected
   }
   for (const channel of deadChannels(db, sources.report)) {
     const node = db.node(channel.id);
+    // A type of message nothing selects is its own finding, listed by its reason (P358).
+    if (isMessageTypeNode(node)) continue;
     const loc = nodeLoc(node);
     findings.push({
       kind: 'one-ended-channel',

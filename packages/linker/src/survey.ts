@@ -1,4 +1,4 @@
-import type { GraphEdge, GraphNode } from '@flowatlas/core';
+import { isMessageTypeNode, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import { cmp } from './order.js';
 
 export interface ChannelSurvey {
@@ -48,6 +48,13 @@ export const surveyChannels = (
 
   for (const channel of nodes) {
     if (channel.type !== 'channel') continue;
+    // A type of message on a channel is asked about apart (P358): counted
+    // here, it would be one more channel with no consumer for every type a
+    // consumer takes without choosing.
+    if (isMessageTypeNode(channel)) {
+      channel.meta = { ...channel.meta, producers: producersOf.get(channel.id) ?? 0, consumers: consumersOf.get(channel.id) ?? 0 };
+      continue;
+    }
     total += 1;
     const producers = producersOf.get(channel.id) ?? 0;
     const consumers = consumersOf.get(channel.id) ?? 0;

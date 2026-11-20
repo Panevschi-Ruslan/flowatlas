@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readAccepted, wayInBodyRead, type GraphEdge, type GraphNode } from '@flowatlas/core';
+import { isMessageTypeNode, readAccepted, wayInBodyRead, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import { acceptedSplitOf, neverSeen, type GraphDb } from '@flowatlas/linker';
 import { blindSpotsBeside, cantFollowFor, deadOptionsOf, deadRows, loadContractBreaks, rankedFindingsOf, rulesReportOf, type DbHandle } from '@flowatlas/mcp';
 import { loadGraph } from '../analysis/graph.js';
@@ -199,7 +199,7 @@ export const overviewOf = (db: GraphDb, handle: DbHandle | undefined, options: O
       crossing.guessed += guessed(edge);
     }
   }
-  const channels = nodes.filter((node) => node.type === 'channel');
+  const channels = nodes.filter((node) => node.type === 'channel' && !isMessageTypeNode(node));
   for (const channel of channels) {
     const publishers = db.edgesTo(channel.id, ['emits']);
     const handlers = db.edgesFrom(channel.id, ['consumes']);

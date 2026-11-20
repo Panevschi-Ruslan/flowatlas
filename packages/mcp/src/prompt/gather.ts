@@ -32,6 +32,7 @@ import {
   type PromptCrossing,
   type PromptStep,
   type PromptSubject,
+  isMessageTypeNode,
 } from '@flowatlas/core';
 import {
   missingByGap,
@@ -647,7 +648,7 @@ export const gatherServiceSubject = (
       .map((id) => db.node(id))
       .filter((found): found is GraphNode => found !== undefined)
       .map((found) => placeStep(projectDetail(found, 1), 1));
-  const channels = db.nodesByType('channel');
+  const channels = db.nodesByType('channel').filter((channel) => !isMessageTypeNode(channel));
   const publishes = channelSteps(
     channels.filter((channel) => db.edgesTo(channel.id, ['emits']).some((edge) => db.node(edge.from)?.repo === service)).map((channel) => channel.id),
   );

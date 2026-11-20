@@ -80,6 +80,7 @@ import { forwarding, originlessFinding, ownOriginsAt, proxiedMeta, proxiedOutFin
 import type { GatewayRouteMeta } from '@flowatlas/graphql';
 import type { LinkReport, ServiceReport } from './report.js';
 import { surveyChannels, surveyRoutes } from './survey.js';
+import { joinMessageTypes, unselectedTypesOf } from './message-types.js';
 import {
   callPerChoice,
   CONFIGURED_UI_VIAS,
@@ -1482,7 +1483,12 @@ export const linkGraphs = (
     }),
   );
 
-  const channels = surveyChannels(nodes.values(), edges.values());
+  // The types of message each channel carries, once every channel is joined (P358).
+  const typed = joinMessageTypes(nodes, edges);
+  found.push(...typed);
+  const unselectedTypes = unselectedTypesOf(typed);
+  const surveyedChannels = surveyChannels(nodes.values(), edges.values());
+  const channels = unselectedTypes.length === 0 ? surveyedChannels : { ...surveyedChannels, unselectedTypes };
   const surveyed = surveyRoutes(nodes.values(), edges.values());
   const nearMissed = nearMissesOf(surveyed.uncalled, nodes, partials);
   const routes = Object.keys(nearMissed).length === 0 ? surveyed : { ...surveyed, nearMissed };

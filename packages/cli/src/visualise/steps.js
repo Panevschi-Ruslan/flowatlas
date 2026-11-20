@@ -1592,7 +1592,8 @@ const promptServiceSubject = (model, service, limits) => {
   const out = others.flatMap((other) => promptCrossingsBetween(model, service, other).map((hop) => ({ ...hop, service: other })));
   const into = others.flatMap((other) => promptCrossingsBetween(model, other, service).map((hop) => ({ ...hop, service: other })));
 
-  const channels = positions.filter((i) => typeIs(i, 'channel'));
+  // A type of message on a channel (P358) is not one more channel, as the server says.
+  const channels = positions.filter((i) => typeIs(i, 'channel') && kinds[model.nodes[i][3]] !== 'message_type');
   const ends = (list, end, type) => list.some((k) => edgeTypes[model.edges[k][2]] === type && inService(model.edges[k][end]));
   const channelSteps = (list) => list.map((i) => promptPlaceOf(model, i, 1)).sort((a, b) => stepCmp(a.id, b.id));
   const publishes = channelSteps(channels.filter((i) => ends(model.incoming[i], 0, 'emits')));

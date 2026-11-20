@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-20T12:50:24.751Z",
+  "builtAt": "2026-11-20T13:41:26.812Z",
   "services": [
     {
       "name": "shipping",
@@ -181,6 +181,40 @@
       }
     },
     {
+      "id": "channel:workspace:*:events#COURIER_ASSIGNED",
+      "type": "channel",
+      "label": "workspace:*:events#COURIER_ASSIGNED",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 19,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:workspace:*:events",
+        "messageType": "COURIER_ASSIGNED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:workspace:*:events#PARCEL_PACKED",
+      "type": "channel",
+      "label": "workspace:*:events#PARCEL_PACKED",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 15,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:workspace:*:events",
+        "messageType": "PARCEL_PACKED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
       "id": "config_key:edge#ROOMS",
       "type": "config_key",
       "label": "ROOMS",
@@ -299,6 +333,16 @@
           "message"
         ],
         "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "PARCEL_PACKED",
+            "consumer": "consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+            "via": "if",
+            "line": 6,
+            "file": "src/screens/ParcelBoard.tsx"
+          }
+        ],
         "routes": [
           "entry:shipping:http:GET:/workspaces/:param/events"
         ]
@@ -802,7 +846,11 @@
         "kind": "message",
         "adapter": "redis-pubsub",
         "channelVia": "template",
-        "method": "publish"
+        "method": "publish",
+        "messageTypes": [
+          "PARCEL_PACKED"
+        ],
+        "discriminator": "type"
       }
     },
     {
@@ -817,7 +865,11 @@
         "kind": "message",
         "adapter": "redis-pubsub",
         "channelVia": "template",
-        "method": "publish"
+        "method": "publish",
+        "messageTypes": [
+          "COURIER_ASSIGNED"
+        ],
+        "discriminator": "type"
       }
     },
     {
@@ -1382,6 +1434,18 @@
       "line": 22
     },
     {
+      "from": "channel:workspace:*:events#PARCEL_PACKED",
+      "to": "consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/ParcelBoard.tsx",
+      "line": 6,
+      "meta": {
+        "selectedBy": "consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+        "via": "if"
+      }
+    },
+    {
       "from": "consumer:edge#src/worker.ts:GET /live/:workspaceId@15",
       "to": "edge#src/worker.ts:GET /live/:workspaceId@15",
       "type": "handles",
@@ -1727,6 +1791,17 @@
       "line": 15
     },
     {
+      "from": "producer:shipping#src/parcels/parcels.service.ts:15:11",
+      "to": "channel:workspace:*:events#PARCEL_PACKED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 15,
+      "params": [
+        "string"
+      ]
+    },
+    {
       "from": "producer:shipping#src/parcels/parcels.service.ts:19:11",
       "to": "channel:workspace:*:events",
       "type": "emits",
@@ -1736,6 +1811,17 @@
       ],
       "file": "src/parcels/parcels.service.ts",
       "line": 19
+    },
+    {
+      "from": "producer:shipping#src/parcels/parcels.service.ts:19:11",
+      "to": "channel:workspace:*:events#COURIER_ASSIGNED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 19,
+      "params": [
+        "string"
+      ]
     },
     {
       "from": "producer:shipping#src/parcels/parcels.service.ts:23:11",
@@ -2174,6 +2260,20 @@
       "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
       "symbol": "listener.unsubscribe",
       "service": "shipping"
+    },
+    {
+      "file": "src/parcels/parcels.service.ts",
+      "line": 19,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects COURIER_ASSIGNED on workspace:*:events: 1 consumer chooses other types (handleParcelEvent); GET /live/:workspaceId@15, onTick and 1 more pass every type on without choosing, and what takes them past it is not read; CourierPanel not read (its handler is not code this reads)",
+      "symbol": "producer:shipping#src/parcels/parcels.service.ts:19:11",
+      "service": "shipping",
+      "meta": {
+        "type": "channel:workspace:*:events#COURIER_ASSIGNED",
+        "channel": "channel:workspace:*:events",
+        "messageType": "COURIER_ASSIGNED",
+        "sureness": "unsure"
+      }
     }
   ]
 }

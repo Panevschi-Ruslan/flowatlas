@@ -508,6 +508,10 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The call carries no payload argument, so nothing describes what travels on this channel. Pass a typed value.',
   'consumer-handler-unresolved': () =>
     'The listener does more than delegate, so the chain stops at the method that registered it. Delegate to a named method.',
+  'message-type-unread': () =>
+    'The type of this message is not written where it is sent, or the choice a consumer makes on it is not one the code states. Write the type as a literal, a constant or an enum member at the send, and choose on it with a switch, an if or a record written out.',
+  'message-type-unselected': () =>
+    'This type of message is published on a channel whose consumers choose what to do by type, and none of them chooses it. Handle it, or stop publishing it.',
 
   // Streams of server-sent events (P359)
   'stream-relay-unread': () =>
@@ -975,6 +979,7 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'release-need-undefined': ['release needing one nothing declares', 'releases needing one nothing declares'],
   's3-write-matches-nothing': ['bucket write no notification takes', 'bucket writes no notification takes'],
   'job-no-handler': ['job no handler of its queue takes', 'jobs no handler of their queue takes'],
+  'message-type-unselected': ['type of message no handler selects', 'types of message no handler selects'],
   'stream-no-writer': ['stream nothing writes to', 'streams nothing writes to'],
   'subscription-matches-nothing': ['rule nothing published matches', 'rules nothing published matches'],
   'failure-seen-undeclared': ['status seen that the code does not declare', 'statuses seen that the code does not declare'],

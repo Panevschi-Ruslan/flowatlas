@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-20T13:16:32.536Z",
+  "configHash": "93bf054e22ea",
+  "services": [
+    {
+      "name": "docs-api",
+      "repo": "./docs-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 30,
+      "edges": 30,
+      "types": 6,
+      "unresolved": 2,
+      "durationMs": 921,
+      "packages": {
+        "name": "docs-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "notify-worker",
+      "repo": "./notify-worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 58,
+      "edges": 57,
+      "types": 7,
+      "unresolved": 2,
+      "durationMs": 930,
+      "packages": {
+        "name": "notify-worker",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "realtime-gateway",
+      "repo": "./realtime-gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 13,
+      "edges": 8,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 895,
+      "packages": {
+        "name": "realtime-gateway",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 1,
+    "linked": 1,
+    "noConsumers": [],
+    "noProducers": [],
+    "unselectedTypes": [
+      "channel:space:*:events#QUOTA_WARNING"
+    ]
+  },
+  "routes": {
+    "total": 5,
+    "called": 0,
+    "uncalled": [
+      "entry:docs-api:http:POST:/spaces/:param/docs/:param/comments",
+      "entry:docs-api:http:POST:/spaces/:param/docs/:param/publish",
+      "entry:docs-api:http:POST:/spaces/:param/exports/:param/done",
+      "entry:docs-api:http:POST:/spaces/:param/members",
+      "entry:docs-api:http:POST:/spaces/:param/quota"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 13,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "file": "src/spaces/spaces.service.ts",
+      "line": 37,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects QUOTA_WARNING on space:*:events: only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types (ActivityFeed.onMessage, AuditTrail.record and 3 more); StreamRelay.forward passes every type on without choosing, and what takes them past it is not read",
+      "symbol": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+      "service": "docs-api",
+      "meta": {
+        "type": "channel:space:*:events#QUOTA_WARNING",
+        "channel": "channel:space:*:events",
+        "messageType": "QUOTA_WARNING",
+        "sureness": "unsure"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 105,
+    "edges": 111,
+    "types": 13,
+    "missed": 5,
+    "sites": 5,
+    "notes": 0,
+    "findings": 1,
+    "unresolved": 5
+  }
+}

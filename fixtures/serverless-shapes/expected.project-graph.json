@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T18:06:32.109Z",
+  "builtAt": "2026-11-20T13:16:38.646Z",
   "services": [
     {
       "name": "members",
@@ -88,6 +88,40 @@
         ],
         "producers": 2,
         "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/${…}@resources.Resources.NoticesQueue#digest",
+      "type": "channel",
+      "label": "sqs/${…}@resources.Resources.NoticesQueue#digest",
+      "repo": "members",
+      "file": "services/notices/src/notices/digest.ts",
+      "line": 7,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:sqs/${…}@resources.Resources.NoticesQueue",
+        "messageType": "digest",
+        "discriminator": "kind",
+        "channelKind": "queue",
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/${…}@resources.Resources.NoticesQueue#welcome",
+      "type": "channel",
+      "label": "sqs/${…}@resources.Resources.NoticesQueue#welcome",
+      "repo": "members",
+      "file": "services/notices/src/notices/welcome.ts",
+      "line": 7,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:sqs/${…}@resources.Resources.NoticesQueue",
+        "messageType": "welcome",
+        "discriminator": "kind",
+        "channelKind": "queue",
+        "producers": 1,
+        "consumers": 0
       }
     },
     {
@@ -986,7 +1020,11 @@
           }
         ],
         "channelKind": "queue",
-        "confidence": "static"
+        "confidence": "static",
+        "messageTypes": [
+          "digest"
+        ],
+        "discriminator": "kind"
       }
     },
     {
@@ -1018,7 +1056,11 @@
           }
         ],
         "channelKind": "queue",
-        "confidence": "static"
+        "confidence": "static",
+        "messageTypes": [
+          "welcome"
+        ],
+        "discriminator": "kind"
       }
     },
     {
@@ -1461,6 +1503,17 @@
       }
     },
     {
+      "from": "producer:members#services/notices/src/notices/digest.ts:7:9",
+      "to": "channel:sqs/${…}@resources.Resources.NoticesQueue#digest",
+      "type": "emits",
+      "confidence": "static",
+      "file": "services/notices/src/notices/digest.ts",
+      "line": 7,
+      "params": [
+        "{kind:string}"
+      ]
+    },
+    {
       "from": "producer:members#services/notices/src/notices/welcome.ts:7:9",
       "to": "channel:sqs/${…}@resources.Resources.NoticesQueue",
       "type": "emits",
@@ -1479,6 +1532,17 @@
           "notices-prod-welcome"
         ]
       }
+    },
+    {
+      "from": "producer:members#services/notices/src/notices/welcome.ts:7:9",
+      "to": "channel:sqs/${…}@resources.Resources.NoticesQueue#welcome",
+      "type": "emits",
+      "confidence": "static",
+      "file": "services/notices/src/notices/welcome.ts",
+      "line": 7,
+      "params": [
+        "{kind:string;member:string}"
+      ]
     }
   ],
   "types": {

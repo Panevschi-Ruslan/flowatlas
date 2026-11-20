@@ -139,6 +139,21 @@ On a `producer`:
 | key | holds |
 |---|---|
 | `heldIn` | where the receiver may be the static field of either of several classes, each declaring its own: each field (`Queues.mail`) with the channels read out of it, none where its value is not read |
+| `messageTypes`, `discriminator` | the types of message its payload fixes and the field they were read from (`type`, else `kind`, `eventType` or `event`); the linker draws an `emits` edge onto each type's node, `channel:<name>#<value>` of kind `message_type` (P358) |
+| `messageTypeUnread` | why a payload that has a type had it not read: a union a caller decides, a value worked out at run time; a `message-type-unread` row says so |
+
+### Types of message
+
+On a `consumer` (P358):
+
+| key | holds |
+|---|---|
+| `selects` | the types its handler chooses on, each `{ type, consumer, via, line, file?, heuristic? }`: `consumer` the consumer drawn for the handler the choice runs, one call deep (its own id where the branch calls nothing of the repository's own), `via` one of `switch`, `if`, `guard`, `map`, `decorator`; the linker draws a `consumes` edge from each type's node to that consumer. Absent on a consumer that reads no type: it takes every type alike |
+| `selectsOthers` | a default branch that hands every other type on the same way |
+| `selectionUnread` | why a choice the handler makes on the type was not read; a `message-type-unread` row says so |
+| `selectedBy` | on a consumer drawn for a choice: the consumer whose handler made it |
+
+On a `channel` of kind `message_type`: `channel` (the channel it is a type of), `messageType`, `discriminator`. Type nodes are counted in none of the link report's channel figures; `channels.unselectedTypes` lists those published where consumers choose by type and chosen by none.
 
 ### Ways in
 

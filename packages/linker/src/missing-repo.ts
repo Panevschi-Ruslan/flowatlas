@@ -1,4 +1,5 @@
 import {
+  isMessageTypeNode,
   blindSpotPlaces,
   causePartsOf,
   CHANNEL_DECLARED_META,
@@ -494,7 +495,7 @@ export const missingRepoSignals = (project: MissingRepoProject, report?: Pick<Li
   // The report's lists; a report without them (a hand-built one) by the counts each channel node keeps.
   const listed = (key: 'noConsumers' | 'noProducers', count: 'consumers' | 'producers'): readonly string[] => {
     const ids = report?.channels?.[key];
-    return Array.isArray(ids) ? ids : project.nodes.filter((node) => node.type === 'channel' && node.meta?.[count] === 0).map((node) => node.id);
+    return Array.isArray(ids) ? ids : project.nodes.filter((node) => node.type === 'channel' && !isMessageTypeNode(node) && node.meta?.[count] === 0).map((node) => node.id);
   };
   for (const id of listed('noConsumers', 'consumers')) channelSignal(id, 'consumer');
   for (const id of listed('noProducers', 'producers')) channelSignal(id, 'producer');

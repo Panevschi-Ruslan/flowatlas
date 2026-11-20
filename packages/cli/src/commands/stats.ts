@@ -13,6 +13,7 @@ import {
   type EdgeType,
   type NodeType,
   type PlaceCount,
+  isMessageTypeNode,
 } from '@flowatlas/core';
 import type { GraphDb, LinkReport } from '@flowatlas/linker';
 import type { Command } from 'commander';
@@ -100,7 +101,7 @@ const sortedRecord = (counts: Map<string, number>, order?: readonly string[]): R
  * better than refusing to answer.
  */
 const recompute = (db: GraphDb): LinkSummary => {
-  const channels = db.nodesByType('channel');
+  const channels = db.nodesByType('channel').filter((channel) => !isMessageTypeNode(channel));
   const routes = db.nodesByType('entry', 'http');
   return {
     channels: {

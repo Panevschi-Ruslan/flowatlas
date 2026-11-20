@@ -9,6 +9,7 @@
  * as a missing request.
  */
 import {
+  isMessageTypeNode,
   CLAIMED_META,
   envelopePath,
   formatTypeRef,
@@ -1023,6 +1024,8 @@ export const boundaries = (lookup: GraphLookup): Exchange[] => {
     }
   }
   for (const channel of lookup.nodesByType('channel')) {
+    // A type of message on a channel carries what its channel carries, which is compared there (P358).
+    if (isMessageTypeNode(channel)) continue;
     found.push(...channelExchanges(lookup, channel));
   }
   for (const producer of lookup.nodesByType('producer')) {

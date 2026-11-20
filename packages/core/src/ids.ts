@@ -22,6 +22,9 @@ import type { EntryKind } from './model/nodes.js';
  *                                          which is how something that knows
  *                                          only a deployed name points at one
  *   channel  channel:<name>              — never repo-prefixed
+ *            channel:<name>#<value>      — one type of message on that channel:
+ *                                          a channel node of kind
+ *                                          `message_type` (P358)
  *   type     type:<repo>#<TypeName>
  *
  * `<repo>` is `services[].name` from the configuration.

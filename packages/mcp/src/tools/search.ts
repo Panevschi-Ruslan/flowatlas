@@ -7,6 +7,7 @@ import {
   groupFailures,
   type FailureGroup,
   gapIdOf,
+  isMessageTypeNode,
   isRule,
   rowKindOf,
   placeIdOf,
@@ -17,7 +18,7 @@ import {
   type GraphNode,
   type RowKind,
 } from '@flowatlas/core';
-import { acceptedSplitOf, type AnchoredUnresolvedRow, type GraphDb } from '@flowatlas/linker';
+import { acceptedSplitOf, messageTypeFacts, unselectedSaid, type AnchoredUnresolvedRow, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, truncate } from '../query/detail.js';
@@ -47,7 +48,7 @@ import {
  * function it is written in (P94), for get_source and who_calls; its `gapId`,
  * `gap:<service>|<file>|<reason>`, is the one `flowatlas accept` takes.
  */
-export const SEARCH_KINDS = ['routes', 'channels', 'tables', 'types', 'gaps', 'fails', 'classes'] as const;
+export const SEARCH_KINDS = ['routes', 'channels', 'messages', 'tables', 'types', 'gaps', 'fails', 'classes'] as const;
 export type SearchKind = (typeof SEARCH_KINDS)[number];
 
 /** Node types that are a class in the code: what DI wires and what a page renders. */
@@ -110,7 +111,27 @@ export interface FailHit {
   service?: string;
 }
 
-type Hit = CompactNode | GapHit | TypeHit | FailHit;
+/**
+ * A type of message on a channel (P358), found by its value: who publishes it
+ * and which handlers select it, or why nothing does.
+ */
+export interface MessageHit {
+  /** The type's node: a channel id, for who_emits, who_consumes, dead and impact. */
+  id: string;
+  type: 'message_type';
+  label: string;
+  /** The channel it is a type of. */
+  channel: string;
+  service?: string;
+  /** The first producers and selecting handlers, by id; `sites` says how many there are in all. */
+  producers: string[];
+  handlers: string[];
+  sites: number;
+  /** No code that runs selects it: who receives the channel instead, and how sure that is. */
+  unselected?: string;
+}
+
+type Hit = CompactNode | GapHit | TypeHit | FailHit | MessageHit;
 
 interface SearchQuery {
   db: GraphDb;
@@ -134,7 +155,8 @@ const cut = <T>(rows: readonly T[], limit: number, offset: number): { rows: T[];
 const nodesOf =
   (types: readonly string[]): Finder =>
   ({ db, text, service, limit, offset, bounded }) => {
-    const pool: GraphNode[] = types.flatMap((type) => db.nodesByType(type)).filter(inService(service));
+    // A type of message is found under `messages`, not as one more channel (P358).
+    const pool: GraphNode[] = types.flatMap((type) => db.nodesByType(type)).filter(inService(service)).filter((node) => !isMessageTypeNode(node));
     const ranked = rankMatches(pool, text);
     return cut(
       ranked.map((match) => projectDetail(match.node, bounded.detail)),
@@ -142,6 +164,39 @@ const nodesOf =
       offset,
     );
   };
+
+/** How many producers and handlers one message hit names. */
+const MESSAGE_ENDS = 3;
+
+const messages: Finder = ({ db, text, service, limit, offset }) => {
+  const wanted = text.toLowerCase();
+  const rows = db
+    .nodesByType('channel')
+    .filter(isMessageTypeNode)
+    .flatMap((node): MessageHit[] => {
+      const facts = messageTypeFacts(db, node);
+      if (!facts.value.toLowerCase().includes(wanted) && !node.id.toLowerCase().includes(wanted)) return [];
+      const services = new Set([...facts.producers, ...facts.selectors.map((selector) => selector.consumer)].map((each) => each.repo));
+      if (service !== undefined && !services.has(service)) return [];
+      const said = unselectedSaid(facts);
+      return [
+        {
+          id: node.id,
+          type: 'message_type',
+          label: facts.value,
+          channel: facts.channel?.label ?? String(node.meta?.['channel'] ?? ''),
+          ...(node.repo === '' ? {} : { service: node.repo }),
+          producers: facts.producers.slice(0, MESSAGE_ENDS).map((producer) => producer.id),
+          handlers: facts.selectors.filter((selector) => selector.unreached === undefined).slice(0, MESSAGE_ENDS).map((selector) => selector.consumer.id),
+          sites: facts.producers.length + facts.selectors.length,
+          ...(said === undefined ? {} : { unselected: said.said }),
+        },
+      ];
+    })
+    // The value asked for exactly first, then the shortest.
+    .sort((a, b) => Number(b.label.toLowerCase() === wanted) - Number(a.label.toLowerCase() === wanted) || a.label.length - b.label.length || (a.id < b.id ? -1 : 1));
+  return cut(rows, limit, offset);
+};
 
 const types: Finder = ({ db, text, service, limit, offset }) => {
   const wanted = text.toLowerCase();
@@ -267,6 +322,7 @@ const fails: Finder = ({ db, text, service, limit, offset }) => {
 const FINDERS: ReadonlyMap<SearchKind, Finder> = new Map<SearchKind, Finder>([
   ['routes', nodesOf(['entry'])],
   ['channels', nodesOf(['channel'])],
+  ['messages', messages],
   ['tables', nodesOf(['table'])],
   ['types', types],
   ['gaps', gaps],
@@ -280,6 +336,11 @@ const FINDERS: ReadonlyMap<SearchKind, Finder> = new Map<SearchKind, Finder>([
  */
 const hintsOfHit = (hit: Hit): string[] => {
   // A node's `type` is any string, so the narrowing is said rather than inferred.
+  if (hit.type === 'message_type') {
+    const found = hit as MessageHit;
+    const channel = found.id.slice(0, found.id.length - found.label.length - 1);
+    return [callOf('who_consumes', { channel, type: found.label }), callOf('who_emits', { channel, type: found.label })];
+  }
   if (hit.type !== 'gap') return hintsFor(hit as Identified);
   // The gap as a prompt with how to close it, first (P122): what an agent acts on.
   const prompt = (hit as GapHit).gapId === undefined ? [] : [`describe_for_prompt({id: ${JSON.stringify((hit as GapHit).gapId)}})`];
@@ -317,6 +378,10 @@ export const searchOutput = {
         sites: z.number().optional(),
         places: z.array(z.string()).optional(),
         more: z.number().optional(),
+        channel: z.string().optional(),
+        producers: z.array(z.string()).optional(),
+        handlers: z.array(z.string()).optional(),
+        unselected: z.string().optional(),
       }),
     ),
   ),
@@ -365,7 +430,7 @@ export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
     'search',
     {
       title: 'Search everything',
-      description: 'One query over routes, channels, tables, types, gaps, failures and classes.',
+      description: 'One query over routes, channels, messages, tables, types, gaps, failures and classes.',
       inputSchema: {
         query: z.string().min(1),
         kinds: z.array(z.enum(SEARCH_KINDS)).optional(),

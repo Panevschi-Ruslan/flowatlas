@@ -471,7 +471,7 @@ accepted with `flowatlas accept` under `accepted`.
 |---|---|---|
 | `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix`, `offset` |
 | `find_symbol` | fuzzy search over every node, by substring or camel-case initials | `query` (required), `types`, `service`, `offset` |
-| `search` | one query over routes and other ways in, channels, tables, types, gaps, what ways in can fail with, and classes, grouped by kind, with `counts` of each | `query` (required), `kinds`, `limit` (10 rows per kind), `service`, `offset` |
+| `search` | one query over routes and other ways in, channels, types of message, tables, types, gaps, what ways in can fail with, and classes, grouped by kind, with `counts` of each | `query` (required), `kinds`, `limit` (10 rows per kind), `service`, `offset` |
 
 `kind` is one of `http`, `rpc`, `event`, `cron`, `invoke`, `workflow`,
 `bot_command`, `bot_callback`, `bot_event` and `scene_step`. An `invoke` is a
@@ -486,8 +486,11 @@ procedures out; narrow them with `service` and `kind` instead.
 `find_symbol` accepts initials: `osc` finds `OrdersService.create`. Start here
 when you know roughly what something is called.
 
-`search` is the wider net. `kinds` is any of `routes`, `channels`, `tables`,
-`types`, `gaps`, `fails` and `classes`. A gap's id, `gap:<service>|<file>|<reason>`,
+`search` is the wider net. `kinds` is any of `routes`, `channels`, `messages`,
+`tables`, `types`, `gaps`, `fails` and `classes`. Under `messages`, a type of
+message on a channel is found by its value (`ORDER_SHIPPED`): each hit is the
+type node, its `channel`, the first `producers` and selecting `handlers` by id,
+and `unselected` where no code that runs selects it (P358). A gap's id, `gap:<service>|<file>|<reason>`,
 is what `flowatlas accept` takes, every hit carries its `kind` (`gap`, `note` or
 `finding`), new gaps come first, and an accepted one says
 `accepted: true` with its note, and `acceptedBy` when a rule took it; an
@@ -696,12 +699,31 @@ window longer than the file holds says `short: true` and every row is `weak`.
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `who_emits` | everything that publishes on a channel, across every repository | `channel` (required), `service`, `offset` |
-| `who_consumes` | everything that handles messages from it; empty means nothing does | `channel` (required), `service`, `offset` |
+| `who_emits` | everything that publishes on a channel, across every repository; with `type`, what publishes that type of message on it | `channel` (required), `type`, `service`, `offset` |
+| `who_consumes` | everything that handles messages from it; empty means nothing does; with `type`, the code that selects that type of message, or why nothing does | `channel` (required), `type`, `service`, `offset` |
 | `get_type` | the structure of a type, with what it refers to expanded to a depth | `type` (required), `depth` |
 | `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it | `type` (required), `service`, `offset` |
 | `check_contract` | what one side of a crossing sends against what the other expects; on an entry, what traffic carried into it against its code | `edge` (a crossing or an entry id), or `from` and `to` |
 | `get_spec` | a service's routes as the OpenAPI 3.1 document `flowatlas spec` writes, or its channel ends as AsyncAPI 3.0, as JSON text; with `path`, one operation and only the schemas it uses (P118) | `service` (required), `kind`, `path`, `maxChars` |
+
+A channel that carries several kinds of message told apart by a field
+(`type`, else `kind`, `eventType` or `event`) has a node per type (P358):
+`channel:<name>#<value>`, of kind `message_type`. A publish whose payload
+fixes the type emits onto it; a handler a consumer's `switch`, `if`, early
+return, record of handlers or decorator chooses for it consumes from it, one
+call deep. Without `type`, `who_emits` and `who_consumes` answer as before and
+add `types`, the values read on the channel. With `type` (or the type node's
+id as `channel`), `who_consumes` lists the selecting handlers, each with
+`selectedIn` (the consumer that chose), `via` and, where nothing builds its
+class, `unreached`; where no code that runs selects the type it says
+`unselected` - which consumers choose other types, which pass every type on
+without choosing, which were not read - and `sureness`: `sure` only when every
+consumer of the channel was read and chooses by type. `who_emits` with `type`
+lists the publishes of it and, where there are none, `maybe`: publishes on the
+channel whose type was not read. A type nobody reads answers with the types
+that are. `dead` and `impact` take a type node like any channel; a type
+published on a channel whose consumers choose by type, and chosen by none, is
+the finding `message-type-unselected`.
 
 `get_type` at `detail: 0` names the type and its fields (or its members); at 1
 it says what each field is, where the type is declared, and names each type it

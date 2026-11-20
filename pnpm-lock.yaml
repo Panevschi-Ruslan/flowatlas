@@ -311,6 +311,9 @@ importers:
 
   packages/extractor-react:
     dependencies:
+      '@flowatlas/adapters-broker':
+        specifier: workspace:*
+        version: link:../adapters-broker
       '@flowatlas/adapters-entry':
         specifier: workspace:*
         version: link:../adapters-entry

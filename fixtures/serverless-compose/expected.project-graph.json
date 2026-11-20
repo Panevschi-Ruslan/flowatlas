@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T18:06:25.277Z",
+  "builtAt": "2026-11-20T13:16:36.053Z",
   "services": [
     {
       "name": "jobs",
@@ -24,6 +24,23 @@
         ],
         "producers": 2,
         "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/jobs-queue#sweep",
+      "type": "channel",
+      "label": "sqs/jobs-queue#sweep",
+      "repo": "jobs",
+      "file": "tools/src/sweep.ts",
+      "line": 7,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:sqs/jobs-queue",
+        "messageType": "sweep",
+        "discriminator": "kind",
+        "channelKind": "queue",
+        "producers": 1,
+        "consumers": 0
       }
     },
     {
@@ -374,7 +391,11 @@
           }
         ],
         "channelKind": "queue",
-        "confidence": "static"
+        "confidence": "static",
+        "messageTypes": [
+          "sweep"
+        ],
+        "discriminator": "kind"
       }
     },
     {
@@ -655,6 +676,17 @@
           "jobs-tools-dev-sweep"
         ]
       }
+    },
+    {
+      "from": "producer:jobs#tools/src/sweep.ts:7:9",
+      "to": "channel:sqs/jobs-queue#sweep",
+      "type": "emits",
+      "confidence": "static",
+      "file": "tools/src/sweep.ts",
+      "line": 7,
+      "params": [
+        "{kind:string}"
+      ]
     }
   ],
   "types": {

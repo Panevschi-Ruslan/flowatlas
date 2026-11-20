@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-20T12:50:26.956Z",
+  "builtAt": "2026-11-20T13:41:28.670Z",
   "services": [
     {
       "name": "api",
@@ -352,6 +352,23 @@
       }
     },
     {
+      "id": "channel:depot:*:events#ORDER_CANCELED",
+      "type": "channel",
+      "label": "depot:*:events#ORDER_CANCELED",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 16,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:depot:*:events",
+        "messageType": "ORDER_CANCELED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
       "id": "consumer:api#src/events/event-bus.service.ts:EventBus.receive",
       "type": "consumer",
       "label": "EventBus.receive",
@@ -482,7 +499,11 @@
         "kind": "event",
         "adapter": "house-bus",
         "channelVia": "template",
-        "method": "publish"
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_CANCELED"
+        ],
+        "discriminator": "type"
       }
     },
     {
@@ -1318,6 +1339,17 @@
       ],
       "file": "src/orders/orders.service.ts",
       "line": 16
+    },
+    {
+      "from": "producer:api#src/orders/orders.service.ts:16:11",
+      "to": "channel:depot:*:events#ORDER_CANCELED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 16,
+      "params": [
+        "type:api#DepotEvent"
+      ]
     },
     {
       "from": "ui_action:web#src/app/orders.component.ts:13:13",

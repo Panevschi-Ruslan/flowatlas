@@ -1,4 +1,4 @@
-import type { GraphNode } from '@flowatlas/core';
+import { isMessageTypeNode, type GraphNode } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 
 /**
@@ -104,6 +104,8 @@ export const resolveChannelRef = (db: GraphDb, ref: string, options: { anyName?:
   }
 
   const fitting = db.nodesByType('channel').filter((channel) => {
+    // A type of message on a channel (P358) is asked for by its own id, never fitted.
+    if (isMessageTypeNode(channel)) return false;
     const label = channel.id.slice(PREFIX.length);
     // A channel that spells nothing out (`*`) would fit every name; a value
     // fits only a channel the graph could not spell out, the others being exact.

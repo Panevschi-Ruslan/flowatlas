@@ -1,3 +1,4 @@
+import { isMessageTypeNode } from '@flowatlas/core';
 import { missingGroupsOf, worthSaying, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -115,7 +116,8 @@ const channelEnds = (db: GraphDb): Map<string, { producers: string[]; consumers:
 export const startSummaryOf = (db: GraphDb, service?: string, perService: number = START_LIMITS.perService): StartSummary =>
   summariseProject(
     {
-      nodes: db.allNodes(),
+      // A type of message on a channel (P358) is asked about with who_consumes, not counted as a channel.
+      nodes: db.allNodes().filter((node) => !isMessageTypeNode(node)),
       channelEnds: channelEnds(db),
       // A finding's symbol is often source text rather than a node; only an id
       // another tool would take is handed on.
