@@ -1,0 +1,29 @@
+{
+  "channel": {
+    "id": "channel:board:*:orders",
+    "type": "channel",
+    "label": "board:*:orders",
+    "loc": "src/boards/orders.service.ts:20",
+    "service": "boards-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.handleScheduledAlert",
+      "type": "consumer",
+      "label": "OrderEventsController.handleScheduledAlert",
+      "loc": "src/events/order-events.controller.ts:28",
+      "service": "orders-worker",
+      "kind": "event",
+      "selectedIn": "OrderEventsController.receive",
+      "via": "switch"
+    }
+  ],
+  "total": 1,
+  "type": "SCHEDULED_ALERT",
+  "next": [
+    "who_emits({channel: \"channel:board:*:orders\", type: \"SCHEDULED_ALERT\"})",
+    "who_calls({symbol: \"consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.handleScheduledAlert\"})",
+    "impact({symbol: \"consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.handleScheduledAlert\"})",
+    "get_source({symbol: \"consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.handleScheduledAlert\"})"
+  ]
+}

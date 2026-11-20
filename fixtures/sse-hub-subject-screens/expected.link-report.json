@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-20T16:01:32.293Z",
+  "configHash": "44d9a210c3c4",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 68,
+      "edges": 61,
+      "types": 5,
+      "unresolved": 0,
+      "durationMs": 960,
+      "packages": {
+        "name": "admin",
+        "runtime": [
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "boards-api",
+      "repo": "./boards-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 82,
+      "edges": 95,
+      "types": 3,
+      "unresolved": 2,
+      "durationMs": 1174,
+      "packages": {
+        "name": "boards-api",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/common",
+          "@nestjs/core",
+          "hono"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders-worker",
+      "repo": "./orders-worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 7,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1050,
+      "packages": {
+        "name": "orders-worker",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 6,
+      "edges": 5,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 859,
+      "packages": {
+        "name": "web",
+        "runtime": [
+          "react",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 5,
+    "resolved": 5,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 5,
+    "linked": 4,
+    "noConsumers": [
+      "channel:board:*:audit"
+    ],
+    "noProducers": [],
+    "unselectedTypes": [
+      "channel:board:*:events#BOARD_RENAMED",
+      "channel:board:*:events#CARD_COMMENTED",
+      "channel:board:*:orders#ORDER_SHIPPED"
+    ]
+  },
+  "routes": {
+    "total": 17,
+    "called": 3,
+    "uncalled": [
+      "entry:boards-api:http:GET:/api/health",
+      "entry:boards-api:http:POST:/boards/:param/audit",
+      "entry:boards-api:http:POST:/boards/:param/cards",
+      "entry:boards-api:http:POST:/boards/:param/cards/:param/archive",
+      "entry:boards-api:http:POST:/boards/:param/cards/:param/comments",
+      "entry:boards-api:http:POST:/boards/:param/cards/:param/move",
+      "entry:boards-api:http:POST:/boards/:param/cards/:param/pin",
+      "entry:boards-api:http:POST:/boards/:param/cards/import",
+      "entry:boards-api:http:POST:/boards/:param/crews/:param",
+      "entry:boards-api:http:POST:/boards/:param/orders/:param",
+      "entry:boards-api:http:POST:/boards/:param/orders/:param/alert",
+      "entry:boards-api:http:POST:/boards/:param/orders/:param/ship",
+      "entry:boards-api:http:POST:/boards/:param/title",
+      "entry:orders-worker:http:POST:/events/orders"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 9,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "file": "src/boards/boards.service.ts",
+      "line": 28,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects BOARD_RENAMED on board:*:events: only RenameWatcher.retitle selects it, and nothing injects or makes LegacyBoardFeed: no constructor is handed it, no inject() asks for it and no new builds it; 6 consumers choose other types (AlertsBadgeComponent.ngOnInit, ArchivePanelComponent.ngOnInit and 4 more)",
+      "symbol": "producer:boards-api#src/boards/boards.service.ts:28:11",
+      "service": "boards-api",
+      "meta": {
+        "type": "channel:board:*:events#BOARD_RENAMED",
+        "channel": "channel:board:*:events",
+        "messageType": "BOARD_RENAMED",
+        "sureness": "sure"
+      }
+    },
+    {
+      "file": "src/boards/boards.service.ts",
+      "line": 33,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects CARD_COMMENTED on board:*:events: 6 consumers choose other types (AlertsBadgeComponent.ngOnInit, ArchivePanelComponent.ngOnInit and 4 more)",
+      "symbol": "producer:boards-api#src/boards/boards.service.ts:33:11",
+      "service": "boards-api",
+      "meta": {
+        "type": "channel:board:*:events#CARD_COMMENTED",
+        "channel": "channel:board:*:events",
+        "messageType": "CARD_COMMENTED",
+        "sureness": "sure"
+      }
+    },
+    {
+      "file": "src/boards/orders.service.ts",
+      "line": 25,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects ORDER_SHIPPED on board:*:orders: 1 consumer chooses other types (OrderEventsController.receive)",
+      "symbol": "producer:boards-api#src/boards/orders.service.ts:25:11",
+      "service": "boards-api",
+      "meta": {
+        "type": "channel:board:*:orders#ORDER_SHIPPED",
+        "channel": "channel:board:*:orders",
+        "messageType": "ORDER_SHIPPED",
+        "sureness": "sure"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 179,
+    "edges": 232,
+    "types": 9,
+    "missed": 2,
+    "sites": 8,
+    "notes": 0,
+    "findings": 3,
+    "unresolved": 2
+  }
+}

@@ -27,7 +27,7 @@ import {
 const selectorOutput = nodeOutput.extend({
   /** The consumer whose handler chose the type, where it is not this one. */
   selectedIn: z.string().optional(),
-  /** How the choice is written: switch, if, guard, map or decorator. */
+  /** How the choice is written: switch, if, guard, map, decorator, or filter (an operator in front of a subscription). */
   via: z.string().optional(),
   /** Why it never runs, where nothing builds its class. */
   unreached: z.string().optional(),

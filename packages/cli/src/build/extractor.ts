@@ -7,7 +7,7 @@ import {
   type ServiceConfig,
   type SourceRootOptions,
 } from '@flowatlas/core';
-import { brokersPass, messageTypesPass, registerBrokerAdapters, streamRelaysPass } from '@flowatlas/adapters-broker';
+import { brokersPass, helperPublishesPass, messageTypesPass, registerBrokerAdapters, streamRelaysPass } from '@flowatlas/adapters-broker';
 import { graphqlCallsPass, grpcCallsPass, leavesPass, procedureCallsPass, registerDbAdapters } from '@flowatlas/adapters-db';
 import { deployedSourceDirectories, registerEntryAdapters } from '@flowatlas/adapters-entry';
 import {
@@ -64,7 +64,7 @@ export const isFrontend = (type: string): boolean => halfOf(type) === 'browser';
  * message each consumer the channel reader drew chooses on (P358), so it runs
  * after it.
  */
-export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, graphqlCallsPass, procedureCallsPass, grpcCallsPass, brokersPass, streamRelaysPass, messageTypesPass, workflowsPass];
+export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, graphqlCallsPass, procedureCallsPass, grpcCallsPass, brokersPass, streamRelaysPass, helperPublishesPass, messageTypesPass, workflowsPass];
 
 /** Every adapter the command line knows how to offer an extractor. */
 export const createRegistry = (): AdapterRegistry => {

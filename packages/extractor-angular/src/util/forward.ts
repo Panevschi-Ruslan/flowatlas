@@ -198,6 +198,24 @@ const passesOn = (argument: TsNode, outer: ClassMethod): boolean => {
   // `this.open(this.params)`, where `this.params` is where `connect` put what it
   // was given. The object is the parameters, so passing it is passing them on.
   if (remembersParametersOf(argument, outer)) return true;
+  // `this.open({ url, key, select })`: a call handed nothing but one object
+  // made of the method's own parameters is handed them, in one value (P362).
+  // Beside other arguments - `this.req('PATCH', `/${id}`, { title })` - such an
+  // object is a body, and the address is decided where the call is written.
+  const written = argument.asKind(SyntaxKind.ObjectLiteralExpression);
+  const call = argument.getParent();
+  if (written !== undefined && call !== undefined && Node.isCallExpression(call) && call.getArguments().length > 1) return false;
+  if (written !== undefined && written.getProperties().length > 0) {
+    const own = new Set<TsNode>(parametersOf(outer));
+    return written.getProperties().every((property) => {
+      const value = Node.isShorthandPropertyAssignment(property)
+        ? property.getValueSymbol()?.getDeclarations()[0]
+        : Node.isPropertyAssignment(property) && Node.isIdentifier(property.getInitializerOrThrow())
+          ? property.getInitializerOrThrow().getSymbol()?.getDeclarations()[0]
+          : undefined;
+      return value !== undefined && own.has(value);
+    });
+  }
   let value = argument;
   for (;;) {
     if (Node.isParenthesizedExpression(value) || Node.isAsExpression(value) || Node.isNonNullExpression(value)) {

@@ -37,10 +37,14 @@ import {
   objectReader,
   requestPathOf,
   routePathOf,
+  writeFilterOf,
   writesHeld,
   type ObjectClass,
   type StubCall,
 } from './durable-objects.js';
+import { feedLookupFor } from './feed-lookup.js';
+import { recordHelperPublishes, scopeFinder } from './helper-publishes.js';
+import { fedFrom, type FedChannel, type HelperPublish } from './hub-feeders.js';
 
 /**
  * Routes that relay a channel onto a stream of server-sent events (P359).
@@ -795,6 +799,17 @@ export const extractStreamRelays = (ctx: PassContext): void => {
     hubs.set(hub.declaration, { held: new Set(hub.held), writers: new Set(), ...(hub.binding === undefined ? {} : { binding: hub.binding }) });
   }
   const fed = new Map<ClassDeclaration, number>();
+  /** The channels each hub is handed by name through the writes to it, with how sure each is. */
+  const forwarded = new Map<ClassDeclaration, Map<string, FedChannel & { writeConfidence: Confidence }>>();
+  /**
+   * The test a hub picks the streams it writes a message to by, where it picks:
+   * which of the routes it answers a channel reaches is then decided by what
+   * each stream was opened with, which is not read, so each relay is a guess.
+   */
+  const filters = new Map<ClassDeclaration, string>();
+  const feedLookup = feedLookupFor(ctx);
+  /** The calls of helpers that name a channel a hub is handed, each a publish of it (P362). */
+  const helperPublishes: HelperPublish[] = [];
   if (hubs.size > 0) {
     for (const [declaration, hub] of hubs) {
       for (const method of methodsOfClass(declaration)) {
@@ -823,6 +838,7 @@ export const extractStreamRelays = (ctx: PassContext): void => {
         const hub = hubs.get(declaration);
         if (hub === undefined) return;
         let confidence: Confidence = 'static';
+        let filter: string | undefined;
         if (method === 'fetch') {
           const answered = methodBodyOf(declaration, 'fetch');
           if (answered === undefined) return;
@@ -834,7 +850,10 @@ export const extractStreamRelays = (ctx: PassContext): void => {
           if (shapeIn(answered.body, view.leaveOut) !== undefined) return;
           if (!feedsHeld(declaration, answered.body, hub.held, view.leaveOut)) return;
           if (!view.matched) confidence = 'heuristic';
+          filter = writeFilterOf(answered.body, view.leaveOut);
         } else if (!hub.writers.has(method)) return;
+        else filter = writeFilterOf(methodBodyOf(declaration, method)?.body ?? call);
+        if (filter !== undefined) filters.set(declaration, filter);
         const className = declaration.getName() ?? 'default';
         const channel = hubChannelOf(className, declaration, hub.binding);
         const { line, column } = lineAndColumnAt(call.getSourceFile(), call.getStart());
@@ -862,9 +881,25 @@ export const extractStreamRelays = (ctx: PassContext): void => {
         ctx.builder.addEdge({ from: scope.id, to: producerId, type: 'calls', confidence, file: scope.file, line });
         ctx.builder.addEdge({ from: producerId, to: channel.id, type: 'emits', confidence, file: scope.file, line, ...(payload === undefined ? {} : { params: [payload] }) });
         fed.set(declaration, (fed.get(declaration) ?? 0) + 1);
+        // The channels the write hands the hub by name, out to the calls that name them (P362).
+        const handed = forwarded.get(declaration) ?? new Map<string, FedChannel & { writeConfidence: Confidence }>();
+        const fedHere = fedFrom(call, feedLookup);
+        helperPublishes.push(...fedHere.publishes);
+        for (const each of fedHere.channels) {
+          const known = handed.get(each.channel);
+          const sure: Confidence = each.confidence === 'static' && confidence === 'static' ? 'static' : 'heuristic';
+          if (known !== undefined && (known.writeConfidence === 'static' || sure !== 'static')) continue;
+          handed.set(each.channel, { ...each, writeConfidence: sure });
+        }
+        if (handed.size > 0) forwarded.set(declaration, handed);
       }, scope.leaveOut);
     }
   }
+
+  recordHelperPublishes(ctx, helperPublishes, scopeFinder(ctx));
+
+  const handlerRoutes = new Map<string, number>();
+  for (const { handlerId } of streamed) handlerRoutes.set(handlerId, (handlerRoutes.get(handlerId) ?? 0) + 1);
 
   for (const { route, handlerId, relayed, unread, consumed, hops, hub } of streamed) {
     // The object is the channel's hub where something writes to it through
@@ -901,8 +936,9 @@ export const extractStreamRelays = (ctx: PassContext): void => {
     }
 
     const handler = ctx.builder.getNode(handlerId);
-    // A plain worker's `fetch` answers several routes, one branch each: a consumer per route.
-    const shared = routeViews.has(route.id);
+    // A plain worker's `fetch` answers several routes, one branch each, and
+    // one handler may be registered on several routes (P362): a consumer per route.
+    const shared = routeViews.has(route.id) || (handlerRoutes.get(handlerId) ?? 0) > 1;
     const consumerId = shared ? `consumer:${handlerId}@${route.label}` : `consumer:${handlerId}`;
     const adapters = [
       ...new Set(
@@ -935,15 +971,37 @@ export const extractStreamRelays = (ctx: PassContext): void => {
       const declaration = hubbed.declaration;
       const channel = hubChannelOf(declaration.getName() ?? 'default', declaration, hubbed.binding);
       const at = lineAndColumnAt(declaration.getSourceFile(), declaration.getStart()).line;
+      const filteredBy = filters.get(declaration);
       ctx.builder.addEdge({
         from: channel.id,
         to: consumerId,
         type: 'consumes',
-        confidence: hubbed.weak ? 'heuristic' : 'static',
+        confidence: hubbed.weak || filteredBy !== undefined ? 'heuristic' : 'static',
         file: ctx.fileOf(declaration),
         line: at,
+        ...(filteredBy === undefined ? {} : { meta: { filteredBy } }),
       });
       hubChannels.push(channel.id);
+      // Each channel the hub is handed by name is relayed onto the streams it holds (P362).
+      for (const each of forwarded.get(declaration)?.values() ?? []) {
+        const id = makeChannelId(each.channel);
+        if (ctx.builder.getNode(id) === undefined) {
+          ctx.builder.addNode({ id, type: 'channel', label: each.channel, repo: ctx.repo, file: each.file, line: each.line, meta: { channelKind: 'channel', adapters: [HUB_ADAPTER] } });
+        }
+        ctx.builder.addEdge({
+          from: id,
+          to: consumerId,
+          type: 'consumes',
+          confidence: hubbed.weak || filteredBy !== undefined ? 'heuristic' : each.writeConfidence,
+          file: each.file,
+          line: each.line,
+          meta: { via: HUB_ADAPTER, hub: declaration.getName() ?? 'default', through: [...each.through], ...(filteredBy === undefined ? {} : { filteredBy }) },
+        });
+        hubChannels.push(id);
+      }
+      // The hub's own channel stands for the channels it is handed by name.
+      const handed = [...(forwarded.get(declaration)?.keys() ?? [])].map((name) => makeChannelId(name)).sort();
+      if (handed.length > 0) channel.meta = { ...channel.meta, forwards: handed };
     }
     for (const each of consumed) {
       ctx.builder.addEdge({ from: each.channel, to: consumerId, type: 'consumes', confidence: each.edge.confidence, file: each.edge.file ?? file, line: each.edge.line ?? line });

@@ -8,6 +8,7 @@ import {
   lineOf,
   makeSymbolId,
   moduleFunctions,
+  namedFunction,
   TypeCollector,
   type BoundedBy,
   type ClassMethod,
@@ -19,7 +20,7 @@ import {
   type SourceCounts,
   type Unresolved,
 } from '@flowatlas/core';
-import type { ClassDeclaration } from 'ts-morph';
+import { Node, type ClassDeclaration } from 'ts-morph';
 import { ClassIndex, type ClassRole, type IndexedClass, type NestClassIndex } from './index-classes.js';
 import { ModuleIndex } from './modules-index.js';
 import type { BootstrapInfo } from './bootstrap.js';
@@ -106,10 +107,12 @@ export interface NestExtractContext extends ExtractContext {
 
   /**
    * The module-level function of that name, in the file at that repo-relative
-   * path. Undefined when the file is not part of this repository, or declares no
-   * such function.
+   * path; with a line, one of that name declared on that line inside another
+   * function - a handler a factory declares and returns as a member of an
+   * object (P362). Undefined when the file is not part of this repository, or
+   * declares no such function.
    */
-  functionAt(file: string, name: string): NamedFunction | undefined;
+  functionAt(file: string, name: string, line?: number): NamedFunction | undefined;
 
   /** Creates the node for a class of this repository, with the type its role implies. */
   ensureClassNode(declaration: ClassDeclaration): GraphNode | undefined;
@@ -194,6 +197,23 @@ export const createNestContext = (options: CreateContextOptions): NestExtractCon
     return found;
   };
 
+  /** A named function declared inside another, by its name and the line it starts on. */
+  const nestedFunctionAt = (file: string, name: string, line: number): NamedFunction | undefined => {
+    const sourceFile = base.project.getSourceFile(join(repoDir, file));
+    let found: NamedFunction | undefined;
+    sourceFile?.forEachDescendant((node, traversal) => {
+      if (found !== undefined) {
+        traversal.stop();
+        return;
+      }
+      if (!Node.isVariableDeclaration(node) && !Node.isFunctionDeclaration(node)) return;
+      if (node.getName() !== name) return;
+      const fn = namedFunction(node);
+      if (fn !== undefined && fn.line === line) found = fn;
+    });
+    return found;
+  };
+
   const drawnFunctions = new Map<string, NamedFunction>();
 
   const fileOfFunction = (fn: NamedFunction): string =>
@@ -218,7 +238,7 @@ export const createNestContext = (options: CreateContextOptions): NestExtractCon
 
     functionIdOf: (fn) => makeSymbolId(repo, fileOfFunction(fn), fn.name),
 
-    functionAt: (file, name) => functionsOf(file)?.get(name),
+    functionAt: (file, name, line) => functionsOf(file)?.get(name) ?? (line === undefined ? undefined : nestedFunctionAt(file, name, line)),
 
     methodIdOf: (declaration) => {
       const owner = declaration.getParent();

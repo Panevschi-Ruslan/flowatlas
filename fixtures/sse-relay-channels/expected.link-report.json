@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-20T13:57:08.533Z",
+  "builtAt": "2026-11-20T14:49:55.474Z",
   "configHash": "9968b986e1bb",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 2,
       "unresolved": 3,
-      "durationMs": 1988,
+      "durationMs": 1112,
       "packages": {
         "name": "edge",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 19,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1338,
+      "durationMs": 780,
       "packages": {
         "name": "portal",
         "runtime": [
@@ -49,7 +49,7 @@
       "edges": 31,
       "types": 0,
       "unresolved": 7,
-      "durationMs": 2297,
+      "durationMs": 1300,
       "packages": {
         "name": "shipping",
         "runtime": [
@@ -128,7 +128,7 @@
       "file": "src/parcels/parcels.service.ts",
       "line": 19,
       "reason": "message-type-unselected",
-      "message": "no code that runs selects COURIER_ASSIGNED on workspace:*:events: 1 consumer chooses other types (handleParcelEvent); GET /live/:workspaceId@15, onTick and 1 more pass every type on without choosing, and what takes them past it is not read; CourierPanel not read (its handler is not code this reads)",
+      "message": "no code that runs selects COURIER_ASSIGNED on workspace:*:events: 1 consumer chooses other types (handleParcelEvent); onTick passes every type on without choosing, and what takes them past it is not read; CourierPanel not read (its handler is not code this reads)",
       "symbol": "producer:shipping#src/parcels/parcels.service.ts:19:11",
       "service": "shipping",
       "meta": {

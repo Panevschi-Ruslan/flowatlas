@@ -3,6 +3,7 @@ import {
   isMessageTypeNode,
   makeMessageTypeId,
   MESSAGE_TYPE_KIND,
+  MESSAGE_TYPE_UNREAD_META,
   messageTypesOf,
   selectionsOf,
   type GraphEdge,
@@ -96,6 +97,36 @@ export const joinMessageTypes = (nodes: Map<string, GraphNode>, edges: Map<strin
       }
     }
   }
+  // A per-scope hub's own channel that is handed other channels by name stands
+  // for their messages (P362): where nothing written to it says a type, the
+  // types its screens choose are drawn on those channels, not on it.
+  const typed = (channel: GraphNode): boolean =>
+    !Array.isArray(channel.meta?.['forwards']) ||
+    (to.get(channel.id) ?? []).some((edge) => edge.type === 'emits' && messageTypesOf(nodes.get(edge.from)).length > 0);
+  /**
+   * What the publishes on a channel say of the types it carries (P362): the
+   * types read, and whether any publish's type was not read. A consumer joined
+   * to several channels through one stream selects a type on each only where
+   * it may be there: a channel whose publishes include it, or one with a
+   * publish whose type was not read (a guess); a channel none of whose
+   * publishes were read for a type keeps every type selected on it.
+   */
+  const published = new Map<string, { types: Set<string>; unread: boolean }>();
+  const publishedOn = (channelId: string): { types: Set<string>; unread: boolean } => {
+    const known = published.get(channelId);
+    if (known !== undefined) return known;
+    const types = new Set<string>();
+    let unread = false;
+    for (const edge of to.get(channelId) ?? []) {
+      if (edge.type !== 'emits') continue;
+      const producer = nodes.get(edge.from);
+      for (const value of messageTypesOf(producer)) types.add(value);
+      if (typeof producer?.meta?.[MESSAGE_TYPE_UNREAD_META] === 'string') unread = true;
+    }
+    const made = { types, unread };
+    published.set(channelId, made);
+    return made;
+  };
   for (const consumer of sorted) {
     if (consumer.type !== 'consumer') continue;
     const selections = selectionsOf(consumer);
@@ -103,15 +134,18 @@ export const joinMessageTypes = (nodes: Map<string, GraphNode>, edges: Map<strin
     for (const edge of to.get(consumer.id) ?? []) {
       if (edge.type !== 'consumes') continue;
       const channel = channelOf(edge.from);
-      if (channel === undefined) continue;
+      if (channel === undefined || !typed(channel)) continue;
+      const carried = publishedOn(channel.id);
       for (const selection of selections) {
         if (!nodes.has(selection.consumer)) continue;
+        const read = carried.types.size === 0 || carried.types.has(selection.type);
+        if (!read && !carried.unread) continue;
         const type = typeNode(channel, selection.type, consumer.meta?.[DISCRIMINATOR_META], consumer);
         add({
           from: type.id,
           to: selection.consumer,
           type: 'consumes',
-          confidence: selection.heuristic === true ? 'heuristic' : edge.confidence,
+          confidence: selection.heuristic === true || !read ? 'heuristic' : edge.confidence,
           file: selection.file ?? consumer.file ?? '',
           line: selection.line,
           meta: { selectedBy: consumer.id, via: selection.via },

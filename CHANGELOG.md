@@ -8,6 +8,61 @@ only one of them moved.
 
 ### Added
 
+- **A channel published through a project's own bus reaches the screens a
+  per-scope hub feeds, and the screens that subscribe through an rxjs wrapper
+  choose its types (P362).** A hub fed by name - the publish helper posts
+  `{ channel, message }` to the object's stub, from `getWorkerEnv().X`,
+  `env.X`, `(env as …).X`, `this.env.X` or any member the worker's
+  configuration binds - relays every channel the helper is handed: the write's
+  parameter is followed out to every call that names a channel, and a test of
+  the channel on the way (`startsWith`, `===`, a pattern, a constant list and
+  `some`, an early return) narrows which; the channel is consumed by each route
+  the hub's stream branch answers. A route's handler that is a member of the
+  object a factory returns (`sse.boardEvents`, `{ boardEvents, stream:
+  boardEvents }`) is the function the member names, for every route reader,
+  and a handler registered on several streamed routes is one relay per route.
+  On the screen, the function an `EventSource`'s frames arrive at that pushes
+  them into a subject (`this._event$.next(data)`) is followed to what exposes
+  the subject (a field made of it, a getter, the subject itself) and to every
+  `subscribe` on that in the repository, past `pipe` and `asObservable`, in an
+  Angular, React or plain-script reader alike: each function a `subscribe` is
+  written in is a consumer of the stream (`meta.subscriptions`), and its types
+  are read in the `filter`s before it (`via: filter`) and in its callback, now
+  also `SET.has(x.type)` and `LIST.includes(x.type)` over a constant or a
+  field. A wrapper nothing injects or makes says so (`meta.unreached`), and a
+  choice made through it is no selection. Whether a type is selected no longer
+  counts a route that relays to screens or a wrapper that hands on to
+  subscribers as passing every type on, so `channels.unselectedTypes` and
+  `message-type-unselected` are sure where every screen was read. The helper
+  may also hand the channel on through a record of handlers looked up by a key
+  (`this.transportHandlers[t](channel, message)` over `t` of
+  `resolveTransports(channel)`): the routing table the key is drawn from (a
+  constant `Map` or object of channel family to a list or set of keys, with
+  its `??` default) decides which channels reach the hub's member, `static`
+  for a listed family and a guess for the default or a table not read. What
+  reaches a subject is followed through other classes too - a field, getter or
+  parameterless method made of it, past casts - and a subscription through one
+  instance of a generic stream class (`new LiveStream<T>()` held by a feature
+  service that hands it its address) is fed by that service's requests alone;
+  `event['type']` is read as `event.type`. A hub's own channel carries no type
+  nodes where nothing written to it says one. Only the value the hub reads as
+  the channel (the `channel` member of what is posted to it) is followed out,
+  through the names it is held in; it is read where it is worked out, a
+  parameter also written as a message's type is never followed, and an object
+  or a name shaped like a type of message is never a channel. A hub that picks
+  the streams it writes to by a test (`inScope(sub, channel)`) relays each
+  channel to its routes as a guess, saying the test in `meta.filteredBy`. A
+  type a consumer selects is drawn on a channel only where the channel's
+  publishes carry it, as a guess where one of them has a type not read, and on
+  a channel none of whose publishes were read for a type as before. A call to
+  a function of the project's own whose channel the walk reads - out from a
+  hub write, a publish the broker reader drew whose channel is a parameter, or
+  a method marked `@CallsService` that is handed a channel - is itself a
+  publish of that channel, drawn as a producer named for the function
+  (`channelVia: helper`) with its payload's type read, unless the broker
+  reader already drew that call; and the broker reader reads a channel held in
+  a `const` (`const channel = \`board:${id}:events\`; publish(channel, …)`) as
+  one written in place.
 - **A stream answered by a per-scope object relays the channel the object
   subscribes to (P361).** A route that hands its request to a Durable Object's
   stub - `env.ROOMS.get(env.ROOMS.idFromName(…))`, `getByName`, a stub a

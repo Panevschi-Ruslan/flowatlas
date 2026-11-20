@@ -148,10 +148,13 @@ On a `consumer` (P358):
 
 | key | holds |
 |---|---|
-| `selects` | the types its handler chooses on, each `{ type, consumer, via, line, file?, heuristic? }`: `consumer` the consumer drawn for the handler the choice runs, one call deep (its own id where the branch calls nothing of the repository's own), `via` one of `switch`, `if`, `guard`, `map`, `decorator`; the linker draws a `consumes` edge from each type's node to that consumer. Absent on a consumer that reads no type: it takes every type alike |
+| `selects` | the types its handler chooses on, each `{ type, consumer, via, line, file?, heuristic? }`: `consumer` the consumer drawn for the handler the choice runs, one call deep (its own id where the branch calls nothing of the repository's own), `via` one of `switch`, `if`, `guard`, `map`, `decorator`, `filter` (an rxjs `filter` in front of a subscription, P362); the linker draws a `consumes` edge from each type's node to that consumer. Absent on a consumer that reads no type: it takes every type alike |
 | `selectsOthers` | a default branch that hands every other type on the same way |
 | `selectionUnread` | why a choice the handler makes on the type was not read; a `message-type-unread` row says so |
 | `selectedBy` | on a consumer drawn for a choice: the consumer whose handler made it |
+| `subscriptions` | on a screen's consumer of a stream that subscribes to what the stream's frames are pushed into rather than holding the stream (P362): each `{ line, column, through }`, the `subscribe` call and the wrapper's member it subscribes to (`BoardStreamService.event$`); its types are read there, in the `filter`s of the `pipe` before it and in its callback |
+| `handsOnTo` | on the consumer a stream's frames arrive at, where it only pushes them into a subject: the consumers subscribed to it, which stand for it when whether a type is selected is asked; `subjects` the subjects it pushes into |
+| `unreached` | why the consumer never runs, said by the reader that drew it: the wrapper it subscribes through is injected or made by nothing (P362); a choice it makes is no selection |
 
 On a `channel` of kind `message_type`: `channel` (the channel it is a type of), `messageType`, `discriminator`. Type nodes are counted in none of the link report's channel figures; `channels.unselectedTypes` lists those published where consumers choose by type and chosen by none.
 

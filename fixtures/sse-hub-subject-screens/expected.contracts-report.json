@@ -1,0 +1,1910 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-20T16:01:32.858Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/orders.service.ts:20:11",
+        "to": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/orders.service.ts:20:11|emits|consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "boards-api",
+        "typeId": "{type:string;orderId:string}",
+        "symbol": "boards-api#src/boards/orders.service.ts:OrdersService.place"
+      },
+      "receiver": {
+        "service": "orders-worker",
+        "typeId": "type:orders-worker#OrderEvent",
+        "symbol": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive"
+      },
+      "findings": [
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:boards-api#src/boards/orders.service.ts:20:11",
+            "to": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+            "type": "emits"
+          },
+          "edgeKey": "producer:boards-api#src/boards/orders.service.ts:20:11|emits|consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+          "direction": "payload",
+          "sender": {
+            "service": "boards-api",
+            "typeId": "{type:string;orderId:string}",
+            "symbol": "boards-api#src/boards/orders.service.ts:OrdersService.place"
+          },
+          "receiver": {
+            "service": "orders-worker",
+            "typeId": "type:orders-worker#OrderEvent",
+            "symbol": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive"
+          },
+          "typeId": "type:orders-worker#OrderEvent",
+          "field": "orderId",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`orderId` is optional for receiver orders-worker and always sent by sender boards-api",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/orders.service.ts:25:11",
+        "to": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/orders.service.ts:25:11|emits|consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "boards-api",
+        "typeId": "{type:string;orderId:string}",
+        "symbol": "boards-api#src/boards/orders.service.ts:OrdersService.ship"
+      },
+      "receiver": {
+        "service": "orders-worker",
+        "typeId": "type:orders-worker#OrderEvent",
+        "symbol": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive"
+      },
+      "findings": [
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:boards-api#src/boards/orders.service.ts:25:11",
+            "to": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+            "type": "emits"
+          },
+          "edgeKey": "producer:boards-api#src/boards/orders.service.ts:25:11|emits|consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+          "direction": "payload",
+          "sender": {
+            "service": "boards-api",
+            "typeId": "{type:string;orderId:string}",
+            "symbol": "boards-api#src/boards/orders.service.ts:OrdersService.ship"
+          },
+          "receiver": {
+            "service": "orders-worker",
+            "typeId": "type:orders-worker#OrderEvent",
+            "symbol": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive"
+          },
+          "typeId": "type:orders-worker#OrderEvent",
+          "field": "orderId",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`orderId` is optional for receiver orders-worker and always sent by sender boards-api",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/orders.service.ts:29:11",
+        "to": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/orders.service.ts:29:11|emits|consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "boards-api",
+        "typeId": "{type:string;orderId:string}",
+        "symbol": "boards-api#src/boards/orders.service.ts:OrdersService.scheduleAlert"
+      },
+      "receiver": {
+        "service": "orders-worker",
+        "typeId": "type:orders-worker#OrderEvent",
+        "symbol": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive"
+      },
+      "findings": [
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:boards-api#src/boards/orders.service.ts:29:11",
+            "to": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+            "type": "emits"
+          },
+          "edgeKey": "producer:boards-api#src/boards/orders.service.ts:29:11|emits|consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+          "direction": "payload",
+          "sender": {
+            "service": "boards-api",
+            "typeId": "{type:string;orderId:string}",
+            "symbol": "boards-api#src/boards/orders.service.ts:OrdersService.scheduleAlert"
+          },
+          "receiver": {
+            "service": "orders-worker",
+            "typeId": "type:orders-worker#OrderEvent",
+            "symbol": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive"
+          },
+          "typeId": "type:orders-worker#OrderEvent",
+          "field": "orderId",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`orderId` is optional for receiver orders-worker and always sent by sender boards-api",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:boards-api#src/boards/orders.service.ts:20:11",
+        "to": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/orders.service.ts:20:11|emits|consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+      "direction": "payload",
+      "sender": {
+        "service": "boards-api",
+        "typeId": "{type:string;orderId:string}",
+        "symbol": "boards-api#src/boards/orders.service.ts:OrdersService.place"
+      },
+      "receiver": {
+        "service": "orders-worker",
+        "typeId": "type:orders-worker#OrderEvent",
+        "symbol": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive"
+      },
+      "typeId": "type:orders-worker#OrderEvent",
+      "field": "orderId",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`orderId` is optional for receiver orders-worker and always sent by sender boards-api",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:boards-api#src/boards/orders.service.ts:25:11",
+        "to": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/orders.service.ts:25:11|emits|consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+      "direction": "payload",
+      "sender": {
+        "service": "boards-api",
+        "typeId": "{type:string;orderId:string}",
+        "symbol": "boards-api#src/boards/orders.service.ts:OrdersService.ship"
+      },
+      "receiver": {
+        "service": "orders-worker",
+        "typeId": "type:orders-worker#OrderEvent",
+        "symbol": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive"
+      },
+      "typeId": "type:orders-worker#OrderEvent",
+      "field": "orderId",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`orderId` is optional for receiver orders-worker and always sent by sender boards-api",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:boards-api#src/boards/orders.service.ts:29:11",
+        "to": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/orders.service.ts:29:11|emits|consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+      "direction": "payload",
+      "sender": {
+        "service": "boards-api",
+        "typeId": "{type:string;orderId:string}",
+        "symbol": "boards-api#src/boards/orders.service.ts:OrdersService.scheduleAlert"
+      },
+      "receiver": {
+        "service": "orders-worker",
+        "typeId": "type:orders-worker#OrderEvent",
+        "symbol": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive"
+      },
+      "typeId": "type:orders-worker#OrderEvent",
+      "field": "orderId",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`orderId` is optional for receiver orders-worker and always sent by sender boards-api",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:43:11",
+        "to": "channel:board:*:audit",
+        "type": "emits"
+      },
+      "edgeKey": "channel:board:*:audit|emits|producer:boards-api#src/boards/boards.service.ts:43:11",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:board:*:audit is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+        "to": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:15:11|emits|consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+        "to": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:15:11|emits|consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+        "to": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:15:11|emits|consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+        "to": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:15:11|emits|consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+        "to": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:15:11|emits|consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+        "to": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:15:11|emits|consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+        "to": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:15:11|emits|consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+        "to": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:15:11|emits|consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+        "to": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:15:11|emits|consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:15:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:15:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:15:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:crewStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+        "to": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:15:11|emits|consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/live/board-feed.ts:BoardFeed.connect declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+        "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:15:11|emits|consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+        "to": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:19:11|emits|consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+        "to": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:19:11|emits|consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+        "to": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:19:11|emits|consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+        "to": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:19:11|emits|consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+        "to": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:19:11|emits|consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+        "to": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:19:11|emits|consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+        "to": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:19:11|emits|consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+        "to": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:19:11|emits|consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+        "to": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:19:11|emits|consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:19:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:19:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:19:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:crewStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+        "to": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:19:11|emits|consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/live/board-feed.ts:BoardFeed.connect declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+        "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:19:11|emits|consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+        "to": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:23:11|emits|consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+        "to": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:23:11|emits|consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+        "to": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:23:11|emits|consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+        "to": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:23:11|emits|consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+        "to": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:23:11|emits|consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+        "to": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:23:11|emits|consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+        "to": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:23:11|emits|consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+        "to": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:23:11|emits|consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+        "to": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:23:11|emits|consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:23:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:23:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:23:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:crewStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+        "to": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:23:11|emits|consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/live/board-feed.ts:BoardFeed.connect declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+        "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:23:11|emits|consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+        "to": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:28:11|emits|consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+        "to": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:28:11|emits|consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+        "to": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:28:11|emits|consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+        "to": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:28:11|emits|consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+        "to": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:28:11|emits|consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+        "to": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:28:11|emits|consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+        "to": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:28:11|emits|consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+        "to": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:28:11|emits|consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+        "to": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:28:11|emits|consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:28:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:28:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:28:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:crewStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+        "to": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:28:11|emits|consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/live/board-feed.ts:BoardFeed.connect declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+        "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:28:11|emits|consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+        "to": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:33:11|emits|consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+        "to": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:33:11|emits|consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+        "to": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:33:11|emits|consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+        "to": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:33:11|emits|consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+        "to": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:33:11|emits|consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+        "to": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:33:11|emits|consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+        "to": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:33:11|emits|consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+        "to": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:33:11|emits|consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+        "to": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:33:11|emits|consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:33:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:33:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:33:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:crewStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+        "to": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:33:11|emits|consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/live/board-feed.ts:BoardFeed.connect declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+        "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:33:11|emits|consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+        "to": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:38:11|emits|consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+        "to": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:38:11|emits|consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+        "to": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:38:11|emits|consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+        "to": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:38:11|emits|consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+        "to": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:38:11|emits|consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+        "to": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:38:11|emits|consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+        "to": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:38:11|emits|consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+        "to": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:38:11|emits|consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+        "to": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:38:11|emits|consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:38:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:38:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:38:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:crewStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+        "to": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:38:11|emits|consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/live/board-feed.ts:BoardFeed.connect declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+        "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/boards.service.ts:38:11|emits|consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+        "to": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:15:11|emits|consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+        "to": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:15:11|emits|consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+        "to": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:15:11|emits|consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+        "to": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:15:11|emits|consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+        "to": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:15:11|emits|consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+        "to": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:15:11|emits|consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+        "to": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:15:11|emits|consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+        "to": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:15:11|emits|consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+        "to": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:15:11|emits|consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:15:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:15:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:15:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:crewStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+        "to": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:15:11|emits|consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/live/board-feed.ts:BoardFeed.connect declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+        "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:15:11|emits|consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+        "to": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:19:11|emits|consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+        "to": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:19:11|emits|consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+        "to": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:19:11|emits|consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+        "to": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:19:11|emits|consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+        "to": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:19:11|emits|consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+        "to": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:19:11|emits|consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+        "to": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:19:11|emits|consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+        "to": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:19:11|emits|consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+        "to": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:19:11|emits|consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:19:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:19:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:19:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "boards-api#src/stream/stream-handlers.ts:crewStream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+        "to": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:19:11|emits|consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/live/board-feed.ts:BoardFeed.connect declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+        "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/boards/card-events.service.ts:19:11|emits|consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/bus/bus.service.ts:34:11",
+        "to": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/bus/bus.service.ts:34:11|emits|consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/bus/bus.service.ts:34:11",
+        "to": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/bus/bus.service.ts:34:11|emits|consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/bus/bus.service.ts:34:11",
+        "to": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/bus/bus.service.ts:34:11|emits|consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/bus/bus.service.ts:34:11",
+        "to": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/bus/bus.service.ts:34:11|emits|consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/bus/bus.service.ts:34:11",
+        "to": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/bus/bus.service.ts:34:11|emits|consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/bus/bus.service.ts:34:11",
+        "to": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/bus/bus.service.ts:34:11|emits|consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/bus/bus.service.ts:34:11",
+        "to": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/bus/bus.service.ts:34:11|emits|consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/bus/bus.service.ts:34:11",
+        "to": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/bus/bus.service.ts:34:11|emits|consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/bus/bus.service.ts:34:11",
+        "to": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/bus/bus.service.ts:34:11|emits|consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/bus/bus.service.ts:34:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/bus/bus.service.ts:34:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/bus/bus.service.ts:34:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/bus/bus.service.ts:34:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/bus/bus.service.ts:34:11",
+        "to": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/bus/bus.service.ts:34:11|emits|consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/bus/bus.service.ts:34:11",
+        "to": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/bus/bus.service.ts:34:11|emits|consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:boards-api#src/bus/bus.service.ts:34:11",
+        "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+        "type": "emits"
+      },
+      "edgeKey": "producer:boards-api#src/bus/bus.service.ts:34:11|emits|consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/live/alerts-stream.service.ts:19:5@27:20",
+        "to": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/live/alerts-stream.service.ts:19:5@27:20|hits|entry:boards-api:http:GET:/api/boards/:param/stream",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "admin#src/app/live/alerts-stream.service.ts:AlertsStreamService.connect declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/live/alerts-stream.service.ts:19:5@27:20",
+        "to": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/live/alerts-stream.service.ts:19:5@27:20|hits|entry:boards-api:http:GET:/api/boards/:param/stream",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19",
+        "to": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19|hits|entry:boards-api:http:GET:/api/boards/:param/events",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19",
+        "to": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19|hits|entry:boards-api:http:GET:/api/boards/:param/events",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/live/crew-board-stream.service.ts:22:5@27:20",
+        "to": "entry:boards-api:http:GET:/api/boards/:param/crew/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/live/crew-board-stream.service.ts:22:5@27:20|hits|entry:boards-api:http:GET:/api/boards/:param/crew/stream",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "admin#src/app/live/crew-board-stream.service.ts:CrewBoardStreamService.connect declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/live/crew-board-stream.service.ts:22:5@27:20",
+        "to": "entry:boards-api:http:GET:/api/boards/:param/crew/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/live/crew-board-stream.service.ts:22:5@27:20|hits|entry:boards-api:http:GET:/api/boards/:param/crew/stream",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/stream/stream-handlers.ts:crewStream answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/live/legacy-board-feed.service.ts:17:20",
+        "to": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/live/legacy-board-feed.service.ts:17:20|hits|entry:boards-api:http:GET:/api/boards/:param/stream",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/live/legacy-board-feed.service.ts:17:20",
+        "to": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/live/legacy-board-feed.service.ts:17:20|hits|entry:boards-api:http:GET:/api/boards/:param/stream",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/live/board-feed.ts:22:20",
+        "to": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/live/board-feed.ts:22:20|hits|entry:boards-api:http:GET:/api/boards/:param/events",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/live/board-feed.ts:BoardFeed.connect declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/live/board-feed.ts:22:20",
+        "to": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/live/board-feed.ts:22:20|hits|entry:boards-api:http:GET:/api/boards/:param/events",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "boards-api#src/stream/stream-handlers.ts:boardEvents answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 3,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 3,
+    "unchecked": 137,
+    "errors": 0,
+    "warnings": 3,
+    "infos": 0,
+    "ignored": 0
+  }
+}

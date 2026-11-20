@@ -1,0 +1,48 @@
+{
+  "channel": {
+    "id": "channel:board:*:events",
+    "type": "channel",
+    "label": "board:*:events",
+    "loc": "src/boards/boards.service.ts:15",
+    "service": "boards-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.bump",
+      "type": "consumer",
+      "label": "AlertsBadgeComponent.bump",
+      "loc": "src/app/boards/alerts-badge.component.ts:18",
+      "service": "admin",
+      "kind": "sse",
+      "selectedIn": "AlertsBadgeComponent.ngOnInit",
+      "via": "if"
+    },
+    {
+      "id": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.refreshArchive",
+      "type": "consumer",
+      "label": "ArchivePanelComponent.refreshArchive",
+      "loc": "src/app/boards/archive-panel.component.ts:26",
+      "service": "admin",
+      "kind": "sse",
+      "selectedIn": "ArchivePanelComponent.ngOnInit",
+      "via": "if"
+    },
+    {
+      "id": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "consumer",
+      "label": "BoardScreen",
+      "loc": "src/screens/BoardScreen.tsx:13",
+      "service": "web",
+      "kind": "sse",
+      "via": "if"
+    }
+  ],
+  "total": 3,
+  "type": "CARD_ARCHIVED",
+  "next": [
+    "who_emits({channel: \"channel:board:*:events\", type: \"CARD_ARCHIVED\"})",
+    "who_calls({symbol: \"consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.bump\"})",
+    "impact({symbol: \"consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.bump\"})",
+    "get_source({symbol: \"consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.bump\"})"
+  ]
+}

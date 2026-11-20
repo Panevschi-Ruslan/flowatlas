@@ -1202,6 +1202,13 @@ export { atChosenHost, matchServedAt, SERVED_AT_META, servedAtOf, type ServedAt,
 export {
   delegateOf,
   EVENT_SOURCE,
+  HANDS_ON_META,
+  recordSubjectSubscribers,
+  SUBSCRIPTIONS_META,
+  subscriptionsOf,
+  UNREACHED_META,
+  type StreamSubscription,
+  type SubjectSubscribers,
   isEventSourceConstruction,
   isWrittenFunction,
   recordStreamConsumer,
@@ -1213,6 +1220,7 @@ export {
   type StreamHolding,
   type StreamListener,
 } from './event-stream.js';
+export { classNeverMade, subjectRelayOf, subjectsPushedBy, type SubjectRelay, type SubjectSubscription } from './stream-subjects.js';
 export {
   DISCRIMINATOR_FIELDS,
   DISCRIMINATOR_META,

@@ -11,6 +11,7 @@ import {
   pathOfPattern,
   requestPathOf,
   routePathOf,
+  writeFilterOf,
   writesHeld,
 } from './durable-objects.js';
 
@@ -108,6 +109,11 @@ describe('the path a request handed to an object asks for', () => {
     expect(requestPathOf(argumentOf(`stub.fetch('https://hub/publish?x=1');`))).toEqual({ kind: 'path', path: '/publish' });
     expect(requestPathOf(argumentOf('stub.fetch(`https://hub/rooms/${id}/leave`);'))).toEqual({ kind: 'path', path: '/rooms/:param/leave' });
     expect(requestPathOf(argumentOf(`stub.fetch(new Request('https://hub/leave', { method: 'POST' }));`))).toEqual({ kind: 'path', path: '/leave' });
+  });
+
+  it('reads the path of a full address whose query is written into it, host and query left out (P362)', () => {
+    expect(requestPathOf(argumentOf('stub.fetch(`https://hub.local/subscribe?scope=${id}`, { method: "GET" });'))).toEqual({ kind: 'path', path: '/subscribe' });
+    expect(requestPathOf(argumentOf(`stub.fetch('https://hub.local/publish', { method: 'POST' });`))).toEqual({ kind: 'path', path: '/publish' });
   });
 
   it('takes the request the route was handed, passed on, as asking for the route\'s path', () => {
@@ -231,5 +237,70 @@ describe('a stub, followed to the class its namespace is made of', () => {
       { method: 'fetch', kind: 'undeclared', binding: 'NOWHERE' },
       undefined,
     ]);
+  });
+});
+
+describe('a namespace reached through the environment however it is held (P362)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'flowatlas-objects-env-'));
+  afterAll(() => rmSync(dir, { recursive: true, force: true }));
+  writeFileSync(join(dir, 'wrangler.jsonc'), `{ "main": "src/index.ts", "durable_objects": { "bindings": [{ "name": "HUB", "class_name": "Hub" }] } }`);
+  const repo = new Project({ compilerOptions: { strict: false } });
+  const index = repo.createSourceFile(
+    join(dir, 'src/index.ts'),
+    `
+    export class Hub { async fetch(request: Request) { return new Response(''); } }
+    interface Env { HUB: any; OTHER: any }
+    declare function getWorkerEnv(): Env;
+    declare const env: Env;
+    declare const holder: { cfg: Env };
+    export class Bus {
+      constructor(private readonly env: Env) {}
+      async viaGetter() { const ns = getWorkerEnv().HUB as any; await ns.get(ns.idFromName('a')).fetch('https://hub/publish'); }
+      async viaCast() { await (env as Record<string, any>).HUB.getByName('b').fetch('https://hub/publish'); }
+      async viaThis() { await this.env.HUB.get(this.env.HUB.idFromName('c')).fetch('https://hub/publish'); }
+      async viaBoundName() { await holder.cfg.HUB.getByName('d').fetch('https://hub/publish'); }
+      async notBound() { await holder.cfg.OTHER.getByName('e').fetch('https://hub/publish'); }
+    }`,
+  );
+  const reader = objectReader(dir, () => repo.getSourceFiles(), () => undefined);
+  const bus = index.getClassOrThrow('Bus');
+  const targetOf = (method: string) => {
+    const call = (bus.getMethodOrThrow(method).getBody() as TsNode)
+      .getDescendants()
+      .filter((node): node is CallExpression => Node.isCallExpression(node) && node.getText().endsWith("fetch('https://hub/publish')"))
+      .at(0) as CallExpression;
+    const stub = reader.stubCallOf(call);
+    return stub === undefined ? undefined : { binding: stub.origin.binding, kind: stub.target.kind };
+  };
+
+  it('reads the binding from a getter of the environment, a cast, this.env, and a name the configuration binds', () => {
+    expect(targetOf('viaGetter')).toEqual({ binding: 'HUB', kind: 'class' });
+    expect(targetOf('viaCast')).toEqual({ binding: 'HUB', kind: 'class' });
+    expect(targetOf('viaThis')).toEqual({ binding: 'HUB', kind: 'class' });
+    expect(targetOf('viaBoundName')).toEqual({ binding: 'HUB', kind: 'class' });
+  });
+
+  it('reads no binding from a holder that is not the environment, under a name nothing binds', () => {
+    expect(targetOf('notBound')).toBeUndefined();
+  });
+});
+
+describe('the test a hub picks the streams it writes to by (P362)', () => {
+  it('names the function a write is guarded by, and nothing where every stream is written to', () => {
+    const filtered = bodyOf(`
+      export class Hub {
+        private readonly subscribers = new Map<any, { scope: string }>();
+        publish(channel: string, frame: Uint8Array) {
+          for (const [writer, sub] of this.subscribers) if (inScope(sub, channel)) void writer.write(frame);
+        }
+      }
+      declare const inScope: (sub: { scope: string }, channel: string) => boolean;`);
+    expect(writeFilterOf(filtered)).toBe('inScope');
+    const everyone = bodyOf(`
+      export class Hub {
+        private readonly writers = new Set<any>();
+        publish(frame: Uint8Array) { for (const writer of this.writers) void writer.write(frame); }
+      }`);
+    expect(writeFilterOf(everyone)).toBeUndefined();
   });
 });

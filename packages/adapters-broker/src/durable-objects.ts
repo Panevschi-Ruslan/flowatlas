@@ -144,13 +144,32 @@ const classArgumentOf = (node: TsNode): ClassDeclaration | undefined => {
 /** Whether a name is held to be the environment the platform hands a worker. */
 const ENV_NAMES: ReadonlySet<string> = new Set(['env', 'bindings']);
 
-/** The binding a namespace is reached by: `env.ROOMS`, `c.env.ROOMS`, `this.env.ROOMS`, `const { ROOMS } = env`. */
-const bindingOf = (namespace: TsNode, depth = 0): string | undefined => {
+/** A function of the project's own that hands back the environment it kept: `getWorkerEnv()`, `getEnv()`, `useEnv()`. */
+const ENV_GETTER = /env(?:ironment)?$|bindings$/i;
+
+/** The name a holder of the environment is written with: `env`, `c.env`, `this.env`, and `env` for `getWorkerEnv()`. */
+const holderNameOf = (holder: TsNode): string | undefined => {
+  if (Node.isIdentifier(holder)) return holder.getText();
+  if (Node.isPropertyAccessExpression(holder)) return holder.getName();
+  if (Node.isCallExpression(holder) && holder.getArguments().length === 0) {
+    const callee = unwrap(holder.getExpression());
+    const name = Node.isIdentifier(callee) ? callee.getText() : Node.isPropertyAccessExpression(callee) ? callee.getName() : undefined;
+    return name !== undefined && ENV_GETTER.test(name) ? 'env' : undefined;
+  }
+  return undefined;
+};
+
+/**
+ * The binding a namespace is reached by: `env.ROOMS`, `c.env.ROOMS`,
+ * `this.env.ROOMS`, `(env as Record<string, unknown>).ROOMS`,
+ * `getWorkerEnv().ROOMS` (P362), `const { ROOMS } = env`; and a member named
+ * as the worker's configuration binds a namespace (`bound`), whatever holds it.
+ */
+const bindingOf = (namespace: TsNode, bound?: ReadonlySet<string>, depth = 0): string | undefined => {
   const at = unwrap(namespace);
   if (Node.isPropertyAccessExpression(at)) {
-    const holder = unwrap(at.getExpression());
-    const holderName = Node.isIdentifier(holder) ? holder.getText() : Node.isPropertyAccessExpression(holder) ? holder.getName() : undefined;
-    return holderName !== undefined && ENV_NAMES.has(holderName) ? at.getName() : undefined;
+    const holderName = holderNameOf(unwrap(at.getExpression()));
+    return (holderName !== undefined && ENV_NAMES.has(holderName)) || bound?.has(at.getName()) === true ? at.getName() : undefined;
   }
   if (Node.isElementAccessExpression(at)) {
     const key = at.getArgumentExpression();
@@ -160,12 +179,12 @@ const bindingOf = (namespace: TsNode, depth = 0): string | undefined => {
   const declaration = at.getSymbol()?.getDeclarations()[0];
   if (declaration !== undefined && Node.isBindingElement(declaration)) {
     const holder = declaration.getFirstAncestorByKind(SyntaxKind.VariableDeclaration)?.getInitializer();
-    const holderName = holder === undefined ? undefined : Node.isIdentifier(unwrap(holder)) ? unwrap(holder).getText() : Node.isPropertyAccessExpression(unwrap(holder)) ? (unwrap(holder) as unknown as { getName(): string }).getName() : undefined;
+    const holderName = holder === undefined ? undefined : holderNameOf(unwrap(holder));
     const property = declaration.getPropertyNameNode()?.getText() ?? declaration.getName();
-    return holderName !== undefined && ENV_NAMES.has(holderName) ? property : undefined;
+    return (holderName !== undefined && ENV_NAMES.has(holderName)) || bound?.has(property) === true ? property : undefined;
   }
   const initializer = initializerOf(at);
-  return initializer === undefined ? undefined : bindingOf(initializer, depth + 1);
+  return initializer === undefined ? undefined : bindingOf(initializer, bound, depth + 1);
 };
 
 /** Whether a value is an object's id: made by the namespace, held in a name, or typed as one. */
@@ -520,6 +539,52 @@ export const writesHeld = (body: TsNode, fields: ReadonlySet<string>, leaveOut?:
   return names && writes;
 };
 
+/**
+ * The test a body writes frames to the streams it holds under, where it picks
+ * among them (P362): `for (const [writer, sub] of this.subscribers) if
+ * (inScope(sub, channel)) writer.write(…)`. The name of the function the test
+ * calls, or the test as written; undefined where every frame written is
+ * written to every stream.
+ */
+export const writeFilterOf = (body: TsNode, leaveOut?: ReadonlySet<TsNode>): string | undefined => {
+  let filter: string | undefined;
+  body.forEachDescendant((node, traversal) => {
+    if (filter !== undefined) {
+      traversal.stop();
+      return;
+    }
+    if (leaveOut?.has(node) === true || Node.isClassDeclaration(node)) {
+      traversal.skip();
+      return;
+    }
+    if (!Node.isCallExpression(node)) return;
+    const callee = node.getExpression();
+    if (!Node.isPropertyAccessExpression(callee) || !FRAME_WRITES.has(callee.getName())) return;
+    let child: TsNode = node;
+    for (let at = node.getParent(); at !== undefined && at !== body; child = at, at = at.getParent()) {
+      const condition =
+        Node.isIfStatement(at) && at.getThenStatement() === child
+          ? at.getExpression()
+          : Node.isConditionalExpression(at) && at.getWhenTrue() === child
+            ? at.getCondition()
+            : Node.isBinaryExpression(at) && at.getRight() === child && at.getOperatorToken().getKind() === SyntaxKind.AmpersandAmpersandToken
+              ? at.getLeft()
+              : undefined;
+      if (condition === undefined) continue;
+      const test = unwrap(condition);
+      const called = Node.isCallExpression(test) ? unwrap(test.getExpression()) : undefined;
+      filter =
+        called !== undefined && (Node.isIdentifier(called) || Node.isPropertyAccessExpression(called))
+          ? Node.isIdentifier(called)
+            ? called.getText()
+            : called.getName()
+          : test.getText().replace(/\s+/g, ' ').slice(0, 40);
+      return;
+    }
+  });
+  return filter;
+};
+
 /** A body of a class's method, where the repository declares it. */
 export const methodBodyOf = (declaration: ClassDeclaration, name: string): { method: TsNode; body: TsNode } | undefined => {
   const { method } = findMethod(declaration, name);
@@ -553,6 +618,7 @@ export const objectReader = (repoDir: string, sources: () => Iterable<{ getFileP
   for (const binding of [...(config?.objects ?? [])].sort((a, b) => Number(a.environment !== undefined) - Number(b.environment !== undefined))) {
     if (!declared.has(binding.binding)) declared.set(binding.binding, binding);
   }
+  const boundNames: ReadonlySet<string> = new Set(declared.keys());
   const classes = new Map<string, ClassDeclaration | undefined>();
 
   /** The class of a name the worker declares: the one its entry exports, or the one of that name in the repository. */
@@ -579,7 +645,7 @@ export const objectReader = (repoDir: string, sources: () => Iterable<{ getFileP
     const name = callee.getName();
     if (name !== STUB_BY_ID && name !== STUB_BY_NAME) return undefined;
     const namespace = namespaceOf(callee.getExpression());
-    const binding = bindingOf(namespace);
+    const binding = bindingOf(namespace, boundNames);
     const typed = isTyped(namespace, NAMESPACE_TYPE);
     const [first] = call.getArguments();
     if (first === undefined) return undefined;

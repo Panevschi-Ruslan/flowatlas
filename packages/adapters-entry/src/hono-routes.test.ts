@@ -396,3 +396,31 @@ describe('an application that is not served where it is declared', () => {
     expect(read.unresolved.filter((row) => row.reason === 'route-path-dynamic')).toEqual([]);
   });
 });
+
+describe('a handler that is a member of the object a factory returns (P362)', () => {
+  it('points the route at the function the member names, written as a shorthand or as key: value', () => {
+    const read = extract(
+      `
+      import { Hono } from 'hono';
+      import { createHandlers } from './handlers.js';
+      const handlers = createHandlers(() => 'deps');
+      const app = new Hono();
+      app.get('/boards/:id/events', handlers.boardEvents);
+      app.get('/boards/:id/stream', handlers.stream);
+    `,
+      {
+        '/src/handlers.ts': `
+          import type { Context } from 'hono';
+          export const createHandlers = (deps: () => string) => {
+            const boardEvents = (c: Context) => c.text(deps());
+            return { boardEvents, stream: boardEvents };
+          };`,
+      },
+    );
+    const handlers = read.entries.map((entry) => {
+      const handler = entry.handler;
+      return handler !== undefined && isFunctionHandler(handler) ? `${entry.id} ${handler.functionName}:${handler.line}` : entry.id;
+    });
+    expect(handlers.sort()).toEqual(['entry:api:http:GET:/boards/:param/events boardEvents:4', 'entry:api:http:GET:/boards/:param/stream boardEvents:4']);
+  });
+});

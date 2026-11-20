@@ -9,14 +9,17 @@ import {
   methodBodies,
   methodNamedOn,
   recordStreamConsumer,
+  recordSubjectSubscribers,
   siteOf,
+  streamConsumerId,
   streamHandlerUnreadRow,
   streamHoldingOf,
+  subjectRelayOf,
   type CallFrame,
   type ClassMethod,
   type StreamListener,
 } from '@flowatlas/core';
-import type { ClassDeclaration, NewExpression } from 'ts-morph';
+import type { ClassDeclaration, NewExpression, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { AngularExtractContext } from '../context.js';
 import { noteIfUnreferenced, requestIdOf, requestsOf, wrapperOf, type RequestSite } from '../util/forward.js';
@@ -170,8 +173,9 @@ export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
     owner: ClassDeclaration,
     className: string,
     file: string,
-    callIds: readonly string[],
+    calls: readonly { id: string; site: TsNode }[],
   ): void => {
+    const callIds = calls.map((call) => call.id);
     const holding = streamHoldingOf(network);
     const at = siteOf(network);
     const symbol = `${className}.${method.getName()}`;
@@ -206,19 +210,62 @@ export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
           confidence: 'static',
         });
       }
+      for (const listener of listeners) handOn(listener, handler, owner, handlerId, calls);
     }
+  };
+
+  /**
+   * The subscriptions to a subject a listener pushes the frames into (P362):
+   * `this._event$.next(data)`, exposed as `event$`, subscribed to by the
+   * screens the service is injected into. Each method a `subscribe` is written
+   * in is one more consumer of the stream, reached from its requests.
+   */
+  const handOn = (listener: StreamListener, handler: ClassMethod, owner: ClassDeclaration, handlerId: string, calls: readonly { id: string; site: TsNode }[]): void => {
+    if (calls.length === 0) return;
+    const written = isWrittenFunction(listener.handler) ? listener.handler : handler;
+    const relay = subjectRelayOf(written, owner, ctx.project, ctx.repoDir);
+    if (relay.subjects.length === 0) return;
+    recordSubjectSubscribers(
+      ctx.builder,
+      relay,
+      {
+        repo: ctx.repo,
+        calls,
+        consumerId: streamConsumerId(handlerId),
+        handlerOf: (subscribe) => {
+          const member = subscribe.getFirstAncestor((node) => Node.isMethodDeclaration(node) || Node.isConstructorDeclaration(node) || Node.isPropertyDeclaration(node));
+          const holder = member?.getParent();
+          if (member === undefined || holder === undefined || !Node.isClassDeclaration(holder)) return undefined;
+          const label = `${holder.getName() ?? 'default'}.${Node.isConstructorDeclaration(member) ? 'constructor' : (member as ClassMethod).getName()}`;
+          if (Node.isConstructorDeclaration(member)) {
+            // A subscription made when the class is built, as a component's constructor often makes it.
+            const classNode = ctx.ensureClassNode(holder);
+            if (classNode === undefined) return undefined;
+            const id = `${classNode.id}.constructor`;
+            ctx.builder.addNode({ id, type: 'method', label, repo: ctx.repo, file: ctx.fileOf(member), line: siteOf(member).line });
+            return { id, label };
+          }
+          const id = ctx.methodIdOf(member as ClassMethod);
+          if (id === undefined) return undefined;
+          ctx.ensureMethodNode(member as ClassMethod);
+          return { id, label };
+        },
+        fileOf: (node) => ctx.fileOf(node),
+      },
+      (row) => ctx.report(row),
+    );
   };
 
   /** A stream opened in a wrapper belongs to whoever handed it the address. */
   const emit = (site: NewExpression, method: ClassMethod, at: RequestSite, owner: ClassDeclaration, className: string): void => {
     const [urlArg] = site.getArguments();
     if (urlArg === undefined) return;
-    const callIds: string[] = [];
+    const calls: { id: string; site: TsNode }[] = [];
     for (const request of requestsOf(ctx, urlArg, method, at)) {
       noteIfUnreferenced(ctx, request.site);
-      callIds.push(record(site, request.site, request.address, request.frames, request.choice));
+      calls.push({ id: record(site, request.site, request.address, request.frames, request.choice), site: request.site.call });
     }
-    consumersOf(site, method, owner, className, at.file, callIds);
+    consumersOf(site, method, owner, className, at.file, calls);
   };
 
   for (const indexed of ctx.classes.all()) {

@@ -1,0 +1,6456 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-20T16:01:32.293Z",
+  "services": [
+    {
+      "name": "boards-api",
+      "repo": "./boards-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders-worker",
+      "repo": "./orders-worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent",
+      "type": "ui_component",
+      "label": "AlertsBadgeComponent",
+      "repo": "admin",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-alerts-badge"
+      }
+    },
+    {
+      "id": "admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.bump",
+      "type": "method",
+      "label": "AlertsBadgeComponent.bump",
+      "repo": "admin",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "type": "method",
+      "label": "AlertsBadgeComponent.ngOnInit",
+      "repo": "admin",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent",
+      "type": "ui_component",
+      "label": "ArchivePanelComponent",
+      "repo": "admin",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 10,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-archive-panel"
+      }
+    },
+    {
+      "id": "admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnDestroy",
+      "type": "method",
+      "label": "ArchivePanelComponent.ngOnDestroy",
+      "repo": "admin",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "type": "method",
+      "label": "ArchivePanelComponent.ngOnInit",
+      "repo": "admin",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.refreshArchive",
+      "type": "method",
+      "label": "ArchivePanelComponent.refreshArchive",
+      "repo": "admin",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/boards/board-page.component.ts:BoardPageComponent",
+      "type": "ui_component",
+      "label": "BoardPageComponent",
+      "repo": "admin",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 7,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-board-page"
+      }
+    },
+    {
+      "id": "admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
+      "type": "method",
+      "label": "BoardPageComponent.load",
+      "repo": "admin",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnDestroy",
+      "type": "method",
+      "label": "BoardPageComponent.ngOnDestroy",
+      "repo": "admin",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "type": "method",
+      "label": "BoardPageComponent.ngOnInit",
+      "repo": "admin",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent",
+      "type": "ui_component",
+      "label": "CardTimelineComponent",
+      "repo": "admin",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 7,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-card-timeline"
+      }
+    },
+    {
+      "id": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.append",
+      "type": "method",
+      "label": "CardTimelineComponent.append",
+      "repo": "admin",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnDestroy",
+      "type": "method",
+      "label": "CardTimelineComponent.ngOnDestroy",
+      "repo": "admin",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "type": "method",
+      "label": "CardTimelineComponent.ngOnInit",
+      "repo": "admin",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
+      "type": "method",
+      "label": "CardTimelineComponent.reorder",
+      "repo": "admin",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent",
+      "type": "ui_component",
+      "label": "CrewPanelComponent",
+      "repo": "admin",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 10,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-crew-panel"
+      }
+    },
+    {
+      "id": "admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnDestroy",
+      "type": "method",
+      "label": "CrewPanelComponent.ngOnDestroy",
+      "repo": "admin",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "type": "method",
+      "label": "CrewPanelComponent.ngOnInit",
+      "repo": "admin",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.scheduleRefresh",
+      "type": "method",
+      "label": "CrewPanelComponent.scheduleRefresh",
+      "repo": "admin",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/live/alerts-stream.service.ts:AlertsStreamService",
+      "type": "provider",
+      "label": "AlertsStreamService",
+      "repo": "admin",
+      "file": "src/app/live/alerts-stream.service.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "admin#src/app/live/alerts-stream.service.ts:AlertsStreamService.connect",
+      "type": "method",
+      "label": "AlertsStreamService.connect",
+      "repo": "admin",
+      "file": "src/app/live/alerts-stream.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/live/board-stream.service.ts:BoardStreamService",
+      "type": "provider",
+      "label": "BoardStreamService",
+      "repo": "admin",
+      "file": "src/app/live/board-stream.service.ts",
+      "line": 16,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "admin#src/app/live/board-stream.service.ts:BoardStreamService.close",
+      "type": "method",
+      "label": "BoardStreamService.close",
+      "repo": "admin",
+      "file": "src/app/live/board-stream.service.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/live/board-stream.service.ts:BoardStreamService.connect",
+      "type": "method",
+      "label": "BoardStreamService.connect",
+      "repo": "admin",
+      "file": "src/app/live/board-stream.service.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "token",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "type": "method",
+      "label": "BoardStreamService.openStream",
+      "repo": "admin",
+      "file": "src/app/live/board-stream.service.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "token",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/live/crew-board-stream.service.ts:CrewBoardStreamService",
+      "type": "provider",
+      "label": "CrewBoardStreamService",
+      "repo": "admin",
+      "file": "src/app/live/crew-board-stream.service.ts",
+      "line": 15,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "admin#src/app/live/crew-board-stream.service.ts:CrewBoardStreamService.connect",
+      "type": "method",
+      "label": "CrewBoardStreamService.connect",
+      "repo": "admin",
+      "file": "src/app/live/crew-board-stream.service.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "token",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed",
+      "type": "provider",
+      "label": "LegacyBoardFeed",
+      "repo": "admin",
+      "file": "src/app/live/legacy-board-feed.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "type": "method",
+      "label": "LegacyBoardFeed.open",
+      "repo": "admin",
+      "file": "src/app/live/legacy-board-feed.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "admin#src/app/live/live-stream.ts:LiveStream",
+      "type": "provider",
+      "label": "LiveStream",
+      "repo": "admin",
+      "file": "src/app/live/live-stream.ts",
+      "line": 14,
+      "kind": "injectable"
+    },
+    {
+      "id": "admin#src/app/live/live-stream.ts:LiveStream.connect",
+      "type": "method",
+      "label": "LiveStream.connect",
+      "repo": "admin",
+      "file": "src/app/live/live-stream.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "url",
+              "type": "string"
+            },
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "select",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/live/live-stream.ts:LiveStream.open",
+      "type": "method",
+      "label": "LiveStream.open",
+      "repo": "admin",
+      "file": "src/app/live/live-stream.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "p",
+              "type": "type:admin#Opened"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/live/live-updates.service.ts:LiveUpdatesService",
+      "type": "provider",
+      "label": "LiveUpdatesService",
+      "repo": "admin",
+      "file": "src/app/live/live-updates.service.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "admin#src/app/live/live-updates.service.ts:LiveUpdatesService.getCardUpdates",
+      "type": "method",
+      "label": "LiveUpdatesService.getCardUpdates",
+      "repo": "admin",
+      "file": "src/app/live/live-updates.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:admin#CardEvent"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/live/rename-watcher.ts:RenameWatcher",
+      "type": "provider",
+      "label": "RenameWatcher",
+      "repo": "admin",
+      "file": "src/app/live/rename-watcher.ts",
+      "line": 4,
+      "kind": "injectable"
+    },
+    {
+      "id": "admin#src/app/live/rename-watcher.ts:RenameWatcher.retitle",
+      "type": "method",
+      "label": "RenameWatcher.retitle",
+      "repo": "admin",
+      "file": "src/app/live/rename-watcher.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "title",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "type": "method",
+      "label": "RenameWatcher.watch",
+      "repo": "admin",
+      "file": "src/app/live/rename-watcher.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "feed",
+              "type": "type:admin#LegacyBoardFeed"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "boards-api",
+      "file": "src/app.module.ts",
+      "line": 10,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "BoardsController"
+        ],
+        "providers": [
+          "BusService",
+          "BoardEventBus",
+          "BoardsService",
+          "CardEventsService",
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.controller.ts:BoardsController",
+      "type": "provider",
+      "label": "BoardsController",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.controller.ts:BoardsController.add",
+      "type": "method",
+      "label": "BoardsController.add",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{cardId:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.controller.ts:BoardsController.alertOrder",
+      "type": "method",
+      "label": "BoardsController.alertOrder",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.controller.ts:BoardsController.archive",
+      "type": "method",
+      "label": "BoardsController.archive",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "cardId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.controller.ts:BoardsController.assign",
+      "type": "method",
+      "label": "BoardsController.assign",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 70,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "crewId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.controller.ts:BoardsController.audit",
+      "type": "method",
+      "label": "BoardsController.audit",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 65,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{actor:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.controller.ts:BoardsController.comment",
+      "type": "method",
+      "label": "BoardsController.comment",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 60,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "cardId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{text:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.controller.ts:BoardsController.importCard",
+      "type": "method",
+      "label": "BoardsController.importCard",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.controller.ts:BoardsController.move",
+      "type": "method",
+      "label": "BoardsController.move",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "cardId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{column:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.controller.ts:BoardsController.pin",
+      "type": "method",
+      "label": "BoardsController.pin",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "cardId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.controller.ts:BoardsController.placeOrder",
+      "type": "method",
+      "label": "BoardsController.placeOrder",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.controller.ts:BoardsController.rename",
+      "type": "method",
+      "label": "BoardsController.rename",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 55,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{title:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.controller.ts:BoardsController.shipOrder",
+      "type": "method",
+      "label": "BoardsController.shipOrder",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.service.ts:BoardsService",
+      "type": "provider",
+      "label": "BoardsService",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.service.ts:BoardsService.addCard",
+      "type": "method",
+      "label": "BoardsService.addCard",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "cardId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.service.ts:BoardsService.archiveCard",
+      "type": "method",
+      "label": "BoardsService.archiveCard",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "cardId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.service.ts:BoardsService.assignCrew",
+      "type": "method",
+      "label": "BoardsService.assignCrew",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "crewId",
+              "type": "string"
+            },
+            {
+              "name": "boardId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.service.ts:BoardsService.auditBoard",
+      "type": "method",
+      "label": "BoardsService.auditBoard",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "actor",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.service.ts:BoardsService.commentOnCard",
+      "type": "method",
+      "label": "BoardsService.commentOnCard",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "cardId",
+              "type": "string"
+            },
+            {
+              "name": "text",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.service.ts:BoardsService.moveCard",
+      "type": "method",
+      "label": "BoardsService.moveCard",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "cardId",
+              "type": "string"
+            },
+            {
+              "name": "column",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/boards.service.ts:BoardsService.renameBoard",
+      "type": "method",
+      "label": "BoardsService.renameBoard",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/card-events.service.ts:CardEventsService",
+      "type": "provider",
+      "label": "CardEventsService",
+      "repo": "boards-api",
+      "file": "src/boards/card-events.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "boards-api#src/boards/card-events.service.ts:CardEventsService.importCard",
+      "type": "method",
+      "label": "CardEventsService.importCard",
+      "repo": "boards-api",
+      "file": "src/boards/card-events.service.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/card-events.service.ts:CardEventsService.pin",
+      "type": "method",
+      "label": "CardEventsService.pin",
+      "repo": "boards-api",
+      "file": "src/boards/card-events.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "cardId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/card-events.service.ts:CardEventsService.publishCardEvent",
+      "type": "method",
+      "label": "CardEventsService.publishCardEvent",
+      "repo": "boards-api",
+      "file": "src/boards/card-events.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "type",
+              "type": "string"
+            },
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "extra",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/card-events.service.ts:CardEventsService.relayImported",
+      "type": "method",
+      "label": "CardEventsService.relayImported",
+      "repo": "boards-api",
+      "file": "src/boards/card-events.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{source:string;type:'CARD_IMPORTED'}"
+            },
+            {
+              "name": "boardId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "boards-api",
+      "file": "src/boards/orders.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "boards-api#src/boards/orders.service.ts:OrdersService.place",
+      "type": "method",
+      "label": "OrdersService.place",
+      "repo": "boards-api",
+      "file": "src/boards/orders.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/orders.service.ts:OrdersService.scheduleAlert",
+      "type": "method",
+      "label": "OrdersService.scheduleAlert",
+      "repo": "boards-api",
+      "file": "src/boards/orders.service.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/boards/orders.service.ts:OrdersService.ship",
+      "type": "method",
+      "label": "OrdersService.ship",
+      "repo": "boards-api",
+      "file": "src/boards/orders.service.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/bus/board-event-bus.ts:BoardEventBus",
+      "type": "provider",
+      "label": "BoardEventBus",
+      "repo": "boards-api",
+      "file": "src/bus/board-event-bus.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "boards-api#src/bus/board-event-bus.ts:BoardEventBus.publish",
+      "type": "method",
+      "label": "BoardEventBus.publish",
+      "repo": "boards-api",
+      "file": "src/bus/board-event-bus.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/bus/bus.service.ts:BusService",
+      "type": "provider",
+      "label": "BusService",
+      "repo": "boards-api",
+      "file": "src/bus/bus.service.ts",
+      "line": 18,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub",
+      "type": "method",
+      "label": "BusService.fanoutToHub",
+      "repo": "boards-api",
+      "file": "src/bus/bus.service.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/bus/bus.service.ts:BusService.fanoutToWorker",
+      "type": "method",
+      "label": "BusService.fanoutToWorker",
+      "repo": "boards-api",
+      "file": "src/bus/bus.service.ts",
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "markers": [
+          {
+            "name": "CallsService",
+            "args": [
+              "orders-worker",
+              "POST /events/orders"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "boards-api#src/bus/bus.service.ts:BusService.publish",
+      "type": "method",
+      "label": "BusService.publish",
+      "repo": "boards-api",
+      "file": "src/bus/bus.service.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/stream/stream-handlers.ts:authorize",
+      "type": "function",
+      "label": "authorize",
+      "repo": "boards-api",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "resolveDeps",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            },
+            {
+              "name": "asked",
+              "type": "{token:string;boardId:string}"
+            }
+          ],
+          "returns": "type:boards-api#Decision"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/stream/stream-handlers.ts:boardEvents",
+      "type": "function",
+      "label": "boardEvents",
+      "repo": "boards-api",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<{Bindings:type:boards-api#Env}>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/stream/stream-handlers.ts:createStreamHandlers",
+      "type": "function",
+      "label": "createStreamHandlers",
+      "repo": "boards-api",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "resolveDeps",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "{boardEvents:{prototype:any;length:number;arguments:any;caller:Function;name:string};stream:{prototype:any;length:number;arguments:any;caller:Function;name:string};crewStream:{prototype:any;length:number;arguments:any;caller:Function;name:string};health:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/stream/stream-handlers.ts:crewStream",
+      "type": "function",
+      "label": "crewStream",
+      "repo": "boards-api",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<{Bindings:type:boards-api#Env}>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/stream/stream-handlers.ts:forwardToHub",
+      "type": "function",
+      "label": "forwardToHub",
+      "repo": "boards-api",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<{Bindings:type:boards-api#Env}>"
+            },
+            {
+              "name": "decision",
+              "type": "type:boards-api#Decision"
+            }
+          ],
+          "returns": "Promise<Response>|Response"
+        }
+      }
+    },
+    {
+      "id": "boards-api#src/stream/stream-handlers.ts:ping",
+      "type": "function",
+      "label": "ping",
+      "repo": "boards-api",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<{Bindings:type:boards-api#Env}>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "channel:board:*:audit",
+      "type": "channel",
+      "label": "board:*:audit",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 43,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "board-bus"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:board:*:audit#BOARD_AUDITED",
+      "type": "channel",
+      "label": "board:*:audit#BOARD_AUDITED",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 43,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:board:*:audit",
+        "messageType": "BOARD_AUDITED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:board:*:events",
+      "type": "channel",
+      "label": "board:*:events",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 15,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "board-bus",
+          "BusService.publish"
+        ],
+        "producers": 7,
+        "consumers": 14
+      }
+    },
+    {
+      "id": "channel:board:*:events#BOARD_RENAMED",
+      "type": "channel",
+      "label": "board:*:events#BOARD_RENAMED",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 28,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:board:*:events",
+        "messageType": "BOARD_RENAMED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:board:*:events#CARD_ADDED",
+      "type": "channel",
+      "label": "board:*:events#CARD_ADDED",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 19,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:board:*:events",
+        "messageType": "CARD_ADDED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:board:*:events#CARD_ARCHIVED",
+      "type": "channel",
+      "label": "board:*:events#CARD_ARCHIVED",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 23,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:board:*:events",
+        "messageType": "CARD_ARCHIVED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 3
+      }
+    },
+    {
+      "id": "channel:board:*:events#CARD_COMMENTED",
+      "type": "channel",
+      "label": "board:*:events#CARD_COMMENTED",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 33,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:board:*:events",
+        "messageType": "CARD_COMMENTED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:board:*:events#CARD_IMPORTED",
+      "type": "channel",
+      "label": "board:*:events#CARD_IMPORTED",
+      "repo": "boards-api",
+      "file": "src/boards/card-events.service.ts",
+      "line": 19,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:board:*:events",
+        "messageType": "CARD_IMPORTED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:board:*:events#CARD_MOVED",
+      "type": "channel",
+      "label": "board:*:events#CARD_MOVED",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 15,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:board:*:events",
+        "messageType": "CARD_MOVED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 3
+      }
+    },
+    {
+      "id": "channel:board:*:events#CARD_PINNED",
+      "type": "channel",
+      "label": "board:*:events#CARD_PINNED",
+      "repo": "web",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 13,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:board:*:events",
+        "messageType": "CARD_PINNED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:board:*:events#CREW_ASSIGNED",
+      "type": "channel",
+      "label": "board:*:events#CREW_ASSIGNED",
+      "repo": "admin",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 18,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:board:*:events",
+        "messageType": "CREW_ASSIGNED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:board:*:orders",
+      "type": "channel",
+      "label": "board:*:orders",
+      "repo": "boards-api",
+      "file": "src/boards/orders.service.ts",
+      "line": 20,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "BusService.publish",
+          "board-bus"
+        ],
+        "producers": 3,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:board:*:orders#ORDER_PLACED",
+      "type": "channel",
+      "label": "board:*:orders#ORDER_PLACED",
+      "repo": "boards-api",
+      "file": "src/boards/orders.service.ts",
+      "line": 20,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:board:*:orders",
+        "messageType": "ORDER_PLACED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:board:*:orders#ORDER_SHIPPED",
+      "type": "channel",
+      "label": "board:*:orders#ORDER_SHIPPED",
+      "repo": "boards-api",
+      "file": "src/boards/orders.service.ts",
+      "line": 25,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:board:*:orders",
+        "messageType": "ORDER_SHIPPED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:board:*:orders#SCHEDULED_ALERT",
+      "type": "channel",
+      "label": "board:*:orders#SCHEDULED_ALERT",
+      "repo": "boards-api",
+      "file": "src/boards/orders.service.ts",
+      "line": 29,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:board:*:orders",
+        "messageType": "SCHEDULED_ALERT",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:crew:*:shifts",
+      "type": "channel",
+      "label": "crew:*:shifts",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 38,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "board-bus"
+        ],
+        "producers": 1,
+        "consumers": 14
+      }
+    },
+    {
+      "id": "channel:crew:*:shifts#CREW_ASSIGNED",
+      "type": "channel",
+      "label": "crew:*:shifts#CREW_ASSIGNED",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 38,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:crew:*:shifts",
+        "messageType": "CREW_ASSIGNED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:durable-object:BoardHub",
+      "type": "channel",
+      "label": "durable-object:BoardHub",
+      "repo": "boards-api",
+      "file": "src/hub/board-hub.ts",
+      "line": 22,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "durable-object"
+        ],
+        "heldBy": "BoardHub",
+        "binding": "BOARD_HUB",
+        "forwards": [
+          "channel:board:*:events",
+          "channel:crew:*:shifts"
+        ],
+        "producers": 1,
+        "consumers": 14
+      }
+    },
+    {
+      "id": "config_key:boards-api#BOARD_HUB",
+      "type": "config_key",
+      "label": "BOARD_HUB",
+      "repo": "boards-api",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 26,
+      "meta": {
+        "key": "BOARD_HUB",
+        "source": "binding"
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.bump",
+      "type": "consumer",
+      "label": "AlertsBadgeComponent.bump",
+      "repo": "admin",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 18,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "selectedBy": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+        "messageTypes": [
+          "CARD_ARCHIVED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "type": "consumer",
+      "label": "AlertsBadgeComponent.ngOnInit",
+      "repo": "admin",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 13,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 13,
+            "column": 5,
+            "through": "AlertsStreamService.alerts$"
+          }
+        ],
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "CARD_ARCHIVED",
+            "consumer": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.bump",
+            "via": "if",
+            "line": 14
+          }
+        ],
+        "routes": [
+          "entry:boards-api:http:GET:/api/boards/:param/stream"
+        ]
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "type": "consumer",
+      "label": "ArchivePanelComponent.ngOnInit",
+      "repo": "admin",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 17,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 17,
+            "column": 16,
+            "through": "BoardStreamService.event$"
+          }
+        ],
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "CARD_ARCHIVED",
+            "consumer": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.refreshArchive",
+            "via": "if",
+            "line": 18
+          }
+        ],
+        "routes": [
+          "entry:boards-api:http:GET:/api/boards/:param/events"
+        ]
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.refreshArchive",
+      "type": "consumer",
+      "label": "ArchivePanelComponent.refreshArchive",
+      "repo": "admin",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 26,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "selectedBy": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+        "messageTypes": [
+          "CARD_ARCHIVED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
+      "type": "consumer",
+      "label": "BoardPageComponent.load",
+      "repo": "admin",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 29,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "selectedBy": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+        "messageTypes": [
+          "CARD_ADDED",
+          "CARD_MOVED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "type": "consumer",
+      "label": "BoardPageComponent.ngOnInit",
+      "repo": "admin",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 16,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 16,
+            "column": 5,
+            "through": "BoardStreamService.event$"
+          }
+        ],
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "CARD_ADDED",
+            "consumer": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
+            "via": "filter",
+            "line": 18
+          },
+          {
+            "type": "CARD_MOVED",
+            "consumer": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
+            "via": "filter",
+            "line": 18
+          }
+        ],
+        "routes": [
+          "entry:boards-api:http:GET:/api/boards/:param/events"
+        ]
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.append",
+      "type": "consumer",
+      "label": "CardTimelineComponent.append",
+      "repo": "admin",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 28,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "selectedBy": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "messageTypes": [
+          "CARD_ADDED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "type": "consumer",
+      "label": "CardTimelineComponent.ngOnInit",
+      "repo": "admin",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 15,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 15,
+            "column": 16,
+            "through": "LiveUpdatesService.getCardUpdates"
+          }
+        ],
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "CARD_ADDED",
+            "consumer": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.append",
+            "via": "if",
+            "line": 16
+          },
+          {
+            "type": "CARD_MOVED",
+            "consumer": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
+            "via": "if",
+            "line": 20
+          }
+        ],
+        "routes": [
+          "entry:boards-api:http:GET:/api/boards/:param/events"
+        ]
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
+      "type": "consumer",
+      "label": "CardTimelineComponent.reorder",
+      "repo": "admin",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 32,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "selectedBy": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "messageTypes": [
+          "CARD_MOVED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "type": "consumer",
+      "label": "CrewPanelComponent.ngOnInit",
+      "repo": "admin",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 18,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 18,
+            "column": 22,
+            "through": "CrewBoardStreamService.events$"
+          }
+        ],
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "CREW_ASSIGNED",
+            "consumer": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.scheduleRefresh",
+            "via": "if",
+            "line": 19
+          }
+        ],
+        "routes": [
+          "entry:boards-api:http:GET:/api/boards/:param/crew/stream"
+        ]
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.scheduleRefresh",
+      "type": "consumer",
+      "label": "CrewPanelComponent.scheduleRefresh",
+      "repo": "admin",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 27,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "selectedBy": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+        "messageTypes": [
+          "CREW_ASSIGNED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "type": "consumer",
+      "label": "BoardStreamService.openStream",
+      "repo": "admin",
+      "file": "src/app/live/board-stream.service.ts",
+      "line": 35,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "handsOnTo": [
+          "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+          "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+          "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit"
+        ],
+        "subjects": [
+          "BoardStreamService._event$"
+        ],
+        "routes": [
+          "entry:boards-api:http:GET:/api/boards/:param/events"
+        ]
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "type": "consumer",
+      "label": "LegacyBoardFeed.open",
+      "repo": "admin",
+      "file": "src/app/live/legacy-board-feed.service.ts",
+      "line": 18,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "handsOnTo": [
+          "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch"
+        ],
+        "subjects": [
+          "LegacyBoardFeed.events"
+        ],
+        "unreached": "nothing injects or makes LegacyBoardFeed: no constructor is handed it, no inject() asks for it and no new builds it",
+        "routes": [
+          "entry:boards-api:http:GET:/api/boards/:param/stream"
+        ]
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "type": "consumer",
+      "label": "LiveStream.open",
+      "repo": "admin",
+      "file": "src/app/live/live-stream.ts",
+      "line": 28,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "handsOnTo": [
+          "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+          "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit"
+        ],
+        "subjects": [
+          "LiveStream.subject"
+        ],
+        "routes": [
+          "entry:boards-api:http:GET:/api/boards/:param/crew/stream",
+          "entry:boards-api:http:GET:/api/boards/:param/stream"
+        ]
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.retitle",
+      "type": "consumer",
+      "label": "RenameWatcher.retitle",
+      "repo": "admin",
+      "file": "src/app/live/rename-watcher.ts",
+      "line": 13,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "selectedBy": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+        "unreached": "nothing injects or makes LegacyBoardFeed: no constructor is handed it, no inject() asks for it and no new builds it",
+        "messageTypes": [
+          "BOARD_RENAMED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "type": "consumer",
+      "label": "RenameWatcher.watch",
+      "repo": "admin",
+      "file": "src/app/live/rename-watcher.ts",
+      "line": 8,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 8,
+            "column": 5,
+            "through": "LegacyBoardFeed.events"
+          }
+        ],
+        "unreached": "nothing injects or makes LegacyBoardFeed: no constructor is handed it, no inject() asks for it and no new builds it",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "BOARD_RENAMED",
+            "consumer": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.retitle",
+            "via": "if",
+            "line": 9
+          }
+        ],
+        "routes": [
+          "entry:boards-api:http:GET:/api/boards/:param/stream"
+        ]
+      }
+    },
+    {
+      "id": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+      "type": "consumer",
+      "label": "GET /api/boards/:param/events",
+      "repo": "boards-api",
+      "file": "src/worker.ts",
+      "line": 15,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "adapter": "durable-object",
+        "relay": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+      "type": "consumer",
+      "label": "GET /api/boards/:param/stream",
+      "repo": "boards-api",
+      "file": "src/worker.ts",
+      "line": 16,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "adapter": "durable-object",
+        "relay": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+      "type": "consumer",
+      "label": "crewStream",
+      "repo": "boards-api",
+      "file": "src/worker.ts",
+      "line": 17,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "adapter": "durable-object",
+        "relay": "entry:boards-api:http:GET:/api/boards/:param/crew/stream",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.handleScheduledAlert",
+      "type": "consumer",
+      "label": "OrderEventsController.handleScheduledAlert",
+      "repo": "orders-worker",
+      "file": "src/events/order-events.controller.ts",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "board-bus",
+        "selectedBy": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+        "messageTypes": [
+          "SCHEDULED_ALERT"
+        ]
+      }
+    },
+    {
+      "id": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+      "type": "consumer",
+      "label": "OrderEventsController.receive",
+      "repo": "orders-worker",
+      "file": "src/events/order-events.controller.ts",
+      "line": 15,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "board-bus",
+        "decorator": "Consumes",
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "ORDER_PLACED",
+            "consumer": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.recordPlaced",
+            "via": "switch",
+            "line": 21
+          },
+          {
+            "type": "SCHEDULED_ALERT",
+            "consumer": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.handleScheduledAlert",
+            "via": "switch",
+            "line": 19
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.recordPlaced",
+      "type": "consumer",
+      "label": "OrderEventsController.recordPlaced",
+      "repo": "orders-worker",
+      "file": "src/events/order-events.controller.ts",
+      "line": 32,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "board-bus",
+        "selectedBy": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+        "messageTypes": [
+          "ORDER_PLACED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "type": "consumer",
+      "label": "BoardFeed.connect",
+      "repo": "web",
+      "file": "src/live/board-feed.ts",
+      "line": 23,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "handsOnTo": [
+          "consumer:web#src/screens/BoardScreen.tsx:BoardScreen"
+        ],
+        "subjects": [
+          "BoardFeed.subject"
+        ],
+        "routes": [
+          "entry:boards-api:http:GET:/api/boards/:param/events"
+        ]
+      }
+    },
+    {
+      "id": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "consumer",
+      "label": "BoardScreen",
+      "repo": "web",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 13,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 13,
+            "column": 17,
+            "through": "BoardFeed.events$"
+          }
+        ],
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "CARD_ARCHIVED",
+            "consumer": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+            "via": "if",
+            "line": 14
+          },
+          {
+            "type": "CARD_IMPORTED",
+            "consumer": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+            "via": "if",
+            "line": 14
+          },
+          {
+            "type": "CARD_MOVED",
+            "consumer": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+            "via": "if",
+            "line": 14
+          },
+          {
+            "type": "CARD_PINNED",
+            "consumer": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+            "via": "if",
+            "line": 14
+          }
+        ],
+        "routes": [
+          "entry:boards-api:http:GET:/api/boards/:param/events"
+        ]
+      }
+    },
+    {
+      "id": "entry:boards-api:http:GET:/api/boards/:param/crew/stream",
+      "type": "entry",
+      "label": "GET /api/boards/:param/crew/stream",
+      "repo": "boards-api",
+      "file": "src/worker.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/boards/:param/crew/stream",
+        "rawPath": "/api/boards/:boardId/crew/stream",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "stream": "sse",
+        "streamFrom": "content-type",
+        "servedBy": [
+          {
+            "class": "BoardHub",
+            "binding": "BOARD_HUB",
+            "method": "fetch",
+            "via": "config"
+          }
+        ],
+        "relays": [
+          "channel:board:*:events",
+          "channel:crew:*:shifts",
+          "channel:durable-object:BoardHub"
+        ]
+      }
+    },
+    {
+      "id": "entry:boards-api:http:GET:/api/boards/:param/events",
+      "type": "entry",
+      "label": "GET /api/boards/:param/events",
+      "repo": "boards-api",
+      "file": "src/worker.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/boards/:param/events",
+        "rawPath": "/api/boards/:boardId/events",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "stream": "sse",
+        "streamFrom": "content-type",
+        "servedBy": [
+          {
+            "class": "BoardHub",
+            "binding": "BOARD_HUB",
+            "method": "fetch",
+            "via": "config"
+          }
+        ],
+        "relays": [
+          "channel:board:*:events",
+          "channel:crew:*:shifts",
+          "channel:durable-object:BoardHub"
+        ]
+      }
+    },
+    {
+      "id": "entry:boards-api:http:GET:/api/boards/:param/stream",
+      "type": "entry",
+      "label": "GET /api/boards/:param/stream",
+      "repo": "boards-api",
+      "file": "src/worker.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/boards/:param/stream",
+        "rawPath": "/api/boards/:boardId/stream",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "stream": "sse",
+        "streamFrom": "content-type",
+        "servedBy": [
+          {
+            "class": "BoardHub",
+            "binding": "BOARD_HUB",
+            "method": "fetch",
+            "via": "config"
+          }
+        ],
+        "relays": [
+          "channel:board:*:events",
+          "channel:crew:*:shifts",
+          "channel:durable-object:BoardHub"
+        ]
+      }
+    },
+    {
+      "id": "entry:boards-api:http:GET:/api/health",
+      "type": "entry",
+      "label": "GET /api/health",
+      "repo": "boards-api",
+      "file": "src/worker.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/health",
+        "rawPath": "/api/health",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:boards-api:http:POST:/boards/:param/audit",
+      "type": "entry",
+      "label": "POST /boards/:param/audit",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 65,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/boards/:param/audit",
+        "rawPath": "/boards/:boardId/audit",
+        "controller": "BoardsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:boards-api:http:POST:/boards/:param/cards",
+      "type": "entry",
+      "label": "POST /boards/:param/cards",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 45,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/boards/:param/cards",
+        "rawPath": "/boards/:boardId/cards",
+        "controller": "BoardsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:boards-api:http:POST:/boards/:param/cards/:param/archive",
+      "type": "entry",
+      "label": "POST /boards/:param/cards/:param/archive",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 50,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/boards/:param/cards/:param/archive",
+        "rawPath": "/boards/:boardId/cards/:cardId/archive",
+        "controller": "BoardsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:boards-api:http:POST:/boards/:param/cards/:param/comments",
+      "type": "entry",
+      "label": "POST /boards/:param/cards/:param/comments",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 60,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/boards/:param/cards/:param/comments",
+        "rawPath": "/boards/:boardId/cards/:cardId/comments",
+        "controller": "BoardsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:boards-api:http:POST:/boards/:param/cards/:param/move",
+      "type": "entry",
+      "label": "POST /boards/:param/cards/:param/move",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 40,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/boards/:param/cards/:param/move",
+        "rawPath": "/boards/:boardId/cards/:cardId/move",
+        "controller": "BoardsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:boards-api:http:POST:/boards/:param/cards/:param/pin",
+      "type": "entry",
+      "label": "POST /boards/:param/cards/:param/pin",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 30,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/boards/:param/cards/:param/pin",
+        "rawPath": "/boards/:boardId/cards/:cardId/pin",
+        "controller": "BoardsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:boards-api:http:POST:/boards/:param/cards/import",
+      "type": "entry",
+      "label": "POST /boards/:param/cards/import",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/boards/:param/cards/import",
+        "rawPath": "/boards/:boardId/cards/import",
+        "controller": "BoardsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:boards-api:http:POST:/boards/:param/crews/:param",
+      "type": "entry",
+      "label": "POST /boards/:param/crews/:param",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 70,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/boards/:param/crews/:param",
+        "rawPath": "/boards/:boardId/crews/:crewId",
+        "controller": "BoardsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:boards-api:http:POST:/boards/:param/orders/:param",
+      "type": "entry",
+      "label": "POST /boards/:param/orders/:param",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/boards/:param/orders/:param",
+        "rawPath": "/boards/:boardId/orders/:orderId",
+        "controller": "BoardsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:boards-api:http:POST:/boards/:param/orders/:param/alert",
+      "type": "entry",
+      "label": "POST /boards/:param/orders/:param/alert",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/boards/:param/orders/:param/alert",
+        "rawPath": "/boards/:boardId/orders/:orderId/alert",
+        "controller": "BoardsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:boards-api:http:POST:/boards/:param/orders/:param/ship",
+      "type": "entry",
+      "label": "POST /boards/:param/orders/:param/ship",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/boards/:param/orders/:param/ship",
+        "rawPath": "/boards/:boardId/orders/:orderId/ship",
+        "controller": "BoardsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:boards-api:http:POST:/boards/:param/title",
+      "type": "entry",
+      "label": "POST /boards/:param/title",
+      "repo": "boards-api",
+      "file": "src/boards/boards.controller.ts",
+      "line": 55,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/boards/:param/title",
+        "rawPath": "/boards/:boardId/title",
+        "controller": "BoardsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders-worker:http:POST:/events/orders",
+      "type": "entry",
+      "label": "POST /events/orders",
+      "repo": "orders-worker",
+      "file": "src/events/order-events.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/events/orders",
+        "rawPath": "/events/orders",
+        "controller": "OrderEventsController",
+        "decorators": [
+          {
+            "name": "Consumes",
+            "args": [
+              "board:*:orders"
+            ]
+          }
+        ],
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "orders-worker#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "orders-worker",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrderEventsController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "orders-worker#src/events/order-events.controller.ts:OrderEventsController",
+      "type": "provider",
+      "label": "OrderEventsController",
+      "repo": "orders-worker",
+      "file": "src/events/order-events.controller.ts",
+      "line": 13,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.handleScheduledAlert",
+      "type": "method",
+      "label": "OrderEventsController.handleScheduledAlert",
+      "repo": "orders-worker",
+      "file": "src/events/order-events.controller.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:orders-worker#OrderEvent"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+      "type": "method",
+      "label": "OrderEventsController.receive",
+      "repo": "orders-worker",
+      "file": "src/events/order-events.controller.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:orders-worker#OrderEvent"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "board:*:orders"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.recordPlaced",
+      "type": "method",
+      "label": "OrderEventsController.recordPlaced",
+      "repo": "orders-worker",
+      "file": "src/events/order-events.controller.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:orders-worker#OrderEvent"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "producer:boards-api#src/boards/boards.service.ts:15:11",
+      "type": "producer",
+      "label": "event board:*:events",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 15,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "board-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "CARD_MOVED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:boards-api#src/boards/boards.service.ts:19:11",
+      "type": "producer",
+      "label": "event board:*:events",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "board-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "CARD_ADDED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:boards-api#src/boards/boards.service.ts:23:11",
+      "type": "producer",
+      "label": "event board:*:events",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 23,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "board-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "CARD_ARCHIVED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:boards-api#src/boards/boards.service.ts:28:11",
+      "type": "producer",
+      "label": "event board:*:events",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "board-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "BOARD_RENAMED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:boards-api#src/boards/boards.service.ts:33:11",
+      "type": "producer",
+      "label": "event board:*:events",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 33,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "board-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "CARD_COMMENTED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:boards-api#src/boards/boards.service.ts:38:11",
+      "type": "producer",
+      "label": "event crew:*:shifts",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 38,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "board-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "CREW_ASSIGNED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:boards-api#src/boards/boards.service.ts:43:11",
+      "type": "producer",
+      "label": "event board:*:audit",
+      "repo": "boards-api",
+      "file": "src/boards/boards.service.ts",
+      "line": 43,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "board-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "BOARD_AUDITED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+      "type": "producer",
+      "label": "event board:*:events",
+      "repo": "boards-api",
+      "file": "src/boards/card-events.service.ts",
+      "line": 15,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "BusService.publish",
+        "channelVia": "helper",
+        "helper": "BusService.publish",
+        "messageTypeUnread": "The type is type, a value worked out when the code runs.",
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+      "type": "producer",
+      "label": "event board:*:events",
+      "repo": "boards-api",
+      "file": "src/boards/card-events.service.ts",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "BusService.publish",
+        "channelVia": "helper",
+        "helper": "BusService.publish",
+        "messageTypes": [
+          "CARD_IMPORTED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:boards-api#src/boards/orders.service.ts:20:11",
+      "type": "producer",
+      "label": "event board:*:orders",
+      "repo": "boards-api",
+      "file": "src/boards/orders.service.ts",
+      "line": 20,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "board-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_PLACED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:boards-api#src/boards/orders.service.ts:25:11",
+      "type": "producer",
+      "label": "event board:*:orders",
+      "repo": "boards-api",
+      "file": "src/boards/orders.service.ts",
+      "line": 25,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "board-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_SHIPPED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:boards-api#src/boards/orders.service.ts:29:11",
+      "type": "producer",
+      "label": "event board:*:orders",
+      "repo": "boards-api",
+      "file": "src/boards/orders.service.ts",
+      "line": 29,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "BusService.publish",
+        "channelVia": "helper",
+        "helper": "BusService.publish",
+        "messageTypes": [
+          "SCHEDULED_ALERT"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:boards-api#src/bus/bus.service.ts:34:11",
+      "type": "producer",
+      "label": "event durable-object:BoardHub",
+      "repo": "boards-api",
+      "file": "src/bus/bus.service.ts",
+      "line": 34,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "durable-object",
+        "channelVia": "object",
+        "method": "fetch",
+        "objectClass": "BoardHub",
+        "binding": "BOARD_HUB"
+      }
+    },
+    {
+      "id": "repo:admin",
+      "type": "repo",
+      "label": "admin",
+      "repo": "admin",
+      "meta": {
+        "stats": {
+          "files": 13,
+          "filesRead": 13,
+          "filesUnreadable": 0,
+          "classes": 12,
+          "templates": 5,
+          "skippedExternalCalls": {
+            "rxjs": 15
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:boards-api",
+      "type": "repo",
+      "label": "boards-api",
+      "repo": "boards-api",
+      "meta": {
+        "stats": {
+          "files": 13,
+          "filesRead": 13,
+          "filesUnreadable": 0,
+          "classes": 8,
+          "skippedExternalCalls": {
+            "hono": 6
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "hono-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders-worker",
+      "type": "repo",
+      "label": "orders-worker",
+      "repo": "orders-worker",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 1,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {
+            "react": 2,
+            "rxjs": 2
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_action:admin#src/app/boards/alerts-badge.component.ts:11:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "admin",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 11,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent",
+        "template": "src/app/boards/alerts-badge.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:admin#src/app/boards/archive-panel.component.ts:16:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "admin",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 16,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent",
+        "template": "src/app/boards/archive-panel.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:admin#src/app/boards/archive-panel.component.ts:22:3",
+      "type": "ui_action",
+      "label": "ngOnDestroy",
+      "repo": "admin",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 22,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnDestroy",
+        "handler": "ngOnDestroy",
+        "component": "admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent",
+        "template": "src/app/boards/archive-panel.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:admin#src/app/boards/board-page.component.ts:14:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "admin",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 14,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "admin#src/app/boards/board-page.component.ts:BoardPageComponent",
+        "template": "src/app/boards/board-page.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:admin#src/app/boards/board-page.component.ts:24:3",
+      "type": "ui_action",
+      "label": "ngOnDestroy",
+      "repo": "admin",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 24,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnDestroy",
+        "handler": "ngOnDestroy",
+        "component": "admin#src/app/boards/board-page.component.ts:BoardPageComponent",
+        "template": "src/app/boards/board-page.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:admin#src/app/boards/card-timeline.component.ts:14:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "admin",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 14,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent",
+        "template": "src/app/boards/card-timeline.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:admin#src/app/boards/card-timeline.component.ts:24:3",
+      "type": "ui_action",
+      "label": "ngOnDestroy",
+      "repo": "admin",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 24,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnDestroy",
+        "handler": "ngOnDestroy",
+        "component": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent",
+        "template": "src/app/boards/card-timeline.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:admin#src/app/boards/crew-panel.component.ts:16:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "admin",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 16,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent",
+        "template": "src/app/boards/crew-panel.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:admin#src/app/boards/crew-panel.component.ts:23:3",
+      "type": "ui_action",
+      "label": "ngOnDestroy",
+      "repo": "admin",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 23,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnDestroy",
+        "handler": "ngOnDestroy",
+        "component": "admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent",
+        "template": "src/app/boards/crew-panel.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/app/live/alerts-stream.service.ts:19:5@27:20",
+      "type": "ui_api_call",
+      "label": "GET /api/boards/:param/stream",
+      "repo": "admin",
+      "file": "src/app/live/alerts-stream.service.ts",
+      "line": 19,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/boards/:param/stream",
+        "path": "/api/boards/:param/stream",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "through": "LiveStream.open",
+        "targetService": "boards-api"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19",
+      "type": "ui_api_call",
+      "label": "GET /api/boards/:param/events",
+      "repo": "admin",
+      "file": "src/app/live/board-stream.service.ts",
+      "line": 34,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/boards/:param/events?token=${…}",
+        "path": "/api/boards/:param/events",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "boards-api"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/app/live/crew-board-stream.service.ts:22:5@27:20",
+      "type": "ui_api_call",
+      "label": "GET /api/boards/:param/crew/stream",
+      "repo": "admin",
+      "file": "src/app/live/crew-board-stream.service.ts",
+      "line": 22,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/boards/:param/crew/stream?token=${…}",
+        "path": "/api/boards/:param/crew/stream",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "through": "LiveStream.open",
+        "targetService": "boards-api"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/app/live/legacy-board-feed.service.ts:17:20",
+      "type": "ui_api_call",
+      "label": "GET /api/boards/:param/stream",
+      "repo": "admin",
+      "file": "src/app/live/legacy-board-feed.service.ts",
+      "line": 17,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/boards/:param/stream",
+        "path": "/api/boards/:param/stream",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "boards-api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/live/board-feed.ts:22:20",
+      "type": "ui_api_call",
+      "label": "GET /api/boards/:param/events",
+      "repo": "web",
+      "file": "src/live/board-feed.ts",
+      "line": 22,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_BOARDS_URL}/api/boards/:param/events",
+        "path": "/api/boards/:param/events",
+        "baseUrlEnv": "VITE_BOARDS_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "boards-api"
+      }
+    },
+    {
+      "id": "web#src/live/board-feed.ts:BoardFeed.connect",
+      "type": "function",
+      "label": "BoardFeed.connect",
+      "repo": "web",
+      "file": "src/live/board-feed.ts",
+      "line": 20
+    },
+    {
+      "id": "web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "ui_component",
+      "label": "BoardScreen",
+      "repo": "web",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 8,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ boardId }",
+              "type": "{boardId:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent",
+      "to": "admin#src/app/live/alerts-stream.service.ts:AlertsStreamService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 8,
+      "meta": {
+        "via": "field-inject"
+      }
+    },
+    {
+      "from": "admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "to": "admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.bump",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 14
+    },
+    {
+      "from": "admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "to": "admin#src/app/live/alerts-stream.service.ts:AlertsStreamService.connect",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 12
+    },
+    {
+      "from": "admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent",
+      "to": "admin#src/app/live/board-stream.service.ts:BoardStreamService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 12,
+      "meta": {
+        "via": "field-inject"
+      }
+    },
+    {
+      "from": "admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "to": "admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.refreshArchive",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 18
+    },
+    {
+      "from": "admin#src/app/boards/board-page.component.ts:BoardPageComponent",
+      "to": "admin#src/app/live/board-stream.service.ts:BoardStreamService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 12
+    },
+    {
+      "from": "admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "to": "admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 21
+    },
+    {
+      "from": "admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "to": "admin#src/app/live/board-stream.service.ts:BoardStreamService.connect",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 15
+    },
+    {
+      "from": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent",
+      "to": "admin#src/app/live/live-updates.service.ts:LiveUpdatesService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 12
+    },
+    {
+      "from": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "to": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.append",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 17
+    },
+    {
+      "from": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "to": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 20
+    },
+    {
+      "from": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "to": "admin#src/app/live/live-updates.service.ts:LiveUpdatesService.getCardUpdates",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:admin#CardEvent",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 15
+    },
+    {
+      "from": "admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent",
+      "to": "admin#src/app/live/crew-board-stream.service.ts:CrewBoardStreamService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 12,
+      "meta": {
+        "via": "field-inject"
+      }
+    },
+    {
+      "from": "admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "to": "admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.scheduleRefresh",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 19
+    },
+    {
+      "from": "admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "to": "admin#src/app/live/crew-board-stream.service.ts:CrewBoardStreamService.connect",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 17
+    },
+    {
+      "from": "admin#src/app/live/alerts-stream.service.ts:AlertsStreamService.connect",
+      "to": "admin#src/app/live/live-stream.ts:LiveStream.connect",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/app/live/alerts-stream.service.ts",
+      "line": 19
+    },
+    {
+      "from": "admin#src/app/live/alerts-stream.service.ts:AlertsStreamService.connect",
+      "to": "ui_api_call:admin#src/app/live/alerts-stream.service.ts:19:5@27:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/live/alerts-stream.service.ts",
+      "line": 19
+    },
+    {
+      "from": "admin#src/app/live/board-stream.service.ts:BoardStreamService.connect",
+      "to": "admin#src/app/live/board-stream.service.ts:BoardStreamService.close",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/live/board-stream.service.ts",
+      "line": 24
+    },
+    {
+      "from": "admin#src/app/live/board-stream.service.ts:BoardStreamService.connect",
+      "to": "admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/live/board-stream.service.ts",
+      "line": 25
+    },
+    {
+      "from": "admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "to": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/live/board-stream.service.ts",
+      "line": 34
+    },
+    {
+      "from": "admin#src/app/live/crew-board-stream.service.ts:CrewBoardStreamService.connect",
+      "to": "admin#src/app/live/live-stream.ts:LiveStream.connect",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/app/live/crew-board-stream.service.ts",
+      "line": 22
+    },
+    {
+      "from": "admin#src/app/live/crew-board-stream.service.ts:CrewBoardStreamService.connect",
+      "to": "ui_api_call:admin#src/app/live/crew-board-stream.service.ts:22:5@27:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/live/crew-board-stream.service.ts",
+      "line": 22
+    },
+    {
+      "from": "admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "to": "ui_api_call:admin#src/app/live/legacy-board-feed.service.ts:17:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/live/legacy-board-feed.service.ts",
+      "line": 17
+    },
+    {
+      "from": "admin#src/app/live/live-stream.ts:LiveStream.connect",
+      "to": "admin#src/app/live/live-stream.ts:LiveStream.open",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:admin#Opened"
+      ],
+      "returns": "void",
+      "file": "src/app/live/live-stream.ts",
+      "line": 23
+    },
+    {
+      "from": "admin#src/app/live/live-updates.service.ts:LiveUpdatesService",
+      "to": "admin#src/app/live/board-stream.service.ts:BoardStreamService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/live/live-updates.service.ts",
+      "line": 13,
+      "meta": {
+        "via": "field-inject"
+      }
+    },
+    {
+      "from": "admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "to": "admin#src/app/live/rename-watcher.ts:RenameWatcher.retitle",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/live/rename-watcher.ts",
+      "line": 9
+    },
+    {
+      "from": "boards-api#src/boards/boards.controller.ts:BoardsController",
+      "to": "boards-api#src/boards/boards.service.ts:BoardsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/boards/boards.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "boards-api#src/boards/boards.controller.ts:BoardsController",
+      "to": "boards-api#src/boards/card-events.service.ts:CardEventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/boards/boards.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "boards-api#src/boards/boards.controller.ts:BoardsController",
+      "to": "boards-api#src/boards/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/boards/boards.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "boards-api#src/boards/boards.controller.ts:BoardsController.add",
+      "to": "boards-api#src/boards/boards.service.ts:BoardsService.addCard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 47
+    },
+    {
+      "from": "boards-api#src/boards/boards.controller.ts:BoardsController.alertOrder",
+      "to": "boards-api#src/boards/orders.service.ts:OrdersService.scheduleAlert",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 27
+    },
+    {
+      "from": "boards-api#src/boards/boards.controller.ts:BoardsController.archive",
+      "to": "boards-api#src/boards/boards.service.ts:BoardsService.archiveCard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 52
+    },
+    {
+      "from": "boards-api#src/boards/boards.controller.ts:BoardsController.assign",
+      "to": "boards-api#src/boards/boards.service.ts:BoardsService.assignCrew",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 72
+    },
+    {
+      "from": "boards-api#src/boards/boards.controller.ts:BoardsController.audit",
+      "to": "boards-api#src/boards/boards.service.ts:BoardsService.auditBoard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 67
+    },
+    {
+      "from": "boards-api#src/boards/boards.controller.ts:BoardsController.comment",
+      "to": "boards-api#src/boards/boards.service.ts:BoardsService.commentOnCard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 62
+    },
+    {
+      "from": "boards-api#src/boards/boards.controller.ts:BoardsController.importCard",
+      "to": "boards-api#src/boards/card-events.service.ts:CardEventsService.importCard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 37
+    },
+    {
+      "from": "boards-api#src/boards/boards.controller.ts:BoardsController.move",
+      "to": "boards-api#src/boards/boards.service.ts:BoardsService.moveCard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 42
+    },
+    {
+      "from": "boards-api#src/boards/boards.controller.ts:BoardsController.pin",
+      "to": "boards-api#src/boards/card-events.service.ts:CardEventsService.pin",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 32
+    },
+    {
+      "from": "boards-api#src/boards/boards.controller.ts:BoardsController.placeOrder",
+      "to": "boards-api#src/boards/orders.service.ts:OrdersService.place",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 17
+    },
+    {
+      "from": "boards-api#src/boards/boards.controller.ts:BoardsController.rename",
+      "to": "boards-api#src/boards/boards.service.ts:BoardsService.renameBoard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 57
+    },
+    {
+      "from": "boards-api#src/boards/boards.controller.ts:BoardsController.shipOrder",
+      "to": "boards-api#src/boards/orders.service.ts:OrdersService.ship",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 22
+    },
+    {
+      "from": "boards-api#src/boards/boards.service.ts:BoardsService",
+      "to": "boards-api#src/bus/board-event-bus.ts:BoardEventBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 12
+    },
+    {
+      "from": "boards-api#src/boards/boards.service.ts:BoardsService.addCard",
+      "to": "boards-api#src/bus/board-event-bus.ts:BoardEventBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.service.ts",
+      "line": 19
+    },
+    {
+      "from": "boards-api#src/boards/boards.service.ts:BoardsService.addCard",
+      "to": "producer:boards-api#src/boards/boards.service.ts:19:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 19
+    },
+    {
+      "from": "boards-api#src/boards/boards.service.ts:BoardsService.archiveCard",
+      "to": "boards-api#src/bus/board-event-bus.ts:BoardEventBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.service.ts",
+      "line": 23
+    },
+    {
+      "from": "boards-api#src/boards/boards.service.ts:BoardsService.archiveCard",
+      "to": "producer:boards-api#src/boards/boards.service.ts:23:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 23
+    },
+    {
+      "from": "boards-api#src/boards/boards.service.ts:BoardsService.assignCrew",
+      "to": "boards-api#src/bus/board-event-bus.ts:BoardEventBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.service.ts",
+      "line": 38
+    },
+    {
+      "from": "boards-api#src/boards/boards.service.ts:BoardsService.assignCrew",
+      "to": "producer:boards-api#src/boards/boards.service.ts:38:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 38
+    },
+    {
+      "from": "boards-api#src/boards/boards.service.ts:BoardsService.auditBoard",
+      "to": "boards-api#src/bus/board-event-bus.ts:BoardEventBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.service.ts",
+      "line": 43
+    },
+    {
+      "from": "boards-api#src/boards/boards.service.ts:BoardsService.auditBoard",
+      "to": "producer:boards-api#src/boards/boards.service.ts:43:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 43
+    },
+    {
+      "from": "boards-api#src/boards/boards.service.ts:BoardsService.commentOnCard",
+      "to": "boards-api#src/bus/board-event-bus.ts:BoardEventBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.service.ts",
+      "line": 33
+    },
+    {
+      "from": "boards-api#src/boards/boards.service.ts:BoardsService.commentOnCard",
+      "to": "producer:boards-api#src/boards/boards.service.ts:33:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 33
+    },
+    {
+      "from": "boards-api#src/boards/boards.service.ts:BoardsService.moveCard",
+      "to": "boards-api#src/bus/board-event-bus.ts:BoardEventBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.service.ts",
+      "line": 15
+    },
+    {
+      "from": "boards-api#src/boards/boards.service.ts:BoardsService.moveCard",
+      "to": "producer:boards-api#src/boards/boards.service.ts:15:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 15
+    },
+    {
+      "from": "boards-api#src/boards/boards.service.ts:BoardsService.renameBoard",
+      "to": "boards-api#src/bus/board-event-bus.ts:BoardEventBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.service.ts",
+      "line": 28
+    },
+    {
+      "from": "boards-api#src/boards/boards.service.ts:BoardsService.renameBoard",
+      "to": "producer:boards-api#src/boards/boards.service.ts:28:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 28
+    },
+    {
+      "from": "boards-api#src/boards/card-events.service.ts:CardEventsService",
+      "to": "boards-api#src/bus/bus.service.ts:BusService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/boards/card-events.service.ts",
+      "line": 12
+    },
+    {
+      "from": "boards-api#src/boards/card-events.service.ts:CardEventsService.importCard",
+      "to": "boards-api#src/boards/card-events.service.ts:CardEventsService.relayImported",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{source:string;type:'CARD_IMPORTED'}",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/card-events.service.ts",
+      "line": 27
+    },
+    {
+      "from": "boards-api#src/boards/card-events.service.ts:CardEventsService.pin",
+      "to": "boards-api#src/boards/card-events.service.ts:CardEventsService.publishCardEvent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/boards/card-events.service.ts",
+      "line": 23
+    },
+    {
+      "from": "boards-api#src/boards/card-events.service.ts:CardEventsService.publishCardEvent",
+      "to": "boards-api#src/bus/bus.service.ts:BusService.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/boards/card-events.service.ts",
+      "line": 15
+    },
+    {
+      "from": "boards-api#src/boards/card-events.service.ts:CardEventsService.publishCardEvent",
+      "to": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/card-events.service.ts",
+      "line": 15
+    },
+    {
+      "from": "boards-api#src/boards/card-events.service.ts:CardEventsService.relayImported",
+      "to": "boards-api#src/bus/bus.service.ts:BusService.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/boards/card-events.service.ts",
+      "line": 19
+    },
+    {
+      "from": "boards-api#src/boards/card-events.service.ts:CardEventsService.relayImported",
+      "to": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/card-events.service.ts",
+      "line": 19
+    },
+    {
+      "from": "boards-api#src/boards/orders.service.ts:OrdersService",
+      "to": "boards-api#src/bus/board-event-bus.ts:BoardEventBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/boards/orders.service.ts",
+      "line": 15
+    },
+    {
+      "from": "boards-api#src/boards/orders.service.ts:OrdersService",
+      "to": "boards-api#src/bus/bus.service.ts:BusService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/boards/orders.service.ts",
+      "line": 16
+    },
+    {
+      "from": "boards-api#src/boards/orders.service.ts:OrdersService.place",
+      "to": "boards-api#src/bus/board-event-bus.ts:BoardEventBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/boards/orders.service.ts",
+      "line": 20
+    },
+    {
+      "from": "boards-api#src/boards/orders.service.ts:OrdersService.place",
+      "to": "producer:boards-api#src/boards/orders.service.ts:20:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/orders.service.ts",
+      "line": 20
+    },
+    {
+      "from": "boards-api#src/boards/orders.service.ts:OrdersService.scheduleAlert",
+      "to": "boards-api#src/bus/bus.service.ts:BusService.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/boards/orders.service.ts",
+      "line": 29
+    },
+    {
+      "from": "boards-api#src/boards/orders.service.ts:OrdersService.scheduleAlert",
+      "to": "producer:boards-api#src/boards/orders.service.ts:29:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/orders.service.ts",
+      "line": 29
+    },
+    {
+      "from": "boards-api#src/boards/orders.service.ts:OrdersService.ship",
+      "to": "boards-api#src/bus/board-event-bus.ts:BoardEventBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/boards/orders.service.ts",
+      "line": 25
+    },
+    {
+      "from": "boards-api#src/boards/orders.service.ts:OrdersService.ship",
+      "to": "producer:boards-api#src/boards/orders.service.ts:25:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/orders.service.ts",
+      "line": 25
+    },
+    {
+      "from": "boards-api#src/bus/board-event-bus.ts:BoardEventBus",
+      "to": "boards-api#src/bus/bus.service.ts:BusService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/bus/board-event-bus.ts",
+      "line": 12
+    },
+    {
+      "from": "boards-api#src/bus/board-event-bus.ts:BoardEventBus.publish",
+      "to": "boards-api#src/bus/bus.service.ts:BusService.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/bus/board-event-bus.ts",
+      "line": 15
+    },
+    {
+      "from": "boards-api#src/bus/bus.service.ts:BusService.fanoutToHub",
+      "to": "producer:boards-api#src/bus/bus.service.ts:34:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/bus/bus.service.ts",
+      "line": 34
+    },
+    {
+      "from": "boards-api#src/stream/stream-handlers.ts:boardEvents",
+      "to": "boards-api#src/stream/stream-handlers.ts:authorize",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+        "{token:string;boardId:string}"
+      ],
+      "returns": "type:boards-api#Decision",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 37
+    },
+    {
+      "from": "boards-api#src/stream/stream-handlers.ts:boardEvents",
+      "to": "boards-api#src/stream/stream-handlers.ts:forwardToHub",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:hono#Context<{Bindings:type:boards-api#Env}>",
+        "type:boards-api#Decision"
+      ],
+      "returns": "Promise<Response>|Response",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 37
+    },
+    {
+      "from": "boards-api#src/stream/stream-handlers.ts:createStreamHandlers",
+      "to": "boards-api#src/stream/stream-handlers.ts:forwardToHub",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:hono#Context<{Bindings:type:boards-api#Env}>",
+        "type:boards-api#Decision"
+      ],
+      "returns": "Promise<Response>|Response",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 37
+    },
+    {
+      "from": "boards-api#src/stream/stream-handlers.ts:crewStream",
+      "to": "boards-api#src/stream/stream-handlers.ts:authorize",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+        "{token:string;boardId:string}"
+      ],
+      "returns": "type:boards-api#Decision",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 42
+    },
+    {
+      "from": "boards-api#src/stream/stream-handlers.ts:crewStream",
+      "to": "boards-api#src/stream/stream-handlers.ts:forwardToHub",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:hono#Context<{Bindings:type:boards-api#Env}>",
+        "type:boards-api#Decision"
+      ],
+      "returns": "Promise<Response>|Response",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 42
+    },
+    {
+      "from": "boards-api#src/stream/stream-handlers.ts:forwardToHub",
+      "to": "config_key:boards-api#BOARD_HUB",
+      "type": "reads_config",
+      "confidence": "heuristic",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 26
+    },
+    {
+      "from": "channel:board:*:events",
+      "to": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 13,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "call": "ui_api_call:admin#src/app/live/alerts-stream.service.ts:19:5@27:20"
+      }
+    },
+    {
+      "from": "channel:board:*:events",
+      "to": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 17,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19"
+      }
+    },
+    {
+      "from": "channel:board:*:events",
+      "to": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 16,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19"
+      }
+    },
+    {
+      "from": "channel:board:*:events",
+      "to": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 15,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19"
+      }
+    },
+    {
+      "from": "channel:board:*:events",
+      "to": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 18,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/crew/stream",
+        "call": "ui_api_call:admin#src/app/live/crew-board-stream.service.ts:22:5@27:20"
+      }
+    },
+    {
+      "from": "channel:board:*:events",
+      "to": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/live/board-stream.service.ts",
+      "line": 35,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19"
+      }
+    },
+    {
+      "from": "channel:board:*:events",
+      "to": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/live/legacy-board-feed.service.ts",
+      "line": 18,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "call": "ui_api_call:admin#src/app/live/legacy-board-feed.service.ts:17:20"
+      }
+    },
+    {
+      "from": "channel:board:*:events",
+      "to": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/live/live-stream.ts",
+      "line": 28,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "call": "ui_api_call:admin#src/app/live/alerts-stream.service.ts:19:5@27:20"
+      }
+    },
+    {
+      "from": "channel:board:*:events",
+      "to": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/live/rename-watcher.ts",
+      "line": 8,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "call": "ui_api_call:admin#src/app/live/legacy-board-feed.service.ts:17:20"
+      }
+    },
+    {
+      "from": "channel:board:*:events",
+      "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/boards/card-events.service.ts",
+      "line": 15,
+      "meta": {
+        "via": "durable-object",
+        "hub": "BoardHub",
+        "through": [
+          "BusService.publish",
+          "BusService.transportHandlers.hub",
+          "BusService.fanoutToHub"
+        ],
+        "filteredBy": "inScope"
+      }
+    },
+    {
+      "from": "channel:board:*:events",
+      "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/boards/card-events.service.ts",
+      "line": 15,
+      "meta": {
+        "via": "durable-object",
+        "hub": "BoardHub",
+        "through": [
+          "BusService.publish",
+          "BusService.transportHandlers.hub",
+          "BusService.fanoutToHub"
+        ],
+        "filteredBy": "inScope"
+      }
+    },
+    {
+      "from": "channel:board:*:events",
+      "to": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/boards/card-events.service.ts",
+      "line": 15,
+      "meta": {
+        "via": "durable-object",
+        "hub": "BoardHub",
+        "through": [
+          "BusService.publish",
+          "BusService.transportHandlers.hub",
+          "BusService.fanoutToHub"
+        ],
+        "filteredBy": "inScope"
+      }
+    },
+    {
+      "from": "channel:board:*:events",
+      "to": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/live/board-feed.ts",
+      "line": 23,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:web#src/live/board-feed.ts:22:20"
+      }
+    },
+    {
+      "from": "channel:board:*:events",
+      "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 13,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:web#src/live/board-feed.ts:22:20"
+      }
+    },
+    {
+      "from": "channel:board:*:events#BOARD_RENAMED",
+      "to": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.retitle",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/live/rename-watcher.ts",
+      "line": 9,
+      "meta": {
+        "selectedBy": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:board:*:events#CARD_ADDED",
+      "to": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 18,
+      "meta": {
+        "selectedBy": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+        "via": "filter"
+      }
+    },
+    {
+      "from": "channel:board:*:events#CARD_ADDED",
+      "to": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.append",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 16,
+      "meta": {
+        "selectedBy": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:board:*:events#CARD_ARCHIVED",
+      "to": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.bump",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 14,
+      "meta": {
+        "selectedBy": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:board:*:events#CARD_ARCHIVED",
+      "to": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.refreshArchive",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 18,
+      "meta": {
+        "selectedBy": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:board:*:events#CARD_ARCHIVED",
+      "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 14,
+      "meta": {
+        "selectedBy": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:board:*:events#CARD_IMPORTED",
+      "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 14,
+      "meta": {
+        "selectedBy": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:board:*:events#CARD_MOVED",
+      "to": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 18,
+      "meta": {
+        "selectedBy": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+        "via": "filter"
+      }
+    },
+    {
+      "from": "channel:board:*:events#CARD_MOVED",
+      "to": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 20,
+      "meta": {
+        "selectedBy": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:board:*:events#CARD_MOVED",
+      "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 14,
+      "meta": {
+        "selectedBy": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:board:*:events#CARD_PINNED",
+      "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 14,
+      "meta": {
+        "selectedBy": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:board:*:events#CREW_ASSIGNED",
+      "to": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.scheduleRefresh",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 19,
+      "meta": {
+        "selectedBy": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:board:*:orders",
+      "to": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/events/order-events.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "channel:board:*:orders#ORDER_PLACED",
+      "to": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.recordPlaced",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/events/order-events.controller.ts",
+      "line": 21,
+      "meta": {
+        "selectedBy": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "channel:board:*:orders#SCHEDULED_ALERT",
+      "to": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.handleScheduledAlert",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/events/order-events.controller.ts",
+      "line": 19,
+      "meta": {
+        "selectedBy": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "channel:crew:*:shifts",
+      "to": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 13,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "call": "ui_api_call:admin#src/app/live/alerts-stream.service.ts:19:5@27:20"
+      }
+    },
+    {
+      "from": "channel:crew:*:shifts",
+      "to": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 17,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19"
+      }
+    },
+    {
+      "from": "channel:crew:*:shifts",
+      "to": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 16,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19"
+      }
+    },
+    {
+      "from": "channel:crew:*:shifts",
+      "to": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 15,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19"
+      }
+    },
+    {
+      "from": "channel:crew:*:shifts",
+      "to": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 18,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/crew/stream",
+        "call": "ui_api_call:admin#src/app/live/crew-board-stream.service.ts:22:5@27:20"
+      }
+    },
+    {
+      "from": "channel:crew:*:shifts",
+      "to": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/live/board-stream.service.ts",
+      "line": 35,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19"
+      }
+    },
+    {
+      "from": "channel:crew:*:shifts",
+      "to": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/live/legacy-board-feed.service.ts",
+      "line": 18,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "call": "ui_api_call:admin#src/app/live/legacy-board-feed.service.ts:17:20"
+      }
+    },
+    {
+      "from": "channel:crew:*:shifts",
+      "to": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/live/live-stream.ts",
+      "line": 28,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "call": "ui_api_call:admin#src/app/live/alerts-stream.service.ts:19:5@27:20"
+      }
+    },
+    {
+      "from": "channel:crew:*:shifts",
+      "to": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/live/rename-watcher.ts",
+      "line": 8,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "call": "ui_api_call:admin#src/app/live/legacy-board-feed.service.ts:17:20"
+      }
+    },
+    {
+      "from": "channel:crew:*:shifts",
+      "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/boards/boards.service.ts",
+      "line": 38,
+      "meta": {
+        "via": "durable-object",
+        "hub": "BoardHub",
+        "through": [
+          "BoardEventBus.publish",
+          "BusService.publish",
+          "BusService.transportHandlers.hub",
+          "BusService.fanoutToHub"
+        ],
+        "filteredBy": "inScope"
+      }
+    },
+    {
+      "from": "channel:crew:*:shifts",
+      "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/boards/boards.service.ts",
+      "line": 38,
+      "meta": {
+        "via": "durable-object",
+        "hub": "BoardHub",
+        "through": [
+          "BoardEventBus.publish",
+          "BusService.publish",
+          "BusService.transportHandlers.hub",
+          "BusService.fanoutToHub"
+        ],
+        "filteredBy": "inScope"
+      }
+    },
+    {
+      "from": "channel:crew:*:shifts",
+      "to": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/boards/boards.service.ts",
+      "line": 38,
+      "meta": {
+        "via": "durable-object",
+        "hub": "BoardHub",
+        "through": [
+          "BoardEventBus.publish",
+          "BusService.publish",
+          "BusService.transportHandlers.hub",
+          "BusService.fanoutToHub"
+        ],
+        "filteredBy": "inScope"
+      }
+    },
+    {
+      "from": "channel:crew:*:shifts",
+      "to": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/live/board-feed.ts",
+      "line": 23,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:web#src/live/board-feed.ts:22:20"
+      }
+    },
+    {
+      "from": "channel:crew:*:shifts",
+      "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 13,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:web#src/live/board-feed.ts:22:20"
+      }
+    },
+    {
+      "from": "channel:crew:*:shifts#CREW_ASSIGNED",
+      "to": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.scheduleRefresh",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 19,
+      "meta": {
+        "selectedBy": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:durable-object:BoardHub",
+      "to": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 13,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "call": "ui_api_call:admin#src/app/live/alerts-stream.service.ts:19:5@27:20"
+      }
+    },
+    {
+      "from": "channel:durable-object:BoardHub",
+      "to": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 17,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19"
+      }
+    },
+    {
+      "from": "channel:durable-object:BoardHub",
+      "to": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 16,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19"
+      }
+    },
+    {
+      "from": "channel:durable-object:BoardHub",
+      "to": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 15,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19"
+      }
+    },
+    {
+      "from": "channel:durable-object:BoardHub",
+      "to": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 18,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/crew/stream",
+        "call": "ui_api_call:admin#src/app/live/crew-board-stream.service.ts:22:5@27:20"
+      }
+    },
+    {
+      "from": "channel:durable-object:BoardHub",
+      "to": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/live/board-stream.service.ts",
+      "line": 35,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19"
+      }
+    },
+    {
+      "from": "channel:durable-object:BoardHub",
+      "to": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/live/legacy-board-feed.service.ts",
+      "line": 18,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "call": "ui_api_call:admin#src/app/live/legacy-board-feed.service.ts:17:20"
+      }
+    },
+    {
+      "from": "channel:durable-object:BoardHub",
+      "to": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/live/live-stream.ts",
+      "line": 28,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "call": "ui_api_call:admin#src/app/live/alerts-stream.service.ts:19:5@27:20"
+      }
+    },
+    {
+      "from": "channel:durable-object:BoardHub",
+      "to": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/app/live/rename-watcher.ts",
+      "line": 8,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/stream",
+        "call": "ui_api_call:admin#src/app/live/legacy-board-feed.service.ts:17:20"
+      }
+    },
+    {
+      "from": "channel:durable-object:BoardHub",
+      "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/hub/board-hub.ts",
+      "line": 22,
+      "meta": {
+        "filteredBy": "inScope"
+      }
+    },
+    {
+      "from": "channel:durable-object:BoardHub",
+      "to": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/hub/board-hub.ts",
+      "line": 22,
+      "meta": {
+        "filteredBy": "inScope"
+      }
+    },
+    {
+      "from": "channel:durable-object:BoardHub",
+      "to": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/hub/board-hub.ts",
+      "line": 22,
+      "meta": {
+        "filteredBy": "inScope"
+      }
+    },
+    {
+      "from": "channel:durable-object:BoardHub",
+      "to": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/live/board-feed.ts",
+      "line": 23,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:web#src/live/board-feed.ts:22:20"
+      }
+    },
+    {
+      "from": "channel:durable-object:BoardHub",
+      "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 13,
+      "meta": {
+        "via": "sse",
+        "route": "entry:boards-api:http:GET:/api/boards/:param/events",
+        "call": "ui_api_call:web#src/live/board-feed.ts:22:20"
+      }
+    },
+    {
+      "from": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.bump",
+      "to": "admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.bump",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 18
+    },
+    {
+      "from": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "to": "admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 13
+    },
+    {
+      "from": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "to": "admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 17
+    },
+    {
+      "from": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.refreshArchive",
+      "to": "admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.refreshArchive",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 26
+    },
+    {
+      "from": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
+      "to": "admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 29
+    },
+    {
+      "from": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "to": "admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 16
+    },
+    {
+      "from": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.append",
+      "to": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.append",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 28
+    },
+    {
+      "from": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "to": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 15
+    },
+    {
+      "from": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
+      "to": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 32
+    },
+    {
+      "from": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "to": "admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 18
+    },
+    {
+      "from": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.scheduleRefresh",
+      "to": "admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.scheduleRefresh",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 27
+    },
+    {
+      "from": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "to": "admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live/board-stream.service.ts",
+      "line": 35
+    },
+    {
+      "from": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "to": "admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live/legacy-board-feed.service.ts",
+      "line": 18
+    },
+    {
+      "from": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "to": "admin#src/app/live/live-stream.ts:LiveStream.open",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live/live-stream.ts",
+      "line": 28
+    },
+    {
+      "from": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.retitle",
+      "to": "admin#src/app/live/rename-watcher.ts:RenameWatcher.retitle",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live/rename-watcher.ts",
+      "line": 13
+    },
+    {
+      "from": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "to": "admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live/rename-watcher.ts",
+      "line": 8
+    },
+    {
+      "from": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+      "to": "boards-api#src/stream/stream-handlers.ts:boardEvents",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 15
+    },
+    {
+      "from": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+      "to": "boards-api#src/stream/stream-handlers.ts:boardEvents",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 16
+    },
+    {
+      "from": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+      "to": "boards-api#src/stream/stream-handlers.ts:crewStream",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 17
+    },
+    {
+      "from": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.handleScheduledAlert",
+      "to": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.handleScheduledAlert",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders-worker#OrderEvent"
+      ],
+      "returns": "string",
+      "file": "src/events/order-events.controller.ts",
+      "line": 28
+    },
+    {
+      "from": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+      "to": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:orders-worker#OrderEvent"
+      ],
+      "returns": "string",
+      "file": "src/events/order-events.controller.ts",
+      "line": 15,
+      "meta": {
+        "body": "type:orders-worker#OrderEvent"
+      }
+    },
+    {
+      "from": "consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.recordPlaced",
+      "to": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.recordPlaced",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders-worker#OrderEvent"
+      ],
+      "returns": "string",
+      "file": "src/events/order-events.controller.ts",
+      "line": 32
+    },
+    {
+      "from": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "to": "web#src/live/board-feed.ts:BoardFeed.connect",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/board-feed.ts",
+      "line": 23
+    },
+    {
+      "from": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "to": "web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 13
+    },
+    {
+      "from": "entry:boards-api:http:GET:/api/boards/:param/crew/stream",
+      "to": "boards-api#src/stream/stream-handlers.ts:crewStream",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 41,
+      "meta": {
+        "requestRead": true,
+        "params": "{boardId:string}"
+      }
+    },
+    {
+      "from": "entry:boards-api:http:GET:/api/boards/:param/events",
+      "to": "boards-api#src/stream/stream-handlers.ts:boardEvents",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 36,
+      "meta": {
+        "requestRead": true,
+        "params": "{boardId:string}"
+      }
+    },
+    {
+      "from": "entry:boards-api:http:GET:/api/boards/:param/stream",
+      "to": "boards-api#src/stream/stream-handlers.ts:boardEvents",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 36,
+      "meta": {
+        "requestRead": true,
+        "params": "{boardId:string}"
+      }
+    },
+    {
+      "from": "entry:boards-api:http:GET:/api/health",
+      "to": "boards-api#src/stream/stream-handlers.ts:ping",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/stream/stream-handlers.ts",
+      "line": 39,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:boards-api:http:POST:/boards/:param/audit",
+      "to": "boards-api#src/boards/boards.controller.ts:BoardsController.audit",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{actor:string}"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 65,
+      "meta": {
+        "params": "{boardId:string}",
+        "body": "{actor:string}"
+      }
+    },
+    {
+      "from": "entry:boards-api:http:POST:/boards/:param/cards",
+      "to": "boards-api#src/boards/boards.controller.ts:BoardsController.add",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{cardId:string}"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 45,
+      "meta": {
+        "params": "{boardId:string}",
+        "body": "{cardId:string}"
+      }
+    },
+    {
+      "from": "entry:boards-api:http:POST:/boards/:param/cards/:param/archive",
+      "to": "boards-api#src/boards/boards.controller.ts:BoardsController.archive",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 50,
+      "meta": {
+        "params": "{boardId:string;cardId:string}"
+      }
+    },
+    {
+      "from": "entry:boards-api:http:POST:/boards/:param/cards/:param/comments",
+      "to": "boards-api#src/boards/boards.controller.ts:BoardsController.comment",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "{text:string}"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 60,
+      "meta": {
+        "params": "{boardId:string;cardId:string}",
+        "body": "{text:string}"
+      }
+    },
+    {
+      "from": "entry:boards-api:http:POST:/boards/:param/cards/:param/move",
+      "to": "boards-api#src/boards/boards.controller.ts:BoardsController.move",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "{column:string}"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 40,
+      "meta": {
+        "params": "{boardId:string;cardId:string}",
+        "body": "{column:string}"
+      }
+    },
+    {
+      "from": "entry:boards-api:http:POST:/boards/:param/cards/:param/pin",
+      "to": "boards-api#src/boards/boards.controller.ts:BoardsController.pin",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 30,
+      "meta": {
+        "params": "{boardId:string;cardId:string}"
+      }
+    },
+    {
+      "from": "entry:boards-api:http:POST:/boards/:param/cards/import",
+      "to": "boards-api#src/boards/boards.controller.ts:BoardsController.importCard",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 35,
+      "meta": {
+        "params": "{boardId:string}"
+      }
+    },
+    {
+      "from": "entry:boards-api:http:POST:/boards/:param/crews/:param",
+      "to": "boards-api#src/boards/boards.controller.ts:BoardsController.assign",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 70,
+      "meta": {
+        "params": "{boardId:string;crewId:string}"
+      }
+    },
+    {
+      "from": "entry:boards-api:http:POST:/boards/:param/orders/:param",
+      "to": "boards-api#src/boards/boards.controller.ts:BoardsController.placeOrder",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 15,
+      "meta": {
+        "params": "{boardId:string;orderId:string}"
+      }
+    },
+    {
+      "from": "entry:boards-api:http:POST:/boards/:param/orders/:param/alert",
+      "to": "boards-api#src/boards/boards.controller.ts:BoardsController.alertOrder",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 25,
+      "meta": {
+        "params": "{boardId:string;orderId:string}"
+      }
+    },
+    {
+      "from": "entry:boards-api:http:POST:/boards/:param/orders/:param/ship",
+      "to": "boards-api#src/boards/boards.controller.ts:BoardsController.shipOrder",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 20,
+      "meta": {
+        "params": "{boardId:string;orderId:string}"
+      }
+    },
+    {
+      "from": "entry:boards-api:http:POST:/boards/:param/title",
+      "to": "boards-api#src/boards/boards.controller.ts:BoardsController.rename",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{title:string}"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 55,
+      "meta": {
+        "params": "{boardId:string}",
+        "body": "{title:string}"
+      }
+    },
+    {
+      "from": "entry:orders-worker:http:POST:/events/orders",
+      "to": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders-worker#OrderEvent"
+      ],
+      "returns": "string",
+      "file": "src/events/order-events.controller.ts",
+      "line": 15,
+      "meta": {
+        "body": "type:orders-worker#OrderEvent"
+      }
+    },
+    {
+      "from": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+      "to": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.handleScheduledAlert",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:orders-worker#OrderEvent"
+      ],
+      "returns": "string",
+      "file": "src/events/order-events.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.receive",
+      "to": "orders-worker#src/events/order-events.controller.ts:OrderEventsController.recordPlaced",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:orders-worker#OrderEvent"
+      ],
+      "returns": "string",
+      "file": "src/events/order-events.controller.ts",
+      "line": 22
+    },
+    {
+      "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+      "to": "channel:board:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;cardId:string;column:string}"
+      ],
+      "file": "src/boards/boards.service.ts",
+      "line": 15
+    },
+    {
+      "from": "producer:boards-api#src/boards/boards.service.ts:15:11",
+      "to": "channel:board:*:events#CARD_MOVED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 15,
+      "params": [
+        "{type:string;cardId:string;column:string}"
+      ]
+    },
+    {
+      "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+      "to": "channel:board:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;cardId:string}"
+      ],
+      "file": "src/boards/boards.service.ts",
+      "line": 19
+    },
+    {
+      "from": "producer:boards-api#src/boards/boards.service.ts:19:11",
+      "to": "channel:board:*:events#CARD_ADDED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 19,
+      "params": [
+        "{type:string;cardId:string}"
+      ]
+    },
+    {
+      "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+      "to": "channel:board:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;cardId:string}"
+      ],
+      "file": "src/boards/boards.service.ts",
+      "line": 23
+    },
+    {
+      "from": "producer:boards-api#src/boards/boards.service.ts:23:11",
+      "to": "channel:board:*:events#CARD_ARCHIVED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 23,
+      "params": [
+        "{type:string;cardId:string}"
+      ]
+    },
+    {
+      "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+      "to": "channel:board:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;title:string}"
+      ],
+      "file": "src/boards/boards.service.ts",
+      "line": 28
+    },
+    {
+      "from": "producer:boards-api#src/boards/boards.service.ts:28:11",
+      "to": "channel:board:*:events#BOARD_RENAMED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 28,
+      "params": [
+        "{type:string;title:string}"
+      ]
+    },
+    {
+      "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+      "to": "channel:board:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;cardId:string;text:string}"
+      ],
+      "file": "src/boards/boards.service.ts",
+      "line": 33
+    },
+    {
+      "from": "producer:boards-api#src/boards/boards.service.ts:33:11",
+      "to": "channel:board:*:events#CARD_COMMENTED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 33,
+      "params": [
+        "{type:string;cardId:string;text:string}"
+      ]
+    },
+    {
+      "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+      "to": "channel:crew:*:shifts",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;boardId:string}"
+      ],
+      "file": "src/boards/boards.service.ts",
+      "line": 38
+    },
+    {
+      "from": "producer:boards-api#src/boards/boards.service.ts:38:11",
+      "to": "channel:crew:*:shifts#CREW_ASSIGNED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 38,
+      "params": [
+        "{type:string;boardId:string}"
+      ]
+    },
+    {
+      "from": "producer:boards-api#src/boards/boards.service.ts:43:11",
+      "to": "channel:board:*:audit",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;actor:string}"
+      ],
+      "file": "src/boards/boards.service.ts",
+      "line": 43
+    },
+    {
+      "from": "producer:boards-api#src/boards/boards.service.ts:43:11",
+      "to": "channel:board:*:audit#BOARD_AUDITED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 43,
+      "params": [
+        "{type:string;actor:string}"
+      ]
+    },
+    {
+      "from": "producer:boards-api#src/boards/card-events.service.ts:15:11",
+      "to": "channel:board:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string}"
+      ],
+      "file": "src/boards/card-events.service.ts",
+      "line": 15
+    },
+    {
+      "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+      "to": "channel:board:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{source:string;type:'CARD_IMPORTED'}"
+      ],
+      "file": "src/boards/card-events.service.ts",
+      "line": 19
+    },
+    {
+      "from": "producer:boards-api#src/boards/card-events.service.ts:19:11",
+      "to": "channel:board:*:events#CARD_IMPORTED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/boards/card-events.service.ts",
+      "line": 19,
+      "params": [
+        "{source:string;type:'CARD_IMPORTED'}"
+      ]
+    },
+    {
+      "from": "producer:boards-api#src/boards/orders.service.ts:20:11",
+      "to": "channel:board:*:orders",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;orderId:string}"
+      ],
+      "file": "src/boards/orders.service.ts",
+      "line": 20
+    },
+    {
+      "from": "producer:boards-api#src/boards/orders.service.ts:20:11",
+      "to": "channel:board:*:orders#ORDER_PLACED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/boards/orders.service.ts",
+      "line": 20,
+      "params": [
+        "{type:string;orderId:string}"
+      ]
+    },
+    {
+      "from": "producer:boards-api#src/boards/orders.service.ts:25:11",
+      "to": "channel:board:*:orders",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;orderId:string}"
+      ],
+      "file": "src/boards/orders.service.ts",
+      "line": 25
+    },
+    {
+      "from": "producer:boards-api#src/boards/orders.service.ts:25:11",
+      "to": "channel:board:*:orders#ORDER_SHIPPED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/boards/orders.service.ts",
+      "line": 25,
+      "params": [
+        "{type:string;orderId:string}"
+      ]
+    },
+    {
+      "from": "producer:boards-api#src/boards/orders.service.ts:29:11",
+      "to": "channel:board:*:orders",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;orderId:string}"
+      ],
+      "file": "src/boards/orders.service.ts",
+      "line": 29
+    },
+    {
+      "from": "producer:boards-api#src/boards/orders.service.ts:29:11",
+      "to": "channel:board:*:orders#SCHEDULED_ALERT",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/boards/orders.service.ts",
+      "line": 29,
+      "params": [
+        "{type:string;orderId:string}"
+      ]
+    },
+    {
+      "from": "producer:boards-api#src/bus/bus.service.ts:34:11",
+      "to": "channel:durable-object:BoardHub",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/bus/bus.service.ts",
+      "line": 34
+    },
+    {
+      "from": "ui_action:admin#src/app/boards/alerts-badge.component.ts:11:3",
+      "to": "admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 11
+    },
+    {
+      "from": "ui_action:admin#src/app/boards/archive-panel.component.ts:16:3",
+      "to": "admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_action:admin#src/app/boards/archive-panel.component.ts:22:3",
+      "to": "admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnDestroy",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 22
+    },
+    {
+      "from": "ui_action:admin#src/app/boards/board-page.component.ts:14:3",
+      "to": "admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 14
+    },
+    {
+      "from": "ui_action:admin#src/app/boards/board-page.component.ts:24:3",
+      "to": "admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnDestroy",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 24
+    },
+    {
+      "from": "ui_action:admin#src/app/boards/card-timeline.component.ts:14:3",
+      "to": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 14
+    },
+    {
+      "from": "ui_action:admin#src/app/boards/card-timeline.component.ts:24:3",
+      "to": "admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnDestroy",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 24
+    },
+    {
+      "from": "ui_action:admin#src/app/boards/crew-panel.component.ts:16:3",
+      "to": "admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_action:admin#src/app/boards/crew-panel.component.ts:23:3",
+      "to": "admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnDestroy",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 23
+    },
+    {
+      "from": "ui_api_call:admin#src/app/live/alerts-stream.service.ts:19:5@27:20",
+      "to": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/boards/alerts-badge.component.ts",
+      "line": 13
+    },
+    {
+      "from": "ui_api_call:admin#src/app/live/alerts-stream.service.ts:19:5@27:20",
+      "to": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/live/live-stream.ts",
+      "line": 28
+    },
+    {
+      "from": "ui_api_call:admin#src/app/live/alerts-stream.service.ts:19:5@27:20",
+      "to": "entry:boards-api:http:GET:/api/boards/:param/stream",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/live/alerts-stream.service.ts",
+      "line": 19,
+      "meta": {
+        "via": "api-target",
+        "targetService": "boards-api"
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19",
+      "to": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/boards/archive-panel.component.ts",
+      "line": 17
+    },
+    {
+      "from": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19",
+      "to": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/boards/board-page.component.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19",
+      "to": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/boards/card-timeline.component.ts",
+      "line": 15
+    },
+    {
+      "from": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19",
+      "to": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/live/board-stream.service.ts",
+      "line": 35
+    },
+    {
+      "from": "ui_api_call:admin#src/app/live/board-stream.service.ts:34:19",
+      "to": "entry:boards-api:http:GET:/api/boards/:param/events",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/live/board-stream.service.ts",
+      "line": 34,
+      "meta": {
+        "via": "api-target",
+        "targetService": "boards-api"
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/app/live/crew-board-stream.service.ts:22:5@27:20",
+      "to": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/boards/crew-panel.component.ts",
+      "line": 18
+    },
+    {
+      "from": "ui_api_call:admin#src/app/live/crew-board-stream.service.ts:22:5@27:20",
+      "to": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/live/live-stream.ts",
+      "line": 28
+    },
+    {
+      "from": "ui_api_call:admin#src/app/live/crew-board-stream.service.ts:22:5@27:20",
+      "to": "entry:boards-api:http:GET:/api/boards/:param/crew/stream",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/live/crew-board-stream.service.ts",
+      "line": 22,
+      "meta": {
+        "via": "api-target",
+        "targetService": "boards-api"
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/app/live/legacy-board-feed.service.ts:17:20",
+      "to": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/live/legacy-board-feed.service.ts",
+      "line": 18
+    },
+    {
+      "from": "ui_api_call:admin#src/app/live/legacy-board-feed.service.ts:17:20",
+      "to": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/live/rename-watcher.ts",
+      "line": 8
+    },
+    {
+      "from": "ui_api_call:admin#src/app/live/legacy-board-feed.service.ts:17:20",
+      "to": "entry:boards-api:http:GET:/api/boards/:param/stream",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/live/legacy-board-feed.service.ts",
+      "line": 17,
+      "meta": {
+        "via": "api-target",
+        "targetService": "boards-api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/live/board-feed.ts:22:20",
+      "to": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/board-feed.ts",
+      "line": 23
+    },
+    {
+      "from": "ui_api_call:web#src/live/board-feed.ts:22:20",
+      "to": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 13
+    },
+    {
+      "from": "ui_api_call:web#src/live/board-feed.ts:22:20",
+      "to": "entry:boards-api:http:GET:/api/boards/:param/events",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/live/board-feed.ts",
+      "line": 22,
+      "meta": {
+        "via": "api-target",
+        "targetService": "boards-api"
+      }
+    },
+    {
+      "from": "web#src/live/board-feed.ts:BoardFeed.connect",
+      "to": "ui_api_call:web#src/live/board-feed.ts:22:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/board-feed.ts",
+      "line": 22
+    }
+  ],
+  "types": {
+    "type:admin#BoardEvent": {
+      "name": "BoardEvent",
+      "kind": "object",
+      "declaredIn": "admin#src/app/live/board-stream.service.ts",
+      "structuralHash": "67da5f2027f2cd82",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:admin#CardEvent": {
+      "name": "CardEvent",
+      "kind": "object",
+      "declaredIn": "admin#src/app/live/live-updates.service.ts",
+      "structuralHash": "b1ff5fbd4df53927",
+      "fields": [
+        {
+          "name": "cardId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true,
+        "extends": [
+          "type:admin#BoardEvent"
+        ]
+      }
+    },
+    "type:admin#LegacyBoardFeed": {
+      "name": "LegacyBoardFeed",
+      "kind": "object",
+      "declaredIn": "admin#src/app/live/legacy-board-feed.service.ts",
+      "structuralHash": "9a5384be054afad2",
+      "fields": [
+        {
+          "name": "events",
+          "type": "type:rxjs#Subject<type:admin#BoardEvent>",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:admin#Opened": {
+      "name": "Opened",
+      "kind": "object",
+      "declaredIn": "admin#src/app/live/live-stream.ts",
+      "structuralHash": "cc031d3ab821694b",
+      "fields": [
+        {
+          "name": "url",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "select",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:boards-api#Decision": {
+      "name": "Decision",
+      "kind": "object",
+      "declaredIn": "boards-api#src/stream/stream-handlers.ts",
+      "structuralHash": "e41892933d703061",
+      "fields": [
+        {
+          "name": "ok",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "boardId",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "scope",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "status",
+          "type": "number",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:boards-api#Env": {
+      "name": "Env",
+      "kind": "object",
+      "declaredIn": "boards-api#src/env.ts",
+      "structuralHash": "0fa3bd21792c4eaa",
+      "fields": [
+        {
+          "name": "BOARD_HUB",
+          "type": "unknown",
+          "optional": false
+        },
+        {
+          "name": "HUB_TOKEN",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:hono#Context<{Bindings:type:boards-api#Env}>": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "hono",
+      "structuralHash": "9245dcdd5ac0d844",
+      "meta": {
+        "declKind": "external",
+        "package": "hono"
+      }
+    },
+    "type:orders-worker#OrderEvent": {
+      "name": "OrderEvent",
+      "kind": "object",
+      "declaredIn": "orders-worker#src/events/order-events.controller.ts",
+      "structuralHash": "765390662acfbefd",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:rxjs#Subject<type:admin#BoardEvent>": {
+      "name": "Subject",
+      "kind": "external",
+      "declaredIn": "rxjs",
+      "structuralHash": "82ae8fdec0bb2440",
+      "meta": {
+        "declKind": "external",
+        "package": "rxjs"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/boards/boards.service.ts",
+      "line": 28,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects BOARD_RENAMED on board:*:events: only RenameWatcher.retitle selects it, and nothing injects or makes LegacyBoardFeed: no constructor is handed it, no inject() asks for it and no new builds it; 6 consumers choose other types (AlertsBadgeComponent.ngOnInit, ArchivePanelComponent.ngOnInit and 4 more)",
+      "symbol": "producer:boards-api#src/boards/boards.service.ts:28:11",
+      "service": "boards-api",
+      "meta": {
+        "type": "channel:board:*:events#BOARD_RENAMED",
+        "channel": "channel:board:*:events",
+        "messageType": "BOARD_RENAMED",
+        "sureness": "sure"
+      }
+    },
+    {
+      "file": "src/boards/boards.service.ts",
+      "line": 33,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects CARD_COMMENTED on board:*:events: 6 consumers choose other types (AlertsBadgeComponent.ngOnInit, ArchivePanelComponent.ngOnInit and 4 more)",
+      "symbol": "producer:boards-api#src/boards/boards.service.ts:33:11",
+      "service": "boards-api",
+      "meta": {
+        "type": "channel:board:*:events#CARD_COMMENTED",
+        "channel": "channel:board:*:events",
+        "messageType": "CARD_COMMENTED",
+        "sureness": "sure"
+      }
+    },
+    {
+      "file": "src/boards/orders.service.ts",
+      "line": 25,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects ORDER_SHIPPED on board:*:orders: 1 consumer chooses other types (OrderEventsController.receive)",
+      "symbol": "producer:boards-api#src/boards/orders.service.ts:25:11",
+      "service": "boards-api",
+      "meta": {
+        "type": "channel:board:*:orders#ORDER_SHIPPED",
+        "channel": "channel:board:*:orders",
+        "messageType": "ORDER_SHIPPED",
+        "sureness": "sure"
+      }
+    },
+    {
+      "file": "src/bus/bus.service.ts",
+      "line": 27,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 7,
+      "hint": "The method is chosen at run time; nothing static to point at.",
+      "symbol": "BusService.publish -> this.transportHandlers[t]",
+      "meta": {
+        "causes": [
+          {
+            "cause": "untyped-value",
+            "sites": 6,
+            "samples": [
+              {
+                "file": "src/bus/bus.service.ts",
+                "line": 33,
+                "symbol": "BusService.fanoutToHub -> ns.get"
+              },
+              {
+                "file": "src/bus/bus.service.ts",
+                "line": 33,
+                "symbol": "BusService.fanoutToHub -> ns.idFromName"
+              },
+              {
+                "file": "src/bus/bus.service.ts",
+                "line": 34,
+                "symbol": "BusService.fanoutToHub -> stub.fetch"
+              }
+            ],
+            "files": [
+              "src/stream/stream-handlers.ts"
+            ]
+          },
+          {
+            "cause": "dynamic-member",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/bus/bus.service.ts",
+                "line": 27,
+                "symbol": "BusService.publish -> this.transportHandlers[t]"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "boards-api"
+    },
+    {
+      "file": "src/env.ts",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "DurableObjectNamespace",
+      "meta": {
+        "cause": "untyped-value"
+      },
+      "service": "boards-api"
+    }
+  ]
+}

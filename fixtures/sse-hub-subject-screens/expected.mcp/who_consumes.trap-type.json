@@ -1,0 +1,28 @@
+{
+  "channel": {
+    "id": "channel:board:*:events",
+    "type": "channel",
+    "label": "board:*:events",
+    "loc": "src/boards/boards.service.ts:15",
+    "service": "boards-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "consumer",
+      "label": "BoardScreen",
+      "loc": "src/screens/BoardScreen.tsx:13",
+      "service": "web",
+      "kind": "sse",
+      "via": "if"
+    }
+  ],
+  "total": 1,
+  "type": "CARD_PINNED",
+  "next": [
+    "who_emits({channel: \"channel:board:*:events\", type: \"CARD_PINNED\"})",
+    "who_calls({symbol: \"consumer:web#src/screens/BoardScreen.tsx:BoardScreen\"})",
+    "impact({symbol: \"consumer:web#src/screens/BoardScreen.tsx:BoardScreen\"})",
+    "get_source({symbol: \"consumer:web#src/screens/BoardScreen.tsx:BoardScreen\"})"
+  ]
+}

@@ -74,7 +74,7 @@ export const SELECTS_OTHERS_META = 'selectsOthers';
 export const SELECTED_BY_META = 'selectedBy';
 
 /** How a selection was written. */
-export type SelectionVia = 'switch' | 'if' | 'guard' | 'map' | 'decorator';
+export type SelectionVia = 'switch' | 'if' | 'guard' | 'map' | 'decorator' | 'filter';
 
 /** One type a consumer selects, and the consumer that handles it. */
 export interface Selection {

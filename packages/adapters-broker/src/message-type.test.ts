@@ -1,7 +1,7 @@
 import { Project, SyntaxKind, type CallExpression } from 'ts-morph';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { GraphBuilder, selectionsOf } from '@flowatlas/core';
-import { readMessageType, readMessageTypes, readSelections, type ChosenHandler, type SelectionReading } from './message-type.js';
+import { readMessageType, readMessageTypes, readSelections, readSubscription, type ChosenHandler, type SelectionReading } from './message-type.js';
 
 /**
  * The types of message one channel carries (P358): the value a send writes
@@ -243,5 +243,100 @@ export class ParcelBoard {
     ]);
     expect(consumer?.meta?.['discriminator']).toBe('type');
     expect(rows).toEqual([]);
+  });
+});
+
+describe('the types a subscription chooses, in its operators and its callback (P362)', () => {
+  const SCREENS = `
+  interface Evt { type: string; [key: string]: unknown }
+  declare class Observable<T> {
+    pipe(...operators: ((source: Observable<T>) => Observable<T>)[]): Observable<T>;
+    subscribe(next: (value: T) => void): void;
+  }
+  declare function filter<T>(predicate: (value: T) => boolean): (source: Observable<T>) => Observable<T>;
+  declare function takeUntil<T>(notifier: unknown): (source: Observable<T>) => Observable<T>;
+  declare const events$: Observable<Evt>;
+  const REFRESH_ON: ReadonlySet<string> = new Set(['MOVED', 'ARCHIVED']);
+  const LISTED = ['ADDED'] as const;
+
+  export class Screen {
+    private readonly flashOn = new Set<string>(['RENAMED']);
+    piped() {
+      events$.pipe(filter((evt) => evt.type === 'MOVED' || evt.type === 'ADDED'), takeUntil(null)).subscribe(() => this.load());
+    }
+    narrowed() {
+      events$.pipe(filter((evt) => ['MOVED', 'ADDED'].includes(evt.type))).subscribe((evt) => {
+        if (evt.type === 'ADDED') this.flash();
+        if (evt.type === 'RENAMED') this.flash();
+      });
+    }
+    bySet() {
+      events$.subscribe((evt) => { if (REFRESH_ON.has(evt.type)) this.load(); });
+    }
+    byField() {
+      events$.subscribe((evt) => { if (this.flashOn.has(evt.type)) this.flash(); });
+    }
+    byList() {
+      events$.subscribe((evt) => { if ((LISTED as readonly string[]).includes(evt.type)) this.flash(); });
+    }
+    everything() {
+      events$.subscribe(() => this.load());
+    }
+    load() {}
+    flash() {}
+  }`;
+  let screens: ReturnType<Project['createSourceFile']>;
+  beforeAll(() => {
+    screens = project.createSourceFile('screens.ts', SCREENS);
+  });
+  const subscriptionIn = (method: string): SelectionReading => {
+    const owner = screens.getClassOrThrow('Screen');
+    const subscribe = owner
+      .getMethodOrThrow(method)
+      .getDescendantsOfKind(SyntaxKind.CallExpression)
+      .find((call) => call.getExpression().getText().endsWith('.subscribe'))!;
+    return readSubscription(subscribe, owner, { repoDir: '/' });
+  };
+
+  it('reads the types a filter lets through, handled by what the callback calls', () => {
+    expect(pairs(subscriptionIn('piped'))).toEqual(['ADDED:filter:load', 'MOVED:filter:load']);
+  });
+
+  it('keeps of what the callback chooses only what the filter lets through', () => {
+    expect(pairs(subscriptionIn('narrowed'))).toEqual(['ADDED:if:flash']);
+  });
+
+  it('reads a test against a constant set, a set a field holds, and a constant list', () => {
+    expect(pairs(subscriptionIn('bySet'))).toEqual(['ARCHIVED:if:load', 'MOVED:if:load']);
+    expect(pairs(subscriptionIn('byField'))).toEqual(['RENAMED:if:flash']);
+    expect(pairs(subscriptionIn('byList'))).toEqual(['ADDED:if:flash']);
+  });
+
+  it('reads no choice where the subscription takes every type', () => {
+    expect(subscriptionIn('everything').selections).toEqual([]);
+  });
+});
+
+describe('a type read in brackets in a subscription (P362)', () => {
+  it('chooses on event[\'type\'] as on event.type, an early return ending the branch', () => {
+    const file = project.createSourceFile(
+      'brackets.ts',
+      `
+      interface Evt { type: string; [key: string]: unknown }
+      declare const updates$: { subscribe(next: (value: Evt) => void): void };
+      export class Timeline {
+        init() {
+          updates$.subscribe((event) => {
+            if (event['type'] === 'ADDED') { this.append(); return; }
+            if (event['type'] === 'MOVED') this.reorder();
+          });
+        }
+        append() {}
+        reorder() {}
+      }`,
+    );
+    const owner = file.getClassOrThrow('Timeline');
+    const subscribe = owner.getDescendantsOfKind(SyntaxKind.CallExpression).find((call) => call.getExpression().getText().endsWith('.subscribe'))!;
+    expect(pairs(readSubscription(subscribe, owner, { repoDir: '/' }))).toEqual(['ADDED:if:append', 'MOVED:if:reorder']);
   });
 });

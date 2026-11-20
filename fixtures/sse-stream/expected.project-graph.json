@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-20T13:41:28.670Z",
+  "builtAt": "2026-11-20T14:49:57.443Z",
   "services": [
     {
       "name": "api",
@@ -397,7 +397,10 @@
         "events": [
           "message"
         ],
-        "entryId": null
+        "entryId": null,
+        "subjects": [
+          "LiveEventsService.events"
+        ]
       }
     },
     {
@@ -414,7 +417,10 @@
         "events": [
           "message"
         ],
-        "entryId": null
+        "entryId": null,
+        "subjects": [
+          "LiveEventsService.events"
+        ]
       }
     },
     {
@@ -431,7 +437,10 @@
         "events": [
           "message"
         ],
-        "entryId": null
+        "entryId": null,
+        "subjects": [
+          "RememberedStreamService.frames"
+        ]
       }
     },
     {
@@ -1701,22 +1710,22 @@
       "service": "api"
     },
     {
-      "file": "src/app/stream-wrapper.service.ts",
-      "line": 18,
-      "reason": "api-path-dynamic",
-      "hint": "The address is built at run time. Annotate the method with /** @flowatlas-calls GET /path */.",
-      "symbol": "new EventSource(url)",
+      "file": "src/app/live-events.service.ts",
+      "line": 30,
+      "reason": "stream-handler-unread",
+      "level": "info",
+      "sites": 5,
+      "message": "The frames of this stream are pushed into LiveEventsService.events, and nothing in this repository was read subscribing to it.",
+      "hint": "Subscribe through the service that holds the subject (a field it exposes, a getter, or the subject itself), with .subscribe(…) after any .pipe(…).",
+      "symbol": "LiveEventsService.open",
       "service": "web"
     },
     {
       "file": "src/app/stream-wrapper.service.ts",
       "line": 18,
-      "reason": "stream-handler-unread",
-      "level": "info",
-      "sites": 2,
-      "message": "A stream of server-sent events is opened here and no handler for its frames is registered where it is held.",
-      "hint": "Register the handler with onmessage or addEventListener on the value the stream is held in, in the function or class that opens it.",
-      "symbol": "StreamWrapperService.open",
+      "reason": "api-path-dynamic",
+      "hint": "The address is built at run time. Annotate the method with /** @flowatlas-calls GET /path */.",
+      "symbol": "new EventSource(url)",
       "service": "web"
     }
   ]

@@ -14,6 +14,8 @@ import {
   methodNamedOn,
   namedFunction,
   recordEntriesOf,
+  subscriptionsOf,
+  UNREACHED_META,
   type ClassMethod,
   type DiscriminatorField,
   type ExtractorPass,
@@ -300,6 +302,20 @@ export interface SelectionReading {
   readonly unread: readonly { readonly line: number; readonly text: string; readonly why: string }[];
   /** A default branch that hands every other type on the same way. */
   readonly others: boolean;
+  /** Read as a predicate (P362): the types the function answers `true` for, or `false` for where `positive` is false. */
+  readonly predicate?: { readonly field: DiscriminatorField; readonly values: readonly string[]; readonly positive: boolean };
+}
+
+/** How a function is read for the types it chooses, beyond as a handler of its own. */
+export interface SelectionOptions {
+  /** Read as a predicate - the function an rxjs `filter` is handed - for the types it lets through (P362). */
+  readonly predicate?: true;
+  /**
+   * Types already chosen before the function runs - by the operators in front of a
+   * subscription's callback (P362): where the function chooses nothing itself,
+   * each is handled by what it calls; where it chooses, only these are kept.
+   */
+  readonly given?: { readonly field: DiscriminatorField; readonly values: readonly string[]; readonly line: number };
 }
 
 /** What a reading of one handler can ask the repository about. */
@@ -313,6 +329,9 @@ export interface SelectionLookup {
 
 /** Fields a message is wrapped in, on its way to a handler: an event's `data`, a request's `body`. */
 const ENVELOPES = new Set(['data', 'payload', 'body', 'detail', 'message']);
+
+/** The classes a set of values the code writes out is made with. */
+const SET_CLASSES: ReadonlySet<string> = new Set(['Set', 'ReadonlySet']);
 
 /** Whether a type can hold a discriminator's value. */
 const stringish = (type: Type): boolean =>
@@ -344,7 +363,7 @@ type Condition =
  * that the first such call at all; a branch that calls nothing of its own is
  * handled where it is written.
  */
-export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undefined, lookup: SelectionLookup): SelectionReading => {
+export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undefined, lookup: SelectionLookup, options: SelectionOptions = {}): SelectionReading => {
   const messages = new Set<TsNode>();
   const discriminators = new Map<TsNode, DiscriminatorField>();
   const selections: ReadSelection[] = [];
@@ -425,7 +444,9 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
       } else takeBindings(name, isMessage(initializer));
     }
   }
-  if (messages.size === 0 && discriminators.size === 0) return { selections, unread, others };
+  // A function that never reads the type chooses nothing - unless the types were chosen in front of it.
+  const readsType = messages.size > 0 || discriminators.size > 0;
+  if (!readsType && options.given === undefined) return { selections, unread, others };
 
   const passesMessage = (call: CallExpression): boolean =>
     call.getArguments().some((argument) =>
@@ -484,6 +505,36 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
     return rightField === undefined ? undefined : { field: rightField, value: left };
   };
 
+  /**
+   * The strings a list or a set the code writes out holds: written in place, or
+   * held in a constant of the module or a field of the class - `['A', 'B']`,
+   * `new Set(['A', 'B'])`, `new Set<string>([…])`, `['A'] as const` (P362).
+   */
+  const listedValues = (expression: TsNode, depth = 0): string[] | undefined => {
+    if (depth > 3) return undefined;
+    const node = peel(expression);
+    const strings = (value: TsNode): string[] | undefined => {
+      const evaluated = evaluateExpression(value);
+      return evaluated.resolved && Array.isArray(evaluated.value) && evaluated.value.every((each) => typeof each === 'string') ? (evaluated.value as string[]) : undefined;
+    };
+    if (Node.isNewExpression(node) && SET_CLASSES.has(node.getExpression().getText())) {
+      const [list] = node.getArguments();
+      return list === undefined ? undefined : (strings(peel(list)) ?? listedValues(list, depth + 1));
+    }
+    const direct = strings(node);
+    if (direct !== undefined) return direct;
+    let held: TsNode | undefined;
+    if (Node.isIdentifier(node)) {
+      const declaration = node.getSymbol()?.getDeclarations()[0];
+      if (declaration !== undefined && Node.isVariableDeclaration(declaration)) held = declaration.getInitializer();
+    } else if (Node.isPropertyAccessExpression(node)) {
+      const holder = peel(node.getExpression());
+      const declaration = node.getNameNode().getSymbol()?.getDeclarations()[0];
+      if ((Node.isThisExpression(holder) || Node.isIdentifier(holder)) && declaration !== undefined && Node.isPropertyDeclaration(declaration)) held = declaration.getInitializer();
+    }
+    return held === undefined ? undefined : listedValues(held, depth + 1);
+  };
+
   const condition = (expression: TsNode): Condition | undefined => {
     const node = peel(expression);
     if (Node.isPrefixUnaryExpression(node) && node.getOperatorToken() === SyntaxKind.ExclamationToken) {
@@ -519,18 +570,16 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
       }
       return undefined;
     }
-    // `['A', 'B'].includes(event.type)`
+    // `['A', 'B'].includes(event.type)`, `LIST.includes(event.type)`, `SET.has(event.type)` (P362)
     if (Node.isCallExpression(node)) {
       const callee = peel(node.getExpression());
       const [argument] = node.getArguments();
-      if (Node.isPropertyAccessExpression(callee) && callee.getName() === 'includes' && argument !== undefined) {
+      if (Node.isPropertyAccessExpression(callee) && (callee.getName() === 'includes' || callee.getName() === 'has') && argument !== undefined) {
         const field = fieldRead(argument);
         if (field === undefined) return undefined;
-        const listed = evaluateExpression(callee.getExpression());
-        if (listed.resolved && Array.isArray(listed.value) && listed.value.every((each) => typeof each === 'string')) {
-          return { field, values: listed.value as string[], positive: true };
-        }
-        return { unread: `${textOf(node)} tests the type against a list the code does not write out.` };
+        const listed = listedValues(callee.getExpression());
+        if (listed !== undefined) return { field, values: listed, positive: true };
+        return { unread: `${textOf(node)} tests the type against a ${callee.getName() === 'has' ? 'set' : 'list'} the code does not write out.` };
       }
     }
     return undefined;
@@ -640,7 +689,17 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
     for (const each of found) add([each.value], field, 'decorator', at, { kind: 'method', method: each.method }, true);
   };
 
-  for (const node of fn.getDescendants()) {
+  if (options.predicate === true) {
+    const body = fn.getBody();
+    const statements = body !== undefined && Node.isBlock(body) ? body.getStatements() : [];
+    const [only] = statements;
+    const answer = body === undefined ? undefined : !Node.isBlock(body) ? body : statements.length === 1 && only !== undefined && Node.isReturnStatement(only) ? only.getExpression() : undefined;
+    const test = answer === undefined || !readsType ? undefined : condition(answer);
+    if (test !== undefined && 'unread' in test) noteUnread(answer as TsNode, test.unread);
+    return { selections, unread, others, ...(test === undefined || 'unread' in test ? {} : { predicate: { field: test.field, values: test.values, positive: test.positive } }) };
+  }
+
+  for (const node of readsType ? fn.getDescendants() : []) {
     if (!own(node, fn)) continue;
     if (Node.isSwitchStatement(node)) {
       const field = fieldRead(node.getExpression());
@@ -714,7 +773,114 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
       readDecorated(field, peel(argument), node);
     }
   }
+  const given = options.given;
+  if (given !== undefined) {
+    // Chosen in front of the function: what it chooses itself is kept where the operators let it through.
+    if (selections.length > 0) return { selections: selections.filter((selection) => given.values.includes(selection.type)), unread, others };
+    const body = fn.getBody();
+    const statements = body === undefined ? [] : Node.isBlock(body) ? body.getStatements() : [body];
+    const handler = handlerIn(statements, fn);
+    for (const type of given.values) selections.push({ type, field: given.field, via: 'filter', line: given.line, handler });
+  }
   return { selections, unread, others };
+};
+
+// ---------------------------------------------------------------------------
+// A subscription (P362)
+
+/** A function handed over as a value: written in place, or a method of an object written in place (`{ next(evt) {…} }`). */
+const handedFunction = (value: TsNode | undefined): FunctionLike | undefined => {
+  if (value === undefined) return undefined;
+  const node = peel(value);
+  if (Node.isArrowFunction(node) || Node.isFunctionExpression(node)) return node;
+  if (Node.isObjectLiteralExpression(node)) {
+    const next = node.getProperty('next');
+    if (next !== undefined && Node.isMethodDeclaration(next)) return next;
+    if (next !== undefined && Node.isPropertyAssignment(next)) return handedFunction(next.getInitializer());
+  }
+  return undefined;
+};
+
+/** The operators handed to each `pipe` between an observable and its `subscribe`, outermost last. */
+const operatorsBefore = (subscribe: CallExpression): TsNode[] => {
+  const operators: TsNode[][] = [];
+  const callee = peel(subscribe.getExpression());
+  let at: TsNode | undefined = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : undefined;
+  for (let step = 0; at !== undefined && step < 8; step += 1) {
+    const node = peel(at);
+    if (!Node.isCallExpression(node)) break;
+    const inner = peel(node.getExpression());
+    if (!Node.isPropertyAccessExpression(inner)) break;
+    if (inner.getName() === 'pipe') operators.unshift([...node.getArguments()]);
+    else if (inner.getName() !== 'asObservable') break;
+    at = inner.getExpression();
+  }
+  return operators.flat();
+};
+
+/** The name an operator is called by: `filter(…)`, `operators.filter(…)`. */
+const operatorName = (operator: TsNode): string | undefined => {
+  const node = peel(operator);
+  if (!Node.isCallExpression(node)) return undefined;
+  const callee = peel(node.getExpression());
+  return Node.isIdentifier(callee) ? callee.getText() : Node.isPropertyAccessExpression(callee) ? callee.getName() : undefined;
+};
+
+/**
+ * The types a subscription chooses (P362): the predicates of the `filter`s in
+ * the `pipe` before it, each narrowing what reaches the callback, and the
+ * callback read as any handler is - the types the operators let through being
+ * the callback's where it chooses nothing itself. A subscription that chooses
+ * nothing anywhere takes every type alike, and records nothing.
+ */
+export const readSubscription = (subscribe: CallExpression, owner: ClassDeclaration | undefined, lookup: SelectionLookup): SelectionReading => {
+  const unread: { line: number; text: string; why: string }[] = [];
+  let given: { field: DiscriminatorField; values: string[]; line: number } | undefined;
+  let narrowedAway = false;
+  for (const operator of operatorsBefore(subscribe)) {
+    if (operatorName(operator) !== 'filter') continue;
+    const predicate = handedFunction((peel(operator) as CallExpression).getArguments()[0]);
+    if (predicate === undefined) continue;
+    const read = readSelections(predicate, owner, lookup, { predicate: true });
+    unread.push(...read.unread);
+    if (read.predicate === undefined || !read.predicate.positive) continue;
+    const values = [...read.predicate.values];
+    if (given === undefined) given = { field: read.predicate.field, values, line: operator.getStartLineNumber() };
+    else {
+      given = { ...given, values: given.values.filter((value) => values.includes(value)) };
+      if (given.values.length === 0) narrowedAway = true;
+    }
+  }
+  const callback = handedFunction(subscribe.getArguments()[0]);
+  if (narrowedAway) return { selections: [], unread, others: false };
+  if (callback === undefined) {
+    const selections: ReadSelection[] =
+      given === undefined ? [] : given.values.map((type) => ({ type, field: given!.field, via: 'filter' as const, line: given!.line, handler: { kind: 'self' as const } }));
+    return { selections, unread, others: false };
+  }
+  const read = readSelections(callback, owner, lookup, given === undefined ? {} : { given });
+  return { selections: read.selections, unread: [...unread, ...read.unread], others: read.others };
+};
+
+/** The `subscribe` call written at a line and column of a file. */
+const subscribeAt = (host: MessageTypeHost, file: string | undefined, line: number, column: number): CallExpression | undefined => {
+  if (file === undefined) return undefined;
+  const source = host.project.getSourceFile(resolvePath(host.repoDir, file));
+  if (source === undefined) return undefined;
+  let position: number;
+  try {
+    position = source.compilerNode.getPositionOfLineAndCharacter(line - 1, column - 1);
+  } catch {
+    return undefined;
+  }
+  // Every node from the token written there out to the outermost one starting there; the `subscribe` among them.
+  let call: CallExpression | undefined;
+  for (let at = source.getDescendantAtPos(position); at !== undefined && at.getStart() === position; at = at.getParent()) {
+    if (!Node.isCallExpression(at)) continue;
+    const callee = peel(at.getExpression());
+    if (Node.isPropertyAccessExpression(callee) && callee.getName() === 'subscribe') call = at;
+  }
+  return call;
 };
 
 // ---------------------------------------------------------------------------
@@ -823,9 +989,11 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
     // The handler it runs; a consumer drawn with no handler of its own is its handler, written where it is.
     const target = handles === undefined ? consumer : builder.getNode(handles.to);
     if (target === undefined) continue;
-    const found = target === consumer ? declarationAt(host, consumer.file, consumer.line) : declarationOfNode(host, target);
-    if (found === undefined) continue;
-    const reading = readSelections(found.fn, found.owner, {
+    // A screen subscribed to what a stream's frames are pushed into chooses at each subscription, not in the function it is written in (P362).
+    const subscriptions = subscriptionsOf(consumer);
+    const found = subscriptions.length > 0 ? undefined : target === consumer ? declarationAt(host, consumer.file, consumer.line) : declarationOfNode(host, target);
+    if (found === undefined && subscriptions.length === 0) continue;
+    const lookup: SelectionLookup = {
       repoDir: host.repoDir,
       calledAt: (line) => {
         const targets = [...new Set((callsFrom.get(target.id) ?? []).filter((edge) => edge.line === line).map((edge) => edge.to))].filter((id) => {
@@ -835,7 +1003,17 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
         return targets.length === 1 ? targets[0] : undefined;
       },
       decorated: () => (decorated ??= decoratedMethods(host)),
+    };
+    const readings = subscriptions.flatMap((each) => {
+      const subscribe = subscribeAt(host, consumer.file, each.line, each.column);
+      if (subscribe === undefined) return [];
+      const owner = subscribe.getFirstAncestor((node): node is ClassDeclaration => Node.isClassDeclaration(node));
+      return [readSubscription(subscribe, owner, lookup)];
     });
+    const reading: SelectionReading =
+      found !== undefined
+        ? readSelections(found.fn, found.owner, lookup)
+        : { selections: readings.flatMap((each) => each.selections), unread: readings.flatMap((each) => each.unread), others: readings.some((each) => each.others) };
     const file = target.file ?? consumer.file ?? '';
 
     for (const row of reading.unread) {
@@ -884,6 +1062,8 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
             ...(consumer.kind === undefined ? {} : { kind: consumer.kind }),
             ...(consumer.meta?.['adapter'] === undefined ? {} : { adapter: consumer.meta['adapter'] }),
             [SELECTED_BY_META]: consumer.id,
+            // A handler chosen by code that never runs never runs either.
+            ...(typeof consumer.meta?.[UNREACHED_META] === 'string' ? { [UNREACHED_META]: consumer.meta[UNREACHED_META] } : {}),
           },
         });
         if (drawn.meta?.[SELECTED_BY_META] !== undefined) {

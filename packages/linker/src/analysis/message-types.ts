@@ -1,8 +1,10 @@
 import {
+  HANDS_ON_META,
   isMessageTypeNode,
   MESSAGE_TYPE_UNREAD_META,
   SELECTION_UNREAD_META,
   selectionsOf,
+  UNREACHED_META,
   type GraphEdge,
   type GraphNode,
 } from '@flowatlas/core';
@@ -76,6 +78,9 @@ const classIdOf = (symbol: string): string | undefined => {
  * nothing does; this is how that one is told apart.
  */
 export const unreachedHandler = (lookup: MessageTypeLookup, consumer: GraphNode, modulesByRepo?: ReadonlySet<string>): string | undefined => {
+  // Said by the reader that drew it: a screen subscribed through a service nothing makes (P362).
+  const said = consumer.meta?.[UNREACHED_META];
+  if (typeof said === 'string') return said;
   const [handles] = lookup.edgesFrom(consumer.id, ['handles']);
   const classId = handles === undefined ? undefined : classIdOf(handles.to);
   const owner = classId === undefined ? undefined : lookup.node(classId);
@@ -103,6 +108,22 @@ const receiverOf = (lookup: MessageTypeLookup, consumer: GraphNode, modulesByRep
   return { consumer, takes: 'generic', ...never };
 };
 
+/**
+ * Whether a consumer only hands the channel's messages on to consumers that
+ * are themselves on the channel (P362), so what they choose stands for it: a
+ * route relaying the channel onto a stream that screens are joined to, and
+ * the function a stream's frames arrive at that pushes them into a subject
+ * the screens subscribe to. Counted as passing every type on, it would make
+ * every "nothing selects this type" unsure though everything past it was read.
+ */
+const handsOnRead = (consumer: GraphNode, consuming: readonly GraphEdge[]): boolean => {
+  const relay = consumer.meta?.['relay'];
+  if (typeof relay === 'string' && consuming.some((edge) => edge.to !== consumer.id && edge.meta?.['route'] === relay)) return true;
+  const handsOn = consumer.meta?.[HANDS_ON_META];
+  // A generic stream class serves several wrappers: on this channel, those of its subscribers this channel reaches stand for it.
+  return Array.isArray(handsOn) && handsOn.some((id) => consuming.some((edge) => edge.to === id));
+};
+
 /** Everything known about one type node. */
 export const messageTypeFacts = (lookup: MessageTypeLookup, type: GraphNode, modulesByRepo?: ReadonlySet<string>): MessageTypeFacts => {
   const channelId = typeof type.meta?.['channel'] === 'string' ? type.meta['channel'] : undefined;
@@ -123,14 +144,12 @@ export const messageTypeFacts = (lookup: MessageTypeLookup, type: GraphNode, mod
       return [{ consumer, edge, ...(selectedBy === undefined ? {} : { selectedBy }), ...(unreached === undefined ? {} : { unreached }) }];
     })
     .sort((a, b) => byId(a.consumer, b.consumer));
-  const receivers =
-    channel === undefined
-      ? []
-      : lookup
-          .edgesFrom(channel.id, ['consumes'])
-          .flatMap((edge) => lookup.node(edge.to) ?? [])
-          .sort(byId)
-          .map((consumer) => receiverOf(lookup, consumer, modulesByRepo));
+  const consuming = channel === undefined ? [] : lookup.edgesFrom(channel.id, ['consumes']);
+  const receivers = consuming
+    .flatMap((edge) => lookup.node(edge.to) ?? [])
+    .filter((consumer) => !handsOnRead(consumer, consuming))
+    .sort(byId)
+    .map((consumer) => receiverOf(lookup, consumer, modulesByRepo));
   const unreadProducers =
     channel === undefined
       ? []

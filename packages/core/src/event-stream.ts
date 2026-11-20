@@ -1,9 +1,10 @@
-import type { NewExpression, Node as TsNode } from 'ts-morph';
+import type { CallExpression, NewExpression, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { GraphBuilder } from './builder.js';
 import type { Confidence } from './model/edges.js';
 import type { Unresolved } from './model/graph.js';
 import { isPlatformProvided } from './platform-fetch.js';
+import type { SubjectRelay } from './stream-subjects.js';
 
 /**
  * A browser's stream of server-sent events, read the same way by every reader
@@ -234,7 +235,35 @@ export interface StreamConsumer {
   /** The events it is registered for, `null` where a name was not read. */
   readonly events: readonly (string | null)[];
   readonly confidence: Confidence;
+  /** Where the function subscribes to a subject the stream's frames are pushed into, rather than holding the stream (P362). */
+  readonly subscription?: StreamSubscription;
+  /** Why it never runs, where that is known: the service it subscribes through is made by nothing. */
+  readonly unreached?: string;
 }
+
+/** A subscription a screen makes to what a stream's frames are pushed into (P362), where it is written. */
+export interface StreamSubscription {
+  /** The `subscribe` call's line and column, in the consumer's file. */
+  readonly line: number;
+  readonly column: number;
+  /** What it subscribes to, as `Holder.member`. */
+  readonly through: string;
+}
+
+/** On a stream's consumer: the subscriptions it makes to what the frames are pushed into, each read for the types it chooses. */
+export const SUBSCRIPTIONS_META = 'subscriptions';
+/** On a consumer: why it never runs. */
+export const UNREACHED_META = 'unreached';
+/** On the consumer a stream's frames arrive at, where it only pushes them into a subject: the consumers subscribed to it. */
+export const HANDS_ON_META = 'handsOnTo';
+
+/** The subscriptions a consumer records, as written. */
+export const subscriptionsOf = (node: { meta?: Record<string, unknown> } | undefined): StreamSubscription[] => {
+  const raw = node?.meta?.[SUBSCRIPTIONS_META];
+  return Array.isArray(raw)
+    ? raw.filter((each): each is StreamSubscription => typeof each === 'object' && each !== null && typeof (each as StreamSubscription).line === 'number' && typeof (each as StreamSubscription).column === 'number')
+    : [];
+};
 
 /** The id of the consumer a stream's frames arrive at in one function. */
 export const streamConsumerId = (handlerId: string): string => `consumer:${handlerId}`;
@@ -260,6 +289,15 @@ export const recordStreamConsumer = (builder: GraphBuilder, consumer: StreamCons
     kind: STREAM_KIND,
     meta: { kind: STREAM_KIND, client: EVENT_SOURCE, events, entryId: null },
   });
+  const node = builder.getNode(id);
+  if (node !== undefined && consumer.subscription !== undefined) {
+    const known = subscriptionsOf(node);
+    const at = consumer.subscription;
+    if (!known.some((each) => each.line === at.line && each.column === at.column)) {
+      node.meta = { ...node.meta, [SUBSCRIPTIONS_META]: [...known, at].sort((a, b) => a.line - b.line || a.column - b.column) };
+    }
+  }
+  if (node !== undefined && consumer.unreached !== undefined) node.meta = { ...node.meta, [UNREACHED_META]: consumer.unreached };
   builder.addEdge({ from: id, to: consumer.handlerId, type: 'handles', confidence: 'static', file: consumer.file, line: consumer.line });
   builder.addEdge({ from: consumer.callId, to: id, type: 'triggers', confidence: consumer.confidence, file: consumer.file, line: consumer.line });
   return id;
@@ -281,3 +319,79 @@ export const streamHandlerUnreadRow = (file: string, line: number, symbol: strin
       : 'Register a function declared by name, or one written in place that calls one.',
   symbol: symbol.slice(0, 80),
 });
+
+/** What a reader of a screen hands in to record the subscriptions behind a stream's consumer. */
+export interface SubjectSubscribers {
+  readonly repo: string;
+  /** The `ui_api_call` nodes of the stream's request, each with the call it is recorded at, where the reader has it. */
+  readonly calls: readonly { readonly id: string; readonly site?: TsNode }[];
+  /** The consumer the stream's frames arrive at, which pushes them into the subject. */
+  readonly consumerId: string;
+  /** The function a `subscribe` is written in, as the reader draws it: its node's id and label; `undefined` where it draws none. */
+  handlerOf(subscribe: CallExpression): { readonly id: string; readonly label: string } | undefined;
+  fileOf(node: TsNode): string;
+}
+
+/**
+ * Records every subscription behind a stream's consumer as a consumer of the
+ * stream of its own (P362): the function the `subscribe` is written in, reached
+ * from the stream's request as the consumer is, carrying where it subscribes so
+ * the types it chooses - in the operators before it and in its callback - are
+ * read there. The consumer that only pushes the frames on says which consumers
+ * it hands them to. A subscription in a function the reader draws no node for,
+ * and a subject nothing is read subscribing to, are rows.
+ */
+export const recordSubjectSubscribers = (builder: GraphBuilder, relay: SubjectRelay, at: SubjectSubscribers, report: (row: Unresolved) => void): string[] => {
+  const recorded: string[] = [];
+  for (const subscription of relay.subscriptions) {
+    const { subscribe } = subscription;
+    const file = at.fileOf(subscribe);
+    const start = subscribe.getSourceFile().getLineAndColumnAtPos(subscribe.getStart());
+    const handler = at.handlerOf(subscribe);
+    if (handler === undefined) {
+      report(streamHandlerUnreadRow(file, start.line, subscription.through, 'unread'));
+      continue;
+    }
+    // One instance of a generic stream class is fed by the requests its wrapper makes (P362).
+    const entry = subscription.entry;
+    const own = entry === undefined ? [] : at.calls.filter((call) => call.site !== undefined && call.site.getSourceFile() === entry.getSourceFile() && entry.containsRange(call.site.getPos(), call.site.getEnd()));
+    for (const { id: callId } of own.length > 0 ? own : at.calls) {
+      recorded.push(
+        recordStreamConsumer(builder, {
+          repo: at.repo,
+          callId,
+          handlerId: handler.id,
+          label: handler.label,
+          file,
+          line: start.line,
+          events: ['message'],
+          confidence: 'static',
+          subscription: { line: start.line, column: start.column, through: subscription.through },
+          ...(subscription.unreached === undefined ? {} : { unreached: subscription.unreached }),
+        }),
+      );
+    }
+  }
+  const consumer = builder.getNode(at.consumerId);
+  const handsOn = [...new Set(recorded)].filter((id) => id !== at.consumerId).sort();
+  if (consumer !== undefined) {
+    consumer.meta = {
+      ...consumer.meta,
+      ...(handsOn.length === 0 ? {} : { [HANDS_ON_META]: handsOn }),
+      subjects: [...relay.subjects],
+      ...(relay.unreached === undefined ? {} : { [UNREACHED_META]: relay.unreached }),
+    };
+  }
+  if (relay.subscriptions.length === 0 && consumer !== undefined) {
+    report({
+      file: consumer.file ?? '',
+      line: consumer.line ?? 0,
+      reason: 'stream-handler-unread',
+      level: 'info',
+      message: `The frames of this stream are pushed into ${relay.subjects.join(', ')}, and nothing in this repository was read subscribing to it.`,
+      hint: 'Subscribe through the service that holds the subject (a field it exposes, a getter, or the subject itself), with .subscribe(…) after any .pipe(…).',
+      symbol: consumer.label.slice(0, 80),
+    });
+  }
+  return handsOn;
+};

@@ -9,10 +9,13 @@ import {
   makeLeafId,
   normalizeFilePath,
   recordStreamConsumer,
+  recordSubjectSubscribers,
   siteOf,
   STREAM_KIND,
+  streamConsumerId,
   streamHandlerUnreadRow,
   streamHoldingOf,
+  subjectRelayOf,
   type StreamListener,
 } from '@flowatlas/core';
 import type { CallExpression, NewExpression, Node as TsNode } from 'ts-morph';
@@ -209,7 +212,7 @@ export const streamsPass = definePass('streams', (ctx: ReactExtractContext) => {
   };
 
   /** The functions the stream's frames arrive at, joined to every request it stands for. */
-  const consumersOf = (network: NewExpression, owner: IndexedFunction, requests: readonly { id: string; chain: readonly CallExpression[] }[]): void => {
+  const consumersOf = (network: NewExpression, owner: IndexedFunction, requests: readonly { id: string; chain: readonly CallExpression[]; site: TsNode }[]): void => {
     const at = siteOf(network);
     const holding = holdingsOf(network, owner);
     if (holding.listeners.length === 0) {
@@ -220,6 +223,7 @@ export const streamsPass = definePass('streams', (ctx: ReactExtractContext) => {
       const file = ctx.fileOf(listener.site);
       const line = siteOf(listener.site).line;
       const reported = new Set<string>();
+      const drawn: string[] = [];
       for (const { id, chain } of requests) {
         const handlers = functionsOf(listener.handler, chain, 0);
         if (handlers === undefined) {
@@ -229,6 +233,7 @@ export const streamsPass = definePass('streams', (ctx: ReactExtractContext) => {
         }
         for (const handler of handlers) {
           ctx.ensureFunctionNode(handler.fn);
+          if (!drawn.includes(handler.id)) drawn.push(handler.id);
           recordStreamConsumer(ctx.builder, {
             repo: ctx.repo,
             callId: id,
@@ -241,7 +246,41 @@ export const streamsPass = definePass('streams', (ctx: ReactExtractContext) => {
           });
         }
       }
+      const [first] = drawn;
+      if (first !== undefined) handOn(listener, requests.map((request) => ({ id: request.id, site: request.site })), first);
     }
+  };
+
+  /**
+   * The subscriptions to a subject the listener pushes the frames into (P362):
+   * each function a `subscribe` is written in is one more consumer of the
+   * stream, reached from its requests.
+   */
+  const handOn = (listener: StreamListener, calls: readonly { id: string; site: TsNode }[], handlerId: string): void => {
+    if (calls.length === 0) return;
+    const written = isWrittenFunction(listener.handler) ? listener.handler : undefined;
+    const around = enclosingIndexed(ctx, listener.site);
+    const method = around?.fn.declaration;
+    const owner = method?.getParent();
+    const relay = subjectRelayOf(written ?? method ?? listener.handler, owner !== undefined && Node.isClassDeclaration(owner) ? owner : undefined, ctx.project, ctx.repoDir);
+    if (relay.subjects.length === 0) return;
+    recordSubjectSubscribers(
+      ctx.builder,
+      relay,
+      {
+        repo: ctx.repo,
+        calls,
+        consumerId: streamConsumerId(handlerId),
+        handlerOf: (subscribe) => {
+          const indexed = enclosingIndexed(ctx, subscribe);
+          if (indexed === undefined) return undefined;
+          ctx.ensureFunctionNode(indexed.fn);
+          return { id: indexed.id, label: indexed.name };
+        },
+        fileOf: (node) => ctx.fileOf(node),
+      },
+      (row) => ctx.report(row),
+    );
   };
 
   for (const indexed of [...ctx.functions.all(), ...classMethods(ctx)]) {
@@ -262,11 +301,11 @@ export const streamsPass = definePass('streams', (ctx: ReactExtractContext) => {
       const [urlArg] = network.getArguments();
       if (urlArg === undefined) continue;
       const site: RequestSite = { call: network, ownerId: indexed.id, file: indexed.file };
-      const requests: { id: string; chain: readonly CallExpression[] }[] = [];
+      const requests: { id: string; chain: readonly CallExpression[]; site: TsNode }[] = [];
       for (const request of requestsOf(ctx, urlArg, indexed, site)) {
         const owner = ctx.functions.byId(request.site.ownerId);
         if (owner !== undefined) ctx.ensureFunctionNode(owner.fn);
-        requests.push({ id: record(network, request), chain: request.calls });
+        requests.push({ id: record(network, request), chain: request.calls, site: request.site.call });
       }
       consumersOf(network, indexed, requests);
     }

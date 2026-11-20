@@ -67,7 +67,7 @@ const resolveHandler = (
   }
 
   if (isFunctionHandler(handler)) {
-    const fn = ctx.functionAt(handler.file, handler.functionName);
+    const fn = ctx.functionAt(handler.file, handler.functionName, handler.line);
     if (fn === undefined) return {};
     ctx.ensureFunctionNode(fn);
     ctx.handlerFunctions.push(fn);

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-20T12:44:13.515Z",
+  "builtAt": "2026-11-20T14:43:42.002Z",
   "services": [
     {
       "name": "api",
@@ -490,7 +490,10 @@
         "events": [
           "message"
         ],
-        "entryId": null
+        "entryId": null,
+        "subjects": [
+          "LiveEventsService.events"
+        ]
       }
     },
     {
@@ -1779,6 +1782,16 @@
       "symbol": "app.get(pathFor('stats'))",
       "adapter": "hono-routes",
       "service": "api"
+    },
+    {
+      "file": "src/app/live-events.service.ts",
+      "line": 27,
+      "reason": "stream-handler-unread",
+      "level": "info",
+      "message": "The frames of this stream are pushed into LiveEventsService.events, and nothing in this repository was read subscribing to it.",
+      "hint": "Subscribe through the service that holds the subject (a field it exposes, a getter, or the subject itself), with .subscribe(…) after any .pipe(…).",
+      "symbol": "LiveEventsService.open",
+      "service": "web"
     }
   ]
 }

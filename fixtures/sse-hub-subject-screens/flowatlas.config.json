@@ -1,0 +1,40 @@
+{
+  "services": [
+    { "name": "boards-api", "repo": "./boards-api", "type": "nestjs" },
+    { "name": "orders-worker", "repo": "./orders-worker", "type": "nestjs" },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"],
+      "apiTarget": { "apiUrl": "boards-api" }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "apiBaseEnv": ["VITE_BOARDS_URL"],
+      "apiTarget": { "VITE_BOARDS_URL": "boards-api" }
+    }
+  ],
+  "adapters": {
+    "broker": {
+      "custom": [
+        {
+          "name": "board-bus",
+          "channelKind": "channel",
+          "producers": [
+            {
+              "receiverType": ["BoardEventBus"],
+              "method": "publish",
+              "channelArg": 0,
+              "payloadArg": 1,
+              "kind": "event"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

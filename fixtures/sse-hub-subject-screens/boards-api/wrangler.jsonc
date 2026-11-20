@@ -1,0 +1,10 @@
+{
+  // One worker: the boards' API, the streams the screens hold open, and the
+  // per-board object that holds them.
+  "name": "boards-api",
+  "main": "src/worker.ts",
+  "durable_objects": {
+    "bindings": [{ "name": "BOARD_HUB", "class_name": "BoardHub" }],
+  },
+  "migrations": [{ "tag": "v1", "new_classes": ["BoardHub"] }],
+}

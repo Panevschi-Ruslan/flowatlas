@@ -1,0 +1,49 @@
+{
+  "channel": {
+    "id": "channel:board:*:events",
+    "type": "channel",
+    "label": "board:*:events",
+    "loc": "src/boards/boards.service.ts:15",
+    "service": "boards-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
+      "type": "consumer",
+      "label": "BoardPageComponent.load",
+      "loc": "src/app/boards/board-page.component.ts:29",
+      "service": "admin",
+      "kind": "sse",
+      "selectedIn": "BoardPageComponent.ngOnInit",
+      "via": "filter"
+    },
+    {
+      "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
+      "type": "consumer",
+      "label": "CardTimelineComponent.reorder",
+      "loc": "src/app/boards/card-timeline.component.ts:32",
+      "service": "admin",
+      "kind": "sse",
+      "selectedIn": "CardTimelineComponent.ngOnInit",
+      "via": "if"
+    },
+    {
+      "id": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "consumer",
+      "label": "BoardScreen",
+      "loc": "src/screens/BoardScreen.tsx:13",
+      "service": "web",
+      "kind": "sse",
+      "via": "if"
+    }
+  ],
+  "total": 3,
+  "channelUsed": "channel:board:*:events",
+  "type": "CARD_MOVED",
+  "next": [
+    "who_emits({channel: \"channel:board:*:events\", type: \"CARD_MOVED\"})",
+    "who_calls({symbol: \"consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load\"})",
+    "impact({symbol: \"consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load\"})",
+    "get_source({symbol: \"consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load\"})"
+  ]
+}

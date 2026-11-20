@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-20T13:16:32.536Z",
+  "builtAt": "2026-11-20T15:39:50.775Z",
   "services": [
     {
       "name": "docs-api",
@@ -2052,7 +2052,7 @@
       "from": "channel:space:*:events#DOC_ARCHIVED",
       "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushArchive",
       "type": "consumes",
-      "confidence": "static",
+      "confidence": "heuristic",
       "file": "src/handlers/activity-feed.service.ts",
       "line": 27,
       "meta": {

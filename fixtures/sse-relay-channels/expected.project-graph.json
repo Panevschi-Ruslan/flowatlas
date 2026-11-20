@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-20T13:57:08.533Z",
+  "builtAt": "2026-11-20T14:49:55.474Z",
   "services": [
     {
       "name": "shipping",
@@ -2275,7 +2275,7 @@
       "file": "src/parcels/parcels.service.ts",
       "line": 19,
       "reason": "message-type-unselected",
-      "message": "no code that runs selects COURIER_ASSIGNED on workspace:*:events: 1 consumer chooses other types (handleParcelEvent); GET /live/:workspaceId@15, onTick and 1 more pass every type on without choosing, and what takes them past it is not read; CourierPanel not read (its handler is not code this reads)",
+      "message": "no code that runs selects COURIER_ASSIGNED on workspace:*:events: 1 consumer chooses other types (handleParcelEvent); onTick passes every type on without choosing, and what takes them past it is not read; CourierPanel not read (its handler is not code this reads)",
       "symbol": "producer:shipping#src/parcels/parcels.service.ts:19:11",
       "service": "shipping",
       "meta": {

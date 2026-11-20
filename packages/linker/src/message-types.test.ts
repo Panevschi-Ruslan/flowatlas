@@ -102,3 +102,129 @@ describe('types of message on a joined channel', () => {
     expect(joinMessageTypes(nodes, edges)).toEqual([]);
   });
 });
+
+describe('types of message reaching screens through a stream (P362)', () => {
+  const ROUTE = 'entry:api:http:GET:/shelves/:param/events';
+  /** The channel relayed by a route onto a stream, a screen service pushing it into a subject, and a screen subscribed. */
+  const streamed = (options: { screenless?: boolean; unreached?: boolean } = {}) => {
+    const { nodes, edges } = build();
+    const add = (each: GraphNode) => nodes.set(each.id, each);
+    const join = (each: GraphEdge) => edges.set(edgeKey(each), each);
+    add(node('api#s.ts:events', { type: 'function', label: 'events' }));
+    add(node('consumer:api#s.ts:events', { type: 'consumer', label: 'events', kind: 'sse', meta: { relay: ROUTE } }));
+    join(edge(CHANNEL, 'consumer:api#s.ts:events', 'consumes'));
+    join(edge('consumer:api#s.ts:events', 'api#s.ts:events', 'handles'));
+    if (options.screenless === true) return { nodes, edges };
+    add(node('web#f.ts:Feed.open', { repo: 'web', label: 'Feed.open' }));
+    add(node('web#p.ts:Page.init', { repo: 'web', label: 'Page.init' }));
+    add(node('consumer:web#f.ts:Feed.open', { type: 'consumer', repo: 'web', label: 'Feed.open', meta: { handsOnTo: ['consumer:web#p.ts:Page.init'] } }));
+    add(
+      node('consumer:web#p.ts:Page.init', {
+        type: 'consumer',
+        repo: 'web',
+        label: 'Page.init',
+        meta: {
+          discriminator: 'type',
+          selects: [{ type: 'BOOK_LENT', consumer: 'consumer:web#p.ts:Page.init', via: 'filter', line: 4 }],
+          ...(options.unreached === true ? { unreached: 'nothing injects or makes Feed' } : {}),
+        },
+      }),
+    );
+    for (const screen of ['consumer:web#f.ts:Feed.open', 'consumer:web#p.ts:Page.init']) {
+      join(edge(CHANNEL, screen, 'consumes', { meta: { via: 'sse', route: ROUTE } }));
+    }
+    join(edge('consumer:web#f.ts:Feed.open', 'web#f.ts:Feed.open', 'handles'));
+    join(edge('consumer:web#p.ts:Page.init', 'web#p.ts:Page.init', 'handles'));
+    return { nodes, edges };
+  };
+
+  it('selects a type at the screen, the route and the service in front of it passing it on to what was read', () => {
+    const { nodes, edges } = streamed();
+    const rows = joinMessageTypes(nodes, edges);
+    expect(rows.map((row) => row.meta?.['type'])).toEqual([]);
+    expect([...edges.values()]).toContainEqual(expect.objectContaining({ from: `${CHANNEL}#BOOK_LENT`, to: 'consumer:web#p.ts:Page.init', type: 'consumes' }));
+  });
+
+  it('is unsure of a type where the route relays it to no screen read', () => {
+    const { nodes, edges } = streamed({ screenless: true });
+    const lent = joinMessageTypes(nodes, edges).find((row) => row.meta?.['type'] === `${CHANNEL}#BOOK_LENT`);
+    expect(lent?.meta).toMatchObject({ sureness: 'unsure' });
+    expect(lent?.message).toContain('events passes every type on without choosing');
+  });
+
+  it('counts a screen subscribed through a service nothing makes as no selection, sure where everything else was read', () => {
+    const { nodes, edges } = streamed({ unreached: true });
+    const lent = joinMessageTypes(nodes, edges).find((row) => row.meta?.['type'] === `${CHANNEL}#BOOK_LENT`);
+    expect(lent?.message).toContain('only Page.init selects it, and nothing injects or makes Feed');
+    expect(lent?.meta).toMatchObject({ sureness: 'sure' });
+  });
+});
+
+describe('a per-scope hub\'s own channel (P362)', () => {
+  it('draws no type on the channel of a hub handed other channels, where nothing written to it says one', () => {
+    const HUB = 'channel:durable-object:Hub';
+    const nodes = new Map<string, GraphNode>(
+      [
+        node(HUB, { type: 'channel', label: 'durable-object:Hub', meta: { channelKind: 'channel', heldBy: 'Hub', forwards: ['channel:shelf:*:events'] } }),
+        node('producer:api#b.ts:1:1', { type: 'producer', file: 'b.ts', line: 1 }),
+        node('web#p.ts:Page.init', { repo: 'web', label: 'Page.init' }),
+        node('consumer:web#p.ts:Page.init', {
+          type: 'consumer',
+          repo: 'web',
+          label: 'Page.init',
+          meta: { discriminator: 'type', selects: [{ type: 'BOOK_LENT', consumer: 'consumer:web#p.ts:Page.init', via: 'if', line: 3 }] },
+        }),
+      ].map((each) => [each.id, each]),
+    );
+    const edges = new Map(
+      [edge('producer:api#b.ts:1:1', HUB, 'emits'), edge(HUB, 'consumer:web#p.ts:Page.init', 'consumes'), edge('consumer:web#p.ts:Page.init', 'web#p.ts:Page.init', 'handles')].map((each) => [edgeKey(each), each]),
+    );
+    joinMessageTypes(nodes, edges);
+    expect(nodes.has(`${HUB}#BOOK_LENT`)).toBe(false);
+  });
+});
+
+describe('a type selected on a channel that never carries it (P362)', () => {
+  const OTHER = 'channel:desk:*:calls';
+  const joined = (unread: boolean) => {
+    const { nodes, edges } = build();
+    const add = (each: GraphNode) => nodes.set(each.id, each);
+    const join = (each: GraphEdge) => edges.set(edgeKey(each), each);
+    add(node(OTHER, { type: 'channel', label: 'desk:*:calls', meta: { channelKind: 'channel' } }));
+    add(node('producer:api#d.ts:1:1', { type: 'producer', file: 'd.ts', line: 1, meta: { messageTypes: ['DESK_CALLED'], discriminator: 'type' } }));
+    if (unread) add(node('producer:api#d.ts:2:1', { type: 'producer', file: 'd.ts', line: 2, meta: { messageTypeUnread: 'a union', discriminator: 'type' } }));
+    add(node('web#s.ts:Screen.init', { repo: 'web', label: 'Screen.init' }));
+    add(
+      node('consumer:web#s.ts:Screen.init', {
+        type: 'consumer',
+        repo: 'web',
+        label: 'Screen.init',
+        meta: { discriminator: 'type', selects: [{ type: 'DESK_CALLED', consumer: 'consumer:web#s.ts:Screen.init', via: 'if', line: 2 }] },
+      }),
+    );
+    // One stream joins the screen to both channels.
+    join(edge('producer:api#d.ts:1:1', OTHER, 'emits'));
+    if (unread) join(edge('producer:api#d.ts:2:1', CHANNEL, 'emits'));
+    // The shelf channel's own publish whose type was not read is left out unless asked for.
+    else edges.delete(edgeKey(edge('producer:api#a.ts:3:1', CHANNEL, 'emits')));
+    join(edge(OTHER, 'consumer:web#s.ts:Screen.init', 'consumes', { meta: { via: 'sse' } }));
+    join(edge(CHANNEL, 'consumer:web#s.ts:Screen.init', 'consumes', { meta: { via: 'sse' } }));
+    join(edge('consumer:web#s.ts:Screen.init', 'web#s.ts:Screen.init', 'handles'));
+    joinMessageTypes(nodes, edges);
+    return { nodes, edges };
+  };
+
+  it('draws the selection only on the channel whose publishes carry the type', () => {
+    const { nodes } = joined(false);
+    expect(nodes.has(`${OTHER}#DESK_CALLED`)).toBe(true);
+    // Every publish on the shelf channel was read, and none is DESK_CALLED.
+    expect(nodes.has(`${CHANNEL}#DESK_CALLED`)).toBe(false);
+  });
+
+  it('draws it as a guess on a channel with a publish whose type was not read', () => {
+    const { nodes, edges } = joined(true);
+    expect(nodes.has(`${CHANNEL}#DESK_CALLED`)).toBe(true);
+    const drawn = [...edges.values()].find((each) => each.from === `${CHANNEL}#DESK_CALLED`);
+    expect(drawn?.confidence).toBe('heuristic');
+  });
+});

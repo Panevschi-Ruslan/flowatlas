@@ -156,6 +156,32 @@ const MESSAGE_TYPE_CASES = [
 ];
 
 /**
+ * A type published through the project's bus, relayed by a per-board hub onto
+ * stream routes, and chosen by screens subscribed through an rxjs wrapper
+ * (P362): the screens that select a type, one selected only through a stream
+ * service nothing injects, one no screen selects, the channel's consumers, a
+ * type chosen through another service's re-exposing method, and one chosen
+ * through one instance of a generic stream class.
+ */
+const HUB_SUBJECT_CASES = [
+  ['who_consumes.type-filter', 'who_consumes', { channel: 'board:<boardId>:events', type: 'CARD_MOVED' }],
+  ['who_consumes.type-set', 'who_consumes', { channel: 'board:*:events', type: 'CARD_ARCHIVED' }],
+  ['who_consumes.unselected', 'who_consumes', { channel: 'board:*:events', type: 'CARD_COMMENTED' }],
+  ['who_consumes.unreached', 'who_consumes', { channel: 'board:*:events', type: 'BOARD_RENAMED' }],
+  ['who_consumes.channel', 'who_consumes', { channel: 'board:*:events' }],
+  // Through another service's method, cast, the type read in brackets.
+  ['who_consumes.type-re-exposed', 'who_consumes', { channel: 'board:*:events', type: 'CARD_ADDED' }],
+  // Through one instance of a generic stream class, on the channel the routing table hands the hub.
+  ['who_consumes.type-generic-stream', 'who_consumes', { channel: 'crew:<crewId>:shifts', type: 'CREW_ASSIGNED' }],
+  // The trap: a type handed to a helper that works the channel out inside is no channel, and no publish read carries it.
+  ['who_consumes.trap-type', 'who_consumes', { channel: 'board:*:events', type: 'CARD_PINNED' }],
+  ['who_consumes.trap-channel', 'who_consumes', { channel: 'CARD_PINNED' }],
+  // Published only by a direct call to the project's own bus, which no broker description names.
+  ['who_consumes.helper-publish', 'who_consumes', { channel: 'board:*:orders', type: 'SCHEDULED_ALERT' }],
+  ['who_emits.helper-publish', 'who_emits', { channel: 'board:*:orders', type: 'SCHEDULED_ALERT' }],
+];
+
+/**
  * Loops that run a query per item (P89): searched busiest first, each saying
  * how sure it is, and written into the prompt with the ways in that reach it.
  */
@@ -470,6 +496,11 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'space-message-types'),
     outDir: join(root, 'fixtures', 'space-message-types', 'expected.mcp'),
     cases: MESSAGE_TYPE_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'sse-hub-subject-screens'),
+    outDir: join(root, 'fixtures', 'sse-hub-subject-screens', 'expected.mcp'),
+    cases: HUB_SUBJECT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

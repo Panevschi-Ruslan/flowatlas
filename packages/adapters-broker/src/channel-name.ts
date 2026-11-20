@@ -297,6 +297,12 @@ export const resolveChannelName = (
     }
   }
 
+  // A template held in a `const` the checker cannot settle - `const channel =
+  // `board:${id}:events`; publish(channel, …)` - is the channel written there
+  // (P362).
+  const held = heldTemplateOf(expr);
+  if (held !== undefined) return resolveChannelName(held, config);
+
   // A name looked up in a collection by a key worked out when the code runs:
   // the collection is filled at run time - from a listing of the account, a
   // cache - and which name it hands back is nowhere in the source (P268).
@@ -312,6 +318,26 @@ export const resolveChannelName = (
     return { unresolved: 'channel-const-unresolved', text };
   }
   return { unresolved: 'channel-dynamic', text };
+};
+
+/**
+ * The template a name is a `const` of, through names bound to names: the
+ * address a channel written once into a local and handed on is (P362). Only a
+ * `const`, whose value is the one written.
+ */
+const heldTemplateOf = (expr: TsNode): TsNode | undefined => {
+  let current: TsNode = expr;
+  for (let step = 0; step < MOST_BINDINGS; step += 1) {
+    while (Node.isParenthesizedExpression(current) || Node.isAsExpression(current) || Node.isNonNullExpression(current)) current = current.getExpression();
+    if (Node.isTemplateExpression(current)) return step === 0 ? undefined : current;
+    if (!Node.isIdentifier(current)) return undefined;
+    const declaration = current.getSymbol()?.getDeclarations()[0];
+    if (declaration === undefined || !Node.isVariableDeclaration(declaration) || declaration.getVariableStatement()?.getDeclarationKind() !== VariableDeclarationKind.Const) return undefined;
+    const value = declaration.getInitializer();
+    if (value === undefined) return undefined;
+    current = value;
+  }
+  return undefined;
 };
 
 /** How many `const` bindings are followed to the lookup a name is the answer of. */

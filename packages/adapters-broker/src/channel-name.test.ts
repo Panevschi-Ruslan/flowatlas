@@ -1,5 +1,5 @@
 import { parseConfig } from '@flowatlas/core';
-import { Project, type SourceFile } from 'ts-morph';
+import { Project, SyntaxKind, type SourceFile } from 'ts-morph';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { isResolved, nameForKind, resolveChannelName } from './channel-name.js';
 
@@ -402,5 +402,23 @@ describe('resolving which channel a call addresses', () => {
       expect(of('fromTwoVariables')).not.toHaveProperty('otherwise');
       expect(of('fromEnvironment')).not.toHaveProperty('otherwise');
     });
+  });
+});
+
+describe('a channel held in a const of the function (P362)', () => {
+  const resolvedIn = (body: string) => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const source = project.createSourceFile('held.ts', `declare function publish(channel: string, message: unknown): void;\nexport function send(id: string, other: string) {\n${body}\n}`);
+    const call = source.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'publish')!;
+    return resolveChannelName(call.getArguments()[0]!, config);
+  };
+
+  it('reads a template written into a const, and through a name bound to it', () => {
+    expect(resolvedIn('const channel = `board:${id}:orders`; publish(channel, {});')).toMatchObject({ name: 'board:*:orders', via: 'template' });
+    expect(resolvedIn('const written = `board:${id}:orders`; const channel = written; publish(channel, {});')).toMatchObject({ name: 'board:*:orders' });
+  });
+
+  it('reads nothing from a let, whose value is whichever was given last', () => {
+    expect(resolvedIn('let channel = `board:${id}:orders`; channel = other; publish(channel, {});')).not.toHaveProperty('name');
   });
 });
