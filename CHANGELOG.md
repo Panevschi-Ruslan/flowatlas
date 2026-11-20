@@ -2156,6 +2156,18 @@ only one of them moved.
 
 ### Fixed
 
+- **A channel asked for as code writes it answers, and no answer suggests a
+  tool the server does not list (P360).** Every MCP tool that takes a channel
+  accepts it with or without `channel:` and with a placeholder in any part
+  (`tenant:<id>:events`, `{id}`, `${id}`, `${ctx.id}`, `:id`, `[id]`) or a
+  value it takes (`tenant:42:events`): the one channel it denotes answers,
+  saying which in `channelUsed`, and several are listed with the call that
+  takes each. An exact name answers as before. Every answer, prompt and the
+  server's instructions leave out a call to a tool the running server hides:
+  on a database alone, where `get_source` is not listed, a hint to read a
+  step says the file and line to read and that the code is not served from a
+  database alone. `start_here`'s `hidden` still says which tools are not
+  listed and when they appear.
 - **`get_source` and `explain` return a decorated declaration whole.** Where a
   declaration ends is found by counting braces from where it starts, and a
   decorated method's or class's recorded start is its first decorator - one

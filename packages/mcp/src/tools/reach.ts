@@ -290,6 +290,8 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
               ...(unsure === undefined ? {} : { seenAmbiguous: unsure }),
             },
             ...(found.alsoAnswers === undefined ? {} : { alsoAnswers: found.alsoAnswers }),
+          ...(found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed }),
+            ...(found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed }),
             // Nothing calls the target itself: a lead, not a verdict (D3).
             ...(targetIsTop ? { topOfChain: true, gapsInFile: walked.targetTop } : {}),
             callers: slimForest(callers, target.repo === '' ? undefined : target.repo),

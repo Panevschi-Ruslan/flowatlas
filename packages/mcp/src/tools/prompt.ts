@@ -4,6 +4,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail } from '../query/detail.js';
 import { withDocs } from '../query/docs.js';
+import { resolveChannelRef } from '../query/channel-ref.js';
 import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import { failuresSeenRef, type FailuresSeenRef } from '../query/fails.js';
@@ -36,13 +37,22 @@ import { specOfNode } from './spec.js';
  * The node an id names: as it is, as a channel without its prefix, or as an
  * entry said aloud. Anything else is a list of near names, never a guess.
  */
-const subjectOf = (db: GraphDb, ref: string): { node: GraphNode; alsoAnswers?: string[] } | GraphNode[] => {
+const subjectOf = (db: GraphDb, ref: string): { node: GraphNode; alsoAnswers?: string[]; channelUsed?: string } | GraphNode[] => {
   const trimmed = ref.trim();
   const exact = db.node(trimmed) ?? db.node(`channel:${trimmed}`);
   if (exact !== undefined) return { node: exact };
   const entry = resolveEntryRef(db, trimmed);
-  if (isResolved(entry)) return { node: entry.node, ...(entry.alsoAnswers === undefined ? {} : { alsoAnswers: entry.alsoAnswers }) };
+  if (isResolved(entry)) {
+    return {
+      node: entry.node,
+      ...(entry.alsoAnswers === undefined ? {} : { alsoAnswers: entry.alsoAnswers }),
+      ...(entry.channelUsed === undefined ? {} : { channelUsed: entry.channelUsed }),
+    };
+  }
   if (entry.candidates.length > 0) return entry.candidates;
+  // A channel by a value it takes (`tenant:42:events`, P360), when nothing else answers to it.
+  const valued = resolveChannelRef(db, trimmed);
+  if (valued !== undefined) return 'candidates' in valued ? valued.candidates : { node: valued.node, ...(valued.channelUsed === undefined ? {} : { channelUsed: valued.channelUsed }) };
   return nearNames(db.search(trimmed, { limit: 200 }), trimmed, 5);
 };
 
@@ -113,15 +123,16 @@ const answer = (
   subject: PromptSubject,
   input: { maxSteps: number; maxChars: number },
   alsoAnswers?: string[],
-  extra: { docs?: unknown[]; failures?: FailuresSeenRef } = {},
+  extra: { docs?: unknown[]; failures?: FailuresSeenRef; channelUsed?: string } = {},
 ) => {
   const next = askNextOf(subject);
   const markdown = describeForPrompt(subject, { ...PROMPT_LIMITS, maxSteps: input.maxSteps, maxChars: input.maxChars });
-  const { docs, failures } = extra;
+  const { docs, failures, channelUsed } = extra;
   return withNext(
     {
       id,
       ...(alsoAnswers === undefined ? {} : { alsoAnswers }),
+      ...(channelUsed === undefined ? {} : { channelUsed }),
       markdown,
       ...(docs === undefined ? {} : { docs }),
       ...(failures === undefined ? {} : { failures }),
@@ -245,6 +256,7 @@ export const describeAnswer = (db: GraphDb, ctx: ToolContext, input: DescribeInp
   // An entry seen at run time carries the comparison as data too (P106), beside the text that says it.
   const compared = counts === undefined ? undefined : failuresSeen(counts, found.node);
   return answer(found.node.id, subject, input, found.alsoAnswers, {
+    ...(found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed }),
     ...withDocs(db, ctx.handle.path, found.node.id),
     ...(compared === undefined ? {} : { failures: failuresSeenRef(compared) }),
   });

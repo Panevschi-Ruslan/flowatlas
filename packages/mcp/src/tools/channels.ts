@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { resolveChannelRef } from '../query/channel-ref.js';
 import { projectDetail, truncate } from '../query/detail.js';
 import { nearNames } from '../query/names.js';
 import { MAX_NEXT, nextFor, withNext } from '../query/next.js';
@@ -23,6 +24,8 @@ const endsOutput = (key: 'producers' | 'consumers') => ({
   channel: nodeOutput,
   [key]: z.array(nodeOutput),
   ...pageOutput,
+  /** The channel id answered for, when the name asked was written another way (`tenant:<id>:events`, P360). */
+  channelUsed: z.string().optional(),
   note: z.string().optional(),
   next: nextOutput,
 });
@@ -35,6 +38,9 @@ const channelId = (ref: string): string => {
   const trimmed = ref.trim();
   return trimmed.startsWith('channel:') ? trimmed : `channel:${trimmed}`;
 };
+
+/** How many channels a name written with placeholders lists when it fits several. */
+const MAX_FITTING = 8;
 
 export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
   const ends = (
@@ -60,17 +66,26 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
       (input) =>
         withDb(ctx.handle, (db) => {
           const { detail, maxNodes, note } = bound(input);
-          const id = channelId(input.channel);
-          const channel = db.node(id);
-          if (channel === undefined) {
-            // The nearest names, each a call that takes it (P94): a typo is
-            // one step from its channel, not a dead end.
-            const near = nearNames(db.nodesByType('channel'), input.channel.trim().replace(/^channel:/, ''), 5);
+          const found = resolveChannelRef(db, input.channel);
+          if (found === undefined || 'candidates' in found) {
+            // Written with placeholders and fitting several: each, as the call that takes it.
+            const fitting = found?.candidates.slice(0, MAX_FITTING);
+            // Otherwise the nearest names, each a call that takes it (P94): a
+            // typo is one step from its channel, not a dead end.
+            const near = fitting ?? nearNames(db.nodesByType('channel'), input.channel.trim().replace(/^channel:/, ''), 5);
             return withNext(
-              { error: `no channel named ${JSON.stringify(id)}`, suggestions: near.map((node) => projectDetail(node, 0)) },
+              {
+                error:
+                  found === undefined
+                    ? `no channel named ${JSON.stringify(channelId(input.channel))}`
+                    : `${JSON.stringify(input.channel.trim())} fits ${found.candidates.length} channels; ask for one of them`,
+                suggestions: near.map((node) => projectDetail(node, 0)),
+              },
               near.slice(0, MAX_NEXT).map((node) => `${name}({channel: ${JSON.stringify(node.id)}})`),
             );
           }
+          const channel = found.node;
+          const id = channel.id;
 
           // A publisher points at the channel; the channel points at a handler.
           const edges =
@@ -90,6 +105,7 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
               [key]: items.map((node) => projectDetail(node, detail)),
               total,
               ...(nextOffset === undefined ? {} : { truncated, nextOffset }),
+              ...(found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed }),
               ...(note === undefined ? {} : { note }),
             },
             pagedNext(

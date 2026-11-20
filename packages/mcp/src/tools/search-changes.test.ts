@@ -142,7 +142,9 @@ beforeAll(async () => {
   );
   saveAccepted(dbPath, [{ reason: 'db-receiver-name-only', note: 'known; read by name', acceptedAt: FIXED }]);
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
-  await createFlowatlasServer({ dbPath }).connect(serverSide);
+  // Every tool listed: these questions are about the calls an answer names, which a
+  // server on a database alone would trim to the tools it lists (P360).
+  await createFlowatlasServer({ dbPath, allTools: true }).connect(serverSide);
   client = new Client({ name: 'test', version: '0' });
   await client.connect(clientSide);
 });

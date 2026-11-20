@@ -1,5 +1,6 @@
 import { normalizePath, type GraphNode } from '@flowatlas/core';
 import { answeringAt, isMatch, matchRoute, type GraphDb } from '@flowatlas/linker';
+import { resolveChannelRef } from './channel-ref.js';
 import { rankMatches } from './names.js';
 
 /**
@@ -8,8 +9,10 @@ import { rankMatches } from './names.js';
  * `alsoAnswers` is set on a route said aloud that a less specific route
  * answers too (P94 D2): the most specific one is the answer, as the router
  * would have it, and the others are named so nothing is hidden.
+ * `channelUsed` is set on a channel written another way than the graph
+ * spells it (`tenant:<id>:events`, P360): the channel id answered for.
  */
-export type Resolved = { id: string; node: GraphNode; alsoAnswers?: string[] };
+export type Resolved = { id: string; node: GraphNode; alsoAnswers?: string[]; channelUsed?: string };
 export type EntryRef = Resolved | { candidates: GraphNode[] };
 
 export const isResolved = (ref: EntryRef): ref is Resolved => 'id' in ref;
@@ -112,6 +115,18 @@ export const resolveEntryRef = (db: GraphDb, ref: string): EntryRef => {
     );
     if (matches.length === 1) return { id: matches[0]!.id, node: matches[0]! };
     if (matches.length > 1) return { candidates: byId(matches) };
+  }
+
+  // A channel written with placeholders (`tenant:<id>:events`) or with its
+  // prefix and a value it takes (`channel:tenant:42:events`), P360: the
+  // channel it denotes, or the channels it fits. A plain word is not read as
+  // one here: any tool's name is far more often a symbol's.
+  const channel = resolveChannelRef(db, trimmed, { anyName: true });
+  if (channel !== undefined) {
+    if (!('candidates' in channel)) {
+      return { id: channel.node.id, node: channel.node, ...(channel.channelUsed === undefined ? {} : { channelUsed: channel.channelUsed }) };
+    }
+    return { candidates: channel.candidates };
   }
 
   // Last resort: an entry whose label is exactly what was asked for.

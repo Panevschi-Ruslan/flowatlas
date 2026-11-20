@@ -1,0 +1,27 @@
+{
+  "channel": {
+    "id": "channel:order:*:opened",
+    "type": "channel",
+    "label": "order:*:opened",
+    "loc": "src/orders/orders.service.ts:26",
+    "service": "api"
+  },
+  "producers": [
+    {
+      "id": "producer:api#src/orders/orders.service.ts:26:5",
+      "type": "producer",
+      "label": "event order:*:closed, order:*:on-hold, order:*:opened",
+      "loc": "src/orders/orders.service.ts:26",
+      "service": "api",
+      "kind": "event"
+    }
+  ],
+  "total": 1,
+  "channelUsed": "channel:order:*:opened",
+  "next": [
+    "who_consumes({channel: \"channel:order:*:opened\"})",
+    "who_calls({symbol: \"producer:api#src/orders/orders.service.ts:26:5\"})",
+    "impact({symbol: \"producer:api#src/orders/orders.service.ts:26:5\"})",
+    "read src/orders/orders.service.ts:26 in api: the code is not served from a database alone"
+  ]
+}

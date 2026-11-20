@@ -269,6 +269,30 @@ const RULES_CASES = [
 ];
 
 /**
+ * A channel asked for as code writes it, of a server started on a database
+ * alone (P360): `fixtures/folded-channels`, whose channels are named at run
+ * time (`order:*:closed`). A placeholder and a value each answer for the one
+ * channel they denote, saying which; a name that fits several lists them; and
+ * with no configuration `get_source` is not listed, so an answer that would
+ * send the agent to read a step says the file and line instead.
+ */
+const foldedChannels = join(root, 'fixtures', 'folded-channels');
+const DATABASE_ALONE_CASES = [
+  ['tools.listed', '#listToolNames', {}],
+  ['who_consumes.placeholder', 'who_consumes', { channel: 'order:<orderId>:closed' }],
+  ['who_emits.template', 'who_emits', { channel: 'channel:order:${order.id}:opened' }],
+  ['who_consumes.value', 'who_consumes', { channel: 'order:42:on-hold' }],
+  ['who_consumes.several', 'who_consumes', { channel: 'order:{id}:{state}' }],
+  ['describe_for_prompt.placeholder', 'describe_for_prompt', { id: 'order:<orderId>:closed' }],
+  ['dead.handler', 'dead', { id: 'consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed' }],
+];
+const databaseAloneCopy = () => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-mcp-database-alone-'));
+  cpSync(join(foldedChannels, '.flowatlas'), copy, { recursive: true });
+  return copy;
+};
+
+/**
  * What a client asks besides a tool, by the name a case gives it, and the
  * document recorded: the listing as it comes, a resource's JSON read back.
  */
@@ -471,6 +495,14 @@ const SUITES = [
     options: { reasonCatalog: reasonCatalog() },
   },
   {
+    fixture: foldedChannels,
+    outDir: join(foldedChannels, 'expected.mcp.database-alone'),
+    cases: DATABASE_ALONE_CASES,
+    copy: databaseAloneCopy,
+    // `flowatlas mcp --db` with no configuration: no repository is known, so no code is served.
+    noConfig: true,
+  },
+  {
     outDir: join(root, 'fixtures', 'multi-repo-deployed', 'expected.mcp'),
     cases: DEPLOYED_CASES,
     // Made, built and checked each run, and removed after: the fixture is three histories as files.
@@ -488,7 +520,7 @@ for (const suite of SUITES) {
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
   const copy = suite.copy?.();
   const server = createFlowatlasServer({
-    configPath,
+    ...(suite.noConfig === true ? {} : { configPath }),
     // Nothing changes under a suite while it runs; the list is decided at each question.
     toolsPollMs: 0,
     ...(copy === undefined ? {} : { dbPath: join(copy, 'graph.db') }),

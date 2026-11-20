@@ -220,7 +220,14 @@ export const prReview = (dbPath: string, base: string | undefined): GetPromptRes
     '',
     ...stepsOf([callOf('what_changed', { verdict: true })]),
     '',
-    'Then ask the calls its `next` gives, in order: `get_flow` on the first way in under `retest`, `check_contract` on the first break, `get_source` on the method of the first new gap, `who_calls` on a caller under `vanishedTargets`. A cut answer says `nextOffset`: ask again from it.',
+    'Then ask the calls its `next` gives, in order:',
+    '',
+    '- `get_flow` on the first way in under `retest`',
+    '- `check_contract` on the first break',
+    '- `get_source` on the method of the first new gap',
+    '- `who_calls` on a caller under `vanishedTargets`',
+    '',
+    'A cut answer says `nextOffset`: ask again from it.',
     '',
     'Write the review as: the verdict and each reason under `because`, the calls that lost their target and what to do about each, the new gaps a change cannot be seen past, and the ways in to retest, busiest first. Name ids; do not paste code.',
   ]);
@@ -294,6 +301,8 @@ const withDbPrompt = (ctx: ToolContext, description: string, run: (db: GraphDb) 
 };
 
 export const registerPrompts = (server: McpServer, ctx: ToolContext): void => {
+  // A prompt names the calls to make: none to a tool this server does not list (P360).
+  const offered = (result: GetPromptResult): GetPromptResult => ctx.listing?.offeredPrompt?.(result) ?? result;
   server.registerPrompt(
     'before-rename',
     {
@@ -301,7 +310,7 @@ export const registerPrompts = (server: McpServer, ctx: ToolContext): void => {
       description: 'The calls to make before renaming a symbol, route, channel or type: who calls it, what reaches it, the crossings it is on.',
       argsSchema: { symbol: z.string().describe('an id, a name, or a route said aloud, e.g. "POST /orders"') },
     },
-    ({ symbol }) => withDbPrompt(ctx, `Before renaming ${symbol}`, (db) => beforeRename(db, symbol)),
+    ({ symbol }) => offered(withDbPrompt(ctx, `Before renaming ${symbol}`, (db) => beforeRename(db, symbol))),
   );
   server.registerPrompt(
     'pr-review',
@@ -310,7 +319,7 @@ export const registerPrompts = (server: McpServer, ctx: ToolContext): void => {
       description: 'Review the branch from the last flowatlas diff: the verdict, its reasons, and the calls that check them.',
       argsSchema: { base: z.string().optional().describe('the ref it merges into, e.g. main') },
     },
-    ({ base }) => prReview(ctx.handle.path, base),
+    ({ base }) => offered(prReview(ctx.handle.path, base)),
   );
   server.registerPrompt(
     'trace-route',
@@ -319,6 +328,6 @@ export const registerPrompts = (server: McpServer, ctx: ToolContext): void => {
       description: 'Trace a way in end to end: its flow, each crossing checked, what the reading could not follow.',
       argsSchema: { route: z.string().describe('a way in, e.g. "POST /orders" or an entry id') },
     },
-    ({ route }) => withDbPrompt(ctx, `Trace ${route}`, (db) => traceRoute(db, route)),
+    ({ route }) => offered(withDbPrompt(ctx, `Trace ${route}`, (db) => traceRoute(db, route))),
   );
 };

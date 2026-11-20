@@ -216,12 +216,18 @@ describe('the tools a session is offered', () => {
    * line each, which a client checks answers against and no model reads.
    * 13,192 read as before; 32,764 and 28,655 in all, the full ceilings to the
    * next 50.
+   *
+   * P360 gave the output schemas of `who_emits`, `who_consumes` and `dead`
+   * `channelUsed` (the channel a name written with placeholders denotes), one
+   * field each that a client checks answers against and no model reads; what
+   * a channel argument accepts is said once in the instructions. 13,192 read
+   * as before; 32,867 and 28,758 in all, the full ceilings to the next 50.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
     expect(read.length).toBeLessThan(13200);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(32800);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(32900);
   });
 
   /**
@@ -242,7 +248,7 @@ describe('the tools a session is offered', () => {
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
       expect(read.length).toBeLessThan(10150);
-      expect(JSON.stringify({ tools }).length).toBeLessThan(28700);
+      expect(JSON.stringify({ tools }).length).toBeLessThan(28800);
     } finally {
       await plain.close();
     }

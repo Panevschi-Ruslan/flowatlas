@@ -1,0 +1,27 @@
+{
+  "channel": {
+    "id": "channel:order:*:on-hold",
+    "type": "channel",
+    "label": "order:*:on-hold",
+    "loc": "src/orders/orders.service.ts:26",
+    "service": "api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onHeld",
+      "type": "consumer",
+      "label": "LifecycleProjections.onHeld",
+      "loc": "src/projections/lifecycle.service.ts:25",
+      "service": "worker",
+      "kind": "event"
+    }
+  ],
+  "total": 1,
+  "channelUsed": "channel:order:*:on-hold",
+  "next": [
+    "who_emits({channel: \"channel:order:*:on-hold\"})",
+    "who_calls({symbol: \"consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onHeld\"})",
+    "impact({symbol: \"consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onHeld\"})",
+    "read src/projections/lifecycle.service.ts:25 in worker: the code is not served from a database alone"
+  ]
+}

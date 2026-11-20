@@ -1,8 +1,9 @@
 import { statSync } from 'node:fs';
-import { ConfigInvalidError, observedPathFor, ruleSetOf, type McpSettings } from '@flowatlas/core';
+import { ConfigInvalidError, observedPathFor, ruleSetOf, type FlowatlasConfig, type McpSettings } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer, RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ListToolsRequestSchema, type GetPromptResult } from '@modelcontextprotocol/sdk/types.js';
+import { offeredOnly, offeredText, type Offer } from './offered.js';
 import type { DbHandle } from './query/db.js';
 import { loggedCall, questionLogSettings, type QuestionLogSettings } from './query/questions.js';
 import { nearWords } from './query/names.js';
@@ -67,6 +68,38 @@ export const listingSettingsOf = (
 
 type Handler = (request: never, extra: never) => unknown;
 
+/** Whether a configuration holds an architecture rule, which `check_rules` needs (read once: the configuration is not read again). */
+export const rulesConfigured = (config: FlowatlasConfig | undefined): boolean => config !== undefined && ruleSetOf(config).rules.length > 0;
+
+/** Why no code is served, when `get_source` is not listed: said after where to read it instead (P360). */
+export const noCodeSaid = (settings: ListingSettings): string =>
+  settings.exclude.has('get_source') ? 'this server is set not to serve code (mcp.exclude)' : 'the code is not served from a database alone';
+
+/**
+ * The tools this server can never list, whatever is built (P360): turned off
+ * by `mcp.exclude`, or needing only what the server was started without - a
+ * configuration (`get_source`), its rules (`check_rules`), the pattern
+ * tester. Decided once, before the first question, so the instructions a
+ * session is given at the start name none of them.
+ */
+export const neverListed = (settings: ListingSettings, started: { sources: boolean; rules: boolean; tester: boolean }): Set<ToolName> => {
+  const facts: ToolFacts = {
+    graph: { nodes: new Set(), entryKinds: new Set(), edges: new Set(), types: 0 },
+    observed: false,
+    changes: false,
+    ...started,
+  };
+  const fixed = (need: Need): boolean => NEEDS[need].from === 'server options' || NEEDS[need].from === 'configuration';
+  return new Set(
+    TOOL_NAMES.filter((name) => {
+      if (settings.exclude.has(name)) return true;
+      if (settings.tools === 'all' || settings.include.has(name)) return false;
+      const needs: readonly Need[] = TOOL_NEEDS[name];
+      return needs.every((need) => fixed(need) && !NEEDS[need].holds(facts));
+    }),
+  );
+};
+
 /** A file's timestamp, or -1 when there is none: what the poll compares. */
 const stamped = (path: string): number => {
   try {
@@ -113,7 +146,7 @@ export class ToolListing {
     this.#handle = options.handle;
     this.#settings = options.settings;
     this.#tester = options.tester;
-    this.#rules = options.handle.config !== undefined && ruleSetOf(options.handle.config).rules.length > 0;
+    this.#rules = rulesConfigured(options.handle.config);
     this.#pollMs = options.pollMs ?? LISTING_POLL_MS;
     this.#log = questionLogSettings(options.handle.config);
     options.handle.onChange(() => this.refresh(true));
@@ -210,6 +243,41 @@ export class ToolListing {
     return [...groups].map(([when, names]) => `${names.join(', ')}: ${when}`).join(' · ');
   }
 
+  /**
+   * What an answer may name now (P360): the tools not listed, and where a
+   * symbol's code is to be read when `get_source` is one of them. Undefined
+   * when every tool is listed.
+   */
+  offer(): Offer | undefined {
+    const hidden = new Set(TOOL_NAMES.filter((name) => this.#tools.get(name)?.enabled === false));
+    if (hidden.size === 0) return undefined;
+    const handle = this.#handle;
+    return {
+      hidden,
+      noCode: noCodeSaid(this.#settings),
+      readAt: (symbol, line) => {
+        const opened = handle.open();
+        const node = 'db' in opened ? opened.db.node(symbol) : undefined;
+        if (node?.file === undefined) return undefined;
+        const at = line ?? node.line;
+        return `${at === undefined ? node.file : `${node.file}:${at}`}${node.repo === '' ? '' : ` in ${node.repo}`}`;
+      },
+    };
+  }
+
+  /** A prompt's text with no call to a tool not listed (P360), the list decided first as before a call. */
+  offeredPrompt(result: GetPromptResult): GetPromptResult {
+    this.refresh(true);
+    const offer = this.offer();
+    if (offer === undefined) return result;
+    return {
+      ...result,
+      messages: result.messages.map((message) =>
+        message.content.type === 'text' ? { ...message, content: { ...message.content, text: offeredText(message.content.text, offer) } } : message,
+      ),
+    };
+  }
+
   /** Why a tool is not listed, as the answer to a call of it; undefined for a listed one. */
   refusal(name: string): { error: string; needs: Need[] } | undefined {
     if (!isToolName(name) || this.#tools.get(name)?.enabled !== false) return undefined;
@@ -275,7 +343,8 @@ export class ToolListing {
         this.start();
         const refused = this.refusal(request.params.name);
         if (refused !== undefined) return respond(refused);
-        if (!this.#log.enabled) return handler(request as never, extra);
+        const answered = () => this.#offered(handler(request as never, extra));
+        if (!this.#log.enabled) return answered();
         // Logged here, once for every tool, so a tool added later is logged too (P235).
         const handle = this.#handle;
         const db = (): GraphDb | undefined => {
@@ -283,9 +352,36 @@ export class ToolListing {
           return 'db' in opened ? opened.db : undefined;
         };
         const call = { via: 'mcp' as const, tool: request.params.name, args: request.params.arguments ?? {} };
-        return loggedCall({ settings: this.#log, dbPath: handle.path, db }, call, () => handler(request as never, extra));
+        return loggedCall({ settings: this.#log, dbPath: handle.path, db }, call, answered);
       }) as Handler;
     }
     return handler;
+  }
+
+  /**
+   * An answer with no suggestion of a tool not listed (P360), whichever tool
+   * wrote it: the one place every answer passes, so a tool added later is
+   * held to it too. The text and `structuredContent` stay one document.
+   */
+  #offered(result: unknown): unknown {
+    if (result instanceof Promise) return result.then((settled: unknown) => this.#offered(settled));
+    const offer = this.offer();
+    const answer = result as { content?: Array<{ type: string; text?: string }>; structuredContent?: Record<string, unknown> } | undefined;
+    const first = answer?.content?.[0];
+    if (offer === undefined || answer === undefined || first?.type !== 'text' || typeof first.text !== 'string') return result;
+    let document: unknown;
+    try {
+      document = answer.structuredContent ?? JSON.parse(first.text);
+    } catch {
+      return { ...answer, content: [{ ...first, text: offeredText(first.text, offer) }, ...(answer.content ?? []).slice(1)] };
+    }
+    const kept = offeredOnly(document, offer);
+    if (kept === document) return result;
+    const text = JSON.stringify(kept);
+    return {
+      ...answer,
+      content: [{ ...first, text }, ...(answer.content ?? []).slice(1)],
+      ...(answer.structuredContent === undefined ? {} : { structuredContent: JSON.parse(text) as Record<string, unknown> }),
+    };
   }
 }

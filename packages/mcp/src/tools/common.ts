@@ -1,5 +1,6 @@
 import type { DetailLevel, EntryShapes, GraphEdge } from '@flowatlas/core';
 import type { MissingGroup, GraphDb } from '@flowatlas/linker';
+import type { GetPromptResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { CLAMP_NOTE, clampDetail } from '../query/detail.js';
 import type { DbHandle } from '../query/db.js';
@@ -56,8 +57,11 @@ export interface ToolContext {
   missingCandidates?: MissingCandidates;
   /** Filled by the contracts package: a route's traffic shapes against its code (P113). */
   trafficChecker?: TrafficChecker;
-  /** The tools not listed and when each appears, for `start_here` to say in one line (P201). */
-  listing?: { hiddenLine(): string | undefined };
+  /**
+   * The tools not listed and when each appears, for `start_here` to say in
+   * one line (P201); and a prompt's text without a call to one of them (P360).
+   */
+  listing?: { hiddenLine(): string | undefined; offeredPrompt?(result: GetPromptResult): GetPromptResult };
 }
 
 /** The directories that look like each group's repository, by path, aligned with `groups`. */

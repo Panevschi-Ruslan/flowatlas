@@ -69,3 +69,12 @@ are ordinary methods, and `adapters.broker.custom` in `flowatlas.config.json` is
 what makes them a producer and a subscriber (I2: ordinary configuration, not a
 privileged code path). Each repository carries its own copy of the client, which
 is how a project that has not yet extracted a shared package actually looks.
+
+## Asked as code writes it (P360)
+
+`expected.mcp.database-alone/` holds what the MCP server answers when started
+on this graph's database with no configuration: `order:<orderId>:closed`,
+`order:${order.id}:opened` and `order:42:on-hold` each answer for the one
+channel the graph names with a `*` there (`channelUsed`), `order:{id}:{state}`
+lists the four it fits, and since no repository is known no answer names
+`get_source`: a step to read is said by its file and line.

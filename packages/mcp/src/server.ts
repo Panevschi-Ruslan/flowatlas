@@ -24,7 +24,9 @@ import { registerSpec } from './tools/spec.js';
 import { registerStart } from './tools/start.js';
 import { registerTypeUsage } from './tools/type-usage.js';
 import { registerTypes } from './tools/types.js';
-import { listingSettingsOf, ToolListing } from './tool-listing.js';
+import { listingSettingsOf, neverListed, noCodeSaid, rulesConfigured, ToolListing } from './tool-listing.js';
+import { offeredText } from './offered.js';
+import type { ToolName } from './tool-needs.js';
 
 export const SERVER_NAME = 'flowatlas';
 
@@ -35,14 +37,14 @@ export const SERVER_NAME = 'flowatlas';
  * `id` the next tool takes as it is, and every answer ends with `next`, the
  * calls that take the ids it just returned.
  */
-export const INSTRUCTIONS = [
+const INSTRUCTION_LINES: readonly string[] = [
   'A map of every repository in this project, already joined. Ask it what reaches what instead of reading files.',
   // The same questions the files `flowatlas agents install` writes list (P227).
   agentQuestionsLine(),
   'Begin with start_here: counts per service, the most common gaps, and entry ids to start from.',
   'Every row carries an `id` that the next tool accepts as it is, and every answer ends with `next`, the calls that take those ids. The chains:',
   '- entry: list_entries -> get_flow({entry: id}) -> get_source({symbol: id}) on the step that matters.',
-  '- channel: who_emits / who_consumes({channel: id}) -> get_flow({entry: id}) on a handler.',
+  '- channel: who_emits / who_consumes({channel: id}) -> get_flow({entry: id}) on a handler. A channel written as code writes it (`tenant:<id>:events`, `{id}`, `${id}`, `:id`, `[id]`, or a value) answers for the one channel it denotes, saying which in `channelUsed`; several are listed.',
   '- symbol: find_symbol -> who_calls / impact({symbol: id}) -> get_flow on an entry it names.',
   '- shape: get_type({type: id}) -> type_usage({type: id}): every way in, crossing, channel and call that takes or returns it, and the types holding it; check_contract for whether two services still agree; get_spec({service}) writes the routes of a service as OpenAPI 3.1 or its channels as AsyncAPI 3.0 (`kind`), and `path` ("GET /orders/{id}", a channel address) answers one operation with the schemas it uses.',
   '- search({query}) finds a route, channel, table, type, class or gap by name; what_changed reads the last flowatlas diff.',
@@ -62,7 +64,28 @@ export const INSTRUCTIONS = [
   'Prompts before-rename, pr-review and trace-route write out the calls those reviews take, ids resolved; resources flowatlas://reasons (why a step was not followed) and flowatlas://services/{name} read without asking. what_changed({verdict: true}) says safe, unsafe or unknown, and why.',
   'Only the tools this project can answer are listed: the run-time ones after flowatlas observe, check_rules with rules configured, what_changed after flowatlas diff, the channel and type tools once the graph holds one. start_here says what is not listed in `hidden`; the list changes as the project does.',
   '`detail` is 0 for ids only, 1 (the default) adds file:line, service and kind, 2 adds what the reader knows about each row; 3 is answered at 2.',
-].join('\n');
+];
+
+/** The line that says when each tool appears: naming one there is the point, so it is said whatever is listed. */
+const LISTING_LINE = INSTRUCTION_LINES.find((line) => line.startsWith('Only the tools this project can answer')) as string;
+
+/** Said instead of the chains' last step when the server serves no code (P360). */
+const NO_CODE_LINE = 'This server serves no code: to read a step, open the `loc` (file:line, at `detail` 1) its row gives, in its repository.';
+
+export const INSTRUCTIONS = INSTRUCTION_LINES.join('\n');
+
+/**
+ * The instructions for a server that can never list `never` (P360): each
+ * chain without the step a session could not take, so the first thing it
+ * reads names no tool it will not find, and where code is to be read when
+ * no code is served.
+ */
+export const instructionsFor = (never: ReadonlySet<ToolName>, noCode: string): string => {
+  if (never.size === 0) return INSTRUCTIONS;
+  const offer = { hidden: never, noCode };
+  const lines = INSTRUCTION_LINES.map((line) => (line === LISTING_LINE ? line : offeredText(line, offer))).filter((line) => line !== '');
+  return [...lines, ...(never.has('get_source') ? [NO_CODE_LINE] : [])].join('\n');
+};
 
 export interface ServerOptions extends DbHandleOptions {
   /** Field-level contract rules, when the contracts package is installed. */
@@ -131,10 +154,16 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
     ...(handle.configPath === undefined ? {} : { configPath: handle.configPath }),
   });
 
+  const never = neverListed(settings, {
+    sources: handle.config !== undefined,
+    rules: rulesConfigured(handle.config),
+    tester: options.patternTester !== undefined,
+  });
+
   const server = new McpServer(
     { name: SERVER_NAME, version: options.version ?? '0.0.0' },
     {
-      instructions: INSTRUCTIONS,
+      instructions: instructionsFor(never, noCodeSaid(settings)),
       // The list follows the project, so a client is told when it changes.
       capabilities: { tools: { listChanged: true } },
     },

@@ -1,0 +1,11 @@
+{
+  "id": "channel:order:*:closed",
+  "channelUsed": "channel:order:*:closed",
+  "markdown": "# Channel: order:*:closed\n\n`channel:order:*:closed` — channel in api at `src/orders/orders.service.ts:26`\n\nRead from the source by flowatlas, without running it. Steps are in call order; a best guess is a join it inferred, not one the code proves.\n\n## Published by · 1\n\n- **event order:*:closed, order:*:on-hold, order:*:opened** `producer:api#src/orders/orders.service.ts:26:5` — api `src/orders/orders.service.ts:26`\n\n## Consumed by · 1\n\n- **LifecycleProjections.onClosed** `consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed` — worker `src/projections/lifecycle.service.ts:26` — consumes (static)\n  - **LifecycleProjections.onClosed** `worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed` — worker `src/projections/lifecycle.service.ts:37` — handles (static) — takes `type:worker#LifecycleEvent`; returns `void`\n\n## Shapes\n\n- in: `type:worker#LifecycleEvent`\n- out: `void`\n\n## Gaps\n\n- none recorded on this chain\n\n## Ask next\n\n- `who_emits({channel: \"channel:order:*:closed\"})`\n- `who_consumes({channel: \"channel:order:*:closed\"})`\n- `describe_for_prompt({id: \"channel:order:*:closed\"})`\n- `who_calls({symbol: \"consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed\"})`\n",
+  "next": [
+    "who_emits({channel: \"channel:order:*:closed\"})",
+    "who_consumes({channel: \"channel:order:*:closed\"})",
+    "describe_for_prompt({id: \"channel:order:*:closed\"})",
+    "who_calls({symbol: \"consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed\"})"
+  ]
+}

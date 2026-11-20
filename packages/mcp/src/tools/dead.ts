@@ -14,7 +14,8 @@ import {
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, truncate } from '../query/detail.js';
-import { isResolved, resolveSymbol } from '../query/entry-ref.js';
+import { resolveChannelRef } from '../query/channel-ref.js';
+import { isResolved, resolveSymbol, type EntryRef } from '../query/entry-ref.js';
 import { nearNames } from '../query/names.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import type { DbHandle } from '../query/db.js';
@@ -164,6 +165,7 @@ export const deadOutput = {
   role: z.string().optional(),
   evidence: evidenceOutput.optional(),
   alsoAnswers: z.array(z.string()).optional(),
+  channelUsed: z.string().optional(),
   rows: z.array(deadRowOutput).optional(),
   counts: z.record(z.string(), z.number()).optional(),
   excludedEntryKinds: z.array(z.string()).optional(),
@@ -173,10 +175,20 @@ export const deadOutput = {
   next: nextOutput,
 };
 
-/** One node, by any name a tool takes; a channel by its bare name too. */
+/**
+ * One node, by any name a tool takes; a channel by its bare name too, and as
+ * a value it takes (`tenant:42:events`) when nothing else answers to it (P360).
+ */
 const answerOne = (db: GraphDb, ctx: ToolContext, ref: string): object => {
   const channel = db.node(`channel:${ref.trim()}`);
-  const found = channel === undefined ? resolveSymbol(db, ref) : { id: channel.id, node: channel };
+  const named = channel === undefined ? resolveSymbol(db, ref) : { id: channel.id, node: channel };
+  const valued = isResolved(named) || named.candidates.length > 0 ? undefined : resolveChannelRef(db, ref);
+  const found: EntryRef =
+    valued === undefined
+      ? named
+      : 'candidates' in valued
+        ? { candidates: valued.candidates }
+        : { id: valued.node.id, node: valued.node, ...(valued.channelUsed === undefined ? {} : { channelUsed: valued.channelUsed }) };
   if (!isResolved(found)) {
     if (found.candidates.length === 0) {
       const near = nearNames(db.search(ref.trim(), { limit: 200 }), ref.trim(), 5);
@@ -207,6 +219,7 @@ const answerOne = (db: GraphDb, ctx: ToolContext, ref: string): object => {
       ...(answer.role === undefined ? {} : { role: answer.role }),
       evidence: wireEvidence(answer.evidence),
       ...(found.alsoAnswers === undefined ? {} : { alsoAnswers: found.alsoAnswers }),
+      ...(found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed }),
     },
     verdictNext(answer.id, answer.verdict, answer.evidence, answer.service).slice(0, MAX_NEXT),
   );

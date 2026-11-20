@@ -1,0 +1,14 @@
+{
+  "id": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed",
+  "type": "consumer",
+  "kind": "event",
+  "service": "worker",
+  "loc": "src/projections/lifecycle.service.ts:26",
+  "verdict": "unknown",
+  "reason": "dead judges ways in, channels, classes, methods and functions, not a consumer",
+  "evidence": {},
+  "next": [
+    "read src/projections/lifecycle.service.ts:26 in worker: the code is not served from a database alone",
+    "cant_follow({service: \"worker\"})"
+  ]
+}

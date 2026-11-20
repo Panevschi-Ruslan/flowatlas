@@ -196,6 +196,8 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
             root: slimTree(flow.root),
             // The less specific routes that answer the same request (P94 D2).
             ...(ref.alsoAnswers === undefined ? {} : { alsoAnswers: ref.alsoAnswers }),
+            // A channel written with placeholders: the one it denotes (P360).
+            ...(ref.channelUsed === undefined ? {} : { channelUsed: ref.channelUsed }),
             unresolvedOnPath: flow.unresolvedOnPath,
             ...(flow.truncated === undefined ? {} : { truncated: flow.truncated, stoppedBy: flow.stoppedBy }),
             ...(flow.crossingsLeft === undefined ? {} : { crossingsLeft: flow.crossingsLeft }),

@@ -1,0 +1,27 @@
+{
+  "channel": {
+    "id": "channel:order:*:closed",
+    "type": "channel",
+    "label": "order:*:closed",
+    "loc": "src/orders/orders.service.ts:26",
+    "service": "api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed",
+      "type": "consumer",
+      "label": "LifecycleProjections.onClosed",
+      "loc": "src/projections/lifecycle.service.ts:26",
+      "service": "worker",
+      "kind": "event"
+    }
+  ],
+  "total": 1,
+  "channelUsed": "channel:order:*:closed",
+  "next": [
+    "who_emits({channel: \"channel:order:*:closed\"})",
+    "who_calls({symbol: \"consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed\"})",
+    "impact({symbol: \"consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed\"})",
+    "read src/projections/lifecycle.service.ts:26 in worker: the code is not served from a database alone"
+  ]
+}

@@ -268,7 +268,8 @@ describe('impact with two things to say (P132, P94)', () => {
       const reply = (await other.callTool({ name: 'impact', arguments: { symbol: target, detail: 3 } })) as { content: Array<{ text: string }> };
       const answer = JSON.parse(reply.content[0]!.text);
       expect(answer.truncated).toBe('reachability stopped at the walk limit of 4000 nodes; entries past it are not listed');
-      expect(answer.note).toBe('detail clamped to 2; use get_source');
+      // A server on a database alone serves no code, so the note does not send the agent to read it there (P360).
+      expect(answer.note).toBe('detail clamped to 2');
     } finally {
       await other.close();
     }
