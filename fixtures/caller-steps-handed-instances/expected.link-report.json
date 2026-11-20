@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T18:28:05.631Z",
+  "builtAt": "2026-11-20T17:32:04.677Z",
   "configHash": "481b5ee8317e",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./console",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 23,
-      "edges": 10,
+      "nodes": 34,
+      "edges": 21,
       "types": 1,
       "unresolved": 17,
-      "durationMs": 1277,
+      "durationMs": 835,
       "packages": {
         "name": "caller-steps-handed-instances-console",
         "runtime": [
@@ -28,11 +28,11 @@
       "repo": "./site",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 8,
-      "edges": 4,
+      "nodes": 11,
+      "edges": 7,
       "types": 0,
       "unresolved": 10,
-      "durationMs": 1208,
+      "durationMs": 763,
       "packages": {
         "name": "caller-steps-handed-instances-site",
         "runtime": [
@@ -77,8 +77,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 31,
-    "edges": 14,
+    "nodes": 45,
+    "edges": 28,
     "types": 1,
     "missed": 27,
     "sites": 28,

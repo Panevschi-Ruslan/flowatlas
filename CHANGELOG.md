@@ -8,6 +8,35 @@ only one of them moved.
 
 ### Added
 
+- **A screen the router registers is a way in, and a link rendered over a
+  constant list reaches every screen the list names (P363).** Each route of a
+  front end's configuration that shows a component of the repository - an
+  Angular route named, loaded lazily, nested in `children` or in a module a
+  `loadChildren` mounts; a React Router table or `<Route>`; a Vue Router route;
+  a page a file router places - is an `entry` of the new kind `screen`,
+  `entry:<service>:screen:<path>` at the full address it is mounted at, the
+  component behind it by a `handles` edge, the guards and resolvers the router
+  runs first listed on it. So `who_calls`, `impact` and `describe_for_prompt` on
+  a routed component name the address it is shown at, linked or not; `dead`
+  answers a component (now judged, as a function is) alive, `routed at
+  /star-map`, saying whether a link to it was read; `search` with
+  `kinds: ["routes"]` finds a screen by its address and by the component it
+  shows. A screen is opened by whoever types its address, so it is triggered
+  from outside the graph, as a schedule is, and never listed as a route nobody
+  calls; server routes' counts and reports are as they were. In an Angular
+  template, `[routerLink]="item.route"`, `routerLink="{{ item.route }}"`,
+  `router.navigate([item.route])` and `navigateByUrl(item.route)` inside
+  `@for` or `*ngFor` are read over the list the loop walks: a member of the
+  component - a field, a getter, a method, a `computed(() => …)` or a
+  `signal(…)` - followed to the constant array of objects it is made of,
+  through `filter`, `slice`, `sort`, `concat`, a `map` to objects spreading or
+  naming the element's members, `flatMap`, `Object.values`, an import and a
+  nested loop over an element's member; each entry's address is a `triggers`
+  edge to the screen at it (`meta.listed`), an address no route answers is a
+  `route-target-unresolved` row naming it, and what of the list is not read is
+  a `route-link-dynamic` row saying why. `routerLink="/x/{{ id }}"` now keeps
+  the text around the hole.
+
 - **A channel published through a project's own bus reaches the screens a
   per-scope hub feeds, and the screens that subscribe through an rxjs wrapper
   choose its types (P362).** A hub fed by name - the publish helper posts

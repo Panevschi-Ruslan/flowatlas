@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:55:25.913Z",
+  "builtAt": "2026-11-20T17:40:24.106Z",
   "services": [
     {
       "name": "api",
@@ -268,6 +268,22 @@
             "prefix": "/api/trpc",
             "file": "src/pages/api/trpc/[trpc].ts"
           }
+        ]
+      }
+    },
+    {
+      "id": "entry:api:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "api",
+      "file": "src/pages/orders.tsx",
+      "line": 8,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "pages-directory",
+        "screens": [
+          "OrdersPage"
         ]
       }
     },
@@ -619,6 +635,17 @@
       "confidence": "static",
       "file": "src/server/root.ts",
       "line": 16
+    },
+    {
+      "from": "entry:api:screen:/orders",
+      "to": "api#src/pages/orders.tsx:OrdersPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/orders.tsx",
+      "line": 8,
+      "meta": {
+        "route": "/orders"
+      }
     },
     {
       "from": "ui_action:web#src/Orders.tsx:20:7",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T16:54:54.669Z",
+  "builtAt": "2026-11-20T17:35:25.063Z",
   "services": [
     {
       "name": "console",
@@ -428,6 +428,182 @@
       }
     },
     {
+      "id": "entry:console:screen:/catalog/hats",
+      "type": "entry",
+      "label": "/catalog/hats",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 30,
+      "kind": "screen",
+      "meta": {
+        "path": "/catalog/hats",
+        "by": "route-table",
+        "screens": [
+          "Hats"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/catalog/home",
+      "type": "entry",
+      "label": "/catalog/home",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 30,
+      "kind": "screen",
+      "meta": {
+        "path": "/catalog/home",
+        "by": "route-table",
+        "screens": [
+          "Home"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/catalog/sale",
+      "type": "entry",
+      "label": "/catalog/sale",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 30,
+      "kind": "screen",
+      "meta": {
+        "path": "/catalog/sale",
+        "by": "route-table",
+        "screens": [
+          "Sale"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/catalog/shoes",
+      "type": "entry",
+      "label": "/catalog/shoes",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 30,
+      "kind": "screen",
+      "meta": {
+        "path": "/catalog/shoes",
+        "by": "route-table",
+        "screens": [
+          "Shoes"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/panels/0",
+      "type": "entry",
+      "label": "/panels/0",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 19,
+      "kind": "screen",
+      "meta": {
+        "path": "/panels/0",
+        "by": "route-table",
+        "screens": [
+          "Outbox"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/panels/1",
+      "type": "entry",
+      "label": "/panels/1",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 19,
+      "kind": "screen",
+      "meta": {
+        "path": "/panels/1",
+        "by": "route-table",
+        "screens": [
+          "Inbox"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/panels/2",
+      "type": "entry",
+      "label": "/panels/2",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 19,
+      "kind": "screen",
+      "meta": {
+        "path": "/panels/2",
+        "by": "route-table",
+        "screens": [
+          "Archive"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/steps/0",
+      "type": "entry",
+      "label": "/steps/0",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 15,
+      "kind": "screen",
+      "meta": {
+        "path": "/steps/0",
+        "by": "route-table",
+        "screens": [
+          "Welcome"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/steps/1",
+      "type": "entry",
+      "label": "/steps/1",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 15,
+      "kind": "screen",
+      "meta": {
+        "path": "/steps/1",
+        "by": "route-table",
+        "screens": [
+          "Billing"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/steps/2",
+      "type": "entry",
+      "label": "/steps/2",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 15,
+      "kind": "screen",
+      "meta": {
+        "path": "/steps/2",
+        "by": "route-table",
+        "screens": [
+          "Profile"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/steps/3",
+      "type": "entry",
+      "label": "/steps/3",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 15,
+      "kind": "screen",
+      "meta": {
+        "path": "/steps/3",
+        "by": "route-table",
+        "screens": [
+          "Intro"
+        ]
+      }
+    },
+    {
       "id": "external_api:localhost:4720",
       "type": "external_api",
       "label": "localhost:4720",
@@ -731,6 +907,127 @@
       "returns": "type:console#Page[]",
       "file": "src/App.tsx",
       "line": 25
+    },
+    {
+      "from": "entry:console:screen:/catalog/hats",
+      "to": "console#src/features/screens.tsx:Hats",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 30,
+      "meta": {
+        "route": "/catalog/hats"
+      }
+    },
+    {
+      "from": "entry:console:screen:/catalog/home",
+      "to": "console#src/features/screens.tsx:Home",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 30,
+      "meta": {
+        "route": "/catalog/home"
+      }
+    },
+    {
+      "from": "entry:console:screen:/catalog/sale",
+      "to": "console#src/features/screens.tsx:Sale",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 30,
+      "meta": {
+        "route": "/catalog/sale"
+      }
+    },
+    {
+      "from": "entry:console:screen:/catalog/shoes",
+      "to": "console#src/features/screens.tsx:Shoes",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 30,
+      "meta": {
+        "route": "/catalog/shoes"
+      }
+    },
+    {
+      "from": "entry:console:screen:/panels/0",
+      "to": "console#src/features/screens.tsx:Outbox",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 19,
+      "meta": {
+        "route": "/panels/0"
+      }
+    },
+    {
+      "from": "entry:console:screen:/panels/1",
+      "to": "console#src/features/screens.tsx:Inbox",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 19,
+      "meta": {
+        "route": "/panels/1"
+      }
+    },
+    {
+      "from": "entry:console:screen:/panels/2",
+      "to": "console#src/features/screens.tsx:Archive",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 19,
+      "meta": {
+        "route": "/panels/2"
+      }
+    },
+    {
+      "from": "entry:console:screen:/steps/0",
+      "to": "console#src/features/screens.tsx:Welcome",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 15,
+      "meta": {
+        "route": "/steps/0"
+      }
+    },
+    {
+      "from": "entry:console:screen:/steps/1",
+      "to": "console#src/features/screens.tsx:Billing",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 15,
+      "meta": {
+        "route": "/steps/1"
+      }
+    },
+    {
+      "from": "entry:console:screen:/steps/2",
+      "to": "console#src/features/screens.tsx:Profile",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 15,
+      "meta": {
+        "route": "/steps/2"
+      }
+    },
+    {
+      "from": "entry:console:screen:/steps/3",
+      "to": "console#src/features/screens.tsx:Intro",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 15,
+      "meta": {
+        "route": "/steps/3"
+      }
     },
     {
       "from": "http_out:poller#src/poll.ts:11:29",

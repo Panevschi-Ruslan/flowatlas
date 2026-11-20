@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "angular-lazy-routes",
-  "generatedAt": "2026-10-08T19:04:43.192Z",
+  "generatedAt": "2026-11-20T17:31:40.709Z",
   "nodes": [
     {
       "id": "angular-lazy-routes#src/app/admin/admin-shell.component.ts:AdminShellComponent",
@@ -17,7 +17,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-admin-shell"
+        "selector": "app-admin-shell",
+        "route": "/admin/settings"
       }
     },
     {
@@ -34,7 +35,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-plugins"
+        "selector": "app-plugins",
+        "route": "/admin/settings/plugins"
       }
     },
     {
@@ -51,7 +53,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-reports"
+        "selector": "app-reports",
+        "route": "/admin/reports/weekly"
       }
     },
     {
@@ -77,7 +80,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-home"
+        "selector": "app-home",
+        "route": "/home"
       }
     },
     {
@@ -94,7 +98,88 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-shell"
+        "selector": "app-shell",
+        "route": "/"
+      }
+    },
+    {
+      "id": "entry:angular-lazy-routes:screen:/",
+      "type": "entry",
+      "kind": "screen",
+      "label": "/",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/app.routes.ts",
+      "line": 14,
+      "meta": {
+        "path": "/",
+        "by": "angular-routes",
+        "screens": [
+          "ShellComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:angular-lazy-routes:screen:/admin/reports/weekly",
+      "type": "entry",
+      "kind": "screen",
+      "label": "/admin/reports/weekly",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/admin/reports.module.ts",
+      "line": 7,
+      "meta": {
+        "path": "/admin/reports/weekly",
+        "by": "angular-routes",
+        "screens": [
+          "ReportsComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:angular-lazy-routes:screen:/admin/settings",
+      "type": "entry",
+      "kind": "screen",
+      "label": "/admin/settings",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/admin/routes.ts",
+      "line": 20,
+      "meta": {
+        "path": "/admin/settings",
+        "by": "angular-routes",
+        "screens": [
+          "AdminShellComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:angular-lazy-routes:screen:/admin/settings/plugins",
+      "type": "entry",
+      "kind": "screen",
+      "label": "/admin/settings/plugins",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/admin/settings.routes.ts",
+      "line": 6,
+      "meta": {
+        "path": "/admin/settings/plugins",
+        "by": "angular-routes",
+        "screens": [
+          "PluginsComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:angular-lazy-routes:screen:/home",
+      "type": "entry",
+      "kind": "screen",
+      "label": "/home",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/app.routes.ts",
+      "line": 15,
+      "meta": {
+        "path": "/home",
+        "by": "angular-routes",
+        "screens": [
+          "HomeComponent"
+        ]
       }
     },
     {
@@ -245,6 +330,61 @@
     }
   ],
   "edges": [
+    {
+      "from": "entry:angular-lazy-routes:screen:/",
+      "to": "angular-lazy-routes#src/app/shell.component.ts:ShellComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 14,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:angular-lazy-routes:screen:/admin/reports/weekly",
+      "to": "angular-lazy-routes#src/app/admin/reports.component.ts:ReportsComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/admin/reports.module.ts",
+      "line": 7,
+      "meta": {
+        "route": "/admin/reports/weekly"
+      }
+    },
+    {
+      "from": "entry:angular-lazy-routes:screen:/admin/settings",
+      "to": "angular-lazy-routes#src/app/admin/admin-shell.component.ts:AdminShellComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/admin/routes.ts",
+      "line": 20,
+      "meta": {
+        "route": "/admin/settings"
+      }
+    },
+    {
+      "from": "entry:angular-lazy-routes:screen:/admin/settings/plugins",
+      "to": "angular-lazy-routes#src/app/admin/plugins.component.ts:PluginsComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/admin/settings.routes.ts",
+      "line": 6,
+      "meta": {
+        "route": "/admin/settings/plugins"
+      }
+    },
+    {
+      "from": "entry:angular-lazy-routes:screen:/home",
+      "to": "angular-lazy-routes#src/app/home.component.ts:HomeComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 15,
+      "meta": {
+        "route": "/home"
+      }
+    },
     {
       "from": "ui_action:angular-lazy-routes#src/app/shell.component.ts:13:8",
       "to": "angular-lazy-routes#src/app/home.component.ts:HomeComponent",

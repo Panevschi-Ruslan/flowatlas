@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T21:21:57.039Z",
+  "builtAt": "2026-11-20T17:37:47.398Z",
   "services": [
     {
       "name": "shop",
@@ -168,6 +168,70 @@
         "rawPath": "/api/visits",
         "adapter": "nitro-routes",
         "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "pages/index"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/admin",
+      "type": "entry",
+      "label": "/admin",
+      "repo": "shop",
+      "file": "app/pages/admin.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/admin",
+        "by": "pages-directory",
+        "screens": [
+          "admin"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/plain",
+      "type": "entry",
+      "label": "/plain",
+      "repo": "shop",
+      "file": "app/pages/plain.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/plain",
+        "by": "pages-directory",
+        "screens": [
+          "plain"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/reports",
+      "type": "entry",
+      "label": "/reports",
+      "repo": "shop",
+      "file": "app/pages/reports.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/reports",
+        "by": "pages-directory",
+        "screens": [
+          "reports"
+        ]
       }
     },
     {
@@ -1274,6 +1338,50 @@
       "line": 1,
       "meta": {
         "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:screen:/",
+      "to": "shop#app/pages/index.vue:pages/index",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/admin",
+      "to": "shop#app/pages/admin.vue:admin",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/admin.vue",
+      "line": 1,
+      "meta": {
+        "route": "/admin"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/plain",
+      "to": "shop#app/pages/plain.vue:plain",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/plain.vue",
+      "line": 1,
+      "meta": {
+        "route": "/plain"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/reports",
+      "to": "shop#app/pages/reports.vue:reports",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/reports.vue",
+      "line": 1,
+      "meta": {
+        "route": "/reports"
       }
     },
     {

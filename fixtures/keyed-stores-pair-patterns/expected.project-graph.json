@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:43:49.595Z",
+  "builtAt": "2026-11-20T17:34:30.288Z",
   "services": [
     {
       "name": "console",
@@ -300,6 +300,406 @@
       }
     },
     {
+      "id": "entry:console:screen:/admin/users",
+      "type": "entry",
+      "label": "/admin/users",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 56,
+      "kind": "screen",
+      "meta": {
+        "path": "/admin/users",
+        "by": "route-table",
+        "screens": [
+          "Users"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/areas/pricing",
+      "type": "entry",
+      "label": "/areas/pricing",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 38,
+      "kind": "screen",
+      "meta": {
+        "path": "/areas/pricing",
+        "by": "route-table",
+        "screens": [
+          "Pricing"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/book/billing",
+      "type": "entry",
+      "label": "/book/billing",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 47,
+      "kind": "screen",
+      "meta": {
+        "path": "/book/billing",
+        "by": "route-table",
+        "screens": [
+          "Billing"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/book/home",
+      "type": "entry",
+      "label": "/book/home",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 47,
+      "kind": "screen",
+      "meta": {
+        "path": "/book/home",
+        "by": "route-table",
+        "screens": [
+          "Home"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/book/overview",
+      "type": "entry",
+      "label": "/book/overview",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 47,
+      "kind": "screen",
+      "meta": {
+        "path": "/book/overview",
+        "by": "route-table",
+        "screens": [
+          "Overview"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/book/settings",
+      "type": "entry",
+      "label": "/book/settings",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 47,
+      "kind": "screen",
+      "meta": {
+        "path": "/book/settings",
+        "by": "route-table",
+        "screens": [
+          "Settings"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/docs/guide",
+      "type": "entry",
+      "label": "/docs/guide",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 35,
+      "kind": "screen",
+      "meta": {
+        "path": "/docs/guide",
+        "by": "route-table",
+        "screens": [
+          "Guide"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/guides/reference",
+      "type": "entry",
+      "label": "/guides/reference",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 35,
+      "kind": "screen",
+      "meta": {
+        "path": "/guides/reference",
+        "by": "route-table",
+        "screens": [
+          "Reference"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/links/help",
+      "type": "entry",
+      "label": "/links/help",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 41,
+      "kind": "screen",
+      "meta": {
+        "path": "/links/help",
+        "by": "route-table",
+        "screens": [
+          "Help"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/panels/usage",
+      "type": "entry",
+      "label": "/panels/usage",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 50,
+      "kind": "screen",
+      "meta": {
+        "path": "/panels/usage",
+        "by": "route-table",
+        "screens": [
+          "Usage"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/shelves/01",
+      "type": "entry",
+      "label": "/shelves/01",
+      "repo": "console",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/shelves/01",
+        "by": "route-table",
+        "screens": [
+          "ShelfPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/shelves/02",
+      "type": "entry",
+      "label": "/shelves/02",
+      "repo": "console",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/shelves/02",
+        "by": "route-table",
+        "screens": [
+          "ShelfPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/shelves/03",
+      "type": "entry",
+      "label": "/shelves/03",
+      "repo": "console",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/shelves/03",
+        "by": "route-table",
+        "screens": [
+          "ShelfPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/shelves/04",
+      "type": "entry",
+      "label": "/shelves/04",
+      "repo": "console",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/shelves/04",
+        "by": "route-table",
+        "screens": [
+          "ShelfPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/shelves/05",
+      "type": "entry",
+      "label": "/shelves/05",
+      "repo": "console",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/shelves/05",
+        "by": "route-table",
+        "screens": [
+          "ShelfPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/shelves/06",
+      "type": "entry",
+      "label": "/shelves/06",
+      "repo": "console",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/shelves/06",
+        "by": "route-table",
+        "screens": [
+          "ShelfPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/shelves/07",
+      "type": "entry",
+      "label": "/shelves/07",
+      "repo": "console",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/shelves/07",
+        "by": "route-table",
+        "screens": [
+          "ShelfPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/shelves/08",
+      "type": "entry",
+      "label": "/shelves/08",
+      "repo": "console",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/shelves/08",
+        "by": "route-table",
+        "screens": [
+          "ShelfPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/shelves/09",
+      "type": "entry",
+      "label": "/shelves/09",
+      "repo": "console",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/shelves/09",
+        "by": "route-table",
+        "screens": [
+          "ShelfPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/shelves/10",
+      "type": "entry",
+      "label": "/shelves/10",
+      "repo": "console",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/shelves/10",
+        "by": "route-table",
+        "screens": [
+          "ShelfPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/shelves/11",
+      "type": "entry",
+      "label": "/shelves/11",
+      "repo": "console",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/shelves/11",
+        "by": "route-table",
+        "screens": [
+          "ShelfPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/shelves/12",
+      "type": "entry",
+      "label": "/shelves/12",
+      "repo": "console",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/shelves/12",
+        "by": "route-table",
+        "screens": [
+          "ShelfPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/tools/export",
+      "type": "entry",
+      "label": "/tools/export",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 53,
+      "kind": "screen",
+      "meta": {
+        "path": "/tools/export",
+        "by": "route-table",
+        "screens": [
+          "Exporter"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/wizard/0",
+      "type": "entry",
+      "label": "/wizard/0",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 44,
+      "kind": "screen",
+      "meta": {
+        "path": "/wizard/0",
+        "by": "route-table",
+        "screens": [
+          "Welcome"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/wizard/1",
+      "type": "entry",
+      "label": "/wizard/1",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 44,
+      "kind": "screen",
+      "meta": {
+        "path": "/wizard/1",
+        "by": "route-table",
+        "screens": [
+          "Finish"
+        ]
+      }
+    },
+    {
       "id": "repo:console",
       "type": "repo",
       "label": "console",
@@ -337,6 +737,281 @@
       "line": 71,
       "meta": {
         "renders": "ShelfRoutes"
+      }
+    },
+    {
+      "from": "entry:console:screen:/admin/users",
+      "to": "console#src/features/screens.tsx:Users",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 56,
+      "meta": {
+        "route": "/admin/users"
+      }
+    },
+    {
+      "from": "entry:console:screen:/areas/pricing",
+      "to": "console#src/features/screens.tsx:Pricing",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 38,
+      "meta": {
+        "route": "/areas/pricing"
+      }
+    },
+    {
+      "from": "entry:console:screen:/book/billing",
+      "to": "console#src/features/screens.tsx:Billing",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 47,
+      "meta": {
+        "route": "/book/billing"
+      }
+    },
+    {
+      "from": "entry:console:screen:/book/home",
+      "to": "console#src/features/screens.tsx:Home",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 47,
+      "meta": {
+        "route": "/book/home"
+      }
+    },
+    {
+      "from": "entry:console:screen:/book/overview",
+      "to": "console#src/features/screens.tsx:Overview",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 47,
+      "meta": {
+        "route": "/book/overview"
+      }
+    },
+    {
+      "from": "entry:console:screen:/book/settings",
+      "to": "console#src/features/screens.tsx:Settings",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 47,
+      "meta": {
+        "route": "/book/settings"
+      }
+    },
+    {
+      "from": "entry:console:screen:/docs/guide",
+      "to": "console#src/features/screens.tsx:Guide",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 35,
+      "meta": {
+        "route": "/docs/guide"
+      }
+    },
+    {
+      "from": "entry:console:screen:/guides/reference",
+      "to": "console#src/features/screens.tsx:Reference",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 35,
+      "meta": {
+        "route": "/guides/reference"
+      }
+    },
+    {
+      "from": "entry:console:screen:/links/help",
+      "to": "console#src/features/screens.tsx:Help",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 41,
+      "meta": {
+        "route": "/links/help"
+      }
+    },
+    {
+      "from": "entry:console:screen:/panels/usage",
+      "to": "console#src/features/screens.tsx:Usage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 50,
+      "meta": {
+        "route": "/panels/usage"
+      }
+    },
+    {
+      "from": "entry:console:screen:/shelves/01",
+      "to": "console#src/features/screens.tsx:ShelfPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/shelves/01"
+      }
+    },
+    {
+      "from": "entry:console:screen:/shelves/02",
+      "to": "console#src/features/screens.tsx:ShelfPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/shelves/02"
+      }
+    },
+    {
+      "from": "entry:console:screen:/shelves/03",
+      "to": "console#src/features/screens.tsx:ShelfPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/shelves/03"
+      }
+    },
+    {
+      "from": "entry:console:screen:/shelves/04",
+      "to": "console#src/features/screens.tsx:ShelfPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/shelves/04"
+      }
+    },
+    {
+      "from": "entry:console:screen:/shelves/05",
+      "to": "console#src/features/screens.tsx:ShelfPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/shelves/05"
+      }
+    },
+    {
+      "from": "entry:console:screen:/shelves/06",
+      "to": "console#src/features/screens.tsx:ShelfPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/shelves/06"
+      }
+    },
+    {
+      "from": "entry:console:screen:/shelves/07",
+      "to": "console#src/features/screens.tsx:ShelfPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/shelves/07"
+      }
+    },
+    {
+      "from": "entry:console:screen:/shelves/08",
+      "to": "console#src/features/screens.tsx:ShelfPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/shelves/08"
+      }
+    },
+    {
+      "from": "entry:console:screen:/shelves/09",
+      "to": "console#src/features/screens.tsx:ShelfPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/shelves/09"
+      }
+    },
+    {
+      "from": "entry:console:screen:/shelves/10",
+      "to": "console#src/features/screens.tsx:ShelfPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/shelves/10"
+      }
+    },
+    {
+      "from": "entry:console:screen:/shelves/11",
+      "to": "console#src/features/screens.tsx:ShelfPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/shelves/11"
+      }
+    },
+    {
+      "from": "entry:console:screen:/shelves/12",
+      "to": "console#src/features/screens.tsx:ShelfPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/ShelfRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/shelves/12"
+      }
+    },
+    {
+      "from": "entry:console:screen:/tools/export",
+      "to": "console#src/features/screens.tsx:Exporter",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 53,
+      "meta": {
+        "route": "/tools/export"
+      }
+    },
+    {
+      "from": "entry:console:screen:/wizard/0",
+      "to": "console#src/features/screens.tsx:Welcome",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 44,
+      "meta": {
+        "route": "/wizard/0"
+      }
+    },
+    {
+      "from": "entry:console:screen:/wizard/1",
+      "to": "console#src/features/screens.tsx:Finish",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 44,
+      "meta": {
+        "route": "/wizard/1"
       }
     }
   ],

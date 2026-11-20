@@ -58,6 +58,22 @@ describe('route tables over a list, pages under a condition, a locale prefix, on
     expect(routeOf(wiki, 'src/screens/settings/Tokens.tsx:Tokens')).toBe('/settings/tokens');
   });
 
+  it('makes each address a page is placed at a screen, its way in, a guess where a condition places it (P363)', () => {
+    const screenOf = (graph: RepoGraph, path: string) => {
+      const id = `entry:${graph.repo}:screen:${path}`;
+      return {
+        entry: graph.nodes.find((node) => node.id === id),
+        behind: graph.edges.filter((edge) => edge.from === id && edge.type === 'handles').map((edge) => `${edge.to.split('#')[1]} ${edge.confidence}`),
+      };
+    };
+    const members = screenOf(wiki, '/settings/members');
+    expect(members.entry).toMatchObject({ type: 'entry', kind: 'screen', label: '/settings/members', meta: { by: 'route-table', screens: ['Members'] } });
+    expect(members.behind).toEqual(['src/screens/settings/Members.tsx:Members static']);
+    expect(screenOf(wiki, '/start').behind).toContain('src/screens/Start.tsx:Start heuristic');
+    // A page a file router places is a screen at its file's address.
+    expect(site.nodes.some((node) => node.type === 'entry' && node.kind === 'screen' && node.meta?.['by'] === 'pages-directory')).toBe(true);
+  });
+
   it('joins a navigation to each page a condition places at its address, and the inner page over the screen that holds its routes', () => {
     expect(navigations(wiki)).toEqual([
       // `env.PUBLIC_SHARE ? <Switch>SharedPage</Switch> : <Switch>SignIn</Switch>`, both at `/`: the build's two choices.
@@ -71,7 +87,7 @@ describe('route tables over a list, pages under a condition, a locale prefix, on
       'src/components/Header.tsx:Header -> src/screens/settings/Tokens.tsx:Tokens (/settings/tokens) static',
       'src/components/Header.tsx:Header -> src/screens/settings/Webhooks.tsx:Webhooks (/settings/webhooks) static',
     ]);
-    const branch = wiki.edges.find((edge) => edge.to.endsWith('SharedPage.tsx:SharedPage'));
+    const branch = wiki.edges.find((edge) => edge.type === 'calls' && edge.to.endsWith('SharedPage.tsx:SharedPage'));
     expect(branch?.meta?.['branch']).toBe(true);
     expect(rowsOf(wiki, 'navigation-unresolved')).toEqual([]);
   });
@@ -90,7 +106,7 @@ describe('route tables over a list, pages under a condition, a locale prefix, on
       'src/components/Nav.tsx:Nav -> src/app/[locale]/posts/page/[pageNumber]/page.tsx:PostsPage (/posts/page/${page + 1}) heuristic',
       'src/components/Nav.tsx:Nav -> src/app/[locale]/search/page.tsx:SearchPage (/search) heuristic',
     ]);
-    const search = site.edges.find((edge) => edge.to.endsWith('search/page.tsx:SearchPage'));
+    const search = site.edges.find((edge) => edge.type === 'calls' && edge.to.endsWith('search/page.tsx:SearchPage'));
     expect(search?.meta?.['localePrefix']).toBe('[locale]');
     // One note per navigation joined across the prefix; the row keeps a few as samples.
     const notes = site.unresolved.filter((row) => row.reason === 'navigation-locale-prefixed');

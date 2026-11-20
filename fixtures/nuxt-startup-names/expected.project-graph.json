@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T21:22:00.790Z",
+  "builtAt": "2026-11-20T17:37:58.249Z",
   "services": [
     {
       "name": "shop",
@@ -90,6 +90,38 @@
         "rawPath": "/api/visits",
         "adapter": "nitro-routes",
         "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "pages/index"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/carts",
+      "type": "entry",
+      "label": "/carts",
+      "repo": "shop",
+      "file": "app/pages/carts.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/carts",
+        "by": "pages-directory",
+        "screens": [
+          "carts"
+        ]
       }
     },
     {
@@ -562,6 +594,28 @@
       "line": 1,
       "meta": {
         "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:screen:/",
+      "to": "shop#app/pages/index.vue:pages/index",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/carts",
+      "to": "shop#app/pages/carts.vue:carts",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/carts.vue",
+      "line": 1,
+      "meta": {
+        "route": "/carts"
       }
     },
     {

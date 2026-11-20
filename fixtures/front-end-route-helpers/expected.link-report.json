@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-12T19:08:40.528Z",
+  "builtAt": "2026-11-20T17:33:38.009Z",
   "configHash": "bc7eb680f0b5",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 3135,
+      "durationMs": 1104,
       "packages": {
         "name": "front-end-route-helpers-catalog",
         "runtime": [
@@ -28,11 +28,11 @@
       "repo": "./console",
       "type": "angular",
       "extractor": "@flowatlas/extractor-angular",
-      "nodes": 9,
-      "edges": 5,
+      "nodes": 12,
+      "edges": 8,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 3055,
+      "durationMs": 1073,
       "packages": {
         "name": "front-end-route-helpers-console",
         "runtime": [
@@ -49,11 +49,11 @@
       "repo": "./desk",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 18,
-      "edges": 16,
+      "nodes": 27,
+      "edges": 25,
       "types": 0,
       "unresolved": 8,
-      "durationMs": 3141,
+      "durationMs": 1089,
       "packages": {
         "name": "front-end-route-helpers-desk",
         "runtime": [
@@ -71,11 +71,11 @@
       "repo": "./panel",
       "type": "vue",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 6,
-      "edges": 4,
+      "nodes": 8,
+      "edges": 6,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 3054,
+      "durationMs": 1045,
       "packages": {
         "name": "front-end-route-helpers-panel",
         "runtime": [
@@ -90,11 +90,11 @@
       "repo": "./sites",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 6,
-      "edges": 3,
+      "nodes": 9,
+      "edges": 8,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 3057,
+      "durationMs": 1108,
       "packages": {
         "name": "front-end-route-helpers-sites",
         "runtime": [
@@ -109,11 +109,11 @@
       "repo": "./stand",
       "type": "sveltekit",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 6,
-      "edges": 4,
+      "nodes": 10,
+      "edges": 8,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 3127,
+      "durationMs": 1069,
       "packages": {
         "name": "front-end-route-helpers-stand",
         "runtime": [],
@@ -170,8 +170,8 @@
     }
   ],
   "totals": {
-    "nodes": 52,
-    "edges": 35,
+    "nodes": 73,
+    "edges": 58,
     "types": 0,
     "missed": 18,
     "sites": 19,

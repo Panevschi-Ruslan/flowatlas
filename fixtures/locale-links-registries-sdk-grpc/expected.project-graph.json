@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T21:21:55.031Z",
+  "builtAt": "2026-11-20T17:35:13.916Z",
   "services": [
     {
       "name": "wiki",
@@ -77,7 +77,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-editor"
+        "selector": "app-editor",
+        "route": "/admin/editor"
       }
     },
     {
@@ -216,6 +217,105 @@
       }
     },
     {
+      "id": "entry:console:screen:/admin/editor",
+      "type": "entry",
+      "label": "/admin/editor",
+      "repo": "console",
+      "file": "src/app/routes.ts",
+      "line": 10,
+      "kind": "screen",
+      "meta": {
+        "path": "/admin/editor",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate signedIn"
+        ],
+        "screens": [
+          "EditorComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:portal:screen:/:param/go/:param",
+      "type": "entry",
+      "label": "/:param/go/:param",
+      "repo": "portal",
+      "file": "src/app/[locale]/go/[plan]/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param/go/:param",
+        "by": "pages-directory",
+        "screens": [
+          "PlanPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:portal:screen:/:param/pricing",
+      "type": "entry",
+      "label": "/:param/pricing",
+      "repo": "portal",
+      "file": "src/app/[locale]/pricing/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param/pricing",
+        "by": "pages-directory",
+        "screens": [
+          "PricingPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/:param",
+      "type": "entry",
+      "label": "/:param",
+      "repo": "site",
+      "file": "src/app/[locale]/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param",
+        "by": "pages-directory",
+        "screens": [
+          "HomePage"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/:param/partners",
+      "type": "entry",
+      "label": "/:param/partners",
+      "repo": "site",
+      "file": "src/app/[locale]/partners/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param/partners",
+        "by": "pages-directory",
+        "screens": [
+          "PartnersPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/:param/pricing",
+      "type": "entry",
+      "label": "/:param/pricing",
+      "repo": "site",
+      "file": "src/app/[locale]/pricing/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param/pricing",
+        "by": "pages-directory",
+        "screens": [
+          "PricingPage"
+        ]
+      }
+    },
+    {
       "id": "entry:stock:rpc:grpc:stock.StockService/GetLevel",
       "type": "entry",
       "label": "grpc stock.StockService/GetLevel",
@@ -243,6 +343,87 @@
         "adapter": "grpc-server",
         "registration": "addService",
         "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:wiki:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "wiki",
+      "file": "src/routes/index.tsx",
+      "line": 10,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "route-table",
+        "screens": [
+          "Home"
+        ]
+      }
+    },
+    {
+      "id": "entry:wiki:screen:/help/billing",
+      "type": "entry",
+      "label": "/help/billing",
+      "repo": "wiki",
+      "file": "src/routes/index.tsx",
+      "line": 11,
+      "kind": "screen",
+      "meta": {
+        "path": "/help/billing",
+        "by": "route-table",
+        "screens": [
+          "HelpBilling"
+        ]
+      }
+    },
+    {
+      "id": "entry:wiki:screen:/settings",
+      "type": "entry",
+      "label": "/settings",
+      "repo": "wiki",
+      "file": "src/routes/index.tsx",
+      "line": 12,
+      "kind": "screen",
+      "meta": {
+        "path": "/settings",
+        "by": "route-table",
+        "screens": [
+          "Profile",
+          "SettingsRoutes"
+        ]
+      }
+    },
+    {
+      "id": "entry:wiki:screen:/settings/audit",
+      "type": "entry",
+      "label": "/settings/audit",
+      "repo": "wiki",
+      "file": "src/routes/settings.tsx",
+      "line": 10,
+      "kind": "screen",
+      "meta": {
+        "path": "/settings/audit",
+        "by": "route-table",
+        "screens": [
+          "AuditSettings"
+        ]
+      }
+    },
+    {
+      "id": "entry:wiki:screen:/settings/integrations/calendar",
+      "type": "entry",
+      "label": "/settings/integrations/calendar",
+      "repo": "wiki",
+      "file": "src/routes/settings.tsx",
+      "line": 10,
+      "kind": "screen",
+      "meta": {
+        "path": "/settings/integrations/calendar",
+        "by": "route-table",
+        "screens": [
+          "CalendarSettings"
+        ]
       }
     },
     {
@@ -1321,12 +1502,144 @@
       }
     },
     {
+      "from": "entry:console:screen:/admin/editor",
+      "to": "console#src/app/editor.component.ts:EditorComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 10,
+      "meta": {
+        "route": "/admin/editor"
+      }
+    },
+    {
+      "from": "entry:portal:screen:/:param/go/:param",
+      "to": "portal#src/app/[locale]/go/[plan]/page.tsx:PlanPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/[locale]/go/[plan]/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/:param/go/:param"
+      }
+    },
+    {
+      "from": "entry:portal:screen:/:param/pricing",
+      "to": "portal#src/app/[locale]/pricing/page.tsx:PricingPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/[locale]/pricing/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/:param/pricing"
+      }
+    },
+    {
+      "from": "entry:site:screen:/:param",
+      "to": "site#src/app/[locale]/page.tsx:HomePage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/[locale]/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/:param"
+      }
+    },
+    {
+      "from": "entry:site:screen:/:param/partners",
+      "to": "site#src/app/[locale]/partners/page.tsx:PartnersPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/[locale]/partners/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/:param/partners"
+      }
+    },
+    {
+      "from": "entry:site:screen:/:param/pricing",
+      "to": "site#src/app/[locale]/pricing/page.tsx:PricingPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/[locale]/pricing/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/:param/pricing"
+      }
+    },
+    {
       "from": "entry:stock:rpc:grpc:stock.StockService/GetLevel",
       "to": "stock#index.js:getLevel",
       "type": "handles",
       "confidence": "static",
       "file": "index.js",
       "line": 8
+    },
+    {
+      "from": "entry:wiki:screen:/",
+      "to": "wiki#src/screens/Home.tsx:Home",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/index.tsx",
+      "line": 10,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/help/billing",
+      "to": "wiki#src/screens/HelpBilling.tsx:HelpBilling",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/index.tsx",
+      "line": 11,
+      "meta": {
+        "route": "/help/billing"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/settings",
+      "to": "wiki#src/routes/settings.tsx:SettingsRoutes",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/index.tsx",
+      "line": 12,
+      "meta": {
+        "route": "/settings"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/settings",
+      "to": "wiki#src/screens/settings/Profile.tsx:Profile",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/settings.tsx",
+      "line": 10,
+      "meta": {
+        "route": "/settings"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/settings/audit",
+      "to": "wiki#src/plugins/audit/client/Settings.tsx:AuditSettings",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/settings.tsx",
+      "line": 10,
+      "meta": {
+        "route": "/settings/audit"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/settings/integrations/calendar",
+      "to": "wiki#src/plugins/calendar/client/Settings.tsx:CalendarSettings",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/settings.tsx",
+      "line": 10,
+      "meta": {
+        "route": "/settings/integrations/calendar"
+      }
     },
     {
       "from": "http_out:checkout#src/app.ts:21:3",

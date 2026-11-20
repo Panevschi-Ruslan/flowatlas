@@ -200,6 +200,7 @@ const CALLER_LABEL: Readonly<Record<string, string>> = {
   event: 'broker',
   cron: 'scheduler',
   task: 'scheduler',
+  screen: 'user',
 };
 
 const CALLER = 'caller';

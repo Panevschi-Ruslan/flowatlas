@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:14:07.021Z",
+  "builtAt": "2026-11-20T17:38:26.111Z",
   "configHash": "72110bdba2d9",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 6290,
+      "durationMs": 1620,
       "packages": {
         "name": "proxy-chain-joins-admin",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 6763,
+      "durationMs": 1604,
       "packages": {
         "name": "proxy-chain-joins-billing",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 6239,
+      "durationMs": 1545,
       "packages": {
         "name": "proxy-chain-joins-catalog",
         "runtime": [
@@ -64,11 +64,11 @@
       "repo": "./gateway",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 6,
-      "edges": 3,
+      "nodes": 7,
+      "edges": 4,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 7083,
+      "durationMs": 1600,
       "packages": {
         "name": "proxy-chain-joins-gateway",
         "runtime": [
@@ -87,7 +87,7 @@
       "edges": 3,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 6969,
+      "durationMs": 1549,
       "packages": {
         "name": "proxy-chain-joins-jobs",
         "runtime": [
@@ -105,7 +105,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 6760,
+      "durationMs": 1514,
       "packages": {
         "name": "proxy-chain-joins-kiosk",
         "runtime": [
@@ -125,7 +125,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 6950,
+      "durationMs": 1541,
       "packages": {
         "name": "proxy-chain-joins-ledger",
         "runtime": [
@@ -143,7 +143,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 6335,
+      "durationMs": 1597,
       "packages": {
         "name": "proxy-chain-joins-orders",
         "runtime": [
@@ -161,7 +161,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 6094,
+      "durationMs": 1578,
       "packages": {
         "name": "proxy-chain-joins-web",
         "runtime": [
@@ -240,8 +240,8 @@
     }
   ],
   "totals": {
-    "nodes": 47,
-    "edges": 33,
+    "nodes": 48,
+    "edges": 34,
     "types": 2,
     "missed": 2,
     "sites": 2,

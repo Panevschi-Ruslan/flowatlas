@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:33:29.216Z",
+  "builtAt": "2026-11-20T17:38:40.793Z",
   "services": [
     {
       "name": "docs",
@@ -182,6 +182,118 @@
           "returns": "unknown"
         },
         "route": "/admin/users"
+      }
+    },
+    {
+      "id": "entry:docs:screen:/admin/users",
+      "type": "entry",
+      "label": "/admin/users",
+      "repo": "docs",
+      "file": "src/App.tsx",
+      "line": 22,
+      "kind": "screen",
+      "meta": {
+        "path": "/admin/users",
+        "by": "route-table",
+        "screens": [
+          "Users"
+        ]
+      }
+    },
+    {
+      "id": "entry:docs:screen:/dashboard/usage",
+      "type": "entry",
+      "label": "/dashboard/usage",
+      "repo": "docs",
+      "file": "src/App.tsx",
+      "line": 25,
+      "kind": "screen",
+      "meta": {
+        "path": "/dashboard/usage",
+        "by": "route-table",
+        "screens": [
+          "Usage"
+        ]
+      }
+    },
+    {
+      "id": "entry:docs:screen:/docs/guides",
+      "type": "entry",
+      "label": "/docs/guides",
+      "repo": "docs",
+      "file": "src/App.tsx",
+      "line": 19,
+      "kind": "screen",
+      "meta": {
+        "path": "/docs/guides",
+        "by": "route-table",
+        "screens": [
+          "Guides"
+        ]
+      }
+    },
+    {
+      "id": "entry:handbook:screen:/:param/about",
+      "type": "entry",
+      "label": "/:param/about",
+      "repo": "handbook",
+      "file": "src/app/[locale]/about/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param/about",
+        "by": "pages-directory",
+        "screens": [
+          "AboutPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:handbook:screen:/:param/pricing",
+      "type": "entry",
+      "label": "/:param/pricing",
+      "repo": "handbook",
+      "file": "src/app/[locale]/pricing/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param/pricing",
+        "by": "pages-directory",
+        "screens": [
+          "PricingPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:handbook:screen:/orders/:param",
+      "type": "entry",
+      "label": "/orders/:param",
+      "repo": "handbook",
+      "file": "src/app/orders/[id]/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders/:param",
+        "by": "pages-directory",
+        "screens": [
+          "OrderPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:handbook:screen:/tags/:param",
+      "type": "entry",
+      "label": "/tags/:param",
+      "repo": "handbook",
+      "file": "src/app/tags/[tag]/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/tags/:param",
+        "by": "pages-directory",
+        "screens": [
+          "TagPage"
+        ]
       }
     },
     {
@@ -731,6 +843,83 @@
         "route": "/admin/users",
         "page": "src/screens.tsx",
         "link": "Link"
+      }
+    },
+    {
+      "from": "entry:docs:screen:/admin/users",
+      "to": "docs#src/screens.tsx:Users",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 22,
+      "meta": {
+        "route": "/admin/users"
+      }
+    },
+    {
+      "from": "entry:docs:screen:/dashboard/usage",
+      "to": "docs#src/screens.tsx:Usage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 25,
+      "meta": {
+        "route": "/dashboard/usage"
+      }
+    },
+    {
+      "from": "entry:docs:screen:/docs/guides",
+      "to": "docs#src/screens.tsx:Guides",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 19,
+      "meta": {
+        "route": "/docs/guides"
+      }
+    },
+    {
+      "from": "entry:handbook:screen:/:param/about",
+      "to": "handbook#src/app/[locale]/about/page.tsx:AboutPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/[locale]/about/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/:param/about"
+      }
+    },
+    {
+      "from": "entry:handbook:screen:/:param/pricing",
+      "to": "handbook#src/app/[locale]/pricing/page.tsx:PricingPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/[locale]/pricing/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/:param/pricing"
+      }
+    },
+    {
+      "from": "entry:handbook:screen:/orders/:param",
+      "to": "handbook#src/app/orders/[id]/page.tsx:OrderPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders/[id]/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/orders/:param"
+      }
+    },
+    {
+      "from": "entry:handbook:screen:/tags/:param",
+      "to": "handbook#src/app/tags/[tag]/page.tsx:TagPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/tags/[tag]/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/tags/:param"
       }
     },
     {

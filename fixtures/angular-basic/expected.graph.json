@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "angular-basic",
-  "generatedAt": "2026-10-09T08:17:43.634Z",
+  "generatedAt": "2026-11-20T17:31:35.576Z",
   "nodes": [
     {
       "id": "angular-basic#node_modules/@angular/common:HttpClient",
@@ -55,7 +55,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-checkout"
+        "selector": "app-checkout",
+        "route": "/"
       }
     },
     {
@@ -463,7 +464,8 @@
         "standalone": false,
         "module": "OrdersModule",
         "selector": "app-orders-list",
-        "templateUrl": "./orders-list.component.html"
+        "templateUrl": "./orders-list.component.html",
+        "route": "/orders/:param"
       }
     },
     {
@@ -508,7 +510,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-profile"
+        "selector": "app-profile",
+        "route": "/profile"
       }
     },
     {
@@ -525,7 +528,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-reports"
+        "selector": "app-reports",
+        "route": "/reports"
       }
     },
     {
@@ -542,7 +546,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-settings"
+        "selector": "app-settings",
+        "route": "/settings"
       }
     },
     {
@@ -581,6 +586,86 @@
         "adapter": "marker",
         "decorator": "flowatlas-consumes",
         "entryId": null
+      }
+    },
+    {
+      "id": "entry:angular-basic:screen:/",
+      "type": "entry",
+      "kind": "screen",
+      "label": "/",
+      "repo": "angular-basic",
+      "file": "src/app/app.routes.ts",
+      "line": 20,
+      "meta": {
+        "path": "/",
+        "by": "angular-routes",
+        "screens": [
+          "CheckoutComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:angular-basic:screen:/orders/:param",
+      "type": "entry",
+      "kind": "screen",
+      "label": "/orders/:param",
+      "repo": "angular-basic",
+      "file": "src/app/app.routes.ts",
+      "line": 21,
+      "meta": {
+        "path": "/orders/:param",
+        "by": "angular-routes",
+        "screens": [
+          "OrdersListComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:angular-basic:screen:/profile",
+      "type": "entry",
+      "kind": "screen",
+      "label": "/profile",
+      "repo": "angular-basic",
+      "file": "src/app/app.routes.ts",
+      "line": 27,
+      "meta": {
+        "path": "/profile",
+        "by": "angular-routes",
+        "screens": [
+          "ProfileComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:angular-basic:screen:/reports",
+      "type": "entry",
+      "kind": "screen",
+      "label": "/reports",
+      "repo": "angular-basic",
+      "file": "src/app/app.routes.ts",
+      "line": 26,
+      "meta": {
+        "path": "/reports",
+        "by": "angular-routes",
+        "screens": [
+          "ReportsComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:angular-basic:screen:/settings",
+      "type": "entry",
+      "kind": "screen",
+      "label": "/settings",
+      "repo": "angular-basic",
+      "file": "src/app/app.routes.ts",
+      "line": 22,
+      "meta": {
+        "path": "/settings",
+        "by": "angular-routes",
+        "screens": [
+          "SettingsComponent"
+        ]
       }
     },
     {
@@ -1142,6 +1227,61 @@
       "confidence": "marker",
       "file": "src/app/orders-api.service.ts",
       "line": 60
+    },
+    {
+      "from": "entry:angular-basic:screen:/",
+      "to": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 20,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:angular-basic:screen:/orders/:param",
+      "to": "angular-basic#src/app/orders-list.component.ts:OrdersListComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 21,
+      "meta": {
+        "route": "/orders/:param"
+      }
+    },
+    {
+      "from": "entry:angular-basic:screen:/profile",
+      "to": "angular-basic#src/app/profile.component.ts:ProfileComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 27,
+      "meta": {
+        "route": "/profile"
+      }
+    },
+    {
+      "from": "entry:angular-basic:screen:/reports",
+      "to": "angular-basic#src/app/reports.component.ts:ReportsComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 26,
+      "meta": {
+        "route": "/reports"
+      }
+    },
+    {
+      "from": "entry:angular-basic:screen:/settings",
+      "to": "angular-basic#src/app/settings.component.ts:SettingsComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 22,
+      "meta": {
+        "route": "/settings"
+      }
     },
     {
       "from": "ui_action:angular-basic#src/app/checkout.component.ts:20:11",

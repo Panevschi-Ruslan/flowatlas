@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T17:24:08.804Z",
+  "builtAt": "2026-11-20T17:38:36.890Z",
   "configHash": "481b5ee8317e",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./console",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 14,
-      "edges": 6,
+      "nodes": 21,
+      "edges": 13,
       "types": 4,
       "unresolved": 15,
-      "durationMs": 1884,
+      "durationMs": 820,
       "packages": {
         "name": "registry-fields-caller-views-console",
         "runtime": [
@@ -28,11 +28,11 @@
       "repo": "./site",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 5,
-      "edges": 2,
+      "nodes": 7,
+      "edges": 4,
       "types": 0,
       "unresolved": 6,
-      "durationMs": 1747,
+      "durationMs": 770,
       "packages": {
         "name": "registry-fields-caller-views-site",
         "runtime": [
@@ -77,8 +77,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 19,
-    "edges": 8,
+    "nodes": 28,
+    "edges": 17,
     "types": 4,
     "missed": 21,
     "sites": 21,

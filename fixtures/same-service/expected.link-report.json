@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T17:08:04.767Z",
+  "builtAt": "2026-11-20T17:39:08.012Z",
   "configHash": "554932e24a02",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": ".",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 20,
-      "edges": 16,
+      "nodes": 21,
+      "edges": 17,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 640,
+      "durationMs": 742,
       "packages": {
         "name": "same-service",
         "runtime": [
@@ -69,8 +69,8 @@
     }
   ],
   "totals": {
-    "nodes": 20,
-    "edges": 20,
+    "nodes": 21,
+    "edges": 21,
     "types": 0,
     "missed": 2,
     "sites": 2,

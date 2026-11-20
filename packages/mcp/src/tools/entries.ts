@@ -33,6 +33,7 @@ const ENTRY_KINDS = [
   'invoke',
   'workflow',
   'task',
+  'screen',
 ] as const;
 
 const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
@@ -70,7 +71,7 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
     'list_entries',
     {
       title: 'List entry points',
-      description: 'Every way in: routes, procedures, bot commands, jobs, message handlers.',
+      description: 'Ways in: routes, procedures, screens, bot commands, jobs, handlers.',
       inputSchema: {
         service: serviceInput,
         kind: z.enum(ENTRY_KINDS).optional(),

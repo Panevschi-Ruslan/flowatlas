@@ -29,6 +29,10 @@ export const EXTERNALLY_TRIGGERED = [
   // A task runs on a schedule, from code that names it, and from a command
   // or a development endpoint a person uses; only the first two are read (P258).
   'task',
+  // A screen is shown at its address to whoever opens it - a typed address, a
+  // bookmark, a link in a mail - as well as through the links the reading
+  // followed, so no link landing on it says nothing about whether it is used (P363).
+  'screen',
 ] as const;
 
 /** Findings the DI resolver records when it cannot say what a token means. */
@@ -117,6 +121,10 @@ export interface DeadEvidence {
   callers?: number;
   caller?: string;
   missing?: 'consumer' | 'producer' | 'both';
+  /** The addresses the router shows it at (P363). */
+  routedAt?: string[];
+  /** How many links and navigations the reading followed land on it (P363). */
+  links?: number;
   unresolvedInjects?: number;
   classReached?: true;
   via?: string;
@@ -1056,6 +1064,14 @@ const ENTRY_CALLERS = ['http_calls', 'hits', 'triggers', 'consumes', 'calls'] as
 
 const entryAnswer = (db: GraphDb, report: LinkReport | undefined, context: RouteContext, entry: GraphNode): Answered & Partial<Pick<DeadEntry, 'class' | 'role'>> => {
   const kind = entry.kind ?? '';
+  if (kind === 'screen') {
+    const links = db.edgesFrom(entry.id, ['handles']).flatMap((edge) => linksTo(db, edge.to));
+    return {
+      verdict: 'unknown',
+      reason: `a screen is opened at its address from outside the graph; ${links.length === 0 ? 'no link to it was read' : `${links.length} link${links.length === 1 ? '' : 's'} read land${links.length === 1 ? 's' : ''} on it`}`,
+      evidence: { outside: kind, links: links.length },
+    };
+  }
   if ((EXTERNALLY_TRIGGERED as readonly string[]).includes(kind)) {
     return { verdict: 'unknown', reason: `a ${kind} way in is triggered from outside the graph`, evidence: { outside: kind } };
   }
@@ -1203,7 +1219,9 @@ export const deadVerdict = (
               ? functionAnswer(db, node)
               : node.type === 'consumer'
                 ? consumerAnswer(db, report, node)
-                : { verdict: 'unknown', reason: `dead judges ways in, channels, consumers, classes, methods and functions, not a ${node.type}`, evidence: {} };
+                : node.type === 'ui_component'
+                  ? componentAnswer(db, node)
+                  : { verdict: 'unknown', reason: `dead judges ways in, channels, consumers, classes, components, methods and functions, not a ${node.type}`, evidence: {} };
   const answered = withTraffic(statically, node.id, trafficFor(db, options));
   return {
     id: node.id,
@@ -1219,8 +1237,57 @@ export const deadVerdict = (
   };
 };
 
+/** The links and navigations that land on a screen's component: every edge into it but its screens' own. */
+const linksTo = (db: GraphDb, component: string): Array<{ from: string }> =>
+  db.edgesTo(component, ['handles', 'calls', 'triggers']).filter((edge) => {
+    const from = db.node(edge.from);
+    return !(from?.type === 'entry' && from.kind === 'screen');
+  });
+
+/**
+ * A component the router shows (P363): alive, at the addresses its screens
+ * are mounted at, whether or not a link the reading followed lands on it -
+ * the router shows it to whoever opens the address. Undefined where no
+ * screen shows it.
+ */
+const routedAnswer = (db: GraphDb, component: GraphNode): Answered | undefined => {
+  const screens = db
+    .edgesTo(component.id, ['handles'])
+    .flatMap((edge) => db.node(edge.from) ?? [])
+    .filter((node) => node.type === 'entry' && node.kind === 'screen')
+    .sort((a, b) => byId(a.id, b.id));
+  const [first] = screens;
+  if (first === undefined) return undefined;
+  const at = screens.map((screen) => screen.label);
+  const links = linksTo(db, component.id).length;
+  return {
+    verdict: 'alive',
+    reason: `routed at ${at.join(', ')}; ${links === 0 ? 'no link to it was read' : `${links} link${links === 1 ? '' : 's'} read land${links === 1 ? 's' : ''} on it`}`,
+    evidence: { via: first.id, routedAt: at, links },
+  };
+};
+
+/**
+ * A component (P363): alive where the router shows it or a link, a
+ * navigation or a parent reaches it; otherwise `unknown`, since a component
+ * a template renders by its tag is reached by nothing the graph draws.
+ */
+const componentAnswer = (db: GraphDb, component: GraphNode): Answered => {
+  const routed = routedAnswer(db, component);
+  if (routed !== undefined) return routed;
+  const reaching = linksTo(db, component.id);
+  if (reaching.length > 0) return { verdict: 'alive', reason: 'a link, a navigation or a parent reaches it', evidence: aliveBy(reaching) };
+  return {
+    verdict: 'unknown',
+    reason: 'no route shows it and no link the reading followed lands on it; a template that renders it by its tag is not drawn',
+    evidence: {},
+  };
+};
+
 /** A function is reached by a call; one nothing calls may be imported by code the reading did not follow. */
 const functionAnswer = (db: GraphDb, fn: GraphNode): Answered => {
+  const routed = routedAnswer(db, fn);
+  if (routed !== undefined) return routed;
   const reaching = db.edgesTo(fn.id, METHOD_CALLERS);
   if (reaching.length > 0) return { verdict: 'alive', reason: 'called', evidence: aliveBy(reaching) };
   return { verdict: 'likely-dead', reason: 'nothing calls it; an import the reading did not follow may', evidence: {} };

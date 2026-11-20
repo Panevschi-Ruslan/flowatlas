@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-06T18:11:10.797Z",
+  "builtAt": "2026-11-20T17:37:51.019Z",
   "configHash": "a27cd8f77c0e",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./shop",
       "type": "nuxt",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 37,
-      "edges": 24,
+      "nodes": 40,
+      "edges": 27,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 729,
+      "durationMs": 793,
       "packages": {
         "name": "layered-shop",
         "runtime": [
@@ -59,8 +59,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 37,
-    "edges": 28,
+    "nodes": 40,
+    "edges": 31,
     "types": 0,
     "missed": 3,
     "sites": 3,

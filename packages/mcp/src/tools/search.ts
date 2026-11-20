@@ -13,6 +13,7 @@ import {
   placeIdOf,
   rankByReach,
   readAccepted,
+  SCREENS_META,
   waysInOf,
   type AcceptedRead,
   type GraphNode,
@@ -164,6 +165,29 @@ const nodesOf =
       offset,
     );
   };
+
+/**
+ * Ways in by their label or id, and a screen also by the component it shows
+ * (P363): asked for the screen of `FloorPlanComponent`, the route that
+ * registers it is the answer, though its label is the address.
+ */
+const routes: Finder = (input) => {
+  const { db, text, service, limit, offset, bounded } = input;
+  const pool = db.nodesByType('entry').filter(inService(service));
+  const ranked = rankMatches(pool, text).map((match) => match.node);
+  const found = new Set(ranked.map((node) => node.id));
+  const wanted = text.toLowerCase();
+  const showing = pool.filter((node) => {
+    if (node.kind !== 'screen' || found.has(node.id)) return false;
+    const shown = node.meta?.[SCREENS_META];
+    return Array.isArray(shown) && shown.some((name) => typeof name === 'string' && name.toLowerCase().includes(wanted));
+  });
+  return cut(
+    [...ranked, ...showing].map((node) => projectDetail(node, bounded.detail)),
+    limit,
+    offset,
+  );
+};
 
 /** How many producers and handlers one message hit names. */
 const MESSAGE_ENDS = 3;
@@ -320,7 +344,7 @@ const fails: Finder = ({ db, text, service, limit, offset }) => {
 };
 
 const FINDERS: ReadonlyMap<SearchKind, Finder> = new Map<SearchKind, Finder>([
-  ['routes', nodesOf(['entry'])],
+  ['routes', routes],
   ['channels', nodesOf(['channel'])],
   ['messages', messages],
   ['tables', nodesOf(['table'])],

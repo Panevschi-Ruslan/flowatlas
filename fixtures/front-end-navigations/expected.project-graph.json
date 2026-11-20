@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T21:21:48.946Z",
+  "builtAt": "2026-11-20T17:33:33.942Z",
   "services": [
     {
       "name": "storefront",
@@ -60,7 +60,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-dashboard"
+        "selector": "app-dashboard",
+        "route": "/"
       }
     },
     {
@@ -77,7 +78,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-invoice"
+        "selector": "app-invoice",
+        "route": "/invoices/:param"
       }
     },
     {
@@ -108,7 +110,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-invoices"
+        "selector": "app-invoices",
+        "route": "/invoices"
       }
     },
     {
@@ -290,6 +293,102 @@
       }
     },
     {
+      "id": "entry:admin:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "admin",
+      "file": "src/app/routes.ts",
+      "line": 8,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "angular-routes",
+        "screens": [
+          "DashboardComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:admin:screen:/invoices",
+      "type": "entry",
+      "label": "/invoices",
+      "repo": "admin",
+      "file": "src/app/routes.ts",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/invoices",
+        "by": "angular-routes",
+        "screens": [
+          "InvoicesComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:admin:screen:/invoices/:param",
+      "type": "entry",
+      "label": "/invoices/:param",
+      "repo": "admin",
+      "file": "src/app/routes.ts",
+      "line": 10,
+      "kind": "screen",
+      "meta": {
+        "path": "/invoices/:param",
+        "by": "angular-routes",
+        "screens": [
+          "InvoiceComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:backoffice:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "backoffice",
+      "file": "src/router/index.ts",
+      "line": 10,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "route-table",
+        "screens": [
+          "HomeView"
+        ]
+      }
+    },
+    {
+      "id": "entry:backoffice:screen:/stock",
+      "type": "entry",
+      "label": "/stock",
+      "repo": "backoffice",
+      "file": "src/router/index.ts",
+      "line": 11,
+      "kind": "screen",
+      "meta": {
+        "path": "/stock",
+        "by": "route-table",
+        "screens": [
+          "StockView"
+        ]
+      }
+    },
+    {
+      "id": "entry:backoffice:screen:/stock/:param",
+      "type": "entry",
+      "label": "/stock/:param",
+      "repo": "backoffice",
+      "file": "src/router/index.ts",
+      "line": 12,
+      "kind": "screen",
+      "meta": {
+        "path": "/stock/:param",
+        "by": "route-table",
+        "screens": [
+          "StockItem"
+        ]
+      }
+    },
+    {
       "id": "entry:kiosk:http:GET:/menu",
       "type": "entry",
       "label": "GET /menu",
@@ -303,6 +402,38 @@
         "adapter": "sveltekit-routes",
         "registration": "routes/+page.server",
         "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:kiosk:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "kiosk",
+      "file": "src/routes/+page.svelte",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "routes/+page"
+        ]
+      }
+    },
+    {
+      "id": "entry:kiosk:screen:/menu",
+      "type": "entry",
+      "label": "/menu",
+      "repo": "kiosk",
+      "file": "src/routes/menu/+page.svelte",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/menu",
+        "by": "pages-directory",
+        "screens": [
+          "menu/+page"
+        ]
       }
     },
     {
@@ -337,6 +468,150 @@
         "registration": "pages/api",
         "middlewareRead": true,
         "handlerVia": "wrapped"
+      }
+    },
+    {
+      "id": "entry:shop:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "shop",
+      "file": "pages/index.tsx",
+      "line": 5,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "HomePage"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/account",
+      "type": "entry",
+      "label": "/account",
+      "repo": "shop",
+      "file": "app/account/page.tsx",
+      "line": 4,
+      "kind": "screen",
+      "meta": {
+        "path": "/account",
+        "by": "pages-directory",
+        "screens": [
+          "AccountPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "shop",
+      "file": "pages/orders/index.tsx",
+      "line": 4,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "pages-directory",
+        "screens": [
+          "OrdersPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/orders/:param",
+      "type": "entry",
+      "label": "/orders/:param",
+      "repo": "shop",
+      "file": "pages/orders/[id].tsx",
+      "line": 4,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders/:param",
+        "by": "pages-directory",
+        "screens": [
+          "OrderPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:storefront:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "storefront",
+      "file": "src/main.tsx",
+      "line": 10,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "route-table",
+        "screens": [
+          "Home"
+        ]
+      }
+    },
+    {
+      "id": "entry:storefront:screen:/legacy",
+      "type": "entry",
+      "label": "/legacy",
+      "repo": "storefront",
+      "file": "src/pages/Legacy.tsx",
+      "line": 14,
+      "kind": "screen",
+      "meta": {
+        "path": "/legacy",
+        "by": "route-table",
+        "screens": [
+          "Legacy"
+        ]
+      }
+    },
+    {
+      "id": "entry:storefront:screen:/login",
+      "type": "entry",
+      "label": "/login",
+      "repo": "storefront",
+      "file": "src/main.tsx",
+      "line": 13,
+      "kind": "screen",
+      "meta": {
+        "path": "/login",
+        "by": "route-table",
+        "screens": [
+          "Login"
+        ]
+      }
+    },
+    {
+      "id": "entry:storefront:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "storefront",
+      "file": "src/main.tsx",
+      "line": 11,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "route-table",
+        "screens": [
+          "Orders"
+        ]
+      }
+    },
+    {
+      "id": "entry:storefront:screen:/orders/:param",
+      "type": "entry",
+      "label": "/orders/:param",
+      "repo": "storefront",
+      "file": "src/main.tsx",
+      "line": 12,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders/:param",
+        "by": "route-table",
+        "screens": [
+          "OrderDetail"
+        ]
       }
     },
     {
@@ -1458,6 +1733,72 @@
       }
     },
     {
+      "from": "entry:admin:screen:/",
+      "to": "admin#src/app/dashboard.component.ts:DashboardComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 8,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:admin:screen:/invoices",
+      "to": "admin#src/app/invoices.component.ts:InvoicesComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 9,
+      "meta": {
+        "route": "/invoices"
+      }
+    },
+    {
+      "from": "entry:admin:screen:/invoices/:param",
+      "to": "admin#src/app/invoice.component.ts:InvoiceComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 10,
+      "meta": {
+        "route": "/invoices/:param"
+      }
+    },
+    {
+      "from": "entry:backoffice:screen:/",
+      "to": "backoffice#src/views/HomeView.vue:HomeView",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router/index.ts",
+      "line": 10,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:backoffice:screen:/stock",
+      "to": "backoffice#src/views/StockView.vue:StockView",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router/index.ts",
+      "line": 11,
+      "meta": {
+        "route": "/stock"
+      }
+    },
+    {
+      "from": "entry:backoffice:screen:/stock/:param",
+      "to": "backoffice#src/views/StockItem.vue:StockItem",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router/index.ts",
+      "line": 12,
+      "meta": {
+        "route": "/stock/:param"
+      }
+    },
+    {
       "from": "entry:kiosk:http:GET:/menu",
       "to": "kiosk#src/routes/menu/+page.server.ts:load",
       "type": "handles",
@@ -1470,6 +1811,28 @@
       }
     },
     {
+      "from": "entry:kiosk:screen:/",
+      "to": "kiosk#src/routes/+page.svelte:routes/+page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/+page.svelte",
+      "line": 1,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:kiosk:screen:/menu",
+      "to": "kiosk#src/routes/menu/+page.svelte:menu/+page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/menu/+page.svelte",
+      "line": 1,
+      "meta": {
+        "route": "/menu"
+      }
+    },
+    {
       "from": "entry:shop:http:DELETE:/api/orders",
       "to": "shop#pages/api/orders.ts:handler",
       "type": "handles",
@@ -1519,6 +1882,105 @@
         "scope": "route",
         "layer": "middleware",
         "source": "withAudit"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/",
+      "to": "shop#pages/index.tsx:HomePage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "pages/index.tsx",
+      "line": 5,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/account",
+      "to": "shop#app/account/page.tsx:AccountPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/account/page.tsx",
+      "line": 4,
+      "meta": {
+        "route": "/account"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/orders",
+      "to": "shop#pages/orders/index.tsx:OrdersPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "pages/orders/index.tsx",
+      "line": 4,
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/orders/:param",
+      "to": "shop#pages/orders/[id].tsx:OrderPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "pages/orders/[id].tsx",
+      "line": 4,
+      "meta": {
+        "route": "/orders/:param"
+      }
+    },
+    {
+      "from": "entry:storefront:screen:/",
+      "to": "storefront#src/pages/Home.tsx:Home",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/main.tsx",
+      "line": 10,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:storefront:screen:/legacy",
+      "to": "storefront#src/pages/Legacy.tsx:Legacy",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/Legacy.tsx",
+      "line": 14,
+      "meta": {
+        "route": "/legacy"
+      }
+    },
+    {
+      "from": "entry:storefront:screen:/login",
+      "to": "storefront#src/pages/Login.tsx:Login",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/main.tsx",
+      "line": 13,
+      "meta": {
+        "route": "/login"
+      }
+    },
+    {
+      "from": "entry:storefront:screen:/orders",
+      "to": "storefront#src/pages/Orders.tsx:Orders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/main.tsx",
+      "line": 11,
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
+      "from": "entry:storefront:screen:/orders/:param",
+      "to": "storefront#src/pages/OrderDetail.tsx:OrderDetail",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/main.tsx",
+      "line": 12,
+      "meta": {
+        "route": "/orders/:param"
       }
     },
     {

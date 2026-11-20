@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:43:49.595Z",
+  "builtAt": "2026-11-20T17:34:30.288Z",
   "configHash": "cfed8ae18f4e",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./console",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 19,
-      "edges": 1,
+      "nodes": 44,
+      "edges": 26,
       "types": 2,
       "unresolved": 20,
-      "durationMs": 0,
+      "durationMs": 823,
       "packages": {
         "name": "keyed-stores-pair-patterns-console",
         "runtime": [
@@ -58,8 +58,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 19,
-    "edges": 1,
+    "nodes": 44,
+    "edges": 26,
     "types": 2,
     "missed": 20,
     "sites": 24,

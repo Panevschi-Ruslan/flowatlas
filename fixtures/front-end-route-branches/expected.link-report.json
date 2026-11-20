@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T17:13:23.024Z",
+  "builtAt": "2026-11-20T17:33:35.828Z",
   "configHash": "0951e08a1408",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./console",
       "type": "angular",
       "extractor": "@flowatlas/extractor-angular",
-      "nodes": 20,
-      "edges": 16,
+      "nodes": 24,
+      "edges": 20,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1293,
+      "durationMs": 770,
       "packages": {
         "name": "front-end-route-branches-console",
         "runtime": [
@@ -29,11 +29,11 @@
       "repo": "./site",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 11,
-      "edges": 12,
+      "nodes": 16,
+      "edges": 17,
       "types": 0,
       "unresolved": 8,
-      "durationMs": 1398,
+      "durationMs": 798,
       "packages": {
         "name": "front-end-route-branches-site",
         "runtime": [
@@ -49,11 +49,11 @@
       "repo": "./wiki",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 17,
-      "edges": 15,
+      "nodes": 26,
+      "edges": 27,
       "types": 1,
       "unresolved": 14,
-      "durationMs": 1398,
+      "durationMs": 812,
       "packages": {
         "name": "front-end-route-branches-wiki",
         "runtime": [
@@ -100,8 +100,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 48,
-    "edges": 43,
+    "nodes": 66,
+    "edges": 64,
     "types": 1,
     "missed": 23,
     "sites": 23,

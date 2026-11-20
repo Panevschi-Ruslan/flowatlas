@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T22:29:58.666Z",
+  "builtAt": "2026-11-20T17:38:00.044Z",
   "configHash": "a27cd8f77c0e",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./shop",
       "type": "nuxt",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 22,
-      "edges": 18,
+      "nodes": 23,
+      "edges": 19,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 702,
+      "durationMs": 762,
       "packages": {
         "name": "nuxt4-shop",
         "runtime": [
@@ -56,8 +56,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 22,
-    "edges": 21,
+    "nodes": 23,
+    "edges": 22,
     "types": 0,
     "missed": 4,
     "sites": 4,

@@ -1,21 +1,30 @@
 import {
   ASTWithSource,
+  Binary,
   Call,
   Chain,
   ImplicitReceiver,
+  Interpolation,
+  KeyedRead,
+  LiteralArray,
+  LiteralPrimitive,
+  NonNullAssert,
   parseTemplate,
   PropertyRead,
   SafeCall,
+  SafeKeyedRead,
   SafePropertyRead,
   ThisReceiver,
+  TmplAstBoundAttribute,
   TmplAstRecursiveVisitor,
   tmplAstVisitAll,
   type AST,
-  type TmplAstBoundAttribute,
   type TmplAstBoundEvent,
+  type TmplAstForLoopBlock,
   type TmplAstLetDeclaration,
   type TmplAstNode,
   type TmplAstReference,
+  type TmplAstTemplate,
   type TmplAstTextAttribute,
   type TmplAstVariable,
 } from '@angular/compiler';
@@ -53,6 +62,8 @@ export type TemplateHandler =
       readonly property: string;
       readonly method: string;
       readonly args: string[];
+      /** The address its first argument spells from what the template reads, where it reads something (P363). */
+      readonly address?: TemplateAddress;
     }
   | {
       readonly kind: 'local';
@@ -62,6 +73,37 @@ export type TemplateHandler =
       readonly args: string[];
     }
   | { readonly kind: 'other'; readonly text: string };
+
+/** One step of a read: a member of what came before, or a call of it with nothing handed. */
+export type TemplateStep = { readonly member: string } | { readonly call: true };
+
+/**
+ * A value a template reads, as the name it starts from and the steps after
+ * it (P363): `item.route` is `item` then `route`, `items()` is `items` then
+ * a call. `own` where the name is written `this.x`, which no local shadows.
+ */
+export interface TemplateRead {
+  readonly root: string;
+  readonly steps: readonly TemplateStep[];
+  readonly text: string;
+  readonly own?: true;
+}
+
+/** A piece of an address: text written as it is, or a value read. */
+export type AddressPart = { readonly text: string } | { readonly read: TemplateRead };
+
+/**
+ * An address a link or a navigation spells from what the template reads
+ * (P363): `item.route`, `'/x/' + item.slug`, `/x/{{ item.slug }}`, or the
+ * segments of `['/x', item.slug]`, joined with `/`.
+ */
+export interface TemplateAddress {
+  readonly parts: readonly AddressPart[];
+  readonly segments: boolean;
+}
+
+/** What a loop variable in scope walks: the list it is read over, or why that was not read. */
+export type LoopSource = TemplateRead | { readonly unread: string };
 
 export interface TemplateEvent {
   /** Event as written, e.g. `click`, `ngSubmit`, `keyup.enter`. */
@@ -73,6 +115,10 @@ export interface TemplateEvent {
   handlers: TemplateHandler[];
   /** Route a link navigates to, for a `routerLink`. */
   route?: string | null;
+  /** The address a link spells from what the template reads, where it reads something (P363). */
+  address?: TemplateAddress;
+  /** The loop variables in scope where it is written, each with the list it walks (P363). */
+  loops?: ReadonlyMap<string, LoopSource>;
   /** 1-based, already offset into the file the template lives in. */
   line: number;
   column: number;
@@ -109,6 +155,97 @@ const KIND_BY_EVENT: ReadonlyMap<string, TemplateEventKind> = new Map([
 ]);
 
 const DEFAULT_PLACEHOLDER = ':param';
+
+/** The router's methods a handler navigates with, whose first argument is an address. */
+const NAVIGATING = new Set(['navigate', 'navigateByUrl']);
+
+const unwrapped = (ast: AST): AST => {
+  let node = ast instanceof ASTWithSource ? ast.ast : ast;
+  while (node instanceof NonNullAssert) node = node.expression;
+  return node;
+};
+
+/** What a template reads, where an expression is a chain of members and calls with nothing handed from a name (P363). */
+export const readOf = (ast: AST, source: string): TemplateRead | undefined => {
+  const whole = unwrapped(ast);
+  const text = source.slice(whole.span.start, whole.span.end) || String((ast as { source?: string }).source ?? '');
+  const steps: TemplateStep[] = [];
+  let node: AST = whole;
+  for (let depth = 0; depth < 16; depth += 1) {
+    if (node instanceof NonNullAssert) {
+      node = node.expression;
+      continue;
+    }
+    if (node instanceof Call || node instanceof SafeCall) {
+      if (node.args.length > 0) return undefined;
+      steps.unshift({ call: true });
+      node = node.receiver;
+      continue;
+    }
+    if (node instanceof PropertyRead || node instanceof SafePropertyRead) {
+      if (node.receiver instanceof ImplicitReceiver) {
+        return { root: node.name, steps, text, ...(node.receiver instanceof ThisReceiver ? { own: true as const } : {}) };
+      }
+      steps.unshift({ member: node.name });
+      node = node.receiver;
+      continue;
+    }
+    if ((node instanceof KeyedRead || node instanceof SafeKeyedRead) && node.key instanceof LiteralPrimitive && typeof node.key.value === 'string') {
+      steps.unshift({ member: node.key.value });
+      node = node.receiver;
+      continue;
+    }
+    return undefined;
+  }
+  return undefined;
+};
+
+/** The pieces an address is written with, where each is text or a read; undefined for anything else. */
+const partsOf = (ast: AST, source: string): AddressPart[] | undefined => {
+  const node = unwrapped(ast);
+  if (node instanceof LiteralPrimitive) return typeof node.value === 'string' ? [{ text: node.value }] : undefined;
+  if (node instanceof Binary && node.operation === '+') {
+    const left = partsOf(node.left, source);
+    const right = partsOf(node.right, source);
+    return left === undefined || right === undefined ? undefined : [...left, ...right];
+  }
+  if (node instanceof Interpolation) {
+    const parts: AddressPart[] = [];
+    for (let at = 0; at < node.strings.length; at += 1) {
+      const text = node.strings[at] as string;
+      if (text !== '') parts.push({ text });
+      const expression = node.expressions[at];
+      if (expression === undefined) continue;
+      const inner = partsOf(expression, source);
+      if (inner === undefined) return undefined;
+      parts.push(...inner);
+    }
+    return parts;
+  }
+  const read = readOf(node, source);
+  return read === undefined ? undefined : [{ read }];
+};
+
+/**
+ * The address an expression spells from what the template reads (P363): one
+ * piece or several joined, or the segments of an array. Undefined where it
+ * reads nothing - an address written out is the route already - or holds a
+ * piece neither text nor a read.
+ */
+export const addressOf = (ast: AST, source: string): TemplateAddress | undefined => {
+  const node = unwrapped(ast);
+  if (node instanceof LiteralArray) {
+    const parts: AddressPart[] = [];
+    for (const element of node.expressions as AST[]) {
+      const inner = partsOf(element, source);
+      if (inner === undefined || inner.length !== 1) return undefined;
+      parts.push(inner[0] as AddressPart);
+    }
+    return parts.some((part) => 'read' in part) ? { parts, segments: true } : undefined;
+  }
+  const parts = partsOf(node, source);
+  return parts === undefined || !parts.some((part) => 'read' in part) ? undefined : { parts, segments: false };
+};
 
 const kindOf = (name: string): TemplateEventKind => {
   const lowered = name.toLowerCase();
@@ -156,6 +293,8 @@ const handlersOf = (handler: AST, locals: ReadonlySet<string>): TemplateHandler[
       (receiver instanceof PropertyRead || receiver instanceof SafePropertyRead) &&
       receiver.receiver instanceof ImplicitReceiver
     ) {
+      const [first] = expression.args;
+      const address = NAVIGATING.has(callee.name) && first !== undefined ? addressOf(first, text) : undefined;
       return locals.has(receiver.name)
         ? {
             kind: 'local',
@@ -168,6 +307,7 @@ const handlersOf = (handler: AST, locals: ReadonlySet<string>): TemplateHandler[
             property: receiver.name,
             method: callee.name,
             args: argsOf(expression),
+            ...(address === undefined ? {} : { address }),
           };
     }
     return { kind: 'other', text };
@@ -179,6 +319,11 @@ const routeOfExpression = (ast: AST, placeholder: string): string | null => {
   const root = ast instanceof ASTWithSource ? ast.ast : ast;
   const literal = root as { expressions?: AST[]; value?: unknown };
   if (typeof literal.value === 'string') return literal.value;
+  // `routerLink="/orders/{{ id }}"`: the text between the holes is the address too (P363).
+  if (root instanceof Interpolation) {
+    const joined = root.strings.map((text, at) => (at < root.expressions.length ? `${text}${placeholder}` : text)).join('');
+    return joined === '' ? null : joined;
+  }
   if (!Array.isArray(literal.expressions)) return null;
   const parts = literal.expressions.map((element) => {
     const value = (element as { value?: unknown }).value;
@@ -233,11 +378,49 @@ class EventCollector extends TmplAstRecursiveVisitor {
   readonly #seen = new Set<string>();
   readonly #placeholder: string;
   readonly #locals: ReadonlySet<string>;
+  /** The loop variables in scope, innermost last, each with the list it walks (P363). */
+  readonly #loops: Array<readonly [string, LoopSource]> = [];
 
   constructor(placeholder: string, locals: ReadonlySet<string>) {
     super();
     this.#placeholder = placeholder;
     this.#locals = locals;
+  }
+
+  /** The list a loop is written over, as a read, or why it is not one. */
+  static #sourceOf(ast: AST): LoopSource {
+    const source = String((ast as { source?: string }).source ?? '');
+    return readOf(ast, source) ?? { unread: `the list ${source.trim()} is not a member, a call of one with nothing handed, or a member of a loop's element` };
+  }
+
+  #within(name: string, source: LoopSource, visit: () => void): void {
+    this.#loops.push([name, source]);
+    try {
+      visit();
+    } finally {
+      this.#loops.pop();
+    }
+  }
+
+  /** The loops in scope, the innermost of one name winning, where there are any. */
+  #scope(): { loops?: ReadonlyMap<string, LoopSource> } {
+    return this.#loops.length === 0 ? {} : { loops: new Map(this.#loops) };
+  }
+
+  /** `@for (item of items(); track item.id)`: what is read inside reads `item` off `items()` (P363). */
+  override visitForLoopBlock(block: TmplAstForLoopBlock): void {
+    this.#within(block.item.name, EventCollector.#sourceOf(block.expression), () => super.visitForLoopBlock(block));
+  }
+
+  /** `*ngFor="let item of items"`: the template's `ngForOf` is the list, its `$implicit` variable the element (P363). */
+  override visitTemplate(template: TmplAstTemplate): void {
+    const over = template.templateAttrs.find((attribute): attribute is TmplAstBoundAttribute => attribute instanceof TmplAstBoundAttribute && attribute.name === 'ngForOf');
+    const item = template.variables.find((variable) => variable.value === '$implicit');
+    if (over === undefined || item === undefined) {
+      super.visitTemplate(template);
+      return;
+    }
+    this.#within(item.name, EventCollector.#sourceOf(over.value), () => super.visitTemplate(template));
   }
 
   /**
@@ -253,11 +436,13 @@ class EventCollector extends TmplAstRecursiveVisitor {
   }
 
   override visitBoundEvent(event: TmplAstBoundEvent): void {
+    const handlers = handlersOf(event.handler, this.#locals);
     this.#add({
       name: event.name,
       kind: kindOf(event.name),
       source: String((event.handler as { source?: string }).source ?? ''),
-      handlers: handlersOf(event.handler, this.#locals),
+      handlers,
+      ...(handlers.some((handler) => handler.kind === 'member' && handler.address !== undefined) ? this.#scope() : {}),
       line: event.sourceSpan.start.line,
       column: event.sourceSpan.start.col,
     });
@@ -278,12 +463,15 @@ class EventCollector extends TmplAstRecursiveVisitor {
 
   override visitBoundAttribute(attribute: TmplAstBoundAttribute): void {
     if (attribute.name !== 'routerLink') return;
+    const source = String((attribute.value as { source?: string }).source ?? '');
+    const address = addressOf(attribute.value, source);
     this.#add({
       name: 'routerLink',
       kind: 'route',
-      source: String((attribute.value as { source?: string }).source ?? ''),
+      source,
       handlers: [],
       route: routeOfExpression(attribute.value, this.#placeholder),
+      ...(address === undefined ? {} : { address, ...this.#scope() }),
       line: attribute.sourceSpan.start.line,
       column: attribute.sourceSpan.start.col,
     });

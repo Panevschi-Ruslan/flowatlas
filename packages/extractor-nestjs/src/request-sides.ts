@@ -176,9 +176,11 @@ export const oneSidePerRequest = (graph: RepoGraph, rootDir: string): RepoGraph 
   for (const edge of graph.edges) {
     if (edge.type === 'calls') callers.set(edge.to, [...(callers.get(edge.to) ?? []), edge.from]);
     if (edge.type !== 'handles') continue;
-    const from = byId.get(edge.from)?.type;
+    const source = byId.get(edge.from);
+    const from = source?.type;
     if (from === 'ui_action') addRoot(edge.to, 'browser');
-    else if (from === 'entry' || from === 'consumer') addRoot(edge.to, 'server');
+    // A screen's way in shows a page, whose side its file says as any screen's does (P363).
+    else if ((from === 'entry' && source?.kind !== 'screen') || from === 'consumer') addRoot(edge.to, 'server');
   }
   for (const node of graph.nodes) {
     if (node.type === 'ui_component' && node.file !== undefined) for (const side of files.screenSides(node.file)) addRoot(node.id, side);

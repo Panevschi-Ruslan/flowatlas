@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:28:15.785Z",
+  "builtAt": "2026-11-20T17:40:15.307Z",
   "configHash": "4191b8cde503",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./shop",
       "type": "sveltekit",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 11,
-      "edges": 7,
+      "nodes": 13,
+      "edges": 9,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 8221,
+      "durationMs": 741,
       "packages": {
         "name": "svelte-moved-routes",
         "runtime": [],
@@ -59,8 +59,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 11,
-    "edges": 8,
+    "nodes": 13,
+    "edges": 10,
     "types": 0,
     "missed": 0,
     "sites": 0,

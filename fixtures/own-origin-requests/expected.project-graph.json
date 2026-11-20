@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:53:48.543Z",
+  "builtAt": "2026-11-20T17:38:07.688Z",
   "services": [
     {
       "name": "site",
@@ -159,6 +159,22 @@
         "registration": "app/route",
         "middlewareRead": true,
         "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:site:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "site",
+      "file": "app/page.tsx",
+      "line": 2,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "Page"
+        ]
       }
     },
     {
@@ -557,6 +573,17 @@
       "line": 2,
       "meta": {
         "requestRead": true
+      }
+    },
+    {
+      "from": "entry:site:screen:/",
+      "to": "site#app/page.tsx:Page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/page.tsx",
+      "line": 2,
+      "meta": {
+        "route": "/"
       }
     },
     {

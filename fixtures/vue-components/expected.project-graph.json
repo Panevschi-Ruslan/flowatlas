@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T12:41:51.058Z",
+  "builtAt": "2026-11-20T17:40:36.783Z",
   "services": [
     {
       "name": "web",
@@ -10,6 +10,22 @@
     }
   ],
   "nodes": [
+    {
+      "id": "entry:web:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "web",
+      "file": "src/router/index.ts",
+      "line": 7,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "route-table",
+        "screens": [
+          "OrdersView"
+        ]
+      }
+    },
     {
       "id": "repo:web",
       "type": "repo",
@@ -196,6 +212,17 @@
     }
   ],
   "edges": [
+    {
+      "from": "entry:web:screen:/orders",
+      "to": "web#src/views/OrdersView.vue:OrdersView",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router/index.ts",
+      "line": 7,
+      "meta": {
+        "route": "/orders"
+      }
+    },
     {
       "from": "ui_action:web#src/components/RowActions.vue:2:11",
       "to": "web#src/components/RowActions.vue:cancel",

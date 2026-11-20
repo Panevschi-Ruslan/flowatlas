@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:14:07.021Z",
+  "builtAt": "2026-11-20T17:38:26.111Z",
   "services": [
     {
       "name": "orders",
@@ -250,6 +250,22 @@
         "registration": "app/route",
         "middlewareRead": true,
         "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:gateway:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "gateway",
+      "file": "app/page.tsx",
+      "line": 2,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "Page"
+        ]
       }
     },
     {
@@ -1181,6 +1197,17 @@
       "line": 2,
       "meta": {
         "requestRead": true
+      }
+    },
+    {
+      "from": "entry:gateway:screen:/",
+      "to": "gateway#app/page.tsx:Page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/page.tsx",
+      "line": 2,
+      "meta": {
+        "route": "/"
       }
     },
     {

@@ -1,5 +1,5 @@
 import { APP_PAGES, PAGES_SCREENS, routePathOfFile } from '@flowatlas/adapters-entry';
-import { hasDependency, normalizePath, startLineOf } from '@flowatlas/core';
+import { addScreenEntry, hasDependency, normalizePath, startLineOf } from '@flowatlas/core';
 import type { JsxAttributeLike, Node as TsNode, ObjectLiteralExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
@@ -295,9 +295,17 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
   const guessed = new Map<string, Set<string>>();
   const placings = new Map<string, Map<string, { branches: readonly string[]; within: Set<string> }>>();
   ROUTE_PLACINGS.set(ctx.builder, placings);
-  const claim = (indexed: IndexedFunction | undefined, path: string, placed = false, branch = false, placing: Placing = { branches: [] }): void => {
+  // Where each screen is placed at each address, for its way in (P363).
+  const sites = new Map<string, Map<string, { file: string; line: number; by: string; guessed: boolean }>>();
+  const claim = (indexed: IndexedFunction | undefined, path: string, placed = false, branch = false, placing: Placing = { branches: [] }, site?: TsNode): void => {
     // A file a router places is a screen whatever it returns: a page that only redirects is still the page at that address (P276).
     if (indexed === undefined || (indexed.role !== 'component' && !placed)) return;
+    const atPath = sites.get(indexed.id) ?? new Map<string, { file: string; line: number; by: string; guessed: boolean }>();
+    sites.set(indexed.id, atPath);
+    const placedBefore = atPath.get(path);
+    if (placedBefore === undefined) {
+      atPath.set(path, { file: site === undefined ? indexed.file : ctx.fileOf(site), line: site === undefined ? indexed.line : Node.isSourceFile(site) ? 1 : startLineOf(site), by: placed ? 'pages-directory' : 'route-table', guessed: branch });
+    } else if (!branch) atPath.set(path, { ...placedBefore, guessed: false });
     const paths = routed.get(indexed.id);
     // A component shown at two addresses keeps both, sorted, so the answer does
     // not depend on which file happened to be read first.
@@ -311,8 +319,8 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
     const within = new Set([...(before?.within ?? []), ...(placing.within === undefined ? [] : [placing.within])]);
     byPath.set(path, { branches: before === undefined ? placing.branches : before.branches.filter((mark) => placing.branches.includes(mark)), within });
   };
-  const claimAll = (indexed: IndexedFunction | undefined, paths: ReturnType<typeof routePathsOf>, placing?: Placing): void => {
-    for (const each of paths ?? []) claim(indexed, each.path, false, each.guessed === true, placing);
+  const claimAll = (indexed: IndexedFunction | undefined, paths: ReturnType<typeof routePathsOf>, placing: Placing | undefined, site: TsNode): void => {
+    for (const each of paths ?? []) claim(indexed, each.path, false, each.guessed === true, placing, site);
   };
 
   for (const sourceFile of ctx.project.getSourceFiles()) {
@@ -324,7 +332,7 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
       if (Node.isObjectLiteralExpression(node)) {
         const paths = routePathsOf(valueOf(node, 'path'));
         if (paths === undefined) return;
-        claimAll(routeScreenOf(ctx, valueOf(node, 'element') ?? valueOf(node, 'Component')), paths, placingOf(ctx, node));
+        claimAll(routeScreenOf(ctx, valueOf(node, 'element') ?? valueOf(node, 'Component')), paths, placingOf(ctx, node), node);
         return;
       }
       // The element form: `<Route path="/orders" element={<Orders />} />`.
@@ -342,14 +350,14 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
       // A route written over a list's items: one route per entry (P291).
       const listed = listedRoutes(pathValue, screenValue);
       if (listed !== undefined) {
-        for (const route of listed.routes) claimAll(routeScreenOf(ctx, route.screen, route.bound), routePathsOf(route.path, route.bound), placing);
+        for (const route of listed.routes) claimAll(routeScreenOf(ctx, route.screen, route.bound), routePathsOf(route.path, route.bound), placing, node);
         // The entries not read, said where the route is written (P320).
         listedRow(ctx, node, listed, screenValue);
         return;
       }
       const paths = routePathsOf(pathValue);
       if (paths === undefined) return;
-      claimAll(routeScreenOf(ctx, screenValue), paths, placing);
+      claimAll(routeScreenOf(ctx, screenValue), paths, placing, node);
     });
   }
 
@@ -381,7 +389,7 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
     for (const declaration of sourceFile.getExportedDeclarations().get('default') ?? []) {
       if (declaration.getSourceFile() === sourceFile) continue;
       const indexed = ctx.functions.get(declaration as never);
-      if (indexed !== undefined && indexed.role !== 'hook') claim(indexed, path, true);
+      if (indexed !== undefined && indexed.role !== 'hook') claim(indexed, path, true, false, undefined, sourceFile);
     }
   }
 
@@ -389,7 +397,13 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
     const indexed = ctx.functions.byId(id);
     if (indexed !== undefined) {
       const branches = guessed.get(id);
-      ctx.ensureFunctionNode(indexed.fn, { route: [...paths].sort().join(' '), ...(branches === undefined ? {} : { routeGuessed: [...branches].sort().join(' ') }) });
+      const node = ctx.ensureFunctionNode(indexed.fn, { route: [...paths].sort().join(' '), ...(branches === undefined ? {} : { routeGuessed: [...branches].sort().join(' ') }) });
+      if (node === undefined) continue;
+      for (const path of [...paths].sort()) {
+        const site = sites.get(id)?.get(path);
+        if (site === undefined) continue;
+        addScreenEntry(ctx.builder, { repo: ctx.repo, path, component: node.id, label: indexed.name, file: site.file, line: site.line, by: site.by, guessed: site.guessed });
+      }
     }
   }
 });

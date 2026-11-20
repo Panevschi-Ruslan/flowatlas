@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T12:20:40.278Z",
+  "builtAt": "2026-11-20T17:37:54.670Z",
   "configHash": "a27cd8f77c0e",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./shop",
       "type": "nuxt",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 27,
-      "edges": 25,
+      "nodes": 32,
+      "edges": 30,
       "types": 0,
       "unresolved": 9,
-      "durationMs": 820,
+      "durationMs": 754,
       "packages": {
         "name": "navigation-shop",
         "runtime": [
@@ -56,8 +56,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 27,
-    "edges": 27,
+    "nodes": 32,
+    "edges": 32,
     "types": 0,
     "missed": 9,
     "sites": 9,

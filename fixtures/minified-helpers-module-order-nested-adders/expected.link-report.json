@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T16:54:54.669Z",
+  "builtAt": "2026-11-20T17:35:25.063Z",
   "configHash": "88469d944ef5",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4696,
+      "durationMs": 744,
       "packages": {
         "name": "cms",
         "runtime": [
@@ -30,11 +30,11 @@
       "repo": "./console",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 19,
-      "edges": 2,
+      "nodes": 30,
+      "edges": 13,
       "types": 1,
       "unresolved": 18,
-      "durationMs": 6498,
+      "durationMs": 864,
       "packages": {
         "name": "minified-helpers-module-order-nested-adders-console",
         "runtime": [
@@ -54,7 +54,7 @@
       "edges": 12,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 5865,
+      "durationMs": 814,
       "packages": {
         "name": "poller",
         "runtime": [
@@ -110,8 +110,8 @@
     }
   ],
   "totals": {
-    "nodes": 40,
-    "edges": 14,
+    "nodes": 51,
+    "edges": 25,
     "types": 1,
     "missed": 21,
     "sites": 22,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:53:41.217Z",
+  "builtAt": "2026-11-20T17:38:00.044Z",
   "services": [
     {
       "name": "shop",
@@ -40,6 +40,22 @@
         "rawPath": "/api/cart",
         "adapter": "nitro-routes",
         "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "pages/index"
+        ]
       }
     },
     {
@@ -435,6 +451,17 @@
         "claimed": [
           "body"
         ]
+      }
+    },
+    {
+      "from": "entry:shop:screen:/",
+      "to": "shop#app/pages/index.vue:pages/index",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "meta": {
+        "route": "/"
       }
     },
     {

@@ -67,6 +67,14 @@ export const ENTRY_KINDS = [
   // from code, on a schedule, by a person - with no address of the network
   // (P258). Its key is the name it is run by.
   'task',
+  // A screen a front end's router shows at an address, keyed by the address
+  // it is mounted at (`/orders/:param`), the components it shows the code
+  // behind it (P363). A person arrives at one by its address, a bookmark or a
+  // link the reading did not follow as well as by the links it did, so a
+  // screen is triggered from outside the graph, as a schedule is; what the
+  // graph adds is that a component the router registers is reached, and at
+  // which address.
+  'screen',
 ] as const;
 
 export type EntryKind = (typeof ENTRY_KINDS)[number];

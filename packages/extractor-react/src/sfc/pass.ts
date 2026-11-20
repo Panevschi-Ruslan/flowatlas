@@ -1,4 +1,4 @@
-import { hasDependency, makeLeafId, makeSymbolId, startLineOf, type EmbeddedFile, type NamedFunction } from '@flowatlas/core';
+import { addScreenEntry, hasDependency, makeLeafId, makeSymbolId, startLineOf, type EmbeddedFile, type NamedFunction } from '@flowatlas/core';
 import { nuxtNamesOf, nuxtPagesOf, sveltekitPagesOf } from '@flowatlas/adapters-entry';
 import type { Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
@@ -9,7 +9,7 @@ import { positionAt, topLevelBlocks } from './blocks.js';
 import { drawChildren, type MarkupComponent } from './children.js';
 import { svelteMarkupEvents, vueTemplateEvents, type TemplateEvent, type TemplateHandler } from './events.js';
 import { COMPONENT_TAIL_NAME, componentNameOf, scriptSourceOf } from './formats.js';
-import { routedComponents } from './routes.js';
+import { routedComponents, type RouteSite } from './routes.js';
 import { adoptAs, functionsOf, indexStores, isOutsideReading, repoFiles, storeCallsIn, storeHookOf, type StoreIndex } from './stores.js';
 
 /**
@@ -119,8 +119,10 @@ export const sfcPass = definePass('components', (ctx: ReactExtractContext) => {
   for (const row of nuxt?.rows ?? []) ctx.report(row);
   // SvelteKit's pages under `kit.files.routes` where the configuration moves them (P251).
   const sveltekit = hasDependency(ctx.pkg, '@sveltejs/kit') ? sveltekitPagesOf(ctx.repoDir) : undefined;
+  const routeSites = new Map<string, Map<string, RouteSite>>();
   const routed = routedComponents(sources, files, {
     repoDir: ctx.repoDir,
+    sites: routeSites,
     extensions,
     pages: sveltekit === undefined ? [] : [sveltekit],
     ...(nuxt === undefined ? {} : { placed: nuxt.routes }),
@@ -138,7 +140,13 @@ export const sfcPass = definePass('components', (ctx: ReactExtractContext) => {
     ctx.functions.add(component);
     ctx.stats.components += 1;
     const paths = routed.get(made.file);
-    ctx.ensureFunctionNode(fn, paths === undefined ? undefined : { route: [...paths].sort().join(' ') });
+    const node = ctx.ensureFunctionNode(fn, paths === undefined ? undefined : { route: [...paths].sort().join(' ') });
+    // Each address the page is shown at is a way in, the page behind it (P363).
+    for (const path of [...(paths ?? [])].sort()) {
+      if (node === undefined) break;
+      const site = routeSites.get(made.file)?.get(path) ?? { file: made.file, line: 1, by: 'pages-directory' };
+      addScreenEntry(ctx.builder, { repo: ctx.repo, path, component: node.id, label: name, file: site.file, line: site.line, by: site.by });
+    }
 
     // What a handler can name: the script's own functions, the Options API's methods and setup.
     const named = new Map<string, IndexedFunction>();

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:54:30.251Z",
+  "builtAt": "2026-11-20T17:39:08.012Z",
   "services": [
     {
       "name": "site",
@@ -42,6 +42,22 @@
         "registration": "app/route",
         "middlewareRead": true,
         "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:site:screen:/things",
+      "type": "entry",
+      "label": "/things",
+      "repo": "site",
+      "file": "app/things/page.tsx",
+      "line": 4,
+      "kind": "screen",
+      "meta": {
+        "path": "/things",
+        "by": "pages-directory",
+        "screens": [
+          "ThingsPage"
+        ]
       }
     },
     {
@@ -413,6 +429,17 @@
       "line": 8,
       "meta": {
         "requestRead": true
+      }
+    },
+    {
+      "from": "entry:site:screen:/things",
+      "to": "site#app/things/page.tsx:ThingsPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/things/page.tsx",
+      "line": 4,
+      "meta": {
+        "route": "/things"
       }
     },
     {

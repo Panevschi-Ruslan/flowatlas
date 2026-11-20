@@ -830,6 +830,8 @@ export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './se
 export { callIndexOf, callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';
 export { BOUNDED_BY, boundedLoopOf, isMigrationFile } from './bounded-loop.js';
 export { loopOver, loopVariableOf, recordEntriesOf } from './loop-elements.js';
+export { addScreenEntry, isScreenEntry, SCREENS_META } from './screens.js';
+export type { ScreenEntry } from './screens.js';
 export type { RecordEntries, LoopElement, LoopReading, TakenElement } from './loop-elements.js';
 export { rankByReach, waysInOf } from './model/row-reach.js';
 export type { BoundedBy, BoundedLoop, BoundedLoopOptions, MigrationMarks } from './bounded-loop.js';

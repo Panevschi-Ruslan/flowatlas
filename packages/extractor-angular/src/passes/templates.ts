@@ -5,6 +5,7 @@ import {
   methodNamedOn,
   lineOf,
   makeLeafId,
+  NAVIGATES_META,
   normalizeFilePath,
   normalizePath,
   siteOf,
@@ -13,6 +14,7 @@ import {
 import type { ClassDeclaration } from 'ts-morph';
 import type { AngularExtractContext, RouteEntry } from '../context.js';
 import { componentDecorator, type IndexedClass } from '../index-classes.js';
+import { readAddress, type ListedReading } from '../listed.js';
 import { parseAngularTemplate, type TemplateEvent, type TemplateHandler } from '../template.js';
 import { metadataOf, propertyOf, stringProperty } from '../util/metadata.js';
 import { holdsRouterAs, landNavigation, writtenOfText } from './navigations.js';
@@ -85,6 +87,24 @@ const routesFor = (routes: readonly RouteEntry[], link: string): RouteEntry[] =>
   return routes.filter((route) => route.path === wanted);
 };
 
+/** Whether an address is nothing but holes - `:param`, `/:param` - which names no route to look for (P363). */
+const onlyHoles = (path: string): boolean => path.split('/').every((segment) => segment === '' || segment === ':param');
+
+/**
+ * The routes that answer an address read off a list's entry (P363): the one
+ * spelled exactly, else those whose parameters take the entry's values -
+ * an entry's `/orders/42` is the route `/orders/:id`.
+ */
+const routesMatching = (routes: readonly RouteEntry[], link: string): RouteEntry[] => {
+  const exact = routesFor(routes, link.split(/[?#]/)[0] ?? link);
+  if (exact.length > 0) return exact;
+  const wanted = normalizePath(link.split(/[?#]/)[0] ?? link).split('/');
+  return routes.filter((route) => {
+    const segments = route.path.split('/');
+    return segments.length === wanted.length && segments.every((segment, at) => segment === wanted[at] || segment.startsWith(':'));
+  });
+};
+
 export const templatesPass = definePass('templates', (ctx) => {
   /** The method a name reaches on a class or anything it extends. */
   const inheritedMethod = (owner: ClassDeclaration, name: string): ClassMethod | undefined =>
@@ -127,6 +147,8 @@ export const templatesPass = definePass('templates', (ctx) => {
     const id = makeLeafId('ui_action', ctx.repo, template.file, event.line, event.column);
     const [first] = event.handlers;
     const args = first !== undefined && first.kind !== 'other' ? first.args : [];
+    // A link spelled from what the template reads, read over the list it walks (P363).
+    const listed = event.kind === 'route' && event.address !== undefined ? readAddress(event.address, { loops: event.loops ?? new Map(), owner: indexed.declaration }) : undefined;
 
     ctx.builder.addNode({
       id,
@@ -142,9 +164,15 @@ export const templatesPass = definePass('templates', (ctx) => {
         component: indexed.id,
         template: template.file,
         ...(event.route === undefined ? {} : { route: event.route }),
+        ...(listed === undefined || listed.paths.length === 0 ? {} : { routes: listed.paths, ...(listed.lists.length === 0 ? {} : { listedFrom: listed.lists }) }),
         ...(args.length === 0 ? {} : { args }),
       },
     });
+
+    if (event.kind === 'route' && listed !== undefined && listed.paths.length > 0) {
+      landListed(indexed, event, template, id, listed);
+      return;
+    }
 
     if (event.kind === 'route') {
       const answering =
@@ -166,7 +194,7 @@ export const templatesPass = definePass('templates', (ctx) => {
       // Without a routed screen to point at there is nothing to say: a link is
       // only unresolved against a configuration that exists.
       if (ctx.routes.length === 0) return;
-      if (event.route === null || event.route === undefined) {
+      if (event.route === null || event.route === undefined || (listed !== undefined && onlyHoles(event.route))) {
         // A link assembled from data names no path, so there is no route to
         // look for. Nothing a reader can do about it, and one line saying so is
         // as much as a list of them would say.
@@ -175,7 +203,10 @@ export const templatesPass = definePass('templates', (ctx) => {
           line: event.line,
           reason: 'route-link-dynamic',
           level: 'info',
-          hint: 'The path is built at run time, so no configured route can be matched against it.',
+          hint:
+            listed === undefined || listed.unread.length === 0
+              ? 'The path is built at run time, so no configured route can be matched against it.'
+              : `The path is read from what the template reads, and that was not followed: ${listed.unread.join('; ')}.`,
           symbol: `${indexed.name} ${event.source}`,
         });
         return;
@@ -210,16 +241,26 @@ export const templatesPass = definePass('templates', (ctx) => {
         handler.kind === 'member' && NAVIGATING.has(handler.method) && holdsRouterAs(indexed.declaration, handler.property),
     );
     for (const handler of navigating) {
-      landNavigation(ctx, {
+      const landing = {
         from: id,
         file: template.file,
         line: event.line,
         symbol: `${indexed.name} (${event.name})`,
         method: handler.method,
-        written: writtenOfText(handler.method, handler.args[0]),
         ensure: () => undefined,
-        type: 'triggers',
-      });
+        type: 'triggers' as const,
+      };
+      // `router.navigate([item.route])` in a loop: one landing per entry of the list it walks (P363).
+      const read = handler.address === undefined ? undefined : readAddress(handler.address, { loops: event.loops ?? new Map(), owner: indexed.declaration });
+      if (read !== undefined && read.paths.length > 0) {
+        for (const path of read.paths) landNavigation(ctx, { ...landing, written: { path } });
+        if (read.unread.length > 0) landNavigation(ctx, { ...landing, written: { code: `${handler.args[0] ?? ''} (${read.unread.join('; ')})`.slice(0, 160) } });
+        continue;
+      }
+      const written = writtenOfText(handler.method, handler.args[0]);
+      // An address that is nothing but values read at run time names no route to look for: code, with why it was not read.
+      const unreadAddress = read !== undefined && 'path' in written && onlyHoles(written.path);
+      landNavigation(ctx, { ...landing, written: unreadAddress ? { code: `${handler.args[0] ?? ''}${read.unread.length === 0 ? '' : ` (${read.unread.join('; ')})`}`.slice(0, 160) } : written });
     }
     if (navigating.length > 0 && navigating.length === event.handlers.length) return;
 
@@ -293,6 +334,59 @@ export const templatesPass = definePass('templates', (ctx) => {
       level: 'nothing',
       hint: 'The binding is an assignment, or a call on something that is not an injected class, so no method node answers it.',
       symbol,
+    });
+  };
+
+  /**
+   * A link read over the list it walks (P363): a `triggers` edge to the
+   * screen at each address an entry spells, with `meta.listed`; a row for an
+   * address no configured route answers, naming it; one for what of the list
+   * was not read, saying why.
+   */
+  const landListed = (indexed: IndexedClass, event: TemplateEvent, template: TemplateText, id: string, listed: ListedReading): void => {
+    for (const path of listed.paths) {
+      const answering = routesMatching(ctx.routes, path);
+      const route = answering.find((candidate) => candidate.component !== undefined);
+      const target = route?.component === undefined ? undefined : ctx.classes.get(route.component);
+      if (target !== undefined && route !== undefined) {
+        ctx.ensureClassNode(target.declaration);
+        const stored = ctx.builder.addEdge({
+          from: id,
+          to: target.id,
+          type: 'triggers',
+          confidence: 'static',
+          file: template.file,
+          line: event.line,
+          meta: { [NAVIGATES_META]: path, route: route.path, listed: true },
+        });
+        const firstPath = stored.meta?.[NAVIGATES_META];
+        if (typeof firstPath === 'string' && firstPath !== path && stored.meta !== undefined) {
+          const also = Array.isArray(stored.meta['alsoNavigates']) ? (stored.meta['alsoNavigates'] as string[]) : [];
+          stored.meta = { ...stored.meta, alsoNavigates: [...new Set([...also, path])].sort() };
+        }
+        continue;
+      }
+      if (ctx.routes.length === 0) continue;
+      ctx.report({
+        file: template.file,
+        line: event.line,
+        reason: answering.length > 0 ? 'route-screen-unread' : 'route-target-unresolved',
+        level: answering.length > 0 ? 'info' : 'action',
+        hint:
+          answering.length > 0
+            ? `A route answers ${path}, which an entry of ${listed.lists.join(', ') || 'the list'} names, but nothing in the configuration said which component it shows.`
+            : `No configured route answers ${path}, which an entry of ${listed.lists.join(', ') || 'the list'} this link is rendered over names.`,
+        symbol: `${indexed.name} ${event.source} -> ${path}`,
+      });
+    }
+    if (listed.unread.length === 0) return;
+    ctx.report({
+      file: template.file,
+      line: event.line,
+      reason: 'route-link-dynamic',
+      level: 'info',
+      hint: `Some of what this link is rendered over was not read: ${listed.unread.join('; ')}.`,
+      symbol: `${indexed.name} ${event.source}`,
     });
   };
 

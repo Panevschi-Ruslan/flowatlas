@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:53:29.874Z",
+  "builtAt": "2026-11-20T17:37:52.907Z",
   "services": [
     {
       "name": "shop",
@@ -72,6 +72,54 @@
         "rawPath": "/api/audit",
         "adapter": "nitro-routes",
         "registration": "module/addServerHandler"
+      }
+    },
+    {
+      "id": "entry:shop:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "shop",
+      "file": "app/views/index.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "views/index"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/admin",
+      "type": "entry",
+      "label": "/admin",
+      "repo": "shop",
+      "file": "../admin-layer/screens/admin.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/admin",
+        "by": "pages-directory",
+        "screens": [
+          "admin"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/catalog",
+      "type": "entry",
+      "label": "/catalog",
+      "repo": "shop",
+      "file": "modules/catalog/runtime/pages/catalog.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/catalog",
+        "by": "pages-directory",
+        "screens": [
+          "catalog"
+        ]
       }
     },
     {
@@ -720,6 +768,39 @@
         "scope": "global",
         "layer": "middleware",
         "source": "module/addServerHandler"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/",
+      "to": "shop#app/views/index.vue:views/index",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/views/index.vue",
+      "line": 1,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/admin",
+      "to": "shop#../admin-layer/screens/admin.vue:admin",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../admin-layer/screens/admin.vue",
+      "line": 1,
+      "meta": {
+        "route": "/admin"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/catalog",
+      "to": "shop#modules/catalog/runtime/pages/catalog.vue:catalog",
+      "type": "handles",
+      "confidence": "static",
+      "file": "modules/catalog/runtime/pages/catalog.vue",
+      "line": 1,
+      "meta": {
+        "route": "/catalog"
       }
     },
     {

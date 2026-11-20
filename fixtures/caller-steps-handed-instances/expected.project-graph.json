@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T21:21:45.078Z",
+  "builtAt": "2026-11-20T17:32:04.677Z",
   "services": [
     {
       "name": "console",
@@ -355,6 +355,230 @@
       }
     },
     {
+      "id": "entry:console:screen:/areas/billing",
+      "type": "entry",
+      "label": "/areas/billing",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 40,
+      "kind": "screen",
+      "meta": {
+        "path": "/areas/billing",
+        "by": "route-table",
+        "screens": [
+          "Billing"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/boards/kanban",
+      "type": "entry",
+      "label": "/boards/kanban",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 46,
+      "kind": "screen",
+      "meta": {
+        "path": "/boards/kanban",
+        "by": "route-table",
+        "screens": [
+          "Kanban"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/guides",
+      "type": "entry",
+      "label": "/guides",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 55,
+      "kind": "screen",
+      "meta": {
+        "path": "/guides",
+        "by": "route-table",
+        "screens": [
+          "Guides"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/panels/alerts",
+      "type": "entry",
+      "label": "/panels/alerts",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 61,
+      "kind": "screen",
+      "meta": {
+        "path": "/panels/alerts",
+        "by": "route-table",
+        "screens": [
+          "Alerts"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/panels/limits",
+      "type": "entry",
+      "label": "/panels/limits",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 61,
+      "kind": "screen",
+      "meta": {
+        "path": "/panels/limits",
+        "by": "route-table",
+        "screens": [
+          "Limits"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/panels/stats",
+      "type": "entry",
+      "label": "/panels/stats",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 61,
+      "kind": "screen",
+      "meta": {
+        "path": "/panels/stats",
+        "by": "route-table",
+        "screens": [
+          "Stats"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/panels/usage",
+      "type": "entry",
+      "label": "/panels/usage",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 61,
+      "kind": "screen",
+      "meta": {
+        "path": "/panels/usage",
+        "by": "route-table",
+        "screens": [
+          "Usage"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/reports/invoices",
+      "type": "entry",
+      "label": "/reports/invoices",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 43,
+      "kind": "screen",
+      "meta": {
+        "path": "/reports/invoices",
+        "by": "route-table",
+        "screens": [
+          "Invoices"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/reports/invoices/edit",
+      "type": "entry",
+      "label": "/reports/invoices/edit",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 43,
+      "kind": "screen",
+      "meta": {
+        "path": "/reports/invoices/edit",
+        "by": "route-table",
+        "screens": [
+          "InvoicesEdit"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/tasks/backlog",
+      "type": "entry",
+      "label": "/tasks/backlog",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 52,
+      "kind": "screen",
+      "meta": {
+        "path": "/tasks/backlog",
+        "by": "route-table",
+        "screens": [
+          "Backlog"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/teams/members",
+      "type": "entry",
+      "label": "/teams/members",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 49,
+      "kind": "screen",
+      "meta": {
+        "path": "/teams/members",
+        "by": "route-table",
+        "screens": [
+          "Members"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/area/limits",
+      "type": "entry",
+      "label": "/area/limits",
+      "repo": "site",
+      "file": "src/app/area/limits/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/area/limits",
+        "by": "pages-directory",
+        "screens": [
+          "LimitsPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/console/logs",
+      "type": "entry",
+      "label": "/console/logs",
+      "repo": "site",
+      "file": "src/app/console/logs/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/console/logs",
+        "by": "pages-directory",
+        "screens": [
+          "LogsPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/help",
+      "type": "entry",
+      "label": "/help",
+      "repo": "site",
+      "file": "src/app/help/page.tsx",
+      "line": 4,
+      "kind": "screen",
+      "meta": {
+        "path": "/help",
+        "by": "pages-directory",
+        "screens": [
+          "HelpPage"
+        ]
+      }
+    },
+    {
       "id": "repo:console",
       "type": "repo",
       "label": "console",
@@ -646,6 +870,160 @@
       "returns": "type:console#Entry",
       "file": "src/App.tsx",
       "line": 30
+    },
+    {
+      "from": "entry:console:screen:/areas/billing",
+      "to": "console#src/features/screens.tsx:Billing",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 40,
+      "meta": {
+        "route": "/areas/billing"
+      }
+    },
+    {
+      "from": "entry:console:screen:/boards/kanban",
+      "to": "console#src/features/screens.tsx:Kanban",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 46,
+      "meta": {
+        "route": "/boards/kanban"
+      }
+    },
+    {
+      "from": "entry:console:screen:/guides",
+      "to": "console#src/features/screens.tsx:Guides",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 55,
+      "meta": {
+        "route": "/guides"
+      }
+    },
+    {
+      "from": "entry:console:screen:/panels/alerts",
+      "to": "console#src/features/screens.tsx:Alerts",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 61,
+      "meta": {
+        "route": "/panels/alerts"
+      }
+    },
+    {
+      "from": "entry:console:screen:/panels/limits",
+      "to": "console#src/features/screens.tsx:Limits",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 61,
+      "meta": {
+        "route": "/panels/limits"
+      }
+    },
+    {
+      "from": "entry:console:screen:/panels/stats",
+      "to": "console#src/features/screens.tsx:Stats",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 61,
+      "meta": {
+        "route": "/panels/stats"
+      }
+    },
+    {
+      "from": "entry:console:screen:/panels/usage",
+      "to": "console#src/features/screens.tsx:Usage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 61,
+      "meta": {
+        "route": "/panels/usage"
+      }
+    },
+    {
+      "from": "entry:console:screen:/reports/invoices",
+      "to": "console#src/features/screens.tsx:Invoices",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 43,
+      "meta": {
+        "route": "/reports/invoices"
+      }
+    },
+    {
+      "from": "entry:console:screen:/reports/invoices/edit",
+      "to": "console#src/features/screens.tsx:InvoicesEdit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 43,
+      "meta": {
+        "route": "/reports/invoices/edit"
+      }
+    },
+    {
+      "from": "entry:console:screen:/tasks/backlog",
+      "to": "console#src/features/screens.tsx:Backlog",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 52,
+      "meta": {
+        "route": "/tasks/backlog"
+      }
+    },
+    {
+      "from": "entry:console:screen:/teams/members",
+      "to": "console#src/features/screens.tsx:Members",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 49,
+      "meta": {
+        "route": "/teams/members"
+      }
+    },
+    {
+      "from": "entry:site:screen:/area/limits",
+      "to": "site#src/app/area/limits/page.tsx:LimitsPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/area/limits/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/area/limits"
+      }
+    },
+    {
+      "from": "entry:site:screen:/console/logs",
+      "to": "site#src/app/console/logs/page.tsx:LogsPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/console/logs/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/console/logs"
+      }
+    },
+    {
+      "from": "entry:site:screen:/help",
+      "to": "site#src/app/help/page.tsx:HelpPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/help/page.tsx",
+      "line": 4,
+      "meta": {
+        "route": "/help"
+      }
     },
     {
       "from": "site#src/app/help/page.tsx:HelpPage",

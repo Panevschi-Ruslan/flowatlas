@@ -53,6 +53,7 @@ import { ssePass } from './passes/sse.js';
 import { templatesPass } from './passes/templates.js';
 import { navigationsPass } from './passes/navigations.js';
 import { guardsPass } from './passes/guards.js';
+import { screensPass } from './passes/screens.js';
 import type { AngularExtractorPass } from './passes/types.js';
 import { ANGULAR_SHAPES } from './shapes/index.js';
 
@@ -150,6 +151,8 @@ export const BUILT_IN_PASSES: readonly AngularExtractorPass[] = [
   navigationsPass,
   // After the navigations, so a guard that navigates is the node they drew (P291).
   guardsPass,
+  // After the guards, so the screen's entry lists what they drew (P363).
+  screensPass,
   callsPass,
   httpPass,
   // After the requests, so a request that sends an operation is one node (P232).

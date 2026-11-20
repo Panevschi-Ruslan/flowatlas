@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:27:57.473Z",
+  "builtAt": "2026-11-20T17:40:13.539Z",
   "services": [
     {
       "name": "shop",
@@ -91,6 +91,86 @@
         "adapter": "sveltekit-routes",
         "registration": "routes/+server",
         "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "shop",
+      "file": "src/routes/+page.svelte",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "routes/+page"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/broken",
+      "type": "entry",
+      "label": "/broken",
+      "repo": "shop",
+      "file": "src/routes/(app)/broken/+page@(shop).svelte",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/broken",
+        "by": "pages-directory",
+        "screens": [
+          "broken/+page@(shop)"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/orders/:param",
+      "type": "entry",
+      "label": "/orders/:param",
+      "repo": "shop",
+      "file": "src/routes/(app)/orders/[id]/+page.svelte",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders/:param",
+        "by": "pages-directory",
+        "screens": [
+          "[id]/+page"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/orders/:param/receipt",
+      "type": "entry",
+      "label": "/orders/:param/receipt",
+      "repo": "shop",
+      "file": "src/routes/(app)/orders/[id]/receipt/+page@.svelte",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders/:param/receipt",
+        "by": "pages-directory",
+        "screens": [
+          "receipt/+page@"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/print",
+      "type": "entry",
+      "label": "/print",
+      "repo": "shop",
+      "file": "src/routes/(app)/print/+page.svelte",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/print",
+        "by": "pages-directory",
+        "screens": [
+          "print/+page"
+        ]
       }
     },
     {
@@ -607,6 +687,61 @@
       "line": 3,
       "meta": {
         "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:screen:/",
+      "to": "shop#src/routes/+page.svelte:routes/+page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/+page.svelte",
+      "line": 1,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/broken",
+      "to": "shop#src/routes/(app)/broken/+page@(shop).svelte:broken/+page@(shop)",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/(app)/broken/+page@(shop).svelte",
+      "line": 1,
+      "meta": {
+        "route": "/broken"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/orders/:param",
+      "to": "shop#src/routes/(app)/orders/[id]/+page.svelte:[id]/+page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/(app)/orders/[id]/+page.svelte",
+      "line": 1,
+      "meta": {
+        "route": "/orders/:param"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/orders/:param/receipt",
+      "to": "shop#src/routes/(app)/orders/[id]/receipt/+page@.svelte:receipt/+page@",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/(app)/orders/[id]/receipt/+page@.svelte",
+      "line": 1,
+      "meta": {
+        "route": "/orders/:param/receipt"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/print",
+      "to": "shop#src/routes/(app)/print/+page.svelte:print/+page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/(app)/print/+page.svelte",
+      "line": 1,
+      "meta": {
+        "route": "/print"
       }
     },
     {

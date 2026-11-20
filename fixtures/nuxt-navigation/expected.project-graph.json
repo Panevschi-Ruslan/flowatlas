@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:53:34.397Z",
+  "builtAt": "2026-11-20T17:37:54.670Z",
   "services": [
     {
       "name": "shop",
@@ -40,6 +40,86 @@
         "rawPath": "/api/seen",
         "adapter": "nitro-routes",
         "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "pages/index"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/login",
+      "type": "entry",
+      "label": "/login",
+      "repo": "shop",
+      "file": "app/pages/login.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/login",
+        "by": "pages-directory",
+        "screens": [
+          "login"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "shop",
+      "file": "app/pages/orders/index.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "pages-directory",
+        "screens": [
+          "orders/index"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/orders/:param",
+      "type": "entry",
+      "label": "/orders/:param",
+      "repo": "shop",
+      "file": "app/pages/orders/[id].vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders/:param",
+        "by": "pages-directory",
+        "screens": [
+          "orders/[id]"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/receipts/:param",
+      "type": "entry",
+      "label": "/receipts/:param",
+      "repo": "shop",
+      "file": "app/pages/receipts/[id].vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/receipts/:param",
+        "by": "pages-directory",
+        "screens": [
+          "receipts/[id]"
+        ]
       }
     },
     {
@@ -496,6 +576,61 @@
       "line": 1,
       "meta": {
         "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:screen:/",
+      "to": "shop#app/pages/index.vue:pages/index",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/login",
+      "to": "shop#app/pages/login.vue:login",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/login.vue",
+      "line": 1,
+      "meta": {
+        "route": "/login"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/orders",
+      "to": "shop#app/pages/orders/index.vue:orders/index",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/orders/index.vue",
+      "line": 1,
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/orders/:param",
+      "to": "shop#app/pages/orders/[id].vue:orders/[id]",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/orders/[id].vue",
+      "line": 1,
+      "meta": {
+        "route": "/orders/:param"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/receipts/:param",
+      "to": "shop#app/pages/receipts/[id].vue:receipts/[id]",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/receipts/[id].vue",
+      "line": 1,
+      "meta": {
+        "route": "/receipts/:param"
       }
     },
     {

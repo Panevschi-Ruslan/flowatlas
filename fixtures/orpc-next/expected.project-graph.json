@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:53:46.805Z",
+  "builtAt": "2026-11-20T17:38:05.814Z",
   "services": [
     {
       "name": "api",
@@ -915,6 +915,22 @@
       }
     },
     {
+      "id": "entry:api:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "api",
+      "file": "app/orders/page.tsx",
+      "line": 8,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "pages-directory",
+        "screens": [
+          "OrdersPage"
+        ]
+      }
+    },
+    {
       "id": "repo:api",
       "type": "repo",
       "label": "api",
@@ -1741,6 +1757,17 @@
       "confidence": "static",
       "file": "src/server/reports.ts",
       "line": 4
+    },
+    {
+      "from": "entry:api:screen:/orders",
+      "to": "api#app/orders/page.tsx:OrdersPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 8,
+      "meta": {
+        "route": "/orders"
+      }
     },
     {
       "from": "ui_action:web#src/Orders.tsx:9:13",

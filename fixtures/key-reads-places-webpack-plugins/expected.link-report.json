@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T13:10:41.522Z",
+  "builtAt": "2026-11-20T17:34:28.437Z",
   "configHash": "88469d944ef5",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 766,
+      "durationMs": 822,
       "packages": {
         "name": "cms",
         "runtime": [
@@ -32,11 +32,11 @@
       "repo": "./console",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 19,
-      "edges": 4,
+      "nodes": 39,
+      "edges": 24,
       "types": 2,
       "unresolved": 19,
-      "durationMs": 0,
+      "durationMs": 864,
       "packages": {
         "name": "key-reads-places-webpack-plugins-console",
         "runtime": [
@@ -56,7 +56,7 @@
       "edges": 24,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 738,
+      "durationMs": 820,
       "packages": {
         "name": "poller",
         "runtime": [
@@ -102,8 +102,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 65,
-    "edges": 35,
+    "nodes": 85,
+    "edges": 55,
     "types": 2,
     "missed": 25,
     "sites": 25,

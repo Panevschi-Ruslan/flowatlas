@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T17:24:12.319Z",
+  "builtAt": "2026-11-20T17:38:38.741Z",
   "configHash": "481b5ee8317e",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./console",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 12,
-      "edges": 9,
+      "nodes": 17,
+      "edges": 14,
       "types": 4,
       "unresolved": 13,
-      "durationMs": 1285,
+      "durationMs": 805,
       "packages": {
         "name": "registry-reach-views-handed-links-console",
         "runtime": [
@@ -28,11 +28,11 @@
       "repo": "./site",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 15,
-      "edges": 11,
+      "nodes": 21,
+      "edges": 17,
       "types": 0,
       "unresolved": 16,
-      "durationMs": 1337,
+      "durationMs": 819,
       "packages": {
         "name": "registry-reach-views-handed-links-site",
         "runtime": [
@@ -77,8 +77,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 27,
-    "edges": 20,
+    "nodes": 38,
+    "edges": 31,
     "types": 4,
     "missed": 29,
     "sites": 29,

@@ -474,7 +474,7 @@ accepted with `flowatlas accept` under `accepted`.
 | `search` | one query over routes and other ways in, channels, types of message, tables, types, gaps, what ways in can fail with, and classes, grouped by kind, with `counts` of each | `query` (required), `kinds`, `limit` (10 rows per kind), `service`, `offset` |
 
 `kind` is one of `http`, `rpc`, `event`, `cron`, `invoke`, `workflow`,
-`bot_command`, `bot_callback`, `bot_event` and `scene_step`. An `invoke` is a
+`bot_command`, `bot_callback`, `bot_event`, `scene_step`, `task` and `screen`. An `invoke` is a
 deployed function called by name rather than by an address (a Lambda function,
 say, as its infrastructure declares it). A `workflow` is a state machine,
 reached by the name it is deployed under; its steps are `function` nodes of
@@ -482,6 +482,15 @@ kind `state`. `rpc` is a procedure — a tRPC one, say — whose
 address is the dotted path its callers write, `orders.list`, rather than a verb
 and a path. It has no path for `pathPrefix` to match, so a prefix leaves
 procedures out; narrow them with `service` and `kind` instead.
+
+A `screen` is a page a front end's router shows at an address (P363),
+`entry:<service>:screen:/orders/:param`, the component it shows the code behind
+it: so `who_calls`, `impact` and `describe_for_prompt` on a routed component
+name the address it is shown at, linked or not, and `dead` answers it alive,
+`routed at /orders/:param`, saying whether a link to it was read. A screen is
+opened by whoever types its address as well as by the links read, so `dead`
+lists none as a route nobody calls. `search` with `kinds: ["routes"]` finds a
+screen by its address and by the component it shows.
 
 `find_symbol` accepts initials: `osc` finds `OrdersService.create`. Start here
 when you know roughly what something is called.

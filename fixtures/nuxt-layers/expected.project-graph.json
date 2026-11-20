@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T21:21:59.065Z",
+  "builtAt": "2026-11-20T17:37:51.019Z",
   "services": [
     {
       "name": "shop",
@@ -88,6 +88,54 @@
         "rawPath": "/api/cart",
         "adapter": "nitro-routes",
         "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "pages/index"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/cart",
+      "type": "entry",
+      "label": "/cart",
+      "repo": "shop",
+      "file": "app/pages/cart.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/cart",
+        "by": "pages-directory",
+        "screens": [
+          "cart"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/catalog",
+      "type": "entry",
+      "label": "/catalog",
+      "repo": "shop",
+      "file": "../ui-layer/pages/catalog.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/catalog",
+        "by": "pages-directory",
+        "screens": [
+          "catalog"
+        ]
       }
     },
     {
@@ -692,6 +740,39 @@
         "claimed": [
           "body"
         ]
+      }
+    },
+    {
+      "from": "entry:shop:screen:/",
+      "to": "shop#app/pages/index.vue:pages/index",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/cart",
+      "to": "shop#app/pages/cart.vue:cart",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/cart.vue",
+      "line": 1,
+      "meta": {
+        "route": "/cart"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/catalog",
+      "to": "shop#../ui-layer/pages/catalog.vue:catalog",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../ui-layer/pages/catalog.vue",
+      "line": 1,
+      "meta": {
+        "route": "/catalog"
       }
     },
     {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T14:22:01.896Z",
+  "builtAt": "2026-11-20T17:38:31.649Z",
   "configHash": "fe6ade849f35",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./shop",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 43,
-      "edges": 56,
+      "nodes": 44,
+      "edges": 57,
       "types": 2,
       "unresolved": 2,
-      "durationMs": 1706,
+      "durationMs": 840,
       "packages": {
         "name": "react-next-shop",
         "runtime": [
@@ -28,11 +28,11 @@
       "repo": "./web",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 17,
-      "edges": 14,
+      "nodes": 19,
+      "edges": 16,
       "types": 2,
       "unresolved": 2,
-      "durationMs": 1557,
+      "durationMs": 792,
       "packages": {
         "name": "react-next-web",
         "runtime": [
@@ -97,8 +97,8 @@
     }
   ],
   "totals": {
-    "nodes": 60,
-    "edges": 73,
+    "nodes": 63,
+    "edges": 76,
     "types": 4,
     "missed": 5,
     "sites": 5,

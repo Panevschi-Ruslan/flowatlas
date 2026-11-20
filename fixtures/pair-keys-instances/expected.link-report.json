@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T21:14:27.623Z",
+  "builtAt": "2026-11-20T17:38:09.551Z",
   "configHash": "cfed8ae18f4e",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./console",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 20,
-      "edges": 9,
+      "nodes": 30,
+      "edges": 19,
       "types": 6,
       "unresolved": 17,
-      "durationMs": 720,
+      "durationMs": 797,
       "packages": {
         "name": "pair-keys-instances-console",
         "runtime": [
@@ -58,8 +58,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 20,
-    "edges": 9,
+    "nodes": 30,
+    "edges": 19,
     "types": 6,
     "missed": 17,
     "sites": 17,

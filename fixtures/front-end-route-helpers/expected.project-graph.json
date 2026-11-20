@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:48:39.629Z",
+  "builtAt": "2026-11-20T17:33:38.009Z",
   "services": [
     {
       "name": "desk",
@@ -121,7 +121,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-login"
+        "selector": "app-login",
+        "route": "/login"
       }
     },
     {
@@ -138,7 +139,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-queue"
+        "selector": "app-queue",
+        "route": "/queue"
       }
     },
     {
@@ -155,7 +157,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-start"
+        "selector": "app-start",
+        "route": "/"
       }
     },
     {
@@ -395,6 +398,347 @@
         "registration": "pages/api",
         "middlewareRead": true,
         "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:console:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "console",
+      "file": "src/app/routes.ts",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "angular-routes",
+        "screens": [
+          "StartComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/login",
+      "type": "entry",
+      "label": "/login",
+      "repo": "console",
+      "file": "src/app/routes.ts",
+      "line": 10,
+      "kind": "screen",
+      "meta": {
+        "path": "/login",
+        "by": "angular-routes",
+        "screens": [
+          "LoginComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/queue",
+      "type": "entry",
+      "label": "/queue",
+      "repo": "console",
+      "file": "src/app/routes.ts",
+      "line": 11,
+      "kind": "screen",
+      "meta": {
+        "path": "/queue",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate authGuard"
+        ],
+        "screens": [
+          "QueueComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:desk:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "desk",
+      "file": "src/routes/index.tsx",
+      "line": 14,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "route-table",
+        "screens": [
+          "Home"
+        ]
+      }
+    },
+    {
+      "id": "entry:desk:screen:/:param",
+      "type": "entry",
+      "label": "/:param",
+      "repo": "desk",
+      "file": "src/routes/index.tsx",
+      "line": 14,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param",
+        "by": "route-table",
+        "screens": [
+          "Home"
+        ]
+      }
+    },
+    {
+      "id": "entry:desk:screen:/a/:param",
+      "type": "entry",
+      "label": "/a/:param",
+      "repo": "desk",
+      "file": "src/routes/index.tsx",
+      "line": 16,
+      "kind": "screen",
+      "meta": {
+        "path": "/a/:param",
+        "by": "route-table",
+        "screens": [
+          "Article"
+        ]
+      }
+    },
+    {
+      "id": "entry:desk:screen:/admin/teams/:param/members",
+      "type": "entry",
+      "label": "/admin/teams/:param/members",
+      "repo": "desk",
+      "file": "src/routes/index.tsx",
+      "line": 17,
+      "kind": "screen",
+      "meta": {
+        "path": "/admin/teams/:param/members",
+        "by": "route-table",
+        "screens": [
+          "TeamMembers"
+        ]
+      }
+    },
+    {
+      "id": "entry:desk:screen:/home",
+      "type": "entry",
+      "label": "/home",
+      "repo": "desk",
+      "file": "src/routes/index.tsx",
+      "line": 14,
+      "kind": "screen",
+      "meta": {
+        "path": "/home",
+        "by": "route-table",
+        "screens": [
+          "Home"
+        ]
+      }
+    },
+    {
+      "id": "entry:desk:screen:/home/:param",
+      "type": "entry",
+      "label": "/home/:param",
+      "repo": "desk",
+      "file": "src/routes/index.tsx",
+      "line": 14,
+      "kind": "screen",
+      "meta": {
+        "path": "/home/:param",
+        "by": "route-table",
+        "screens": [
+          "Home"
+        ]
+      }
+    },
+    {
+      "id": "entry:desk:screen:/login",
+      "type": "entry",
+      "label": "/login",
+      "repo": "desk",
+      "file": "src/routes/index.tsx",
+      "line": 13,
+      "kind": "screen",
+      "meta": {
+        "path": "/login",
+        "by": "route-table",
+        "screens": [
+          "Login"
+        ]
+      }
+    },
+    {
+      "id": "entry:desk:screen:/search",
+      "type": "entry",
+      "label": "/search",
+      "repo": "desk",
+      "file": "src/routes/index.tsx",
+      "line": 15,
+      "kind": "screen",
+      "meta": {
+        "path": "/search",
+        "by": "route-table",
+        "screens": [
+          "Search"
+        ]
+      }
+    },
+    {
+      "id": "entry:desk:screen:/search/:param",
+      "type": "entry",
+      "label": "/search/:param",
+      "repo": "desk",
+      "file": "src/routes/index.tsx",
+      "line": 15,
+      "kind": "screen",
+      "meta": {
+        "path": "/search/:param",
+        "by": "route-table",
+        "screens": [
+          "Search"
+        ]
+      }
+    },
+    {
+      "id": "entry:panel:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "panel",
+      "file": "src/router/index.ts",
+      "line": 10,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "route-table",
+        "screens": [
+          "BoardView"
+        ]
+      }
+    },
+    {
+      "id": "entry:panel:screen:/tickets",
+      "type": "entry",
+      "label": "/tickets",
+      "repo": "panel",
+      "file": "src/router/index.ts",
+      "line": 11,
+      "kind": "screen",
+      "meta": {
+        "path": "/tickets",
+        "by": "route-table",
+        "screens": [
+          "TicketsView"
+        ]
+      }
+    },
+    {
+      "id": "entry:sites:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "sites",
+      "file": "apps/blog/src/app/(app)/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "BlogPage",
+          "StorePage"
+        ]
+      }
+    },
+    {
+      "id": "entry:sites:screen:/:param",
+      "type": "entry",
+      "label": "/:param",
+      "repo": "sites",
+      "file": "apps/blog/src/app/(app)/[slug]/page.tsx",
+      "line": 2,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param",
+        "by": "pages-directory",
+        "screens": [
+          "BlogPage",
+          "StorePage"
+        ]
+      }
+    },
+    {
+      "id": "entry:sites:screen:/search",
+      "type": "entry",
+      "label": "/search",
+      "repo": "sites",
+      "file": "apps/blog/src/app/(app)/search/page.tsx",
+      "line": 2,
+      "kind": "screen",
+      "meta": {
+        "path": "/search",
+        "by": "pages-directory",
+        "screens": [
+          "SearchPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:stand:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "stand",
+      "file": "src/routes/+page.svelte",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "routes/+page"
+        ]
+      }
+    },
+    {
+      "id": "entry:stand:screen:/cart",
+      "type": "entry",
+      "label": "/cart",
+      "repo": "stand",
+      "file": "src/routes/cart/+page.svelte",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/cart",
+        "by": "pages-directory",
+        "screens": [
+          "cart/+page"
+        ]
+      }
+    },
+    {
+      "id": "entry:stand:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "stand",
+      "file": "src/routes/orders/+page.svelte",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "pages-directory",
+        "screens": [
+          "orders/+page"
+        ]
+      }
+    },
+    {
+      "id": "entry:stand:screen:/orders/:param",
+      "type": "entry",
+      "label": "/orders/:param",
+      "repo": "stand",
+      "file": "src/routes/orders/[id]/+page.svelte",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders/:param",
+        "by": "pages-directory",
+        "screens": [
+          "[id]/+page"
+        ]
       }
     },
     {
@@ -1177,6 +1521,259 @@
       "line": 6,
       "meta": {
         "requestRead": true
+      }
+    },
+    {
+      "from": "entry:console:screen:/",
+      "to": "console#src/app/start.component.ts:StartComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 9,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:console:screen:/login",
+      "to": "console#src/app/login.component.ts:LoginComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 10,
+      "meta": {
+        "route": "/login"
+      }
+    },
+    {
+      "from": "entry:console:screen:/queue",
+      "to": "console#src/app/queue.component.ts:QueueComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 11,
+      "meta": {
+        "route": "/queue"
+      }
+    },
+    {
+      "from": "entry:desk:screen:/",
+      "to": "desk#src/screens/Home.tsx:Home",
+      "type": "handles",
+      "confidence": "heuristic",
+      "file": "src/routes/index.tsx",
+      "line": 14,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:desk:screen:/:param",
+      "to": "desk#src/screens/Home.tsx:Home",
+      "type": "handles",
+      "confidence": "heuristic",
+      "file": "src/routes/index.tsx",
+      "line": 14,
+      "meta": {
+        "route": "/:param"
+      }
+    },
+    {
+      "from": "entry:desk:screen:/a/:param",
+      "to": "desk#src/screens/Article.tsx:Article",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/index.tsx",
+      "line": 16,
+      "meta": {
+        "route": "/a/:param"
+      }
+    },
+    {
+      "from": "entry:desk:screen:/admin/teams/:param/members",
+      "to": "desk#src/screens/TeamMembers.tsx:TeamMembers",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/index.tsx",
+      "line": 17,
+      "meta": {
+        "route": "/admin/teams/:param/members"
+      }
+    },
+    {
+      "from": "entry:desk:screen:/home",
+      "to": "desk#src/screens/Home.tsx:Home",
+      "type": "handles",
+      "confidence": "heuristic",
+      "file": "src/routes/index.tsx",
+      "line": 14,
+      "meta": {
+        "route": "/home"
+      }
+    },
+    {
+      "from": "entry:desk:screen:/home/:param",
+      "to": "desk#src/screens/Home.tsx:Home",
+      "type": "handles",
+      "confidence": "heuristic",
+      "file": "src/routes/index.tsx",
+      "line": 14,
+      "meta": {
+        "route": "/home/:param"
+      }
+    },
+    {
+      "from": "entry:desk:screen:/login",
+      "to": "desk#src/screens/Login/Login.tsx:Login",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/index.tsx",
+      "line": 13,
+      "meta": {
+        "route": "/login"
+      }
+    },
+    {
+      "from": "entry:desk:screen:/search",
+      "to": "desk#src/screens/Search.tsx:Search",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/index.tsx",
+      "line": 15,
+      "meta": {
+        "route": "/search"
+      }
+    },
+    {
+      "from": "entry:desk:screen:/search/:param",
+      "to": "desk#src/screens/Search.tsx:Search",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/index.tsx",
+      "line": 15,
+      "meta": {
+        "route": "/search/:param"
+      }
+    },
+    {
+      "from": "entry:panel:screen:/",
+      "to": "panel#src/views/BoardView.vue:BoardView",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router/index.ts",
+      "line": 10,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:panel:screen:/tickets",
+      "to": "panel#src/views/TicketsView.vue:TicketsView",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router/index.ts",
+      "line": 11,
+      "meta": {
+        "route": "/tickets"
+      }
+    },
+    {
+      "from": "entry:sites:screen:/",
+      "to": "sites#apps/blog/src/app/(app)/[slug]/page.tsx:BlogPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "apps/blog/src/app/(app)/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:sites:screen:/",
+      "to": "sites#apps/store/src/app/(app)/[slug]/page.tsx:StorePage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "apps/store/src/app/(app)/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:sites:screen:/:param",
+      "to": "sites#apps/blog/src/app/(app)/[slug]/page.tsx:BlogPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "apps/blog/src/app/(app)/[slug]/page.tsx",
+      "line": 2,
+      "meta": {
+        "route": "/:param"
+      }
+    },
+    {
+      "from": "entry:sites:screen:/:param",
+      "to": "sites#apps/store/src/app/(app)/[slug]/page.tsx:StorePage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "apps/store/src/app/(app)/[slug]/page.tsx",
+      "line": 2,
+      "meta": {
+        "route": "/:param"
+      }
+    },
+    {
+      "from": "entry:sites:screen:/search",
+      "to": "sites#apps/blog/src/app/(app)/search/page.tsx:SearchPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "apps/blog/src/app/(app)/search/page.tsx",
+      "line": 2,
+      "meta": {
+        "route": "/search"
+      }
+    },
+    {
+      "from": "entry:stand:screen:/",
+      "to": "stand#src/routes/+page.svelte:routes/+page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/+page.svelte",
+      "line": 1,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:stand:screen:/cart",
+      "to": "stand#src/routes/cart/+page.svelte:cart/+page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/cart/+page.svelte",
+      "line": 1,
+      "meta": {
+        "route": "/cart"
+      }
+    },
+    {
+      "from": "entry:stand:screen:/orders",
+      "to": "stand#src/routes/orders/+page.svelte:orders/+page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/orders/+page.svelte",
+      "line": 1,
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
+      "from": "entry:stand:screen:/orders/:param",
+      "to": "stand#src/routes/orders/[id]/+page.svelte:[id]/+page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/orders/[id]/+page.svelte",
+      "line": 1,
+      "meta": {
+        "route": "/orders/:param"
       }
     },
     {

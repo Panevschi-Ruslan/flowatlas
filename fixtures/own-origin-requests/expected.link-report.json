@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:13:34.697Z",
+  "builtAt": "2026-11-20T17:38:07.688Z",
   "configHash": "8629e6e75be8",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2316,
+      "durationMs": 787,
       "packages": {
         "name": "own-origin-requests-catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 2477,
+      "durationMs": 827,
       "packages": {
         "name": "own-origin-requests-shop",
         "runtime": [
@@ -44,11 +44,11 @@
       "repo": "./site",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 8,
-      "edges": 4,
+      "nodes": 9,
+      "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2449,
+      "durationMs": 816,
       "packages": {
         "name": "own-origin-requests-site",
         "runtime": [
@@ -135,8 +135,8 @@
     }
   ],
   "totals": {
-    "nodes": 24,
-    "edges": 19,
+    "nodes": 25,
+    "edges": 20,
     "types": 2,
     "missed": 2,
     "sites": 2,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T16:14:18.803Z",
+  "builtAt": "2026-11-20T17:33:33.942Z",
   "configHash": "e53814a49045",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./admin",
       "type": "angular",
       "extractor": "@flowatlas/extractor-angular",
-      "nodes": 12,
-      "edges": 7,
+      "nodes": 15,
+      "edges": 10,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 909,
+      "durationMs": 1056,
       "packages": {
         "name": "front-end-navigations-admin",
         "runtime": [
@@ -29,11 +29,11 @@
       "repo": "./backoffice",
       "type": "vue",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 12,
-      "edges": 8,
+      "nodes": 15,
+      "edges": 11,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 884,
+      "durationMs": 988,
       "packages": {
         "name": "front-end-navigations-backoffice",
         "runtime": [
@@ -48,11 +48,11 @@
       "repo": "./kiosk",
       "type": "sveltekit",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 7,
-      "edges": 5,
+      "nodes": 9,
+      "edges": 7,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 916,
+      "durationMs": 1027,
       "packages": {
         "name": "front-end-navigations-kiosk",
         "runtime": [],
@@ -67,11 +67,11 @@
       "repo": "./shop",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 24,
-      "edges": 25,
+      "nodes": 28,
+      "edges": 29,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 953,
+      "durationMs": 1081,
       "packages": {
         "name": "front-end-navigations-shop",
         "runtime": [
@@ -87,11 +87,11 @@
       "repo": "./storefront",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 20,
-      "edges": 21,
+      "nodes": 25,
+      "edges": 26,
       "types": 0,
       "unresolved": 9,
-      "durationMs": 908,
+      "durationMs": 1025,
       "packages": {
         "name": "front-end-navigations-storefront",
         "runtime": [
@@ -190,8 +190,8 @@
     }
   ],
   "totals": {
-    "nodes": 75,
-    "edges": 66,
+    "nodes": 92,
+    "edges": 83,
     "types": 0,
     "missed": 25,
     "sites": 34,

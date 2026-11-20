@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T14:41:40.339Z",
+  "builtAt": "2026-11-20T17:37:56.502Z",
   "configHash": "a27cd8f77c0e",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./shop",
       "type": "nuxt",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 38,
-      "edges": 47,
+      "nodes": 40,
+      "edges": 49,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 1021,
+      "durationMs": 784,
       "packages": {
         "name": "plugins-tasks-shop",
         "runtime": [
@@ -72,8 +72,8 @@
     }
   ],
   "totals": {
-    "nodes": 38,
-    "edges": 55,
+    "nodes": 40,
+    "edges": 57,
     "types": 0,
     "missed": 3,
     "sites": 3,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T22:27:05.730Z",
+  "builtAt": "2026-11-20T17:38:05.814Z",
   "configHash": "eb0f8a5034e2",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./api",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 34,
-      "edges": 35,
+      "nodes": 35,
+      "edges": 36,
       "types": 2,
       "unresolved": 3,
-      "durationMs": 750,
+      "durationMs": 876,
       "packages": {
         "name": "orpc-next-api",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 9,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 679,
+      "durationMs": 784,
       "packages": {
         "name": "orpc-next-web",
         "runtime": [
@@ -105,8 +105,8 @@
     }
   ],
   "totals": {
-    "nodes": 51,
-    "edges": 52,
+    "nodes": 52,
+    "edges": 53,
     "types": 2,
     "missed": 7,
     "sites": 7,

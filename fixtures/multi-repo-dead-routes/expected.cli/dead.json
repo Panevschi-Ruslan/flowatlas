@@ -114,7 +114,8 @@
     "bot_event",
     "scene_step",
     "invoke",
-    "task"
+    "task",
+    "screen"
   ],
   "unresolvedInjects": 0
 }

@@ -702,3 +702,44 @@ describe('verdicts', () => {
     expect(missing).toBeUndefined();
   });
 });
+
+describe('a screen the router registers (P363)', () => {
+  const nodes = [
+    node('entry:web:screen:/map', { type: 'entry', kind: 'screen', label: '/map' }),
+    node('entry:web:screen:/archive', { type: 'entry', kind: 'screen', label: '/archive' }),
+    node('web#src/map.ts:MapComponent', { type: 'ui_component', label: 'MapComponent' }),
+    node('web#src/archive.ts:ArchiveComponent', { type: 'ui_component', label: 'ArchiveComponent' }),
+    node('web#src/badge.ts:BadgeComponent', { type: 'ui_component', label: 'BadgeComponent' }),
+    node('web#src/linked.ts:LinkedComponent', { type: 'ui_component', label: 'LinkedComponent' }),
+    node('web#src/page.tsx:Page', { type: 'function', label: 'Page' }),
+    node('ui_action:web#src/side.html:3:8', { type: 'ui_action', kind: 'route' }),
+  ];
+  const edges = [
+    edge('entry:web:screen:/map', 'web#src/map.ts:MapComponent', { type: 'handles' }),
+    edge('entry:web:screen:/map', 'web#src/page.tsx:Page', { type: 'handles' }),
+    edge('entry:web:screen:/archive', 'web#src/archive.ts:ArchiveComponent', { type: 'handles' }),
+    edge('ui_action:web#src/side.html:3:8', 'web#src/map.ts:MapComponent', { type: 'triggers' }),
+    edge('ui_action:web#src/side.html:3:8', 'web#src/linked.ts:LinkedComponent', { type: 'triggers' }),
+  ];
+
+  it('answers a routed component alive at its address, saying whether a link to it was read', () => {
+    const db = buildTestDb({ nodes, edges });
+    const map = deadVerdict(db, db.report(), 'web#src/map.ts:MapComponent');
+    const archive = deadVerdict(db, db.report(), 'web#src/archive.ts:ArchiveComponent');
+    const page = deadVerdict(db, db.report(), 'web#src/page.tsx:Page');
+    const linked = deadVerdict(db, db.report(), 'web#src/linked.ts:LinkedComponent');
+    const badge = deadVerdict(db, db.report(), 'web#src/badge.ts:BadgeComponent');
+    const entry = deadVerdict(db, db.report(), 'entry:web:screen:/archive');
+    const listed = deadEntries(db, db.report());
+    db.close();
+    expect(map).toMatchObject({ verdict: 'alive', reason: 'routed at /map; 1 link read lands on it', evidence: { routedAt: ['/map'], links: 1 } });
+    expect(archive).toMatchObject({ verdict: 'alive', reason: 'routed at /archive; no link to it was read', evidence: { via: 'entry:web:screen:/archive', links: 0 } });
+    expect(page).toMatchObject({ verdict: 'alive', evidence: { routedAt: ['/map'] } });
+    expect(linked).toMatchObject({ verdict: 'alive', evidence: { callers: 1 } });
+    // Rendered by a tag, which is drawn by nothing: not a claim either way.
+    expect(badge).toMatchObject({ verdict: 'unknown' });
+    expect(entry).toMatchObject({ verdict: 'unknown', reason: 'a screen is opened at its address from outside the graph; no link to it was read' });
+    // A screen is never a route nobody calls.
+    expect(listed).toEqual([]);
+  });
+});

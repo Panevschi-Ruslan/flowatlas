@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:43:02.153Z",
+  "builtAt": "2026-11-20T17:33:35.828Z",
   "services": [
     {
       "name": "wiki",
@@ -86,7 +86,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-reports"
+        "selector": "app-reports",
+        "route": "/reports"
       }
     },
     {
@@ -182,7 +183,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-sign-in"
+        "selector": "app-sign-in",
+        "route": "/sign-in"
       }
     },
     {
@@ -199,7 +201,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-start"
+        "selector": "app-start",
+        "route": "/"
       }
     },
     {
@@ -244,7 +247,311 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-users"
+        "selector": "app-users",
+        "route": "/admin/users"
+      }
+    },
+    {
+      "id": "entry:console:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "console",
+      "file": "src/app/routes.ts",
+      "line": 13,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "angular-routes",
+        "screens": [
+          "StartComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/admin/users",
+      "type": "entry",
+      "label": "/admin/users",
+      "repo": "console",
+      "file": "src/app/routes.ts",
+      "line": 20,
+      "kind": "screen",
+      "meta": {
+        "path": "/admin/users",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate requireSession",
+          "canActivateChild AdminGuard",
+          "canActivate roleGuard('owner')"
+        ],
+        "screens": [
+          "UsersComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/reports",
+      "type": "entry",
+      "label": "/reports",
+      "repo": "console",
+      "file": "src/app/routes.ts",
+      "line": 15,
+      "kind": "screen",
+      "meta": {
+        "path": "/reports",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate requireSession",
+          "resolve totalsResolver"
+        ],
+        "screens": [
+          "ReportsComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/sign-in",
+      "type": "entry",
+      "label": "/sign-in",
+      "repo": "console",
+      "file": "src/app/routes.ts",
+      "line": 14,
+      "kind": "screen",
+      "meta": {
+        "path": "/sign-in",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate () => !inject(SessionService).isSignedIn()"
+        ],
+        "screens": [
+          "SignInComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/:param",
+      "type": "entry",
+      "label": "/:param",
+      "repo": "site",
+      "file": "src/app/[locale]/page.tsx",
+      "line": 5,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param",
+        "by": "pages-directory",
+        "screens": [
+          "FrontPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/:param/:param",
+      "type": "entry",
+      "label": "/:param/:param",
+      "repo": "site",
+      "file": "src/app/[locale]/[slug]/page.tsx",
+      "line": 2,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param/:param",
+        "by": "pages-directory",
+        "screens": [
+          "ArticlePage"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/:param/posts/page/:param",
+      "type": "entry",
+      "label": "/:param/posts/page/:param",
+      "repo": "site",
+      "file": "src/app/[locale]/posts/page/[pageNumber]/page.tsx",
+      "line": 2,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param/posts/page/:param",
+        "by": "pages-directory",
+        "screens": [
+          "PostsPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/:param/search",
+      "type": "entry",
+      "label": "/:param/search",
+      "repo": "site",
+      "file": "src/app/[locale]/search/page.tsx",
+      "line": 2,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param/search",
+        "by": "pages-directory",
+        "screens": [
+          "SearchPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/admin",
+      "type": "entry",
+      "label": "/admin",
+      "repo": "site",
+      "file": "src/app/(admin)/admin/page.tsx",
+      "line": 2,
+      "kind": "screen",
+      "meta": {
+        "path": "/admin",
+        "by": "pages-directory",
+        "screens": [
+          "AdminPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:wiki:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "wiki",
+      "file": "src/routes/index.tsx",
+      "line": 13,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "route-table",
+        "screens": [
+          "SharedPage",
+          "SignIn",
+          "Start"
+        ]
+      }
+    },
+    {
+      "id": "entry:wiki:screen:/:param",
+      "type": "entry",
+      "label": "/:param",
+      "repo": "wiki",
+      "file": "src/routes/index.tsx",
+      "line": 18,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param",
+        "by": "route-table",
+        "screens": [
+          "Start"
+        ]
+      }
+    },
+    {
+      "id": "entry:wiki:screen:/settings",
+      "type": "entry",
+      "label": "/settings",
+      "repo": "wiki",
+      "file": "src/routes/index.tsx",
+      "line": 19,
+      "kind": "screen",
+      "meta": {
+        "path": "/settings",
+        "by": "route-table",
+        "screens": [
+          "Profile",
+          "SettingsRoutes"
+        ]
+      }
+    },
+    {
+      "id": "entry:wiki:screen:/settings/members",
+      "type": "entry",
+      "label": "/settings/members",
+      "repo": "wiki",
+      "file": "src/routes/settings.tsx",
+      "line": 18,
+      "kind": "screen",
+      "meta": {
+        "path": "/settings/members",
+        "by": "route-table",
+        "screens": [
+          "Members"
+        ]
+      }
+    },
+    {
+      "id": "entry:wiki:screen:/settings/shortcuts",
+      "type": "entry",
+      "label": "/settings/shortcuts",
+      "repo": "wiki",
+      "file": "src/routes/settings.tsx",
+      "line": 21,
+      "kind": "screen",
+      "meta": {
+        "path": "/settings/shortcuts",
+        "by": "route-table",
+        "screens": [
+          "Shortcuts"
+        ]
+      }
+    },
+    {
+      "id": "entry:wiki:screen:/settings/tokens",
+      "type": "entry",
+      "label": "/settings/tokens",
+      "repo": "wiki",
+      "file": "src/routes/settings.tsx",
+      "line": 21,
+      "kind": "screen",
+      "meta": {
+        "path": "/settings/tokens",
+        "by": "route-table",
+        "screens": [
+          "Tokens"
+        ]
+      }
+    },
+    {
+      "id": "entry:wiki:screen:/settings/webhooks",
+      "type": "entry",
+      "label": "/settings/webhooks",
+      "repo": "wiki",
+      "file": "src/routes/settings.tsx",
+      "line": 18,
+      "kind": "screen",
+      "meta": {
+        "path": "/settings/webhooks",
+        "by": "route-table",
+        "screens": [
+          "Webhooks"
+        ]
+      }
+    },
+    {
+      "id": "entry:wiki:screen:/start",
+      "type": "entry",
+      "label": "/start",
+      "repo": "wiki",
+      "file": "src/routes/index.tsx",
+      "line": 18,
+      "kind": "screen",
+      "meta": {
+        "path": "/start",
+        "by": "route-table",
+        "screens": [
+          "Start"
+        ]
+      }
+    },
+    {
+      "id": "entry:wiki:screen:/start/:param",
+      "type": "entry",
+      "label": "/start/:param",
+      "repo": "wiki",
+      "file": "src/routes/index.tsx",
+      "line": 18,
+      "kind": "screen",
+      "meta": {
+        "path": "/start/:param",
+        "by": "route-table",
+        "screens": [
+          "Start"
+        ]
       }
     },
     {
@@ -948,6 +1255,237 @@
         "route": "/admin/users",
         "order": 2,
         "factory": true
+      }
+    },
+    {
+      "from": "entry:console:screen:/",
+      "to": "console#src/app/start.component.ts:StartComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 13,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:console:screen:/admin/users",
+      "to": "console#src/app/users.component.ts:UsersComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 20,
+      "meta": {
+        "route": "/admin/users"
+      }
+    },
+    {
+      "from": "entry:console:screen:/reports",
+      "to": "console#src/app/reports.component.ts:ReportsComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 15,
+      "meta": {
+        "route": "/reports"
+      }
+    },
+    {
+      "from": "entry:console:screen:/sign-in",
+      "to": "console#src/app/sign-in.component.ts:SignInComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/routes.ts",
+      "line": 14,
+      "meta": {
+        "route": "/sign-in"
+      }
+    },
+    {
+      "from": "entry:site:screen:/:param",
+      "to": "site#src/app/[locale]/page.tsx:FrontPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/[locale]/page.tsx",
+      "line": 5,
+      "meta": {
+        "route": "/:param"
+      }
+    },
+    {
+      "from": "entry:site:screen:/:param/:param",
+      "to": "site#src/app/[locale]/[slug]/page.tsx:ArticlePage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/[locale]/[slug]/page.tsx",
+      "line": 2,
+      "meta": {
+        "route": "/:param/:param"
+      }
+    },
+    {
+      "from": "entry:site:screen:/:param/posts/page/:param",
+      "to": "site#src/app/[locale]/posts/page/[pageNumber]/page.tsx:PostsPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/[locale]/posts/page/[pageNumber]/page.tsx",
+      "line": 2,
+      "meta": {
+        "route": "/:param/posts/page/:param"
+      }
+    },
+    {
+      "from": "entry:site:screen:/:param/search",
+      "to": "site#src/app/[locale]/search/page.tsx:SearchPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/[locale]/search/page.tsx",
+      "line": 2,
+      "meta": {
+        "route": "/:param/search"
+      }
+    },
+    {
+      "from": "entry:site:screen:/admin",
+      "to": "site#src/app/(admin)/admin/page.tsx:AdminPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/(admin)/admin/page.tsx",
+      "line": 2,
+      "meta": {
+        "route": "/admin"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/",
+      "to": "wiki#src/screens/SharedPage.tsx:SharedPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/index.tsx",
+      "line": 13,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/",
+      "to": "wiki#src/screens/SignIn.tsx:SignIn",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/index.tsx",
+      "line": 17,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/",
+      "to": "wiki#src/screens/Start.tsx:Start",
+      "type": "handles",
+      "confidence": "heuristic",
+      "file": "src/routes/index.tsx",
+      "line": 18,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/:param",
+      "to": "wiki#src/screens/Start.tsx:Start",
+      "type": "handles",
+      "confidence": "heuristic",
+      "file": "src/routes/index.tsx",
+      "line": 18,
+      "meta": {
+        "route": "/:param"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/settings",
+      "to": "wiki#src/routes/settings.tsx:SettingsRoutes",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/index.tsx",
+      "line": 19,
+      "meta": {
+        "route": "/settings"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/settings",
+      "to": "wiki#src/screens/settings/Profile.tsx:Profile",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/settings.tsx",
+      "line": 18,
+      "meta": {
+        "route": "/settings"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/settings/members",
+      "to": "wiki#src/screens/settings/Members.tsx:Members",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/settings.tsx",
+      "line": 18,
+      "meta": {
+        "route": "/settings/members"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/settings/shortcuts",
+      "to": "wiki#src/screens/settings/Shortcuts.tsx:Shortcuts",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/settings.tsx",
+      "line": 21,
+      "meta": {
+        "route": "/settings/shortcuts"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/settings/tokens",
+      "to": "wiki#src/screens/settings/Tokens.tsx:Tokens",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/settings.tsx",
+      "line": 21,
+      "meta": {
+        "route": "/settings/tokens"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/settings/webhooks",
+      "to": "wiki#src/screens/settings/Webhooks.tsx:Webhooks",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/settings.tsx",
+      "line": 18,
+      "meta": {
+        "route": "/settings/webhooks"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/start",
+      "to": "wiki#src/screens/Start.tsx:Start",
+      "type": "handles",
+      "confidence": "heuristic",
+      "file": "src/routes/index.tsx",
+      "line": 18,
+      "meta": {
+        "route": "/start"
+      }
+    },
+    {
+      "from": "entry:wiki:screen:/start/:param",
+      "to": "wiki#src/screens/Start.tsx:Start",
+      "type": "handles",
+      "confidence": "heuristic",
+      "file": "src/routes/index.tsx",
+      "line": 18,
+      "meta": {
+        "route": "/start/:param"
       }
     },
     {

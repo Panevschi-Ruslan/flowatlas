@@ -63,7 +63,8 @@
     "bot_event",
     "scene_step",
     "invoke",
-    "task"
+    "task",
+    "screen"
   ],
   "next": [
     "dead({id: \"entry:gateway:http:POST:/orders/charge\"})"

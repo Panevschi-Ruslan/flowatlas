@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:54:05.467Z",
+  "builtAt": "2026-11-20T17:38:31.649Z",
   "services": [
     {
       "name": "shop",
@@ -312,6 +312,54 @@
         "registration": "module 'use server'",
         "viaImport": true,
         "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "shop",
+      "file": "app/orders/page.tsx",
+      "line": 7,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "pages-directory",
+        "screens": [
+          "OrdersPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:web:screen:/invoices",
+      "type": "entry",
+      "label": "/invoices",
+      "repo": "web",
+      "file": "src/routes.tsx",
+      "line": 13,
+      "kind": "screen",
+      "meta": {
+        "path": "/invoices",
+        "by": "route-table",
+        "screens": [
+          "InvoicesPanel"
+        ]
+      }
+    },
+    {
+      "id": "entry:web:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "web",
+      "file": "src/routes.tsx",
+      "line": 12,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "route-table",
+        "screens": [
+          "OrdersPanel"
+        ]
       }
     },
     {
@@ -1438,6 +1486,39 @@
       "confidence": "static",
       "file": "app/actions/orders.ts",
       "line": 18
+    },
+    {
+      "from": "entry:shop:screen:/orders",
+      "to": "shop#app/orders/page.tsx:OrdersPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 7,
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
+      "from": "entry:web:screen:/invoices",
+      "to": "web#src/components/InvoicesPanel.tsx:InvoicesPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes.tsx",
+      "line": 13,
+      "meta": {
+        "route": "/invoices"
+      }
+    },
+    {
+      "from": "entry:web:screen:/orders",
+      "to": "web#src/components/OrdersPanel.tsx:OrdersPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes.tsx",
+      "line": 12,
+      "meta": {
+        "route": "/orders"
+      }
     },
     {
       "from": "shop#app/actions/orders.ts:archiveOrder",

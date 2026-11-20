@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T14:44:18.174Z",
+  "builtAt": "2026-11-20T17:40:38.467Z",
   "configHash": "0c86f0068ac4",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./web",
       "type": "vue",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 11,
-      "edges": 8,
+      "nodes": 12,
+      "edges": 9,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1308,
+      "durationMs": 680,
       "packages": {
         "name": "vue-plugins-web",
         "runtime": [
@@ -99,8 +99,8 @@
     }
   ],
   "totals": {
-    "nodes": 11,
-    "edges": 8,
+    "nodes": 12,
+    "edges": 9,
     "types": 0,
     "missed": 5,
     "sites": 5,

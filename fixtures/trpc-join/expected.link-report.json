@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T12:56:11.649Z",
+  "builtAt": "2026-11-20T17:40:24.106Z",
   "configHash": "6770c6354ded",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1060,
+      "durationMs": 817,
       "packages": {
         "name": "trpc-join-admin",
         "runtime": [
@@ -28,11 +28,11 @@
       "repo": "./api",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 10,
-      "edges": 4,
+      "nodes": 11,
+      "edges": 5,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 1074,
+      "durationMs": 867,
       "packages": {
         "name": "trpc-join-api",
         "runtime": [
@@ -53,7 +53,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 974,
+      "durationMs": 816,
       "packages": {
         "name": "trpc-join-web",
         "runtime": [
@@ -121,8 +121,8 @@
     }
   ],
   "totals": {
-    "nodes": 25,
-    "edges": 18,
+    "nodes": 26,
+    "edges": 19,
     "types": 0,
     "missed": 7,
     "sites": 7,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:41:44.568Z",
+  "builtAt": "2026-11-20T17:40:40.376Z",
   "services": [
     {
       "name": "api",
@@ -196,6 +196,38 @@
             "line": 21,
             "source": "throw"
           }
+        ]
+      }
+    },
+    {
+      "id": "entry:web:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "web",
+      "file": "src/router/index.ts",
+      "line": 8,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "route-table",
+        "screens": [
+          "OrdersView"
+        ]
+      }
+    },
+    {
+      "id": "entry:web:screen:/orders/:param",
+      "type": "entry",
+      "label": "/orders/:param",
+      "repo": "web",
+      "file": "src/router/index.ts",
+      "line": 11,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders/:param",
+        "by": "route-table",
+        "screens": [
+          "OrderDetail"
         ]
       }
     },
@@ -569,6 +601,28 @@
       "line": 32,
       "meta": {
         "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:web:screen:/orders",
+      "to": "web#src/views/OrdersView.vue:OrdersView",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router/index.ts",
+      "line": 8,
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
+      "from": "entry:web:screen:/orders/:param",
+      "to": "web#src/views/OrderDetail.vue:OrderDetail",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router/index.ts",
+      "line": 11,
+      "meta": {
+        "route": "/orders/:param"
       }
     },
     {

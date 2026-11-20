@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-15T14:55:00.764Z",
+  "builtAt": "2026-11-20T17:38:40.793Z",
   "configHash": "7c524233745c",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./docs",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 10,
-      "edges": 5,
+      "nodes": 13,
+      "edges": 8,
       "types": 2,
       "unresolved": 9,
-      "durationMs": 0,
+      "durationMs": 1006,
       "packages": {
         "name": "registry-stores-address-props-vite-docs",
         "runtime": [
@@ -28,11 +28,11 @@
       "repo": "./handbook",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 10,
-      "edges": 8,
+      "nodes": 14,
+      "edges": 12,
       "types": 0,
       "unresolved": 9,
-      "durationMs": 0,
+      "durationMs": 1003,
       "packages": {
         "name": "registry-stores-address-props-vite-handbook",
         "runtime": [
@@ -51,7 +51,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 929,
       "packages": {
         "name": "registry-stores-address-props-vite-jobs",
         "runtime": [
@@ -69,7 +69,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 923,
       "packages": {
         "name": "registry-stores-address-props-vite-planner",
         "runtime": [],
@@ -89,7 +89,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 938,
       "packages": {
         "name": "registry-stores-address-props-vite-store",
         "runtime": [
@@ -140,8 +140,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 33,
-    "edges": 22,
+    "nodes": 40,
+    "edges": 29,
     "types": 2,
     "missed": 20,
     "sites": 20,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:53:37.516Z",
+  "builtAt": "2026-11-20T17:37:56.502Z",
   "services": [
     {
       "name": "shop",
@@ -139,6 +139,38 @@
         "rawPath": "/api/visits",
         "adapter": "nitro-routes",
         "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "pages/index"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "shop",
+      "file": "app/pages/orders.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "pages-directory",
+        "screens": [
+          "orders"
+        ]
       }
     },
     {
@@ -1053,6 +1085,28 @@
         "scope": "global",
         "layer": "middleware",
         "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/",
+      "to": "shop#app/pages/index.vue:pages/index",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/orders",
+      "to": "shop#app/pages/orders.vue:orders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/orders.vue",
+      "line": 1,
+      "meta": {
+        "route": "/orders"
       }
     },
     {

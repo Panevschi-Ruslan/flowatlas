@@ -124,8 +124,9 @@ const ASKED_KINDS = new Set(['http', 'bot_command', 'bot_callback', 'bot_event',
  */
 const roleOf = (entries: Record<string, number>, ui: number, consumers: number): Column => {
   const asked = Object.entries(entries).reduce((sum, [kind, n]) => sum + (ASKED_KINDS.has(kind) ? n : 0), 0);
-  const any = Object.values(entries).reduce((sum, n) => sum + n, 0);
-  if (ui > 0 && (entries['http'] ?? 0) === 0) return 'front';
+  // A screen the router shows is a front end's way in, never a worker's (P363).
+  const any = Object.entries(entries).reduce((sum, [kind, n]) => sum + (kind === 'screen' ? 0 : n), 0);
+  if ((ui > 0 || (entries['screen'] ?? 0) > 0) && (entries['http'] ?? 0) === 0) return 'front';
   if (asked > 0) return 'api';
   if (any > 0 || consumers > 0) return 'worker';
   return 'library';

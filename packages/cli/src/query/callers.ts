@@ -125,6 +125,7 @@ const KIND_LABEL: Record<string, [string, string]> = {
   cron: ['cron job', 'cron jobs'],
   workflow: ['workflow', 'workflows'],
   task: ['task', 'tasks'],
+  screen: ['screen', 'screens'],
 };
 
 export interface ReachableGroup {

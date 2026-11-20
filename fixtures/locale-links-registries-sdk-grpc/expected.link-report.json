@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:49:44.029Z",
+  "builtAt": "2026-11-20T17:35:13.916Z",
   "configHash": "8256fc8fbd0c",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1185,
       "packages": {
         "name": "locale-links-registries-sdk-grpc-checkout",
         "runtime": [
@@ -28,11 +28,11 @@
       "repo": "./console",
       "type": "angular",
       "extractor": "@flowatlas/extractor-angular",
-      "nodes": 14,
-      "edges": 7,
+      "nodes": 15,
+      "edges": 8,
       "types": 1,
       "unresolved": 6,
-      "durationMs": 0,
+      "durationMs": 1148,
       "packages": {
         "name": "locale-links-registries-sdk-grpc-console",
         "runtime": [
@@ -53,11 +53,11 @@
       "repo": "./portal",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 4,
-      "edges": 2,
+      "nodes": 6,
+      "edges": 4,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 648,
+      "durationMs": 1161,
       "packages": {
         "name": "locale-links-registries-sdk-grpc-portal",
         "runtime": [
@@ -73,11 +73,11 @@
       "repo": "./site",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 10,
-      "edges": 9,
+      "nodes": 13,
+      "edges": 12,
       "types": 0,
       "unresolved": 9,
-      "durationMs": 0,
+      "durationMs": 1222,
       "packages": {
         "name": "locale-links-registries-sdk-grpc-site",
         "runtime": [
@@ -97,7 +97,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1145,
       "packages": {
         "name": "locale-links-registries-sdk-grpc-stock",
         "runtime": [
@@ -112,11 +112,11 @@
       "repo": "./wiki",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 22,
-      "edges": 12,
+      "nodes": 27,
+      "edges": 18,
       "types": 1,
       "unresolved": 12,
-      "durationMs": 0,
+      "durationMs": 1283,
       "packages": {
         "name": "locale-links-registries-sdk-grpc-wiki",
         "runtime": [
@@ -241,8 +241,8 @@
     }
   ],
   "totals": {
-    "nodes": 57,
-    "edges": 34,
+    "nodes": 68,
+    "edges": 46,
     "types": 7,
     "missed": 38,
     "sites": 38,

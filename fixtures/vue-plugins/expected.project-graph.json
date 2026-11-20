@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T14:44:18.174Z",
+  "builtAt": "2026-11-20T17:40:38.467Z",
   "services": [
     {
       "name": "web",
@@ -10,6 +10,22 @@
     }
   ],
   "nodes": [
+    {
+      "id": "entry:web:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "web",
+      "file": "src/router/index.ts",
+      "line": 7,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "route-table",
+        "screens": [
+          "OrdersView"
+        ]
+      }
+    },
     {
       "id": "repo:web",
       "type": "repo",
@@ -206,6 +222,17 @@
     }
   ],
   "edges": [
+    {
+      "from": "entry:web:screen:/orders",
+      "to": "web#src/views/OrdersView.vue:OrdersView",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router/index.ts",
+      "line": 7,
+      "meta": {
+        "route": "/orders"
+      }
+    },
     {
       "from": "web#src/components/AppBadge.vue:AppBadge",
       "to": "ui_api_call:web#src/components/AppBadge.vue:6:15",

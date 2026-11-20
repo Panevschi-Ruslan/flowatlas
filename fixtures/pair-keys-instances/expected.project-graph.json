@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T21:14:27.623Z",
+  "builtAt": "2026-11-20T17:38:09.551Z",
   "services": [
     {
       "name": "console",
@@ -300,6 +300,166 @@
       }
     },
     {
+      "id": "entry:console:screen:/dock/main",
+      "type": "entry",
+      "label": "/dock/main",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 58,
+      "kind": "screen",
+      "meta": {
+        "path": "/dock/main",
+        "by": "route-table",
+        "screens": [
+          "DockMain"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/gadgets/gauge",
+      "type": "entry",
+      "label": "/gadgets/gauge",
+      "repo": "console",
+      "file": "src/routes/WidgetRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/gadgets/gauge",
+        "by": "route-table",
+        "screens": [
+          "Gauge"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/inbox",
+      "type": "entry",
+      "label": "/inbox",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 34,
+      "kind": "screen",
+      "meta": {
+        "path": "/inbox",
+        "by": "route-table",
+        "screens": [
+          "Inbox"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/pages/faq",
+      "type": "entry",
+      "label": "/pages/faq",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 40,
+      "kind": "screen",
+      "meta": {
+        "path": "/pages/faq",
+        "by": "route-table",
+        "screens": [
+          "Faq"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/pages/intro",
+      "type": "entry",
+      "label": "/pages/intro",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 40,
+      "kind": "screen",
+      "meta": {
+        "path": "/pages/intro",
+        "by": "route-table",
+        "screens": [
+          "Intro"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/reports",
+      "type": "entry",
+      "label": "/reports",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 34,
+      "kind": "screen",
+      "meta": {
+        "path": "/reports",
+        "by": "route-table",
+        "screens": [
+          "Reports"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/shelf/home",
+      "type": "entry",
+      "label": "/shelf/home",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 48,
+      "kind": "screen",
+      "meta": {
+        "path": "/shelf/home",
+        "by": "route-table",
+        "screens": [
+          "ShelfHome"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/teams/members",
+      "type": "entry",
+      "label": "/teams/members",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 43,
+      "kind": "screen",
+      "meta": {
+        "path": "/teams/members",
+        "by": "route-table",
+        "screens": [
+          "Members"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/tools/export",
+      "type": "entry",
+      "label": "/tools/export",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 37,
+      "kind": "screen",
+      "meta": {
+        "path": "/tools/export",
+        "by": "route-table",
+        "screens": [
+          "Export"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/widgets/chart",
+      "type": "entry",
+      "label": "/widgets/chart",
+      "repo": "console",
+      "file": "src/routes/WidgetRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/widgets/chart",
+        "by": "route-table",
+        "screens": [
+          "Chart"
+        ]
+      }
+    },
+    {
       "id": "repo:console",
       "type": "repo",
       "label": "console",
@@ -433,6 +593,116 @@
       "returns": "type:console#ShelfRegistry",
       "file": "src/lib/shelves.ts",
       "line": 21
+    },
+    {
+      "from": "entry:console:screen:/dock/main",
+      "to": "console#src/features/screens.tsx:DockMain",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 58,
+      "meta": {
+        "route": "/dock/main"
+      }
+    },
+    {
+      "from": "entry:console:screen:/gadgets/gauge",
+      "to": "console#src/features/screens.tsx:Gauge",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/WidgetRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/gadgets/gauge"
+      }
+    },
+    {
+      "from": "entry:console:screen:/inbox",
+      "to": "console#src/features/screens.tsx:Inbox",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 34,
+      "meta": {
+        "route": "/inbox"
+      }
+    },
+    {
+      "from": "entry:console:screen:/pages/faq",
+      "to": "console#src/features/screens.tsx:Faq",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 40,
+      "meta": {
+        "route": "/pages/faq"
+      }
+    },
+    {
+      "from": "entry:console:screen:/pages/intro",
+      "to": "console#src/features/screens.tsx:Intro",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 40,
+      "meta": {
+        "route": "/pages/intro"
+      }
+    },
+    {
+      "from": "entry:console:screen:/reports",
+      "to": "console#src/features/screens.tsx:Reports",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 34,
+      "meta": {
+        "route": "/reports"
+      }
+    },
+    {
+      "from": "entry:console:screen:/shelf/home",
+      "to": "console#src/features/screens.tsx:ShelfHome",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 48,
+      "meta": {
+        "route": "/shelf/home"
+      }
+    },
+    {
+      "from": "entry:console:screen:/teams/members",
+      "to": "console#src/features/screens.tsx:Members",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 43,
+      "meta": {
+        "route": "/teams/members"
+      }
+    },
+    {
+      "from": "entry:console:screen:/tools/export",
+      "to": "console#src/features/screens.tsx:Export",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 37,
+      "meta": {
+        "route": "/tools/export"
+      }
+    },
+    {
+      "from": "entry:console:screen:/widgets/chart",
+      "to": "console#src/features/screens.tsx:Chart",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/WidgetRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/widgets/chart"
+      }
     }
   ],
   "types": {

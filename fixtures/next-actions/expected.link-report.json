@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-16T23:29:19.656Z",
+  "builtAt": "2026-11-20T17:37:32.089Z",
   "configHash": "1f65cc337532",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./shop",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 16,
-      "edges": 15,
+      "nodes": 17,
+      "edges": 16,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 487,
+      "durationMs": 750,
       "packages": {
         "name": "next-actions-shop",
         "runtime": [
@@ -58,8 +58,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 16,
-    "edges": 15,
+    "nodes": 17,
+    "edges": 16,
     "types": 0,
     "missed": 3,
     "sites": 3,

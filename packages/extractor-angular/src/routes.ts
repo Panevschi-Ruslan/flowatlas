@@ -532,6 +532,7 @@ export const collectRoutes = (ctx: AngularExtractContext): RouteEntry[] => {
     const guards = chainOf(own);
     out.push({
       path,
+      site: element,
       ...(ref?.kind === 'local' ? { component: ref.declaration } : {}),
       ...(guards.length === 0 ? {} : { guards }),
     });

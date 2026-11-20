@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:48:17.524Z",
+  "builtAt": "2026-11-20T17:33:02.437Z",
   "services": [
     {
       "name": "orders",
@@ -251,6 +251,22 @@
       }
     },
     {
+      "id": "entry:store:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "store",
+      "file": "app/page.tsx",
+      "line": 4,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "Page"
+        ]
+      }
+    },
+    {
       "id": "entry:storefront:http:GET:/api/basket",
       "type": "entry",
       "label": "GET /api/basket",
@@ -264,6 +280,22 @@
         "rawPath": "/api/basket",
         "adapter": "nitro-routes",
         "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:storefront:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "storefront",
+      "file": "pages/index.vue",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "pages/index"
+        ]
       }
     },
     {
@@ -1342,6 +1374,17 @@
       }
     },
     {
+      "from": "entry:store:screen:/",
+      "to": "store#app/page.tsx:Page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/page.tsx",
+      "line": 4,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
       "from": "entry:storefront:http:GET:/api/basket",
       "to": "storefront#server/api/basket.get.ts:GET /api/basket@1",
       "type": "handles",
@@ -1351,6 +1394,17 @@
       "line": 1,
       "meta": {
         "requestRead": true
+      }
+    },
+    {
+      "from": "entry:storefront:screen:/",
+      "to": "storefront#pages/index.vue:pages/index",
+      "type": "handles",
+      "confidence": "static",
+      "file": "pages/index.vue",
+      "line": 1,
+      "meta": {
+        "route": "/"
       }
     },
     {

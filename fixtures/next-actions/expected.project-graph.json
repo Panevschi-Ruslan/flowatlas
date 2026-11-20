@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:52:27.746Z",
+  "builtAt": "2026-11-20T17:37:32.089Z",
   "services": [
     {
       "name": "shop",
@@ -58,6 +58,22 @@
         "builder": "next-safe-action",
         "viaImport": true,
         "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "shop",
+      "file": "app/orders/page.tsx",
+      "line": 10,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "pages-directory",
+        "screens": [
+          "OrdersPage"
+        ]
       }
     },
     {
@@ -320,6 +336,17 @@
       "confidence": "static",
       "file": "app/actions/orders.ts",
       "line": 28
+    },
+    {
+      "from": "entry:shop:screen:/orders",
+      "to": "shop#app/orders/page.tsx:OrdersPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 10,
+      "meta": {
+        "route": "/orders"
+      }
     },
     {
       "from": "shop#app/actions/orders.ts:action archiveOrder@22",

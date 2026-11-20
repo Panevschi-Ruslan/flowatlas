@@ -98,6 +98,13 @@ export const routeNames = (
   return named;
 };
 
+/** Where a route places a component file: the route table's line, or the page file itself. */
+export interface RouteSite {
+  readonly file: string;
+  readonly line: number;
+  readonly by: string;
+}
+
 /** Every component file the repository routes to, with the addresses it is shown at. */
 export const routedComponents = (
   sources: readonly SourceFile[],
@@ -108,11 +115,18 @@ export const routedComponents = (
     pages: readonly FsRouter[];
     /** Files a framework's own reading has placed already, at their address (P243). */
     placed?: ReadonlyMap<string, string>;
+    /** Filled with where each file is placed at each address, for the screen's way in (P363). */
+    sites?: Map<string, Map<string, RouteSite>>;
   },
 ): Map<string, Set<string>> => {
   const routed = new Map<string, Set<string>>();
-  const claim = (file: string, path: string): void => {
-    routed.set(file, (routed.get(file) ?? new Set()).add(normalizePath(path)));
+  const claim = (file: string, path: string, site?: RouteSite): void => {
+    const address = normalizePath(path);
+    routed.set(file, (routed.get(file) ?? new Set()).add(address));
+    if (options.sites === undefined) return;
+    const atPath = options.sites.get(file) ?? new Map<string, RouteSite>();
+    options.sites.set(file, atPath);
+    if (!atPath.has(address)) atPath.set(address, site ?? { file, line: 1, by: 'pages-directory' });
   };
   for (const sourceFile of sources) {
     sourceFile.forEachDescendant((node) => {
@@ -121,7 +135,7 @@ export const routedComponents = (
       if (component === undefined) return;
       const path = fullPath(node);
       const file = path === undefined ? undefined : routedFile(component, options.repoDir, options.extensions);
-      if (file !== undefined && path !== undefined) claim(file, path);
+      if (file !== undefined && path !== undefined) claim(file, path, { file: normalizeFilePath(sourceFile.getFilePath(), options.repoDir), line: node.getStartLineNumber(), by: 'route-table' });
     });
   }
   for (const [file, path] of options.placed ?? []) claim(file, path);

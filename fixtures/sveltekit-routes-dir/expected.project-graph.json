@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:28:15.785Z",
+  "builtAt": "2026-11-20T17:40:15.307Z",
   "services": [
     {
       "name": "shop",
@@ -41,6 +41,38 @@
         "adapter": "sveltekit-routes",
         "registration": "routes/+page.server",
         "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:screen:/",
+      "type": "entry",
+      "label": "/",
+      "repo": "shop",
+      "file": "src/app/+page.svelte",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/",
+        "by": "pages-directory",
+        "screens": [
+          "app/+page"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:screen:/items/:param",
+      "type": "entry",
+      "label": "/items/:param",
+      "repo": "shop",
+      "file": "src/app/items/[id]/+page.svelte",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/items/:param",
+        "by": "pages-directory",
+        "screens": [
+          "[id]/+page"
+        ]
       }
     },
     {
@@ -224,6 +256,28 @@
       "meta": {
         "requestRead": true,
         "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/",
+      "to": "shop#src/app/+page.svelte:app/+page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/+page.svelte",
+      "line": 1,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:shop:screen:/items/:param",
+      "to": "shop#src/app/items/[id]/+page.svelte:[id]/+page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/items/[id]/+page.svelte",
+      "line": 1,
+      "meta": {
+        "route": "/items/:param"
       }
     },
     {

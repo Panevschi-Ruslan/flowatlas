@@ -52,6 +52,8 @@ export interface RouteEntry {
   path: string;
   /** Component the route shows, when it names a class of this repository. */
   component?: ClassDeclaration;
+  /** The route object as written, where its screen's way in points (P363). */
+  site?: Node;
   /**
    * What the router runs before it shows the route, in its order (P291): each
    * `canMatch`, `canActivateChild` and `canActivate` from the outermost route

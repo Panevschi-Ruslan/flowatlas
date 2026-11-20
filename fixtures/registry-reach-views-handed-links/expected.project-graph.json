@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T17:24:12.319Z",
+  "builtAt": "2026-11-20T17:38:38.741Z",
   "services": [
     {
       "name": "console",
@@ -180,6 +180,182 @@
           "params": [],
           "returns": "type:console#Tool[]"
         }
+      }
+    },
+    {
+      "id": "entry:console:screen:/billing",
+      "type": "entry",
+      "label": "/billing",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 25,
+      "kind": "screen",
+      "meta": {
+        "path": "/billing",
+        "by": "route-table",
+        "screens": [
+          "Billing"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/console/usage",
+      "type": "entry",
+      "label": "/console/usage",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 28,
+      "kind": "screen",
+      "meta": {
+        "path": "/console/usage",
+        "by": "route-table",
+        "screens": [
+          "Usage"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/plugins/calendar",
+      "type": "entry",
+      "label": "/plugins/calendar",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 34,
+      "kind": "screen",
+      "meta": {
+        "path": "/plugins/calendar",
+        "by": "route-table",
+        "screens": [
+          "Calendar"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/reports/sales",
+      "type": "entry",
+      "label": "/reports/sales",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 31,
+      "kind": "screen",
+      "meta": {
+        "path": "/reports/sales",
+        "by": "route-table",
+        "screens": [
+          "Sales"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/team",
+      "type": "entry",
+      "label": "/team",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 25,
+      "kind": "screen",
+      "meta": {
+        "path": "/team",
+        "by": "route-table",
+        "screens": [
+          "Team"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/:param/about",
+      "type": "entry",
+      "label": "/:param/about",
+      "repo": "site",
+      "file": "src/app/[locale]/about/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param/about",
+        "by": "pages-directory",
+        "screens": [
+          "AboutPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/:param/careers",
+      "type": "entry",
+      "label": "/:param/careers",
+      "repo": "site",
+      "file": "src/app/[locale]/careers/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param/careers",
+        "by": "pages-directory",
+        "screens": [
+          "CareersPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/:param/pricing",
+      "type": "entry",
+      "label": "/:param/pricing",
+      "repo": "site",
+      "file": "src/app/[locale]/pricing/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/:param/pricing",
+        "by": "pages-directory",
+        "screens": [
+          "PricingPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/legal",
+      "type": "entry",
+      "label": "/legal",
+      "repo": "site",
+      "file": "src/app/legal/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/legal",
+        "by": "pages-directory",
+        "screens": [
+          "LegalPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/status",
+      "type": "entry",
+      "label": "/status",
+      "repo": "site",
+      "file": "src/app/status/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/status",
+        "by": "pages-directory",
+        "screens": [
+          "StatusPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/tags/:param",
+      "type": "entry",
+      "label": "/tags/:param",
+      "repo": "site",
+      "file": "src/app/tags/[tag]/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/tags/:param",
+        "by": "pages-directory",
+        "screens": [
+          "TagPage"
+        ]
       }
     },
     {
@@ -603,6 +779,127 @@
       "returns": "type:console#Tool[]",
       "file": "src/App.tsx",
       "line": 36
+    },
+    {
+      "from": "entry:console:screen:/billing",
+      "to": "console#src/features/screens.tsx:Billing",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 25,
+      "meta": {
+        "route": "/billing"
+      }
+    },
+    {
+      "from": "entry:console:screen:/console/usage",
+      "to": "console#src/features/screens.tsx:Usage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 28,
+      "meta": {
+        "route": "/console/usage"
+      }
+    },
+    {
+      "from": "entry:console:screen:/plugins/calendar",
+      "to": "console#src/features/screens.tsx:Calendar",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 34,
+      "meta": {
+        "route": "/plugins/calendar"
+      }
+    },
+    {
+      "from": "entry:console:screen:/reports/sales",
+      "to": "console#src/features/screens.tsx:Sales",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 31,
+      "meta": {
+        "route": "/reports/sales"
+      }
+    },
+    {
+      "from": "entry:console:screen:/team",
+      "to": "console#src/features/screens.tsx:Team",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 25,
+      "meta": {
+        "route": "/team"
+      }
+    },
+    {
+      "from": "entry:site:screen:/:param/about",
+      "to": "site#src/app/[locale]/about/page.tsx:AboutPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/[locale]/about/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/:param/about"
+      }
+    },
+    {
+      "from": "entry:site:screen:/:param/careers",
+      "to": "site#src/app/[locale]/careers/page.tsx:CareersPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/[locale]/careers/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/:param/careers"
+      }
+    },
+    {
+      "from": "entry:site:screen:/:param/pricing",
+      "to": "site#src/app/[locale]/pricing/page.tsx:PricingPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/[locale]/pricing/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/:param/pricing"
+      }
+    },
+    {
+      "from": "entry:site:screen:/legal",
+      "to": "site#src/app/legal/page.tsx:LegalPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/legal/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/legal"
+      }
+    },
+    {
+      "from": "entry:site:screen:/status",
+      "to": "site#src/app/status/page.tsx:StatusPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/status/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/status"
+      }
+    },
+    {
+      "from": "entry:site:screen:/tags/:param",
+      "to": "site#src/app/tags/[tag]/page.tsx:TagPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/tags/[tag]/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/tags/:param"
+      }
     },
     {
       "from": "site#src/components/Back.tsx:Back",

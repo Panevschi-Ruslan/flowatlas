@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T20:19:11.458Z",
+  "builtAt": "2026-11-20T17:32:50.635Z",
   "configHash": "481b5ee8317e",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./console",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 29,
-      "edges": 11,
+      "nodes": 40,
+      "edges": 22,
       "types": 3,
       "unresolved": 18,
-      "durationMs": 763,
+      "durationMs": 852,
       "packages": {
         "name": "composed-steps-props-factories-console",
         "runtime": [
@@ -28,11 +28,11 @@
       "repo": "./site",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 10,
-      "edges": 7,
+      "nodes": 14,
+      "edges": 11,
       "types": 0,
       "unresolved": 13,
-      "durationMs": 706,
+      "durationMs": 792,
       "packages": {
         "name": "composed-steps-props-factories-site",
         "runtime": [
@@ -77,8 +77,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 39,
-    "edges": 18,
+    "nodes": 54,
+    "edges": 33,
     "types": 3,
     "missed": 31,
     "sites": 32,

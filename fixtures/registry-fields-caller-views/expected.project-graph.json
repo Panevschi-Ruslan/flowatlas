@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-17T17:24:08.804Z",
+  "builtAt": "2026-11-20T17:38:36.890Z",
   "services": [
     {
       "name": "console",
@@ -215,6 +215,150 @@
       }
     },
     {
+      "id": "entry:console:screen:/app/drafts",
+      "type": "entry",
+      "label": "/app/drafts",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 38,
+      "kind": "screen",
+      "meta": {
+        "path": "/app/drafts",
+        "by": "route-table",
+        "screens": [
+          "Drafts"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/app/home",
+      "type": "entry",
+      "label": "/app/home",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 38,
+      "kind": "screen",
+      "meta": {
+        "path": "/app/home",
+        "by": "route-table",
+        "screens": [
+          "Home"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/archive",
+      "type": "entry",
+      "label": "/archive",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 32,
+      "kind": "screen",
+      "meta": {
+        "path": "/archive",
+        "by": "route-table",
+        "screens": [
+          "Archive"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/inbox",
+      "type": "entry",
+      "label": "/inbox",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 35,
+      "kind": "screen",
+      "meta": {
+        "path": "/inbox",
+        "by": "route-table",
+        "screens": [
+          "Inbox"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/outbox",
+      "type": "entry",
+      "label": "/outbox",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 35,
+      "kind": "screen",
+      "meta": {
+        "path": "/outbox",
+        "by": "route-table",
+        "screens": [
+          "Outbox"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/widgets/clock",
+      "type": "entry",
+      "label": "/widgets/clock",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 29,
+      "kind": "screen",
+      "meta": {
+        "path": "/widgets/clock",
+        "by": "route-table",
+        "screens": [
+          "Clock"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/widgets/weather",
+      "type": "entry",
+      "label": "/widgets/weather",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 29,
+      "kind": "screen",
+      "meta": {
+        "path": "/widgets/weather",
+        "by": "route-table",
+        "screens": [
+          "Weather"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/app/settings",
+      "type": "entry",
+      "label": "/app/settings",
+      "repo": "site",
+      "file": "src/app/app/settings/page.tsx",
+      "line": 1,
+      "kind": "screen",
+      "meta": {
+        "path": "/app/settings",
+        "by": "pages-directory",
+        "screens": [
+          "SettingsPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:site:screen:/help",
+      "type": "entry",
+      "label": "/help",
+      "repo": "site",
+      "file": "src/app/help/page.tsx",
+      "line": 3,
+      "kind": "screen",
+      "meta": {
+        "path": "/help",
+        "by": "pages-directory",
+        "screens": [
+          "HelpPage"
+        ]
+      }
+    },
+    {
       "id": "repo:console",
       "type": "repo",
       "label": "console",
@@ -413,6 +557,105 @@
       "returns": "type:console#Tool[]",
       "file": "src/App.tsx",
       "line": 19
+    },
+    {
+      "from": "entry:console:screen:/app/drafts",
+      "to": "console#src/features/screens.tsx:Drafts",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 38,
+      "meta": {
+        "route": "/app/drafts"
+      }
+    },
+    {
+      "from": "entry:console:screen:/app/home",
+      "to": "console#src/features/screens.tsx:Home",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 38,
+      "meta": {
+        "route": "/app/home"
+      }
+    },
+    {
+      "from": "entry:console:screen:/archive",
+      "to": "console#src/features/screens.tsx:Archive",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 32,
+      "meta": {
+        "route": "/archive"
+      }
+    },
+    {
+      "from": "entry:console:screen:/inbox",
+      "to": "console#src/features/screens.tsx:Inbox",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 35,
+      "meta": {
+        "route": "/inbox"
+      }
+    },
+    {
+      "from": "entry:console:screen:/outbox",
+      "to": "console#src/features/screens.tsx:Outbox",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 35,
+      "meta": {
+        "route": "/outbox"
+      }
+    },
+    {
+      "from": "entry:console:screen:/widgets/clock",
+      "to": "console#src/features/screens.tsx:Clock",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 29,
+      "meta": {
+        "route": "/widgets/clock"
+      }
+    },
+    {
+      "from": "entry:console:screen:/widgets/weather",
+      "to": "console#src/features/screens.tsx:Weather",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 29,
+      "meta": {
+        "route": "/widgets/weather"
+      }
+    },
+    {
+      "from": "entry:site:screen:/app/settings",
+      "to": "site#src/app/app/settings/page.tsx:SettingsPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app/settings/page.tsx",
+      "line": 1,
+      "meta": {
+        "route": "/app/settings"
+      }
+    },
+    {
+      "from": "entry:site:screen:/help",
+      "to": "site#src/app/help/page.tsx:HelpPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/help/page.tsx",
+      "line": 3,
+      "meta": {
+        "route": "/help"
+      }
     },
     {
       "from": "site#src/app/help/page.tsx:HelpPage",
