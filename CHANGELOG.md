@@ -8,6 +8,33 @@ only one of them moved.
 
 ### Added
 
+- **A stream answered by a per-scope object relays the channel the object
+  subscribes to (P361).** A route that hands its request to a Durable Object's
+  stub - `env.ROOMS.get(env.ROOMS.idFromName(…))`, `getByName`, a stub a
+  helper of the project's own hands back - is followed to the class the
+  namespace is made of, said by its type (`DurableObjectNamespace<Room>`) or by
+  the worker's `wrangler.jsonc`/`wrangler.json`/`wrangler.toml`
+  (`durable_objects.bindings`, the class the entry exports), into the class's
+  `fetch` or the method called on the stub. A `fetch` that tells paths apart
+  (`=== '/x'`, `startsWith`, `endsWith`, a `switch`, a pattern tested against
+  the path) is read for the branch the request's path takes. The stream and
+  the subscriptions are then read there as in the route's own code, with a
+  subscription the object opens in its constructor or alarm counted where it
+  feeds the streams the object holds; the route records the class in
+  `meta.servedBy`. An object that holds the streams open and is written to
+  through its stub - a method of it, or a branch of its `fetch` that holds no
+  stream - is the hub of a channel of its own, `durable-object:<Class>`: each
+  such call is a producer of it and the route a consumer, so the walk runs from
+  the call to the screen with no broker between. A plain worker's own `fetch`
+  (`export default { fetch }`) whose branch hands a stream to an object is read
+  as a `GET` route of the path the branch's test names (`meta.adapter:
+  "worker-fetch"`), or a `route-path-dynamic` row where the test names none. A
+  class not followed - bound and declared nowhere, declared by another worker,
+  bound nowhere - is said in `meta.handedTo` and in the route's
+  `stream-relay-unread` row. The worker's configuration is now read by one
+  parser shared with the settings reader, which also reads an array written
+  over several lines and a dotted key in TOML.
+
 - **A channel relayed onto a stream of server-sent events reaches the screens
   holding it open (P359).** A route whose handler streams server-sent events
   (Nest's `@Sse`, which alone now declares a `GET` route; Hono's `streamSSE`

@@ -515,7 +515,7 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
 
   // Streams of server-sent events (P359)
   'stream-relay-unread': () =>
-    "The route streams server-sent events and no channel it relays onto the stream was read, so the screens holding it open are joined to no channel. Subscribe in the code behind the route with a client a broker description reads, or annotate the handler with @Consumes('<channel>').",
+    "The route streams server-sent events and no channel it relays onto the stream was read, so the screens holding it open are joined to no channel. Where the route hands its request to a per-scope object (a Durable Object), the row says why its class was not followed: bind it under durable_objects in the worker's wrangler file, or type the namespace as DurableObjectNamespace<Class>. Otherwise subscribe in the code behind the route with a client a broker description reads, or annotate the handler with @Consumes('<channel>').",
   'stream-handler-unread': () =>
     'A screen opens a stream of server-sent events and the function its frames arrive at was not found. Register a named function, or one written in place that calls one, with onmessage or addEventListener where the stream is held.',
 

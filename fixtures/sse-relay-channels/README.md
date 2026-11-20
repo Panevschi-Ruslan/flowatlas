@@ -49,7 +49,7 @@ three links it stands for; the screen's consumer lists the routes in
 | `GET /workspaces/:param/warehouses/:param/packing` | `@Sse(…)` (`decorator`) | `RelayService.frames(channel)`, handed `warehouse:${…}:parcels` by the route | `channel:warehouse:*:parcels` |
 | `GET /workspaces/:param/audit` | `@Sse('audit')` (`decorator`) | nothing a subscription says | — : `stream-relay-unread` at `live.controller.ts:34` |
 | `GET /live/:param` (edge) | `streamSSE(c, …)` and `writeSSE` (`helper`) | `listen(channel, …)`, a function of the worker's own, handed `workspace:${…}:events` | `channel:workspace:*:events` |
-| `GET /rooms/:param/stream` (edge) | not seen: the request is handed to an object of its own | code this route does not hold | — : `stream-relay-unread` from the linker, because a browser holds it open |
+| `GET /rooms/:param/stream` (edge) | not seen: the request is handed to a per-scope object, `ROOMS`, that no worker configuration binds and whose type names no class (`meta.handedTo`, P361) | code this route does not hold | — : `stream-relay-unread` from the linker, because a browser holds it open, saying why the object was not followed |
 
 `@Sse(path)` with no other route decorator is a `GET` route of its own; beside
 `@Get` it marks the route as a stream and declares nothing more (the shape

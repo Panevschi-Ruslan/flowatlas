@@ -1,0 +1,3454 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-20T13:57:04.647Z",
+  "services": [
+    {
+      "name": "planner",
+      "repo": "./planner",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "digest-worker",
+      "repo": "./digest-worker",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "board-web",
+      "repo": "./board-web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "board-web#src/live/digest.ts:onDigest",
+      "type": "function",
+      "label": "onDigest",
+      "repo": "board-web",
+      "file": "src/live/digest.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "frame",
+              "type": "MessageEvent<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "board-web#src/live/digest.ts:onTeamCard",
+      "type": "function",
+      "label": "onTeamCard",
+      "repo": "board-web",
+      "file": "src/live/digest.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "frame",
+              "type": "MessageEvent<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "board-web#src/live/digest.ts:watchDigest",
+      "type": "function",
+      "label": "watchDigest",
+      "repo": "board-web",
+      "file": "src/live/digest.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "EventSource"
+        }
+      }
+    },
+    {
+      "id": "board-web#src/live/digest.ts:watchTeam",
+      "type": "function",
+      "label": "watchTeam",
+      "repo": "board-web",
+      "file": "src/live/digest.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "teamId",
+              "type": "string"
+            }
+          ],
+          "returns": "EventSource"
+        }
+      }
+    },
+    {
+      "id": "board-web#src/live/streams.ts:onAlert",
+      "type": "function",
+      "label": "onAlert",
+      "repo": "board-web",
+      "file": "src/live/streams.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "frame",
+              "type": "MessageEvent<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "board-web#src/live/streams.ts:onArchived",
+      "type": "function",
+      "label": "onArchived",
+      "repo": "board-web",
+      "file": "src/live/streams.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "frame",
+              "type": "MessageEvent<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "board-web#src/live/streams.ts:onLedger",
+      "type": "function",
+      "label": "onLedger",
+      "repo": "board-web",
+      "file": "src/live/streams.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "frame",
+              "type": "MessageEvent<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "board-web#src/live/streams.ts:watchAlerts",
+      "type": "function",
+      "label": "watchAlerts",
+      "repo": "board-web",
+      "file": "src/live/streams.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "EventSource"
+        }
+      }
+    },
+    {
+      "id": "board-web#src/live/streams.ts:watchArchive",
+      "type": "function",
+      "label": "watchArchive",
+      "repo": "board-web",
+      "file": "src/live/streams.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            }
+          ],
+          "returns": "EventSource"
+        }
+      }
+    },
+    {
+      "id": "board-web#src/live/streams.ts:watchLedger",
+      "type": "function",
+      "label": "watchLedger",
+      "repo": "board-web",
+      "file": "src/live/streams.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "EventSource"
+        }
+      }
+    },
+    {
+      "id": "board-web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "ui_component",
+      "label": "BoardScreen",
+      "repo": "board-web",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 19,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ boardId }",
+              "type": "{boardId:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "board-web#src/screens/BoardScreen.tsx:handleActivity",
+      "type": "function",
+      "label": "handleActivity",
+      "repo": "board-web",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:board-web#BoardEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "board-web#src/screens/BoardScreen.tsx:handlePresence",
+      "type": "function",
+      "label": "handlePresence",
+      "repo": "board-web",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:board-web#BoardEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cache_op:digest-worker#src/digest-feed.ts:12:11",
+      "type": "cache_op",
+      "label": "other ?",
+      "repo": "digest-worker",
+      "file": "src/digest-feed.ts",
+      "line": 12,
+      "meta": {
+        "op": "other",
+        "keyPattern": null,
+        "package": "redis",
+        "method": "connect"
+      }
+    },
+    {
+      "id": "cache_op:digest-worker#src/digest-feed.ts:13:11",
+      "type": "cache_op",
+      "label": "other digest:daily",
+      "repo": "digest-worker",
+      "file": "src/digest-feed.ts",
+      "line": 13,
+      "meta": {
+        "op": "other",
+        "keyPattern": "digest:daily",
+        "package": "redis",
+        "method": "subscribe"
+      }
+    },
+    {
+      "id": "cache_op:digest-worker#src/team-feed.ts:13:11",
+      "type": "cache_op",
+      "label": "other ?",
+      "repo": "digest-worker",
+      "file": "src/team-feed.ts",
+      "line": 13,
+      "meta": {
+        "op": "other",
+        "keyPattern": null,
+        "package": "redis",
+        "method": "connect"
+      }
+    },
+    {
+      "id": "cache_op:digest-worker#src/team-feed.ts:14:11",
+      "type": "cache_op",
+      "label": "other team:*:feed",
+      "repo": "digest-worker",
+      "file": "src/team-feed.ts",
+      "line": 14,
+      "meta": {
+        "op": "other",
+        "keyPattern": "team:*:feed",
+        "package": "redis",
+        "method": "subscribe"
+      }
+    },
+    {
+      "id": "cache_op:gateway#src/bus.ts:7:9",
+      "type": "cache_op",
+      "label": "other ?",
+      "repo": "gateway",
+      "file": "src/bus.ts",
+      "line": 7,
+      "meta": {
+        "op": "other",
+        "keyPattern": null,
+        "package": "redis",
+        "method": "connect"
+      }
+    },
+    {
+      "id": "cache_op:gateway#src/bus.ts:8:9",
+      "type": "cache_op",
+      "label": "other ?",
+      "repo": "gateway",
+      "file": "src/bus.ts",
+      "line": 8,
+      "meta": {
+        "op": "other",
+        "keyPattern": null,
+        "package": "redis",
+        "method": "subscribe"
+      }
+    },
+    {
+      "id": "cache_op:planner#src/boards/boards.service.ts:11:11",
+      "type": "cache_op",
+      "label": "other board:*:activity",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 11,
+      "meta": {
+        "op": "other",
+        "keyPattern": "board:*:activity",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:planner#src/boards/boards.service.ts:12:11",
+      "type": "cache_op",
+      "label": "other team:*:feed",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 12,
+      "meta": {
+        "op": "other",
+        "keyPattern": "team:*:feed",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:planner#src/boards/boards.service.ts:16:11",
+      "type": "cache_op",
+      "label": "other alerts:global",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 16,
+      "meta": {
+        "op": "other",
+        "keyPattern": "alerts:global",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:planner#src/boards/boards.service.ts:20:11",
+      "type": "cache_op",
+      "label": "other digest:daily",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 20,
+      "meta": {
+        "op": "other",
+        "keyPattern": "digest:daily",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "channel:alerts:global",
+      "type": "channel",
+      "label": "alerts:global",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 16,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ],
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:alerts:global#ALERT",
+      "type": "channel",
+      "label": "alerts:global#ALERT",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 16,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:alerts:global",
+        "messageType": "ALERT",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:board:*:activity",
+      "type": "channel",
+      "label": "board:*:activity",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 11,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ],
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:board:*:activity#CARD_ADDED",
+      "type": "channel",
+      "label": "board:*:activity#CARD_ADDED",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 11,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:board:*:activity",
+        "messageType": "CARD_ADDED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:digest:daily",
+      "type": "channel",
+      "label": "digest:daily",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 20,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ],
+        "producers": 1,
+        "consumers": 3
+      }
+    },
+    {
+      "id": "channel:digest:daily#DIGEST",
+      "type": "channel",
+      "label": "digest:daily#DIGEST",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 20,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:digest:daily",
+        "messageType": "DIGEST",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:durable-object:PresenceHub",
+      "type": "channel",
+      "label": "durable-object:PresenceHub",
+      "repo": "gateway",
+      "file": "src/objects/presence-hub.ts",
+      "line": 14,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "durable-object"
+        ],
+        "heldBy": "PresenceHub",
+        "binding": "PRESENCE",
+        "producers": 2,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:durable-object:PresenceHub#MEMBER_JOINED",
+      "type": "channel",
+      "label": "durable-object:PresenceHub#MEMBER_JOINED",
+      "repo": "board-web",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 25,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:durable-object:PresenceHub",
+        "messageType": "MEMBER_JOINED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:team:*:feed",
+      "type": "channel",
+      "label": "team:*:feed",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 12,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ],
+        "producers": 1,
+        "consumers": 3
+      }
+    },
+    {
+      "id": "channel:team:*:feed#CARD_ADDED",
+      "type": "channel",
+      "label": "team:*:feed#CARD_ADDED",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 12,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:team:*:feed",
+        "messageType": "CARD_ADDED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "config_key:gateway#ALERTS",
+      "type": "config_key",
+      "label": "ALERTS",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 35,
+      "meta": {
+        "key": "ALERTS",
+        "source": "binding"
+      }
+    },
+    {
+      "id": "config_key:gateway#ALERTS_ID",
+      "type": "config_key",
+      "label": "ALERTS_ID",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 35,
+      "meta": {
+        "key": "ALERTS_ID",
+        "source": "binding"
+      }
+    },
+    {
+      "id": "config_key:gateway#ARCHIVE",
+      "type": "config_key",
+      "label": "ARCHIVE",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 38,
+      "meta": {
+        "key": "ARCHIVE",
+        "source": "binding"
+      }
+    },
+    {
+      "id": "config_key:gateway#BOARD_FEEDS",
+      "type": "config_key",
+      "label": "BOARD_FEEDS",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 15,
+      "meta": {
+        "key": "BOARD_FEEDS",
+        "source": "binding"
+      }
+    },
+    {
+      "id": "config_key:gateway#LEDGER",
+      "type": "config_key",
+      "label": "LEDGER",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 41,
+      "meta": {
+        "key": "LEDGER",
+        "source": "binding"
+      }
+    },
+    {
+      "id": "config_key:gateway#PRESENCE",
+      "type": "config_key",
+      "label": "PRESENCE",
+      "repo": "gateway",
+      "file": "src/presence.ts",
+      "line": 5,
+      "meta": {
+        "key": "PRESENCE",
+        "source": "binding"
+      }
+    },
+    {
+      "id": "consumer:board-web#src/live/digest.ts:onDigest",
+      "type": "consumer",
+      "label": "onDigest",
+      "repo": "board-web",
+      "file": "src/live/digest.ts",
+      "line": 13,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "routes": [
+          "entry:digest-worker:http:GET:/digest/stream"
+        ]
+      }
+    },
+    {
+      "id": "consumer:board-web#src/live/digest.ts:onTeamCard",
+      "type": "consumer",
+      "label": "onTeamCard",
+      "repo": "board-web",
+      "file": "src/live/digest.ts",
+      "line": 19,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "routes": [
+          "entry:digest-worker:http:GET:/teams/:param/feed"
+        ]
+      }
+    },
+    {
+      "id": "consumer:board-web#src/live/streams.ts:onAlert",
+      "type": "consumer",
+      "label": "onAlert",
+      "repo": "board-web",
+      "file": "src/live/streams.ts",
+      "line": 21,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "routes": [
+          "entry:gateway:http:GET:/alerts/stream"
+        ]
+      }
+    },
+    {
+      "id": "consumer:board-web#src/live/streams.ts:onArchived",
+      "type": "consumer",
+      "label": "onArchived",
+      "repo": "board-web",
+      "file": "src/live/streams.ts",
+      "line": 28,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:board-web#src/live/streams.ts:onLedger",
+      "type": "consumer",
+      "label": "onLedger",
+      "repo": "board-web",
+      "file": "src/live/streams.ts",
+      "line": 35,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:board-web#src/screens/BoardScreen.tsx:handleActivity",
+      "type": "consumer",
+      "label": "handleActivity",
+      "repo": "board-web",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 23,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "CARD_ADDED",
+            "consumer": "consumer:board-web#src/screens/BoardScreen.tsx:handleActivity",
+            "via": "if",
+            "line": 11
+          }
+        ],
+        "routes": [
+          "entry:gateway:http:GET:/boards/:param/activity"
+        ]
+      }
+    },
+    {
+      "id": "consumer:board-web#src/screens/BoardScreen.tsx:handlePresence",
+      "type": "consumer",
+      "label": "handlePresence",
+      "repo": "board-web",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 25,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "MEMBER_JOINED",
+            "consumer": "consumer:board-web#src/screens/BoardScreen.tsx:handlePresence",
+            "via": "if",
+            "line": 16
+          }
+        ],
+        "routes": [
+          "entry:gateway:http:GET:/boards/:param/presence"
+        ]
+      }
+    },
+    {
+      "id": "consumer:digest-worker#src/digest-feed.ts:DigestFeed.fetch",
+      "type": "consumer",
+      "label": "DigestFeed.fetch",
+      "repo": "digest-worker",
+      "file": "src/digest-feed.ts",
+      "line": 13,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "decorator": "subscribe",
+        "entryId": "entry:digest-worker:event:digest:daily"
+      }
+    },
+    {
+      "id": "consumer:digest-worker#src/team-feed.ts:TeamFeed.fetch",
+      "type": "consumer",
+      "label": "TeamFeed.fetch",
+      "repo": "digest-worker",
+      "file": "src/team-feed.ts",
+      "line": 14,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "decorator": "subscribe",
+        "entryId": "entry:digest-worker:event:team:*:feed"
+      }
+    },
+    {
+      "id": "consumer:digest-worker#src/worker.ts:default.fetch@GET /digest/stream",
+      "type": "consumer",
+      "label": "GET /digest/stream",
+      "repo": "digest-worker",
+      "file": "src/worker.ts",
+      "line": 17,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "adapter": "redis-pubsub",
+        "relay": "entry:digest-worker:http:GET:/digest/stream",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:digest-worker#src/worker.ts:default.fetch@GET /teams/:param/feed",
+      "type": "consumer",
+      "label": "GET /teams/:param/feed",
+      "repo": "digest-worker",
+      "file": "src/worker.ts",
+      "line": 21,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "adapter": "redis-pubsub",
+        "relay": "entry:digest-worker:http:GET:/teams/:param/feed",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:gateway#src/index.ts:GET /alerts/stream@35",
+      "type": "consumer",
+      "label": "GET /alerts/stream@35",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 35,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "adapter": "redis-pubsub",
+        "relay": "entry:gateway:http:GET:/alerts/stream",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:gateway#src/index.ts:GET /boards/:boardId/activity@14",
+      "type": "consumer",
+      "label": "GET /boards/:boardId/activity@14",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 14,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "adapter": "redis-pubsub",
+        "relay": "entry:gateway:http:GET:/boards/:param/activity",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:gateway#src/index.ts:GET /boards/:boardId/presence@21",
+      "type": "consumer",
+      "label": "GET /boards/:boardId/presence@21",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 21,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "adapter": "durable-object",
+        "relay": "entry:gateway:http:GET:/boards/:param/presence",
+        "entryId": null
+      }
+    },
+    {
+      "id": "digest-worker#src/digest-feed.ts:DigestFeed",
+      "type": "provider",
+      "label": "DigestFeed",
+      "repo": "digest-worker",
+      "file": "src/digest-feed.ts",
+      "line": 7,
+      "kind": "injectable"
+    },
+    {
+      "id": "digest-worker#src/digest-feed.ts:DigestFeed.fetch",
+      "type": "method",
+      "label": "DigestFeed.fetch",
+      "repo": "digest-worker",
+      "file": "src/digest-feed.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "digest-worker#src/team-feed.ts:TeamFeed",
+      "type": "provider",
+      "label": "TeamFeed",
+      "repo": "digest-worker",
+      "file": "src/team-feed.ts",
+      "line": 7,
+      "kind": "injectable"
+    },
+    {
+      "id": "digest-worker#src/team-feed.ts:TeamFeed.fetch",
+      "type": "method",
+      "label": "TeamFeed.fetch",
+      "repo": "digest-worker",
+      "file": "src/team-feed.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "Request"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "digest-worker#src/worker.ts:default.fetch",
+      "type": "function",
+      "label": "default.fetch",
+      "repo": "digest-worker",
+      "file": "src/worker.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "Request"
+            },
+            {
+              "name": "env",
+              "type": "type:digest-worker#Env"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "entry:digest-worker:event:digest:daily",
+      "type": "entry",
+      "label": "event digest:daily",
+      "repo": "digest-worker",
+      "file": "src/digest-feed.ts",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "pattern": "digest:daily",
+        "adapter": "redis-pubsub"
+      }
+    },
+    {
+      "id": "entry:digest-worker:event:team:*:feed",
+      "type": "entry",
+      "label": "event team:*:feed",
+      "repo": "digest-worker",
+      "file": "src/team-feed.ts",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "pattern": "team:*:feed",
+        "adapter": "redis-pubsub"
+      }
+    },
+    {
+      "id": "entry:digest-worker:http:GET:/digest/stream",
+      "type": "entry",
+      "label": "GET /digest/stream",
+      "repo": "digest-worker",
+      "file": "src/worker.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/digest/stream",
+        "rawPath": "/digest/stream",
+        "adapter": "worker-fetch",
+        "registration": "pathname",
+        "handlerVia": "object",
+        "stream": "sse",
+        "streamFrom": "frames",
+        "servedBy": [
+          {
+            "class": "DigestFeed",
+            "binding": "DIGESTS",
+            "method": "fetch",
+            "via": "config"
+          }
+        ],
+        "relays": [
+          "channel:digest:daily"
+        ]
+      }
+    },
+    {
+      "id": "entry:digest-worker:http:GET:/teams/:param/feed",
+      "type": "entry",
+      "label": "GET /teams/:param/feed",
+      "repo": "digest-worker",
+      "file": "src/worker.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/teams/:param/feed",
+        "rawPath": "/teams/:param/feed",
+        "adapter": "worker-fetch",
+        "registration": "pathname",
+        "handlerVia": "object",
+        "stream": "sse",
+        "streamFrom": "frames",
+        "servedBy": [
+          {
+            "class": "TeamFeed",
+            "binding": "TEAM_FEEDS",
+            "method": "fetch",
+            "via": "config"
+          }
+        ],
+        "relays": [
+          "channel:team:*:feed"
+        ]
+      }
+    },
+    {
+      "id": "entry:gateway:http:GET:/alerts/stream",
+      "type": "entry",
+      "label": "GET /alerts/stream",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/alerts/stream",
+        "rawPath": "/alerts/stream",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "stream": "sse",
+        "streamFrom": "content-type",
+        "servedBy": [
+          {
+            "class": "AlertsRelay",
+            "binding": "ALERTS",
+            "method": "fetch",
+            "via": "config"
+          }
+        ],
+        "relays": [
+          "channel:alerts:global"
+        ]
+      }
+    },
+    {
+      "id": "entry:gateway:http:GET:/boards/:param/activity",
+      "type": "entry",
+      "label": "GET /boards/:param/activity",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/boards/:param/activity",
+        "rawPath": "/boards/:boardId/activity",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "stream": "sse",
+        "streamFrom": "content-type",
+        "servedBy": [
+          {
+            "class": "BoardFeed",
+            "binding": "BOARD_FEEDS",
+            "method": "fetch",
+            "via": "config"
+          }
+        ],
+        "relays": [
+          "channel:board:*:activity"
+        ]
+      }
+    },
+    {
+      "id": "entry:gateway:http:GET:/boards/:param/archive",
+      "type": "entry",
+      "label": "GET /boards/:param/archive",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 38,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/boards/:param/archive",
+        "rawPath": "/boards/:boardId/archive",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "handedTo": [
+          {
+            "binding": "ARCHIVE",
+            "method": "fetch",
+            "why": "wrangler.jsonc binds ARCHIVE to the class ArchiveFeed, which this repository does not declare",
+            "hint": "Export ArchiveFeed from the worker's entry, or correct class_name in wrangler.jsonc.",
+            "file": "src/index.ts",
+            "line": 38
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:gateway:http:GET:/boards/:param/presence",
+      "type": "entry",
+      "label": "GET /boards/:param/presence",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/boards/:param/presence",
+        "rawPath": "/boards/:boardId/presence",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "stream": "sse",
+        "streamFrom": "content-type",
+        "servedBy": [
+          {
+            "class": "PresenceHub",
+            "binding": "PRESENCE",
+            "method": "fetch",
+            "via": "type"
+          }
+        ],
+        "relays": [
+          "channel:durable-object:PresenceHub"
+        ]
+      }
+    },
+    {
+      "id": "entry:gateway:http:GET:/ledger/stream",
+      "type": "entry",
+      "label": "GET /ledger/stream",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 41,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/ledger/stream",
+        "rawPath": "/ledger/stream",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "handedTo": [
+          {
+            "binding": "LEDGER",
+            "method": "fetch",
+            "why": "wrangler.jsonc binds LEDGER to the class LedgerFeed of the worker ledger-worker, whose code is read with that worker",
+            "hint": "Annotate the handler with @Consumes('<channel>') for what LedgerFeed relays.",
+            "file": "src/index.ts",
+            "line": 41
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:gateway:http:POST:/boards/:param/presence",
+      "type": "entry",
+      "label": "POST /boards/:param/presence",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/boards/:param/presence",
+        "rawPath": "/boards/:boardId/presence",
+        "adapter": "hono-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:gateway:http:POST:/boards/:param/presence/leave",
+      "type": "entry",
+      "label": "POST /boards/:param/presence/leave",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/boards/:param/presence/leave",
+        "rawPath": "/boards/:boardId/presence/leave",
+        "adapter": "hono-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:planner:http:POST:/alerts",
+      "type": "entry",
+      "label": "POST /alerts",
+      "repo": "planner",
+      "file": "src/boards/boards.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/alerts",
+        "rawPath": "/alerts",
+        "controller": "BoardsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:planner:http:POST:/boards/:param/cards",
+      "type": "entry",
+      "label": "POST /boards/:param/cards",
+      "repo": "planner",
+      "file": "src/boards/boards.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/boards/:param/cards",
+        "rawPath": "/boards/:boardId/cards",
+        "controller": "BoardsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:planner:http:POST:/digest",
+      "type": "entry",
+      "label": "POST /digest",
+      "repo": "planner",
+      "file": "src/boards/boards.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/digest",
+        "rawPath": "/digest",
+        "controller": "BoardsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "gateway#src/bus.ts:listen",
+      "type": "function",
+      "label": "listen",
+      "repo": "gateway",
+      "file": "src/bus.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "onMessage",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/index.ts:GET /alerts/stream@35",
+      "type": "function",
+      "label": "GET /alerts/stream@35",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<{Bindings:type:gateway#Env}>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/index.ts:GET /boards/:boardId/activity@14",
+      "type": "function",
+      "label": "GET /boards/:boardId/activity@14",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<{Bindings:type:gateway#Env}>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/index.ts:GET /boards/:boardId/archive@38",
+      "type": "function",
+      "label": "GET /boards/:boardId/archive@38",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 38,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<{Bindings:type:gateway#Env}>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/index.ts:GET /boards/:boardId/presence@21",
+      "type": "function",
+      "label": "GET /boards/:boardId/presence@21",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<{Bindings:type:gateway#Env}>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/index.ts:GET /ledger/stream@41",
+      "type": "function",
+      "label": "GET /ledger/stream@41",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<{Bindings:type:gateway#Env}>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/index.ts:POST /boards/:boardId/presence/leave@28",
+      "type": "function",
+      "label": "POST /boards/:boardId/presence/leave@28",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<{Bindings:type:gateway#Env}>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/index.ts:POST /boards/:boardId/presence@23",
+      "type": "function",
+      "label": "POST /boards/:boardId/presence@23",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<{Bindings:type:gateway#Env}>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/objects/board-feed.ts:BoardFeed",
+      "type": "provider",
+      "label": "BoardFeed",
+      "repo": "gateway",
+      "file": "src/objects/board-feed.ts",
+      "line": 9,
+      "kind": "injectable"
+    },
+    {
+      "id": "gateway#src/objects/board-feed.ts:BoardFeed.fetch",
+      "type": "method",
+      "label": "BoardFeed.fetch",
+      "repo": "gateway",
+      "file": "src/objects/board-feed.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "Request"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/objects/presence-hub.ts:PresenceHub",
+      "type": "provider",
+      "label": "PresenceHub",
+      "repo": "gateway",
+      "file": "src/objects/presence-hub.ts",
+      "line": 14,
+      "kind": "injectable"
+    },
+    {
+      "id": "gateway#src/objects/presence-hub.ts:PresenceHub.announce",
+      "type": "method",
+      "label": "PresenceHub.announce",
+      "repo": "gateway",
+      "file": "src/objects/presence-hub.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "member",
+              "type": "type:gateway#PresenceMember"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/objects/presence-hub.ts:PresenceHub.fetch",
+      "type": "method",
+      "label": "PresenceHub.fetch",
+      "repo": "gateway",
+      "file": "src/objects/presence-hub.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "Request"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/objects/presence-hub.ts:PresenceHub.send",
+      "type": "method",
+      "label": "PresenceHub.send",
+      "repo": "gateway",
+      "file": "src/objects/presence-hub.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{type:string;member:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/presence.ts:presenceFor",
+      "type": "function",
+      "label": "presenceFor",
+      "repo": "gateway",
+      "file": "src/presence.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "env",
+              "type": "type:gateway#Env"
+            },
+            {
+              "name": "boardId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:@cloudflare/workers-types#DurableObjectStub"
+        }
+      }
+    },
+    {
+      "id": "planner#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "planner",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "BoardsController"
+        ],
+        "providers": [
+          "BoardsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "planner#src/boards/boards.controller.ts:BoardsController",
+      "type": "provider",
+      "label": "BoardsController",
+      "repo": "planner",
+      "file": "src/boards/boards.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "planner#src/boards/boards.controller.ts:BoardsController.addCard",
+      "type": "method",
+      "label": "BoardsController.addCard",
+      "repo": "planner",
+      "file": "src/boards/boards.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{teamId:string;title:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "planner#src/boards/boards.controller.ts:BoardsController.digest",
+      "type": "method",
+      "label": "BoardsController.digest",
+      "repo": "planner",
+      "file": "src/boards/boards.controller.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{summary:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "planner#src/boards/boards.controller.ts:BoardsController.raise",
+      "type": "method",
+      "label": "BoardsController.raise",
+      "repo": "planner",
+      "file": "src/boards/boards.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{text:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "planner#src/boards/boards.service.ts:BoardsService",
+      "type": "provider",
+      "label": "BoardsService",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "planner#src/boards/boards.service.ts:BoardsService.addCard",
+      "type": "method",
+      "label": "BoardsService.addCard",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "boardId",
+              "type": "string"
+            },
+            {
+              "name": "teamId",
+              "type": "string"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "planner#src/boards/boards.service.ts:BoardsService.raiseAlert",
+      "type": "method",
+      "label": "BoardsService.raiseAlert",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "text",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "planner#src/boards/boards.service.ts:BoardsService.sendDigest",
+      "type": "method",
+      "label": "BoardsService.sendDigest",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "summary",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:gateway#src/index.ts:24:9",
+      "type": "producer",
+      "label": "event durable-object:PresenceHub",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 24,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "durable-object",
+        "channelVia": "object",
+        "method": "announce",
+        "objectClass": "PresenceHub",
+        "binding": "PRESENCE"
+      }
+    },
+    {
+      "id": "producer:gateway#src/index.ts:30:9",
+      "type": "producer",
+      "label": "event durable-object:PresenceHub",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 30,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "durable-object",
+        "channelVia": "object",
+        "method": "fetch",
+        "objectClass": "PresenceHub",
+        "binding": "PRESENCE"
+      }
+    },
+    {
+      "id": "producer:planner#src/boards/boards.service.ts:11:11",
+      "type": "producer",
+      "label": "message board:*:activity",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 11,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "CARD_ADDED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:planner#src/boards/boards.service.ts:12:11",
+      "type": "producer",
+      "label": "message team:*:feed",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 12,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "CARD_ADDED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:planner#src/boards/boards.service.ts:16:11",
+      "type": "producer",
+      "label": "message alerts:global",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 16,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "ALERT"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:planner#src/boards/boards.service.ts:20:11",
+      "type": "producer",
+      "label": "message digest:daily",
+      "repo": "planner",
+      "file": "src/boards/boards.service.ts",
+      "line": 20,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "DIGEST"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "repo:board-web",
+      "type": "repo",
+      "label": "board-web",
+      "repo": "board-web",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "functions": 13,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {
+            "react": 2
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:digest-worker",
+      "type": "repo",
+      "label": "digest-worker",
+      "repo": "digest-worker",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {
+            "redis": 4
+          }
+        },
+        "adapters": {
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:gateway",
+      "type": "repo",
+      "label": "gateway",
+      "repo": "gateway",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "@cloudflare/workers-types": 16,
+            "hono": 9
+          }
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "hono-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:planner",
+      "type": "repo",
+      "label": "planner",
+      "repo": "planner",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "redis": 4
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "ui_api_call:board-web#src/live/digest.ts:12:18",
+      "type": "ui_api_call",
+      "label": "GET /digest/stream",
+      "repo": "board-web",
+      "file": "src/live/digest.ts",
+      "line": 12,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_DIGEST_URL}/digest/stream",
+        "path": "/digest/stream",
+        "baseUrlEnv": "VITE_DIGEST_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "digest-worker"
+      }
+    },
+    {
+      "id": "ui_api_call:board-web#src/live/digest.ts:18:18",
+      "type": "ui_api_call",
+      "label": "GET /teams/:param/feed",
+      "repo": "board-web",
+      "file": "src/live/digest.ts",
+      "line": 18,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_DIGEST_URL}/teams/:param/feed",
+        "path": "/teams/:param/feed",
+        "baseUrlEnv": "VITE_DIGEST_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "digest-worker"
+      }
+    },
+    {
+      "id": "ui_api_call:board-web#src/live/streams.ts:20:18",
+      "type": "ui_api_call",
+      "label": "GET /alerts/stream",
+      "repo": "board-web",
+      "file": "src/live/streams.ts",
+      "line": 20,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_GATEWAY_URL}/alerts/stream",
+        "path": "/alerts/stream",
+        "baseUrlEnv": "VITE_GATEWAY_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "ui_api_call:board-web#src/live/streams.ts:27:18",
+      "type": "ui_api_call",
+      "label": "GET /boards/:param/archive",
+      "repo": "board-web",
+      "file": "src/live/streams.ts",
+      "line": 27,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_GATEWAY_URL}/boards/:param/archive",
+        "path": "/boards/:param/archive",
+        "baseUrlEnv": "VITE_GATEWAY_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "ui_api_call:board-web#src/live/streams.ts:34:18",
+      "type": "ui_api_call",
+      "label": "GET /ledger/stream",
+      "repo": "board-web",
+      "file": "src/live/streams.ts",
+      "line": 34,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_GATEWAY_URL}/ledger/stream",
+        "path": "/ledger/stream",
+        "baseUrlEnv": "VITE_GATEWAY_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "ui_api_call:board-web#src/screens/BoardScreen.tsx:22:22",
+      "type": "ui_api_call",
+      "label": "GET /boards/:param/activity",
+      "repo": "board-web",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 22,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_GATEWAY_URL}/boards/:param/activity",
+        "path": "/boards/:param/activity",
+        "baseUrlEnv": "VITE_GATEWAY_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "ui_api_call:board-web#src/screens/BoardScreen.tsx:24:22",
+      "type": "ui_api_call",
+      "label": "GET /boards/:param/presence",
+      "repo": "board-web",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 24,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_GATEWAY_URL}/boards/:param/presence",
+        "path": "/boards/:param/presence",
+        "baseUrlEnv": "VITE_GATEWAY_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "gateway"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "board-web#src/live/digest.ts:watchDigest",
+      "to": "ui_api_call:board-web#src/live/digest.ts:12:18",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/digest.ts",
+      "line": 12
+    },
+    {
+      "from": "board-web#src/live/digest.ts:watchTeam",
+      "to": "ui_api_call:board-web#src/live/digest.ts:18:18",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/digest.ts",
+      "line": 18
+    },
+    {
+      "from": "board-web#src/live/streams.ts:watchAlerts",
+      "to": "ui_api_call:board-web#src/live/streams.ts:20:18",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/streams.ts",
+      "line": 20
+    },
+    {
+      "from": "board-web#src/live/streams.ts:watchArchive",
+      "to": "ui_api_call:board-web#src/live/streams.ts:27:18",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/streams.ts",
+      "line": 27
+    },
+    {
+      "from": "board-web#src/live/streams.ts:watchLedger",
+      "to": "ui_api_call:board-web#src/live/streams.ts:34:18",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/streams.ts",
+      "line": 34
+    },
+    {
+      "from": "board-web#src/screens/BoardScreen.tsx:BoardScreen",
+      "to": "board-web#src/screens/BoardScreen.tsx:handleActivity",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:board-web#BoardEvent"
+      ],
+      "returns": "void",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 23
+    },
+    {
+      "from": "board-web#src/screens/BoardScreen.tsx:BoardScreen",
+      "to": "board-web#src/screens/BoardScreen.tsx:handlePresence",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:board-web#BoardEvent"
+      ],
+      "returns": "void",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 25
+    },
+    {
+      "from": "board-web#src/screens/BoardScreen.tsx:BoardScreen",
+      "to": "ui_api_call:board-web#src/screens/BoardScreen.tsx:22:22",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 22
+    },
+    {
+      "from": "board-web#src/screens/BoardScreen.tsx:BoardScreen",
+      "to": "ui_api_call:board-web#src/screens/BoardScreen.tsx:24:22",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 24
+    },
+    {
+      "from": "channel:alerts:global",
+      "to": "consumer:board-web#src/live/streams.ts:onAlert",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/streams.ts",
+      "line": 21,
+      "meta": {
+        "via": "sse",
+        "route": "entry:gateway:http:GET:/alerts/stream",
+        "call": "ui_api_call:board-web#src/live/streams.ts:20:18"
+      }
+    },
+    {
+      "from": "channel:alerts:global",
+      "to": "consumer:gateway#src/index.ts:GET /alerts/stream@35",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/objects/alerts-relay.ts",
+      "line": 20
+    },
+    {
+      "from": "channel:board:*:activity",
+      "to": "consumer:board-web#src/screens/BoardScreen.tsx:handleActivity",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 23,
+      "meta": {
+        "via": "sse",
+        "route": "entry:gateway:http:GET:/boards/:param/activity",
+        "call": "ui_api_call:board-web#src/screens/BoardScreen.tsx:22:22"
+      }
+    },
+    {
+      "from": "channel:board:*:activity",
+      "to": "consumer:gateway#src/index.ts:GET /boards/:boardId/activity@14",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/bus.ts",
+      "line": 8
+    },
+    {
+      "from": "channel:board:*:activity#CARD_ADDED",
+      "to": "consumer:board-web#src/screens/BoardScreen.tsx:handleActivity",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 11,
+      "meta": {
+        "selectedBy": "consumer:board-web#src/screens/BoardScreen.tsx:handleActivity",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:digest:daily",
+      "to": "consumer:board-web#src/live/digest.ts:onDigest",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/digest.ts",
+      "line": 13,
+      "meta": {
+        "via": "sse",
+        "route": "entry:digest-worker:http:GET:/digest/stream",
+        "call": "ui_api_call:board-web#src/live/digest.ts:12:18"
+      }
+    },
+    {
+      "from": "channel:digest:daily",
+      "to": "consumer:digest-worker#src/digest-feed.ts:DigestFeed.fetch",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/digest-feed.ts",
+      "line": 13
+    },
+    {
+      "from": "channel:digest:daily",
+      "to": "consumer:digest-worker#src/worker.ts:default.fetch@GET /digest/stream",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/digest-feed.ts",
+      "line": 13
+    },
+    {
+      "from": "channel:durable-object:PresenceHub",
+      "to": "consumer:board-web#src/screens/BoardScreen.tsx:handlePresence",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 25,
+      "meta": {
+        "via": "sse",
+        "route": "entry:gateway:http:GET:/boards/:param/presence",
+        "call": "ui_api_call:board-web#src/screens/BoardScreen.tsx:24:22"
+      }
+    },
+    {
+      "from": "channel:durable-object:PresenceHub",
+      "to": "consumer:gateway#src/index.ts:GET /boards/:boardId/presence@21",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/objects/presence-hub.ts",
+      "line": 14
+    },
+    {
+      "from": "channel:durable-object:PresenceHub#MEMBER_JOINED",
+      "to": "consumer:board-web#src/screens/BoardScreen.tsx:handlePresence",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 16,
+      "meta": {
+        "selectedBy": "consumer:board-web#src/screens/BoardScreen.tsx:handlePresence",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:team:*:feed",
+      "to": "consumer:board-web#src/live/digest.ts:onTeamCard",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/digest.ts",
+      "line": 19,
+      "meta": {
+        "via": "sse",
+        "route": "entry:digest-worker:http:GET:/teams/:param/feed",
+        "call": "ui_api_call:board-web#src/live/digest.ts:18:18"
+      }
+    },
+    {
+      "from": "channel:team:*:feed",
+      "to": "consumer:digest-worker#src/team-feed.ts:TeamFeed.fetch",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/team-feed.ts",
+      "line": 14
+    },
+    {
+      "from": "channel:team:*:feed",
+      "to": "consumer:digest-worker#src/worker.ts:default.fetch@GET /teams/:param/feed",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/team-feed.ts",
+      "line": 14
+    },
+    {
+      "from": "consumer:board-web#src/live/digest.ts:onDigest",
+      "to": "board-web#src/live/digest.ts:onDigest",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/digest.ts",
+      "line": 13
+    },
+    {
+      "from": "consumer:board-web#src/live/digest.ts:onTeamCard",
+      "to": "board-web#src/live/digest.ts:onTeamCard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/digest.ts",
+      "line": 19
+    },
+    {
+      "from": "consumer:board-web#src/live/streams.ts:onAlert",
+      "to": "board-web#src/live/streams.ts:onAlert",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/streams.ts",
+      "line": 21
+    },
+    {
+      "from": "consumer:board-web#src/live/streams.ts:onArchived",
+      "to": "board-web#src/live/streams.ts:onArchived",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/streams.ts",
+      "line": 28
+    },
+    {
+      "from": "consumer:board-web#src/live/streams.ts:onLedger",
+      "to": "board-web#src/live/streams.ts:onLedger",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/streams.ts",
+      "line": 35
+    },
+    {
+      "from": "consumer:board-web#src/screens/BoardScreen.tsx:handleActivity",
+      "to": "board-web#src/screens/BoardScreen.tsx:handleActivity",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 23
+    },
+    {
+      "from": "consumer:board-web#src/screens/BoardScreen.tsx:handlePresence",
+      "to": "board-web#src/screens/BoardScreen.tsx:handlePresence",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 25
+    },
+    {
+      "from": "consumer:digest-worker#src/digest-feed.ts:DigestFeed.fetch",
+      "to": "digest-worker#src/digest-feed.ts:DigestFeed.fetch",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "Response",
+      "file": "src/digest-feed.ts",
+      "line": 13
+    },
+    {
+      "from": "consumer:digest-worker#src/team-feed.ts:TeamFeed.fetch",
+      "to": "digest-worker#src/team-feed.ts:TeamFeed.fetch",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "Request"
+      ],
+      "returns": "Response",
+      "file": "src/team-feed.ts",
+      "line": 14
+    },
+    {
+      "from": "consumer:digest-worker#src/worker.ts:default.fetch@GET /digest/stream",
+      "to": "digest-worker#src/worker.ts:default.fetch",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 17
+    },
+    {
+      "from": "consumer:digest-worker#src/worker.ts:default.fetch@GET /teams/:param/feed",
+      "to": "digest-worker#src/worker.ts:default.fetch",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 21
+    },
+    {
+      "from": "consumer:gateway#src/index.ts:GET /alerts/stream@35",
+      "to": "gateway#src/index.ts:GET /alerts/stream@35",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 35
+    },
+    {
+      "from": "consumer:gateway#src/index.ts:GET /boards/:boardId/activity@14",
+      "to": "gateway#src/index.ts:GET /boards/:boardId/activity@14",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 14
+    },
+    {
+      "from": "consumer:gateway#src/index.ts:GET /boards/:boardId/presence@21",
+      "to": "gateway#src/index.ts:GET /boards/:boardId/presence@21",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 21
+    },
+    {
+      "from": "digest-worker#src/digest-feed.ts:DigestFeed.fetch",
+      "to": "cache_op:digest-worker#src/digest-feed.ts:12:11",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/digest-feed.ts",
+      "line": 12
+    },
+    {
+      "from": "digest-worker#src/digest-feed.ts:DigestFeed.fetch",
+      "to": "cache_op:digest-worker#src/digest-feed.ts:13:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/digest-feed.ts",
+      "line": 13
+    },
+    {
+      "from": "digest-worker#src/team-feed.ts:TeamFeed.fetch",
+      "to": "cache_op:digest-worker#src/team-feed.ts:13:11",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/team-feed.ts",
+      "line": 13
+    },
+    {
+      "from": "digest-worker#src/team-feed.ts:TeamFeed.fetch",
+      "to": "cache_op:digest-worker#src/team-feed.ts:14:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/team-feed.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:digest-worker:event:digest:daily",
+      "to": "digest-worker#src/digest-feed.ts:DigestFeed.fetch",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "Response",
+      "file": "src/digest-feed.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:digest-worker:event:team:*:feed",
+      "to": "digest-worker#src/team-feed.ts:TeamFeed.fetch",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "Request"
+      ],
+      "returns": "Response",
+      "file": "src/team-feed.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:digest-worker:http:GET:/digest/stream",
+      "to": "digest-worker#src/worker.ts:default.fetch",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 17
+    },
+    {
+      "from": "entry:digest-worker:http:GET:/teams/:param/feed",
+      "to": "digest-worker#src/worker.ts:default.fetch",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:gateway:http:GET:/alerts/stream",
+      "to": "gateway#src/index.ts:GET /alerts/stream@35",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 35,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:gateway:http:GET:/boards/:param/activity",
+      "to": "gateway#src/index.ts:GET /boards/:boardId/activity@14",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 14,
+      "meta": {
+        "requestRead": true,
+        "params": "{boardId:string}"
+      }
+    },
+    {
+      "from": "entry:gateway:http:GET:/boards/:param/archive",
+      "to": "gateway#src/index.ts:GET /boards/:boardId/archive@38",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 38,
+      "meta": {
+        "requestRead": true,
+        "params": "{boardId:string}"
+      }
+    },
+    {
+      "from": "entry:gateway:http:GET:/boards/:param/presence",
+      "to": "gateway#src/index.ts:GET /boards/:boardId/presence@21",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 21,
+      "meta": {
+        "requestRead": true,
+        "params": "{boardId:string}"
+      }
+    },
+    {
+      "from": "entry:gateway:http:GET:/ledger/stream",
+      "to": "gateway#src/index.ts:GET /ledger/stream@41",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 41,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:gateway:http:POST:/boards/:param/presence",
+      "to": "gateway#src/index.ts:POST /boards/:boardId/presence@23",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 23,
+      "meta": {
+        "requestRead": true,
+        "body": "type:gateway#PresenceMember",
+        "params": "{boardId:string}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:gateway:http:POST:/boards/:param/presence/leave",
+      "to": "gateway#src/index.ts:POST /boards/:boardId/presence/leave@28",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 28,
+      "meta": {
+        "requestRead": true,
+        "params": "{boardId:string}"
+      }
+    },
+    {
+      "from": "entry:planner:http:POST:/alerts",
+      "to": "planner#src/boards/boards.controller.ts:BoardsController.raise",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{text:string}"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 13,
+      "meta": {
+        "body": "{text:string}"
+      }
+    },
+    {
+      "from": "entry:planner:http:POST:/boards/:param/cards",
+      "to": "planner#src/boards/boards.controller.ts:BoardsController.addCard",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{teamId:string;title:string}"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 8,
+      "meta": {
+        "params": "{boardId:string}",
+        "body": "{teamId:string;title:string}"
+      }
+    },
+    {
+      "from": "entry:planner:http:POST:/digest",
+      "to": "planner#src/boards/boards.controller.ts:BoardsController.digest",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{summary:string}"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 18,
+      "meta": {
+        "body": "{summary:string}"
+      }
+    },
+    {
+      "from": "gateway#src/bus.ts:listen",
+      "to": "cache_op:gateway#src/bus.ts:7:9",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/bus.ts",
+      "line": 7
+    },
+    {
+      "from": "gateway#src/bus.ts:listen",
+      "to": "cache_op:gateway#src/bus.ts:8:9",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/bus.ts",
+      "line": 8
+    },
+    {
+      "from": "gateway#src/index.ts:GET /alerts/stream@35",
+      "to": "config_key:gateway#ALERTS",
+      "type": "reads_config",
+      "confidence": "heuristic",
+      "file": "src/index.ts",
+      "line": 35
+    },
+    {
+      "from": "gateway#src/index.ts:GET /alerts/stream@35",
+      "to": "config_key:gateway#ALERTS_ID",
+      "type": "reads_config",
+      "confidence": "heuristic",
+      "file": "src/index.ts",
+      "line": 35
+    },
+    {
+      "from": "gateway#src/index.ts:GET /boards/:boardId/activity@14",
+      "to": "config_key:gateway#BOARD_FEEDS",
+      "type": "reads_config",
+      "confidence": "heuristic",
+      "file": "src/index.ts",
+      "line": 15
+    },
+    {
+      "from": "gateway#src/index.ts:GET /boards/:boardId/archive@38",
+      "to": "config_key:gateway#ARCHIVE",
+      "type": "reads_config",
+      "confidence": "heuristic",
+      "file": "src/index.ts",
+      "line": 38
+    },
+    {
+      "from": "gateway#src/index.ts:GET /boards/:boardId/presence@21",
+      "to": "gateway#src/presence.ts:presenceFor",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:gateway#Env",
+        "string"
+      ],
+      "returns": "type:@cloudflare/workers-types#DurableObjectStub",
+      "file": "src/index.ts",
+      "line": 21
+    },
+    {
+      "from": "gateway#src/index.ts:GET /ledger/stream@41",
+      "to": "config_key:gateway#LEDGER",
+      "type": "reads_config",
+      "confidence": "heuristic",
+      "file": "src/index.ts",
+      "line": 41
+    },
+    {
+      "from": "gateway#src/index.ts:POST /boards/:boardId/presence/leave@28",
+      "to": "gateway#src/presence.ts:presenceFor",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:gateway#Env",
+        "string"
+      ],
+      "returns": "type:@cloudflare/workers-types#DurableObjectStub",
+      "file": "src/index.ts",
+      "line": 29
+    },
+    {
+      "from": "gateway#src/index.ts:POST /boards/:boardId/presence/leave@28",
+      "to": "producer:gateway#src/index.ts:30:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 30
+    },
+    {
+      "from": "gateway#src/index.ts:POST /boards/:boardId/presence@23",
+      "to": "gateway#src/presence.ts:presenceFor",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:gateway#Env",
+        "string"
+      ],
+      "returns": "type:@cloudflare/workers-types#DurableObjectStub",
+      "file": "src/index.ts",
+      "line": 24
+    },
+    {
+      "from": "gateway#src/index.ts:POST /boards/:boardId/presence@23",
+      "to": "producer:gateway#src/index.ts:24:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 24
+    },
+    {
+      "from": "gateway#src/objects/board-feed.ts:BoardFeed.fetch",
+      "to": "gateway#src/bus.ts:listen",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/objects/board-feed.ts",
+      "line": 21
+    },
+    {
+      "from": "gateway#src/objects/presence-hub.ts:PresenceHub.announce",
+      "to": "gateway#src/objects/presence-hub.ts:PresenceHub.send",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{type:string;member:string}"
+      ],
+      "returns": "void",
+      "file": "src/objects/presence-hub.ts",
+      "line": 29
+    },
+    {
+      "from": "gateway#src/objects/presence-hub.ts:PresenceHub.fetch",
+      "to": "gateway#src/objects/presence-hub.ts:PresenceHub.send",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{type:string;member:string}"
+      ],
+      "returns": "void",
+      "file": "src/objects/presence-hub.ts",
+      "line": 20
+    },
+    {
+      "from": "gateway#src/presence.ts:presenceFor",
+      "to": "config_key:gateway#PRESENCE",
+      "type": "reads_config",
+      "confidence": "heuristic",
+      "file": "src/presence.ts",
+      "line": 5
+    },
+    {
+      "from": "planner#src/boards/boards.controller.ts:BoardsController",
+      "to": "planner#src/boards/boards.service.ts:BoardsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/boards/boards.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "planner#src/boards/boards.controller.ts:BoardsController.addCard",
+      "to": "planner#src/boards/boards.service.ts:BoardsService.addCard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "planner#src/boards/boards.controller.ts:BoardsController.digest",
+      "to": "planner#src/boards/boards.service.ts:BoardsService.sendDigest",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "planner#src/boards/boards.controller.ts:BoardsController.raise",
+      "to": "planner#src/boards/boards.service.ts:BoardsService.raiseAlert",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/boards/boards.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "planner#src/boards/boards.service.ts:BoardsService.addCard",
+      "to": "cache_op:planner#src/boards/boards.service.ts:11:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 11
+    },
+    {
+      "from": "planner#src/boards/boards.service.ts:BoardsService.addCard",
+      "to": "cache_op:planner#src/boards/boards.service.ts:12:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 12
+    },
+    {
+      "from": "planner#src/boards/boards.service.ts:BoardsService.addCard",
+      "to": "producer:planner#src/boards/boards.service.ts:11:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 11
+    },
+    {
+      "from": "planner#src/boards/boards.service.ts:BoardsService.addCard",
+      "to": "producer:planner#src/boards/boards.service.ts:12:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 12
+    },
+    {
+      "from": "planner#src/boards/boards.service.ts:BoardsService.raiseAlert",
+      "to": "cache_op:planner#src/boards/boards.service.ts:16:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 16
+    },
+    {
+      "from": "planner#src/boards/boards.service.ts:BoardsService.raiseAlert",
+      "to": "producer:planner#src/boards/boards.service.ts:16:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 16
+    },
+    {
+      "from": "planner#src/boards/boards.service.ts:BoardsService.sendDigest",
+      "to": "cache_op:planner#src/boards/boards.service.ts:20:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 20
+    },
+    {
+      "from": "planner#src/boards/boards.service.ts:BoardsService.sendDigest",
+      "to": "producer:planner#src/boards/boards.service.ts:20:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 20
+    },
+    {
+      "from": "producer:gateway#src/index.ts:24:9",
+      "to": "channel:durable-object:PresenceHub",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:gateway#PresenceMember"
+      ],
+      "file": "src/index.ts",
+      "line": 24
+    },
+    {
+      "from": "producer:gateway#src/index.ts:30:9",
+      "to": "channel:durable-object:PresenceHub",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 30
+    },
+    {
+      "from": "producer:planner#src/boards/boards.service.ts:11:11",
+      "to": "channel:board:*:activity",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/boards/boards.service.ts",
+      "line": 11
+    },
+    {
+      "from": "producer:planner#src/boards/boards.service.ts:11:11",
+      "to": "channel:board:*:activity#CARD_ADDED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "producer:planner#src/boards/boards.service.ts:12:11",
+      "to": "channel:team:*:feed",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/boards/boards.service.ts",
+      "line": 12
+    },
+    {
+      "from": "producer:planner#src/boards/boards.service.ts:12:11",
+      "to": "channel:team:*:feed#CARD_ADDED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 12,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "producer:planner#src/boards/boards.service.ts:16:11",
+      "to": "channel:alerts:global",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/boards/boards.service.ts",
+      "line": 16
+    },
+    {
+      "from": "producer:planner#src/boards/boards.service.ts:16:11",
+      "to": "channel:alerts:global#ALERT",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 16,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "producer:planner#src/boards/boards.service.ts:20:11",
+      "to": "channel:digest:daily",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/boards/boards.service.ts",
+      "line": 20
+    },
+    {
+      "from": "producer:planner#src/boards/boards.service.ts:20:11",
+      "to": "channel:digest:daily#DIGEST",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/boards/boards.service.ts",
+      "line": 20,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "ui_api_call:board-web#src/live/digest.ts:12:18",
+      "to": "consumer:board-web#src/live/digest.ts:onDigest",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/digest.ts",
+      "line": 13
+    },
+    {
+      "from": "ui_api_call:board-web#src/live/digest.ts:12:18",
+      "to": "entry:digest-worker:http:GET:/digest/stream",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/live/digest.ts",
+      "line": 12,
+      "meta": {
+        "via": "api-target",
+        "targetService": "digest-worker"
+      }
+    },
+    {
+      "from": "ui_api_call:board-web#src/live/digest.ts:18:18",
+      "to": "consumer:board-web#src/live/digest.ts:onTeamCard",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/digest.ts",
+      "line": 19
+    },
+    {
+      "from": "ui_api_call:board-web#src/live/digest.ts:18:18",
+      "to": "entry:digest-worker:http:GET:/teams/:param/feed",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/live/digest.ts",
+      "line": 18,
+      "meta": {
+        "via": "api-target",
+        "targetService": "digest-worker"
+      }
+    },
+    {
+      "from": "ui_api_call:board-web#src/live/streams.ts:20:18",
+      "to": "consumer:board-web#src/live/streams.ts:onAlert",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/streams.ts",
+      "line": 21
+    },
+    {
+      "from": "ui_api_call:board-web#src/live/streams.ts:20:18",
+      "to": "entry:gateway:http:GET:/alerts/stream",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/live/streams.ts",
+      "line": 20,
+      "meta": {
+        "via": "api-target",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:board-web#src/live/streams.ts:27:18",
+      "to": "consumer:board-web#src/live/streams.ts:onArchived",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/streams.ts",
+      "line": 28
+    },
+    {
+      "from": "ui_api_call:board-web#src/live/streams.ts:27:18",
+      "to": "entry:gateway:http:GET:/boards/:param/archive",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/live/streams.ts",
+      "line": 27,
+      "meta": {
+        "via": "api-target",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:board-web#src/live/streams.ts:34:18",
+      "to": "consumer:board-web#src/live/streams.ts:onLedger",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/streams.ts",
+      "line": 35
+    },
+    {
+      "from": "ui_api_call:board-web#src/live/streams.ts:34:18",
+      "to": "entry:gateway:http:GET:/ledger/stream",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/live/streams.ts",
+      "line": 34,
+      "meta": {
+        "via": "api-target",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:board-web#src/screens/BoardScreen.tsx:22:22",
+      "to": "consumer:board-web#src/screens/BoardScreen.tsx:handleActivity",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 23
+    },
+    {
+      "from": "ui_api_call:board-web#src/screens/BoardScreen.tsx:22:22",
+      "to": "entry:gateway:http:GET:/boards/:param/activity",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 22,
+      "meta": {
+        "via": "api-target",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:board-web#src/screens/BoardScreen.tsx:24:22",
+      "to": "consumer:board-web#src/screens/BoardScreen.tsx:handlePresence",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 25
+    },
+    {
+      "from": "ui_api_call:board-web#src/screens/BoardScreen.tsx:24:22",
+      "to": "entry:gateway:http:GET:/boards/:param/presence",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/screens/BoardScreen.tsx",
+      "line": 24,
+      "meta": {
+        "via": "api-target",
+        "targetService": "gateway"
+      }
+    }
+  ],
+  "types": {
+    "type:@cloudflare/workers-types#DurableObject<type:gateway#Env,this>": {
+      "name": "DurableObject",
+      "kind": "external",
+      "declaredIn": "@cloudflare/workers-types",
+      "structuralHash": "2455ed2540d4c5f9",
+      "meta": {
+        "declKind": "external",
+        "package": "@cloudflare/workers-types"
+      }
+    },
+    "type:@cloudflare/workers-types#DurableObjectNamespace<type:gateway#PresenceHub>": {
+      "name": "DurableObjectNamespace",
+      "kind": "external",
+      "declaredIn": "@cloudflare/workers-types",
+      "structuralHash": "bc6be7897f98b7b3",
+      "meta": {
+        "declKind": "external",
+        "package": "@cloudflare/workers-types"
+      }
+    },
+    "type:@cloudflare/workers-types#DurableObjectNamespace<undefined>": {
+      "name": "DurableObjectNamespace",
+      "kind": "external",
+      "declaredIn": "@cloudflare/workers-types",
+      "structuralHash": "bc6be7897f98b7b3",
+      "meta": {
+        "declKind": "external",
+        "package": "@cloudflare/workers-types"
+      }
+    },
+    "type:@cloudflare/workers-types#DurableObjectState": {
+      "name": "DurableObjectState",
+      "kind": "external",
+      "declaredIn": "@cloudflare/workers-types",
+      "structuralHash": "114ee9b904868dc1",
+      "meta": {
+        "declKind": "external",
+        "package": "@cloudflare/workers-types"
+      }
+    },
+    "type:@cloudflare/workers-types#DurableObjectStub": {
+      "name": "DurableObjectStub",
+      "kind": "external",
+      "declaredIn": "@cloudflare/workers-types",
+      "structuralHash": "20a05fed0f2039b7",
+      "meta": {
+        "declKind": "external",
+        "package": "@cloudflare/workers-types"
+      }
+    },
+    "type:board-web#BoardEvent": {
+      "name": "BoardEvent",
+      "kind": "object",
+      "declaredIn": "board-web#src/screens/BoardScreen.tsx",
+      "structuralHash": "c55efe09b8a4d9e3",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "member",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:digest-worker#Env": {
+      "name": "Env",
+      "kind": "object",
+      "declaredIn": "digest-worker#src/worker.ts",
+      "structuralHash": "290699f2a46d05c7",
+      "fields": [
+        {
+          "name": "DIGESTS",
+          "type": "type:@cloudflare/workers-types#DurableObjectNamespace<undefined>",
+          "optional": false
+        },
+        {
+          "name": "TEAM_FEEDS",
+          "type": "type:@cloudflare/workers-types#DurableObjectNamespace<undefined>",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:gateway#Env": {
+      "name": "Env",
+      "kind": "object",
+      "declaredIn": "gateway#src/env.ts",
+      "structuralHash": "3badc3d27aeb3ad0",
+      "fields": [
+        {
+          "name": "BOARD_FEEDS",
+          "type": "type:@cloudflare/workers-types#DurableObjectNamespace<undefined>",
+          "optional": false
+        },
+        {
+          "name": "PRESENCE",
+          "type": "type:@cloudflare/workers-types#DurableObjectNamespace<type:gateway#PresenceHub>",
+          "optional": false
+        },
+        {
+          "name": "ALERTS",
+          "type": "type:@cloudflare/workers-types#DurableObjectNamespace<undefined>",
+          "optional": false
+        },
+        {
+          "name": "ALERTS_ID",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "ARCHIVE",
+          "type": "type:@cloudflare/workers-types#DurableObjectNamespace<undefined>",
+          "optional": false
+        },
+        {
+          "name": "LEDGER",
+          "type": "type:@cloudflare/workers-types#DurableObjectNamespace<undefined>",
+          "optional": false
+        },
+        {
+          "name": "REDIS_URL",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:gateway#PresenceHub": {
+      "name": "PresenceHub",
+      "kind": "object",
+      "declaredIn": "gateway#src/objects/presence-hub.ts",
+      "structuralHash": "a445accf3214ab8c",
+      "fields": [
+        {
+          "name": "writers",
+          "type": "Set<WritableStreamDefaultWriter<Uint8Array<ArrayBufferLike>>>",
+          "optional": false
+        },
+        {
+          "name": "ctx",
+          "type": "type:@cloudflare/workers-types#DurableObjectState",
+          "optional": false
+        },
+        {
+          "name": "env",
+          "type": "type:gateway#Env",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true,
+        "extends": [
+          "type:@cloudflare/workers-types#DurableObject<type:gateway#Env,this>"
+        ]
+      }
+    },
+    "type:gateway#PresenceMember": {
+      "name": "PresenceMember",
+      "kind": "object",
+      "declaredIn": "gateway#src/objects/presence-hub.ts",
+      "structuralHash": "1204184ec4755515",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:hono#Context<{Bindings:type:gateway#Env}>": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "hono",
+      "structuralHash": "9245dcdd5ac0d844",
+      "meta": {
+        "declKind": "external",
+        "package": "hono"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/digest-feed.ts",
+      "line": 12,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "client.connect",
+      "service": "digest-worker"
+    },
+    {
+      "file": "src/digest-feed.ts",
+      "line": 13,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The listener does more than delegate, so the chain stops at the method that registered it.",
+      "symbol": "DigestFeed.fetch",
+      "service": "digest-worker"
+    },
+    {
+      "file": "src/team-feed.ts",
+      "line": 13,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "client.connect",
+      "service": "digest-worker"
+    },
+    {
+      "file": "src/team-feed.ts",
+      "line": 14,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The listener does more than delegate, so the chain stops at the method that registered it.",
+      "symbol": "TeamFeed.fetch",
+      "service": "digest-worker"
+    },
+    {
+      "file": "src/worker.ts",
+      "line": 24,
+      "reason": "route-path-dynamic",
+      "level": "info",
+      "message": "This worker's fetch hands requests to the per-scope object DigestFeed, whose fetch streams server-sent events, under a test of the path that names no route, so no screen is joined to the stream.",
+      "hint": "Test the path for equality, for a prefix (startsWith('/feeds/')), or with an anchored pattern, or serve the stream from a route of a router.",
+      "symbol": "default.fetch",
+      "service": "digest-worker"
+    },
+    {
+      "file": "src/bus.ts",
+      "line": 7,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "client.connect",
+      "service": "gateway"
+    },
+    {
+      "file": "src/bus.ts",
+      "line": 8,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "client.subscribe",
+      "service": "gateway"
+    },
+    {
+      "file": "src/env.ts",
+      "line": 9,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "this",
+      "service": "gateway"
+    },
+    {
+      "service": "gateway",
+      "file": "src/index.ts",
+      "line": 38,
+      "reason": "stream-relay-unread",
+      "level": "info",
+      "message": "A browser holds this route open as a stream of server-sent events, and the route hands its request to a per-scope object whose class is not read: wrangler.jsonc binds ARCHIVE to the class ArchiveFeed, which this repository does not declare.",
+      "hint": "Export ArchiveFeed from the worker's entry, or correct class_name in wrangler.jsonc.",
+      "symbol": "GET /boards/:param/archive"
+    },
+    {
+      "service": "gateway",
+      "file": "src/index.ts",
+      "line": 41,
+      "reason": "stream-relay-unread",
+      "level": "info",
+      "message": "A browser holds this route open as a stream of server-sent events, and the route hands its request to a per-scope object whose class is not read: wrangler.jsonc binds LEDGER to the class LedgerFeed of the worker ledger-worker, whose code is read with that worker.",
+      "hint": "Annotate the handler with @Consumes('<channel>') for what LedgerFeed relays.",
+      "symbol": "GET /ledger/stream"
+    }
+  ]
+}

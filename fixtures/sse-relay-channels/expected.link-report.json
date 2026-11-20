@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-20T13:41:26.812Z",
+  "builtAt": "2026-11-20T13:57:08.533Z",
   "configHash": "9968b986e1bb",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 2,
       "unresolved": 3,
-      "durationMs": 1058,
+      "durationMs": 1988,
       "packages": {
         "name": "edge",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 19,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 722,
+      "durationMs": 1338,
       "packages": {
         "name": "portal",
         "runtime": [
@@ -49,7 +49,7 @@
       "edges": 31,
       "types": 0,
       "unresolved": 7,
-      "durationMs": 1202,
+      "durationMs": 2297,
       "packages": {
         "name": "shipping",
         "runtime": [
@@ -111,8 +111,8 @@
       "line": 25,
       "reason": "stream-relay-unread",
       "level": "info",
-      "message": "A browser holds this route open as a stream of server-sent events, and nothing in the code behind it was read as relaying a channel onto it.",
-      "hint": "Where the stream is answered by code of the route's own, subscribe there with a client a broker description reads; or annotate the handler with @Consumes('<channel>').",
+      "message": "A browser holds this route open as a stream of server-sent events, and the route hands its request to a per-scope object whose class is not read: no worker configuration of this repository binds ROOMS under durable_objects, and the namespace's type names no class.",
+      "hint": "Declare ROOMS under durable_objects.bindings in the worker's wrangler file with its class_name, or type the namespace as DurableObjectNamespace<Class>.",
       "symbol": "GET /rooms/:param/stream"
     },
     {

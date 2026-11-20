@@ -20,8 +20,8 @@ app.get('/live/:workspaceId', (c) =>
   }),
 );
 
-// The stream answered by an object of its own the request is handed to: what
-// that object relays is code this route does not hold.
+// The stream answered by an object the request is handed to, which nothing
+// binds to a class (P361): what it relays is code this route does not hold.
 app.get('/rooms/:roomId/stream', (c) => {
   const id = c.env.ROOMS.idFromName(c.req.param('roomId'));
   return c.env.ROOMS.get(id).fetch(c.req.raw);

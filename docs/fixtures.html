@@ -66,13 +66,13 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>325 fixtures</span>
-    <span>832 snapshot files</span>
+    <span>326 fixtures</span>
+    <span>835 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
   <section data-area>
-    <h2>Channels and messages <span class="count" data-total="16">16</span></h2>
+    <h2>Channels and messages <span class="count" data-total="17">17</span></h2>
     <ul>
       <li class="fixture" data-search="aws-sdk-not-installed channels and messages a library catalogue that publishes through the aws sdk in a clone nobody has installed, which is how a serverless repository is usually first read: there is no `node_modules`, so every client is `any` to the checker and none of them can say which package declared it.">
         <div class="head">
@@ -184,6 +184,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">2 services</span>
         </div>
         <p>A plain socket server and a browser in another repository, each naming the same events on the same namespaces.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="sse-durable-objects channels and messages streams of server-sent events answered by per-scope objects (cloudflare's durable objects) a worker hands its request to, and the screens holding them open.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/sse-durable-objects">sse-durable-objects</a>
+          <span class="kind">4 services</span>
+        </div>
+        <p>Streams of server-sent events answered by per-scope objects (Cloudflare's Durable Objects) a worker hands its request to, and the screens holding them open.</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="sse-relay-channels channels and messages a channel published by one service, relayed onto streams of server-sent events by the routes that subscribe to it, and the screens whose handlers the frames arrive at.">

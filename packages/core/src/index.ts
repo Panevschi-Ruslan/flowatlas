@@ -1232,3 +1232,13 @@ export {
   type Selection,
   type SelectionVia,
 } from './message-types.js';
+export {
+  objectBindingsOf,
+  parseJsonc,
+  readWorkerConfig,
+  readWorkerDocument,
+  readWorkerToml,
+  WORKER_CONFIG_FILES,
+  type ObjectBinding,
+  type WorkerConfig,
+} from './worker-config.js';

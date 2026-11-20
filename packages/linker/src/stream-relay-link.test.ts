@@ -65,3 +65,14 @@ describe('channels handed on through a stream (P359)', () => {
     expect(edges.size).toBe(before);
   });
 });
+
+describe('a route handed to a per-scope object whose class is not read (P361)', () => {
+  it('names the object and why, where a browser holds the route open', () => {
+    const { nodes, edges } = graph();
+    const quiet = nodes.get(QUIET) as GraphNode;
+    quiet.meta = { handedTo: [{ binding: 'ROOMS', method: 'fetch', why: 'wrangler.jsonc binds ROOMS to the class Room, which this repository does not declare', hint: 'Export Room.' }] };
+    const [row] = joinStreamRelays(nodes, edges);
+    expect(row).toMatchObject({ file: 'src/worker.ts', line: 20, reason: 'stream-relay-unread', hint: 'Export Room.' });
+    expect(row?.message).toContain('hands its request to a per-scope object whose class is not read: wrangler.jsonc binds ROOMS');
+  });
+});

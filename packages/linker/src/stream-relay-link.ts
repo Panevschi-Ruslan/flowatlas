@@ -16,7 +16,8 @@ import { cmp, edgeKey } from './order.js';
  * publisher runs through to the screen's handler.
  *
  * A stream a browser holds open on a route that relays nothing read is a row on
- * the route, unless the server's reader saw the stream and wrote one there
+ * the route - naming the per-scope object the route hands its request to, where
+ * its class was not read (P361) - unless the server's reader saw the stream and wrote one there
  * itself; a request that joined no route was already counted as one by the
  * request join.
  */
@@ -86,6 +87,23 @@ export const joinStreamRelays = (nodes: Map<string, GraphNode>, edges: Map<strin
   for (const route of [...unrelayed.values()].sort((a, b) => cmp(a.id, b.id))) {
     // The server's reader saw the stream, found nothing relayed, and said so where it is answered.
     if (route.meta?.['stream'] === STREAM_KIND) continue;
+    // The route hands its request to a per-scope object whose class the
+    // server's reader could not read (P361): the stream is answered there.
+    const handedTo = Array.isArray(route.meta?.['handedTo']) ? (route.meta?.['handedTo'] as { why?: unknown; hint?: unknown }[]) : [];
+    const [handed] = handedTo;
+    if (handed !== undefined && typeof handed.why === 'string') {
+      rows.push({
+        service: route.repo,
+        file: route.file ?? '',
+        line: route.line ?? 0,
+        reason: 'stream-relay-unread',
+        level: 'info',
+        message: `A browser holds this route open as a stream of server-sent events, and the route hands its request to a per-scope object whose class is not read: ${handed.why}.`,
+        hint: typeof handed.hint === 'string' ? handed.hint : 'Annotate the handler with @Consumes(\'<channel>\').',
+        symbol: route.label,
+      });
+      continue;
+    }
     rows.push({
       service: route.repo,
       file: route.file ?? '',

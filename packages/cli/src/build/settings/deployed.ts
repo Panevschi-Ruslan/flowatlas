@@ -1,3 +1,4 @@
+import { parseJsonc, readWorkerToml as readToml } from '@flowatlas/core';
 import { parse } from 'yaml';
 import type { Written } from './dotenv.js';
 
@@ -78,36 +79,6 @@ export const readServerlessFile = (text: string): DeploymentSettings => {
   };
 };
 
-/** JSON with comments and trailing commas, as a worker's configuration is written. */
-const parseJsonc = (text: string): unknown => {
-  let out = '';
-  let inString = false;
-  for (let index = 0; index < text.length; index += 1) {
-    const char = text[index] as string;
-    const next = text[index + 1];
-    if (inString) {
-      out += char;
-      if (char === '\\') {
-        out += next ?? '';
-        index += 1;
-      } else if (char === '"') inString = false;
-      continue;
-    }
-    if (char === '"') {
-      inString = true;
-      out += char;
-    } else if (char === '/' && next === '/') {
-      while (index < text.length && text[index] !== '\n') index += 1;
-      out += '\n';
-    } else if (char === '/' && next === '*') {
-      index += 2;
-      while (index < text.length && !(text[index] === '*' && text[index + 1] === '/')) index += 1;
-      index += 1;
-    } else out += char;
-  }
-  return JSON.parse(out.replace(/,(\s*[}\]])/g, '$1'));
-};
-
 /**
  * `services: [{ binding, service, entrypoint? }]`: the workers a worker reaches
  * by name rather than by address (P91). Only bindings written out in full; one
@@ -166,94 +137,8 @@ export const readWorkerJson = (text: string): DeploymentSettings => {
   }
 };
 
-/** A TOML string or number, as a worker's configuration writes one. */
-const tomlValue = (written: string): string | number | undefined => {
-  const text = written.trim();
-  const quoted = /^"((?:[^"\\]|\\.)*)"|^'([^']*)'/.exec(text);
-  if (quoted !== null) return quoted[1] !== undefined ? quoted[1].replace(/\\(.)/g, '$1') : quoted[2];
-  const number = /^(\d+)\s*(?:#.*)?$/.exec(text);
-  return number === null ? undefined : Number(number[1]);
-};
-
-/** `{ A = "x", B = "y" }`, one level deep. */
-const inlineTable = (written: string): Record<string, unknown> | undefined => {
-  const body = /^\{(.*)\}\s*(?:#.*)?$/.exec(written.trim())?.[1];
-  if (body === undefined) return undefined;
-  const out: Record<string, unknown> = {};
-  for (const pair of body.match(/[A-Za-z0-9_.-]+\s*=\s*(?:"(?:[^"\\]|\\.)*"|'[^']*'|[^,]+)/g) ?? []) {
-    const equals = pair.indexOf('=');
-    const value = tomlValue(pair.slice(equals + 1));
-    if (value !== undefined) out[pair.slice(0, equals).trim().replace(/^"|"$/g, '')] = value;
-  }
-  return out;
-};
-
-/** `[{ a = "x" }, { b = "y" }]`, an inline array of inline tables, on one line. */
-const inlineArray = (written: string): Record<string, unknown>[] | undefined => {
-  const body = /^\[(.*)\]\s*(?:#.*)?$/.exec(written.trim())?.[1];
-  if (body === undefined) return undefined;
-  const tables = body.match(/\{[^{}]*\}/g) ?? [];
-  return tables.map((table) => inlineTable(table)).filter((table): table is Record<string, unknown> => table !== undefined);
-};
-
 /**
- * The part of a worker's TOML configuration that holds variables and
- * bindings: tables and inline tables of strings and numbers, which is all
- * `vars` and `dev` are, and the arrays of tables `services` is written as
- * (`[[services]]` or `services = [{ … }]`, P91). Everything else in the file
- * is skipped, not misread.
+ * The TOML spelling, parsed by the core's reader of a worker's configuration
+ * (shared with the stream reader, P361).
  */
-const readToml = (text: string): Record<string, unknown> => {
-  const root: Record<string, unknown> = {};
-  let table: Record<string, unknown> | undefined = root;
-  const tableAt = (path: string[]): Record<string, unknown> => {
-    let at = root;
-    for (const key of path) {
-      const next = at[key];
-      if (isRecord(next)) at = next;
-      else {
-        const made: Record<string, unknown> = {};
-        at[key] = made;
-        at = made;
-      }
-    }
-    return at;
-  };
-  for (const raw of text.split(/\r?\n/)) {
-    const line = raw.trim();
-    if (line === '' || line.startsWith('#')) continue;
-    const header = /^\[([^[\]]+)\]\s*(?:#.*)?$/.exec(line);
-    if (header !== null) {
-      table = tableAt((header[1] as string).split('.').map((key) => key.trim().replace(/^"|"$/g, '')));
-      continue;
-    }
-    // An array of tables: one more entry of the list at that path. Only
-    // `services` is read (P91); `[[routes]]` and the rest hold nothing here.
-    const arrayHeader = /^\[\[([^[\]]+)\]\]\s*(?:#.*)?$/.exec(line);
-    if (arrayHeader !== null) {
-      const path = (arrayHeader[1] as string).split('.').map((key) => key.trim().replace(/^"|"$/g, ''));
-      const last = path.pop() as string;
-      if (last !== 'services') {
-        table = undefined;
-        continue;
-      }
-      const owner = tableAt(path);
-      const list = Array.isArray(owner[last]) ? (owner[last] as unknown[]) : [];
-      const made: Record<string, unknown> = {};
-      list.push(made);
-      owner[last] = list;
-      table = made;
-      continue;
-    }
-    const pair = /^([A-Za-z0-9_."-]+)\s*=\s*(.*)$/.exec(line);
-    if (pair === null || table === undefined) continue;
-    const key = (pair[1] as string).replace(/^"|"$/g, '');
-    const written = pair[2] as string;
-    const trimmed = written.trim();
-    const value = trimmed.startsWith('{') ? inlineTable(written) : trimmed.startsWith('[') ? inlineArray(written) : tomlValue(written);
-    if (value !== undefined) table[key] = value;
-  }
-  return root;
-};
-
 export const readWorkerToml = (text: string): DeploymentSettings => fromWorkerDocument(readToml(text));

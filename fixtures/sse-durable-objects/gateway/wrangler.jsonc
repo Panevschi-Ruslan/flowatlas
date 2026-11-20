@@ -1,0 +1,18 @@
+{
+  // The worker in front of the boards: each per-scope object it holds streams
+  // open in is bound here by the name the code reaches it under.
+  "name": "board-gateway",
+  "main": "src/index.ts",
+  "durable_objects": {
+    "bindings": [
+      { "name": "BOARD_FEEDS", "class_name": "BoardFeed" },
+      { "name": "PRESENCE", "class_name": "PresenceHub" },
+      { "name": "ALERTS", "class_name": "AlertsRelay" },
+      // Bound, and declared nowhere in this worker.
+      { "name": "ARCHIVE", "class_name": "ArchiveFeed" },
+      // Declared by another worker.
+      { "name": "LEDGER", "class_name": "LedgerFeed", "script_name": "ledger-worker" },
+    ],
+  },
+  "migrations": [{ "tag": "v1", "new_classes": ["BoardFeed", "PresenceHub", "AlertsRelay"] }],
+}

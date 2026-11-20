@@ -1,0 +1,30 @@
+{
+  "services": [
+    {
+      "name": "planner",
+      "repo": "./planner",
+      "type": "nestjs"
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "express"
+    },
+    {
+      "name": "digest-worker",
+      "repo": "./digest-worker",
+      "type": "express"
+    },
+    {
+      "name": "board-web",
+      "repo": "./board-web",
+      "type": "react",
+      "apiBaseEnv": ["VITE_GATEWAY_URL", "VITE_DIGEST_URL"],
+      "apiTarget": {
+        "VITE_GATEWAY_URL": "gateway",
+        "VITE_DIGEST_URL": "digest-worker"
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}
