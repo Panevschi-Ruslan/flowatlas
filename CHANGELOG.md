@@ -8,6 +8,25 @@ only one of them moved.
 
 ### Added
 
+- **A channel relayed onto a stream of server-sent events reaches the screens
+  holding it open (P359).** A route whose handler streams server-sent events
+  (Nest's `@Sse`, which alone now declares a `GET` route; Hono's `streamSSE`
+  and `writeSSE`; a `text/event-stream` answer; frames written as `data: …`)
+  is read for the subscriptions in the code behind it, a few calls deep, with
+  the broker descriptions consumers are read with; a channel handed to a
+  helper of the project's own is read at the call that hands it. Each channel
+  makes the route a consumer of it (`meta.relay` on the consumer,
+  `meta.stream` and `meta.relays` on the route). A screen's `EventSource` is
+  read by the React, Vue, Svelte and plain-script reader as the Angular one
+  reads it, and in both the function its frames arrive at - named, called by
+  a listener written in place, or handed into a hook by its caller - is a
+  `consumer` of kind `sse` the request `triggers`. The linker joins the two:
+  the channel `consumes` into each screen's consumer, with the route and the
+  request on the edge, so `who_consumes`, `get_flow`, `impact` and `dead` walk
+  from publisher to screen. A stream whose relayed channel is not read is a
+  `stream-relay-unread` row, a stream with no handler found a
+  `stream-handler-unread` row.
+
 - **A narrower root bounds a reading inside its checkout too, and what a
   tsconfig names above it is said (P357).** A configuration kept beside or
   below its services reads no higher in its checkout than its own directory

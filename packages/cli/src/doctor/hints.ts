@@ -509,6 +509,12 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'consumer-handler-unresolved': () =>
     'The listener does more than delegate, so the chain stops at the method that registered it. Delegate to a named method.',
 
+  // Streams of server-sent events (P359)
+  'stream-relay-unread': () =>
+    "The route streams server-sent events and no channel it relays onto the stream was read, so the screens holding it open are joined to no channel. Subscribe in the code behind the route with a client a broker description reads, or annotate the handler with @Consumes('<channel>').",
+  'stream-handler-unread': () =>
+    'A screen opens a stream of server-sent events and the function its frames arrive at was not found. Register a named function, or one written in place that calls one, with onmessage or addEventListener where the stream is held.',
+
   // Starting a workflow or a function by its deployed name (adapters-broker, P24)
   'start-from-environment': () =>
     'What this call starts is the value of an environment variable, set where the code is deployed and not in it. It is completed from the value each function that runs the code is deployed with; this row is left where nothing deployed is known to run it.',

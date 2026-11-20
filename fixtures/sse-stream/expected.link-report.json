@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-16T23:29:41.745Z",
+  "builtAt": "2026-11-20T12:50:26.956Z",
   "configHash": "37634076a802",
   "services": [
     {
@@ -11,8 +11,8 @@
       "nodes": 25,
       "edges": 21,
       "types": 1,
-      "unresolved": 1,
-      "durationMs": 663,
+      "unresolved": 2,
+      "durationMs": 924,
       "packages": {
         "name": "api",
         "runtime": [
@@ -28,11 +28,11 @@
       "repo": "./web",
       "type": "angular",
       "extractor": "@flowatlas/extractor-angular",
-      "nodes": 31,
-      "edges": 20,
+      "nodes": 34,
+      "edges": 26,
       "types": 1,
-      "unresolved": 1,
-      "durationMs": 553,
+      "unresolved": 2,
+      "durationMs": 761,
       "packages": {
         "name": "web",
         "runtime": [
@@ -80,13 +80,13 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 56,
-    "edges": 46,
+    "nodes": 59,
+    "edges": 52,
     "types": 2,
-    "missed": 2,
-    "sites": 2,
+    "missed": 4,
+    "sites": 5,
     "notes": 0,
     "findings": 0,
-    "unresolved": 2
+    "unresolved": 4
   }
 }

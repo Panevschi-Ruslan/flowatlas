@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T17:15:14.044Z",
+  "builtAt": "2026-11-20T12:44:13.515Z",
   "services": [
     {
       "name": "api",
@@ -475,6 +475,23 @@
       "file": "src/worker.ts",
       "line": 34,
       "kind": "function"
+    },
+    {
+      "id": "consumer:web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "consumer",
+      "label": "LiveEventsService.open",
+      "repo": "web",
+      "file": "src/app/live-events.service.ts",
+      "line": 27,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null
+      }
     },
     {
       "id": "entry:api:http:ALL:/api/*",
@@ -1151,6 +1168,14 @@
       "line": 52
     },
     {
+      "from": "consumer:web#src/app/live-events.service.ts:LiveEventsService.open",
+      "to": "web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 27
+    },
+    {
       "from": "entry:api:http:ALL:/api/*",
       "to": "api#src/worker.ts:forwardToNest",
       "type": "handles",
@@ -1562,6 +1587,14 @@
     },
     {
       "from": "ui_api_call:web#src/app/live-events.service.ts:26:20",
+      "to": "consumer:web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 27
+    },
+    {
+      "from": "ui_api_call:web#src/app/live-events.service.ts:26:20",
       "to": "entry:api:http:GET:/api/depots/:param/stream",
       "type": "hits",
       "confidence": "static",
@@ -1716,6 +1749,16 @@
     }
   },
   "unresolved": [
+    {
+      "service": "api",
+      "file": "src/worker.ts",
+      "line": 27,
+      "reason": "stream-relay-unread",
+      "level": "info",
+      "message": "A browser holds this route open as a stream of server-sent events, and nothing in the code behind it was read as relaying a channel onto it.",
+      "hint": "Where the stream is answered by code of the route's own, subscribe there with a client a broker description reads; or annotate the handler with @Consumes('<channel>').",
+      "symbol": "GET /api/depots/:param/stream"
+    },
     {
       "file": "src/worker.ts",
       "line": 36,

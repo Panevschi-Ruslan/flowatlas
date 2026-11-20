@@ -1199,3 +1199,17 @@ export { defaultHeadersWritten, headersAHookAdds, joinHookHeaders, NO_HOOK_HEADE
 export { responseHeadersRead, type AnswerHanded, type ResponseHeadersRead } from './response-headers.js';
 export type { ConfigLiteral, ExportedNames } from './config-literal.js';
 export { atChosenHost, matchServedAt, SERVED_AT_META, servedAtOf, type ServedAt, type ServedMatch } from './served-at.js';
+export {
+  delegateOf,
+  EVENT_SOURCE,
+  isEventSourceConstruction,
+  isWrittenFunction,
+  recordStreamConsumer,
+  STREAM_KIND,
+  streamConsumerId,
+  streamHandlerUnreadRow,
+  streamHoldingOf,
+  type StreamConsumer,
+  type StreamHolding,
+  type StreamListener,
+} from './event-stream.js';

@@ -1,0 +1,292 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-20T12:50:25.398Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:shipping#src/parcels/parcels.service.ts:15:11",
+        "to": "consumer:shipping#src/live/live.controller.ts:LiveController.events",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shipping#src/parcels/parcels.service.ts:15:11|emits|consumer:shipping#src/live/live.controller.ts:LiveController.events",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "shipping",
+        "typeId": "string",
+        "symbol": "shipping#src/parcels/parcels.service.ts:ParcelsService.markPacked"
+      },
+      "receiver": {
+        "service": "shipping",
+        "typeId": "string",
+        "symbol": "shipping#src/live/live.controller.ts:LiveController.events"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:shipping#src/parcels/parcels.service.ts:19:11",
+        "to": "consumer:shipping#src/live/live.controller.ts:LiveController.events",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shipping#src/parcels/parcels.service.ts:19:11|emits|consumer:shipping#src/live/live.controller.ts:LiveController.events",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "shipping",
+        "typeId": "string",
+        "symbol": "shipping#src/parcels/parcels.service.ts:ParcelsService.assignCourier"
+      },
+      "receiver": {
+        "service": "shipping",
+        "typeId": "string",
+        "symbol": "shipping#src/live/live.controller.ts:LiveController.events"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:shipping#src/parcels/parcels.service.ts:23:11",
+        "to": "consumer:shipping#src/live/live.controller.ts:LiveController.packing",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shipping#src/parcels/parcels.service.ts:23:11|emits|consumer:shipping#src/live/live.controller.ts:LiveController.packing",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "shipping",
+        "typeId": "string",
+        "symbol": "shipping#src/parcels/parcels.service.ts:ParcelsService.queueForPacking"
+      },
+      "receiver": {
+        "service": "shipping",
+        "typeId": "string",
+        "symbol": "shipping#src/live/live.controller.ts:LiveController.packing"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:shipping#src/parcels/parcels.service.ts:15:11",
+        "to": "consumer:edge#src/worker.ts:GET /live/:workspaceId@15",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shipping#src/parcels/parcels.service.ts:15:11|emits|consumer:edge#src/worker.ts:GET /live/:workspaceId@15",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "edge#src/worker.ts:GET /live/:workspaceId@15 declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shipping#src/parcels/parcels.service.ts:15:11",
+        "to": "consumer:portal#src/live/ticker.ts:onTick",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shipping#src/parcels/parcels.service.ts:15:11|emits|consumer:portal#src/live/ticker.ts:onTick",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:portal#src/live/ticker.ts:onTick declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shipping#src/parcels/parcels.service.ts:15:11",
+        "to": "consumer:portal#src/screens/ParcelBoard.tsx:CourierPanel",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shipping#src/parcels/parcels.service.ts:15:11|emits|consumer:portal#src/screens/ParcelBoard.tsx:CourierPanel",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:portal#src/screens/ParcelBoard.tsx:CourierPanel declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shipping#src/parcels/parcels.service.ts:15:11",
+        "to": "consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shipping#src/parcels/parcels.service.ts:15:11|emits|consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shipping#src/parcels/parcels.service.ts:19:11",
+        "to": "consumer:edge#src/worker.ts:GET /live/:workspaceId@15",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shipping#src/parcels/parcels.service.ts:19:11|emits|consumer:edge#src/worker.ts:GET /live/:workspaceId@15",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "edge#src/worker.ts:GET /live/:workspaceId@15 declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shipping#src/parcels/parcels.service.ts:19:11",
+        "to": "consumer:portal#src/live/ticker.ts:onTick",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shipping#src/parcels/parcels.service.ts:19:11|emits|consumer:portal#src/live/ticker.ts:onTick",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:portal#src/live/ticker.ts:onTick declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shipping#src/parcels/parcels.service.ts:19:11",
+        "to": "consumer:portal#src/screens/ParcelBoard.tsx:CourierPanel",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shipping#src/parcels/parcels.service.ts:19:11|emits|consumer:portal#src/screens/ParcelBoard.tsx:CourierPanel",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:portal#src/screens/ParcelBoard.tsx:CourierPanel declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shipping#src/parcels/parcels.service.ts:19:11",
+        "to": "consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shipping#src/parcels/parcels.service.ts:19:11|emits|consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shipping#src/parcels/parcels.service.ts:23:11",
+        "to": "consumer:portal#src/screens/PackingScreen.tsx:PackingScreen",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shipping#src/parcels/parcels.service.ts:23:11|emits|consumer:portal#src/screens/PackingScreen.tsx:PackingScreen",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:portal#src/screens/PackingScreen.tsx:PackingScreen declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:portal#src/live/ticker.ts:16:18",
+        "to": "entry:edge:http:GET:/live/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:portal#src/live/ticker.ts:16:18|hits|entry:edge:http:GET:/live/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "portal#src/live/ticker.ts:startTicker declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:portal#src/live/ticker.ts:16:18",
+        "to": "entry:edge:http:GET:/live/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:portal#src/live/ticker.ts:16:18|hits|entry:edge:http:GET:/live/:param",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "edge#src/worker.ts:GET /live/:workspaceId@15 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:portal#src/live/ticker.ts:23:18",
+        "to": "entry:edge:http:GET:/rooms/:param/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:portal#src/live/ticker.ts:23:18|hits|entry:edge:http:GET:/rooms/:param/stream",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "portal#src/live/ticker.ts:joinRoom declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:portal#src/live/ticker.ts:23:18",
+        "to": "entry:edge:http:GET:/rooms/:param/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:portal#src/live/ticker.ts:23:18|hits|entry:edge:http:GET:/rooms/:param/stream",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "edge#src/worker.ts:GET /rooms/:roomId/stream@25 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:portal#src/live/useWorkspaceEvents.ts:15:20",
+        "to": "entry:shipping:http:GET:/workspaces/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:portal#src/live/useWorkspaceEvents.ts:15:20|hits|entry:shipping:http:GET:/workspaces/:param/events",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "portal#src/live/useWorkspaceEvents.ts:useWorkspaceEvents declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:portal#src/live/useWorkspaceEvents.ts:15:20",
+        "to": "entry:shipping:http:GET:/workspaces/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:portal#src/live/useWorkspaceEvents.ts:15:20|hits|entry:shipping:http:GET:/workspaces/:param/events",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "portal#src/live/useWorkspaceEvents.ts:useWorkspaceEvents declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:portal#src/screens/PackingScreen.tsx:7:20",
+        "to": "entry:shipping:http:GET:/workspaces/:param/warehouses/:param/packing",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:portal#src/screens/PackingScreen.tsx:7:20|hits|entry:shipping:http:GET:/workspaces/:param/warehouses/:param/packing",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "portal#src/screens/PackingScreen.tsx:PackingScreen declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:portal#src/screens/PackingScreen.tsx:7:20",
+        "to": "entry:shipping:http:GET:/workspaces/:param/warehouses/:param/packing",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:portal#src/screens/PackingScreen.tsx:7:20|hits|entry:shipping:http:GET:/workspaces/:param/warehouses/:param/packing",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "portal#src/screens/PackingScreen.tsx:PackingScreen declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 3,
+    "shared": 0,
+    "identical": 3,
+    "hash_differs": 0,
+    "unchecked": 17,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

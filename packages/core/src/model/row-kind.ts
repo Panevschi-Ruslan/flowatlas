@@ -321,6 +321,10 @@ const GAPS: readonly string[] = [
   'channel-const-unresolved',
   'payload-type-unknown',
   'consumer-handler-unresolved',
+  // A stream of server-sent events whose relayed channel, or whose handler on
+  // the screen, is not read (P359)
+  'stream-relay-unread',
+  'stream-handler-unread',
   'start-from-environment',
   'start-name-unread',
   'starter-undescribed',

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:41:10.901Z",
+  "builtAt": "2026-11-20T12:50:26.956Z",
   "services": [
     {
       "name": "api",
@@ -367,6 +367,57 @@
       }
     },
     {
+      "id": "consumer:web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "consumer",
+      "label": "LiveEventsService.open",
+      "repo": "web",
+      "file": "src/app/live-events.service.ts",
+      "line": 30,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:web#src/app/live-events.service.ts:LiveEventsService.openWithToken",
+      "type": "consumer",
+      "label": "LiveEventsService.openWithToken",
+      "repo": "web",
+      "file": "src/app/live-events.service.ts",
+      "line": 47,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:web#src/app/remembered-stream.service.ts:RememberedStreamService.open",
+      "type": "consumer",
+      "label": "RememberedStreamService.open",
+      "repo": "web",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 37,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null
+      }
+    },
+    {
       "id": "entry:api:event:depot:*:events",
       "type": "entry",
       "label": "event depot:*:events",
@@ -398,7 +449,9 @@
             "args": []
           }
         ],
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "stream": "sse",
+        "streamFrom": "decorator"
       }
     },
     {
@@ -1189,6 +1242,30 @@
       "line": 30
     },
     {
+      "from": "consumer:web#src/app/live-events.service.ts:LiveEventsService.open",
+      "to": "web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 30
+    },
+    {
+      "from": "consumer:web#src/app/live-events.service.ts:LiveEventsService.openWithToken",
+      "to": "web#src/app/live-events.service.ts:LiveEventsService.openWithToken",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 47
+    },
+    {
+      "from": "consumer:web#src/app/remembered-stream.service.ts:RememberedStreamService.open",
+      "to": "web#src/app/remembered-stream.service.ts:RememberedStreamService.open",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 37
+    },
+    {
       "from": "entry:api:event:depot:*:events",
       "to": "api#src/events/event-bus.service.ts:EventBus.receive",
       "type": "handles",
@@ -1268,6 +1345,14 @@
     },
     {
       "from": "ui_api_call:web#src/app/live-events.service.ts:29:20",
+      "to": "consumer:web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 30
+    },
+    {
+      "from": "ui_api_call:web#src/app/live-events.service.ts:29:20",
       "to": "entry:api:http:GET:/depots/:param/events",
       "type": "hits",
       "confidence": "static",
@@ -1277,6 +1362,14 @@
         "via": "api-target",
         "targetService": "api"
       }
+    },
+    {
+      "from": "ui_api_call:web#src/app/live-events.service.ts:46:20",
+      "to": "consumer:web#src/app/live-events.service.ts:LiveEventsService.openWithToken",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 47
     },
     {
       "from": "ui_api_call:web#src/app/live-events.service.ts:46:20",
@@ -1305,6 +1398,14 @@
         "via": "api-target",
         "targetService": "api"
       }
+    },
+    {
+      "from": "ui_api_call:web#src/app/remembered-stream.service.ts:63:5@36:20",
+      "to": "consumer:web#src/app/remembered-stream.service.ts:RememberedStreamService.open",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 37
     },
     {
       "from": "ui_api_call:web#src/app/remembered-stream.service.ts:63:5@36:20",
@@ -1558,11 +1659,32 @@
       "service": "api"
     },
     {
+      "file": "src/orders/events.controller.ts",
+      "line": 18,
+      "reason": "stream-relay-unread",
+      "level": "info",
+      "message": "This route streams server-sent events, and no subscription to a channel was found in the code behind it.",
+      "hint": "What reaches the stream is decided by code not read as a subscription (a pipeline over a subject, a request handed to an object of its own). Annotate the handler with @Consumes('<channel>').",
+      "symbol": "GET /depots/:param/events",
+      "service": "api"
+    },
+    {
       "file": "src/app/stream-wrapper.service.ts",
       "line": 18,
       "reason": "api-path-dynamic",
       "hint": "The address is built at run time. Annotate the method with /** @flowatlas-calls GET /path */.",
       "symbol": "new EventSource(url)",
+      "service": "web"
+    },
+    {
+      "file": "src/app/stream-wrapper.service.ts",
+      "line": 18,
+      "reason": "stream-handler-unread",
+      "level": "info",
+      "sites": 2,
+      "message": "A stream of server-sent events is opened here and no handler for its frames is registered where it is held.",
+      "hint": "Register the handler with onmessage or addEventListener on the value the stream is held in, in the function or class that opens it.",
+      "symbol": "StreamWrapperService.open",
       "service": "web"
     }
   ]

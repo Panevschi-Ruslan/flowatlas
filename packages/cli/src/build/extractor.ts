@@ -7,7 +7,7 @@ import {
   type ServiceConfig,
   type SourceRootOptions,
 } from '@flowatlas/core';
-import { brokersPass, registerBrokerAdapters } from '@flowatlas/adapters-broker';
+import { brokersPass, registerBrokerAdapters, streamRelaysPass } from '@flowatlas/adapters-broker';
 import { graphqlCallsPass, grpcCallsPass, leavesPass, procedureCallsPass, registerDbAdapters } from '@flowatlas/adapters-db';
 import { deployedSourceDirectories, registerEntryAdapters } from '@flowatlas/adapters-entry';
 import {
@@ -62,7 +62,7 @@ export const isFrontend = (type: string): boolean => halfOf(type) === 'browser';
  * through an oRPC or tRPC client (P242), and `grpcCallsPass` the gRPC methods
  * it calls on another service (P274).
  */
-export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, graphqlCallsPass, procedureCallsPass, grpcCallsPass, brokersPass, workflowsPass];
+export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, graphqlCallsPass, procedureCallsPass, grpcCallsPass, brokersPass, streamRelaysPass, workflowsPass];
 
 /** Every adapter the command line knows how to offer an extractor. */
 export const createRegistry = (): AdapterRegistry => {

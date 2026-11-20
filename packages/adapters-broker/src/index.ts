@@ -8,6 +8,7 @@
 export const PACKAGE_NAME = '@flowatlas/adapters-broker';
 
 export { brokerSpecsFor, brokersPass, extractBrokers } from './brokers-pass.js';
+export { extractStreamRelays, streamRelaysPass } from './stream-relays.js';
 export { brokerAdapters, createCustomBrokerAdapter, socketio } from './adapters/index.js';
 export { nameWithin } from './address.js';
 export type {

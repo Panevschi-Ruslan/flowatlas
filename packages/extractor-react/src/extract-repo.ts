@@ -57,6 +57,7 @@ import { navigationsPass } from './passes/navigations.js';
 import { proceduresPass } from './passes/procedures.js';
 import { routesPass } from './passes/routes.js';
 import { signaturesPass } from './passes/signatures.js';
+import { streamsPass } from './passes/streams.js';
 import type { ReactExtractorPass } from './passes/types.js';
 import { createReactProject, REACT_SOURCE_ROOTS } from './project.js';
 
@@ -149,6 +150,8 @@ export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   navigationsPass,
   actionsPass,
   httpPass,
+  // Streams of server-sent events and the functions their frames arrive at (P359).
+  streamsPass,
   // After the requests, so a `fetch` that sends an operation is one node (P232).
   graphqlPass,
   proceduresPass,

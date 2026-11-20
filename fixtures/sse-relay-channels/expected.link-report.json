@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-20T12:50:24.751Z",
+  "configHash": "9968b986e1bb",
+  "services": [
+    {
+      "name": "edge",
+      "repo": "./edge",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 8,
+      "types": 2,
+      "unresolved": 3,
+      "durationMs": 0,
+      "packages": {
+        "name": "edge",
+        "runtime": [
+          "hono",
+          "redis"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "portal",
+      "repo": "./portal",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 21,
+      "edges": 19,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "portal",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shipping",
+      "repo": "./shipping",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 38,
+      "edges": 31,
+      "types": 0,
+      "unresolved": 7,
+      "durationMs": 0,
+      "packages": {
+        "name": "shipping",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "redis",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 5,
+    "resolved": 4,
+    "unresolved": 1,
+    "byReason": {
+      "target-route-not-found": 1
+    }
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 8,
+    "called": 4,
+    "uncalled": [
+      "entry:shipping:http:GET:/workspaces/:param/audit",
+      "entry:shipping:http:POST:/workspaces/:param/parcels/:param/courier",
+      "entry:shipping:http:POST:/workspaces/:param/parcels/:param/packed",
+      "entry:shipping:http:POST:/workspaces/:param/parcels/:param/queue/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 3,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "edge",
+      "file": "src/worker.ts",
+      "line": 25,
+      "reason": "stream-relay-unread",
+      "level": "info",
+      "message": "A browser holds this route open as a stream of server-sent events, and nothing in the code behind it was read as relaying a channel onto it.",
+      "hint": "Where the stream is answered by code of the route's own, subscribe there with a client a broker description reads; or annotate the handler with @Consumes('<channel>').",
+      "symbol": "GET /rooms/:param/stream"
+    },
+    {
+      "service": "portal",
+      "file": "src/live/ticker.ts",
+      "line": 30,
+      "reason": "target-route-not-found",
+      "message": "target service shipping has no route GET /notices/stream",
+      "hint": "Route renamed? Check shipping's controllers, or annotate the method with /** @flowatlas-calls GET /notices/stream */.",
+      "symbol": "ui_api_call:portal#src/live/ticker.ts:30:18"
+    }
+  ],
+  "totals": {
+    "nodes": 69,
+    "edges": 66,
+    "types": 3,
+    "missed": 12,
+    "sites": 14,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 12
+  }
+}

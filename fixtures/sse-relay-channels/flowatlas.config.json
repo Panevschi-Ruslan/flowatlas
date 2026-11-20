@@ -1,0 +1,25 @@
+{
+  "services": [
+    {
+      "name": "shipping",
+      "repo": "./shipping",
+      "type": "nestjs"
+    },
+    {
+      "name": "edge",
+      "repo": "./edge",
+      "type": "express"
+    },
+    {
+      "name": "portal",
+      "repo": "./portal",
+      "type": "react",
+      "apiBaseEnv": ["VITE_SHIPPING_URL", "VITE_EDGE_URL"],
+      "apiTarget": {
+        "VITE_SHIPPING_URL": "shipping",
+        "VITE_EDGE_URL": "edge"
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

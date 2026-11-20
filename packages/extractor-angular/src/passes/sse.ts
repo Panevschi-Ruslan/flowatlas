@@ -1,38 +1,36 @@
 import {
   applicationOfFile,
-  isPlatformProvided,
+  delegateOf,
+  EVENT_SOURCE,
+  isEventSourceConstruction,
+  isWrittenFunction,
   makeExternalApiId,
   makeLeafId,
   methodBodies,
+  methodNamedOn,
+  recordStreamConsumer,
   siteOf,
+  streamHandlerUnreadRow,
+  streamHoldingOf,
   type CallFrame,
   type ClassMethod,
+  type StreamListener,
 } from '@flowatlas/core';
-import type { NewExpression, Node as TsNode } from 'ts-morph';
+import type { ClassDeclaration, NewExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { AngularExtractContext } from '../context.js';
 import { noteIfUnreferenced, requestIdOf, requestsOf, wrapperOf, type RequestSite } from '../util/forward.js';
 import type { ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
 
-/** The browser's own client for a stream of server-sent events. */
-const CLIENT = 'EventSource';
-
 /**
- * Whether this `EventSource` is the browser's.
+ * The browser's own client for a stream of server-sent events.
  *
- * The name alone proves nothing — a repository is free to declare a class of its
- * own by that name, and one that did would be something else entirely. What
- * decides is where the name was declared: the language's own library, or a
- * package standing in for it where the browser has none. A class declared in the
- * repository is rejected. A name the checker will not resolve at all is accepted,
- * because there is then no declaration for it to have missed: it is the ambient
- * global in a repository whose compiler settings leave the browser's library out.
+ * Which construction is the browser's - and not a class of the repository's own
+ * by that name - is asked of the core, which every reader of a screen asks the
+ * same way (P359).
  */
-const isBrowserClient = (expression: TsNode): boolean => {
-  if (!Node.isIdentifier(expression) || expression.getText() !== CLIENT) return false;
-  return isPlatformProvided(expression);
-};
+const CLIENT = EVENT_SOURCE;
 
 /**
  * Streams the browser subscribes to.
@@ -45,6 +43,12 @@ const isBrowserClient = (expression: TsNode): boolean => {
  * service boundary (R08).
  *
  * The verb is never in doubt: the protocol has only one.
+ *
+ * The method the frames arrive at is the other half (P359): it is recorded as a
+ * consumer the request `triggers`, and the linker joins it to whatever channels
+ * the route relays onto the stream. It is read where the stream is held: the
+ * method a listener written in place delegates to on `this`, or the method that
+ * registered it, which is then its own step.
  */
 export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
   const apiBaseEnv = ctx.service.apiBaseEnv ?? [];
@@ -55,7 +59,7 @@ export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
     address: ApiUrl,
     frames: readonly CallFrame[],
     choice?: string,
-  ): void => {
+  ): string => {
     const { call: site, methodId, file } = request;
     const at = siteOf(site);
     const leaf = makeLeafId('ui_api_call', ctx.repo, file, at.line, at.column);
@@ -142,16 +146,79 @@ export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
         symbol: site.getText().slice(0, 80),
       });
     }
+    return id;
+  };
+
+  /**
+   * The method one listener hands the frames to: the one a listener written in
+   * place calls on `this`, the one `this.handle` names, or else the method the
+   * listener is written in. `undefined` where it is a value not followed.
+   */
+  const handlerOf = (listener: StreamListener, owner: ClassDeclaration, method: ClassMethod): ClassMethod | undefined => {
+    const inPlace = isWrittenFunction(listener.handler);
+    const named = inPlace ? delegateOf(listener.handler) : listener.handler;
+    if (named !== undefined && Node.isPropertyAccessExpression(named) && Node.isThisExpression(named.getExpression())) {
+      return methodNamedOn(owner, named.getName()) ?? (inPlace ? method : undefined);
+    }
+    return inPlace ? method : undefined;
+  };
+
+  /** The methods the stream made at `network` hands its frames to, each joined to every request it stands for. */
+  const consumersOf = (
+    network: NewExpression,
+    method: ClassMethod,
+    owner: ClassDeclaration,
+    className: string,
+    file: string,
+    callIds: readonly string[],
+  ): void => {
+    const holding = streamHoldingOf(network);
+    const at = siteOf(network);
+    const symbol = `${className}.${method.getName()}`;
+    if (holding.listeners.length === 0) {
+      // Handed back to a caller, which holds it where this does not look; or held by nothing.
+      ctx.report(streamHandlerUnreadRow(file, at.line, symbol, holding.returned ? 'unread' : 'none'));
+      return;
+    }
+    const byMethod = new Map<ClassMethod, StreamListener[]>();
+    for (const listener of holding.listeners) {
+      const handler = handlerOf(listener, owner, method);
+      if (handler === undefined) {
+        ctx.report(streamHandlerUnreadRow(file, siteOf(listener.site).line, symbol, 'unread'));
+        continue;
+      }
+      byMethod.set(handler, [...(byMethod.get(handler) ?? []), listener]);
+    }
+    for (const [handler, listeners] of byMethod) {
+      const handlerId = ctx.methodIdOf(handler);
+      if (handlerId === undefined) continue;
+      ctx.ensureMethodNode(handler);
+      const line = listeners[0] === undefined ? at.line : siteOf(listeners[0].site).line;
+      for (const callId of callIds) {
+        recordStreamConsumer(ctx.builder, {
+          repo: ctx.repo,
+          callId,
+          handlerId,
+          label: `${className}.${handler.getName()}`,
+          file,
+          line,
+          events: listeners.map((listener) => listener.event),
+          confidence: 'static',
+        });
+      }
+    }
   };
 
   /** A stream opened in a wrapper belongs to whoever handed it the address. */
-  const emit = (site: NewExpression, method: ClassMethod, at: RequestSite): void => {
+  const emit = (site: NewExpression, method: ClassMethod, at: RequestSite, owner: ClassDeclaration, className: string): void => {
     const [urlArg] = site.getArguments();
     if (urlArg === undefined) return;
+    const callIds: string[] = [];
     for (const request of requestsOf(ctx, urlArg, method, at)) {
       noteIfUnreferenced(ctx, request.site);
-      record(site, request.site, request.address, request.frames, request.choice);
+      callIds.push(record(site, request.site, request.address, request.frames, request.choice));
     }
+    consumersOf(site, method, owner, className, at.file, callIds);
   };
 
   for (const indexed of ctx.classes.all()) {
@@ -165,10 +232,9 @@ export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
           traversal.skip();
           return;
         }
-        if (!Node.isNewExpression(site)) return;
-        if (!isBrowserClient(site.getExpression())) return;
+        if (!isEventSourceConstruction(site)) return;
         ctx.ensureMethodNode(method);
-        emit(site, method, { call: site, methodId, file: indexed.file });
+        emit(site, method, { call: site, methodId, file: indexed.file }, indexed.declaration, indexed.name);
       });
     }
   }

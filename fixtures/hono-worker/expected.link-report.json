@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-18T17:15:14.044Z",
+  "builtAt": "2026-11-20T12:44:13.515Z",
   "configHash": "37634076a802",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 40,
       "types": 4,
       "unresolved": 2,
-      "durationMs": 948,
+      "durationMs": 1039,
       "packages": {
         "name": "api",
         "runtime": [
@@ -30,11 +30,11 @@
       "repo": "./web",
       "type": "angular",
       "extractor": "@flowatlas/extractor-angular",
-      "nodes": 13,
-      "edges": 9,
+      "nodes": 14,
+      "edges": 11,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 722,
+      "durationMs": 781,
       "packages": {
         "name": "web",
         "runtime": [
@@ -91,15 +91,26 @@
     "total": 4,
     "sharedPackage": 0
   },
-  "unresolved": [],
+  "unresolved": [
+    {
+      "service": "api",
+      "file": "src/worker.ts",
+      "line": 27,
+      "reason": "stream-relay-unread",
+      "level": "info",
+      "message": "A browser holds this route open as a stream of server-sent events, and nothing in the code behind it was read as relaying a channel onto it.",
+      "hint": "Where the stream is answered by code of the route's own, subscribe there with a client a broker description reads; or annotate the handler with @Consumes('<channel>').",
+      "symbol": "GET /api/depots/:param/stream"
+    }
+  ],
   "totals": {
-    "nodes": 55,
-    "edges": 51,
+    "nodes": 56,
+    "edges": 53,
     "types": 4,
-    "missed": 2,
-    "sites": 2,
+    "missed": 3,
+    "sites": 3,
     "notes": 0,
     "findings": 0,
-    "unresolved": 2
+    "unresolved": 3
   }
 }

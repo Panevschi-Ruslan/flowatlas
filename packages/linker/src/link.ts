@@ -57,6 +57,7 @@ import {
 import { joinChannelPatterns } from './pattern-link.js';
 import { matchTakenPublishes } from './takes-link.js';
 import { joinReferences } from './reference-link.js';
+import { joinStreamRelays } from './stream-relay-link.js';
 import { auditRoutes } from './route-audit.js';
 import { answeredOnlyByWildcard, couldReach } from './route-match.js';
 import { cmp, edgeKey } from './order.js';
@@ -1467,6 +1468,10 @@ export const linkGraphs = (
   // Whatever names an entry by its deployed name alone, joined to the entry in
   // whichever service declares it.
   found.push(...joinReferences(nodes, edges));
+
+  // The channels a route relays onto a stream, handed on to the screens
+  // holding it open, once every stream's request has joined its route (P359).
+  found.push(...joinStreamRelays(nodes, edges));
 
   found.push(
     ...auditRoutes(nodes, edges.values(), {

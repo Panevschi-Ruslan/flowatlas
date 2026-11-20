@@ -106,6 +106,16 @@ const ROUTE_DECORATORS: ReadonlyMap<string, string> = new Map([
   ['All', 'ALL'],
 ]);
 
+/**
+ * Nest's decorator for a stream of server-sent events, which declares a `GET`
+ * route of its own (P359): `@Sse('events')`. Beside another route decorator it
+ * declares nothing more - the framework applies decorators from the bottom up,
+ * so `@Get('events') @Sse()` is one route at `events` - and only marks the
+ * answer as a stream. Left out of the framework's list below on purpose: it
+ * stays in the route's `decorators`, which is where a stream is read from.
+ */
+const STREAM_DECORATOR = 'Sse';
+
 const FRAMEWORK_DECORATORS = new Set([
   ...ROUTE_DECORATORS.keys(),
   'Controller',
@@ -365,14 +375,16 @@ export const nestjsHttpAdapter: EntryAdapter = {
           line: startLineOf(method),
           symbol: `${controllerName}.${method.getName()}`,
         });
-        for (const decorator of routes.matched) {
+        // A stream's decorator alone is the route; beside another it is not a second one.
+        const streams = routes.matched.length === 0 ? nestDecorators(method, [STREAM_DECORATOR]).matched.slice(0, 1) : [];
+        for (const decorator of [...routes.matched, ...streams]) {
           // Both spellings, because `import { Get as HttpGet }` is still a GET
           // and the table is keyed by the names Nest exports. A decorator that
           // matched by name and answers to neither is not a thing that exists
           // today; it gets a row rather than a `continue`, because the one thing
           // this reader may not do is drop a route it recognised (R84).
           const httpMethod = decoratorNames(decorator)
-            .map((name) => ROUTE_DECORATORS.get(name))
+            .map((name) => (name === STREAM_DECORATOR ? 'GET' : ROUTE_DECORATORS.get(name)))
             .find((verb) => verb !== undefined);
           if (httpMethod === undefined) {
             ctx.builder.addUnresolved({
