@@ -5,7 +5,7 @@ import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { readGraphFile, resolveNodeId } from '../../../../scripts/fixture-nodes.mjs';
-import { createFlowatlasServer } from '../server.js';
+import { createFlowatlasServer, INSTRUCTIONS, INSTRUCTIONS_MAX } from '../server.js';
 import type { FlowNode } from '../query/types.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
@@ -230,12 +230,47 @@ describe('the tools a session is offered', () => {
    * whose type was not read, and on each handler where and how it chose the
    * type. 13,344 read and 33,964 in all (19 tools: 10,292 and 29,855), the
    * ceilings to the next 50, here and below.
+   *
+   * Lowered by P366, which lists the shared inputs (`detail`, `maxNodes`,
+   * `offset`, `service`) with their type alone, their meaning and defaults
+   * said once in the instructions, and drops the `$schema` header the SDK
+   * writes on each input schema; the descriptions took what the instructions
+   * no longer say about one tool. 11,296 read and 31,916 in all, from 13,344
+   * and 33,964; the ceilings at the next 50 above.
    */
+  /**
+   * The instructions are re-sent on every turn (P366): 6,435 characters
+   * before, 2,131 after, with room under the ceiling for a line or two that
+   * describes a field every answer carries.
+   */
+  it('come with instructions that fit their ceiling, and name the tool to begin with and every chain', () => {
+    expect(INSTRUCTIONS.length).toBeLessThanOrEqual(INSTRUCTIONS_MAX - 300);
+    expect(client.getInstructions()).toBe(INSTRUCTIONS);
+    for (const said of ['Begin with start_here', '- entry: ', '- channel: ', '- symbol: ', '- shape: ', 'Only the tools this project can answer', '`detail` 0']) expect(INSTRUCTIONS).toContain(said);
+  });
+
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(13350);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(34000);
+    expect(read.length).toBeLessThan(11350);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(31950);
+  });
+
+  /**
+   * What every tool shares is said once (P366): a shared input keeps only its
+   * type, and only where its bounds are the shared ones; a tool whose bound
+   * differs says what differs. The full schema still checks every call.
+   */
+  it('list the shared inputs by type alone, and what differs from them', async () => {
+    const { tools } = await client.listTools();
+    const input = (name: string) => tools.find((tool) => tool.name === name)?.inputSchema as { $schema?: string; properties: Record<string, unknown> };
+    for (const tool of tools) expect((tool.inputSchema as { $schema?: string }).$schema).toBeUndefined();
+    expect(input('list_entries').properties).toMatchObject({ detail: { type: 'integer' }, maxNodes: { type: 'integer' }, offset: { type: 'integer' }, service: { type: 'string' } });
+    expect(input('list_entries').properties['detail']).toEqual({ type: 'integer' });
+    expect(input('get_flow').properties['maxNodes']).toEqual({ default: 60, type: 'integer' });
+    expect(input('trace_for').properties['maxNodes']).toEqual({ default: 60, type: 'integer', maximum: 200 });
+    const refused = await client.callTool({ name: 'list_entries', arguments: { detail: 9 } });
+    expect(refused.isError).toBe(true);
   });
 
   /**

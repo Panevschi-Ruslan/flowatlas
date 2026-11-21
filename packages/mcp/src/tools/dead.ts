@@ -230,7 +230,8 @@ export const registerDead = (server: McpServer, ctx: ToolContext): void => {
     'dead',
     {
       title: 'Is this dead',
-      description: "Whether a node is dead and what could make that wrong; or a service's dead rows.",
+      description:
+        "Whether a node is `dead`, `likely-dead` (a call read in part could reach it: `couldHit`), `unknown` or `alive`, and what could make that wrong; or a service's dead rows, verdict first.",
       inputSchema: {
         id: z.string().optional(),
         service: serviceInput,

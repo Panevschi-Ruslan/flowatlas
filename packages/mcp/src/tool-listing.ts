@@ -3,6 +3,7 @@ import { ConfigInvalidError, observedPathFor, ruleSetOf, type FlowatlasConfig, t
 import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer, RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema, type GetPromptResult } from '@modelcontextprotocol/sdk/types.js';
+import { listedTools } from './listed-schema.js';
 import { offeredOnly, offeredText, type Offer } from './offered.js';
 import type { DbHandle } from './query/db.js';
 import { loggedCall, questionLogSettings, type QuestionLogSettings } from './query/questions.js';
@@ -334,7 +335,8 @@ export class ToolListing {
       return ((request: never, extra: never) => {
         this.refresh(false);
         this.start();
-        return handler(request, extra);
+        // The shared inputs said once, in the instructions, not on every tool (P366).
+        return listedTools(handler(request, extra));
       }) as Handler;
     }
     if (schema === CallToolRequestSchema) {

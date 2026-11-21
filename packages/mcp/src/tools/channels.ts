@@ -242,13 +242,13 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
   ends(
     'who_emits',
     'Who publishes to a channel',
-    'What publishes on a channel, in every repository.',
+    'What publishes on a channel, in every repository. A name written as code (`tenant:<id>:events`, `{id}`, `:id`) answers for the channel it denotes (`channelUsed`); `type` keeps the publishes of one message type.',
     'producers',
   );
   ends(
     'who_consumes',
     'Who handles a channel',
-    'What handles a channel; empty means nothing does.',
+    'What handles a channel; empty means nothing does. A name written as code answers for the channel it denotes (`channelUsed`); `type` keeps the handlers that select one message type, or says `unselected` with its `sureness`.',
     'consumers',
   );
 };

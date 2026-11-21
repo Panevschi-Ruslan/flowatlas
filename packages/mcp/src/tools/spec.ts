@@ -47,7 +47,7 @@ export const registerSpec = (server: McpServer, ctx: ToolContext): void => {
     'get_spec',
     {
       title: 'Read the API document',
-      description: 'Routes as OpenAPI 3.1 or channels as AsyncAPI 3.0, written from the graph; path for one operation.',
+      description: 'Routes as OpenAPI 3.1 or channels as AsyncAPI 3.0 (`kind`), written from the graph; `path` ("GET /orders/{id}", a channel address) for one operation.',
       inputSchema: {
         service: z.string(),
         kind: z.enum(['openapi', 'asyncapi']).optional(),

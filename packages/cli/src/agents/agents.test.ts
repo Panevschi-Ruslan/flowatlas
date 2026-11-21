@@ -1,13 +1,23 @@
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { AGENT_QUESTIONS, agentQuestionsLine, type GraphEdge, type GraphNode } from '@flowatlas/core';
+import { AGENT_HABITS, AGENT_QUESTIONS, agentQuestionsLine, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import { INSTRUCTIONS } from '@flowatlas/mcp';
 import { afterAll, describe, expect, it } from 'vitest';
-import { agentsStatus, installAgents, removeAgents, withSearchHook, withoutSearchHook } from '../commands/agents.js';
+import { agentsStatus, installAgents, removeAgents, serverKeyIn, withSearchHook, withoutSearchHook } from '../commands/agents.js';
 import { namesOf, NAMES_FORMAT_VERSION, type NamesIndex } from './names.js';
 import { contextFor, hookOutput, longestLiteral, patternsOf, runSearchHook, shellWords } from './search-hook.js';
-import { GUIDE_MAX_LINES, guideBody, ownedFile, ownedState, sharedBlock, withGuideBlock, withoutGuideBlock } from './template.js';
+import {
+  GUIDE_MAX_LINES,
+  guideBody,
+  ownedFile,
+  ownedState,
+  SHARED_MAX_CHARS,
+  sharedBlock,
+  toolSearchQuery,
+  withGuideBlock,
+  withoutGuideBlock,
+} from './template.js';
 
 const scratch = mkdtempSync(join(tmpdir(), 'flowatlas-agents-'));
 afterAll(() => rmSync(scratch, { recursive: true, force: true }));
@@ -40,6 +50,34 @@ describe('the guide every assistant is given (P227)', () => {
     expect(ownedState(skill)).toBe('ours');
     expect(ownedState(skill.replace('Narrow, then read', 'Read'))).toBe('edited');
     expect(ownedState('# my own skill\n')).toBe('foreign');
+  });
+
+  it('keeps the block a team’s file holds short, and says in it how to spend few turns (P366)', () => {
+    const block = sharedBlock(GUIDE);
+    expect(block.length).toBeLessThanOrEqual(SHARED_MAX_CHARS);
+    expect(block).toContain(
+      '`select:mcp__flowatlas__search,mcp__flowatlas__who_calls,mcp__flowatlas__who_consumes,mcp__flowatlas__who_emits,mcp__flowatlas__dead,mcp__flowatlas__impact,mcp__flowatlas__find_symbol,mcp__flowatlas__list_entries,mcp__flowatlas__get_flow`',
+    );
+    for (const habit of AGENT_HABITS) expect(block).toContain(`- ${habit}`);
+    expect(block).toContain('`complete: true`');
+    expect(block).toContain('`verbose: true`');
+    expect(block).toContain('.claude/skills/flowatlas/SKILL.md');
+    // The table is the full guide's: loaded when used, not on every turn.
+    expect(block).not.toContain('| Question |');
+    const skill = ownedFile('claude-skill', GUIDE);
+    for (const habit of AGENT_HABITS) expect(skill).toContain(`- ${habit}`);
+    expect(skill).toContain('ToolSearch call');
+  });
+
+  it('writes the ToolSearch line with the name the server is registered under', () => {
+    expect(toolSearchQuery('graph.map')).toMatch(/^select:mcp__graph_map__search,mcp__graph_map__who_calls,/);
+    const dir = join(scratch, 'registered');
+    mkdirSync(dir, { recursive: true });
+    expect(serverKeyIn(dir)).toBe('flowatlas');
+    writeFileSync(join(dir, '.mcp.json'), JSON.stringify({ mcpServers: { other: { command: 'x' }, graph: { command: 'npx', args: ['flowatlas', 'mcp', '--config', 'c.json'] } } }));
+    expect(serverKeyIn(dir)).toBe('graph');
+    writeFileSync(join(dir, '.mcp.json'), 'not json');
+    expect(serverKeyIn(dir)).toBe('flowatlas');
   });
 
   it('puts a block in a team’s file and takes it out leaving the file as it was, byte for byte', () => {
@@ -121,6 +159,38 @@ describe('flowatlas agents install, status and remove', () => {
     removeAgents({ config, repo: 'web' });
     expect(JSON.parse(readFileSync(settings, 'utf8'))).toEqual(theirs);
     expect(existsSync(join(dir('web'), '.claude', 'settings.json'))).toBe(false);
+  });
+
+  it('refuses to write into a project found from a git repository that is none of its own, and writes from its root or a repository of it (P366)', () => {
+    const { config, dir } = project('scope');
+    const root = join(dir('web'), '..');
+    mkdirSync(join(dir('gateway'), '.git'), { recursive: true });
+    mkdirSync(join(dir('web'), 'src'), { recursive: true });
+    writeFileSync(join(dir('web'), '.git'), 'gitdir: elsewhere\n');
+    // A new repository made in a folder under the project's root: none of its repositories.
+    const unrelated = join(root, 'tools', 'scratch-repo');
+    mkdirSync(join(unrelated, '.git'), { recursive: true });
+    mkdirSync(join(unrelated, 'src'), { recursive: true });
+    for (const cwd of [unrelated, join(unrelated, 'src')]) {
+      expect(() => installAgents({ cwd, instructions: true, hook: true })).toThrow(/is not one of the repositories of the flowatlas project found above it/);
+      expect(() => removeAgents({ cwd })).toThrow(/flowatlas\.config\.json\)?; nothing was written\. .*pass --config ".*flowatlas\.config\.json"/);
+    }
+    expect(existsSync(join(dir('gateway'), '.claude'))).toBe(false);
+    expect(existsSync(join(dir('web'), 'AGENTS.md'))).toBe(false);
+    expect(existsSync(join(unrelated, '.claude'))).toBe(false);
+    // Asked for by name, the project is written as before.
+    expect(installAgents({ cwd: unrelated, config, repo: 'web' }).changes.map((change) => change.state)).toEqual(['installed', 'installed']);
+    // From a repository of the project, and from its root, as before.
+    expect(installAgents({ cwd: join(dir('web'), 'src') }).changes.map((change) => change.state)).toEqual(['installed', 'installed', 'unchanged', 'unchanged']);
+    expect(agentsStatus({ cwd: dir('gateway') }).changes).toHaveLength(4);
+    expect(removeAgents({ cwd: root }).changes.map((change) => change.state)).toEqual(['removed', 'removed', 'removed', 'removed']);
+  });
+
+  it('writes from a monorepo whose checkout holds the project’s root', () => {
+    const { dir } = project('monorepo');
+    const root = join(dir('web'), '..');
+    mkdirSync(join(root, '.git'), { recursive: true });
+    expect(installAgents({ cwd: dir('web') }).changes).toHaveLength(4);
   });
 
   it('merges and unmerges settings without losing a key', () => {

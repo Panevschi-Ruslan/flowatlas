@@ -2014,6 +2014,13 @@ since it was written), `missing`, `edited by hand` or `not flowatlas`. `remove`
 takes out what `install` wrote and nothing else, and keeps a guide edited by
 hand unless `--force`.
 
+Without `--config` the configuration is the nearest above the working
+directory. Run inside a git repository that is neither the project's root, one
+of its repositories nor one holding them (a new repository made in a folder
+under the project, say), all three refuse and write nothing, naming the
+configuration found: run them from its root or one of its repositories, or pass
+`--config` (P366).
+
 ### `flowatlas publish` and `flowatlas pull [source]`
 
 One graph for the team (P236): CI builds and `publish`es the project's graph as

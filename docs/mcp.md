@@ -104,6 +104,31 @@ dead, why a flow stops, is a branch safe), and the rules from
 questions. Nothing in it changes with a build; counts and gaps come from
 `start_here`.
 
+A team's own file (`AGENTS.md`, `CLAUDE.md`, Copilot's) is read whole at the
+start of every session and sent again on every turn, so its block is shorter
+than the guide (P366): the services, the questions in a few words, where the
+full guide is, and four lines on spending few turns:
+
+- load the tools in one ToolSearch call, with the `select:` line written out
+  for `search`, `who_calls`, `who_consumes`, `who_emits`, `dead`, `impact`,
+  `find_symbol`, `list_entries` and `get_flow` under the name the server is
+  registered as in the repository's `.mcp.json` (`mcp__flowatlas__search`, …);
+- an answer that says `complete: true` is the whole answer: check only what it
+  lists as left unread or unsure, not its rows one by one or with a search;
+- pass several ids in one call, and send calls that do not need each other
+  together;
+- answers are compact: ask `verbose: true` only when a field you need is
+  missing.
+
+The guide (the skill and the Cursor rule, read when used) says the same with
+the table and the other rules.
+
+Found from the working directory, the project is the nearest configuration
+above it. Run inside a git repository that is none of the project's (neither
+its root, one of its repositories nor one holding them), `install`, `status`
+and `remove` refuse, name the configuration found and write nothing; `--config`
+names a project explicitly.
+
 | Where | Read by | Written |
 |---|---|---|
 | `.claude/skills/flowatlas/SKILL.md` | Claude Code, loaded when its description fits the question | by default |
@@ -125,8 +150,8 @@ channel, deployed function or handler that something in another repository
 calls, publishes or handles, it adds a few lines beside the search's result:
 
 ```
-flowatlas: this search covered the web checkout only; the project's graph sees the other repositories too.
-- `GET /orders/:param`, in orders: callers in billing (1), gateway (1). who_calls({symbol: "entry:orders:http:GET:/orders/:param"}) lists them (…)
+flowatlas: this search saw the web checkout only; the graph also sees the other repositories.
+- `GET /orders/:param`, in orders: callers in billing (1), gateway (1). who_calls({symbol: "entry:orders:http:GET:/orders/:param"}) lists them.
 ```
 
 Otherwise it says nothing: a search for a string, a local helper or a `TODO`
@@ -157,10 +182,18 @@ own limits (`perService`; `top` and `samples`; `maxSteps` and `maxChars`;
 (`maxChars`) and `test_pattern` (ten rules, ten tests a rule). Answers are
 bounded and say when they were cut, rather than filling a context window.
 
+The meaning and defaults of `detail`, `maxNodes`, `offset` and `service` are
+said once, in the server's instructions, and each tool lists them by type alone
+(P366); a tool whose bound differs (`get_flow`'s 60 rows) lists what differs.
+Every call is still checked against the full bounds. The instructions, re-sent
+by a client on every turn, are about 2,100 characters: the tool to begin with,
+the chains, the shared inputs and which tools are listed when. What one tool's
+answer needs is said in that tool's description.
+
 ### Which tools appear when
 
 Every tool's name, description and inputs are read by the assistant at the
-start of a session, about 13,000 characters for all twenty-six. A tool the
+start of a session, about 11,000 characters for all 26 tools. A tool the
 project cannot answer yet would cost that and answer an error, so the server
 lists only the tools whose needs hold. Tools follow what the project has, not
 which frameworks it uses:

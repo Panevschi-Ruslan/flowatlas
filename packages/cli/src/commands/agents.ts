@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
-import { loadConfig, toPosixPath, type LoadedConfig } from '@flowatlas/core';
+import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join, relative, resolve } from 'node:path';
+import { checkoutTopOf, isWithinDir, loadConfig, toPosixPath, type LoadedConfig } from '@flowatlas/core';
 import { Command } from 'commander';
 import { NAMES_FILE } from '../agents/names.js';
 import { runSearchHook } from '../agents/search-hook.js';
@@ -17,6 +17,7 @@ import {
   type AgentGuide,
   type AgentTarget,
 } from '../agents/template.js';
+import { MCP_FILE, SERVER_KEY } from './mcp.js';
 import { cannotRun } from '../exit.js';
 import { ownBin } from '../own-path.js';
 
@@ -37,6 +38,8 @@ import { ownBin } from '../own-path.js';
  */
 export interface AgentsOptions {
   config?: string;
+  /** Where the configuration is looked for from without `config`: the working directory unless said. */
+  cwd?: string;
   repo?: string;
   dryRun?: boolean;
   /** Also write the marked block into the files a team owns. */
@@ -90,10 +93,73 @@ const reposOf = (loaded: LoadedConfig, only: string | undefined): Repo[] => {
   return [...byDir.values()];
 };
 
+/**
+ * The name the graph server is registered under in a repository (P366): the
+ * key of the `.mcp.json` entry that starts `flowatlas mcp`, which is what
+ * Claude Code names its tools after. `SERVER_KEY`, what `flowatlas mcp
+ * install` writes, where the file says none.
+ */
+export const serverKeyIn = (repoDir: string): string => {
+  const text = read(join(repoDir, MCP_FILE));
+  if (text === undefined) return SERVER_KEY;
+  try {
+    const servers = (JSON.parse(text) as { mcpServers?: Record<string, { command?: unknown; args?: unknown }> }).mcpServers ?? {};
+    if (SERVER_KEY in servers) return SERVER_KEY;
+    for (const [key, entry] of Object.entries(servers)) {
+      const words = [entry?.command, ...(Array.isArray(entry?.args) ? entry.args : [])].filter((word): word is string => typeof word === 'string');
+      if (words.includes('mcp') && words.some((word) => /flowatlas/.test(word))) return key;
+    }
+  } catch {
+    // Not JSON: the server is not registered there in any way a client reads.
+  }
+  return SERVER_KEY;
+};
+
 const guideFor = (loaded: LoadedConfig, repo: Repo): AgentGuide => ({
   services: loaded.config.services.map((service) => ({ name: service.name, type: service.type })),
   here: repo.services,
+  server: serverKeyIn(repo.dir),
 });
+
+/**
+ * The configuration a run writes for, refusing one found from a checkout that
+ * is not the project's (P366).
+ *
+ * Found from the working directory, a configuration is the nearest above it.
+ * Run in a repository of its own that happens to sit below a project's root -
+ * a new checkout made in a folder under it - that is the project's, and the
+ * guide, the blocks and the hooks went into every one of the project's
+ * repositories, none of which it was run for. So where the working directory
+ * is inside a checkout that is neither the project's root, one of its
+ * repositories, nor one holding either, the run is refused, naming the
+ * configuration found and how to write into it. A configuration given with
+ * `--config` is asked for by name and used as it is.
+ */
+export const loadForAgents = (options: AgentsOptions): LoadedConfig => {
+  if (options.config !== undefined) return loadConfig(options.config);
+  const cwd = resolve(options.cwd ?? process.cwd());
+  const loaded = loadConfig(cwd);
+  const found = checkoutTopOf(cwd);
+  if (found === undefined) return loaded;
+  const checkout = realOf(found);
+  // The project's checkouts are its root's and each repository's, or one holding them (a monorepo).
+  const project = [loaded.rootDir, ...loaded.config.services.map((service) => loaded.repoDir(service))].map(realOf);
+  if (project.some((dir) => isWithinDir(dir, checkout))) return loaded;
+  throw cannotRun(
+    `${cwd} is in the git repository ${found}, which is not one of the repositories of the flowatlas project found above it (${loaded.configPath}); ` +
+      `nothing was written. To write the guide into that project's repositories, run this from ${loaded.rootDir} or pass --config ${JSON.stringify(loaded.configPath)}; ` +
+      `to add this repository, add it to that configuration as a service, or give it a configuration of its own (flowatlas init).`,
+  );
+};
+
+/** A directory as the disk really has it, so a link and its target compare as one; as given where it is not there. */
+const realOf = (dir: string): string => {
+  try {
+    return realpathSync.native(dir);
+  } catch {
+    return resolve(dir);
+  }
+};
 
 const read = (path: string): string | undefined => {
   try {
@@ -173,7 +239,7 @@ const json = (value: unknown): string => `${JSON.stringify(value, null, 2)}\n`;
 
 /** Writes, or with `dryRun` says it would write, what each repository's assistants read. */
 export const installAgents = (options: AgentsOptions = {}): AgentsRun => {
-  const loaded = loadConfig(options.config ?? process.cwd());
+  const loaded = loadForAgents(options);
   const run: AgentsRun = { changes: [] };
   const say = (repo: Repo, file: string, state: AgentFileState): void => void run.changes.push({ services: repo.services, file, state });
   for (const repo of reposOf(loaded, options.repo)) {
@@ -228,7 +294,7 @@ export const installAgents = (options: AgentsOptions = {}): AgentsRun => {
 
 /** What each repository's assistants are told now, against what `install` would write. */
 export const agentsStatus = (options: AgentsOptions = {}): AgentsRun => {
-  const loaded = loadConfig(options.config ?? process.cwd());
+  const loaded = loadForAgents(options);
   const run: AgentsRun = { changes: [] };
   for (const repo of reposOf(loaded, options.repo)) {
     const guide = guideFor(loaded, repo);
@@ -266,7 +332,7 @@ export const agentsStatus = (options: AgentsOptions = {}): AgentsRun => {
 
 /** Takes out exactly what `install` wrote; a file edited by hand is kept and named. */
 export const removeAgents = (options: AgentsOptions = {}): AgentsRun => {
-  const loaded = loadConfig(options.config ?? process.cwd());
+  const loaded = loadForAgents(options);
   const run: AgentsRun = { changes: [] };
   for (const repo of reposOf(loaded, options.repo)) {
     for (const target of OWNED_TARGETS) {

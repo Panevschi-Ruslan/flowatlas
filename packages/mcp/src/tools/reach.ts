@@ -238,7 +238,8 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
     'who_calls',
     {
       title: 'Who calls this',
-      description: 'What reaches a symbol, walked back across repositories.',
+      description:
+        'What reaches a symbol, walked back across repositories; on a class, its methods. A route said aloud (`GET /orders/123`) is the most specific route, the others under `alsoAnswers`.',
       inputSchema: {
         symbol: z.string().describe('node id or name'),
         depth: z.number().int().min(1).max(MAX_CALLER_DEPTH).default(DEFAULT_CALLER_DEPTH).describe('hops back'),

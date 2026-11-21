@@ -2249,6 +2249,27 @@ only one of them moved.
 
 ### Changed
 
+- **Less said on every turn, and a guide that saves turns (P366).** The
+  graph server's instructions, which a client sends again with every
+  request, are about 2,100 characters instead of 6,400: the tool to begin
+  with, the id chains, the inputs every tool shares and which tools are
+  listed when, with what one tool's answer needs moved into that tool's
+  description. The tool list gives the shared inputs (`detail`, `maxNodes`,
+  `offset`, `service`) by type alone, their meaning said once in the
+  instructions, and drops the `$schema` header on each input schema: about
+  10,100 characters of names, descriptions and inputs for all 26
+  tools instead of 12,200, every call still checked against the full bounds.
+  `flowatlas agents install` writes a shorter block into `AGENTS.md`,
+  `CLAUDE.md` and Copilot's file (about 1,100 characters instead of 2,000:
+  the services, the questions in a few words and where the full guide is),
+  and the block and the guide now say to load the core tools in one
+  ToolSearch call (the `select:` line written out under the name the server
+  is registered as in `.mcp.json`), to take an answer that says
+  `complete: true` as the whole answer, to pass several ids in one call and
+  send independent calls together, and to ask `verbose: true` only when a
+  field is missing. The search hook's note names the call and no longer the
+  terminal command.
+
 - **A route on an application the framework's own maker made is as sure as
   a typed one (P346).** With nothing installed, a call or `new` of a
   dialect's maker imported or required from the package itself
@@ -2307,6 +2328,15 @@ only one of them moved.
   the project names it.
 
 ### Fixed
+
+- **`flowatlas agents` writes only into the project it was run for (P366).**
+  Run in a git repository of its own made below a project's root, `install`
+  found that project's configuration and wrote the guide, the blocks and the
+  hooks into every one of its repositories. Without `--config`, `install`,
+  `status` and `remove` now refuse inside a git repository that is neither
+  the project's root, one of its repositories nor one holding them, naming
+  the configuration found and how to write into it; from the root or a
+  repository of the project, or with `--config`, they run as before.
 
 - **A channel asked for as code writes it answers, and no answer suggests a
   tool the server does not list (P360).** Every MCP tool that takes a channel

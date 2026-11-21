@@ -16,6 +16,8 @@
 export interface AgentQuestion {
   /** The question, as an assistant would meet it. */
   ask: string;
+  /** The same in a few words, for text re-sent on every turn (P366). */
+  short: string;
   /** The graph server's call that answers it. */
   tool: string;
   /** The same from a terminal, for an assistant without the server. */
@@ -23,25 +25,36 @@ export interface AgentQuestion {
 }
 
 export const AGENT_QUESTIONS: readonly AgentQuestion[] = Object.freeze([
-  { ask: 'who calls this route, method or handler, in any repository', tool: 'who_calls({symbol})', command: 'flowatlas impact <symbol>' },
-  { ask: 'what breaks if I change this, and whose', tool: 'impact({symbol})', command: 'flowatlas impact <symbol> --entries-only' },
-  { ask: 'follow a request end to end, across services', tool: 'get_flow({entry})', command: 'flowatlas flow "<VERB /path>"' },
-  { ask: 'who publishes or handles this message', tool: 'who_emits / who_consumes({channel})', command: 'flowatlas channel <name>' },
-  { ask: 'how does this reach that', tool: 'get_flow({entry, to})', command: 'flowatlas path <from> <to>' },
-  { ask: 'everything about one name, to hand on', tool: 'describe_for_prompt({id})', command: 'flowatlas explain <name>' },
-  { ask: 'is this dead', tool: 'dead({id})', command: 'flowatlas dead' },
-  { ask: 'why does a flow stop', tool: 'cant_follow', command: 'flowatlas doctor --unresolved' },
-  { ask: 'is this branch safe to merge', tool: 'what_changed({verdict: true})', command: 'flowatlas diff <base>' },
+  { ask: 'who calls this route, method or handler, in any repository', short: 'who calls this', tool: 'who_calls({symbol})', command: 'flowatlas impact <symbol>' },
+  { ask: 'what breaks if I change this, and whose', short: 'what breaks if it changes', tool: 'impact({symbol})', command: 'flowatlas impact <symbol> --entries-only' },
+  { ask: 'follow a request end to end, across services', short: 'how a request flows', tool: 'get_flow({entry})', command: 'flowatlas flow "<VERB /path>"' },
+  { ask: 'who publishes or handles this message', short: 'who publishes or handles a message', tool: 'who_emits / who_consumes({channel})', command: 'flowatlas channel <name>' },
+  { ask: 'how does this reach that', short: 'how this reaches that', tool: 'get_flow({entry, to})', command: 'flowatlas path <from> <to>' },
+  { ask: 'everything about one name, to hand on', short: 'all about a name', tool: 'describe_for_prompt({id})', command: 'flowatlas explain <name>' },
+  { ask: 'is this dead', short: 'is it dead', tool: 'dead({id})', command: 'flowatlas dead' },
+  { ask: 'why does a flow stop', short: 'why a flow stops', tool: 'cant_follow', command: 'flowatlas doctor --unresolved' },
+  { ask: 'is this branch safe to merge', short: 'is a branch safe', tool: 'what_changed({verdict: true})', command: 'flowatlas diff <base>' },
 ]);
 
-/** The rules every rendering states, after the questions. */
+/**
+ * How to spend as few turns as an answer allows (P366): what every rendering
+ * says, the short block read on every turn included. An agent that checks a
+ * complete answer row by row, asks for one id at a time or waits for one call
+ * before sending another that does not need it spends a turn each time, and a
+ * turn costs more than any answer.
+ */
+export const AGENT_HABITS: readonly string[] = Object.freeze([
+  'An answer that says `complete: true` is the whole answer: do not re-check it row by row or with a search; check only what it lists as left unread or unsure.',
+  'Pass several ids in one call (`ids: [...]`), and send independent calls together in one turn.',
+  'Answers are compact; ask `verbose: true` only when a field you need is missing.',
+]);
+
+/** The rules the full guide states after the habits, loaded when the guide is. */
 export const AGENT_RULES: readonly string[] = Object.freeze([
-  'Narrow, then read: find the exact id (find_symbol, list_entries or search), ask what it connects to, then read the source of the one or two steps that matter.',
-  'An answer says what the graph could not read (`unresolvedOnPath`, `cant_follow`): search those files yourself; the graph is not the whole truth there.',
+  'Narrow, then read: find the id (find_symbol, list_entries or search), ask what it connects to, then read only the steps that matter.',
+  'Where an answer says the graph could not read something (`unresolvedOnPath`, `cant_follow`), search those files yourself.',
   'An answer with `stale` was built before the files it cites changed: run `flowatlas build` and ask again.',
-  'A search inside one repository cannot see the others; the graph joins them.',
 ]);
 
-/** The questions as one line, for the graph server's instructions. */
-export const agentQuestionsLine = (): string =>
-  `Ask it, not a search of the files, for: ${AGENT_QUESTIONS.map((question) => `${question.ask} (${question.tool})`).join('; ')}.`;
+/** The questions as one line, for the graph server's instructions: the chains there name the tools. */
+export const agentQuestionsLine = (): string => `Ask it, not a search of the files: ${AGENT_QUESTIONS.map((question) => question.short).join(', ')}.`;

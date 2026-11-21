@@ -118,7 +118,7 @@ export const registerSource = (server: McpServer, ctx: ToolContext): void => {
     'get_source',
     {
       title: 'Read the source of a symbol',
-      description: 'The code of one symbol; the only tool that returns source.',
+      description: 'The code of one symbol; the only tool that returns source. A long one says `truncated` and the `fromLine` to read on from.',
       inputSchema: {
         symbol: z.string().describe('node id or name'),
         context: z.number().int().min(0).max(50).default(0).describe('lines either side'),

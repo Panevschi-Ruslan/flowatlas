@@ -195,7 +195,12 @@ const counted = (across: Record<string, number>, leave: string | undefined): str
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
     .map(([service, n]) => `${service} (${n})`);
 
-/** What the hook says about one name, or nothing when everything about it is in the searched repository. */
+/**
+ * What the hook says about one name, or nothing when everything about it is
+ * in the searched repository: who is on the far side and the call that lists
+ * them, and no more (P366), since what a hook adds is read again on every
+ * later turn.
+ */
 const sentenceFor = (name: IndexedName, here: string | undefined): string | undefined => {
   const far = counted(name.across, here);
   if (far.length === 0) return undefined;
@@ -203,10 +208,9 @@ const sentenceFor = (name: IndexedName, here: string | undefined): string | unde
   const owner = name.service === null ? '' : `, in ${name.service}`;
   const call =
     name.kind === 'channel'
-      ? `who_emits({channel: ${JSON.stringify(name.text)}}) and who_consumes({channel: ${JSON.stringify(name.text)}})`
-      : `who_calls({symbol: ${JSON.stringify(name.id)}})`;
-  const command = name.kind === 'channel' ? `flowatlas channel ${JSON.stringify(name.text)}` : `flowatlas impact ${JSON.stringify(name.id)}`;
-  return `\`${what}\`${owner}: ${name.role} in ${far.join(', ')}. ${call} ${name.kind === 'channel' ? 'list' : 'lists'} them (${command} in a terminal).`;
+      ? `who_emits and who_consumes({channel: ${JSON.stringify(name.text)}}) list them`
+      : `who_calls({symbol: ${JSON.stringify(name.id)}}) lists them`;
+  return `\`${what}\`${owner}: ${name.role} in ${far.join(', ')}. ${call}.`;
 };
 
 /**
@@ -232,7 +236,7 @@ export const contextFor = (call: HookCall, index: NamesIndex | undefined, platfo
   }
   if (said.length === 0) return undefined;
   return [
-    `flowatlas: this search covered the ${here} checkout only; the project's graph sees the other repositories too.`,
+    `flowatlas: this search saw the ${here} checkout only; the graph also sees the other repositories.`,
     ...said.map((line) => `- ${line}`),
     ...(more === 0 ? [] : [`- and ${more} more names this pattern matches (search({query}) lists them).`]),
   ].join('\n');

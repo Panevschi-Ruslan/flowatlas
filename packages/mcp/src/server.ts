@@ -31,40 +31,39 @@ import type { ToolName } from './tool-needs.js';
 export const SERVER_NAME = 'flowatlas';
 
 /**
- * What a session is told before its first question.
+ * What a session is told before its first question, and again on every turn
+ * after it (P366): a client re-sends the instructions with every request,
+ * while a tool's description and input reach the model only once the tool is
+ * loaded. So this says what no single tool can - which tool to begin with,
+ * how their ids chain, which tools are listed when, and the inputs every tool
+ * shares - and what one tool's answer needs is said on that tool. At most
+ * `INSTRUCTIONS_MAX` characters, with room for a line or two more.
  *
  * The chains are spelled out because they are the point: every row carries an
  * `id` the next tool takes as it is, and every answer ends with `next`, the
  * calls that take the ids it just returned.
  */
 const INSTRUCTION_LINES: readonly string[] = [
-  'A map of every repository in this project, already joined. Ask it what reaches what instead of reading files.',
+  'A map of every repository in this project, already joined: ask it what reaches what instead of reading files.',
   // The same questions the files `flowatlas agents install` writes list (P227).
   agentQuestionsLine(),
-  'Begin with start_here: counts per service, the most common gaps, and entry ids to start from.',
-  'Every row carries an `id` that the next tool accepts as it is, and every answer ends with `next`, the calls that take those ids. The chains:',
+  'Begin with start_here: counts per service, the commonest gaps, and entry ids to start from.',
+  'Every row carries an `id` the next tool takes as it is; every answer ends with `next`, the calls that take those ids. The chains:',
   '- entry: list_entries -> get_flow({entry: id}) -> get_source({symbol: id}) on the step that matters.',
-  '- channel: who_emits / who_consumes({channel: id}) -> get_flow({entry: id}) on a handler. A channel written as code writes it (`tenant:<id>:events`, `{id}`, `${id}`, `:id`, `[id]`, or a value) answers for the one channel it denotes, saying which in `channelUsed`; several are listed. `type` narrows either to one type of message on the channel (the value of its `type`, `kind` or `event` field): the code that publishes it, or the handlers that select it - or `unselected`, no code selects it, with `sureness`.',
-  '- symbol: find_symbol -> who_calls / impact({symbol: id}) -> get_flow on an entry it names.',
-  '- shape: get_type({type: id}) -> type_usage({type: id}): every way in, crossing, channel and call that takes or returns it, and the types holding it; check_contract for whether two services still agree; get_spec({service}) writes the routes of a service as OpenAPI 3.1 or its channels as AsyncAPI 3.0 (`kind`), and `path` ("GET /orders/{id}", a channel address) answers one operation with the schemas it uses.',
-  '- search({query}) finds a route, channel, message type (`ORDER_READY`, with its producers and handlers), table, type, class or gap by name; what_changed reads the last flowatlas diff.',
-  "- why a flow stops: cant_follow groups every step the reading could not follow by cause and package -> get_source on a place it names; a wrapper of the project's own -> test_pattern on a draft rule for it.",
-  '- findings - a likely N+1, a route with no guard, a contract break, a channel with one end, a broken architecture rule (check_rules lists those) - are not gaps: findings() counts each kind with its top rows, ranked by reach; findings({kind}) lists one, each row with the call that shows it.',
-  "- dead({id}) says whether a node is dead: `dead`, `likely-dead` (a call read in part could reach it: `couldHit`), `unknown` (`outside` the project, or a call `oneOff` a segment) or `alive`; dead({service}) lists them, verdict first.",
-  '- run time: hot_paths -> slow_steps({entry: id}) -> trace_for({entry: id}), one slow and one failing request as trees of node ids -> get_source on a slow step.',
-  '- failures at run time: undeclared_failures lists ways in that answered a status no failure in their code declares, 5xx first -> trace_for({entry}) for a failing request; get_flow `failures` and `fails[].seen` set the statuses seen beside the declared ones.',
-  '- never seen: never_seen({since}) lists what the code runs and traffic never touched, `strong` beside a busy neighbour, `weak` otherwise -> dead({id}), which reads traffic as evidence (`seen`, `neverSeen`); cant_follow({cause: "seen-not-in-code"}) lists what traffic reached and no reader drew, with the call that looks for each; a best guess traffic went through says `confirmedBy: "traffic"`.',
-  'get_flow, describe_for_prompt and impact carry `docs` when a Markdown page describes the node (flowatlas docs): `file`, `line` and `state`; `changed` or `gone` is a page to update with the change. start_here says `staleDocs`.',
-  'Rows real traffic went through carry `observed: n`, with `p95` (ms) and `errorRate` where timed (`seenAmbiguous: n` where requests fit it and other places too, so were counted on none); gaps someone accepted with flowatlas accept carry `accepted: true`.',
-  'describe_for_prompt({id}) writes any of these as Markdown to hand on; `scope` class, file or service writes the whole of one. Every list tool takes the same optional `service` filter, a service name, to keep only its rows.',
-  'Every answer is bounded; get_source is the only one that returns code, and says `truncated` with the `fromLine` to read on from when a declaration is longer than one answer.',
-  '`maxNodes` is the most rows an answer holds. A list that was cut says `total` and `nextOffset`: ask the same call again with `offset: nextOffset` for the next page, and `next` writes that call first.',
-  'get_flow writes each node once: met again it is `{id, ref: true, seenAt}`, seenAt the row its subtree is under. It stops at `maxNodes` (60) or about `maxChars` (12000) characters, says which in `stoppedBy`, and lists the crossings it did not follow in `crossingsLeft`: ask get_flow on one. With `to` (any node, and `entry` any node too) it keeps only the shortest ways there; none says `searched`, and `reverse` when the other way round holds.',
-  'who_calls says `stoppedBy` and the `frontier` ids when depth cut it, and `topOfChain` with `gapsInFile` on a node nothing calls: dead, or called from behind a gap (dead({id}) says which it is likely to be). On a class it answers for its methods. A route said aloud (`GET /orders/123`) resolves to the most specific route, naming the others under `alsoAnswers`. A failed call is `isError` and names the nearest under `suggestions`.',
-  'Prompts before-rename, pr-review and trace-route write out the calls those reviews take, ids resolved; resources flowatlas://reasons (why a step was not followed) and flowatlas://services/{name} read without asking. what_changed({verdict: true}) says safe, unsafe or unknown, and why.',
+  '- channel: who_emits or who_consumes({channel: id}), with `type` for one message type -> get_flow({entry: id}) on a handler.',
+  '- symbol: find_symbol -> who_calls or impact({symbol: id}) -> get_flow on an entry it names.',
+  '- shape: get_type({type: id}) -> type_usage({type: id}); check_contract on a crossing; get_spec({service}).',
+  '- name: search({query}) finds a route, channel, message type, table, type, class or gap.',
+  '- stops: cant_follow -> get_source on a place it names; test_pattern on a draft rule for a wrapper.',
+  '- bugs and dead code: findings() -> findings({kind}); dead({id}), or dead({service}) for a list.',
+  '- run time: hot_paths -> slow_steps({entry: id}) -> trace_for({entry: id}); undeclared_failures; never_seen -> dead({id}).',
+  '- to hand on: describe_for_prompt({id}) writes any of these as Markdown.',
+  "Inputs shared by the tools that take them, said only here: `detail` 0 is ids only, 1 (the default) adds file:line, service and kind, 2 what the reader knows of each row; `service` keeps one service's rows; `maxNodes` is the most rows (150 unless the tool says), and a list cut short says `total` and `nextOffset`: the same call with `offset: nextOffset` reads on.",
   'Only the tools this project can answer are listed: the run-time ones after flowatlas observe, check_rules with rules configured, what_changed after flowatlas diff, the channel and type tools once the graph holds one. start_here says what is not listed in `hidden`; the list changes as the project does.',
-  '`detail` is 0 for ids only, 1 (the default) adds file:line, service and kind, 2 adds what the reader knows about each row; 3 is answered at 2.',
 ];
+
+/** The most characters the instructions may run to (P366): they are re-sent on every turn of a session. */
+export const INSTRUCTIONS_MAX = 2500;
 
 /** The line that says when each tool appears: naming one there is the point, so it is said whatever is listed. */
 const LISTING_LINE = INSTRUCTION_LINES.find((line) => line.startsWith('Only the tools this project can answer')) as string;

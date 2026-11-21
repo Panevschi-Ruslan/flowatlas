@@ -5,7 +5,7 @@
  * session in one repository answers a question about another one without
  * opening it.
  */
-export { createFlowatlasServer, startStdioServer, SERVER_NAME, INSTRUCTIONS } from './server.js';
+export { createFlowatlasServer, startStdioServer, SERVER_NAME, INSTRUCTIONS, INSTRUCTIONS_MAX } from './server.js';
 export type { ServerOptions } from './server.js';
 export { canAnswer, isToolName, NEEDS, TOOL_NAMES, TOOL_NEEDS } from './tool-needs.js';
 export type { Need, NeedSource, ToolFacts, ToolName } from './tool-needs.js';
