@@ -5,18 +5,23 @@ import { z } from 'zod';
 import { resolveChannelRef } from '../query/channel-ref.js';
 import { projectDetail, truncate } from '../query/detail.js';
 import { nearNames } from '../query/names.js';
-import { MAX_NEXT, nextFor, withNext } from '../query/next.js';
+import { MAX_NEXT, nextFor, withNext, withoutShown } from '../query/next.js';
+import { reachReader, type ReachReader } from '../query/ways-in.js';
 import type { CompactNode } from '../query/types.js';
 import {
   bound,
   callOf,
   commonInput,
+  completeOf,
   inService,
   nextOutput,
+  completeOutput,
   nodeOutput,
   pagedNext,
   pageInput,
+  pageLeft,
   pageOutput,
+  reachedNodeOutput,
   READ_ONLY,
   serviceInput,
   withDb,
@@ -24,7 +29,7 @@ import {
 } from './common.js';
 
 /** A handler that selects one type, with where the choice was made (P358). */
-const selectorOutput = nodeOutput.extend({
+const selectorOutput = reachedNodeOutput.extend({
   /** The consumer whose handler chose the type, where it is not this one. */
   selectedIn: z.string().optional(),
   /** How the choice is written: switch, if, guard, map, decorator, or filter (an operator in front of a subscription). */
@@ -36,8 +41,9 @@ const selectorOutput = nodeOutput.extend({
 /** What who_emits and who_consumes answer: the channel, and one page of one end of it. */
 const endsOutput = (key: 'producers' | 'consumers') => ({
   channel: nodeOutput,
-  [key]: z.array(key === 'consumers' ? selectorOutput : nodeOutput),
+  [key]: z.array(key === 'consumers' ? selectorOutput : reachedNodeOutput),
   ...pageOutput,
+  ...completeOutput,
   /** The channel id answered for, when the name asked was written another way (`tenant:<id>:events`, P360). */
   channelUsed: z.string().optional(),
   /** The type of message asked about, where one was (P358). */
@@ -72,17 +78,27 @@ const typeValues = (db: GraphDb, channel: string): string[] =>
   messageTypesOn(db, channel).map((node) => String(node.meta?.['messageType'] ?? node.label));
 
 /** A selector as listed: the consumer, and where and how the choice was made. */
-const selectorRow = (db: GraphDb, facts: MessageTypeFacts, consumer: GraphNode, detail: Parameters<typeof projectDetail>[1]): CompactNode & Record<string, unknown> => {
+const selectorRow = (
+  db: GraphDb,
+  facts: MessageTypeFacts,
+  consumer: GraphNode,
+  detail: Parameters<typeof projectDetail>[1],
+  reader: ReachReader,
+): CompactNode & { selectedIn?: string; via?: string; unreached?: string } => {
   const found = facts.selectors.find((selector) => selector.consumer.id === consumer.id);
   const via = found?.edge.meta?.['via'];
   const selectedIn = found?.selectedBy === undefined ? undefined : (db.node(found.selectedBy)?.label ?? found.selectedBy);
-  return {
+  return reader.annotate({
     ...projectDetail(consumer, detail),
     ...(selectedIn === undefined ? {} : { selectedIn }),
     ...(typeof via === 'string' ? { via } : {}),
     ...(found?.unreached === undefined ? {} : { unreached: found.unreached }),
-  };
+  });
 };
+
+/** Publishes whose type was not read, said in `left`: any of them may send the type asked about. */
+const unreadSaid = (count: number, channel: string, type: string): string | undefined =>
+  count === 0 ? undefined : `unread: ${count} publish${count === 1 ? '' : 'es'} on ${channel} send${count === 1 ? 's' : ''} a type not read; any may be ${type}`;
 
 export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
   const ends = (
@@ -129,6 +145,8 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
           }
           const channel = found.node;
           const id = channel.id;
+          // Whether each row runs and where it is reached from (P364).
+          const reader = reachReader(db, ctx.handle, detail);
           const other = key === 'producers' ? 'who_consumes' : 'who_emits';
           const used = found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed };
 
@@ -157,6 +175,7 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
                     `no type ${JSON.stringify(wanted)} is read on ${parent.label}` +
                     (unread.length === 0 ? '' : `; ${unread.length} publish${unread.length === 1 ? '' : 'es'} on it send${unread.length === 1 ? 's' : ''} a type not read, which may be it`),
                   ...(unread.length === 0 ? {} : { maybe: unread.slice(0, 3).map((producer) => projectDetail(producer, detail)) }),
+                  ...completeOf([unreadSaid(unread.length, parent.label, wanted)]),
                 },
                 [
                   ...near.map((value) => callOf(name, { channel: parent.id, type: value.id })),
@@ -172,10 +191,11 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
             const said = key === 'consumers' ? unselectedSaid(facts) : undefined;
             const maybe = key === 'producers' && facts.producers.length === 0 ? facts.unreadProducers : [];
             const args = { channel: parent.id, type: wanted, service: input.service, detail: input.detail, maxNodes };
+            const rows = items.map((node) => (key === 'consumers' ? selectorRow(db, facts, node, detail, reader) : reader.annotate(projectDetail(node, detail))));
             return withNext(
               {
                 channel: projectDetail(parent, detail),
-                [key]: items.map((node) => (key === 'consumers' ? selectorRow(db, facts, node, detail) : projectDetail(node, detail))),
+                [key]: rows,
                 total,
                 ...(nextOffset === undefined ? {} : { truncated, nextOffset }),
                 ...used,
@@ -191,14 +211,23 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
                     ? {}
                     : { note }),
                 ...(maybe.length === 0 ? {} : { maybe: maybe.slice(0, 3).map((producer) => projectDetail(producer, detail)) }),
+                ...completeOf([
+                  pageLeft(total, items.length, input.offset, nextOffset),
+                  key === 'producers' && unreadSaid(facts.unreadProducers.length, parent.label, wanted),
+                  said?.sureness === 'unsure' && `unsure: ${said.said}`,
+                  ...reader.left(),
+                ]),
               },
               pagedNext(
                 { tool: name, args, nextOffset },
-                [
-                  callOf(other, { channel: parent.id, type: wanted }),
-                  ...(said === undefined ? [] : [callOf('who_consumes', { channel: parent.id })]),
-                  ...nextFor(items[0]),
-                ].slice(0, 4),
+                withoutShown(
+                  [
+                    callOf(other, { channel: parent.id, type: wanted }),
+                    ...(said === undefined ? [] : [callOf('who_consumes', { channel: parent.id })]),
+                    ...nextFor(items[0]),
+                  ],
+                  rows,
+                ).slice(0, 4),
               ),
             );
           }
@@ -213,26 +242,31 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
             .sort(byId);
 
           const { items, total, truncated, nextOffset } = truncate(nodes, maxNodes, input.offset);
+          const rows = items.map((node) => reader.annotate(projectDetail(node, detail)));
           const args = { channel: id, service: input.service, detail: input.detail, maxNodes };
           // The types it carries, each a question of its own (P358).
           const values = typeValues(db, id);
           return withNext(
             {
               channel: projectDetail(channel, detail),
-              [key]: items.map((node) => projectDetail(node, detail)),
+              [key]: rows,
               total,
               ...(nextOffset === undefined ? {} : { truncated, nextOffset }),
               ...used,
               ...(values.length === 0 ? {} : { types: values }),
+              ...completeOf([pageLeft(total, items.length, input.offset, nextOffset), ...reader.left()]),
               ...(note === undefined ? {} : { note }),
             },
             pagedNext(
               { tool: name, args, nextOffset },
-              [
-                ...(values[0] === undefined ? [] : [callOf(name, { channel: id, type: values[0] })]),
-                `${other}({channel: ${JSON.stringify(id)}})`,
-                ...nextFor(items[0]),
-              ].slice(0, 4),
+              withoutShown(
+                [
+                  ...(values[0] === undefined ? [] : [callOf(name, { channel: id, type: values[0] })]),
+                  `${other}({channel: ${JSON.stringify(id)}})`,
+                  ...nextFor(items[0]),
+                ],
+                rows,
+              ).slice(0, 4),
             ),
           );
         }),

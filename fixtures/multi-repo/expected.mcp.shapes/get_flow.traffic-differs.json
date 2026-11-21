@@ -87,6 +87,10 @@
       "service": "billing"
     }
   ],
+  "complete": false,
+  "left": [
+    "maxNodes: 7 more nodes past maxNodes 5; raise maxNodes or ask get_flow on a child id"
+  ],
   "next": [
     "describe_for_prompt({id: \"entry:gateway:http:POST:/orders/:param/invoice\"})",
     "check_contract({edge: \"entry:gateway:http:POST:/orders/:param/invoice\"})",

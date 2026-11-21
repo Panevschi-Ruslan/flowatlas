@@ -13,13 +13,15 @@
       "label": "event order.created",
       "loc": "src/orders/orders.service.ts:49",
       "service": "orders",
-      "kind": "event"
+      "kind": "event",
+      "reach": "alive",
+      "from": "POST /orders"
     }
   ],
   "total": 1,
+  "complete": true,
   "next": [
     "who_consumes({channel: \"channel:order.created\"})",
-    "who_calls({symbol: \"producer:orders#src/orders/orders.service.ts:49:5\"})",
     "impact({symbol: \"producer:orders#src/orders/orders.service.ts:49:5\"})",
     "get_source({symbol: \"producer:orders#src/orders/orders.service.ts:49:5\"})"
   ]

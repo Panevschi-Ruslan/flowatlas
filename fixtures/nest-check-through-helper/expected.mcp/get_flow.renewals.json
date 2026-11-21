@@ -118,6 +118,7 @@
     ]
   },
   "unresolvedOnPath": 0,
+  "complete": true,
   "next": [
     "describe_for_prompt({id: \"entry:lending:http:POST:/desk/renewals\"})",
     "impact({symbol: \"entry:lending:http:POST:/desk/renewals\"})",

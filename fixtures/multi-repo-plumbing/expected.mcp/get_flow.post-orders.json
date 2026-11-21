@@ -586,6 +586,10 @@
   "stoppedBy": [
     "depth"
   ],
+  "complete": false,
+  "left": [
+    "depth: ≥4 more nodes past depth 8; raise depth"
+  ],
   "next": [
     "describe_for_prompt({id: \"entry:orders:http:POST:/orders\"})",
     "impact({symbol: \"entry:orders:http:POST:/orders\"})",

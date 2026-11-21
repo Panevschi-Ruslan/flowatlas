@@ -1,0 +1,41 @@
+{
+  "answers": [
+    {
+      "asked": "DeskEvent",
+      "type": {
+        "id": "type:console#DeskEvent",
+        "name": "DeskEvent",
+        "kind": "object",
+        "declaredIn": "console#src/live/useDeskEvents.ts",
+        "fields": [
+          {
+            "name": "type",
+            "type": "string",
+            "optional": false
+          },
+          {
+            "name": "ticketId",
+            "type": "string",
+            "optional": false
+          },
+          {
+            "name": "agentId",
+            "type": "string",
+            "optional": true
+          }
+        ]
+      },
+      "nested": {},
+      "complete": true
+    },
+    {
+      "asked": "NoSuchType",
+      "error": "no type named \"NoSuchType\""
+    }
+  ],
+  "complete": true,
+  "next": [
+    "type_usage({type: \"type:console#DeskEvent\"})",
+    "find_symbol({query: \"DeskEvent\"})"
+  ]
+}

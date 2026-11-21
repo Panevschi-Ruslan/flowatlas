@@ -3,13 +3,17 @@
     "id": "angular-basic#src/app/reports.component.ts:ReportsComponent",
     "type": "ui_component",
     "line": 4,
-    "kind": "standalone"
+    "kind": "standalone",
+    "reach": "alive",
+    "from": "screen /reports",
+    "ways": 2
   },
   "callers": [
     {
       "node": {
         "id": "entry:angular-basic:screen:/reports",
-        "loc": "src/app/app.routes.ts:26"
+        "loc": "src/app/app.routes.ts:26",
+        "reach": "unknown"
       },
       "edge": {
         "type": "handles",
@@ -29,6 +33,10 @@
       "topOfChain": true,
       "gapsInFile": 2
     }
+  ],
+  "complete": false,
+  "left": [
+    "gaps: 1 chain top sits in a file with unread calls"
   ],
   "next": [
     "cant_follow({service: \"angular-basic\"})",

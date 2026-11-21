@@ -8,6 +8,30 @@ only one of them moved.
 
 ### Added
 
+- **Answers that finish in one call (P364).** Each row naming code in
+  `who_calls`, `who_consumes`, `who_emits`, `impact`, `search` and
+  `find_symbol` says whether it runs, `reach` (`alive`, `unreached`, `dead`,
+  `unknown`: the verdict `dead` gives, by the same functions, `unreached` for
+  `likely-dead` or for code something calls that no way in reaches), and where
+  it is reached from, `from`: the nearest way in (`screen /queue`,
+  `GET /orders/:param`, `cron nightly`, `consumer tenant:*:events`, or `none`),
+  its own service first, with `ways` counting several - walked back through
+  the handler a consumer runs, the component a method or a handler's file
+  belongs to and the class an injection builds, through only the types a
+  consumer selects, bounded per row and per answer and saying where it was cut.
+  So a handler's row says the screen it is shown on, and needs no `dead`,
+  `who_calls` or `search` after it; `dead({id})` names its way in too. `dead`
+  takes `ids`, `find_symbol` and `search` `queries`, `get_type` `types` and
+  `who_calls` `symbols`, beside the single form: several inputs answered in
+  one call, each under `answers` with what it `asked`. Every list answer
+  (those, `list_entries`, `dead`'s rows, `get_flow`, `get_type`) says
+  `complete: true`, or `complete: false` with `left` naming what was cut or
+  left unread - a page, a depth or node cut, gaps where a caller may hide, a
+  publish whose type was not read, steps not followed. `next` no longer
+  suggests `dead` on a row that shows `reach`, nor `who_calls` or `search` on
+  one that shows `from`. The linker's `deadJudge` judges many nodes of one
+  graph with what every verdict reads of it read once.
+
 - **A screen the router registers is a way in, and a link rendered over a
   constant list reaches every screen the list names (P363).** Each route of a
   front end's configuration that shows a component of the repository - an

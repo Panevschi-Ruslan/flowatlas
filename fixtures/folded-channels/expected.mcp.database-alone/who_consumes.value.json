@@ -13,14 +13,17 @@
       "label": "LifecycleProjections.onHeld",
       "loc": "src/projections/lifecycle.service.ts:25",
       "service": "worker",
-      "kind": "event"
+      "kind": "event",
+      "reach": "alive",
+      "from": "event order:*:on-hold",
+      "ways": 2
     }
   ],
   "total": 1,
   "channelUsed": "channel:order:*:on-hold",
+  "complete": true,
   "next": [
     "who_emits({channel: \"channel:order:*:on-hold\"})",
-    "who_calls({symbol: \"consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onHeld\"})",
     "impact({symbol: \"consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onHeld\"})",
     "read src/projections/lifecycle.service.ts:25 in worker: the code is not served from a database alone"
   ]

@@ -94,6 +94,7 @@
     ]
   },
   "unresolvedOnPath": 0,
+  "complete": true,
   "next": [
     "describe_for_prompt({id: \"consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated\"})",
     "impact({symbol: \"consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated\"})",

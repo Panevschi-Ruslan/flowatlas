@@ -1,0 +1,65 @@
+{
+  "answers": [
+    {
+      "asked": "onTicketEvent",
+      "matches": [
+        {
+          "id": "console#src/screens/TicketScreen.tsx:onTicketEvent",
+          "type": "function",
+          "label": "onTicketEvent",
+          "loc": "src/screens/TicketScreen.tsx:7",
+          "service": "console",
+          "reach": "alive",
+          "from": "screen /tickets/:param",
+          "ways": 3
+        },
+        {
+          "id": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+          "type": "consumer",
+          "label": "onTicketEvent",
+          "loc": "src/live/useDeskEvents.ts:16",
+          "service": "console",
+          "kind": "sse",
+          "reach": "alive",
+          "from": "screen /tickets/:param",
+          "ways": 3
+        }
+      ],
+      "total": 2,
+      "complete": true
+    },
+    {
+      "asked": "reopen",
+      "matches": [
+        {
+          "id": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen",
+          "type": "method",
+          "label": "TicketsService.reopen",
+          "loc": "src/tickets/tickets.service.ts:22",
+          "service": "desk-api",
+          "reach": "unreached",
+          "from": "none"
+        },
+        {
+          "id": "channel:desk:*:events#TICKET_REOPENED",
+          "type": "channel",
+          "label": "desk:*:events#TICKET_REOPENED",
+          "loc": "src/tickets/tickets.service.ts:23",
+          "service": "desk-api",
+          "kind": "message_type",
+          "reach": "unreached",
+          "from": "none"
+        }
+      ],
+      "total": 2,
+      "complete": true
+    }
+  ],
+  "complete": true,
+  "next": [
+    "impact({symbol: \"console#src/screens/TicketScreen.tsx:onTicketEvent\"})",
+    "impact({symbol: \"desk-api#src/tickets/tickets.service.ts:TicketsService.reopen\"})",
+    "get_source({symbol: \"console#src/screens/TicketScreen.tsx:onTicketEvent\"})",
+    "get_source({symbol: \"desk-api#src/tickets/tickets.service.ts:TicketsService.reopen\"})"
+  ]
+}

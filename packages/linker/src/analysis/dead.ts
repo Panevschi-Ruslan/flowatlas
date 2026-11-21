@@ -1131,11 +1131,11 @@ const messageTypeAnswer = (db: GraphDb, type: GraphNode): Answered => {
  * A consumer (P358): `dead` when its handler's class is built by nothing, and
  * otherwise as the channels it consumes are - alive when one is published.
  */
-const consumerAnswer = (db: GraphDb, report: LinkReport | undefined, consumer: GraphNode): Answered => {
+const consumerAnswer = (db: GraphDb, report: LinkReport | undefined, consumer: GraphNode, silent: SilentChannels = () => deadChannels(db, report)): Answered => {
   const unreached = unreachedHandler(db, consumer);
   if (unreached !== undefined) return { verdict: 'dead', reason: unreached, evidence: {} };
   const channels = db.edgesTo(consumer.id, ['consumes']).flatMap((edge) => db.node(edge.from) ?? []);
-  const answers = channels.map((channel) => ({ channel, answered: channelAnswer(db, report, channel) }));
+  const answers = channels.map((channel) => ({ channel, answered: channelAnswer(db, report, channel, silent) }));
   const published = answers.find(({ channel }) => db.edgesTo(channel.id, ['emits']).length > 0);
   if (published !== undefined) return { verdict: 'alive', reason: 'something publishes what it consumes', evidence: { via: published.channel.id } };
   const [first] = answers;
@@ -1143,14 +1143,17 @@ const consumerAnswer = (db: GraphDb, report: LinkReport | undefined, consumer: G
   return { verdict: first.answered.verdict === 'alive' ? 'unknown' : first.answered.verdict, reason: first.answered.reason, evidence: { ...first.answered.evidence, via: first.channel.id } };
 };
 
-const channelAnswer = (db: GraphDb, report: LinkReport | undefined, channel: GraphNode): Answered => {
+/** The channels missing an end, as `deadChannels` lists them: read once by a judge that asks of many channels. */
+type SilentChannels = () => readonly DeadChannel[];
+
+const channelAnswer = (db: GraphDb, report: LinkReport | undefined, channel: GraphNode, silent: SilentChannels = () => deadChannels(db, report)): Answered => {
   if (isMessageTypeNode(channel)) return messageTypeAnswer(db, channel);
   const producers = db.edgesTo(channel.id, ['emits']);
   const consumers = db.edgesFrom(channel.id, ['consumes']);
   if (producers.length > 0 && consumers.length > 0) {
     return { verdict: 'alive', reason: 'published and consumed', evidence: aliveBy(producers) };
   }
-  const row = deadChannels(db, report).find((found) => found.id === channel.id);
+  const row = silent().find((found) => found.id === channel.id);
   if (row !== undefined) return { verdict: row.verdict, reason: row.reason, evidence: row.evidence };
   return {
     verdict: 'dead',
@@ -1199,41 +1202,64 @@ export const deadVerdict = (
   report: LinkReport | undefined,
   id: string,
   options: DeadOptions = {},
-): DeadAnswer | undefined => {
-  const node = db.node(id);
-  if (node === undefined) return undefined;
+): DeadAnswer | undefined => deadJudge(db, report, options)(id);
+
+/** The node types `dead` judges; any other is answered `unknown` without a look. */
+export const JUDGED_TYPES: readonly string[] = ['entry', 'channel', 'provider', 'method', 'function', 'consumer', 'ui_component'];
+
+/**
+ * `deadVerdict` for many nodes of one graph (P364): what every verdict reads
+ * of the whole graph (the routes' near misses, the classes' modules and
+ * injects, the channels missing an end, the traffic) is read once, on first
+ * need, and each node is then judged by the same functions. An answer that
+ * says whether each of its rows runs asks this once per row.
+ */
+export const deadJudge = (
+  db: GraphDb,
+  report: LinkReport | undefined,
+  options: DeadOptions = {},
+): ((id: string) => DeadAnswer | undefined) => {
   const context = routeContext(db, report, options);
-  const providers = (): ProviderContext => providerContext(db);
-  const statically: Answered & Partial<Pick<DeadEntry, 'class' | 'role'>> =
-    node.type === 'entry'
-      ? entryAnswer(db, report, context, node)
-      : node.type === 'channel'
-        ? channelAnswer(db, report, node)
-        : node.type === 'provider'
-          ? node.kind === 'controller'
-            ? controllerAnswer(db, report, context, providers(), node)
-            : providerAnswer(db, providers(), node)
-          : node.type === 'method'
-            ? methodAnswer(db, providers(), node)
-            : node.type === 'function'
-              ? functionAnswer(db, node)
-              : node.type === 'consumer'
-                ? consumerAnswer(db, report, node)
-                : node.type === 'ui_component'
-                  ? componentAnswer(db, node)
-                  : { verdict: 'unknown', reason: `dead judges ways in, channels, consumers, classes, components, methods and functions, not a ${node.type}`, evidence: {} };
-  const answered = withTraffic(statically, node.id, trafficFor(db, options));
-  return {
-    id: node.id,
-    type: node.type,
-    ...(node.kind === undefined ? {} : { kind: node.kind }),
-    ...(node.repo === '' ? {} : { service: node.repo }),
-    ...located(node),
-    verdict: answered.verdict,
-    reason: answered.reason,
-    ...(answered.class === undefined ? {} : { class: answered.class }),
-    ...(answered.role === undefined ? {} : { role: answered.role }),
-    evidence: answered.evidence ?? {},
+  let providerFacts: ProviderContext | undefined;
+  const providers = (): ProviderContext => (providerFacts ??= providerContext(db));
+  let silentRows: readonly DeadChannel[] | undefined;
+  const silent: SilentChannels = () => (silentRows ??= deadChannels(db, report));
+  let traffic: { overlay: TrafficOverlay | undefined } | undefined;
+  return (id) => {
+    const node = db.node(id);
+    if (node === undefined) return undefined;
+    const statically: Answered & Partial<Pick<DeadEntry, 'class' | 'role'>> =
+      node.type === 'entry'
+        ? entryAnswer(db, report, context, node)
+        : node.type === 'channel'
+          ? channelAnswer(db, report, node, silent)
+          : node.type === 'provider'
+            ? node.kind === 'controller'
+              ? controllerAnswer(db, report, context, providers(), node)
+              : providerAnswer(db, providers(), node)
+            : node.type === 'method'
+              ? methodAnswer(db, providers(), node)
+              : node.type === 'function'
+                ? functionAnswer(db, node)
+                : node.type === 'consumer'
+                  ? consumerAnswer(db, report, node, silent)
+                  : node.type === 'ui_component'
+                    ? componentAnswer(db, node)
+                    : { verdict: 'unknown', reason: `dead judges ways in, channels, consumers, classes, components, methods and functions, not a ${node.type}`, evidence: {} };
+    traffic ??= { overlay: trafficFor(db, options) };
+    const answered = withTraffic(statically, node.id, traffic.overlay);
+    return {
+      id: node.id,
+      type: node.type,
+      ...(node.kind === undefined ? {} : { kind: node.kind }),
+      ...(node.repo === '' ? {} : { service: node.repo }),
+      ...located(node),
+      verdict: answered.verdict,
+      reason: answered.reason,
+      ...(answered.class === undefined ? {} : { class: answered.class }),
+      ...(answered.role === undefined ? {} : { role: answered.role }),
+      evidence: answered.evidence ?? {},
+    };
   };
 };
 

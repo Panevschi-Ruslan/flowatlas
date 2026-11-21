@@ -17,19 +17,26 @@ import { projectDetail, truncate } from '../query/detail.js';
 import { resolveChannelRef } from '../query/channel-ref.js';
 import { isResolved, resolveSymbol, type EntryRef } from '../query/entry-ref.js';
 import { nearNames } from '../query/names.js';
-import { MAX_NEXT, withNext } from '../query/next.js';
-import type { DbHandle } from '../query/db.js';
-import { loadObserved } from '../query/observed.js';
+import { MAX_NEXT, withNext, withoutShown } from '../query/next.js';
+import { deadOptionsOf, reachReader, type ReachReader } from '../query/ways-in.js';
 import {
+  answerEach,
+  answersOutput,
+  askedOf,
   callOf,
   commonInput,
+  completeOf,
+  completeOutput,
   nextOutput,
+  pageLeft,
   nodeOutput,
   pagedNext,
   pageInput,
   pageOutput,
   READ_ONLY,
+  reachOutput,
   serviceInput,
+  severalInput,
   withDb,
   type ToolContext,
 } from './common.js';
@@ -44,22 +51,8 @@ const LISTED_BY_DEFAULT: readonly DeadKind[] = ['entries', 'channels', 'provider
 /** The type of node each kind lists, which each row says it is. */
 const TYPE_OF: Readonly<Record<DeadKind, string>> = { entries: 'entry', channels: 'channel', providers: 'provider', methods: 'method' };
 
-/**
- * The rules the CLI's `dead` reads from the configuration, read the same way
- * so the two agree, and the observed file beside the database when there is
- * one: traffic is evidence for every verdict (P110), over all it holds.
- */
-export const deadOptionsOf = (handle: Pick<DbHandle, 'config'> & { path?: string }, service?: string): DeadOptions => {
-  const publicRoutes = handle.config?.doctor?.publicRoutes ?? [];
-  const infrastructure = handle.config?.dead?.infrastructure;
-  const observed = handle.path === undefined ? undefined : loadObserved(handle.path);
-  return {
-    ...(service === undefined ? {} : { service }),
-    ...(publicRoutes.length === 0 ? {} : { publicRoutes }),
-    ...(infrastructure === undefined ? {} : { infrastructure }),
-    ...(observed === undefined ? {} : { observed }),
-  };
-};
+/** Moved beside the reach every answer's rows carry (P364), which reads them the same way. */
+export { deadOptionsOf };
 
 const locOf = (item: { file?: string; line?: number }): string | undefined =>
   item.file === undefined ? undefined : item.line === undefined ? item.file : `${item.file}:${item.line}`;
@@ -164,6 +157,9 @@ export const deadOutput = {
   class: z.string().optional(),
   role: z.string().optional(),
   evidence: evidenceOutput.optional(),
+  from: reachOutput.from,
+  ways: reachOutput.ways,
+  walkCut: reachOutput.walkCut,
   alsoAnswers: z.array(z.string()).optional(),
   channelUsed: z.string().optional(),
   rows: z.array(deadRowOutput).optional(),
@@ -172,6 +168,8 @@ export const deadOutput = {
   ...pageOutput,
   total: z.number().optional(),
   candidates: z.array(nodeOutput).optional(),
+  answers: answersOutput,
+  ...completeOutput,
   next: nextOutput,
 };
 
@@ -179,7 +177,7 @@ export const deadOutput = {
  * One node, by any name a tool takes; a channel by its bare name too, and as
  * a value it takes (`tenant:42:events`) when nothing else answers to it (P360).
  */
-const answerOne = (db: GraphDb, ctx: ToolContext, ref: string): object => {
+const answerOne = (db: GraphDb, ctx: ToolContext, reader: ReachReader, ref: string): object => {
   const channel = db.node(`channel:${ref.trim()}`);
   const named = channel === undefined ? resolveSymbol(db, ref) : { id: channel.id, node: channel };
   const valued = isResolved(named) || named.candidates.length > 0 ? undefined : resolveChannelRef(db, ref);
@@ -206,6 +204,8 @@ const answerOne = (db: GraphDb, ctx: ToolContext, ref: string): object => {
   const answer = deadVerdict(db, db.report(), found.node.id, deadOptionsOf(ctx.handle));
   if (answer === undefined) return { error: `no node ${JSON.stringify(found.node.id)}` };
   const loc = locOf(answer);
+  // Where it is reached from (P364), so an alive answer needs no who_calls after it.
+  const { from, ways, walkCut } = reader.of(answer.id);
   return withNext(
     {
       id: answer.id,
@@ -218,10 +218,17 @@ const answerOne = (db: GraphDb, ctx: ToolContext, ref: string): object => {
       ...(answer.class === undefined ? {} : { class: answer.class }),
       ...(answer.role === undefined ? {} : { role: answer.role }),
       evidence: wireEvidence(answer.evidence),
+      ...(from === undefined ? {} : { from }),
+      ...(ways === undefined ? {} : { ways }),
+      ...(walkCut === undefined ? {} : { walkCut }),
       ...(found.alsoAnswers === undefined ? {} : { alsoAnswers: found.alsoAnswers }),
       ...(found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed }),
     },
-    verdictNext(answer.id, answer.verdict, answer.evidence, answer.service).slice(0, MAX_NEXT),
+    [
+      ...withoutShown(verdictNext(answer.id, answer.verdict, answer.evidence, answer.service), [{ id: answer.id, ...(from === undefined ? {} : { from }) }]),
+      // Several ways in, of which `from` names the nearest: impact lists them all.
+      ...(ways === undefined ? [] : [callOf('impact', { symbol: answer.id })]),
+    ].slice(0, MAX_NEXT),
   );
 };
 
@@ -234,6 +241,7 @@ export const registerDead = (server: McpServer, ctx: ToolContext): void => {
         "Whether a node is `dead`, `likely-dead` (a call read in part could reach it: `couldHit`), `unknown` or `alive`, and what could make that wrong; or a service's dead rows, verdict first.",
       inputSchema: {
         id: z.string().optional(),
+        ids: severalInput(),
         service: serviceInput,
         kind: z.enum(DEAD_KINDS).optional(),
         maxNodes: commonInput.maxNodes,
@@ -244,7 +252,12 @@ export const registerDead = (server: McpServer, ctx: ToolContext): void => {
     },
     (input) =>
       withDb(ctx.handle, (db) => {
-        if (input.id !== undefined) return answerOne(db, ctx, input.id);
+        const asked = askedOf(input.id, input.ids);
+        if (asked.length > 0) {
+          const reader = reachReader(db, ctx.handle, 1);
+          if (asked.length === 1) return answerOne(db, ctx, reader, asked[0]!);
+          return answerEach('id', asked, (id) => answerOne(db, ctx, reader, id));
+        }
         const kinds = input.kind === undefined ? LISTED_BY_DEFAULT : [input.kind];
         const rows = deadRows(db, deadOptionsOf(ctx.handle, input.service), kinds);
         const counts: Record<string, number> = {};
@@ -260,6 +273,7 @@ export const registerDead = (server: McpServer, ctx: ToolContext): void => {
             ...(nextOffset === undefined ? {} : { nextOffset }),
             counts,
             ...(kinds.includes('entries') ? { excludedEntryKinds: [...EXTERNALLY_TRIGGERED] } : {}),
+            ...completeOf([pageLeft(total, items.length, input.offset, nextOffset)]),
           },
           pagedNext({ tool: 'dead', args, nextOffset }, first === undefined ? [] : [callOf('dead', { id: first.id })]),
         );

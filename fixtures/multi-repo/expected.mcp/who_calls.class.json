@@ -5,7 +5,10 @@
     "label": "OrdersService",
     "loc": "src/orders/orders.service.ts:11",
     "service": "orders",
-    "kind": "injectable"
+    "kind": "injectable",
+    "reach": "alive",
+    "from": "GET /orders/:param",
+    "ways": 4
   },
   "callers": [
     {
@@ -13,7 +16,9 @@
         "id": "orders#src/orders/orders.controller.ts:OrdersController.archive",
         "type": "method",
         "label": "OrdersController.archive",
-        "loc": "src/orders/orders.controller.ts:42"
+        "loc": "src/orders/orders.controller.ts:42",
+        "reach": "alive",
+        "from": "POST /orders/:param/archive"
       },
       "edge": {
         "type": "calls",
@@ -31,7 +36,9 @@
         "id": "orders#src/orders/orders.controller.ts:OrdersController.create",
         "type": "method",
         "label": "OrdersController.create",
-        "loc": "src/orders/orders.controller.ts:31"
+        "loc": "src/orders/orders.controller.ts:31",
+        "reach": "alive",
+        "from": "POST /orders"
       },
       "edge": {
         "type": "calls",
@@ -49,7 +56,9 @@
         "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
         "type": "method",
         "label": "OrdersController.findOne",
-        "loc": "src/orders/orders.controller.ts:25"
+        "loc": "src/orders/orders.controller.ts:25",
+        "reach": "alive",
+        "from": "GET /orders/:param"
       },
       "edge": {
         "type": "calls",
@@ -67,7 +76,9 @@
         "id": "orders#src/orders/orders.controller.ts:OrdersController.latest",
         "type": "method",
         "label": "OrdersController.latest",
-        "loc": "src/orders/orders.controller.ts:19"
+        "loc": "src/orders/orders.controller.ts:19",
+        "reach": "alive",
+        "from": "GET /orders/latest"
       },
       "edge": {
         "type": "calls",
@@ -87,6 +98,10 @@
     "orders#src/orders/orders.controller.ts:OrdersController.create",
     "orders#src/orders/orders.controller.ts:OrdersController.findOne",
     "orders#src/orders/orders.controller.ts:OrdersController.latest"
+  ],
+  "complete": false,
+  "left": [
+    "depth: 4 callers past depth 1, from the frontier rows"
   ],
   "next": [
     "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService\", depth: 2})",

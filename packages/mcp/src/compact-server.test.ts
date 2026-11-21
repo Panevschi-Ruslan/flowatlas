@@ -72,7 +72,9 @@ describe('compact answers at the boundary (P365)', () => {
     }
     // 17,126 against 24,007 when measured: the fixture's rows at detail 1 were
     // slimmed before (P93), and what is left is ids, edges and Markdown.
-    expect(compact).toBeLessThan(whole * 0.72);
+    // 18,845 against 25,532 once P364's reach, from and complete are on the
+    // rows: compaction keeps them, since each answers a call.
+    expect(compact).toBeLessThan(whole * 0.75);
   });
 
   it('never hands verbose to the tool: a cut list pages with the call an agent would write', async () => {

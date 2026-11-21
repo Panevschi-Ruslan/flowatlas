@@ -24,6 +24,11 @@ export interface CompactNode {
    * under, where its subtree is written (P92). A walk expands each node once.
    */
   seenAt?: string;
+  /** Whether it runs, where it is reached from, how many ways in, and whether that walk was cut (P364, `ways-in.ts`). */
+  reach?: 'alive' | 'unreached' | 'dead' | 'unknown';
+  from?: string;
+  ways?: number;
+  walkCut?: true;
 }
 
 /** How one node was reached. */

@@ -78,6 +78,7 @@
     "task",
     "screen"
   ],
+  "complete": true,
   "next": [
     "dead({id: \"entry:orders:http:GET:/a/:param\"})"
   ]

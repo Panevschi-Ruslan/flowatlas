@@ -7,7 +7,9 @@
     "service": "orders",
     "observed": 2,
     "p95": 492,
-    "errorRate": 0
+    "errorRate": 0,
+    "reach": "alive",
+    "from": "GET /orders/:param"
   },
   "callers": [
     {
@@ -15,7 +17,9 @@
         "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
         "type": "method",
         "label": "OrdersController.findOne",
-        "loc": "src/orders/orders.controller.ts:25"
+        "loc": "src/orders/orders.controller.ts:25",
+        "reach": "alive",
+        "from": "GET /orders/:param"
       },
       "edge": {
         "type": "calls",
@@ -35,7 +39,8 @@
             "type": "entry",
             "label": "GET /orders/:param",
             "loc": "src/orders/orders.controller.ts:25",
-            "kind": "http"
+            "kind": "http",
+            "reach": "alive"
           },
           "edge": {
             "type": "handles",
@@ -55,7 +60,10 @@
                 "type": "http_out",
                 "label": "GET /orders/:param",
                 "loc": "src/invoices/invoices.service.ts:33",
-                "service": "billing"
+                "service": "billing",
+                "reach": "alive",
+                "from": "consumer invoice.requested",
+                "ways": 5
               },
               "edge": {
                 "type": "http_calls",
@@ -71,7 +79,10 @@
                     "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
                     "type": "method",
                     "label": "InvoicesService.create",
-                    "loc": "src/invoices/invoices.service.ts:30"
+                    "loc": "src/invoices/invoices.service.ts:30",
+                    "reach": "alive",
+                    "from": "consumer invoice.requested",
+                    "ways": 5
                   },
                   "edge": {
                     "type": "calls",
@@ -86,7 +97,10 @@
                         "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
                         "type": "method",
                         "label": "InvoicesConsumer.onInvoiceRequested",
-                        "loc": "src/invoices/invoices.consumer.ts:28"
+                        "loc": "src/invoices/invoices.consumer.ts:28",
+                        "reach": "alive",
+                        "from": "consumer invoice.requested",
+                        "ways": 2
                       },
                       "edge": {
                         "type": "calls",
@@ -103,7 +117,9 @@
                             "type": "consumer",
                             "label": "InvoicesConsumer.onInvoiceRequested",
                             "loc": "src/invoices/invoices.consumer.ts:28",
-                            "kind": "event"
+                            "kind": "event",
+                            "reach": "dead",
+                            "from": "event invoice.requested"
                           },
                           "edge": {
                             "type": "handles",
@@ -121,7 +137,8 @@
                             "type": "entry",
                             "label": "event invoice.requested",
                             "loc": "src/invoices/invoices.consumer.ts:28",
-                            "kind": "event"
+                            "kind": "event",
+                            "reach": "dead"
                           },
                           "edge": {
                             "type": "handles",
@@ -140,7 +157,10 @@
                         "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
                         "type": "method",
                         "label": "InvoicesConsumer.onOrderCreated",
-                        "loc": "src/invoices/invoices.consumer.ts:17"
+                        "loc": "src/invoices/invoices.consumer.ts:17",
+                        "reach": "alive",
+                        "from": "event order.created",
+                        "ways": 2
                       },
                       "edge": {
                         "type": "calls",
@@ -160,7 +180,10 @@
                             "type": "consumer",
                             "label": "InvoicesConsumer.onOrderCreated",
                             "loc": "src/invoices/invoices.consumer.ts:17",
-                            "kind": "event"
+                            "kind": "event",
+                            "reach": "alive",
+                            "from": "event order.created",
+                            "ways": 2
                           },
                           "edge": {
                             "type": "handles",
@@ -178,7 +201,8 @@
                             "type": "entry",
                             "label": "event order.created",
                             "loc": "src/invoices/invoices.consumer.ts:17",
-                            "kind": "event"
+                            "kind": "event",
+                            "reach": "alive"
                           },
                           "edge": {
                             "type": "handles",
@@ -200,7 +224,9 @@
                         "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
                         "type": "method",
                         "label": "InvoicesController.create",
-                        "loc": "src/invoices/invoices.controller.ts:15"
+                        "loc": "src/invoices/invoices.controller.ts:15",
+                        "reach": "alive",
+                        "from": "POST /invoices"
                       },
                       "edge": {
                         "type": "calls",
@@ -220,7 +246,8 @@
                             "type": "entry",
                             "label": "POST /invoices",
                             "loc": "src/invoices/invoices.controller.ts:15",
-                            "kind": "http"
+                            "kind": "http",
+                            "reach": "alive"
                           },
                           "edge": {
                             "type": "handles",
@@ -247,7 +274,9 @@
                 "type": "http_out",
                 "label": "GET /orders/:param",
                 "loc": "src/clients/orders.client.ts:33",
-                "service": "gateway"
+                "service": "gateway",
+                "reach": "alive",
+                "from": "GET /orders/:param"
               },
               "edge": {
                 "type": "http_calls",
@@ -264,7 +293,9 @@
                     "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
                     "type": "method",
                     "label": "OrdersClient.fetchOne",
-                    "loc": "src/clients/orders.client.ts:32"
+                    "loc": "src/clients/orders.client.ts:32",
+                    "reach": "alive",
+                    "from": "GET /orders/:param"
                   },
                   "edge": {
                     "type": "calls",
@@ -276,7 +307,9 @@
                         "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
                         "type": "method",
                         "label": "OrdersController.findOne",
-                        "loc": "src/orders/orders.controller.ts:30"
+                        "loc": "src/orders/orders.controller.ts:30",
+                        "reach": "alive",
+                        "from": "GET /orders/:param"
                       },
                       "edge": {
                         "type": "calls",
@@ -296,7 +329,8 @@
                             "type": "entry",
                             "label": "GET /orders/:param",
                             "loc": "src/orders/orders.controller.ts:30",
-                            "kind": "http"
+                            "kind": "http",
+                            "reach": "alive"
                           },
                           "edge": {
                             "type": "handles",
@@ -331,6 +365,10 @@
     "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
     "entry:billing:http:POST:/invoices",
     "entry:gateway:http:GET:/orders/:param"
+  ],
+  "complete": false,
+  "left": [
+    "depth: 5 callers past depth 6, from the frontier rows"
   ],
   "next": [
     "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\", depth: 12})",

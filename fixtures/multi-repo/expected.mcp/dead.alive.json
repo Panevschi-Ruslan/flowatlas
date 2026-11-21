@@ -10,7 +10,9 @@
     "callers": 1,
     "caller": "orders#src/orders/orders.controller.ts:OrdersController"
   },
+  "from": "GET /orders/:param",
+  "ways": 4,
   "next": [
-    "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService\"})"
+    "impact({symbol: \"orders#src/orders/orders.service.ts:OrdersService\"})"
   ]
 }

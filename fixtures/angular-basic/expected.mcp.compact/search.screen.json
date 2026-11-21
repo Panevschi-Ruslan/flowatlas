@@ -8,7 +8,8 @@
     "routes": [
       {
         "id": "entry:angular-basic:screen:/reports",
-        "loc": "src/app/app.routes.ts:26"
+        "loc": "src/app/app.routes.ts:26",
+        "reach": "unknown"
       }
     ],
     "classes": [
@@ -16,10 +17,14 @@
         "id": "angular-basic#src/app/reports.component.ts:ReportsComponent",
         "type": "ui_component",
         "line": 4,
-        "kind": "standalone"
+        "kind": "standalone",
+        "reach": "alive",
+        "from": "screen /reports",
+        "ways": 2
       }
     ]
   },
+  "complete": true,
   "next": [
     "get_flow({entry: \"entry:angular-basic:screen:/reports\"})",
     "describe_for_prompt({id: \"entry:angular-basic:screen:/reports\"})"

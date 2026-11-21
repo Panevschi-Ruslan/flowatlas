@@ -1,0 +1,61 @@
+{
+  "answers": [
+    {
+      "asked": "QueueScreen",
+      "query": "QueueScreen",
+      "counts": {
+        "classes": 1
+      },
+      "results": {
+        "classes": [
+          {
+            "id": "console#src/screens/QueueScreen.tsx:QueueScreen",
+            "type": "ui_component",
+            "label": "QueueScreen",
+            "loc": "src/screens/QueueScreen.tsx:12",
+            "service": "console",
+            "kind": "function",
+            "reach": "alive",
+            "from": "screen /queue"
+          }
+        ]
+      },
+      "complete": true
+    },
+    {
+      "asked": "TICKET_CLOSED",
+      "query": "TICKET_CLOSED",
+      "counts": {
+        "messages": 1
+      },
+      "results": {
+        "messages": [
+          {
+            "id": "channel:desk:*:events#TICKET_CLOSED",
+            "type": "message_type",
+            "label": "TICKET_CLOSED",
+            "channel": "desk:*:events",
+            "service": "desk-api",
+            "producers": [
+              "producer:desk-api#src/tickets/tickets.service.ts:19:11"
+            ],
+            "handlers": [
+              "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent"
+            ],
+            "sites": 2,
+            "reach": "alive",
+            "from": "POST /desks/:param/tickets/:param/close"
+          }
+        ]
+      },
+      "complete": true
+    }
+  ],
+  "complete": true,
+  "next": [
+    "impact({symbol: \"console#src/screens/QueueScreen.tsx:QueueScreen\"})",
+    "who_consumes({channel: \"channel:desk:*:events\", type: \"TICKET_CLOSED\"})",
+    "get_source({symbol: \"console#src/screens/QueueScreen.tsx:QueueScreen\"})",
+    "who_emits({channel: \"channel:desk:*:events\", type: \"TICKET_CLOSED\"})"
+  ]
+}

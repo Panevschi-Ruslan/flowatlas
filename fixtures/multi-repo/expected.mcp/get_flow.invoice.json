@@ -217,6 +217,10 @@
       "service": "orders"
     }
   ],
+  "complete": false,
+  "left": [
+    "depth: ≥1 more nodes past depth 8; raise depth"
+  ],
   "next": [
     "describe_for_prompt({id: \"entry:gateway:http:POST:/orders/:param/invoice\"})",
     "check_contract({from: \"http_out:gateway#src/clients/billing.client.ts:33:12\", to: \"entry:billing:http:POST:/invoices\"})",

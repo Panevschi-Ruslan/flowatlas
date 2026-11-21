@@ -199,6 +199,7 @@
       "state": "ok"
     }
   ],
+  "complete": true,
   "next": [
     "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
     "trace_for({entry: \"entry:gateway:http:GET:/orders/:param\"})",

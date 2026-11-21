@@ -23,18 +23,26 @@ import { acceptedSplitOf, messageTypeFacts, unselectedSaid, type AnchoredUnresol
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, truncate } from '../query/detail.js';
-import { hintsFor, MAX_NEXT, withNext, type Identified } from '../query/next.js';
+import { hintsFor, MAX_NEXT, withNext, withoutShown, type Identified, type RowShown } from '../query/next.js';
+import { reachReader, type ReachReader } from '../query/ways-in.js';
 import type { CompactNode } from '../query/types.js';
 import { rankMatches } from './entries.js';
 import {
+  answerEach,
+  answersOutput,
+  askedOf,
   bound,
   callOf,
   commonInput,
+  completeOf,
+  completeOutput,
   inService,
   nextOutput,
   pageInput,
+  reachOutput,
   READ_ONLY,
   serviceInput,
+  severalInput,
   withDb,
   type Bounded,
   type ToolContext,
@@ -375,8 +383,8 @@ const hintsOfHit = (hit: Hit): string[] => {
 
 /** What search answers: per kind, how many match in all and one page of them. */
 export const searchOutput = {
-  query: z.string(),
-  counts: z.record(z.string(), z.number()),
+  query: z.string().optional(),
+  counts: z.record(z.string(), z.number()).optional(),
   results: z.record(
     z.string(),
     z.array(
@@ -406,20 +414,27 @@ export const searchOutput = {
         producers: z.array(z.string()).optional(),
         handlers: z.array(z.string()).optional(),
         unselected: z.string().optional(),
+        ...reachOutput,
       }),
     ),
-  ),
+  ).optional(),
   truncated: z.string().optional(),
   nextOffset: z.number().optional(),
   note: z.string().optional(),
+  answers: answersOutput,
+  ...completeOutput,
   next: nextOutput,
 };
+
+/** The kinds whose rows are code `dead` judges, so each row says whether it runs (P364). */
+const REACHED_KINDS: ReadonlySet<SearchKind> = new Set(['routes', 'channels', 'messages', 'classes', 'fails']);
 
 export const runSearch = (
   db: GraphDb,
   input: { query: string; kinds?: readonly SearchKind[]; service?: string; limit: number; offset?: number },
   bounded: Bounded,
   accepted: AcceptedRead,
+  reader?: ReachReader,
 ): {
   results: Partial<Record<SearchKind, Hit[]>>;
   counts: Partial<Record<SearchKind, number>>;
@@ -437,13 +452,14 @@ export const runSearch = (
   for (const kind of kinds) {
     const found = FINDERS.get(kind)!({ db, text, service: input.service, limit: input.limit, offset, bounded, accepted });
     if (found.total === 0) continue;
-    results[kind] = found.rows;
+    results[kind] = reader === undefined || !REACHED_KINDS.has(kind) ? found.rows : found.rows.map((row) => reader.annotate(row));
     counts[kind] = found.total;
     const left = found.total - Math.min(offset, found.total) - found.rows.length;
     if (left > 0) more[kind] = left;
     if (found.rows[0] !== undefined) hints.push(...hintsOfHit(found.rows[0]));
   }
-  return { results, counts, more, next: [...new Set(hints)].slice(0, MAX_NEXT) };
+  const shown = Object.values(results).flat() as RowShown[];
+  return { results, counts, more, next: withoutShown([...new Set(hints)], shown).slice(0, MAX_NEXT) };
 };
 
 /** The defaults a hint for the next page leaves out. */
@@ -456,7 +472,8 @@ export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
       title: 'Search everything',
       description: 'One query over routes, channels, messages, tables, types, gaps, failures and classes.',
       inputSchema: {
-        query: z.string().min(1),
+        query: z.string().min(1).optional(),
+        queries: severalInput(),
         kinds: z.array(z.enum(SEARCH_KINDS)).optional(),
         limit: z.number().int().min(1).max(100).default(10).describe('rows per kind'),
         service: serviceInput,
@@ -468,51 +485,67 @@ export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
     },
     (input) =>
       withDb(ctx.handle, (db) => {
+        const asked = askedOf(input.query, input.queries);
+        if (asked.length === 0) return { error: 'ask with query or queries' };
         const bounded = bound(input);
         const accepted = readAccepted(ctx.handle.path);
         const limit = Math.min(input.limit, bounded.maxNodes);
-        const { results, counts, more, next } = runSearch(
-          db,
-          {
-            query: input.query,
-            ...(input.kinds === undefined ? {} : { kinds: input.kinds }),
-            ...(input.service === undefined ? {} : { service: input.service }),
-            limit,
-            offset: input.offset,
-          },
-          bounded,
-          accepted,
-        );
-        if (Object.keys(counts).length === 0) return { error: `nothing matches ${JSON.stringify(input.query)}` };
-        // An accepted.json that could not be read marks nothing accepted, and says so (P80).
-        const notes = [
-          ...(bounded.note === undefined ? [] : [bounded.note]),
-          ...(accepted.problem === undefined || counts.gaps === undefined ? [] : [`${describeAcceptedProblem(accepted.problem)}.`]),
-        ];
-        // One offset pages every kind; the next page asks again for the kinds that have more.
-        const cutKinds = Object.keys(more) as SearchKind[];
-        const nextOffset = input.offset + limit;
-        const paging =
-          cutKinds.length === 0
-            ? {}
-            : {
-                truncated: `${cutKinds.map((kind) => `${kind} ${more[kind]!} more`).join(', ')}; next page offset ${nextOffset}`,
-                nextOffset,
-              };
-        const page =
-          cutKinds.length === 0
-            ? []
-            : [
-                callOf(
-                  'search',
-                  { query: input.query, kinds: cutKinds, limit: input.limit, service: input.service, detail: input.detail, maxNodes: input.maxNodes, offset: nextOffset },
-                  SEARCH_DEFAULTS,
-                ),
-              ];
-        return withNext(
-          { query: input.query, counts, results, ...paging, ...(notes.length === 0 ? {} : { note: notes.join(' ') }) },
-          [...page, ...next].slice(0, MAX_NEXT),
-        );
+        // Whether each row runs and where it is reached from (P364), one reader for every query.
+        const reader = reachReader(db, ctx.handle, bounded.detail);
+        const one = (query: string): object => {
+          const { results, counts, more, next } = runSearch(
+            db,
+            {
+              query,
+              ...(input.kinds === undefined ? {} : { kinds: input.kinds }),
+              ...(input.service === undefined ? {} : { service: input.service }),
+              limit,
+              offset: input.offset,
+            },
+            bounded,
+            accepted,
+            reader,
+          );
+          if (Object.keys(counts).length === 0) return { error: `nothing matches ${JSON.stringify(query)}` };
+          // An accepted.json that could not be read marks nothing accepted, and says so (P80).
+          const notes = [
+            ...(bounded.note === undefined ? [] : [bounded.note]),
+            ...(accepted.problem === undefined || counts.gaps === undefined ? [] : [`${describeAcceptedProblem(accepted.problem)}.`]),
+          ];
+          // One offset pages every kind; the next page asks again for the kinds that have more.
+          const cutKinds = Object.keys(more) as SearchKind[];
+          const nextOffset = input.offset + limit;
+          const paging =
+            cutKinds.length === 0
+              ? {}
+              : {
+                  truncated: `${cutKinds.map((kind) => `${kind} ${more[kind]!} more`).join(', ')}; next page offset ${nextOffset}`,
+                  nextOffset,
+                };
+          const page =
+            cutKinds.length === 0
+              ? []
+              : [
+                  callOf(
+                    'search',
+                    { query: query, kinds: cutKinds, limit: input.limit, service: input.service, detail: input.detail, maxNodes: input.maxNodes, offset: nextOffset },
+                    SEARCH_DEFAULTS,
+                  ),
+                ];
+          return withNext(
+            {
+              query,
+              counts,
+              results,
+              ...paging,
+              ...completeOf([paging.truncated === undefined ? undefined : `page: ${paging.truncated}`, ...reader.left()]),
+              ...(notes.length === 0 ? {} : { note: notes.join(' ') }),
+            },
+            [...page, ...next].slice(0, MAX_NEXT),
+          );
+        };
+        if (asked.length === 1) return one(asked[0]!);
+        return answerEach('query', asked, one);
       }),
   );
 };

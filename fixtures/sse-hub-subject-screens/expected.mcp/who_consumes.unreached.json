@@ -16,17 +16,21 @@
       "kind": "sse",
       "selectedIn": "RenameWatcher.watch",
       "via": "if",
-      "unreached": "nothing injects or makes LegacyBoardFeed: no constructor is handed it, no inject() asks for it and no new builds it"
+      "unreached": "nothing injects or makes LegacyBoardFeed: no constructor is handed it, no inject() asks for it and no new builds it",
+      "reach": "dead",
+      "from": "POST /boards/:param/title (boards-api)",
+      "ways": 8
     }
   ],
   "total": 1,
   "type": "BOARD_RENAMED",
   "unselected": "no code that runs selects BOARD_RENAMED on board:*:events: only RenameWatcher.retitle selects it, and nothing injects or makes LegacyBoardFeed: no constructor is handed it, no inject() asks for it and no new builds it; 6 consumers choose other types (AlertsBadgeComponent.ngOnInit, ArchivePanelComponent.ngOnInit and 4 more)",
   "sureness": "sure",
+  "complete": true,
   "next": [
     "who_emits({channel: \"channel:board:*:events\", type: \"BOARD_RENAMED\"})",
     "who_consumes({channel: \"channel:board:*:events\"})",
-    "who_calls({symbol: \"consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.retitle\"})",
-    "impact({symbol: \"consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.retitle\"})"
+    "impact({symbol: \"consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.retitle\"})",
+    "get_source({symbol: \"consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.retitle\"})"
   ]
 }

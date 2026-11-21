@@ -12,7 +12,7 @@ import type { FlowNode } from '../query/types.js';
 import { nearNames } from './entries.js';
 import { MAX_NEXT, withNext, withTraceFor } from '../query/next.js';
 import { slimTree } from '../query/wire.js';
-import { bound, callOf, commonInput, READ_ONLY, withDb, type ToolContext } from './common.js';
+import { bound, callOf, commonInput, completeOf, READ_ONLY, withDb, type ToolContext } from './common.js';
 import { trafficDiffers } from './contract.js';
 
 /**
@@ -204,6 +204,12 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
             ...(flow.crossingsLeft === undefined ? {} : { crossingsLeft: flow.crossingsLeft }),
             // The pages that describe this flow (P120): a change here is one they must follow.
             ...withDocs(db, ctx.handle.path, ref.id),
+            // The whole flow, or what was cut or left unread on it (P364).
+            ...completeOf([
+              flow.truncated !== undefined && `${(flow.stoppedBy ?? []).join(', ') || 'cut'}: ${flow.truncated}`,
+              flow.unresolvedOnPath > 0 &&
+                `unread: ${flow.unresolvedOnPath} step${flow.unresolvedOnPath === 1 ? '' : 's'} on the path could not be followed`,
+            ]),
             ...(note === undefined ? {} : { note }),
           },
           withDrift(

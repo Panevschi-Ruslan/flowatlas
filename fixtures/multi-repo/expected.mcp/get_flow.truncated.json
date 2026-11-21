@@ -100,6 +100,10 @@
       "state": "ok"
     }
   ],
+  "complete": false,
+  "left": [
+    "maxNodes: 5 more nodes past maxNodes 5; raise maxNodes or ask get_flow on a child id"
+  ],
   "next": [
     "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
     "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})",

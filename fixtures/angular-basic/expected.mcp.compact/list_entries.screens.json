@@ -22,6 +22,7 @@
     }
   ],
   "total": 5,
+  "complete": true,
   "next": [
     "get_flow({entry: \"entry:angular-basic:screen:/\"})",
     "describe_for_prompt({id: \"entry:angular-basic:screen:/\"})"

@@ -1,0 +1,37 @@
+{
+  "answers": [
+    {
+      "asked": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+      "id": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+      "type": "consumer",
+      "kind": "sse",
+      "service": "console",
+      "loc": "src/live/useDeskEvents.ts:16",
+      "verdict": "alive",
+      "reason": "something publishes what it consumes",
+      "evidence": {
+        "via": "channel:desk:*:events"
+      },
+      "from": "screen /queue",
+      "ways": 2
+    },
+    {
+      "asked": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen",
+      "id": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen",
+      "type": "method",
+      "service": "desk-api",
+      "loc": "src/tickets/tickets.service.ts:22",
+      "verdict": "likely-dead",
+      "reason": "nothing calls it, though its class is used: a call through a receiver the reading could not type may",
+      "evidence": {
+        "classReached": true
+      },
+      "from": "none"
+    }
+  ],
+  "next": [
+    "impact({symbol: \"consumer:console#src/screens/QueueScreen.tsx:onQueueEvent\"})",
+    "get_source({symbol: \"desk-api#src/tickets/tickets.service.ts:TicketsService.reopen\"})",
+    "cant_follow({service: \"desk-api\"})"
+  ]
+}

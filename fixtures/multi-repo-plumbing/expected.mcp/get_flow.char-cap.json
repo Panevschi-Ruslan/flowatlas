@@ -156,6 +156,10 @@
       "service": "billing"
     }
   ],
+  "complete": false,
+  "left": [
+    "maxChars: 21 more nodes past about 3000 characters; raise maxChars or ask get_flow on a child id"
+  ],
   "next": [
     "describe_for_prompt({id: \"entry:gateway:http:POST:/orders/:param/invoice\"})",
     "get_flow({entry: \"entry:billing:http:POST:/invoices\"})",

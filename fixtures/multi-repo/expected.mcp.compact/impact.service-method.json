@@ -1,36 +1,44 @@
 {
   "target": {
     "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
-    "line": 25
+    "line": 25,
+    "reach": "alive"
   },
   "entries": [
     {
       "id": "entry:billing:event:invoice.requested",
-      "loc": "src/invoices/invoices.consumer.ts:28"
+      "loc": "src/invoices/invoices.consumer.ts:28",
+      "reach": "dead"
     },
     {
       "id": "entry:billing:event:order.created",
-      "loc": "src/invoices/invoices.consumer.ts:17"
+      "loc": "src/invoices/invoices.consumer.ts:17",
+      "reach": "alive"
     },
     {
       "id": "entry:billing:http:POST:/invoices",
-      "loc": "src/invoices/invoices.controller.ts:15"
+      "loc": "src/invoices/invoices.controller.ts:15",
+      "reach": "alive"
     },
     {
       "id": "entry:gateway:http:GET:/orders/:param",
-      "loc": "src/orders/orders.controller.ts:30"
+      "loc": "src/orders/orders.controller.ts:30",
+      "reach": "alive"
     },
     {
       "id": "entry:gateway:http:POST:/orders/:param/invoice",
-      "loc": "src/orders/orders.controller.ts:40"
+      "loc": "src/orders/orders.controller.ts:40",
+      "reach": "alive"
     },
     {
       "id": "entry:orders:http:GET:/orders/:param",
-      "loc": "src/orders/orders.controller.ts:25"
+      "loc": "src/orders/orders.controller.ts:25",
+      "reach": "alive"
     },
     {
       "id": "entry:orders:http:POST:/orders",
-      "loc": "src/orders/orders.controller.ts:31"
+      "loc": "src/orders/orders.controller.ts:31",
+      "reach": "dead"
     }
   ],
   "total": 7,
@@ -53,6 +61,7 @@
     "channel:invoice.requested",
     "channel:order.created"
   ],
+  "complete": true,
   "next": [
     "get_flow({entry: \"entry:billing:event:invoice.requested\"})",
     "describe_for_prompt({id: \"entry:billing:event:invoice.requested\"})"

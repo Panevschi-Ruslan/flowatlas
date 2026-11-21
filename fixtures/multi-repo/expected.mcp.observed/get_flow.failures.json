@@ -212,6 +212,7 @@
     ]
   },
   "unresolvedOnPath": 0,
+  "complete": true,
   "next": [
     "describe_for_prompt({id: \"entry:billing:http:POST:/invoices\"})",
     "trace_for({entry: \"entry:billing:http:POST:/invoices\"})",

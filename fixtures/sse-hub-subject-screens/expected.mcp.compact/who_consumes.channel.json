@@ -8,72 +8,114 @@
     {
       "id": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
       "line": 13,
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
       "line": 17,
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
       "line": 16,
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
       "line": 15,
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
       "line": 18,
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
       "line": 35,
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
       "line": 18,
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "dead",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
       "line": 28,
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
       "line": 8,
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "dead",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
       "loc": "src/worker.ts:15",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "GET /api/boards/:param/events",
+      "ways": 10
     },
     {
       "id": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
       "loc": "src/worker.ts:16",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "GET /api/boards/:param/events",
+      "ways": 10
     },
     {
       "id": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
       "loc": "src/worker.ts:17",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "GET /api/boards/:param/crew/stream",
+      "ways": 9
     },
     {
       "id": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
       "line": 23,
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
       "line": 13,
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards/:param/archive (boards-api)",
+      "ways": 3
     }
   ],
   "total": 14,
@@ -87,6 +129,7 @@
     "CARD_PINNED",
     "CREW_ASSIGNED"
   ],
+  "complete": true,
   "next": [
     "who_consumes({channel: \"channel:board:*:events\", type: \"BOARD_RENAMED\"})",
     "who_emits({channel: \"channel:board:*:events\"})"

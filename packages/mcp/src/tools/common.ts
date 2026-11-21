@@ -252,6 +252,67 @@ export const withDb = (
   }
 };
 
+/**
+ * Whether a list answer is the whole answer (P364): `complete: true` when it
+ * holds every row the graph has and nothing on the way was left unread;
+ * otherwise `complete: false` and `left`, each thing cut or unread in a few
+ * words. The cuts and notes each tool already says (`truncated`,
+ * `stoppedBy`, a gap at the top of a chain, a publish whose type was not
+ * read) are gathered here, so an agent reads one field to know whether to
+ * stop.
+ */
+export const completeOf = (left: ReadonlyArray<string | undefined | false>): { complete: boolean; left?: string[] } => {
+  const said = left.filter((item): item is string => typeof item === 'string' && item !== '');
+  return said.length === 0 ? { complete: true } : { complete: false, left: said };
+};
+
+/** How a page cut is said in `left`. */
+export const pageLeft = (total: number, shown: number, offset: number, nextOffset: number | undefined): string | undefined =>
+  nextOffset === undefined ? undefined : `page: ${total - Math.min(offset, total) - shown} more rows from offset ${nextOffset}`;
+
+/** The most inputs one call answers (P364): `ids`, `queries`, `symbols` or `types`. */
+export const MAX_ASKED = 20;
+
+/** A list of inputs asked together, beside the single one a tool takes; undescribed, as the instructions say it once. */
+export const severalInput = () => z.array(z.string()).min(1).max(MAX_ASKED).optional();
+
+/** The single input and the several, in order, without repeats; none when neither was given. */
+export const askedOf = (one: string | undefined, several: readonly string[] | undefined): string[] =>
+  [...new Set([...(one === undefined ? [] : [one]), ...(several ?? [])])];
+
+/**
+ * Several inputs answered in one answer (P364): each by the tool's own code
+ * in turn, bounded as a single one is, under `answers` with the input it
+ * answers as `asked` (a key no answer uses: get_type's has a `type`); the
+ * hints of all, the first of each first, in one `next`; and `complete`
+ * false where any answer is cut or left something unread.
+ */
+export const answerEach = (key: string, asked: readonly string[], run: (value: string) => object): object => {
+  const answers: Array<Record<string, unknown>> = [];
+  const hints: string[][] = [];
+  for (const value of asked) {
+    const { next, ...rest } = run(value) as { next?: string[] } & Record<string, unknown>;
+    answers.push({ asked: value, ...rest });
+    hints.push(next ?? []);
+  }
+  const next: string[] = [];
+  for (let at = 0; next.length < MAX_NEXT && hints.some((list) => list.length > at); at += 1) {
+    for (const list of hints) {
+      const hint = list[at];
+      if (hint !== undefined && !next.includes(hint) && next.length < MAX_NEXT) next.push(hint);
+    }
+  }
+  const incomplete = answers.filter((answer) => answer['complete'] === false).map((answer) => String(answer['asked']));
+  // Said only where the answers say it: a verdict is not a list to be whole.
+  const lists = answers.some((answer) => 'complete' in answer);
+  return {
+    answers,
+    ...(lists ? { complete: incomplete.length === 0 } : {}),
+    ...(incomplete.length === 0 ? {} : { left: incomplete.map((value) => `${key} ${value}: see its left`) }),
+    ...(next.length === 0 ? {} : { next }),
+  };
+};
+
 /*
  * Pieces of the output schemas (P93), shared so a row is declared once. A
  * schema says what a success answer holds; an error goes out with `isError`
@@ -260,6 +321,20 @@ export const withDb = (
 
 /** The calls that take the ids an answer returned. */
 export const nextOutput = z.array(z.string()).optional();
+
+/** Whether a row runs and where it is reached from (P364), as `reachReader` says it. */
+export const reachOutput = {
+  reach: z.enum(['alive', 'unreached', 'dead', 'unknown']).optional(),
+  from: z.string().optional(),
+  ways: z.number().optional(),
+  walkCut: z.literal(true).optional(),
+};
+
+/** Whether a list is the whole answer, and what was left if not (P364). */
+export const completeOutput = {
+  complete: z.boolean().optional(),
+  left: z.array(z.string()).optional(),
+};
 
 /**
  * A node as it goes over the wire (`CompactNode`). Named, so a schema that
@@ -277,9 +352,15 @@ export const nodeOutput = z
   })
   .meta({ id: 'Node' });
 
+/** A row of code with whether it runs and where it is reached from (P364). */
+export const reachedNodeOutput = nodeOutput.extend(reachOutput).meta({ id: 'ReachedNode' });
+
 /** What every cut list says beside its rows. */
 export const pageOutput = {
   total: z.number(),
   nextOffset: z.number().optional(),
   truncated: z.string().optional(),
 };
+
+/** Several inputs answered together: one answer per input, each the shape a single one has. */
+export const answersOutput = z.array(z.record(z.string(), z.unknown())).optional();

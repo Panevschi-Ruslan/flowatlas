@@ -1,0 +1,29 @@
+{
+  "channel": {
+    "id": "channel:desk:*:events",
+    "type": "channel",
+    "label": "desk:*:events",
+    "loc": "src/live/live.controller.ts:13",
+    "service": "desk-api"
+  },
+  "producers": [
+    {
+      "id": "producer:desk-api#src/tickets/tickets.service.ts:15:11",
+      "type": "producer",
+      "label": "message desk:*:events",
+      "loc": "src/tickets/tickets.service.ts:15",
+      "service": "desk-api",
+      "kind": "message",
+      "reach": "alive",
+      "from": "POST /desks/:param/tickets/:param/assign"
+    }
+  ],
+  "total": 1,
+  "type": "TICKET_ASSIGNED",
+  "complete": true,
+  "next": [
+    "who_consumes({channel: \"channel:desk:*:events\", type: \"TICKET_ASSIGNED\"})",
+    "impact({symbol: \"producer:desk-api#src/tickets/tickets.service.ts:15:11\"})",
+    "get_source({symbol: \"producer:desk-api#src/tickets/tickets.service.ts:15:11\"})"
+  ]
+}

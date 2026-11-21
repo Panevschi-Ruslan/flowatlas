@@ -13,13 +13,16 @@
       "label": "InvoicesConsumer.onOrderCreated",
       "loc": "src/invoices/invoices.consumer.ts:17",
       "service": "billing",
-      "kind": "event"
+      "kind": "event",
+      "reach": "alive",
+      "from": "event order.created",
+      "ways": 2
     }
   ],
   "total": 1,
+  "complete": true,
   "next": [
     "who_emits({channel: \"channel:order.created\"})",
-    "who_calls({symbol: \"consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated\"})",
     "impact({symbol: \"consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated\"})",
     "get_source({symbol: \"consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated\"})"
   ]

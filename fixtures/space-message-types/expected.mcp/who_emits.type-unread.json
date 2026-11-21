@@ -20,6 +20,10 @@
       "kind": "event"
     }
   ],
+  "complete": false,
+  "left": [
+    "unread: 1 publish on space:*:events sends a type not read; any may be DOC_ARCHIVED"
+  ],
   "next": [
     "who_consumes({channel: \"channel:space:*:events\", type: \"DOC_ARCHIVED\"})"
   ]

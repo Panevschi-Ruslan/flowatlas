@@ -1,0 +1,19 @@
+{
+  "services": [
+    {
+      "name": "desk-api",
+      "repo": "./desk-api",
+      "type": "nestjs"
+    },
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "react",
+      "apiBaseEnv": ["VITE_DESK_URL"],
+      "apiTarget": {
+        "VITE_DESK_URL": "desk-api"
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

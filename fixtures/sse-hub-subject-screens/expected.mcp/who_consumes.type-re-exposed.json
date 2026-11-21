@@ -15,7 +15,10 @@
       "service": "admin",
       "kind": "sse",
       "selectedIn": "BoardPageComponent.ngOnInit",
-      "via": "filter"
+      "via": "filter",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.append",
@@ -25,14 +28,17 @@
       "service": "admin",
       "kind": "sse",
       "selectedIn": "CardTimelineComponent.ngOnInit",
-      "via": "if"
+      "via": "if",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     }
   ],
   "total": 2,
   "type": "CARD_ADDED",
+  "complete": true,
   "next": [
     "who_emits({channel: \"channel:board:*:events\", type: \"CARD_ADDED\"})",
-    "who_calls({symbol: \"consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load\"})",
     "impact({symbol: \"consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load\"})",
     "get_source({symbol: \"consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load\"})"
   ]

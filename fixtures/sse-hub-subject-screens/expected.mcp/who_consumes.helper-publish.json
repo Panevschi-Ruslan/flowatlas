@@ -15,14 +15,17 @@
       "service": "orders-worker",
       "kind": "event",
       "selectedIn": "OrderEventsController.receive",
-      "via": "switch"
+      "via": "switch",
+      "reach": "alive",
+      "from": "POST /events/orders",
+      "ways": 4
     }
   ],
   "total": 1,
   "type": "SCHEDULED_ALERT",
+  "complete": true,
   "next": [
     "who_emits({channel: \"channel:board:*:orders\", type: \"SCHEDULED_ALERT\"})",
-    "who_calls({symbol: \"consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.handleScheduledAlert\"})",
     "impact({symbol: \"consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.handleScheduledAlert\"})",
     "get_source({symbol: \"consumer:orders-worker#src/events/order-events.controller.ts:OrderEventsController.handleScheduledAlert\"})"
   ]

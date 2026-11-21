@@ -12,7 +12,9 @@
     ],
     "links": 1
   },
+  "from": "screen /settings",
+  "ways": 2,
   "next": [
-    "who_calls({symbol: \"angular-basic#src/app/settings.component.ts:SettingsComponent\"})"
+    "impact({symbol: \"angular-basic#src/app/settings.component.ts:SettingsComponent\"})"
   ]
 }

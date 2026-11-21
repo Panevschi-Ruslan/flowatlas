@@ -11,6 +11,7 @@
   "type": "CARD_COMMENTED",
   "unselected": "no code that runs selects CARD_COMMENTED on board:*:events: 6 consumers choose other types (AlertsBadgeComponent.ngOnInit, ArchivePanelComponent.ngOnInit and 4 more)",
   "sureness": "sure",
+  "complete": true,
   "next": [
     "who_emits({channel: \"channel:board:*:events\", type: \"CARD_COMMENTED\"})",
     "who_consumes({channel: \"channel:board:*:events\"})"

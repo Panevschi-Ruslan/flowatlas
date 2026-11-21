@@ -10,27 +10,37 @@
       "line": 29,
       "kind": "sse",
       "selectedIn": "BoardPageComponent.ngOnInit",
-      "via": "filter"
+      "via": "filter",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
       "line": 32,
       "kind": "sse",
       "selectedIn": "CardTimelineComponent.ngOnInit",
-      "via": "if"
+      "via": "if",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards/:param/move (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
       "line": 13,
       "kind": "sse",
-      "via": "if"
+      "via": "if",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards/:param/archive (boards-api)",
+      "ways": 3
     }
   ],
   "total": 3,
   "channelUsed": "channel:board:*:events",
   "type": "CARD_MOVED",
+  "complete": true,
   "next": [
     "who_emits({channel: \"channel:board:*:events\", type: \"CARD_MOVED\"})",
-    "who_calls({symbol: \"consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load\"})"
+    "impact({symbol: \"consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load\"})"
   ]
 }

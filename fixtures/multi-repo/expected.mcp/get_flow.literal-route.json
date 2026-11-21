@@ -72,6 +72,7 @@
     "entry:orders:http:GET:/orders/:param"
   ],
   "unresolvedOnPath": 0,
+  "complete": true,
   "next": [
     "describe_for_prompt({id: \"entry:orders:http:GET:/orders/latest\"})",
     "impact({symbol: \"entry:orders:http:GET:/orders/latest\"})",

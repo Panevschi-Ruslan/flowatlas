@@ -13,7 +13,10 @@
       "label": "AlertsBadgeComponent.ngOnInit",
       "loc": "src/app/boards/alerts-badge.component.ts:13",
       "service": "admin",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
@@ -21,7 +24,10 @@
       "label": "ArchivePanelComponent.ngOnInit",
       "loc": "src/app/boards/archive-panel.component.ts:17",
       "service": "admin",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
@@ -29,7 +35,10 @@
       "label": "BoardPageComponent.ngOnInit",
       "loc": "src/app/boards/board-page.component.ts:16",
       "service": "admin",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
@@ -37,7 +46,10 @@
       "label": "CardTimelineComponent.ngOnInit",
       "loc": "src/app/boards/card-timeline.component.ts:15",
       "service": "admin",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
@@ -45,7 +57,10 @@
       "label": "CrewPanelComponent.ngOnInit",
       "loc": "src/app/boards/crew-panel.component.ts:18",
       "service": "admin",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
@@ -53,7 +68,10 @@
       "label": "BoardStreamService.openStream",
       "loc": "src/app/live/board-stream.service.ts:35",
       "service": "admin",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
@@ -61,7 +79,10 @@
       "label": "LegacyBoardFeed.open",
       "loc": "src/app/live/legacy-board-feed.service.ts:18",
       "service": "admin",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "dead",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
@@ -69,7 +90,10 @@
       "label": "LiveStream.open",
       "loc": "src/app/live/live-stream.ts:28",
       "service": "admin",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
@@ -77,7 +101,10 @@
       "label": "RenameWatcher.watch",
       "loc": "src/app/live/rename-watcher.ts:8",
       "service": "admin",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "dead",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
@@ -85,7 +112,10 @@
       "label": "GET /api/boards/:param/events",
       "loc": "src/worker.ts:15",
       "service": "boards-api",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "GET /api/boards/:param/events",
+      "ways": 10
     },
     {
       "id": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
@@ -93,7 +123,10 @@
       "label": "GET /api/boards/:param/stream",
       "loc": "src/worker.ts:16",
       "service": "boards-api",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "GET /api/boards/:param/events",
+      "ways": 10
     },
     {
       "id": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
@@ -101,7 +134,10 @@
       "label": "crewStream",
       "loc": "src/worker.ts:17",
       "service": "boards-api",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "GET /api/boards/:param/crew/stream",
+      "ways": 9
     },
     {
       "id": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
@@ -109,7 +145,10 @@
       "label": "BoardFeed.connect",
       "loc": "src/live/board-feed.ts:23",
       "service": "web",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
     },
     {
       "id": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
@@ -117,7 +156,10 @@
       "label": "BoardScreen",
       "loc": "src/screens/BoardScreen.tsx:13",
       "service": "web",
-      "kind": "sse"
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards/:param/archive (boards-api)",
+      "ways": 3
     }
   ],
   "total": 14,
@@ -131,10 +173,11 @@
     "CARD_PINNED",
     "CREW_ASSIGNED"
   ],
+  "complete": true,
   "next": [
     "who_consumes({channel: \"channel:board:*:events\", type: \"BOARD_RENAMED\"})",
     "who_emits({channel: \"channel:board:*:events\"})",
-    "who_calls({symbol: \"consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit\"})",
-    "impact({symbol: \"consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit\"})"
+    "impact({symbol: \"consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit\"})",
+    "get_source({symbol: \"consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit\"})"
   ]
 }

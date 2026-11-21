@@ -11,43 +11,53 @@
     "routes": [
       {
         "id": "entry:orders:http:POST:/orders",
-        "loc": "src/orders/orders.controller.ts:31"
+        "loc": "src/orders/orders.controller.ts:31",
+        "reach": "dead"
       },
       {
         "id": "entry:gateway:http:POST:/orders/pay",
-        "loc": "src/orders/orders.controller.ts:45"
+        "loc": "src/orders/orders.controller.ts:45",
+        "reach": "dead"
       },
       {
         "id": "entry:gateway:http:GET:/orders/:param",
-        "loc": "src/orders/orders.controller.ts:30"
+        "loc": "src/orders/orders.controller.ts:30",
+        "reach": "alive"
       },
       {
         "id": "entry:orders:http:GET:/orders/:param",
-        "loc": "src/orders/orders.controller.ts:25"
+        "loc": "src/orders/orders.controller.ts:25",
+        "reach": "alive"
       },
       {
         "id": "entry:orders:http:GET:/orders/latest",
-        "loc": "src/orders/orders.controller.ts:19"
+        "loc": "src/orders/orders.controller.ts:19",
+        "reach": "unreached"
       },
       {
         "id": "entry:gateway:http:POST:/orders/charge",
-        "loc": "src/orders/orders.controller.ts:50"
+        "loc": "src/orders/orders.controller.ts:50",
+        "reach": "dead"
       },
       {
         "id": "entry:gateway:http:POST:/orders/:param/ship",
-        "loc": "src/orders/orders.controller.ts:60"
+        "loc": "src/orders/orders.controller.ts:60",
+        "reach": "alive"
       },
       {
         "id": "entry:gateway:http:POST:/orders/:param/cancel",
-        "loc": "src/orders/orders.controller.ts:35"
+        "loc": "src/orders/orders.controller.ts:35",
+        "reach": "unknown"
       },
       {
         "id": "entry:gateway:http:POST:/orders/:param/refund",
-        "loc": "src/orders/orders.controller.ts:65"
+        "loc": "src/orders/orders.controller.ts:65",
+        "reach": "alive"
       },
       {
         "id": "entry:gateway:http:POST:/orders/:param/resume",
-        "loc": "src/orders/orders.controller.ts:71"
+        "loc": "src/orders/orders.controller.ts:71",
+        "reach": "alive"
       }
     ],
     "tables": [
@@ -138,31 +148,45 @@
         "id": "gateway#src/clients/orders.client.ts:OrdersClient",
         "type": "provider",
         "line": 14,
-        "kind": "injectable"
+        "kind": "injectable",
+        "reach": "alive",
+        "from": "GET /orders/:param",
+        "ways": 5
       },
       {
         "id": "orders#src/orders/orders.service.ts:OrdersService",
         "type": "provider",
         "line": 11,
-        "kind": "injectable"
+        "kind": "injectable",
+        "reach": "alive",
+        "from": "GET /orders/:param",
+        "ways": 4
       },
       {
         "id": "gateway#src/orders/orders.controller.ts:OrdersController",
         "type": "provider",
         "line": 22,
-        "kind": "controller"
+        "kind": "controller",
+        "reach": "alive",
+        "from": "GET /orders/:param",
+        "ways": 8
       },
       {
         "id": "orders#src/orders/orders.controller.ts:OrdersController",
         "type": "provider",
         "line": 8,
-        "kind": "controller"
+        "kind": "controller",
+        "reach": "alive",
+        "from": "GET /orders/:param",
+        "ways": 4
       },
       {
         "id": "web#src/app/orders-api.service.ts:OrdersApiService",
         "type": "provider",
         "line": 15,
-        "kind": "injectable"
+        "kind": "injectable",
+        "reach": "unreached",
+        "from": "none"
       },
       {
         "id": "orders#src/app.module.ts:AppModule",
@@ -173,12 +197,16 @@
       {
         "id": "orders#node_modules/typeorm:Repository",
         "type": "provider",
-        "kind": "external"
+        "kind": "external",
+        "reach": "unknown",
+        "from": "none"
       },
       {
         "id": "orders#node_modules/@nestjs/microservices:ClientProxy",
         "type": "provider",
-        "kind": "external"
+        "kind": "external",
+        "reach": "unknown",
+        "from": "none"
       },
       {
         "id": "orders#node_modules/@nestjs/microservices:ClientsModule",
@@ -189,12 +217,18 @@
         "id": "orders#src/aliases/legacy-aliases.controller.ts:LegacyAliasesController",
         "type": "provider",
         "line": 16,
-        "kind": "controller"
+        "kind": "controller",
+        "reach": "dead",
+        "from": "GET /a/:param"
       }
     ]
   },
   "truncated": "routes 3 more, classes 1 more; next page offset 10",
   "nextOffset": 10,
+  "complete": false,
+  "left": [
+    "page: routes 3 more, classes 1 more; next page offset 10"
+  ],
   "next": [
     "search({query: \"orders\", kinds: [\"routes\",\"classes\"], offset: 10})"
   ]

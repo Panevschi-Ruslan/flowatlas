@@ -15,7 +15,9 @@
       "service": "notify-worker",
       "kind": "event",
       "selectedIn": "AuditTrail.record",
-      "via": "map"
+      "via": "map",
+      "reach": "alive",
+      "from": "POST /spaces/:param/members (docs-api)"
     },
     {
       "id": "consumer:notify-worker#src/handlers/notices.service.ts:Notices.digest",
@@ -25,7 +27,10 @@
       "service": "notify-worker",
       "kind": "event",
       "selectedIn": "SpaceEventsDispatcher.dispatch",
-      "via": "switch"
+      "via": "switch",
+      "reach": "alive",
+      "from": "event space:*:events",
+      "ways": 6
     },
     {
       "id": "consumer:notify-worker#src/handlers/welcome.handlers.ts:WelcomeHandlers.greet",
@@ -35,15 +40,17 @@
       "service": "notify-worker",
       "kind": "event",
       "selectedIn": "RegistryDispatcher.route",
-      "via": "decorator"
+      "via": "decorator",
+      "reach": "alive",
+      "from": "POST /spaces/:param/members (docs-api)"
     }
   ],
   "total": 3,
   "channelUsed": "channel:space:*:events",
   "type": "MEMBER_JOINED",
+  "complete": true,
   "next": [
     "who_emits({channel: \"channel:space:*:events\", type: \"MEMBER_JOINED\"})",
-    "who_calls({symbol: \"consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordJoin\"})",
     "impact({symbol: \"consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordJoin\"})",
     "get_source({symbol: \"consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordJoin\"})"
   ]

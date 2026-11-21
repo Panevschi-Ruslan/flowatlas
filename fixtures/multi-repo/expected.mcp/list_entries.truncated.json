@@ -28,6 +28,10 @@
   "total": 17,
   "truncated": "14 more; next page offset 3",
   "nextOffset": 3,
+  "complete": false,
+  "left": [
+    "page: 14 more rows from offset 3"
+  ],
   "next": [
     "list_entries({maxNodes: 3, offset: 3})",
     "get_flow({entry: \"entry:billing:event:invoice.requested\"})",

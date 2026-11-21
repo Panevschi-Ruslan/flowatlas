@@ -15,15 +15,18 @@
       "service": "admin",
       "kind": "sse",
       "selectedIn": "CrewPanelComponent.ngOnInit",
-      "via": "if"
+      "via": "if",
+      "reach": "alive",
+      "from": "POST /boards/:param/crews/:param (boards-api)",
+      "ways": 8
     }
   ],
   "total": 1,
   "channelUsed": "channel:crew:*:shifts",
   "type": "CREW_ASSIGNED",
+  "complete": true,
   "next": [
     "who_emits({channel: \"channel:crew:*:shifts\", type: \"CREW_ASSIGNED\"})",
-    "who_calls({symbol: \"consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.scheduleRefresh\"})",
     "impact({symbol: \"consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.scheduleRefresh\"})",
     "get_source({symbol: \"consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.scheduleRefresh\"})"
   ]

@@ -2,12 +2,15 @@
   "matches": [
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
-      "line": 32
+      "line": 32,
+      "reach": "alive",
+      "from": "GET /orders/:param"
     }
   ],
   "total": 1,
+  "complete": true,
   "next": [
-    "who_calls({symbol: \"gateway#src/clients/orders.client.ts:OrdersClient.fetchOne\"})",
-    "impact({symbol: \"gateway#src/clients/orders.client.ts:OrdersClient.fetchOne\"})"
+    "impact({symbol: \"gateway#src/clients/orders.client.ts:OrdersClient.fetchOne\"})",
+    "get_source({symbol: \"gateway#src/clients/orders.client.ts:OrdersClient.fetchOne\"})"
   ]
 }

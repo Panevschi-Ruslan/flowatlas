@@ -42,6 +42,7 @@
     }
   ],
   "total": 5,
+  "complete": true,
   "next": [
     "get_flow({entry: \"entry:orders:http:GET:/a/:param\"})",
     "describe_for_prompt({id: \"entry:orders:http:GET:/a/:param\"})",

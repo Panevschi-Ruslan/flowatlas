@@ -16,17 +16,24 @@
       "kind": "event",
       "selectedIn": "LegacyDigest.onEvent",
       "via": "if",
-      "unreached": "nothing builds LegacyDigest: no module registers it and nothing injects it"
+      "unreached": "nothing builds LegacyDigest: no module registers it and nothing injects it",
+      "reach": "dead",
+      "from": "event space:*:events",
+      "ways": 6
     }
   ],
   "total": 1,
   "type": "QUOTA_WARNING",
   "unselected": "no code that runs selects QUOTA_WARNING on space:*:events: only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types (ActivityFeed.onMessage, AuditTrail.record and 3 more); StreamRelay.forward passes every type on without choosing, and what takes them past it is not read",
   "sureness": "unsure",
+  "complete": false,
+  "left": [
+    "unsure: no code that runs selects QUOTA_WARNING on space:*:events: only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types (ActivityFeed.onMessage, AuditTrail.record and 3 more); StreamRelay.forward passes every type on without choosing, and what takes them past it is not read"
+  ],
   "next": [
     "who_emits({channel: \"channel:space:*:events\", type: \"QUOTA_WARNING\"})",
     "who_consumes({channel: \"channel:space:*:events\"})",
-    "who_calls({symbol: \"consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.mailQuota\"})",
-    "impact({symbol: \"consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.mailQuota\"})"
+    "impact({symbol: \"consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.mailQuota\"})",
+    "get_source({symbol: \"consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.mailQuota\"})"
   ]
 }

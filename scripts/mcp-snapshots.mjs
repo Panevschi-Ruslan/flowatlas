@@ -224,6 +224,26 @@ const SCREEN_COMPACT_CASES = [
 ];
 
 /**
+ * Answers that finish in one call (P364): each row of code with whether it
+ * runs and the nearest way in (a screen for a handler the router shows, none
+ * for one no way in reaches), each list saying whether it is complete and what
+ * was left if not, several inputs in one call, and `next` without a call a
+ * row already answers.
+ */
+const SCREEN_REACH_CASES = [
+  ['who_consumes.type-screens', 'who_consumes', { channel: 'desk:*:events', type: 'TICKET_ASSIGNED' }],
+  ['who_consumes.type-unreached', 'who_consumes', { channel: 'desk:*:events', type: 'TICKET_REOPENED' }],
+  ['who_emits.type-route', 'who_emits', { channel: 'desk:*:events', type: 'TICKET_ASSIGNED' }],
+  ['who_calls.depth-cut', 'who_calls', { symbol: 'desk-api#src/tickets/tickets.service.ts:TicketsService.assign', depth: 1 }],
+  ['impact.reach', 'impact', { symbol: 'desk-api#src/tickets/tickets.service.ts:TicketsService.close' }],
+  ['dead.several', 'dead', { ids: ['consumer:console#src/screens/QueueScreen.tsx:onQueueEvent', 'desk-api#src/tickets/tickets.service.ts:TicketsService.reopen'] }],
+  ['find_symbol.several', 'find_symbol', { queries: ['onTicketEvent', 'reopen'] }],
+  ['search.several', 'search', { queries: ['QueueScreen', 'TICKET_CLOSED'], kinds: ['classes', 'messages'] }],
+  ['get_type.several', 'get_type', { types: ['DeskEvent', 'NoSuchType'] }],
+  ['list_entries.page-left', 'list_entries', { maxNodes: 2 }],
+];
+
+/**
  * Loops that run a query per item (P89): searched busiest first, each saying
  * how sure it is, and written into the prompt with the ways in that reach it.
  */
@@ -554,6 +574,11 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'sse-hub-subject-screens'),
     outDir: join(root, 'fixtures', 'sse-hub-subject-screens', 'expected.mcp'),
     cases: HUB_SUBJECT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'helpdesk-screen-reach'),
+    outDir: join(root, 'fixtures', 'helpdesk-screen-reach', 'expected.mcp'),
+    cases: SCREEN_REACH_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

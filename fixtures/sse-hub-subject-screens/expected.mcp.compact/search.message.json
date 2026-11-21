@@ -18,10 +18,13 @@
           "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
           "consumer:web#src/screens/BoardScreen.tsx:BoardScreen"
         ],
-        "sites": 4
+        "sites": 4,
+        "reach": "alive",
+        "from": "POST /boards/:param/cards/:param/move"
       }
     ]
   },
+  "complete": true,
   "next": [
     "who_consumes({channel: \"channel:board:*:events\", type: \"CARD_MOVED\"})",
     "who_emits({channel: \"channel:board:*:events\", type: \"CARD_MOVED\"})"

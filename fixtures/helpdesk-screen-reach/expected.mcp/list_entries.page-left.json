@@ -1,0 +1,33 @@
+{
+  "entries": [
+    {
+      "id": "entry:console:screen:/queue",
+      "type": "entry",
+      "label": "/queue",
+      "loc": "src/App.tsx:10",
+      "service": "console",
+      "kind": "screen"
+    },
+    {
+      "id": "entry:console:screen:/tickets/:param",
+      "type": "entry",
+      "label": "/tickets/:param",
+      "loc": "src/App.tsx:11",
+      "service": "console",
+      "kind": "screen"
+    }
+  ],
+  "total": 6,
+  "truncated": "4 more; next page offset 2",
+  "nextOffset": 2,
+  "complete": false,
+  "left": [
+    "page: 4 more rows from offset 2"
+  ],
+  "next": [
+    "list_entries({maxNodes: 2, offset: 2})",
+    "get_flow({entry: \"entry:console:screen:/queue\"})",
+    "describe_for_prompt({id: \"entry:console:screen:/queue\"})",
+    "impact({symbol: \"entry:console:screen:/queue\"})"
+  ]
+}

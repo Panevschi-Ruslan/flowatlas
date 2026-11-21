@@ -22,6 +22,7 @@
       }
     ]
   },
+  "complete": true,
   "next": [
     "describe_for_prompt({id: \"gap:gateway|src/checkout.controller.ts|unknown-base-url-env\"})",
     "get_source({symbol: \"http_out:gateway#src/checkout.controller.ts:12:26\"})",

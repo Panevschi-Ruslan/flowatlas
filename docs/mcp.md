@@ -331,6 +331,61 @@ deeper, each row's `loc` and `label` were longer, and the share left out is
 larger. `expected.mcp.compact` beside three fixtures holds compact answers
 beside the whole ones in `expected.mcp`.
 
+#### Answers that finish in one call (P364)
+
+An answer says what an assistant would otherwise check row by row, so the
+question is answered in the call that asked it.
+
+- **Whether a row runs, and where it is reached from.** Each row naming code
+  in `who_calls` (the target and every caller), `who_consumes`, `who_emits`,
+  `impact` (the target and each way in), `search` (routes, channels, message
+  types, classes, failures) and `find_symbol` carries, at `detail` 1 and up:
+  - `reach`: the verdict `dead` gives, by the same functions (one judge per
+    answer, which reads what every verdict needs of the graph once):
+    `alive`, `dead`, `unknown`, or `unreached` - `dead`'s `likely-dead`, or
+    `alive` where the walk below met no way in (something calls it, nothing a
+    way in reaches does). A publish or a request, which `dead` does not
+    judge, takes the liveliest verdict of the code it is written in.
+  - `from`: the nearest way in, short - `screen /queue`, `GET /orders/:param`,
+    `cron nightly`, `consumer tenant:*:events` (a handler whose channel nothing
+    read publishes to), with `(service)` after it when it is another
+    service's - or `none`. A walk back from the row finds the first ways in on
+    each path (it does not walk past one), the row's own service first, then
+    the nearest; besides the edges every caller walk follows, a consumer runs
+    in its handler, a component's method and a handler's file where the
+    component is shown, and a handler's class where it is injected. A
+    consumer that chooses by type is walked through the types it selects, not
+    every publish of its channel. `ways` counts the ways in where there are
+    several. A way in's own row has no `from`.
+  - The walk reads at most 300 nodes per row and 20,000 per answer, each node
+    and its edges read from the database once per answer, and at most 400
+    rows are judged: `walkCut: true` says a row's walk stopped at its bound
+    (`ways` is then a floor, and no `from` means none was met within it); rows
+    past the answer's bound say nothing, and `left` says how many.
+  `dead({id})` carries `from` and `ways` the same way.
+- **Several inputs in one call.** `dead` takes `ids`, `find_symbol` and
+  `search` take `queries`, `get_type` takes `types` and `who_calls` takes
+  `symbols`, beside the single form, at most 20, the single one first and
+  repeats once. Each is answered by the same code in turn, bounded as one is,
+  under `answers`, each with the input it answers as `asked`; `next` holds the
+  first hints of each.
+- **Whether a list is the whole answer.** `who_calls`, `impact`,
+  `who_consumes`, `who_emits`, `search`, `find_symbol`, `list_entries`,
+  `dead` (its rows), `get_flow` and `get_type` say `complete: true` when they
+  hold every row the graph has and nothing on the way was left unread;
+  otherwise `complete: false` and `left`, each thing cut or unread in a few
+  words: `page: 4 more rows from offset 2`, `depth: 3 callers past depth 3,
+  from the frontier rows`, `maxNodes: …`, `walk: stopped at 4000 nodes`,
+  `gaps: 2 unread in its file, any may call it`, `unread: 2 publishes on
+  tenant:*:events send a type not read; any may be ORDER_READY`, `unsure: no
+  code that runs selects …`, `unread: 3 steps on the path could not be
+  followed`. Several answers are `complete` only when each is. An answer that
+  says `complete: true` needs no grep to confirm it.
+- **`next` names only calls that add something.** No `dead` on a row that
+  shows `reach`, no `who_calls` or `search` for a row that shows `from`; the
+  call that pages or walks on from a cut stays first. `dead` on a node with
+  several ways in suggests `impact`, which lists them all.
+
 ### Ids, `next`, and where to begin
 
 Every row any tool returns carries an `id`, and every other tool takes that id

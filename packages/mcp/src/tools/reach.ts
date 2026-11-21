@@ -6,20 +6,26 @@ import { projectDetail, projectEdge, truncate } from '../query/detail.js';
 import { isResolved, resolveSymbol, type EntryRef } from '../query/entry-ref.js';
 import { REVERSE_EDGES, walkBack } from '../query/flow.js';
 import { truncationMessage, type FlowNode, type WalkLimit } from '../query/types.js';
-import { MAX_NEXT, nextFor, withNext } from '../query/next.js';
+import { MAX_NEXT, nextFor, withNext, withoutShown, type RowShown } from '../query/next.js';
+import { annotateTree, reachReader, type ReachReader } from '../query/ways-in.js';
 import { figuresOf, loadObservedCounts, markObserved, nodeAmbiguous, nodeRow } from '../query/observed.js';
 import { slimForest } from '../query/wire.js';
 import { withDocs } from '../query/docs.js';
 import {
+  answerEach,
+  askedOf,
   bound,
   callOf,
   commonInput,
   COMMON_DEFAULTS,
+  completeOf,
   inService,
   pagedNext,
   pageInput,
+  pageLeft,
   READ_ONLY,
   serviceInput,
+  severalInput,
   withDb,
   type ToolContext,
 } from './common.js';
@@ -233,7 +239,115 @@ const findFirst = (nodes: readonly FlowNode[], test: (item: FlowNode) => boolean
   return undefined;
 };
 
+/** Every row of a tree, for what `next` need not ask again (P364). */
+const rowsOf = (nodes: readonly FlowNode[]): RowShown[] => {
+  const rows: RowShown[] = [];
+  const queue = [...nodes];
+  while (queue.length > 0) {
+    const item = queue.shift()!;
+    rows.push(item.node);
+    queue.push(...item.children);
+  }
+  return rows;
+};
+
+/** How many rows of a tree are the top of a chain in a file with gaps: an unread call there may be their caller. */
+const topsWithGaps = (nodes: readonly FlowNode[]): number =>
+  nodes.reduce((sum, item) => sum + (item.topOfChain === true && (item.gapsInFile ?? 0) > 0 ? 1 : 0) + topsWithGaps(item.children), 0);
+
+/** What who_calls was asked, less the symbol, which each answer of several takes in turn. */
+interface WhoCallsAsked {
+  depth: number;
+  service?: string | undefined;
+  detail: number;
+  maxNodes: number;
+}
+
 export const registerReach = (server: McpServer, ctx: ToolContext): void => {
+  /** One symbol's callers (who_calls), with each row's reach (P364). */
+  const whoCallsOne = (db: GraphDb, input: WhoCallsAsked, symbol: string, reader: ReachReader): object => {
+    const { detail, maxNodes, note } = bound(input);
+    const defaults = { ...COMMON_DEFAULTS, depth: DEFAULT_CALLER_DEPTH };
+    const found = resolveSymbol(db, symbol);
+    if (!isResolved(found)) {
+      return candidatesAnswer(found, { symbol }, detail, (id) =>
+        callOf('who_calls', { symbol: id, depth: input.depth, service: input.service }, defaults),
+      );
+    }
+    const target = found.node;
+
+    const walked = callersOf(db, target, input.depth, maxNodes, detail);
+    const callers = keepService(db, walked.callers, input.service);
+    const firstEntry = findFirst(callers, (item) => item.node.type === 'entry');
+    const counts = loadObservedCounts(ctx.handle.path);
+    if (counts !== undefined) markObserved(counts, target.id, callers, 'backward');
+    const seen = counts === undefined ? undefined : nodeRow(counts, target.id);
+    const unsure = counts === undefined ? undefined : nodeAmbiguous(counts, target.id);
+    // Whether each row runs and where it is reached from, the target first (P364).
+    const { id: _target, ...targetReach } = reader.annotate({ id: target.id });
+    annotateTree(callers, reader);
+
+    const stoppedBy = stoppedByOf(walked.cut);
+    const first = stoppedBy[0];
+    const deeper = Math.min(MAX_CALLER_DEPTH, input.depth * 2);
+    // The walk on first, where it stopped; then where a chain that ends in
+    // nobody might be called from; then the ids the tree names.
+    const goOn =
+      first !== 'depth'
+        ? []
+        : input.depth < MAX_CALLER_DEPTH
+          ? [callOf('who_calls', { symbol: target.id, depth: deeper, service: input.service }, defaults)]
+          : walked.frontier.slice(0, 2).map((id) => callOf('who_calls', { symbol: id, depth: input.depth }, defaults));
+    // The first chain that ends in nobody, among the rows kept.
+    const targetIsTop = walked.targetTop !== undefined;
+    const topRow = targetIsTop ? undefined : findFirst(callers, (item) => item.topOfChain === true);
+    const top = targetIsTop ? target : topRow === undefined ? undefined : db.node(topRow.node.id);
+    const tops = topsWithGaps(callers);
+    const shown: RowShown[] = [{ id: target.id, label: target.label, ...targetReach }, ...rowsOf(callers)];
+    return withNext(
+      {
+        target: {
+          ...projectDetail(target, detail),
+          ...(seen === undefined ? {} : { observed: seen.hits, ...figuresOf(seen) }),
+          ...(unsure === undefined ? {} : { seenAmbiguous: unsure }),
+          ...targetReach,
+        },
+        ...(found.alsoAnswers === undefined ? {} : { alsoAnswers: found.alsoAnswers }),
+        ...(found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed }),
+        // Nothing calls the target itself: a lead, not a verdict (D3).
+        ...(targetIsTop ? { topOfChain: true, gapsInFile: walked.targetTop } : {}),
+        callers: slimForest(callers, target.repo === '' ? undefined : target.repo),
+        ...(first === undefined
+          ? {}
+          : {
+              truncated: callersCutSaid(walked.cut, first, input.depth, maxNodes),
+              stoppedBy,
+              ...(walked.cut.depth > 0 ? { frontier: walked.frontier } : {}),
+            }),
+        ...completeOf([
+          walked.cut.depth > 0 && `depth: ${walked.cut.depth} callers past depth ${input.depth}, from the frontier rows`,
+          walked.cut.maxNodes > 0 && `maxNodes: ${walked.cut.maxNodes} callers cut`,
+          targetIsTop && (walked.targetTop ?? 0) > 0 && `gaps: ${walked.targetTop} unread in its file, any may call it`,
+          tops > 0 && `gaps: ${tops} chain top${tops === 1 ? '' : 's'} sit${tops === 1 ? 's' : ''} in a file with unread calls`,
+          ...reader.left(),
+        ]),
+        ...(note === undefined ? {} : { note }),
+      },
+      [
+        ...goOn,
+        ...withoutShown(
+          [
+            ...(top === undefined ? [] : gapLeads(top)),
+            // Not the call just made, which `nextFor` offers for any symbol.
+            ...nextFor(firstEntry?.node, target).filter((hint) => hint !== callOf('who_calls', { symbol: target.id })),
+          ],
+          shown,
+        ),
+      ].slice(0, MAX_NEXT),
+    );
+  };
+
+
   server.registerTool(
     'who_calls',
     {
@@ -241,7 +355,8 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
       description:
         'What reaches a symbol, walked back across repositories; on a class, its methods. A route said aloud (`GET /orders/123`) is the most specific route, the others under `alsoAnswers`.',
       inputSchema: {
-        symbol: z.string().describe('node id or name'),
+        symbol: z.string().optional().describe('node id or name'),
+        symbols: severalInput(),
         depth: z.number().int().min(1).max(MAX_CALLER_DEPTH).default(DEFAULT_CALLER_DEPTH).describe('hops back'),
         service: serviceInput,
         ...commonInput,
@@ -250,68 +365,11 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
     },
     (input) =>
       withDb(ctx.handle, (db) => {
-        const { detail, maxNodes, note } = bound(input);
-        const defaults = { ...COMMON_DEFAULTS, depth: DEFAULT_CALLER_DEPTH };
-        const found = resolveSymbol(db, input.symbol);
-        if (!isResolved(found)) {
-          return candidatesAnswer(found, input, detail, (id) =>
-            callOf('who_calls', { symbol: id, depth: input.depth, service: input.service }, defaults),
-          );
-        }
-        const target = found.node;
-
-        const walked = callersOf(db, target, input.depth, maxNodes, detail);
-        const callers = keepService(db, walked.callers, input.service);
-        const firstEntry = findFirst(callers, (item) => item.node.type === 'entry');
-        const counts = loadObservedCounts(ctx.handle.path);
-        if (counts !== undefined) markObserved(counts, target.id, callers, 'backward');
-        const seen = counts === undefined ? undefined : nodeRow(counts, target.id);
-        const unsure = counts === undefined ? undefined : nodeAmbiguous(counts, target.id);
-
-        const stoppedBy = stoppedByOf(walked.cut);
-        const first = stoppedBy[0];
-        const deeper = Math.min(MAX_CALLER_DEPTH, input.depth * 2);
-        // The walk on first, where it stopped; then where a chain that ends in
-        // nobody might be called from; then the ids the tree names.
-        const goOn =
-          first !== 'depth'
-            ? []
-            : input.depth < MAX_CALLER_DEPTH
-              ? [callOf('who_calls', { symbol: target.id, depth: deeper, service: input.service }, defaults)]
-              : walked.frontier.slice(0, 2).map((id) => callOf('who_calls', { symbol: id, depth: input.depth }, defaults));
-        // The first chain that ends in nobody, among the rows kept.
-        const targetIsTop = walked.targetTop !== undefined;
-        const topRow = targetIsTop ? undefined : findFirst(callers, (item) => item.topOfChain === true);
-        const top = targetIsTop ? target : topRow === undefined ? undefined : db.node(topRow.node.id);
-        return withNext(
-          {
-            target: {
-              ...projectDetail(target, detail),
-              ...(seen === undefined ? {} : { observed: seen.hits, ...figuresOf(seen) }),
-              ...(unsure === undefined ? {} : { seenAmbiguous: unsure }),
-            },
-            ...(found.alsoAnswers === undefined ? {} : { alsoAnswers: found.alsoAnswers }),
-          ...(found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed }),
-            ...(found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed }),
-            // Nothing calls the target itself: a lead, not a verdict (D3).
-            ...(targetIsTop ? { topOfChain: true, gapsInFile: walked.targetTop } : {}),
-            callers: slimForest(callers, target.repo === '' ? undefined : target.repo),
-            ...(first === undefined
-              ? {}
-              : {
-                  truncated: callersCutSaid(walked.cut, first, input.depth, maxNodes),
-                  stoppedBy,
-                  ...(walked.cut.depth > 0 ? { frontier: walked.frontier } : {}),
-                }),
-            ...(note === undefined ? {} : { note }),
-          },
-          [
-            ...goOn,
-            ...(top === undefined ? [] : gapLeads(top)),
-            // Not the call just made, which `nextFor` offers for any symbol.
-            ...nextFor(firstEntry?.node, target).filter((hint) => hint !== callOf('who_calls', { symbol: target.id })),
-          ].slice(0, MAX_NEXT),
-        );
+        const asked = askedOf(input.symbol, input.symbols);
+        if (asked.length === 0) return { error: 'ask with symbol or symbols' };
+        const reader = reachReader(db, ctx.handle, bound(input).detail);
+        if (asked.length === 1) return whoCallsOne(db, input, asked[0]!, reader);
+        return answerEach('symbol', asked, (symbol) => whoCallsOne(db, input, symbol, reader));
       }),
   );
 
@@ -379,6 +437,10 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
 
         entries.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
         const { items, total, truncated, nextOffset } = truncate(entries, maxNodes, input.offset);
+        // Whether the target and each way in runs (P364); the ways in are the answer's rows, so no `from`.
+        const reader = reachReader(db, ctx.handle, detail);
+        const rows = items.map((entry) => reader.annotate(projectDetail(entry, detail)));
+        const targetReach = detail < 1 ? undefined : reader.of(target.id).reach;
         const args = { symbol: target.id, service: input.service, detail: input.detail, maxNodes };
         // The walk's own limit is a cut, said where cuts are said (P94): it
         // used to be a note, which the detail clamp's note overwrote (P132).
@@ -405,10 +467,10 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
                 ...gapLeads(target),
               ];
         return withNext({
-          target: projectDetail(target, detail),
+          target: { ...projectDetail(target, detail), ...(targetReach === undefined ? {} : { reach: targetReach }) },
           ...(found.alsoAnswers === undefined ? {} : { alsoAnswers: found.alsoAnswers }),
           ...(forClass ? { forMethods: starts.length } : {}),
-          entries: items.map((entry) => projectDetail(entry, detail)),
+          entries: rows,
           total,
           ...(cuts.length === 0 ? {} : { truncated: cuts.join('; ') }),
           ...(nextOffset === undefined ? {} : { nextOffset }),
@@ -422,8 +484,14 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
           channels: [...channels].sort(),
           // The pages about it (P120): what to update beside what to retest.
           ...withDocs(db, ctx.handle.path, target.id),
+          ...completeOf([
+            pageLeft(total, items.length, input.offset, nextOffset),
+            walkCut !== undefined && `walk: stopped at ${IMPACT_WALK_NODES} nodes; ways in past it not listed`,
+            entriesNone !== undefined && reached > 0 && elsewhere === 0 && 'gaps: something reaches it but no way in does; its callers may be behind a gap',
+            ...reader.left(),
+          ]),
           ...(note === undefined ? {} : { note }),
-        }, pagedNext({ tool: 'impact', args, nextOffset }, leads));
+        }, pagedNext({ tool: 'impact', args, nextOffset }, withoutShown(leads, rows)));
       }),
   );
 };

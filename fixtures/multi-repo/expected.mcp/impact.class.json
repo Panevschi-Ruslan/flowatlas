@@ -5,7 +5,8 @@
     "label": "OrdersService",
     "loc": "src/orders/orders.service.ts:11",
     "service": "orders",
-    "kind": "injectable"
+    "kind": "injectable",
+    "reach": "alive"
   },
   "forMethods": 4,
   "entries": [
@@ -15,7 +16,8 @@
       "label": "event invoice.requested",
       "loc": "src/invoices/invoices.consumer.ts:28",
       "service": "billing",
-      "kind": "event"
+      "kind": "event",
+      "reach": "dead"
     },
     {
       "id": "entry:billing:event:order.created",
@@ -23,7 +25,8 @@
       "label": "event order.created",
       "loc": "src/invoices/invoices.consumer.ts:17",
       "service": "billing",
-      "kind": "event"
+      "kind": "event",
+      "reach": "alive"
     },
     {
       "id": "entry:billing:http:POST:/invoices",
@@ -31,7 +34,8 @@
       "label": "POST /invoices",
       "loc": "src/invoices/invoices.controller.ts:15",
       "service": "billing",
-      "kind": "http"
+      "kind": "http",
+      "reach": "alive"
     },
     {
       "id": "entry:gateway:http:GET:/orders/:param",
@@ -39,7 +43,8 @@
       "label": "GET /orders/:param",
       "loc": "src/orders/orders.controller.ts:30",
       "service": "gateway",
-      "kind": "http"
+      "kind": "http",
+      "reach": "alive"
     },
     {
       "id": "entry:gateway:http:POST:/orders/:param/invoice",
@@ -47,7 +52,8 @@
       "label": "POST /orders/:param/invoice",
       "loc": "src/orders/orders.controller.ts:40",
       "service": "gateway",
-      "kind": "http"
+      "kind": "http",
+      "reach": "alive"
     },
     {
       "id": "entry:orders:http:GET:/orders/:param",
@@ -55,7 +61,8 @@
       "label": "GET /orders/:param",
       "loc": "src/orders/orders.controller.ts:25",
       "service": "orders",
-      "kind": "http"
+      "kind": "http",
+      "reach": "alive"
     },
     {
       "id": "entry:orders:http:GET:/orders/latest",
@@ -63,7 +70,8 @@
       "label": "GET /orders/latest",
       "loc": "src/orders/orders.controller.ts:19",
       "service": "orders",
-      "kind": "http"
+      "kind": "http",
+      "reach": "unreached"
     },
     {
       "id": "entry:orders:http:POST:/orders",
@@ -71,7 +79,8 @@
       "label": "POST /orders",
       "loc": "src/orders/orders.controller.ts:31",
       "service": "orders",
-      "kind": "http"
+      "kind": "http",
+      "reach": "dead"
     },
     {
       "id": "entry:orders:http:POST:/orders/:param/archive",
@@ -79,7 +88,8 @@
       "label": "POST /orders/:param/archive",
       "loc": "src/orders/orders.controller.ts:42",
       "service": "orders",
-      "kind": "http"
+      "kind": "http",
+      "reach": "unknown"
     }
   ],
   "total": 9,
@@ -102,6 +112,7 @@
     "channel:invoice.requested",
     "channel:order.created"
   ],
+  "complete": true,
   "next": [
     "get_flow({entry: \"entry:billing:event:invoice.requested\"})",
     "describe_for_prompt({id: \"entry:billing:event:invoice.requested\"})",

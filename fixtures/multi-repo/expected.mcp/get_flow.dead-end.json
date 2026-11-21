@@ -120,6 +120,10 @@
     ]
   },
   "unresolvedOnPath": 1,
+  "complete": false,
+  "left": [
+    "unread: 1 step on the path could not be followed"
+  ],
   "next": [
     "describe_for_prompt({id: \"entry:gateway:http:POST:/orders/:param/cancel\"})",
     "impact({symbol: \"entry:gateway:http:POST:/orders/:param/cancel\"})",

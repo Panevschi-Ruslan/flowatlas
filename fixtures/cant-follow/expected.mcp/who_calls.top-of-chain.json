@@ -4,11 +4,17 @@
     "type": "method",
     "label": "ReminderJob.start",
     "loc": "src/jobs/reminder.job.ts:10",
-    "service": "storefront"
+    "service": "storefront",
+    "reach": "unreached",
+    "from": "none"
   },
   "topOfChain": true,
   "gapsInFile": 2,
   "callers": [],
+  "complete": false,
+  "left": [
+    "gaps: 2 unread in its file, any may call it"
+  ],
   "next": [
     "cant_follow({service: \"storefront\"})",
     "search({query: \"src/jobs/reminder.job.ts\", kinds: [\"gaps\"]})",

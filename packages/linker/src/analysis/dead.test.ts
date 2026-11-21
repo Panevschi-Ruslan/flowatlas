@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deadChannels, deadEntries, deadMethods, deadProviders, deadVerdict, unresolvedInjectCount } from './dead.js';
+import { deadChannels, deadEntries, deadJudge, deadMethods, deadProviders, deadVerdict, JUDGED_TYPES, unresolvedInjectCount } from './dead.js';
 import { buildTestDb, edge, node } from './__fixtures__/test-db.js';
 
 const route = (id: string, over = {}) =>
@@ -649,6 +649,36 @@ describe('verdicts', () => {
     // A method nothing calls on a class that is used: a call the reading could not type may reach it (I3).
     expect(unused).toMatchObject({ verdict: 'likely-dead', evidence: { classReached: true } });
     expect(methods.map((row) => `${row.id} ${row.verdict}`)).toEqual(['orders#src/s.ts:Svc.unused likely-dead']);
+  });
+
+  it('judges many nodes with one judge exactly as one at a time (P364)', () => {
+    const db = buildTestDb({
+      nodes: [
+        route('entry:orders:http:GET:/a'),
+        route('entry:orders:http:GET:/b'),
+        node('orders#src/s.ts:Svc', { type: 'provider', kind: 'injectable', label: 'Svc', file: 'src/s.ts', line: 1 }),
+        node('orders#src/s.ts:Svc.used'),
+        node('orders#src/s.ts:Svc.unused'),
+        node('orders#src/c.ts:Ctl.list'),
+        node('channel:order.created', { type: 'channel', label: 'order.created' }),
+        node('http_out:web#1', { type: 'http_out', repo: 'web' }),
+        node('orders#src/t.ts:table', { type: 'table' }),
+      ],
+      edges: [
+        edge('http_out:web#1', 'entry:orders:http:GET:/a', { type: 'http_calls' }),
+        edge('entry:orders:http:GET:/a', 'orders#src/c.ts:Ctl.list', { type: 'handles' }),
+        edge('orders#src/c.ts:Ctl.list', 'orders#src/s.ts:Svc.used'),
+      ],
+      report: report(['entry:orders:http:GET:/b']),
+    });
+    const ids = ['entry:orders:http:GET:/a', 'entry:orders:http:GET:/b', 'orders#src/s.ts:Svc', 'orders#src/s.ts:Svc.unused', 'channel:order.created', 'orders#src/t.ts:table', 'missing'];
+    const judge = deadJudge(db, db.report());
+    const together = ids.map((id) => judge(id));
+    const alone = ids.map((id) => deadVerdict(db, db.report(), id));
+    db.close();
+    expect(together).toEqual(alone);
+    expect(together.map((answer) => answer?.verdict)).toEqual(['alive', 'dead', 'alive', 'likely-dead', 'dead', 'unknown', undefined]);
+    expect(JUDGED_TYPES).not.toContain('table');
   });
 
   it('says dead for a method on a class nothing reaches, and likely-dead where injects did not resolve', () => {

@@ -8,7 +8,8 @@
     "kind": "http",
     "observed": 22,
     "p95": 72.88,
-    "errorRate": 0
+    "errorRate": 0,
+    "reach": "alive"
   },
   "callers": [
     {
@@ -18,7 +19,9 @@
         "label": "GET /orders/:param",
         "loc": "src/app/orders-api.service.ts:21",
         "service": "web",
-        "kind": "http"
+        "kind": "http",
+        "reach": "unreached",
+        "from": "none"
       },
       "edge": {
         "type": "hits",
@@ -34,7 +37,9 @@
         "label": "GET /orders/:param",
         "loc": "src/app/orders-api.service.ts:73",
         "service": "web",
-        "kind": "http"
+        "kind": "http",
+        "reach": "unreached",
+        "from": "none"
       },
       "edge": {
         "type": "hits",
@@ -55,6 +60,10 @@
   "frontier": [
     "ui_api_call:web#src/app/orders-api.service.ts:21:12",
     "ui_api_call:web#src/app/orders-api.service.ts:73:12"
+  ],
+  "complete": false,
+  "left": [
+    "depth: 2 callers past depth 1, from the frontier rows"
   ],
   "next": [
     "who_calls({symbol: \"entry:gateway:http:GET:/orders/:param\", depth: 2})",

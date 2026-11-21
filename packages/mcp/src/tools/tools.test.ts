@@ -241,6 +241,13 @@ describe('the tools a session is offered', () => {
    * Then P365 gave every tool but `get_source` `verbose` (28 characters a tool),
    * and listed output schemas that require no field, since a compact answer
    * may leave any out: 12,021 read and 31,642 in all after both; the ceilings just above.
+   *
+   * And P364 let `dead`, `find_symbol`, `search`, `get_type` and `who_calls`
+   * take several inputs at once (`ids`, `queries`, `types`, `symbols`, each
+   * an undescribed list of at most 20, said once in the instructions),
+   * and gave the output schemas `reach`, `from`, `ways` and `walkCut` on the
+   * rows of code, `complete` and `left` on the lists and `answers` for
+   * several: measured after all three, the ceilings just above, here and below.
    */
   /**
    * The instructions are re-sent on every turn (P366): 6,435 characters
@@ -248,7 +255,7 @@ describe('the tools a session is offered', () => {
    * describes a field every answer carries.
    */
   it('come with instructions that fit their ceiling, and name the tool to begin with and every chain', () => {
-    expect(INSTRUCTIONS.length).toBeLessThanOrEqual(INSTRUCTIONS_MAX - 150);
+    expect(INSTRUCTIONS.length).toBeLessThanOrEqual(INSTRUCTIONS_MAX);
     expect(client.getInstructions()).toBe(INSTRUCTIONS);
     for (const said of ['Begin with start_here', '- entry: ', '- channel: ', '- symbol: ', '- shape: ', 'Only the tools this project can answer', '`detail` 0']) expect(INSTRUCTIONS).toContain(said);
   });
@@ -256,8 +263,8 @@ describe('the tools a session is offered', () => {
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(12050);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(31650);
+    expect(read.length).toBeLessThan(12350);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(34100);
   });
 
   /**
@@ -295,7 +302,7 @@ describe('the tools a session is offered', () => {
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
       expect(read.length).toBeLessThan(99999);
-      expect(JSON.stringify({ tools }).length).toBeLessThan(29400);
+      expect(JSON.stringify({ tools }).length).toBeLessThan(30350);
     } finally {
       await plain.close();
     }

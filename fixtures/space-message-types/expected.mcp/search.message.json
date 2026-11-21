@@ -17,7 +17,9 @@
         ],
         "handlers": [],
         "sites": 2,
-        "unselected": "no code that runs selects QUOTA_WARNING on space:*:events: only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types (ActivityFeed.onMessage, AuditTrail.record and 3 more); StreamRelay.forward passes every type on without choosing, and what takes them past it is not read"
+        "unselected": "no code that runs selects QUOTA_WARNING on space:*:events: only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types (ActivityFeed.onMessage, AuditTrail.record and 3 more); StreamRelay.forward passes every type on without choosing, and what takes them past it is not read",
+        "reach": "unknown",
+        "from": "POST /spaces/:param/quota"
       }
     ],
     "gaps": [
@@ -37,6 +39,7 @@
       }
     ]
   },
+  "complete": true,
   "next": [
     "who_consumes({channel: \"channel:space:*:events\", type: \"QUOTA_WARNING\"})",
     "who_emits({channel: \"channel:space:*:events\", type: \"QUOTA_WARNING\"})",

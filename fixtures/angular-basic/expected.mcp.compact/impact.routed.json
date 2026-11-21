@@ -3,12 +3,14 @@
     "id": "angular-basic#src/app/profile.component.ts:ProfileComponent",
     "type": "ui_component",
     "line": 4,
-    "kind": "standalone"
+    "kind": "standalone",
+    "reach": "alive"
   },
   "entries": [
     {
       "id": "entry:angular-basic:screen:/profile",
-      "loc": "src/app/app.routes.ts:27"
+      "loc": "src/app/app.routes.ts:27",
+      "reach": "unknown"
     }
   ],
   "total": 1,
@@ -21,6 +23,7 @@
   },
   "servicesWithoutEntry": [],
   "channels": [],
+  "complete": true,
   "next": [
     "get_flow({entry: \"entry:angular-basic:screen:/profile\"})",
     "describe_for_prompt({id: \"entry:angular-basic:screen:/profile\"})"

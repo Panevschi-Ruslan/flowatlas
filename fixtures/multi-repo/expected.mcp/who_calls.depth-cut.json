@@ -4,7 +4,9 @@
     "type": "method",
     "label": "OrdersService.findOne",
     "loc": "src/orders/orders.service.ts:25",
-    "service": "orders"
+    "service": "orders",
+    "reach": "alive",
+    "from": "GET /orders/:param"
   },
   "callers": [
     {
@@ -12,7 +14,9 @@
         "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
         "type": "method",
         "label": "OrdersController.findOne",
-        "loc": "src/orders/orders.controller.ts:25"
+        "loc": "src/orders/orders.controller.ts:25",
+        "reach": "alive",
+        "from": "GET /orders/:param"
       },
       "edge": {
         "type": "calls",
@@ -29,7 +33,8 @@
             "type": "entry",
             "label": "GET /orders/:param",
             "loc": "src/orders/orders.controller.ts:25",
-            "kind": "http"
+            "kind": "http",
+            "reach": "alive"
           },
           "edge": {
             "type": "handles",
@@ -50,6 +55,10 @@
   ],
   "frontier": [
     "entry:orders:http:GET:/orders/:param"
+  ],
+  "complete": false,
+  "left": [
+    "depth: 2 callers past depth 2, from the frontier rows"
   ],
   "next": [
     "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\", depth: 4})",

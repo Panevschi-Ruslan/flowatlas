@@ -60,7 +60,8 @@ const INSTRUCTION_LINES: readonly string[] = [
   '- to hand on: describe_for_prompt({id}) writes any of these as Markdown.',
   "Inputs shared by the tools that take them, said only here: `detail` 0 is ids only, 1 (the default) adds file:line, service and kind, 2 what the reader knows of each row; `service` keeps one service's rows; `maxNodes` is the most rows (150 unless the tool says), and a list cut short says `total` and `nextOffset`: the same call with `offset: nextOffset` reads on.",
   'Only the tools this project can answer are listed: the run-time ones after flowatlas observe, check_rules with rules configured, what_changed after flowatlas diff, the channel and type tools once the graph holds one. start_here says what is not listed in `hidden`; the list changes as the project does.',
-  'Answers are compact: a row leaves out what its `id` already says, and empty fields; `verbose: true` gives every field.',
+  'Answers are compact: a row leaves out what its `id` says; `verbose: true` gives every field.',
+  'Rows of code carry `reach` and `from`, the nearest way in: no need to check them. `complete: true` is the whole answer, else `left` says what was cut. Several at once: dead `ids`, find_symbol and search `queries`, get_type `types`, who_calls `symbols`.',
 ];
 
 /** The most characters the instructions may run to (P366): they are re-sent on every turn of a session. */

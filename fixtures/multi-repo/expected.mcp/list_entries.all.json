@@ -138,6 +138,7 @@
     }
   ],
   "total": 17,
+  "complete": true,
   "next": [
     "get_flow({entry: \"entry:billing:event:invoice.requested\"})",
     "describe_for_prompt({id: \"entry:billing:event:invoice.requested\"})",
