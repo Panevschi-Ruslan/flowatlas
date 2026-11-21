@@ -1,0 +1,94 @@
+{
+  "channel": {
+    "id": "channel:board:*:events",
+    "loc": "src/boards/boards.service.ts:15",
+    "service": "boards-api",
+    "meta": {
+      "channelKind": "channel",
+      "adapters": [
+        "board-bus",
+        "BusService.publish"
+      ],
+      "producers": 7,
+      "consumers": 14
+    }
+  },
+  "consumers": [
+    {
+      "id": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
+      "line": 29,
+      "kind": "sse",
+      "meta": {
+        "selectedBy": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+        "messageTypes": [
+          "CARD_ADDED",
+          "CARD_MOVED"
+        ]
+      },
+      "via": "filter"
+    },
+    {
+      "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
+      "line": 32,
+      "kind": "sse",
+      "meta": {
+        "selectedBy": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "messageTypes": [
+          "CARD_MOVED"
+        ]
+      },
+      "via": "if"
+    },
+    {
+      "id": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "line": 13,
+      "kind": "sse",
+      "meta": {
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "subscriptions": [
+          {
+            "line": 13,
+            "column": 17,
+            "through": "BoardFeed.events$"
+          }
+        ],
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "CARD_ARCHIVED",
+            "via": "if",
+            "line": 14
+          },
+          {
+            "type": "CARD_IMPORTED",
+            "via": "if",
+            "line": 14
+          },
+          {
+            "type": "CARD_MOVED",
+            "via": "if",
+            "line": 14
+          },
+          {
+            "type": "CARD_PINNED",
+            "via": "if",
+            "line": 14
+          }
+        ],
+        "routes": [
+          "entry:boards-api:http:GET:/api/boards/:param/events"
+        ]
+      },
+      "via": "if"
+    }
+  ],
+  "total": 3,
+  "type": "CARD_MOVED",
+  "next": [
+    "who_emits({channel: \"channel:board:*:events\", type: \"CARD_MOVED\"})",
+    "who_calls({symbol: \"consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load\"})"
+  ]
+}

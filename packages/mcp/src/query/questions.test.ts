@@ -40,7 +40,7 @@ const connect = async (dbPath: string) => {
   await client.connect(clientSide);
   clients.push(client);
   return async (name: string, args: Record<string, unknown> = {}): Promise<string> => {
-    const response = (await client.callTool({ name, arguments: args })) as { content: Array<{ text: string }> };
+    const response = (await client.callTool({ name, arguments: { verbose: true, ...args } })) as { content: Array<{ text: string }> };
     return response.content[0]!.text;
   };
 };

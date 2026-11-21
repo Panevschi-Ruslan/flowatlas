@@ -23,6 +23,11 @@
  * gains an observed file, a rule or a channel shows the tools it gains. The
  * whole list (`all`) is the same twenty-six names for every fixture and is
  * held by the tool tests, with its size.
+ *
+ * Every question is asked with `verbose: true` (P365), so these hold the whole
+ * answer, as they did before answers were compacted. The `expected.mcp.compact`
+ * suites ask a few of the same questions with `verbose: false`: the answer an
+ * agent is handed, each fact its ids already say left out.
  */
 import { isDeepStrictEqual } from 'node:util';
 import { copyFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -179,6 +184,43 @@ const HUB_SUBJECT_CASES = [
   // Published only by a direct call to the project's own bus, which no broker description names.
   ['who_consumes.helper-publish', 'who_consumes', { channel: 'board:*:orders', type: 'SCHEDULED_ALERT' }],
   ['who_emits.helper-publish', 'who_emits', { channel: 'board:*:orders', type: 'SCHEDULED_ALERT' }],
+];
+
+/**
+ * The answer an agent is handed (P365): questions the suites above ask with
+ * `verbose: true`, asked compact, so the two can be read side by side. On the
+ * main fixture the tools an agent calls most: a flow, the callers and the ways
+ * in of a method, a cut list and its paging call, a name, a verdict, a
+ * channel's ends and a description at `detail: 2`.
+ */
+const COMPACT_CASES = [
+  ['get_flow.cross-service', 'get_flow', { entry: 'entry:gateway:http:GET:/orders/:param', depth: 8, verbose: false }],
+  ['who_calls.cross-service', 'who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 6, verbose: false }],
+  ['impact.service-method', 'impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', verbose: false }],
+  ['list_entries.truncated', 'list_entries', { maxNodes: 3, verbose: false }],
+  ['find_symbol.partial', 'find_symbol', { query: 'fetchOne', verbose: false }],
+  ['search.orders', 'search', { query: 'orders', verbose: false }],
+  ['dead.service', 'dead', { service: 'gateway', verbose: false }],
+  ['who_consumes.order-created', 'who_consumes', { channel: 'order.created', detail: 2, verbose: false }],
+  ['who_emits.order-created', 'who_emits', { channel: 'order.created', verbose: false }],
+  ['describe_for_prompt.entry', 'describe_for_prompt', { id: 'entry:orders:http:POST:/orders', verbose: false }],
+];
+
+/** Message types chosen by screens' handlers through a stream wrapper, compact (P365), at both levels of detail. */
+const HUB_SUBJECT_COMPACT_CASES = [
+  ['who_consumes.type-filter', 'who_consumes', { channel: 'board:<boardId>:events', type: 'CARD_MOVED', verbose: false }],
+  ['who_consumes.type-filter-detail', 'who_consumes', { channel: 'board:*:events', type: 'CARD_MOVED', detail: 2, verbose: false }],
+  ['who_consumes.channel', 'who_consumes', { channel: 'board:*:events', verbose: false }],
+  ['search.message', 'search', { query: 'CARD_MOVED', verbose: false }],
+];
+
+/** Screens the router registers, compact (P365): the ways in of a routed component, its verdict, and a screen found by address. */
+const SCREEN_COMPACT_CASES = [
+  ['list_entries.screens', 'list_entries', { kind: 'screen', verbose: false }],
+  ['who_calls.routed', 'who_calls', { symbol: 'angular-basic#src/app/reports.component.ts:ReportsComponent', verbose: false }],
+  ['impact.routed', 'impact', { symbol: 'angular-basic#src/app/profile.component.ts:ProfileComponent', verbose: false }],
+  ['dead.routed', 'dead', { id: 'angular-basic#src/app/settings.component.ts:SettingsComponent', verbose: false }],
+  ['search.screen', 'search', { query: '/reports', verbose: false }],
 ];
 
 /**
@@ -473,6 +515,17 @@ const shapesOptions = (copy) => {
 
 const SUITES = [
   { fixture, outDir, cases: CASES, prompts: PROMPTS },
+  { fixture, outDir: join(fixture, 'expected.mcp.compact'), cases: COMPACT_CASES },
+  {
+    fixture: join(root, 'fixtures', 'sse-hub-subject-screens'),
+    outDir: join(root, 'fixtures', 'sse-hub-subject-screens', 'expected.mcp.compact'),
+    cases: HUB_SUBJECT_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'angular-basic'),
+    outDir: join(root, 'fixtures', 'angular-basic', 'expected.mcp.compact'),
+    cases: SCREEN_COMPACT_CASES,
+  },
   { fixture: housePatterns, outDir: join(housePatterns, 'expected.mcp'), cases: PATTERN_CASES, options: { patternTester } },
   {
     fixture,
@@ -594,7 +647,8 @@ for (const suite of SUITES) {
     let parsed;
     if (tool.startsWith('#')) parsed = await CLIENT_ASKS[tool](client, args);
     else {
-      const response = await client.callTool({ name: tool, arguments: args });
+      // Asked `verbose` unless the case says otherwise (P365): these snapshots hold the whole answer, the compact ones what an agent is handed.
+      const response = await client.callTool({ name: tool, arguments: { verbose: true, ...args } });
       parsed = JSON.parse(response.content[0].text);
       // The text and structuredContent are one document; an error carries isError instead.
       if (response.isError === true ? response.structuredContent !== undefined : !isDeepStrictEqual(response.structuredContent, parsed)) {

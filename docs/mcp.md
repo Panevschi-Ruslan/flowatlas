@@ -287,6 +287,50 @@ Each fact is said once. A tree names a repeated node as `{ id, ref: true }`,
 and says `service` on its root and again only on the row that crosses into
 another service.
 
+**Compact by default, `verbose` for every field.** An assistant pays for every
+character of an answer on every later turn, so what it is handed leaves out
+what the ids in it already say. Every tool takes `verbose` (default `false`);
+`verbose: true` answers exactly as the tool writes it, field for field. Without
+it, every answer passes through one compaction where answers are serialised,
+whichever tool wrote it:
+
+A row's ids are its `id` and, on a gap, its `gapId` (`gap:<service>|<file>|<reason>`).
+
+| Left out | When |
+|---|---|
+| `type` | when an id starts with it (`consumer:`, `entry:`, `channel:`, `gap:`), and `method` on a symbol whose id ends `Class.member`; a `function` or a `class` stays |
+| `service` | when an id names it (`orders#…`, `consumer:orders#…`, `entry:orders:…`, `gap:orders\|…`); a channel's stays |
+| the file of `loc` | when an id holds it: `loc` becomes `line` (`"line": 311`), or goes when the id holds the line too (a request's id); a `loc` whose file no id holds stays as it is |
+| `label` | when it is the id's tail, as written (`Notices.digest`, `order.created`) or said aloud (`GET /orders/:param` beside `entry:orders:http:GET:/orders/:param`); a request's `GET /orders` stays |
+| `kind` | when a way in's id says it (`entry:<service>:<kind>:…`) |
+| any other field | when it is a part of the row's id (its tail, or a whole part between `:`, `#` and `\|`: a gap's `reason`), the tail of an id the row's `meta` says in full (`selectedIn` beside `meta.selectedBy`), or the id of the row it is under (`meta.selects[].consumer` on that consumer) |
+| a `meta` key | when it says again a field of the row (`meta.kind` beside `kind`), a part of the row's id (a way in's `meta.method` and `meta.path`), or a word of its `label` (a request's `meta.method` and `meta.path` beside `GET /orders/:param`) |
+| null, `false`, `[]`, `{}` | on every row below the answer; the answer's own fields stay, since an empty `consumers` or `dead: false` there is the answer |
+| `next` past two calls | when the list was cut, `next` is the paging call alone |
+
+`id`, `gapId`, `complete`, `left`, `reach` and `from` are never left out.
+
+`line` rather than a shortened `loc` reads one way only: a number is a line of
+the file the id names. A field the compaction does not know is kept, so a field
+a tool adds is handed on whole. `detail` means the same in both: `detail: 2`'s
+`meta` stays, less its repeats. `get_source` is never compacted, and neither is
+the Markdown of `describe_for_prompt`; the page, the exported graph and the
+reports show everything. Since a compact answer may leave any field out, the
+`outputSchema` a tool lists requires none, and a row that may say `loc` may say
+`line` instead.
+
+On the fixtures' graphs (the main project, the message types chosen by
+screens, the routed screens and four more), the answers of the tools an agent
+calls most are a quarter smaller compact: `list_entries` 0.54 of the whole
+answer, `find_symbol` 0.57, `who_consumes` and `who_emits` 0.61, `impact` 0.65,
+`search` 0.68, `who_calls` 0.69, `get_flow` 0.71, `dead` 0.87 and
+`describe_for_prompt` 0.93 (its Markdown is not compacted). A fixture's rows
+were already slim at `detail: 1` (`label` and `service` said once in a tree);
+what is left is the ids, the edges and `next`. On a project whose files sit
+deeper, each row's `loc` and `label` were longer, and the share left out is
+larger. `expected.mcp.compact` beside three fixtures holds compact answers
+beside the whole ones in `expected.mcp`.
+
 ### Ids, `next`, and where to begin
 
 Every row any tool returns carries an `id`, and every other tool takes that id

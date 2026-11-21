@@ -1,0 +1,29 @@
+{
+  "entries": [
+    {
+      "id": "entry:angular-basic:screen:/",
+      "loc": "src/app/app.routes.ts:20"
+    },
+    {
+      "id": "entry:angular-basic:screen:/orders/:param",
+      "loc": "src/app/app.routes.ts:21"
+    },
+    {
+      "id": "entry:angular-basic:screen:/profile",
+      "loc": "src/app/app.routes.ts:27"
+    },
+    {
+      "id": "entry:angular-basic:screen:/reports",
+      "loc": "src/app/app.routes.ts:26"
+    },
+    {
+      "id": "entry:angular-basic:screen:/settings",
+      "loc": "src/app/app.routes.ts:22"
+    }
+  ],
+  "total": 5,
+  "next": [
+    "get_flow({entry: \"entry:angular-basic:screen:/\"})",
+    "describe_for_prompt({id: \"entry:angular-basic:screen:/\"})"
+  ]
+}

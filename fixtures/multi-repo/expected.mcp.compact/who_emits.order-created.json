@@ -1,0 +1,19 @@
+{
+  "channel": {
+    "id": "channel:order.created",
+    "loc": "src/orders/orders.service.ts:49",
+    "service": "orders"
+  },
+  "producers": [
+    {
+      "id": "producer:orders#src/orders/orders.service.ts:49:5",
+      "label": "event order.created",
+      "kind": "event"
+    }
+  ],
+  "total": 1,
+  "next": [
+    "who_consumes({channel: \"channel:order.created\"})",
+    "who_calls({symbol: \"producer:orders#src/orders/orders.service.ts:49:5\"})"
+  ]
+}

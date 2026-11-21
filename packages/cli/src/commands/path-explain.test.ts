@@ -1,4 +1,4 @@
-import { describeAnswer, DbHandle, isResolved, resolveSymbol as resolveSymbolRef } from '@flowatlas/mcp';
+import { compactAnswer, describeAnswer, DbHandle, isResolved, resolveSymbol as resolveSymbolRef } from '@flowatlas/mcp';
 import { openGraphDb } from '@flowatlas/linker';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { CliError, EXIT } from '../exit.js';
@@ -112,6 +112,17 @@ describe('flowatlas explain (P229)', () => {
     expect(answer.id).toBe(ENTRY);
     expect(typeof answer.markdown).toBe('string');
     expect(Array.isArray(answer.next)).toBe(true);
+  });
+
+  it('prints the answer compact on one line, and whole with --verbose (P365)', () => {
+    const compact = capture();
+    runExplain(ENTRY, { db: dbPath, format: 'json' }, compact);
+    const whole = capture();
+    runExplain(ENTRY, { db: dbPath, format: 'json', verbose: true }, whole);
+    expect(compact.stdout.trimEnd()).not.toContain('\n');
+    expect(whole.stdout).toContain('\n  "');
+    expect(JSON.parse(compact.stdout)).toEqual(compactAnswer(JSON.parse(whole.stdout)));
+    expect(compact.stdout.length).toBeLessThan(whole.stdout.length);
   });
 
   it('describes a service with --scope', () => {

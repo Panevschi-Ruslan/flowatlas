@@ -2300,7 +2300,8 @@ it is read or handed on as it is (`flowatlas explain "POST /orders" | pbcopy`).
 | `--max-steps <n>` | `40` | most chain steps written |
 | `--max-chars <n>` | `8000` | most characters written |
 | `--with-spec` | off | add the route's or channel's part of the written API document |
-| `--format <name>` | `markdown` | `markdown`, or `json` for the tool's whole answer, `next` included |
+| `--format <name>` | `markdown` | `markdown`, or `json` for the tool's answer, `next` included, compact on one line as an assistant is handed it ([compact answers](mcp.md#answers)) |
+| `--verbose` | off | with `--format json`, the whole answer, every field, pretty-printed: what the tool answers with `verbose: true` |
 
 A name that means several things stops with the candidates, and one nothing has
 says so (exit 1); a scope the node does not have names the ones it has (exit 2).

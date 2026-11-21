@@ -25,7 +25,7 @@ const ask = async (config: string, calls: Array<Record<string, unknown>>, dbPath
   try {
     const answers = [];
     for (const args of calls) {
-      const response = (await client.callTool({ name: 'dead', arguments: args })) as { content: Array<{ text: string }> };
+      const response = (await client.callTool({ name: 'dead', arguments: { verbose: true, ...args } })) as { content: Array<{ text: string }> };
       answers.push(JSON.parse(response.content[0]!.text));
     }
     return answers;

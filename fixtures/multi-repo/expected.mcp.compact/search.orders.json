@@ -1,0 +1,201 @@
+{
+  "query": "orders",
+  "counts": {
+    "routes": 13,
+    "tables": 1,
+    "types": 2,
+    "gaps": 6,
+    "classes": 11
+  },
+  "results": {
+    "routes": [
+      {
+        "id": "entry:orders:http:POST:/orders",
+        "loc": "src/orders/orders.controller.ts:31"
+      },
+      {
+        "id": "entry:gateway:http:POST:/orders/pay",
+        "loc": "src/orders/orders.controller.ts:45"
+      },
+      {
+        "id": "entry:gateway:http:GET:/orders/:param",
+        "loc": "src/orders/orders.controller.ts:30"
+      },
+      {
+        "id": "entry:orders:http:GET:/orders/:param",
+        "loc": "src/orders/orders.controller.ts:25"
+      },
+      {
+        "id": "entry:orders:http:GET:/orders/latest",
+        "loc": "src/orders/orders.controller.ts:19"
+      },
+      {
+        "id": "entry:gateway:http:POST:/orders/charge",
+        "loc": "src/orders/orders.controller.ts:50"
+      },
+      {
+        "id": "entry:gateway:http:POST:/orders/:param/ship",
+        "loc": "src/orders/orders.controller.ts:60"
+      },
+      {
+        "id": "entry:gateway:http:POST:/orders/:param/cancel",
+        "loc": "src/orders/orders.controller.ts:35"
+      },
+      {
+        "id": "entry:gateway:http:POST:/orders/:param/refund",
+        "loc": "src/orders/orders.controller.ts:65"
+      },
+      {
+        "id": "entry:gateway:http:POST:/orders/:param/resume",
+        "loc": "src/orders/orders.controller.ts:71"
+      }
+    ],
+    "tables": [
+      {
+        "id": "table:orders#orders"
+      }
+    ],
+    "types": [
+      {
+        "id": "type:orders#Order"
+      },
+      {
+        "id": "type:@fx/contracts#OrderStatus",
+        "service": "@fx/contracts"
+      }
+    ],
+    "gaps": [
+      {
+        "id": "http_out:gateway#src/clients/orders.client.ts:44:12",
+        "gapId": "gap:gateway|src/clients/orders.client.ts|target-route-not-found",
+        "kind": "gap",
+        "message": "target service orders has no route POST /orders/:param/cancel",
+        "sites": 1,
+        "places": [
+          "src/clients/orders.client.ts:44"
+        ]
+      },
+      {
+        "id": "http_out:gateway#src/clients/orders.client.ts:59:12",
+        "gapId": "gap:gateway|src/clients/orders.client.ts|dynamic-http-url",
+        "kind": "gap",
+        "message": "GET /orders/${…}${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+        "sites": 1,
+        "places": [
+          "src/clients/orders.client.ts:59"
+        ]
+      },
+      {
+        "gapId": "gap:orders|src/orders/orders.controller.ts|route-unguarded",
+        "kind": "finding",
+        "line": 19,
+        "message": "GET /orders/latest has no guard in front of it and reaches orders.",
+        "sites": 4,
+        "places": [
+          "src/orders/orders.controller.ts:19",
+          "src/orders/orders.controller.ts:25",
+          "src/orders/orders.controller.ts:31",
+          "src/orders/orders.controller.ts:42"
+        ]
+      },
+      {
+        "id": "ui_api_call:web#src/app/orders-api.service.ts:26:12",
+        "gapId": "gap:web|src/app/orders-api.service.ts|target-route-not-found",
+        "kind": "gap",
+        "message": "target service gateway has no route GET /orders/:param/receipt",
+        "sites": 2,
+        "places": [
+          "src/app/orders-api.service.ts:26",
+          "src/app/orders-api.service.ts:106"
+        ]
+      },
+      {
+        "id": "ui_api_call:web#src/app/orders-api.service.ts:34:12",
+        "gapId": "gap:web|src/app/orders-api.service.ts|ambiguous-route-target",
+        "kind": "gap",
+        "message": "gateway and orders both answer GET /orders/:param",
+        "sites": 1,
+        "places": [
+          "src/app/orders-api.service.ts:34"
+        ]
+      },
+      {
+        "id": "ui_api_call:web#src/app/orders-api.service.ts:48:12",
+        "gapId": "gap:web|src/app/orders-api.service.ts|api-path-dynamic",
+        "kind": "gap",
+        "message": "GET /orders/${…}-summary is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+        "sites": 4,
+        "places": [
+          "src/app/orders-api.service.ts:48",
+          "src/app/orders-api.service.ts:124",
+          "src/app/orders-api.service.ts:139",
+          "src/app/orders-api.service.ts:140"
+        ]
+      }
+    ],
+    "classes": [
+      {
+        "id": "gateway#src/clients/orders.client.ts:OrdersClient",
+        "type": "provider",
+        "line": 14,
+        "kind": "injectable"
+      },
+      {
+        "id": "orders#src/orders/orders.service.ts:OrdersService",
+        "type": "provider",
+        "line": 11,
+        "kind": "injectable"
+      },
+      {
+        "id": "gateway#src/orders/orders.controller.ts:OrdersController",
+        "type": "provider",
+        "line": 22,
+        "kind": "controller"
+      },
+      {
+        "id": "orders#src/orders/orders.controller.ts:OrdersController",
+        "type": "provider",
+        "line": 8,
+        "kind": "controller"
+      },
+      {
+        "id": "web#src/app/orders-api.service.ts:OrdersApiService",
+        "type": "provider",
+        "line": 15,
+        "kind": "injectable"
+      },
+      {
+        "id": "orders#src/app.module.ts:AppModule",
+        "type": "module",
+        "line": 18,
+        "kind": "static"
+      },
+      {
+        "id": "orders#node_modules/typeorm:Repository",
+        "type": "provider",
+        "kind": "external"
+      },
+      {
+        "id": "orders#node_modules/@nestjs/microservices:ClientProxy",
+        "type": "provider",
+        "kind": "external"
+      },
+      {
+        "id": "orders#node_modules/@nestjs/microservices:ClientsModule",
+        "type": "module",
+        "kind": "external"
+      },
+      {
+        "id": "orders#src/aliases/legacy-aliases.controller.ts:LegacyAliasesController",
+        "type": "provider",
+        "line": 16,
+        "kind": "controller"
+      }
+    ]
+  },
+  "truncated": "routes 3 more, classes 1 more; next page offset 10",
+  "nextOffset": 10,
+  "next": [
+    "search({query: \"orders\", kinds: [\"routes\",\"classes\"], offset: 10})"
+  ]
+}

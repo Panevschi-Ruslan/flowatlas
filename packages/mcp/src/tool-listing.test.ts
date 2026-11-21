@@ -50,7 +50,7 @@ const connect = async (options: ServerOptions) => {
   return {
     names: async (): Promise<string[]> => (await client.listTools()).tools.map((tool) => tool.name).sort(),
     call: async (name: string, args: Record<string, unknown> = {}): Promise<{ isError: boolean; answer: any }> => {
-      const response = (await client.callTool({ name, arguments: args })) as { isError?: boolean; content: Array<{ text: string }> };
+      const response = (await client.callTool({ name, arguments: { verbose: true, ...args } })) as { isError?: boolean; content: Array<{ text: string }> };
       return { isError: response.isError === true, answer: JSON.parse(response.content[0]!.text) };
     },
     changes: (): number => changes,

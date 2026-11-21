@@ -1,0 +1,60 @@
+{
+  "target": {
+    "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+    "line": 25
+  },
+  "entries": [
+    {
+      "id": "entry:billing:event:invoice.requested",
+      "loc": "src/invoices/invoices.consumer.ts:28"
+    },
+    {
+      "id": "entry:billing:event:order.created",
+      "loc": "src/invoices/invoices.consumer.ts:17"
+    },
+    {
+      "id": "entry:billing:http:POST:/invoices",
+      "loc": "src/invoices/invoices.controller.ts:15"
+    },
+    {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "loc": "src/orders/orders.controller.ts:30"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "loc": "src/orders/orders.controller.ts:40"
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "loc": "src/orders/orders.controller.ts:25"
+    },
+    {
+      "id": "entry:orders:http:POST:/orders",
+      "loc": "src/orders/orders.controller.ts:31"
+    }
+  ],
+  "total": 7,
+  "reached": 38,
+  "entriesByService": {
+    "orders": 2,
+    "billing": 3,
+    "gateway": 2
+  },
+  "reachedByService": {
+    "orders": 7,
+    "billing": 11,
+    "gateway": 8,
+    "web": 12
+  },
+  "servicesWithoutEntry": [
+    "web"
+  ],
+  "channels": [
+    "channel:invoice.requested",
+    "channel:order.created"
+  ],
+  "next": [
+    "get_flow({entry: \"entry:billing:event:invoice.requested\"})",
+    "describe_for_prompt({id: \"entry:billing:event:invoice.requested\"})"
+  ]
+}

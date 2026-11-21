@@ -10,7 +10,7 @@ const CONFIG = join(resolve(import.meta.dirname, '../../../..'), 'fixtures', 'lo
 let client: Client;
 
 const call = async (name: string, args: Record<string, unknown> = {}): Promise<any> => {
-  const response = (await client.callTool({ name, arguments: args })) as { content: Array<{ text: string }> };
+  const response = (await client.callTool({ name, arguments: { verbose: true, ...args } })) as { content: Array<{ text: string }> };
   return JSON.parse(response.content[0]!.text);
 };
 

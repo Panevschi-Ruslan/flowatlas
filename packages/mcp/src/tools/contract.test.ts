@@ -53,7 +53,7 @@ const connect = async (trafficChecker?: TrafficChecker): Promise<(name: string, 
   await client.connect(clientSide);
   clients.push(client);
   return async (name, args = {}) => {
-    const response = (await client.callTool({ name, arguments: args })) as { content: Array<{ text: string }> };
+    const response = (await client.callTool({ name, arguments: { verbose: true, ...args } })) as { content: Array<{ text: string }> };
     return JSON.parse(response.content[0]!.text);
   };
 };

@@ -24,7 +24,17 @@ export const READ_ONLY = { readOnlyHint: true, openWorldHint: false, idempotentH
 export const commonInput = {
   detail: z.number().int().min(0).max(3).default(1),
   maxNodes: z.number().int().min(1).max(2000).default(150),
+  verbose: z.boolean().optional(),
 };
+
+/**
+ * Whether to hand the answer over whole (P365): every tool takes it, those
+ * that do not spread `commonInput` given it where they are registered. Read
+ * where every answer is serialised and never handed to the tool, which
+ * answers the same either way; unset or false, the answer is compacted there
+ * (`compact.ts`).
+ */
+export const verboseInput = commonInput.verbose;
 
 /** Where a page of a list starts (P93); a cut answer says the next one. */
 export const pageInput = {

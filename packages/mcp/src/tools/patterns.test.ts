@@ -14,7 +14,7 @@ const connect = async (patternTester?: PatternTester): Promise<Client> => {
 };
 
 const ask = async (client: Client, args: Record<string, unknown>): Promise<{ isError?: boolean; body: any }> => {
-  const response = (await client.callTool({ name: 'test_pattern', arguments: args })) as { isError?: boolean; content: Array<{ text: string }> };
+  const response = (await client.callTool({ name: 'test_pattern', arguments: { verbose: true, ...args } })) as { isError?: boolean; content: Array<{ text: string }> };
   return { ...(response.isError === undefined ? {} : { isError: response.isError }), body: JSON.parse(response.content[0]!.text) };
 };
 

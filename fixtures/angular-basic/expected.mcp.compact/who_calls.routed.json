@@ -1,0 +1,37 @@
+{
+  "target": {
+    "id": "angular-basic#src/app/reports.component.ts:ReportsComponent",
+    "type": "ui_component",
+    "line": 4,
+    "kind": "standalone"
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "entry:angular-basic:screen:/reports",
+        "loc": "src/app/app.routes.ts:26"
+      },
+      "edge": {
+        "type": "handles",
+        "confidence": "static"
+      }
+    },
+    {
+      "node": {
+        "id": "ui_action:angular-basic#src/app/checkout.component.ts:28:10",
+        "label": "routerLink=\"/reports\"",
+        "kind": "route"
+      },
+      "edge": {
+        "type": "triggers",
+        "confidence": "static"
+      },
+      "topOfChain": true,
+      "gapsInFile": 2
+    }
+  ],
+  "next": [
+    "cant_follow({service: \"angular-basic\"})",
+    "search({query: \"src/app/checkout.component.ts\", kinds: [\"gaps\"]})"
+  ]
+}

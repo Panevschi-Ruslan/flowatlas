@@ -1,0 +1,254 @@
+{
+  "target": {
+    "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+    "line": 25
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+        "line": 25
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "string"
+        ],
+        "returns": "type:@fx/contracts#OrderDto"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "entry:orders:http:GET:/orders/:param",
+            "loc": "src/orders/orders.controller.ts:25"
+          },
+          "edge": {
+            "type": "handles",
+            "confidence": "static",
+            "params": [
+              "string"
+            ],
+            "returns": "type:@fx/contracts#OrderDto"
+          },
+          "children": [
+            {
+              "node": {
+                "id": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+                "label": "GET /orders/:param"
+              },
+              "edge": {
+                "type": "http_calls",
+                "confidence": "static",
+                "returns": "type:billing#OrderView"
+              },
+              "children": [
+                {
+                  "node": {
+                    "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+                    "line": 30
+                  },
+                  "edge": {
+                    "type": "calls",
+                    "confidence": "static"
+                  },
+                  "children": [
+                    {
+                      "node": {
+                        "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
+                        "line": 28
+                      },
+                      "edge": {
+                        "type": "calls",
+                        "confidence": "static",
+                        "params": [
+                          "type:billing#CreateInvoiceDto"
+                        ],
+                        "returns": "type:billing#InvoiceDto"
+                      },
+                      "children": [
+                        {
+                          "node": {
+                            "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
+                            "line": 28,
+                            "kind": "event"
+                          },
+                          "edge": {
+                            "type": "handles",
+                            "confidence": "static",
+                            "params": [
+                              "type:billing#InvoiceRequestedEvent"
+                            ],
+                            "returns": "void"
+                          }
+                        },
+                        {
+                          "node": {
+                            "id": "entry:billing:event:invoice.requested",
+                            "loc": "src/invoices/invoices.consumer.ts:28"
+                          },
+                          "edge": {
+                            "type": "handles",
+                            "confidence": "static",
+                            "params": [
+                              "type:billing#InvoiceRequestedEvent"
+                            ],
+                            "returns": "void"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "node": {
+                        "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+                        "line": 17
+                      },
+                      "edge": {
+                        "type": "calls",
+                        "confidence": "static",
+                        "params": [
+                          "type:billing#CreateInvoiceDto"
+                        ],
+                        "returns": "type:billing#InvoiceDto"
+                      },
+                      "children": [
+                        {
+                          "node": {
+                            "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+                            "line": 17,
+                            "kind": "event"
+                          },
+                          "edge": {
+                            "type": "handles",
+                            "confidence": "static",
+                            "params": [
+                              "type:billing#OrderCreatedEvent"
+                            ],
+                            "returns": "void"
+                          }
+                        },
+                        {
+                          "node": {
+                            "id": "entry:billing:event:order.created",
+                            "loc": "src/invoices/invoices.consumer.ts:17"
+                          },
+                          "edge": {
+                            "type": "handles",
+                            "confidence": "static",
+                            "params": [
+                              "type:billing#OrderCreatedEvent"
+                            ],
+                            "returns": "void"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "node": {
+                        "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+                        "line": 15
+                      },
+                      "edge": {
+                        "type": "calls",
+                        "confidence": "static",
+                        "params": [
+                          "type:billing#CreateInvoiceDto"
+                        ],
+                        "returns": "type:billing#InvoiceDto"
+                      },
+                      "children": [
+                        {
+                          "node": {
+                            "id": "entry:billing:http:POST:/invoices",
+                            "loc": "src/invoices/invoices.controller.ts:15"
+                          },
+                          "edge": {
+                            "type": "handles",
+                            "confidence": "static",
+                            "params": [
+                              "type:billing#CreateInvoiceDto"
+                            ],
+                            "returns": "type:billing#InvoiceDto"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "node": {
+                "id": "http_out:gateway#src/clients/orders.client.ts:33:12",
+                "label": "GET /orders/:param"
+              },
+              "edge": {
+                "type": "http_calls",
+                "confidence": "static",
+                "returns": "type:@fx/contracts#OrderDto"
+              },
+              "children": [
+                {
+                  "node": {
+                    "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
+                    "line": 32
+                  },
+                  "edge": {
+                    "type": "calls",
+                    "confidence": "static"
+                  },
+                  "children": [
+                    {
+                      "node": {
+                        "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
+                        "line": 30
+                      },
+                      "edge": {
+                        "type": "calls",
+                        "confidence": "static",
+                        "params": [
+                          "string"
+                        ],
+                        "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+                      },
+                      "children": [
+                        {
+                          "node": {
+                            "id": "entry:gateway:http:GET:/orders/:param",
+                            "loc": "src/orders/orders.controller.ts:30"
+                          },
+                          "edge": {
+                            "type": "handles",
+                            "confidence": "static",
+                            "params": [
+                              "string"
+                            ],
+                            "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "truncated": "5 more nodes past depth 6; raise depth",
+  "stoppedBy": [
+    "depth"
+  ],
+  "frontier": [
+    "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
+    "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+    "entry:billing:http:POST:/invoices",
+    "entry:gateway:http:GET:/orders/:param"
+  ],
+  "next": [
+    "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\", depth: 12})",
+    "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})"
+  ]
+}

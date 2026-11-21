@@ -1,4 +1,4 @@
-import { describeAnswer, PROMPT_LIMITS, PROMPT_SCOPES, staleFor, type PromptScopeName } from '@flowatlas/mcp';
+import { compactAnswer, describeAnswer, PROMPT_LIMITS, PROMPT_SCOPES, staleFor, type PromptScopeName } from '@flowatlas/mcp';
 import type { Command } from 'commander';
 import { handleFor, type DbOptions } from '../db.js';
 import { cannotRun, notFound } from '../exit.js';
@@ -14,6 +14,8 @@ export interface ExplainOptions extends DbOptions {
   maxChars?: string;
   format?: string;
   withSpec?: boolean;
+  /** With `--format json`: the tool's answer whole, as `verbose: true` asks it (P365). */
+  verbose?: boolean;
 }
 
 const whole = (value: string | undefined, fallback: number, flag: string, least: number, most: number): number => {
@@ -93,9 +95,12 @@ const answerExplain = (name: string, options: ExplainOptions, io: QueryIo = proc
     // The tool's answer says it in `stale` (P230); the Markdown alone does not, so the terminal hears it on stderr.
     const stale = staleFor(handle.path, answer);
     if (stale !== undefined) io.err(`${staleLine(stale)}\n`);
-    const text = format === 'json' ? `${JSON.stringify(stale === undefined ? answer : { ...answer, stale }, null, 2)}\n` : `${(answer.markdown ?? '').trimEnd()}\n`;
+    const said = stale === undefined ? answer : { ...answer, stale };
+    // JSON is what an agent is handed, compact as the tool's (P365); `--verbose` prints it whole, as before.
+    const json = (): string => (options.verbose === true ? JSON.stringify(said, null, 2) : JSON.stringify(compactAnswer(said)));
+    const text = format === 'json' ? `${json()}\n` : `${(answer.markdown ?? '').trimEnd()}\n`;
     io.out(text);
-    noteAnswer(stale === undefined ? answer : { ...answer, stale }, text.length);
+    noteAnswer(said, text.length);
   } finally {
     opened.db.close();
   }
@@ -117,6 +122,7 @@ export const registerExplain = (program: Command): void => {
     .option('--max-chars <n>', `most characters written (default ${PROMPT_LIMITS.maxChars})`)
     .option('--with-spec', "add the route's or channel's part of the written API document")
     .option('--format <name>', `one of ${EXPLAIN_FORMATS.join(', ')}`)
+    .option('--verbose', 'with --format json, the whole answer, pretty-printed, instead of the compact one')
     .action((name: string, options: ExplainOptions) => {
       runExplain(name, options);
     });

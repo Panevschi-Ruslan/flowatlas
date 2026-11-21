@@ -29,7 +29,7 @@ const requestIn = (method: string): string =>
 let client: Client;
 
 const call = async (name: string, args: Record<string, unknown> = {}): Promise<any> => {
-  const response = (await client.callTool({ name, arguments: args })) as {
+  const response = (await client.callTool({ name, arguments: { verbose: true, ...args } })) as {
     content: Array<{ text: string }>;
   };
   return JSON.parse(response.content[0]!.text);
@@ -237,6 +237,10 @@ describe('the tools a session is offered', () => {
    * writes on each input schema; the descriptions took what the instructions
    * no longer say about one tool. 11,296 read and 31,916 in all, from 13,344
    * and 33,964; the ceilings at the next 50 above.
+   *
+   * Then P365 gave every tool but `get_source` `verbose` (28 characters a tool),
+   * and listed output schemas that require no field, since a compact answer
+   * may leave any out: 12,021 read and 31,642 in all after both; the ceilings just above.
    */
   /**
    * The instructions are re-sent on every turn (P366): 6,435 characters
@@ -244,7 +248,7 @@ describe('the tools a session is offered', () => {
    * describes a field every answer carries.
    */
   it('come with instructions that fit their ceiling, and name the tool to begin with and every chain', () => {
-    expect(INSTRUCTIONS.length).toBeLessThanOrEqual(INSTRUCTIONS_MAX - 300);
+    expect(INSTRUCTIONS.length).toBeLessThanOrEqual(INSTRUCTIONS_MAX - 150);
     expect(client.getInstructions()).toBe(INSTRUCTIONS);
     for (const said of ['Begin with start_here', '- entry: ', '- channel: ', '- symbol: ', '- shape: ', 'Only the tools this project can answer', '`detail` 0']) expect(INSTRUCTIONS).toContain(said);
   });
@@ -252,8 +256,8 @@ describe('the tools a session is offered', () => {
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(11350);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(31950);
+    expect(read.length).toBeLessThan(12050);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(31650);
   });
 
   /**
@@ -291,7 +295,7 @@ describe('the tools a session is offered', () => {
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
       expect(read.length).toBeLessThan(99999);
-      expect(JSON.stringify({ tools }).length).toBeLessThan(29900);
+      expect(JSON.stringify({ tools }).length).toBeLessThan(29400);
     } finally {
       await plain.close();
     }
@@ -338,7 +342,7 @@ describe('the tools a session is offered', () => {
   });
 
   it('carry the answer as structuredContent too, the same document as the text', async () => {
-    const reply = (await client.callTool({ name: 'list_entries', arguments: { maxNodes: 2 } })) as {
+    const reply = (await client.callTool({ name: 'list_entries', arguments: { verbose: true, maxNodes: 2 } })) as {
       content: Array<{ text: string }>;
       structuredContent?: unknown;
     };
@@ -831,7 +835,7 @@ describe('an answer that could not be given (P94)', () => {
       ['search', { query: 'zzzz-nothing-zzzz' }],
     ];
     for (const [name, args] of failing) {
-      const reply = (await client.callTool({ name, arguments: args })) as { isError?: boolean; structuredContent?: unknown; content: Array<{ text: string }> };
+      const reply = (await client.callTool({ name, arguments: { verbose: true, ...args } })) as { isError?: boolean; structuredContent?: unknown; content: Array<{ text: string }> };
       expect(reply.isError, name).toBe(true);
       expect(reply.structuredContent, name).toBeUndefined();
       expect(JSON.parse(reply.content[0]!.text).error, name).toEqual(expect.any(String));
@@ -1087,7 +1091,7 @@ describe('dead, findings, type_usage and scoped prompts', () => {
     await server.connect(serverSide);
     const own = new Client({ name: 'scope', version: '0' });
     await own.connect(clientSide);
-    const response = (await own.callTool({ name: 'describe_for_prompt', arguments: { id: 'POST /orders', scope: 'class' } })) as {
+    const response = (await own.callTool({ name: 'describe_for_prompt', arguments: { verbose: true, id: 'POST /orders', scope: 'class' } })) as {
       isError?: boolean;
       content: Array<{ text: string }>;
     };

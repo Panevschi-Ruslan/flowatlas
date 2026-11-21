@@ -110,7 +110,7 @@ const checker: ContractChecker = () => [
 let client: Client;
 
 const call = async (name: string, args: Record<string, unknown> = {}): Promise<any> => {
-  const response = (await client.callTool({ name, arguments: args })) as { content: Array<{ text: string }> };
+  const response = (await client.callTool({ name, arguments: { verbose: true, ...args } })) as { content: Array<{ text: string }> };
   return JSON.parse(response.content[0]!.text);
 };
 
@@ -240,7 +240,7 @@ describe('a walk that comes back on itself', () => {
 
 describe('an answer that is an error', () => {
   it('says isError, with nothing to check against a schema', async () => {
-    const reply = (await client.callTool({ name: 'what_changed', arguments: {} })) as { isError?: boolean; structuredContent?: unknown };
+    const reply = (await client.callTool({ name: 'what_changed', arguments: { verbose: true } })) as { isError?: boolean; structuredContent?: unknown };
     expect(reply.isError).toBe(true);
     expect(reply.structuredContent).toBeUndefined();
   });
@@ -265,7 +265,7 @@ describe('impact with two things to say (P132, P94)', () => {
     const other = new Client({ name: 'test', version: '0' });
     await other.connect(clientSide);
     try {
-      const reply = (await other.callTool({ name: 'impact', arguments: { symbol: target, detail: 3 } })) as { content: Array<{ text: string }> };
+      const reply = (await other.callTool({ name: 'impact', arguments: { verbose: true, symbol: target, detail: 3 } })) as { content: Array<{ text: string }> };
       const answer = JSON.parse(reply.content[0]!.text);
       expect(answer.truncated).toBe('reachability stopped at the walk limit of 4000 nodes; entries past it are not listed');
       // A server on a database alone serves no code, so the note does not send the agent to read it there (P360).

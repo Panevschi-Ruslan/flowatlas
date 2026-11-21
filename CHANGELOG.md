@@ -2269,6 +2269,34 @@ only one of them moved.
   send independent calls together, and to ask `verbose: true` only when a
   field is missing. The search hook's note names the call and no longer the
   terminal command.
+- **The graph server's answers are compact by default, and `verbose: true`
+  answers as before (P365).** An assistant pays for every character of an
+  answer on every later turn, and most of a row said again what its `id`
+  already says. Every answer now passes, once, where answers are serialised,
+  through one compaction whatever tool wrote it. On a row with an `id` (or a
+  gap's `gapId`): `type` goes when the id starts with it (and `method` on a
+  symbol whose id ends `Class.member`), `service` when the id names it, `label`
+  when it is the id's tail as written or said aloud (`GET /orders` beside its
+  way in's id), `kind` when a way in's id says it, the file of `loc` when the id
+  holds it (`loc` becomes `line`, or goes when the id holds the line too), and
+  any other field that is a part of the id, the tail of an id its `meta` says
+  in full (`selectedIn` beside `meta.selectedBy`) or the id of the row it is
+  under; a `meta` key goes when it repeats the row's own field, a part of its
+  id or a word of its label. Below the answer's own fields, null, `false` and
+  empty fields go; `next` keeps at most two calls, or the paging call alone
+  when the list was cut. A field it does not know is kept, and `detail` means
+  what it did. Every tool takes `verbose` (default `false`) for the whole
+  answer; `get_source` and the Markdown of `describe_for_prompt` are never
+  compacted, and the page, the exported graph and the reports are unchanged.
+  The `outputSchema` each tool lists now requires no field, and a row that may
+  say `loc` may say `line`. On seven fixtures' graphs the answers of the tools
+  an agent calls most are 0.74 of their whole size in all, from 0.54
+  (`list_entries`) to 0.87 (`dead`); what is left is ids, edges and `next`
+  (docs/mcp.md, *Answers*).
+  `flowatlas explain --format json` prints the compact answer on one line, and
+  `--verbose` the whole one as before. The MCP snapshots are asked
+  `verbose: true` and did not move; `expected.mcp.compact` beside three
+  fixtures holds the compact answers.
 
 - **A route on an application the framework's own maker made is as sure as
   a typed one (P346).** With nothing installed, a call or `new` of a

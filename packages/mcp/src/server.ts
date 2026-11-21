@@ -60,6 +60,7 @@ const INSTRUCTION_LINES: readonly string[] = [
   '- to hand on: describe_for_prompt({id}) writes any of these as Markdown.',
   "Inputs shared by the tools that take them, said only here: `detail` 0 is ids only, 1 (the default) adds file:line, service and kind, 2 what the reader knows of each row; `service` keeps one service's rows; `maxNodes` is the most rows (150 unless the tool says), and a list cut short says `total` and `nextOffset`: the same call with `offset: nextOffset` reads on.",
   'Only the tools this project can answer are listed: the run-time ones after flowatlas observe, check_rules with rules configured, what_changed after flowatlas diff, the channel and type tools once the graph holds one. start_here says what is not listed in `hidden`; the list changes as the project does.',
+  'Answers are compact: a row leaves out what its `id` already says, and empty fields; `verbose: true` gives every field.',
 ];
 
 /** The most characters the instructions may run to (P366): they are re-sent on every turn of a session. */
@@ -69,7 +70,7 @@ export const INSTRUCTIONS_MAX = 2500;
 const LISTING_LINE = INSTRUCTION_LINES.find((line) => line.startsWith('Only the tools this project can answer')) as string;
 
 /** Said instead of the chains' last step when the server serves no code (P360). */
-const NO_CODE_LINE = 'This server serves no code: to read a step, open the `loc` (file:line, at `detail` 1) its row gives, in its repository.';
+const NO_CODE_LINE = 'This server serves no code: to read a step, open the file and line its row gives at `detail` 1 (`loc`, or the file in its `id` and `line`), in its repository.';
 
 export const INSTRUCTIONS = INSTRUCTION_LINES.join('\n');
 

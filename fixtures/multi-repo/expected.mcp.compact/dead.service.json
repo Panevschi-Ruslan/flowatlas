@@ -1,0 +1,50 @@
+{
+  "rows": [
+    {
+      "id": "entry:gateway:http:POST:/orders/charge",
+      "verdict": "dead",
+      "reason": "no http_calls/hits from any repo (may be a public API)",
+      "loc": "src/orders/orders.controller.ts:50"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/pay",
+      "verdict": "dead",
+      "reason": "no http_calls/hits from any repo (may be a public API)",
+      "loc": "src/orders/orders.controller.ts:45"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/cancel",
+      "verdict": "unknown",
+      "reason": "no http_calls/hits from any repo (may be a public API); a request that found no route is one segment off it",
+      "loc": "src/orders/orders.controller.ts:35",
+      "evidence": {
+        "oneOff": [
+          {
+            "call": "ui_api_call:web#src/app/orders-api.service.ts:106:12",
+            "asks": "POST /orders/:param/hold",
+            "differs": "hold for cancel",
+            "loc": "src/app/orders-api.service.ts:106"
+          }
+        ]
+      }
+    }
+  ],
+  "total": 3,
+  "counts": {
+    "dead": 2,
+    "unknown": 1
+  },
+  "excludedEntryKinds": [
+    "cron",
+    "bot_command",
+    "bot_callback",
+    "bot_event",
+    "scene_step",
+    "invoke",
+    "task",
+    "screen"
+  ],
+  "next": [
+    "dead({id: \"entry:gateway:http:POST:/orders/charge\"})"
+  ]
+}

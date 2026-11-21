@@ -1,0 +1,32 @@
+{
+  "channel": {
+    "id": "channel:order.created",
+    "loc": "src/orders/orders.service.ts:49",
+    "service": "orders",
+    "meta": {
+      "channelKind": "topic",
+      "adapters": [
+        "nestjs-kafka"
+      ],
+      "producers": 1,
+      "consumers": 1
+    }
+  },
+  "consumers": [
+    {
+      "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "line": 17,
+      "kind": "event",
+      "meta": {
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:billing:event:order.created"
+      }
+    }
+  ],
+  "total": 1,
+  "next": [
+    "who_emits({channel: \"channel:order.created\"})",
+    "who_calls({symbol: \"consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated\"})"
+  ]
+}

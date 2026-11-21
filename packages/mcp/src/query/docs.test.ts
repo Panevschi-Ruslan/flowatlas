@@ -64,7 +64,7 @@ const connect = async (path: string): Promise<Client> => {
 };
 
 const call = async (on: Client, name: string, args: Record<string, unknown>): Promise<any> => {
-  const response = (await on.callTool({ name, arguments: args })) as { content: Array<{ text: string }> };
+  const response = (await on.callTool({ name, arguments: { verbose: true, ...args } })) as { content: Array<{ text: string }> };
   return JSON.parse(response.content[0]!.text);
 };
 

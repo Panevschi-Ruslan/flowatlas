@@ -7,6 +7,7 @@
  */
 export { createFlowatlasServer, startStdioServer, SERVER_NAME, INSTRUCTIONS, INSTRUCTIONS_MAX } from './server.js';
 export type { ServerOptions } from './server.js';
+export { compactAnswer, compactOutputSchema, FULL_ANSWER_TOOLS } from './compact.js';
 export { canAnswer, isToolName, NEEDS, TOOL_NAMES, TOOL_NEEDS } from './tool-needs.js';
 export type { Need, NeedSource, ToolFacts, ToolName } from './tool-needs.js';
 export { LISTING_POLL_MS, listingSettingsOf, ToolListing } from './tool-listing.js';

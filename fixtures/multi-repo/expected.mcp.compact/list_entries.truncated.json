@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "entry:billing:event:invoice.requested",
+      "loc": "src/invoices/invoices.consumer.ts:28"
+    },
+    {
+      "id": "entry:billing:event:order.created",
+      "loc": "src/invoices/invoices.consumer.ts:17"
+    },
+    {
+      "id": "entry:billing:http:GET:/invoices/:param",
+      "loc": "src/invoices/invoices.controller.ts:26"
+    }
+  ],
+  "total": 17,
+  "truncated": "14 more; next page offset 3",
+  "nextOffset": 3,
+  "next": [
+    "list_entries({maxNodes: 3, offset: 3})"
+  ]
+}
