@@ -44,7 +44,7 @@ export const SERVER_NAME = 'flowatlas';
  * calls that take the ids it just returned.
  */
 const INSTRUCTION_LINES: readonly string[] = [
-  'A map of every repository in this project, already joined: ask it what reaches what instead of reading files.',
+  'A map of every repository in this project, already joined.',
   // The same questions the files `flowatlas agents install` writes list (P227).
   agentQuestionsLine(),
   'Begin with start_here: counts per service, the commonest gaps, and entry ids to start from.',
@@ -58,10 +58,10 @@ const INSTRUCTION_LINES: readonly string[] = [
   '- bugs and dead code: findings() -> findings({kind}); dead({id}), or dead({service}) for a list.',
   '- run time: hot_paths -> slow_steps({entry: id}) -> trace_for({entry: id}); undeclared_failures; never_seen -> dead({id}).',
   '- to hand on: describe_for_prompt({id}) writes any of these as Markdown.',
-  "Inputs shared by the tools that take them, said only here: `detail` 0 is ids only, 1 (the default) adds file:line, service and kind, 2 what the reader knows of each row; `service` keeps one service's rows; `maxNodes` is the most rows (150 unless the tool says), and a list cut short says `total` and `nextOffset`: the same call with `offset: nextOffset` reads on.",
-  'Only the tools this project can answer are listed: the run-time ones after flowatlas observe, check_rules with rules configured, what_changed after flowatlas diff, the channel and type tools once the graph holds one. start_here says what is not listed in `hidden`; the list changes as the project does.',
+  "Shared inputs: `detail` 0 is ids only, 1 (the default) adds file:line, service and kind, 2 what the reader knows of each row; `service` keeps one service's rows; `maxNodes` is the most rows (150 unless the tool says), and a list cut short says `total` and `nextOffset`: ask again with `offset: nextOffset`.",
+  'Only the tools this project can answer are listed: the run-time ones after flowatlas observe, check_rules with rules configured, what_changed after flowatlas diff, the channel and type tools once the graph holds one. start_here says what is not listed in `hidden`.',
   'Answers are compact: a row leaves out what its `id` says; `verbose: true` gives every field.',
-  'Rows of code carry `reach` and `from`, the nearest way in: no need to check them. `complete: true` is the whole answer, else `left` says what was cut. Several at once: dead `ids`, find_symbol and search `queries`, get_type `types`, who_calls `symbols`.',
+  'Rows of code carry `reach` (alive; maybe: behind an unread call, see `gap`, `behind`; unreached; dead; outside: its caller is outside the project) and `from`, the nearest way in: no need to check them; keep maybe rows when asked what breaks. `complete: true` is the whole answer, else `left` says what was cut. Several at once: dead `ids`, find_symbol and search `queries`, get_type `types`, who_calls `symbols`.',
 ];
 
 /** The most characters the instructions may run to (P366): they are re-sent on every turn of a session. */

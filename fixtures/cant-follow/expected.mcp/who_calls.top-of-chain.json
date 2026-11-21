@@ -5,8 +5,9 @@
     "label": "ReminderJob.start",
     "loc": "src/jobs/reminder.job.ts:10",
     "service": "storefront",
-    "reach": "unreached",
-    "from": "none"
+    "reach": "maybe",
+    "from": "behind",
+    "gap": "gap:storefront|src/jobs/reminder.job.ts|di-type-unresolved"
   },
   "topOfChain": true,
   "gapsInFile": 2,

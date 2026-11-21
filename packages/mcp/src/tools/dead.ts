@@ -160,6 +160,8 @@ export const deadOutput = {
   from: reachOutput.from,
   ways: reachOutput.ways,
   walkCut: reachOutput.walkCut,
+  gap: reachOutput.gap,
+  behind: reachOutput.behind,
   alsoAnswers: z.array(z.string()).optional(),
   channelUsed: z.string().optional(),
   rows: z.array(deadRowOutput).optional(),
@@ -205,7 +207,7 @@ const answerOne = (db: GraphDb, ctx: ToolContext, reader: ReachReader, ref: stri
   if (answer === undefined) return { error: `no node ${JSON.stringify(found.node.id)}` };
   const loc = locOf(answer);
   // Where it is reached from (P364), so an alive answer needs no who_calls after it.
-  const { from, ways, walkCut } = reader.of(answer.id);
+  const { from, ways, walkCut, gap, behind } = reader.of(answer.id);
   return withNext(
     {
       id: answer.id,
@@ -221,6 +223,9 @@ const answerOne = (db: GraphDb, ctx: ToolContext, reader: ReachReader, ref: stri
       ...(from === undefined ? {} : { from }),
       ...(ways === undefined ? {} : { ways }),
       ...(walkCut === undefined ? {} : { walkCut }),
+      // A maybe's unread call and the code its chain stops at (P367); `reason` already says why otherwise.
+      ...(gap === undefined ? {} : { gap }),
+      ...(behind === undefined || behind === answer.reason ? {} : { behind }),
       ...(found.alsoAnswers === undefined ? {} : { alsoAnswers: found.alsoAnswers }),
       ...(found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed }),
     },

@@ -23,6 +23,11 @@
  *   says in full (a gap's `reason` beside its `gapId`, `selectedIn` beside
  *   `meta.selectedBy`), and a `meta` key equal to the row's own field.
  *
+ * Anywhere below the answer's own fields, a field whose value is the id of
+ * the answer's `target` (a failure's `at` thrown in the very method impact
+ * was asked about) or of a row it is inside goes, and a `file` an id beside it
+ * holds (the row's own, another field's, the target's) goes too (P367).
+ *
  * Below the answer's own fields, a field that is null, false, or an empty list
  * or object goes too. The answer's own fields stay as they are: an empty list
  * there (no consumer) or a `false` (`dead: false`) is the answer. `next` keeps
@@ -44,7 +49,7 @@ export const COMPACT_MAX_NEXT = 2;
  * whole answer, and whether and from where a row is reached. A row's id stays
  * too, whatever else says it.
  */
-const KEPT: ReadonlySet<string> = new Set(['id', 'gapId', 'complete', 'left', 'reach', 'from']);
+const KEPT: ReadonlySet<string> = new Set(['id', 'gapId', 'complete', 'left', 'reach', 'from', 'gap', 'behind']);
 
 /** The fields that name the row, each dropped only by its own rule above. */
 const IDENTITY: ReadonlySet<string> = new Set(['type', 'label', 'kind', 'service', 'loc']);
@@ -211,6 +216,8 @@ const compactValue = (value: unknown, depth: number, under: readonly string[]): 
 const compactObject = (row: Plain, depth: number, under: readonly string[]): Plain => {
   const ids = ID_KEYS.map((key) => row[key]).filter((value): value is string => typeof value === 'string');
   const fullIds = [...ids, ...metaIds(row.meta)];
+  // The ids that may hold a `file` beside them: the row's, its fields' and meta's in full, and those it is inside.
+  const holders = [...fullIds, ...metaIds(row), ...under];
   const inside = ids.length === 0 ? under : [...under, ...ids];
   const out: Plain = {};
   for (const [key, value] of Object.entries(row)) {
@@ -220,8 +227,10 @@ const compactObject = (row: Plain, depth: number, under: readonly string[]): Pla
     }
     const blankable = depth > 0;
     if (blankable && isBlank(value)) continue;
-    // A field naming the row it is inside (`meta.selects[].consumer` on that consumer's row).
+    // A field naming the row it is inside (`meta.selects[].consumer` on that consumer's row), or the answer's target.
     if (typeof value === 'string' && under.includes(value)) continue;
+    // A file an id beside it says already (`file` beside a failure's `at`, or beside the target that `at` was).
+    if (key === 'file' && typeof value === 'string' && holders.some((id) => holdsFile(id, value))) continue;
     if (ids.length > 0 && typeof value === 'string' && IDENTITY.has(key)) {
       if (key === 'loc') {
         const left = locBesideAll(ids, value);
@@ -245,8 +254,12 @@ const compactObject = (row: Plain, depth: number, under: readonly string[]): Pla
   return out;
 };
 
+/** The id of the answer's `target`, which a field below may only name again. */
+const targetIdOf = (answer: unknown): string[] =>
+  isPlain(answer) && isPlain(answer.target) && typeof answer.target.id === 'string' ? [answer.target.id] : [];
+
 /** The answer with every fact its ids already say left out (see above); anything else as it was. */
-export const compactAnswer = <T>(answer: T): T => compactValue(answer, 0, []) as T;
+export const compactAnswer = <T>(answer: T): T => compactValue(answer, 0, targetIdOf(answer)) as T;
 
 /**
  * An output schema as the server lists it (P365): no field is required,

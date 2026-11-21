@@ -33,7 +33,9 @@ Type-checked, never executed:
 - `who_consumes` on `TICKET_ASSIGNED`: both screens' handlers, each `reach:
   alive` and `from: "screen /queue"` or `"screen /tickets/:param"`, and
   `complete: true`; `next` names no `dead`, `who_calls` or `search` on them.
-- `who_consumes` on `TICKET_REOPENED`: the panel's handler, `from: "none"`.
+- `who_consumes` on `TICKET_REOPENED`: the panel's handler, `reach: maybe`,
+  `from: "behind"`, `behind` naming the panel: nothing read renders it, but a
+  render the reading does not draw could (P367).
 - `who_emits` on `TICKET_ASSIGNED`: the publish, reached from its route.
 - `dead` with `ids`, `find_symbol` and `search` with `queries`: several asked
   in one call, one answer each under `answers`.

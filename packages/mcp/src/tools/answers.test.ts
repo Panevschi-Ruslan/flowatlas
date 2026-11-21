@@ -267,7 +267,9 @@ describe('impact with two things to say (P132, P94)', () => {
     try {
       const reply = (await other.callTool({ name: 'impact', arguments: { verbose: true, symbol: target, detail: 3 } })) as { content: Array<{ text: string }> };
       const answer = JSON.parse(reply.content[0]!.text);
-      expect(answer.truncated).toBe('reachability stopped at the walk limit of 4000 nodes; entries past it are not listed');
+      // Every caller nothing calls is a maybe row (P367), a page of them: the walk's cut is said beside the page's.
+      expect(answer.truncated).toMatch(/; reachability stopped at the walk limit of 4000 nodes; entries past it are not listed$/);
+      expect(answer.left).toContain('walk: stopped at 4000 nodes; ways in past it not listed');
       // A server on a database alone serves no code, so the note does not send the agent to read it there (P360).
       expect(answer.note).toBe('detail clamped to 2');
     } finally {

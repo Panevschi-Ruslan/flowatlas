@@ -4,10 +4,10 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, projectEdge, truncate } from '../query/detail.js';
 import { isResolved, resolveSymbol, type EntryRef } from '../query/entry-ref.js';
-import { REVERSE_EDGES, walkBack } from '../query/flow.js';
+import { REVERSE_EDGES } from '../query/flow.js';
 import { truncationMessage, type FlowNode, type WalkLimit } from '../query/types.js';
 import { MAX_NEXT, nextFor, withNext, withoutShown, type RowShown } from '../query/next.js';
-import { annotateTree, reachReader, type ReachReader } from '../query/ways-in.js';
+import { annotateTree, reachReader, viaSaid, type ReachReader, type WayInFound } from '../query/ways-in.js';
 import { figuresOf, loadObservedCounts, markObserved, nodeAmbiguous, nodeRow } from '../query/observed.js';
 import { slimForest } from '../query/wire.js';
 import { withDocs } from '../query/docs.js';
@@ -377,7 +377,8 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
     'impact',
     {
       title: 'Blast radius',
-      description: 'Every entry that reaches a symbol, by service: what to retest if it changes.',
+      description:
+        'Every way in that could break if a symbol changes, in any service: callers past a route or channel name it in `via`; a chain stopped by an unread call is a `maybe` row. Detail 1 is enough.',
       inputSchema: {
         symbol: z.string().describe('node id or name'),
         service: serviceInput,
@@ -394,38 +395,43 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
           return candidatesAnswer(found, input, detail, (id) => callOf('impact', { symbol: id, service: input.service }));
         }
         const target = found.node;
+        const reader = reachReader(db, ctx.handle, detail);
 
         // A class answers for its methods (P95): calls point at them, never at it.
         const { starts, forClass } = startsOf(db, target);
-        const from = forClass ? [target.id, ...starts.map((start) => start.id)] : target.id;
-        const ownIds = new Set(typeof from === 'string' ? [from] : from);
-        // Twelve hops back, and one more per step of every workflow the walk climbs through.
-        const reach = walkBack(12, (maxDepth) =>
-          db.reverseReach(from, { edgeTypes: REVERSE_EDGES, maxDepth, maxNodes: IMPACT_WALK_NODES }),
-        );
-        const entries: GraphNode[] = [];
+        const ownIds = new Set([target.id, ...starts.map((start) => start.id)]);
+        // Back from the target past every way in to the callers beyond it (P367): a
+        // screen that shows the component whose method requests the route, a bot
+        // command whose handler does, each with the crossing it came through.
+        const walked = reader.waysIn(forClass ? starts : [target], IMPACT_WALK_NODES);
         const channels = new Set<string>();
-        const entriesByService: Record<string, number> = {};
         const reachedByService: Record<string, number> = {};
         let reached = 0;
-        let elsewhere = 0;
-
-        for (const row of reach.rows) {
-          if (ownIds.has(row.id)) continue;
+        for (const node of walked.met) {
+          if (ownIds.has(node.id)) continue;
           reached += 1;
-          const node = db.node(row.id);
-          if (node !== undefined) {
-            reachedByService[node.repo] = (reachedByService[node.repo] ?? 0) + 1;
-          }
-          if (row.type === 'channel') channels.add(row.id);
-          if (row.type !== 'entry' || node === undefined) continue;
-          if (!inService(input.service)(node)) {
+          reachedByService[node.repo] = (reachedByService[node.repo] ?? 0) + 1;
+          if (node.type === 'channel') channels.add(node.id);
+        }
+
+        const inScope = inService(input.service);
+        const entriesByService: Record<string, number> = {};
+        let elsewhere = 0;
+        const ways: WayInFound[] = [];
+        for (const way of walked.found) {
+          // Its ways in are the rows: a consumer nothing read publishes to is walked past, and listed by its way in.
+          if (ownIds.has(way.node.id) || way.node.type !== 'entry') continue;
+          if (!inScope(way.node)) {
             elsewhere += 1;
             continue;
           }
-          entries.push(node);
-          entriesByService[node.repo] = (entriesByService[node.repo] ?? 0) + 1;
+          ways.push(way);
+          entriesByService[way.node.repo] = (entriesByService[way.node.repo] ?? 0) + 1;
         }
+        // A chain that ends before any way in, where an unread call could reach it: a maybe row, with the gap.
+        const maybes = walked.tops.filter((top) => !ownIds.has(top.node.id) && inScope(top.node) && reader.maybeEnd(top.node));
+        const byId = (a: WayInFound, b: WayInFound): number => (a.node.id < b.node.id ? -1 : a.node.id > b.node.id ? 1 : 0);
+        const listed = [...ways.sort(byId), ...maybes.sort(byId)];
 
         // A change is visible in every service the chain runs into, whether or
         // not an entry point was found above it. Counting only the entry points
@@ -435,22 +441,23 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
           .filter((repo) => entriesByService[repo] === undefined)
           .sort();
 
-        entries.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-        const { items, total, truncated, nextOffset } = truncate(entries, maxNodes, input.offset);
-        // Whether the target and each way in runs (P364); the ways in are the answer's rows, so no `from`.
-        const reader = reachReader(db, ctx.handle, detail);
-        const rows = items.map((entry) => reader.annotate(projectDetail(entry, detail)));
+        const { items, total, truncated, nextOffset } = truncate(listed, maxNodes, input.offset);
+        // Whether each way in runs (P364) and the crossing it reaches the target through (P367).
+        const rows = items.map((way) => {
+          const row = reader.annotate(projectDetail(way.node, detail));
+          return detail < 1 || way.via === undefined ? row : { ...row, via: viaSaid(way.via, way.node) };
+        });
         const targetReach = detail < 1 ? undefined : reader.of(target.id).reach;
         const args = { symbol: target.id, service: input.service, detail: input.detail, maxNodes };
         // The walk's own limit is a cut, said where cuts are said (P94): it
         // used to be a note, which the detail clamp's note overwrote (P132).
-        const walkCut = reach.truncated
+        const walkCut = walked.cut
           ? `reachability stopped at the walk limit of ${IMPACT_WALK_NODES} nodes; entries past it are not listed`
           : undefined;
         const cuts = [...(nextOffset === undefined ? [] : [truncated!]), ...(walkCut === undefined ? [] : [walkCut])];
         // No way in, said rather than left as an empty list, with where to look (P94).
         const entriesNone =
-          entries.length > 0
+          ways.length > 0
             ? undefined
             : elsewhere > 0
               ? `no way in of ${input.service ?? ''} reaches this; ${elsewhere} in other services do`
@@ -459,11 +466,11 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
                 : 'nothing reaches this';
         const leads =
           entriesNone === undefined
-            ? nextFor(items[0])
+            ? nextFor(items[0]?.node)
             : [
                 ...(elsewhere > 0 ? [callOf('impact', { symbol: target.id })] : []),
                 // Deeper callers only where something reaches it at all.
-                ...(reached > 0 ? [callOf('who_calls', { symbol: target.id, depth: 8 }, { ...COMMON_DEFAULTS, depth: DEFAULT_CALLER_DEPTH })] : []),
+                ...(reached > 0 && maybes.length === 0 ? [callOf('who_calls', { symbol: target.id, depth: 8 }, { ...COMMON_DEFAULTS, depth: DEFAULT_CALLER_DEPTH })] : []),
                 ...gapLeads(target),
               ];
         return withNext({
@@ -479,6 +486,7 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
           // rather than indistinguishable from nothing reaching it.
           reached,
           entriesByService,
+          ...(maybes.length === 0 ? {} : { maybe: maybes.length }),
           reachedByService,
           servicesWithoutEntry,
           channels: [...channels].sort(),
@@ -487,7 +495,9 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
           ...completeOf([
             pageLeft(total, items.length, input.offset, nextOffset),
             walkCut !== undefined && `walk: stopped at ${IMPACT_WALK_NODES} nodes; ways in past it not listed`,
-            entriesNone !== undefined && reached > 0 && elsewhere === 0 && 'gaps: something reaches it but no way in does; its callers may be behind a gap',
+            maybes.length > 0 &&
+              `gaps: ${maybes.length} chain${maybes.length === 1 ? ' stops' : 's stop'} at an unread call before any way in: the maybe row${maybes.length === 1 ? '' : 's'}`,
+            entriesNone !== undefined && reached > 0 && elsewhere === 0 && maybes.length === 0 && 'gaps: something reaches it but no way in does; its callers may be behind a gap',
             ...reader.left(),
           ]),
           ...(note === undefined ? {} : { note }),

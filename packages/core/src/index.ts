@@ -1071,6 +1071,7 @@ export {
   causeMeta,
   causeOfRow,
   causePartsOf,
+  recordsFollowCause,
   groupCantFollow,
   hintForCause,
   isKnownCause,

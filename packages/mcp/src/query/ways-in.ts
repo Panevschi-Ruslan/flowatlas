@@ -1,4 +1,4 @@
-import { isMessageTypeNode, type GraphEdge, type GraphNode } from '@flowatlas/core';
+import { gapIdOf, isMessageTypeNode, recordsFollowCause, wasMissed, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import {
   deadJudge,
   JUDGED_TYPES,
@@ -7,7 +7,6 @@ import {
   VERDICT_ORDER,
   type DeadAnswer,
   type DeadOptions,
-  type DeadVerdict,
   type GraphDb,
 } from '@flowatlas/linker';
 import type { DbHandle } from './db.js';
@@ -16,33 +15,55 @@ import { loadObserved } from './observed.js';
 
 /**
  * Whether a row's code runs, and where it is reached from (P364), said on the
- * row so an answer needs no `dead`, `who_calls` or `search` after it.
+ * row so an answer needs no `dead`, `who_calls` or `search` after it; and
+ * never a maybe said as a no (P367).
  *
- * `reach` is the verdict `dead` gives, by the same functions (`deadJudge`):
- * `alive`, `dead`, `unknown`, and `unreached` for `dead`'s `likely-dead` -
- * nothing read reaches it, though a call the reading did not follow may. An
- * `alive` row whose walk back ran to its end and met no way in is
- * `unreached` too: something calls it, but nothing a way in reaches. A site
- * of code `dead` does not judge (a publish, a request) takes the liveliest
- * verdict of the code it is written in.
+ * `reach` is read off the verdict `dead` gives, by the same functions
+ * (`deadJudge`):
+ *
+ * - `alive`: a way in reaches it.
+ * - `maybe`: `dead`'s `likely-dead`, or nothing read reaches it but a call the
+ *   reading did not follow could: a walk back from the row ends at code
+ *   nothing read calls, in a file with an unread call or judged `likely-dead`
+ *   itself. The row names it: `gap`, the unread call's gap id, and `behind`,
+ *   the code the chain stops at (or, for the row itself, why it may still be
+ *   called).
+ * - `unreached`: no way in reaches it, and no unread call could.
+ * - `dead`: as `dead` answers.
+ * - `outside`: something outside the project calls it - a webhook, a bot
+ *   update or command, a cron, a screen opened at its address, a public
+ *   route. A way in is never doubtful just because its caller is outside.
+ *
+ * A site of code `dead` does not judge (a publish, a request) takes the
+ * liveliest verdict of the code it is written in.
  *
  * `from` is the nearest way in: the first ways in a walk back from the row
- * meets, a way in not walked past, the row's own service first. `ways` counts
- * them where there are several. The walk is bounded per row and per answer;
- * `walkCut` says a row's walk stopped at its bound (so `ways` is a floor, and
- * a missing `from` means none was met within it), and rows past the answer's
- * bound carry no `from`, which the answer's `left` says.
+ * meets, a way in not walked past, the row's own service first; on a `maybe`
+ * row nothing read reaches, the nearest way in beyond the unread call where
+ * one is known (a walk back from the code the call is written in), and
+ * `behind` otherwise. `ways` counts them where there are several. The walk is
+ * bounded per row and per answer; `walkCut` says a row's walk stopped at its
+ * bound (so `ways` is a floor, and a missing `from` means none was met within
+ * it), and rows past the answer's bound carry no `from`, which the answer's
+ * `left` says.
  */
-export type Reach = 'alive' | 'unreached' | 'dead' | 'unknown';
+export type Reach = 'alive' | 'maybe' | 'unreached' | 'dead' | 'outside';
+
+export const REACHES: readonly Reach[] = ['alive', 'maybe', 'unreached', 'dead', 'outside'];
 
 export interface RowReach {
   reach?: Reach;
   from?: string;
   ways?: number;
   walkCut?: true;
+  /** On a `maybe` row: the gap id of the unread call that could reach it. */
+  gap?: string;
+  /** On a `maybe` row: the code its chain stops at, or why the row itself may still be called. */
+  behind?: string;
 }
 
-const REACH_OF: Readonly<Record<DeadVerdict, Reach>> = { alive: 'alive', 'likely-dead': 'unreached', dead: 'dead', unknown: 'unknown' };
+/** What `from` says on a `maybe` row when no way in beyond the unread call is known. */
+export const FROM_BEHIND = 'behind';
 
 /** The most nodes one row's walk back reads. */
 export const ROW_WALK = 300;
@@ -68,8 +89,31 @@ export const deadOptionsOf = (handle: Pick<DbHandle, 'config'> & { path?: string
   };
 };
 
+/**
+ * A verdict as `reach` says it (P367). `unknown` is never said: with what is
+ * outside named (a kind of way in, an infrastructure role, a stream, a
+ * library), or on a way in nothing reaches with no call one segment off, the
+ * caller is outside the project; otherwise an unread call could reach it.
+ */
+export const reachOfVerdict = (node: Pick<GraphNode, 'type'>, answer: Pick<DeadAnswer, 'verdict' | 'evidence'>): Reach => {
+  switch (answer.verdict) {
+    case 'alive':
+      return 'alive';
+    case 'dead':
+      return 'dead';
+    case 'likely-dead':
+      return 'maybe';
+    default:
+      if (answer.evidence.outside !== undefined) return 'outside';
+      return node.type === 'entry' && answer.evidence.oneOff === undefined ? 'outside' : 'maybe';
+  }
+};
+
 /** The edges that run the code a site is written in: a call, a route or action handing it work. */
 const SITE_CALLERS = ['calls', 'handles'] as const;
+
+/** The edges by which a caller reaches a way in across a crossing: a request to a route. */
+const REQUEST_EDGES: ReadonlySet<string> = new Set(['http_calls', 'hits']);
 
 const CLASS_TYPES = new Set(['provider', 'ui_component']);
 
@@ -116,17 +160,88 @@ const readOnce = (db: GraphDb): GraphReads => {
 const isOutsideConsumer = (graph: GraphReads, node: GraphNode): boolean =>
   node.type === 'consumer' && graph.edgesTo(node.id, ['consumes']).every((edge) => graph.edgesTo(edge.from, ['emits']).length === 0);
 
+/** One hop back: the node it reaches, whether that node holds the code (see `walk`), and the edge, when it is one. */
+interface Step {
+  id: string;
+  held: boolean;
+  edge?: GraphEdge;
+  /** The handler a consumer runs: where it is held places the consumer, and what else calls it does not. */
+  ran?: true;
+}
+
+/** The unread calls of one file, read once per answer: how many, and the first, with the code it is written in. */
+interface FileGaps {
+  count: number;
+  gap: string;
+  anchor?: string;
+}
+
+/** A crossing into the start's chain: a route said aloud, or `channel <name>`, and the service it is in. */
+export interface Crossing {
+  said: string;
+  repo: string;
+}
+
+/** A way in a walk met, with the crossing it was reached through, if any. */
+export interface WayInFound {
+  node: GraphNode;
+  depth: number;
+  /** The crossing nearest the start on its path. */
+  via?: Crossing;
+}
+
+/** A crossing as `via` says it on a row: with its service after it where that is not the row's. */
+export const viaSaid = (via: Crossing, row: Pick<GraphNode, 'repo'>): string =>
+  via.repo !== '' && via.repo !== row.repo ? `${via.said} (${via.repo})` : via.said;
+
 interface Walked {
-  found: Array<{ node: GraphNode; depth: number }>;
+  found: WayInFound[];
+  /** Code nothing read calls, where a chain ended without a way in, nearest first. */
+  tops: WayInFound[];
+  /** Every node met, the start's own left out. */
+  met: GraphNode[];
   read: number;
   cut: boolean;
 }
+
+/** The crossing a hop back from `node` over `edge` passes, or nothing where it passes none. */
+const crossingOf = (node: GraphNode, edge: GraphEdge | undefined): Crossing | undefined => {
+  if (edge === undefined) return undefined;
+  if (node.type === 'entry' && REQUEST_EDGES.has(edge.type)) {
+    return { said: node.kind === undefined || node.kind === 'http' ? node.label : `${node.kind} ${node.label}`, repo: node.repo };
+  }
+  if (node.type === 'channel' && edge.type === 'emits') return { said: `channel ${node.label}`, repo: '' };
+  return undefined;
+};
+
+/**
+ * Whether impact's walk, which goes on past ways in, follows a hop. A link or
+ * a navigation onto a screen or a component is no call into the code behind
+ * it: the screen that links to another shows nothing of it and breaks with
+ * none of its changes, so the walk does not go back along one.
+ */
+const crossesInto = (node: GraphNode, step: Step): boolean =>
+  !(step.edge?.type === 'triggers' && (node.type === 'ui_component' || (node.type === 'entry' && node.kind === 'screen')));
 
 export interface ReachReader {
   /** The reach of one node, or nothing for a node the graph does not hold. */
   of(id: string): RowReach;
   /** A row with its reach after its own fields, at detail 1 and up. */
   annotate<T extends { id?: string }>(row: T): T & RowReach;
+  /**
+   * Every way in that reaches the starts (P367), walked back past each way in
+   * met to the callers beyond it, each with the crossing it was reached
+   * through; the code chains end at with no way in; and every node met.
+   * Bounded by `limit` nodes, on its own budget.
+   */
+  waysIn(starts: readonly GraphNode[], limit: number): Walked;
+  /**
+   * Whether the end of a chain is one an unread call or a caller outside the
+   * project could reach: judged `maybe` or `outside`, or in a file with a step
+   * the reading could not follow and not judged `dead`. Judged, never walked,
+   * so many ends cost little; `of` says the same of each.
+   */
+  maybeEnd(node: GraphNode): boolean;
   /** What was not computed, for the answer's `left`. */
   left(): string[];
 }
@@ -159,6 +274,22 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
     }
     return componentsByFile.get(`${repo}\u0000${file}`) ?? [];
   };
+  let gapsByFile: Map<string, FileGaps> | undefined;
+  const gapsIn = (node: GraphNode): FileGaps | undefined => {
+    if (node.file === undefined) return undefined;
+    if (gapsByFile === undefined) {
+      gapsByFile = new Map();
+      for (const row of db.allUnresolved()) {
+        // Only a step the reading could not follow, with why, is an unread call: a request that found no route is not one.
+        if (row.service === null || row.file === null || !wasMissed(row) || !recordsFollowCause(row)) continue;
+        const key = `${row.service}\u0000${row.file}`;
+        const known = gapsByFile.get(key);
+        if (known !== undefined) known.count += 1;
+        else gapsByFile.set(key, { count: 1, gap: gapIdOf({ reason: row.reason, service: row.service, file: row.file }), ...(row.node === null ? {} : { anchor: row.node }) });
+      }
+    }
+    return gapsByFile.get(`${node.repo}\u0000${node.file}`);
+  };
 
   let budget = ANSWER_WALK;
   let judged = 0;
@@ -167,20 +298,59 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
   const done = new Map<string, RowReach>();
 
   /**
-   * Back from a node to the first ways in on each path. Beside the edges
-   * every caller walk follows, the hops that place code in what holds it: a
-   * consumer runs in its handler, a component's method runs where the
-   * component is shown, a handler's class is built where it is injected, and
-   * a template's action belongs to its file's component.
+   * The hops back from a node: the edges every caller walk follows, and the
+   * hops that place code in what holds it - a consumer runs in its handler, a
+   * component's method runs where the component is shown, a handler's class
+   * is built where it is injected, and a template's action belongs to its
+   * file's component.
    */
-  const walk = (start: GraphNode): Walked => {
-    const limit = Math.min(ROW_WALK, budget);
-    const seen = new Set<string>([start.id]);
-    const found: Walked['found'] = [];
-    // A handler a consumer runs is held as the consumer's is: where its class or file is shown.
-    const handler = graph.edgesTo(start.id, ['handles']).some((edge) => edge.from.startsWith('consumer:'));
-    const queue: Array<{ node: GraphNode; depth: number; held: boolean }> = [{ node: start, depth: 0, held: handler }];
-    if (CLASS_TYPES.has(start.type)) {
+  const stepsBack = (node: GraphNode, held: boolean, isStart: boolean, holdersOnly = false): Step[] => {
+    // A consumer runs where its handler is held: the request that opened its
+    // stream is shared by every screen that opens one, so it says nothing of which.
+    const handlers = node.type === 'consumer' ? graph.edgesFrom(node.id, ['handles']) : [];
+    let into = holdersOnly ? [] : graph.edgesTo(node.id, REVERSE_EDGES).filter((edge) => handlers.length === 0 || edge.type !== 'triggers');
+    // A consumer that chooses by type runs on the types it selects, not on every publish of their channel.
+    const typed = node.type === 'consumer' ? into.filter((edge) => edge.type === 'consumes' && isMessageTypeNode(graph.node(edge.from))) : [];
+    if (typed.length > 0) into = into.filter((edge) => edge.type !== 'consumes' || typed.includes(edge));
+    const steps: Step[] = into.map((edge) => ({ id: edge.from, held: false, edge }));
+    for (const edge of handlers) steps.push({ id: edge.to, held: true, ran: true });
+    if (node.type === 'method' || node.type === 'function') {
+      const owner = ownerOf(node.id);
+      const holder = owner === undefined ? undefined : graph.node(owner);
+      if (holder !== undefined && (holder.type === 'ui_component' || held)) steps.push({ id: holder.id, held: true });
+    }
+    if (CLASS_TYPES.has(node.type) && (held || isStart)) {
+      for (const edge of graph.edgesTo(node.id, ['injects'])) steps.push({ id: edge.from, held: true });
+    }
+    if (node.type === 'ui_component') {
+      for (const edge of graph.edgesTo(node.id, ['imports'])) {
+        if (graph.node(edge.from)?.type === 'ui_component') steps.push({ id: edge.from, held: true });
+      }
+    }
+    // A template's action, and a module's function a consumer runs, belong to the components of their file.
+    if (node.type === 'ui_action' || (node.type === 'function' && held)) {
+      for (const component of componentsIn(node.repo, node.file)) steps.push({ id: component.id, held: true });
+    }
+    return steps;
+  };
+
+  /**
+   * Back from the starts to the ways in on each path. A row's walk stops at
+   * the first way in on a path; impact's walks on past each one (`through`),
+   * to the callers beyond it, saying the crossing each was reached through.
+   */
+  const walk = (starts: readonly GraphNode[], limit: number, through: boolean): Walked => {
+    const startIds = new Set(starts.map((start) => start.id));
+    const seen = new Set<string>(startIds);
+    const found: WayInFound[] = [];
+    const tops: WayInFound[] = [];
+    const met: GraphNode[] = [];
+    const queue: Array<{ node: GraphNode; depth: number; held: boolean; via?: Crossing; ran?: true }> = [];
+    for (const start of starts) {
+      // A handler a consumer runs is held as the consumer's is: where its class or file is shown.
+      const handler = graph.edgesTo(start.id, ['handles']).some((edge) => edge.from.startsWith('consumer:'));
+      queue.push({ node: start, depth: 0, held: handler });
+      if (!CLASS_TYPES.has(start.type)) continue;
       for (const method of methodsOfClass(start.id)) {
         const node = graph.node(method);
         if (node === undefined || seen.has(method)) continue;
@@ -198,61 +368,83 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
       }
       read += 1;
       const { node, depth } = item;
-      if (node.id !== start.id && (node.type === 'entry' || isOutsideConsumer(graph, node))) {
-        found.push({ node, depth });
-        continue;
+      const isStart = startIds.has(node.id);
+      if (!isStart) met.push(node);
+      const wayIn = !isStart && (node.type === 'entry' || isOutsideConsumer(graph, node));
+      if (wayIn) {
+        found.push({ node, depth, ...(item.via === undefined ? {} : { via: item.via }) });
+        if (!through) continue;
       }
-      // A consumer runs where its handler is held: the request that opened its
-      // stream is shared by every screen that opens one, so it says nothing of which.
-      const handlers = node.type === 'consumer' ? graph.edgesFrom(node.id, ['handles']) : [];
-      let into = graph.edgesTo(node.id, REVERSE_EDGES).filter((edge) => handlers.length === 0 || edge.type !== 'triggers');
-      // A consumer that chooses by type runs on the types it selects, not on every publish of their channel.
-      const typed = node.type === 'consumer' ? into.filter((edge) => edge.type === 'consumes' && isMessageTypeNode(graph.node(edge.from))) : [];
-      if (typed.length > 0) into = into.filter((edge) => edge.type !== 'consumes' || typed.includes(edge));
-      const next: Array<{ id: string; held: boolean }> = into.map((edge) => ({ id: edge.from, held: false }));
-      for (const edge of handlers) next.push({ id: edge.to, held: true });
-      if (node.type === 'method' || node.type === 'function') {
-        const owner = ownerOf(node.id);
-        const holder = owner === undefined ? undefined : graph.node(owner);
-        if (holder !== undefined && (holder.type === 'ui_component' || item.held)) next.push({ id: holder.id, held: true });
-      }
-      if (CLASS_TYPES.has(node.type) && (item.held || node.id === start.id)) {
-        for (const edge of graph.edgesTo(node.id, ['injects'])) next.push({ id: edge.from, held: true });
-      }
-      if (node.type === 'ui_component') {
-        for (const edge of graph.edgesTo(node.id, ['imports'])) {
-          if (graph.node(edge.from)?.type === 'ui_component') next.push({ id: edge.from, held: true });
-        }
-      }
-      // A template's action, and a module's function a consumer runs, belong to the components of their file.
-      if (node.type === 'ui_action' || (node.type === 'function' && item.held)) {
-        for (const component of componentsIn(node.repo, node.file)) next.push({ id: component.id, held: true });
-      }
-      for (const step of next) {
+      // Impact's walk lists every way in, so a handler a consumer runs is placed by what holds it alone:
+      // whatever else calls the handler (the code that subscribes it, say) does not reach the consumer.
+      const steps = through
+        ? stepsBack(node, item.held, isStart, item.ran === true).filter((step) => crossesInto(node, step))
+        : stepsBack(node, item.held, isStart);
+      if (!wayIn && steps.length === 0) tops.push({ node, depth, ...(item.via === undefined ? {} : { via: item.via }) });
+      for (const step of steps) {
         if (seen.has(step.id)) continue;
         seen.add(step.id);
         const reached = graph.node(step.id);
-        if (reached !== undefined) queue.push({ node: reached, depth: depth + 1, held: step.held });
+        if (reached === undefined) continue;
+        const via = item.via ?? crossingOf(node, step.edge);
+        queue.push({ node: reached, depth: depth + 1, held: step.held, ...(via === undefined ? {} : { via }), ...(step.ran === true ? { ran: true as const } : {}) });
       }
     }
-    budget -= read;
-    return { found, read, cut };
+    return { found, tops, met, read, cut };
   };
 
-  /** The verdict of a node `dead` judges, or the liveliest of the code a site is written in. */
-  const reachOf = (node: GraphNode): Reach | undefined => {
+  /** A row's walk, on the answer's budget. */
+  const rowWalk = (start: GraphNode): Walked => {
+    const walked = walk([start], Math.min(ROW_WALK, budget), false);
+    budget -= walked.read;
+    return walked;
+  };
+
+  /** The verdict of a node `dead` judges, or the liveliest of the code a site is written in, as `reach`. */
+  const reachOf = (node: GraphNode): { reach: Reach; answer: DeadAnswer } | undefined => {
     if (JUDGED_TYPES.includes(node.type)) {
       const answer = verdictOf(node.id);
-      return answer === undefined ? undefined : REACH_OF[answer.verdict];
+      return answer === undefined ? undefined : { reach: reachOfVerdict(node, answer), answer };
     }
-    let best: DeadVerdict | undefined;
+    let best: { caller: GraphNode; answer: DeadAnswer } | undefined;
     for (const edge of graph.edgesTo(node.id, SITE_CALLERS)) {
       const caller = graph.node(edge.from);
       if (caller === undefined || !JUDGED_TYPES.includes(caller.type)) continue;
-      const verdict = verdictOf(caller.id)?.verdict;
-      if (verdict !== undefined && (best === undefined || VERDICT_ORDER[verdict] > VERDICT_ORDER[best])) best = verdict;
+      const answer = verdictOf(caller.id);
+      if (answer !== undefined && (best === undefined || VERDICT_ORDER[answer.verdict] > VERDICT_ORDER[best.answer.verdict])) best = { caller, answer };
     }
-    return best === undefined ? undefined : REACH_OF[best];
+    return best === undefined ? undefined : { reach: reachOfVerdict(best.caller, best.answer), answer: best.answer };
+  };
+
+  /**
+   * The first end of a chain an unread call could reach, nearest first: code
+   * judged `likely-dead`, or said unknown with nothing outside named, or in a
+   * file with an unread call. Each is judged once per answer.
+   */
+  const firstMaybe = (tops: readonly WayInFound[], row: GraphNode, rowReach: Reach): { top: GraphNode; gaps?: FileGaps } | undefined => {
+    for (const { node } of tops) {
+      const gaps = gapsIn(node);
+      if (gaps !== undefined) return { top: node, gaps };
+      const reach = node.id === row.id ? rowReach : JUDGED_TYPES.includes(node.type) ? reachOf(node)?.reach : 'maybe';
+      if (reach === 'maybe' || reach === 'outside') return { top: node };
+    }
+    return undefined;
+  };
+
+  /** Where a `maybe` row is reached from: the nearest way in beyond its unread call, when the call's code is known. */
+  const beyondGap = (gaps: FileGaps | undefined, row: GraphNode): string => {
+    const anchor = gaps?.anchor === undefined ? undefined : graph.node(gaps.anchor);
+    if (anchor === undefined || budget <= 0) return FROM_BEHIND;
+    const walked = rowWalk(anchor);
+    const nearest = nearestOf(walked.found, row);
+    return nearest === undefined ? FROM_BEHIND : wayInSaid(graph, nearest.node, row.repo === '' ? undefined : row.repo);
+  };
+
+  /** The nearest of the ways in met, the row's own service first. */
+  const nearestOf = (found: readonly WayInFound[], row: GraphNode): WayInFound | undefined => {
+    const own = found.filter((way) => way.node.repo === row.repo);
+    const pool = own.length > 0 ? own : found;
+    return [...pool].sort((a, b) => a.depth - b.depth || (a.node.id < b.node.id ? -1 : a.node.id > b.node.id ? 1 : 0))[0];
   };
 
   const of = (id: string): RowReach => {
@@ -265,27 +457,38 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
       return {};
     }
     judged += 1;
-    const reach = reachOf(node);
-    let row: RowReach = reach === undefined ? {} : { reach };
+    const judgedReach = reachOf(node);
+    let row: RowReach = judgedReach === undefined ? {} : { reach: judgedReach.reach };
     // A way in is its own; only code below one is walked back from.
-    if (node.type !== 'entry' && reach !== undefined) {
+    if (node.type !== 'entry' && judgedReach !== undefined) {
       if (budget <= 0) unwalked += 1;
       else {
-        const walked = walk(node);
-        const own = walked.found.filter((way) => way.node.repo === node.repo);
-        const pool = own.length > 0 ? own : walked.found;
-        const nearest = [...pool].sort((a, b) => a.depth - b.depth || (a.node.id < b.node.id ? -1 : a.node.id > b.node.id ? 1 : 0))[0];
+        const walked = rowWalk(node);
+        const nearest = nearestOf(walked.found, node);
         const ways = new Set(walked.found.map((way) => way.node.id)).size;
         const nowhere = nearest === undefined && !walked.cut;
+        let reach = judgedReach.reach;
+        // Nothing read reaches it: a chain that ends where an unread call could reach is a maybe, not a no.
+        const maybe = nowhere && (reach === 'alive' || reach === 'maybe') ? firstMaybe(walked.tops, node, reach) : undefined;
+        if (nowhere && reach === 'alive') reach = maybe === undefined ? 'unreached' : 'maybe';
+        const behind = maybe === undefined || maybe.top.id === node.id ? undefined : maybe.top.id;
         row = {
-          ...row,
-          ...(nowhere && reach === 'alive' ? { reach: 'unreached' as const } : {}),
-          ...(nearest === undefined ? (walked.cut ? {} : { from: 'none' }) : { from: wayInSaid(graph, nearest.node, node.repo === '' ? undefined : node.repo) }),
+          reach,
+          ...(nearest !== undefined
+            ? { from: wayInSaid(graph, nearest.node, node.repo === '' ? undefined : node.repo) }
+            : walked.cut
+              ? {}
+              : { from: reach === 'maybe' ? beyondGap(maybe?.gaps, node) : 'none' }),
           ...(ways > 1 ? { ways } : {}),
           ...(walked.cut ? { walkCut: true as const } : {}),
+          ...(reach !== 'maybe' || maybe?.gaps === undefined ? {} : { gap: maybe.gaps.gap }),
+          ...(reach !== 'maybe' || behind === undefined ? {} : { behind }),
         };
       }
     }
+    // A maybe nothing was walked back from (a way in, a walk cut short) says why `dead` says it may be called; a walked
+    // one says it with `from`, and with `gap` and `behind` where an unread call or another chain end was met.
+    if (row.reach === 'maybe' && row.from === undefined && judgedReach !== undefined) row = { ...row, behind: judgedReach.answer.reason };
     done.set(id, row);
     return row;
   };
@@ -293,6 +496,11 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
   return {
     of,
     annotate: (row) => (detail < 1 || row.id === undefined ? (row as typeof row & RowReach) : { ...row, ...of(row.id) }),
+    waysIn: (starts, limit) => walk(starts, limit, true),
+    maybeEnd: (node) => {
+      const reach = reachOf(node)?.reach;
+      return reach === 'maybe' || reach === 'outside' || (reach === 'alive' && gapsIn(node) !== undefined);
+    },
     left: () => [
       ...(unjudged === 0 ? [] : [`reach: not computed for ${unjudged} row${unjudged === 1 ? '' : 's'} past ${MAX_JUDGED}`]),
       ...(unwalked === 0 ? [] : [`from: not walked for ${unwalked} row${unwalked === 1 ? '' : 's'} past ${ANSWER_WALK} nodes read`]),

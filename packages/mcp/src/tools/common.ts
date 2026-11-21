@@ -322,12 +322,14 @@ export const answerEach = (key: string, asked: readonly string[], run: (value: s
 /** The calls that take the ids an answer returned. */
 export const nextOutput = z.array(z.string()).optional();
 
-/** Whether a row runs and where it is reached from (P364), as `reachReader` says it. */
+/** Whether a row runs and where it is reached from (P364), as `reachReader` says it; a maybe with what it sits behind (P367). */
 export const reachOutput = {
-  reach: z.enum(['alive', 'unreached', 'dead', 'unknown']).optional(),
+  reach: z.enum(['alive', 'maybe', 'unreached', 'dead', 'outside']).optional(),
   from: z.string().optional(),
   ways: z.number().optional(),
   walkCut: z.literal(true).optional(),
+  gap: z.string().optional(),
+  behind: z.string().optional(),
 };
 
 /** Whether a list is the whole answer, and what was left if not (P364). */

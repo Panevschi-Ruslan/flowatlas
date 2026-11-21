@@ -248,6 +248,13 @@ describe('the tools a session is offered', () => {
    * and gave the output schemas `reach`, `from`, `ways` and `walkCut` on the
    * rows of code, `complete` and `left` on the lists and `answers` for
    * several: measured after all three, the ceilings just above, here and below.
+   *
+   * Then P367 said in impact's description what it lists now (the ways in
+   * on the calling side with `via`, the `maybe` rows) and that detail 1 is
+   * enough, and gave the rows of code `gap` and `behind` and the five words of
+   * `reach` in the output schemas: 12,443 read and 34,470 in all, 30,734 for
+   * the nineteen tools below; the ceilings moved to them, rounded up to the
+   * next 50.
    */
   /**
    * The instructions are re-sent on every turn (P366): 6,435 characters
@@ -263,8 +270,8 @@ describe('the tools a session is offered', () => {
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(12350);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(34100);
+    expect(read.length).toBeLessThan(12450);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(34500);
   });
 
   /**
@@ -302,7 +309,7 @@ describe('the tools a session is offered', () => {
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
       expect(read.length).toBeLessThan(99999);
-      expect(JSON.stringify({ tools }).length).toBeLessThan(30350);
+      expect(JSON.stringify({ tools }).length).toBeLessThan(30750);
     } finally {
       await plain.close();
     }
@@ -386,8 +393,9 @@ describe('reading a list a page at a time', () => {
     expect((await call('find_symbol', { query: 'orders', maxNodes: 1, offset: 1 })).matches[0].id).not.toBe(found.matches[0].id);
     const symbol = 'orders#src/orders/orders.service.ts:OrdersService.findOne';
     const impact = await call('impact', { symbol, maxNodes: 1 });
-    // Billing's call reaches it too (P209): its three ways in, and the two that reach billing.
-    expect(impact).toMatchObject({ total: 7, nextOffset: 1 });
+    // Billing's call reaches it too (P209): its three ways in, and the two that reach billing; and
+    // the five ends of chains in the web an unread call could reach, as maybe rows (P367).
+    expect(impact).toMatchObject({ total: 12, nextOffset: 1 });
     expect(impact.next[0]).toBe(`impact({symbol: ${JSON.stringify(symbol)}, maxNodes: 1, offset: 1})`);
     const emits = await call('who_emits', { channel: 'order.created', offset: 1 });
     expect(emits).toMatchObject({ producers: [], total: 1 });
@@ -606,7 +614,8 @@ describe('working backwards', () => {
     });
     // Billing reads the order it invoices (P209), so every way into billing that writes an invoice
     // reaches it, and the gateway's and orders' ways in that reach billing do too.
-    expect(answer.entries.map((entry: { id: string }) => entry.id).sort()).toEqual([
+    const ways = answer.entries.filter((entry: { reach: string }) => entry.reach !== 'maybe');
+    expect(ways.map((entry: { id: string }) => entry.id).sort()).toEqual([
       'entry:billing:event:invoice.requested',
       'entry:billing:event:order.created',
       'entry:billing:http:POST:/invoices',
@@ -616,6 +625,19 @@ describe('working backwards', () => {
       'entry:orders:http:POST:/orders',
     ]);
     expect(answer.entriesByService).toEqual({ billing: 3, gateway: 2, orders: 2 });
+    // The ways in on the calling side say the crossing they come through; the target's own route says none (P367).
+    expect(ways.find((entry: { id: string }) => entry.id === 'entry:gateway:http:GET:/orders/:param').via).toBe('GET /orders/:param (orders)');
+    expect(ways.find((entry: { id: string }) => entry.id === 'entry:orders:http:GET:/orders/:param').via).toBeUndefined();
+    // The web's chains end at a component no route shows and client methods nothing read calls: maybe rows, after the ways in.
+    const maybes = answer.entries.filter((entry: { reach: string }) => entry.reach === 'maybe');
+    expect(maybes.map((entry: { id: string }) => entry.id)).toEqual([
+      'web#src/app/checkout.component.ts:CheckoutComponent',
+      'web#src/app/orders-api.service.ts:OrdersApiService.invoice',
+      'web#src/app/orders-api.service.ts:OrdersApiService.one',
+      'web#src/app/orders-api.service.ts:OrdersApiService.probe',
+      'web#src/app/orders-api.service.ts:OrdersApiService.twoBlind',
+    ]);
+    expect(answer.maybe).toBe(5);
     // Every service the chain runs into, whether or not a way in was found
     // above it, because a change is visible in all of them (R03).
     expect(Object.keys(answer.reachedByService).sort()).toEqual(['billing', 'gateway', 'orders', 'web']);

@@ -10,16 +10,16 @@
     {
       "id": "entry:angular-basic:screen:/profile",
       "loc": "src/app/app.routes.ts:27",
-      "reach": "unknown"
+      "reach": "outside"
     }
   ],
   "total": 1,
-  "reached": 2,
+  "reached": 1,
   "entriesByService": {
     "angular-basic": 1
   },
   "reachedByService": {
-    "angular-basic": 2
+    "angular-basic": 1
   },
   "servicesWithoutEntry": [],
   "channels": [],

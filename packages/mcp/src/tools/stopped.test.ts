@@ -135,14 +135,14 @@ describe('who_calls at the end of a chain', () => {
 describe('impact with no way in', () => {
   it('says the callers may be behind a gap when something reaches it, and where to look', async () => {
     const answer = await call('impact', { symbol: SWEPT });
-    expect(answer.entries).toEqual([]);
+    // The chain ends at code nothing read calls, which an unread call could: a maybe row (P367), not an empty list.
+    expect(answer.entries.map((row: { id: string; reach: string }) => [row.id, row.reach])).toEqual([[ORPHAN, 'maybe']]);
+    expect(answer.maybe).toBe(1);
     expect(answer.reached).toBe(1);
     expect(answer.entriesNone).toBe('nothing in the graph reaches this from a way in; the callers may be behind a gap');
-    expect(answer.next).toEqual([
-      `who_calls({symbol: ${JSON.stringify(SWEPT)}, depth: 8})`,
-      'cant_follow({service: "shop"})',
-      'search({query: "src/jobs/sweep.ts", kinds: ["gaps"]})',
-    ]);
+    expect(answer.left).toEqual(['gaps: 1 chain stops at an unread call before any way in: the maybe row']);
+    // The maybe row is the chain's top: no deeper who_calls, only where its caller may hide.
+    expect(answer.next).toEqual(['cant_follow({service: "shop"})', 'search({query: "src/jobs/sweep.ts", kinds: ["gaps"]})']);
   });
 
   it('says nothing reaches it when nothing does', async () => {
@@ -153,7 +153,7 @@ describe('impact with no way in', () => {
 
   it('says nothing about it when a way in does reach it', async () => {
     const answer = await call('impact', { symbol: SERVICE });
-    expect(answer.entries.map((row: { id: string }) => row.id)).toEqual([ROUTE]);
+    expect(answer.entries.map((row: { id: string; reach?: string }) => [row.id, row.reach])).toEqual([[ROUTE, 'dead'], [ORPHAN, 'maybe']]);
     expect(answer.entriesNone).toBeUndefined();
   });
 });

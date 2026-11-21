@@ -15,8 +15,9 @@
       "service": "console",
       "kind": "sse",
       "via": "if",
-      "reach": "unreached",
-      "from": "none"
+      "reach": "maybe",
+      "from": "behind",
+      "behind": "console#src/screens/ArchivePanel.tsx:ArchivePanel"
     }
   ],
   "total": 1,

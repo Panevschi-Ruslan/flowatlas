@@ -107,7 +107,7 @@ questions. Nothing in it changes with a build; counts and gaps come from
 A team's own file (`AGENTS.md`, `CLAUDE.md`, Copilot's) is read whole at the
 start of every session and sent again on every turn, so its block is shorter
 than the guide (P366): the services, the questions in a few words, where the
-full guide is, and four lines on spending few turns:
+full guide is, and five lines on spending few turns:
 
 - load the tools in one ToolSearch call, with the `select:` line written out
   for `search`, `who_calls`, `who_consumes`, `who_emits`, `dead`, `impact`,
@@ -115,6 +115,8 @@ full guide is, and four lines on spending few turns:
   registered as in the repository's `.mcp.json` (`mcp__flowatlas__search`, …);
 - an answer that says `complete: true` is the whole answer: check only what it
   lists as left unread or unsure, not its rows one by one or with a search;
+- keep `reach: "maybe"` rows when asked what breaks or calls something: they
+  sit behind an unread call (`gap`), not nowhere (P367);
 - pass several ids in one call, and send calls that do not need each other
   together;
 - answers are compact: ask `verbose: true` only when a field you need is
@@ -186,7 +188,7 @@ The meaning and defaults of `detail`, `maxNodes`, `offset` and `service` are
 said once, in the server's instructions, and each tool lists them by type alone
 (P366); a tool whose bound differs (`get_flow`'s 60 rows) lists what differs.
 Every call is still checked against the full bounds. The instructions, re-sent
-by a client on every turn, are about 2,100 characters: the tool to begin with,
+by a client on every turn, are at most 2,500 characters: the tool to begin with,
 the chains, the shared inputs and which tools are listed when. What one tool's
 answer needs is said in that tool's description.
 
@@ -340,16 +342,35 @@ question is answered in the call that asked it.
   in `who_calls` (the target and every caller), `who_consumes`, `who_emits`,
   `impact` (the target and each way in), `search` (routes, channels, message
   types, classes, failures) and `find_symbol` carries, at `detail` 1 and up:
-  - `reach`: the verdict `dead` gives, by the same functions (one judge per
-    answer, which reads what every verdict needs of the graph once):
-    `alive`, `dead`, `unknown`, or `unreached` - `dead`'s `likely-dead`, or
-    `alive` where the walk below met no way in (something calls it, nothing a
-    way in reaches does). A publish or a request, which `dead` does not
+  - `reach`: read off the verdict `dead` gives, by the same functions (one
+    judge per answer, which reads what every verdict needs of the graph
+    once), and never a maybe said as a no (P367):
+    - `alive`: a way in reaches it.
+    - `maybe`: `dead`'s `likely-dead`, or nothing read reaches it but a call
+      the reading did not follow could: the walk below ends at code nothing
+      read calls, judged `likely-dead` (a method of a class that is used, a
+      function), said unknown with nothing outside named (a component a
+      template may render by its tag), or in a file with a step the reading
+      could not follow and says why (a call through a receiver with no class;
+      a request that found no route is not one). The row names it: `gap`,
+      that step's gap id, and `behind`, the code the chain stops at when it is
+      not the row itself; a way in that is a maybe (a request one segment
+      off) says in `behind` why `dead` says it may be called.
+    - `unreached`: no way in reaches it, and no unread call could.
+    - `dead`: as `dead` answers.
+    - `outside`: something outside the project calls it - a webhook, a bot
+      update or command, a cron, a screen opened at its address, a public
+      route, a class from a library. A way in is never doubtful just because
+      its caller is outside: `dead`'s `unknown` with what is outside named,
+      or on a way in nothing reaches and no call one segment off names.
+    `unknown` is not said. A publish or a request, which `dead` does not
     judge, takes the liveliest verdict of the code it is written in.
   - `from`: the nearest way in, short - `screen /queue`, `GET /orders/:param`,
     `cron nightly`, `consumer tenant:*:events` (a handler whose channel nothing
     read publishes to), with `(service)` after it when it is another
-    service's - or `none`. A walk back from the row finds the first ways in on
+    service's - or `none`; on a `maybe` row nothing read reaches, the nearest
+    way in beyond the unread call where the code it is written in is known,
+    and `behind` otherwise. A walk back from the row finds the first ways in on
     each path (it does not walk past one), the row's own service first, then
     the nearest; besides the edges every caller walk follows, a consumer runs
     in its handler, a component's method and a handler's file where the
@@ -362,7 +383,7 @@ question is answered in the call that asked it.
     rows are judged: `walkCut: true` says a row's walk stopped at its bound
     (`ways` is then a floor, and no `from` means none was met within it); rows
     past the answer's bound say nothing, and `left` says how many.
-  `dead({id})` carries `from` and `ways` the same way.
+  `dead({id})` carries `from`, `ways`, `gap` and `behind` the same way.
 - **Several inputs in one call.** `dead` takes `ids`, `find_symbol` and
   `search` take `queries`, `get_type` takes `types` and `who_calls` takes
   `symbols`, beside the single form, at most 20, the single one first and
@@ -650,7 +671,7 @@ route matched too. A helper's choices count: `423` finds the routes whose
 |---|---|---|
 | `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain; with `to`, only the shortest ways to that node | `entry` (required), `to`, `depth` (8, one more per workflow step), `maxChars` |
 | `who_calls` | everything that reaches a symbol, backwards across repositories | `symbol` (required), `depth` (3; 16 at most), `service` |
-| `impact` | every entry point that can reach a symbol, and which services they belong to | `symbol` (required), `service`, `offset` |
+| `impact` | every way in that could break if a symbol changes, in any service: its own, those past each crossing on the calling side with `via`, and `maybe` rows where a chain stops at an unread call | `symbol` (required), `service`, `offset` |
 
 Asked about a class, `who_calls` and `impact` answer for every method of it
 something calls (P95): calls point at methods, never at the class. Each
@@ -696,9 +717,25 @@ registered as `/orders/latest`, not `/orders/:param`, and the answer names the
 routes that would also answer it under `alsoAnswers`. Two routes that spell the
 address out alike, in two services, stay candidates.
 
-`impact` is the one to ask before changing something: it answers "what would
-have to be retested", including the services whose chains run into this one
-without an entry point of their own. With no way in it says `entriesNone`
+`impact` is the one to ask before changing something: it answers "which ways
+in, in any repository, could break", in one call (P367). It walks back from the
+target past every way in it meets to the callers beyond it, with the hops that
+place code in what holds it (as `from` walks): a screen that shows the
+component whose method requests the route, a bot command whose handler does,
+a consumer of a channel the chain publishes to. `entries` holds them all: the
+target's own ways in, and each on the calling side with `via`, the crossing
+nearest the target it came through (`PATCH /orders/status (shop-api)`, a route
+said aloud with its service where that is not the row's, or `channel <name>`);
+`reach` on each (detail 1 is enough to say which could break). A chain that
+stops before any way in, at code an unread call could reach, is a row of its
+own with `reach: "maybe"`, `gap` and `via`, counted in `maybe` and in `left`
+(`gaps: 1 chain stops at an unread call before any way in`). A link or a
+navigation onto a screen or a component is no call into it, so the walk does
+not go back along one. It is bounded by 4,000 nodes; `entriesByService`,
+`reachedByService` and `servicesWithoutEntry` still name the services whose
+chains run into this one without an entry point of their own. At `detail` 2,
+a failure on an entry whose `at` is the target, and a `file` the id beside it
+holds, are left out of a compact answer. With no way in it says `entriesNone`
 ("nothing in the graph reaches this from a way in; the callers may be behind a
 gap", or "nothing reaches this"), and `next` names a deeper `who_calls`, the
 service's `cant_follow` and a gap search on the file. A walk that stopped at

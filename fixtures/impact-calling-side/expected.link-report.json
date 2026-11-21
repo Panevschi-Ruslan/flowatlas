@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-21T18:14:59.818Z",
+  "configHash": "d49f404e0051",
+  "services": [
+    {
+      "name": "backoffice-web",
+      "repo": "./backoffice-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 9,
+      "edges": 6,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 748,
+      "packages": {
+        "name": "backoffice-web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "ops-bot",
+      "repo": "./ops-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 12,
+      "edges": 7,
+      "types": 1,
+      "unresolved": 4,
+      "durationMs": 920,
+      "packages": {
+        "name": "ops-bot",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "rxjs",
+          "telegraf"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop-api",
+      "repo": "./shop-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 16,
+      "edges": 12,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 893,
+      "packages": {
+        "name": "shop-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 1,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 1,
+    "resolved": 1,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 1,
+    "uncalled": [
+      "entry:shop-api:http:POST:/hooks/chat"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 37,
+    "edges": 27,
+    "types": 1,
+    "missed": 4,
+    "sites": 5,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 4
+  }
+}

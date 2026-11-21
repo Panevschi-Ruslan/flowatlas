@@ -25,10 +25,13 @@ export interface CompactNode {
    */
   seenAt?: string;
   /** Whether it runs, where it is reached from, how many ways in, and whether that walk was cut (P364, `ways-in.ts`). */
-  reach?: 'alive' | 'unreached' | 'dead' | 'unknown';
+  reach?: 'alive' | 'maybe' | 'unreached' | 'dead' | 'outside';
   from?: string;
   ways?: number;
   walkCut?: true;
+  /** On a `maybe` row: the unread call that could reach it, and the code its chain stops at (P367). */
+  gap?: string;
+  behind?: string;
 }
 
 /** How one node was reached. */

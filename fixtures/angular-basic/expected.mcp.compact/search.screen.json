@@ -9,7 +9,7 @@
       {
         "id": "entry:angular-basic:screen:/reports",
         "loc": "src/app/app.routes.ts:26",
-        "reach": "unknown"
+        "reach": "outside"
       }
     ],
     "classes": [

@@ -8,6 +8,34 @@ only one of them moved.
 
 ### Added
 
+- **Reach that never hides a maybe, and impact that answers "what could
+  break" in one call (P367).** `reach` is `alive`, `maybe`, `unreached`,
+  `dead` or `outside`, and no longer `unknown`: `maybe` is `dead`'s
+  `likely-dead`, or code nothing read reaches whose chain ends where an unread
+  call could reach it (code judged `likely-dead`, a component a template may
+  render by its tag, or a file with a step the reading could not follow and
+  says why), naming it with `gap` (that step's gap id) and `behind` (the code
+  the chain stops at), and `from` the nearest way in beyond the unread call
+  where its code is known, `behind` otherwise; `unreached` now means no way in
+  reaches it and no unread call could; `outside` is a way in something outside
+  the project calls (a webhook, a bot update or command, a cron, a screen, a
+  public route) or a class from a library, so a webhook way in no longer reads
+  as doubtful. `dead({id})` carries `gap` and `behind` too. `impact` walks back
+  past every way in to the callers beyond it, with the hops `from` walks (a
+  screen showing the component whose method requests the route, a bot command
+  whose handler does, a consumer of a channel the chain publishes to), and
+  lists every way in that could break, in any service, in `entries`, each on
+  the calling side with `via`, the crossing it came through
+  (`PATCH /orders/status (shop-api)`, `channel <name>`), and a chain that stops
+  at an unread call before any way in as a `maybe` row with its gap, counted
+  in `maybe` and said in `left`; a link or a navigation onto a screen is no
+  call into it and is not walked back along. Its description says detail 1 is
+  enough. A compact answer leaves out any field below the answer's own whose
+  value is the answer's target id (a failure's `at` thrown in the method impact
+  was asked about) and a `file` an id beside it holds. The server's
+  instructions and the guide `flowatlas agents install` writes say the five
+  words and to keep `maybe` rows when asked what could break or what calls
+  something. Core gains `recordsFollowCause`.
 - **Answers that finish in one call (P364).** Each row naming code in
   `who_calls`, `who_consumes`, `who_emits`, `impact`, `search` and
   `find_symbol` says whether it runs, `reach` (`alive`, `unreached`, `dead`,

@@ -99,8 +99,18 @@ const CAUSE_OF_REASON: ReadonlyMap<string, string> = new Map([
 
 const text = (value: unknown): string | undefined => (typeof value === 'string' && value !== '' ? value : undefined);
 
+/**
+ * Whether a row is a step the reading could not follow, with why (P75): one
+ * that records its cause, a fold listing its places by cause, or a reason
+ * that is a cause under another name. A call through a receiver with no
+ * class is one; a request whose route was not found is not, so only the
+ * first could be the unread call that reaches code nothing read calls (P367).
+ */
+export const recordsFollowCause = (row: { reason: string; meta?: Record<string, unknown> | null | undefined }): boolean =>
+  text(row.meta?.[CAUSE_META]) !== undefined || Array.isArray(row.meta?.[CAUSES_META]) || CAUSE_OF_REASON.has(row.reason);
+
 /** A row's own cause: the one it records, or the one its reason is. */
-export const causeOfRow = (row: { reason: string; meta?: Record<string, unknown> }): FollowCause => {
+export const causeOfRow =(row: { reason: string; meta?: Record<string, unknown> }): FollowCause => {
   const cause = text(row.meta?.[CAUSE_META]);
   const pkg = text(row.meta?.[PACKAGE_META]);
   return {

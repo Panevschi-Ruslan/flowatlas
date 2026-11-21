@@ -37,8 +37,8 @@
           "label": "TicketsService.reopen",
           "loc": "src/tickets/tickets.service.ts:22",
           "service": "desk-api",
-          "reach": "unreached",
-          "from": "none"
+          "reach": "maybe",
+          "from": "behind"
         },
         {
           "id": "channel:desk:*:events#TICKET_REOPENED",
@@ -47,8 +47,9 @@
           "loc": "src/tickets/tickets.service.ts:23",
           "service": "desk-api",
           "kind": "message_type",
-          "reach": "unreached",
-          "from": "none"
+          "reach": "maybe",
+          "from": "behind",
+          "behind": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen"
         }
       ],
       "total": 2,

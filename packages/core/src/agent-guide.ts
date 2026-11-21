@@ -41,10 +41,12 @@ export const AGENT_QUESTIONS: readonly AgentQuestion[] = Object.freeze([
  * says, the short block read on every turn included. An agent that checks a
  * complete answer row by row, asks for one id at a time or waits for one call
  * before sending another that does not need it spends a turn each time, and a
- * turn costs more than any answer.
+ * turn costs more than any answer. One that drops a `maybe` row, read as
+ * "nothing runs this", answers what could break with half the list (P367).
  */
 export const AGENT_HABITS: readonly string[] = Object.freeze([
   'An answer that says `complete: true` is the whole answer: do not re-check it row by row or with a search; check only what it lists as left unread or unsure.',
+  'Keep `reach: "maybe"` rows when asked what breaks or calls something: they sit behind an unread call (`gap`).',
   'Pass several ids in one call (`ids: [...]`), and send independent calls together in one turn.',
   'Answers are compact; ask `verbose: true` only when a field you need is missing.',
 ]);

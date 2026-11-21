@@ -175,4 +175,36 @@ describe('compact answers (P365)', () => {
       },
     });
   });
+
+  it("leaves out a failure's `at` that is the answer's target, and a `file` an id beside it holds (P367)", () => {
+    const target = 'shop-api#src/orders.service.ts:OrdersService.updateStatus';
+    const answer = {
+      target: { id: target, type: 'method', label: 'OrdersService.updateStatus', loc: 'src/orders.service.ts:8' },
+      entries: [
+        {
+          id: 'entry:shop-api:http:PATCH:/orders/status',
+          meta: {
+            fails: [
+              { status: 409, exception: 'ConflictException', at: target, file: 'src/orders.service.ts', line: 9, source: 'throw' },
+              { exception: 'NotFoundException', at: 'shop-api#src/stock.service.ts:StockService.take', file: 'src/stock.service.ts', line: 4 },
+              { exception: 'BadRequestException', at: 'shop-api#src/stock.service.ts:StockService.take', file: 'src/other.ts', line: 7 },
+            ],
+          },
+          reach: 'maybe',
+          gap: 'gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver',
+          behind: 'ops-bot#src/ops-bot.ts:OpsBot.handleStatus',
+        },
+      ],
+    };
+    const compact = compactAnswer(answer) as typeof answer;
+    expect(compact.entries[0]!.meta.fails).toEqual([
+      { status: 409, exception: 'ConflictException', line: 9, source: 'throw' },
+      { exception: 'NotFoundException', at: 'shop-api#src/stock.service.ts:StockService.take', line: 4 },
+      // A file no id beside it holds stays.
+      { exception: 'BadRequestException', at: 'shop-api#src/stock.service.ts:StockService.take', file: 'src/other.ts', line: 7 },
+    ]);
+    // What a maybe sits behind is never left out.
+    expect(compact.entries[0]).toMatchObject({ reach: 'maybe', gap: answer.entries[0]!.gap, behind: answer.entries[0]!.behind });
+    expect(compact.target).toEqual({ id: target, line: 8 });
+  });
 });

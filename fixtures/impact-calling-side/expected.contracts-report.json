@@ -1,0 +1,100 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-21T18:15:00.318Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:ops-bot#src/shop.client.ts:15:26",
+        "to": "entry:shop-api:http:PATCH:/orders/status",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:ops-bot#src/shop.client.ts:15:26|http_calls|entry:shop-api:http:PATCH:/orders/status",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "ops-bot",
+        "typeId": "{orderId:string;status:string}",
+        "symbol": "ops-bot#src/shop.client.ts:ShopClient.updateStatus",
+        "writes": [
+          "orderId",
+          "status"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "shop-api",
+        "typeId": "{orderId:string;status:string}",
+        "symbol": "shop-api#src/orders.controller.ts:OrdersController.setStatus"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:backoffice-web#src/orders-api.service.ts:13:12",
+        "to": "entry:shop-api:http:PATCH:/orders/status",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:backoffice-web#src/orders-api.service.ts:13:12|hits|entry:shop-api:http:PATCH:/orders/status",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "backoffice-web",
+        "typeId": "{orderId:string;status:string}",
+        "symbol": "backoffice-web#src/orders-api.service.ts:OrdersApiService.setStatus",
+        "writes": [
+          "orderId",
+          "status"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "shop-api",
+        "typeId": "{orderId:string;status:string}",
+        "symbol": "shop-api#src/orders.controller.ts:OrdersController.setStatus"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:ops-bot#src/shop.client.ts:15:26",
+        "to": "entry:shop-api:http:PATCH:/orders/status",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:ops-bot#src/shop.client.ts:15:26|http_calls|entry:shop-api:http:PATCH:/orders/status",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "shop-api#src/orders.controller.ts:OrdersController.setStatus declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:backoffice-web#src/orders-api.service.ts:13:12",
+        "to": "entry:shop-api:http:PATCH:/orders/status",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:backoffice-web#src/orders-api.service.ts:13:12|hits|entry:shop-api:http:PATCH:/orders/status",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "shop-api#src/orders.controller.ts:OrdersController.setStatus declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    }
+  ],
+  "summary": {
+    "edges": 2,
+    "shared": 0,
+    "identical": 2,
+    "hash_differs": 0,
+    "unchecked": 2,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

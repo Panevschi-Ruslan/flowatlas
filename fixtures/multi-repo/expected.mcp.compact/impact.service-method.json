@@ -8,27 +8,32 @@
     {
       "id": "entry:billing:event:invoice.requested",
       "loc": "src/invoices/invoices.consumer.ts:28",
-      "reach": "dead"
+      "reach": "dead",
+      "via": "GET /orders/:param (orders)"
     },
     {
       "id": "entry:billing:event:order.created",
       "loc": "src/invoices/invoices.consumer.ts:17",
-      "reach": "alive"
+      "reach": "alive",
+      "via": "GET /orders/:param (orders)"
     },
     {
       "id": "entry:billing:http:POST:/invoices",
       "loc": "src/invoices/invoices.controller.ts:15",
-      "reach": "alive"
+      "reach": "alive",
+      "via": "GET /orders/:param (orders)"
     },
     {
       "id": "entry:gateway:http:GET:/orders/:param",
       "loc": "src/orders/orders.controller.ts:30",
-      "reach": "alive"
+      "reach": "alive",
+      "via": "GET /orders/:param (orders)"
     },
     {
       "id": "entry:gateway:http:POST:/orders/:param/invoice",
       "loc": "src/orders/orders.controller.ts:40",
-      "reach": "alive"
+      "reach": "alive",
+      "via": "GET /orders/:param (orders)"
     },
     {
       "id": "entry:orders:http:GET:/orders/:param",
@@ -38,21 +43,60 @@
     {
       "id": "entry:orders:http:POST:/orders",
       "loc": "src/orders/orders.controller.ts:31",
-      "reach": "dead"
+      "reach": "dead",
+      "via": "GET /orders/:param"
+    },
+    {
+      "id": "web#src/app/checkout.component.ts:CheckoutComponent",
+      "type": "ui_component",
+      "line": 12,
+      "kind": "standalone",
+      "reach": "maybe",
+      "from": "behind",
+      "via": "GET /orders/:param (orders)"
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.invoice",
+      "line": 60,
+      "reach": "maybe",
+      "from": "behind",
+      "via": "GET /orders/:param (orders)"
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.one",
+      "line": 72,
+      "reach": "maybe",
+      "from": "behind",
+      "via": "GET /orders/:param (orders)"
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.probe",
+      "line": 123,
+      "reach": "maybe",
+      "from": "behind",
+      "via": "GET /orders/:param (orders)"
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.twoBlind",
+      "line": 138,
+      "reach": "maybe",
+      "from": "behind",
+      "via": "GET /orders/:param (orders)"
     }
   ],
-  "total": 7,
-  "reached": 38,
+  "total": 12,
+  "reached": 39,
   "entriesByService": {
     "orders": 2,
     "billing": 3,
     "gateway": 2
   },
+  "maybe": 5,
   "reachedByService": {
     "orders": 7,
     "billing": 11,
     "gateway": 8,
-    "web": 12
+    "web": 13
   },
   "servicesWithoutEntry": [
     "web"
@@ -61,7 +105,10 @@
     "channel:invoice.requested",
     "channel:order.created"
   ],
-  "complete": true,
+  "complete": false,
+  "left": [
+    "gaps: 5 chains stop at an unread call before any way in: the maybe rows"
+  ],
   "next": [
     "get_flow({entry: \"entry:billing:event:invoice.requested\"})",
     "describe_for_prompt({id: \"entry:billing:event:invoice.requested\"})"

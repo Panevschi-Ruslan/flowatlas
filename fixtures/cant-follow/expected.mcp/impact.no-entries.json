@@ -5,7 +5,7 @@
     "label": "ReminderJob.start",
     "loc": "src/jobs/reminder.job.ts:10",
     "service": "storefront",
-    "reach": "unreached"
+    "reach": "maybe"
   },
   "entries": [],
   "total": 0,

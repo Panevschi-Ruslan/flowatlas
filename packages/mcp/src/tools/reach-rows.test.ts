@@ -57,10 +57,11 @@ describe('reach and the nearest way in on each row', () => {
     expect(repeats(answer.next, [QUEUE, TICKET])).toEqual([]);
   });
 
-  it('says a handler no way in reaches is unreached, from none', async () => {
+  it('says a handler no way in reaches sits behind the component nothing renders, a maybe and never a no (P367)', async () => {
     const answer = await call('who_consumes', { channel: CHANNEL, type: 'TICKET_REOPENED' });
     expect(answer.consumers).toHaveLength(1);
-    expect(answer.consumers[0]).toMatchObject({ id: ARCHIVE, reach: 'unreached', from: 'none' });
+    // No route shows the panel and nothing read renders it, but a render the reading does not draw could.
+    expect(answer.consumers[0]).toMatchObject({ id: ARCHIVE, reach: 'maybe', from: 'behind', behind: 'console#src/screens/ArchivePanel.tsx:ArchivePanel' });
   });
 
   it('places a publish at the route that runs it', async () => {
@@ -80,7 +81,8 @@ describe('reach and the nearest way in on each row', () => {
     expect(callers.target).toMatchObject({ reach: 'alive', from: 'POST /desks/:param/tickets/:param/assign' });
     expect(callers.callers[0].node).toMatchObject({ reach: 'alive' });
     const found = await call('find_symbol', { query: 'reopen' });
-    expect(found.matches.find((row: { id: string }) => row.id === REOPEN)).toMatchObject({ reach: 'unreached', from: 'none' });
+    // Nothing calls it, though its class is used: a call the reading could not type may (P367).
+    expect(found.matches.find((row: { id: string }) => row.id === REOPEN)).toMatchObject({ reach: 'maybe', from: 'behind' });
     const searched = await call('search', { query: 'QueueScreen', kinds: ['classes'] });
     expect(searched.results.classes[0]).toMatchObject({ reach: 'alive', from: 'screen /queue' });
     const bare = await call('who_consumes', { channel: CHANNEL, type: 'TICKET_ASSIGNED', detail: 0 });
@@ -105,7 +107,7 @@ describe('several inputs in one call', () => {
       [QUEUE, 'alive'],
       [REOPEN, 'likely-dead'],
     ]);
-    expect(answer.answers[1].from).toBe('none');
+    expect(answer.answers[1].from).toBe('behind');
     expect(answer.complete).toBeUndefined();
   });
 

@@ -224,6 +224,26 @@ const SCREEN_COMPACT_CASES = [
 ];
 
 /**
+ * Every way in that could break, in one impact call, and reach that never
+ * hides a maybe (P367): a back end's method a screen and a bot reach through
+ * one route, the bot's handler behind the unread call its loop of routes
+ * makes, and a webhook that calls the method directly.
+ */
+const CALLING_SIDE_TARGET = 'shop-api#src/orders.service.ts:OrdersService.updateStatus';
+const CALLING_SIDE_CASES = [
+  ['impact.calling-side', 'impact', { symbol: CALLING_SIDE_TARGET }],
+  ['impact.detail-2', 'impact', { symbol: CALLING_SIDE_TARGET, detail: 2 }],
+  ['impact.route', 'impact', { symbol: 'entry:shop-api:http:PATCH:/orders/status' }],
+  ['who_calls.bot-chain', 'who_calls', { symbol: CALLING_SIDE_TARGET, depth: 8 }],
+  ['dead.bot-handler', 'dead', { id: 'ops-bot#src/ops-bot.ts:OpsBot.handleStatus' }],
+];
+/** The same impact, compact (P365), at both levels of detail: what an agent is handed. */
+const CALLING_SIDE_COMPACT_CASES = [
+  ['impact.calling-side', 'impact', { symbol: CALLING_SIDE_TARGET, verbose: false }],
+  ['impact.detail-2', 'impact', { symbol: CALLING_SIDE_TARGET, detail: 2, verbose: false }],
+];
+
+/**
  * Answers that finish in one call (P364): each row of code with whether it
  * runs and the nearest way in (a screen for a handler the router shows, none
  * for one no way in reaches), each list saying whether it is complete and what
@@ -579,6 +599,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'helpdesk-screen-reach'),
     outDir: join(root, 'fixtures', 'helpdesk-screen-reach', 'expected.mcp'),
     cases: SCREEN_REACH_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'impact-calling-side'),
+    outDir: join(root, 'fixtures', 'impact-calling-side', 'expected.mcp'),
+    cases: CALLING_SIDE_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'impact-calling-side'),
+    outDir: join(root, 'fixtures', 'impact-calling-side', 'expected.mcp.compact'),
+    cases: CALLING_SIDE_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

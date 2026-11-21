@@ -8,7 +8,8 @@
   "evidence": {
     "unresolvedInjects": 1
   },
-  "from": "none",
+  "from": "behind",
+  "gap": "gap:storefront|src/jobs/reminder.job.ts|di-type-unresolved",
   "next": [
     "get_source({symbol: \"storefront#src/jobs/reminder.job.ts:ReminderJob.start\"})",
     "cant_follow({service: \"storefront\"})"
