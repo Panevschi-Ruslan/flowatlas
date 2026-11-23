@@ -18,8 +18,8 @@ import type { GraphNode } from './model/nodes.js';
  * The count is of names, not of uses, so it errs towards "written": every
  * identifier of every source file the reading opened, every word of every
  * string, template literal and JSX text, and every word of the markup the
- * reading read beside them (an Angular template in its own file, a
- * single-file component: `noteMarkup`), comments alone left out. A name
+ * reading read beside them (a template in its own file, a single-file
+ * component: `noteMarkup`), comments alone left out. A name
  * written twice anywhere - an overload, an interface member, a mention in a
  * test - is written. Left unmarked too, since something outside the
  * repository may call them by contract or by where they sit: what the
@@ -27,11 +27,11 @@ import type { GraphNode } from './model/nodes.js';
  * anything, a decorated member, a framework's hook (`ngOnChanges`), a
  * file's default export (a layout a framework renders, a module imported
  * under another name) and its members, a component a file declares by
- * where it sits rather than in code (`.vue`, `.svelte`), and everything in a
+ * where it sits rather than in code (a single-file component), and everything in a
  * repository that publishes an entry for others to import (`main`, `module`,
  * `exports`, `types` in its manifest).
  *
- * The Angular reader marks the same key on a method that makes a request
+ * A front-end reader marks the same key on a method that makes a request
  * when the compiler finds no reference to it (`noteIfUnreferenced`, read by
  * the contract check); both say nothing in the repository names it.
  */
