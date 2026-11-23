@@ -594,7 +594,7 @@ export const isNavigationEdge = (edge: { readonly type: string; readonly meta?: 
 
 /**
  * The keys of a `calls` edge's `meta` that say a router or a framework runs
- * the callee before the screen the edge comes from is shown: an Angular
+ * the callee before the screen the edge comes from is shown: a front-end
  * route's guard or resolver (`guard`, P291), a page's route middleware
  * (`middleware`, P255). The callee runs before the screen; it calls none of
  * the screen's code, so a walk back from it to what lists it says only what
