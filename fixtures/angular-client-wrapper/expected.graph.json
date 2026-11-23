@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "angular-client-wrapper",
-  "generatedAt": "2026-11-08T12:50:09.121Z",
+  "generatedAt": "2026-11-23T14:32:06.472Z",
   "nodes": [
     {
       "id": "angular-client-wrapper#node_modules/@angular/common:HttpClient",
@@ -477,7 +477,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-translations-tab"
+        "selector": "app-translations-tab",
+        "unreferenced": true
       }
     },
     {

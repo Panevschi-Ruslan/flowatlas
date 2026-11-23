@@ -7,15 +7,12 @@
   },
   "callers": [
     {
-      "node": {
-        "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
-        "line": 25,
-        "reach": "alive",
-        "from": "GET /orders/:param"
-      },
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "line": 25,
+      "reach": "alive",
+      "from": "GET /orders/:param",
       "edge": {
         "type": "calls",
-        "confidence": "static",
         "params": [
           "string"
         ],
@@ -23,14 +20,11 @@
       },
       "children": [
         {
-          "node": {
-            "id": "entry:orders:http:GET:/orders/:param",
-            "loc": "src/orders/orders.controller.ts:25",
-            "reach": "alive"
-          },
+          "id": "entry:orders:http:GET:/orders/:param",
+          "loc": "src/orders/orders.controller.ts:25",
+          "reach": "alive",
           "edge": {
             "type": "handles",
-            "confidence": "static",
             "params": [
               "string"
             ],
@@ -38,43 +32,32 @@
           },
           "children": [
             {
-              "node": {
-                "id": "http_out:billing#src/invoices/invoices.service.ts:33:7",
-                "label": "GET /orders/:param",
-                "reach": "alive",
-                "from": "consumer invoice.requested",
-                "ways": 5
-              },
+              "id": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+              "label": "GET /orders/:param",
+              "reach": "alive",
+              "from": "consumer invoice.requested",
+              "ways": 5,
               "edge": {
                 "type": "http_calls",
-                "confidence": "static",
                 "returns": "type:billing#OrderView"
               },
               "children": [
                 {
-                  "node": {
-                    "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
-                    "line": 30,
-                    "reach": "alive",
-                    "from": "consumer invoice.requested",
-                    "ways": 5
-                  },
-                  "edge": {
-                    "type": "calls",
-                    "confidence": "static"
-                  },
+                  "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+                  "line": 30,
+                  "reach": "alive",
+                  "from": "consumer invoice.requested",
+                  "ways": 5,
+                  "edge": "calls",
                   "children": [
                     {
-                      "node": {
-                        "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
-                        "line": 28,
-                        "reach": "alive",
-                        "from": "consumer invoice.requested",
-                        "ways": 2
-                      },
+                      "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
+                      "line": 28,
+                      "reach": "alive",
+                      "from": "consumer invoice.requested",
+                      "ways": 2,
                       "edge": {
                         "type": "calls",
-                        "confidence": "static",
                         "params": [
                           "type:billing#CreateInvoiceDto"
                         ],
@@ -82,16 +65,13 @@
                       },
                       "children": [
                         {
-                          "node": {
-                            "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
-                            "line": 28,
-                            "kind": "event",
-                            "reach": "dead",
-                            "from": "event invoice.requested"
-                          },
+                          "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
+                          "line": 28,
+                          "kind": "event",
+                          "reach": "dead",
+                          "from": "event invoice.requested",
                           "edge": {
                             "type": "handles",
-                            "confidence": "static",
                             "params": [
                               "type:billing#InvoiceRequestedEvent"
                             ],
@@ -99,14 +79,11 @@
                           }
                         },
                         {
-                          "node": {
-                            "id": "entry:billing:event:invoice.requested",
-                            "loc": "src/invoices/invoices.consumer.ts:28",
-                            "reach": "dead"
-                          },
+                          "id": "entry:billing:event:invoice.requested",
+                          "loc": "src/invoices/invoices.consumer.ts:28",
+                          "reach": "dead",
                           "edge": {
                             "type": "handles",
-                            "confidence": "static",
                             "params": [
                               "type:billing#InvoiceRequestedEvent"
                             ],
@@ -116,16 +93,13 @@
                       ]
                     },
                     {
-                      "node": {
-                        "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
-                        "line": 17,
-                        "reach": "alive",
-                        "from": "event order.created",
-                        "ways": 2
-                      },
+                      "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+                      "line": 17,
+                      "reach": "alive",
+                      "from": "event order.created",
+                      "ways": 2,
                       "edge": {
                         "type": "calls",
-                        "confidence": "static",
                         "params": [
                           "type:billing#CreateInvoiceDto"
                         ],
@@ -133,17 +107,14 @@
                       },
                       "children": [
                         {
-                          "node": {
-                            "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
-                            "line": 17,
-                            "kind": "event",
-                            "reach": "alive",
-                            "from": "event order.created",
-                            "ways": 2
-                          },
+                          "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+                          "line": 17,
+                          "kind": "event",
+                          "reach": "alive",
+                          "from": "event order.created",
+                          "ways": 2,
                           "edge": {
                             "type": "handles",
-                            "confidence": "static",
                             "params": [
                               "type:billing#OrderCreatedEvent"
                             ],
@@ -151,14 +122,11 @@
                           }
                         },
                         {
-                          "node": {
-                            "id": "entry:billing:event:order.created",
-                            "loc": "src/invoices/invoices.consumer.ts:17",
-                            "reach": "alive"
-                          },
+                          "id": "entry:billing:event:order.created",
+                          "loc": "src/invoices/invoices.consumer.ts:17",
+                          "reach": "alive",
                           "edge": {
                             "type": "handles",
-                            "confidence": "static",
                             "params": [
                               "type:billing#OrderCreatedEvent"
                             ],
@@ -168,15 +136,12 @@
                       ]
                     },
                     {
-                      "node": {
-                        "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
-                        "line": 15,
-                        "reach": "alive",
-                        "from": "POST /invoices"
-                      },
+                      "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+                      "line": 15,
+                      "reach": "alive",
+                      "from": "POST /invoices",
                       "edge": {
                         "type": "calls",
-                        "confidence": "static",
                         "params": [
                           "type:billing#CreateInvoiceDto"
                         ],
@@ -184,14 +149,11 @@
                       },
                       "children": [
                         {
-                          "node": {
-                            "id": "entry:billing:http:POST:/invoices",
-                            "loc": "src/invoices/invoices.controller.ts:15",
-                            "reach": "alive"
-                          },
+                          "id": "entry:billing:http:POST:/invoices",
+                          "loc": "src/invoices/invoices.controller.ts:15",
+                          "reach": "alive",
                           "edge": {
                             "type": "handles",
-                            "confidence": "static",
                             "params": [
                               "type:billing#CreateInvoiceDto"
                             ],
@@ -205,40 +167,29 @@
               ]
             },
             {
-              "node": {
-                "id": "http_out:gateway#src/clients/orders.client.ts:33:12",
-                "label": "GET /orders/:param",
-                "reach": "alive",
-                "from": "GET /orders/:param"
-              },
+              "id": "http_out:gateway#src/clients/orders.client.ts:33:12",
+              "label": "GET /orders/:param",
+              "reach": "alive",
+              "from": "GET /orders/:param",
               "edge": {
                 "type": "http_calls",
-                "confidence": "static",
                 "returns": "type:@fx/contracts#OrderDto"
               },
               "children": [
                 {
-                  "node": {
-                    "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
-                    "line": 32,
-                    "reach": "alive",
-                    "from": "GET /orders/:param"
-                  },
-                  "edge": {
-                    "type": "calls",
-                    "confidence": "static"
-                  },
+                  "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
+                  "line": 32,
+                  "reach": "alive",
+                  "from": "GET /orders/:param",
+                  "edge": "calls",
                   "children": [
                     {
-                      "node": {
-                        "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
-                        "line": 30,
-                        "reach": "alive",
-                        "from": "GET /orders/:param"
-                      },
+                      "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
+                      "line": 30,
+                      "reach": "alive",
+                      "from": "GET /orders/:param",
                       "edge": {
                         "type": "calls",
-                        "confidence": "static",
                         "params": [
                           "string"
                         ],
@@ -246,14 +197,11 @@
                       },
                       "children": [
                         {
-                          "node": {
-                            "id": "entry:gateway:http:GET:/orders/:param",
-                            "loc": "src/orders/orders.controller.ts:30",
-                            "reach": "alive"
-                          },
+                          "id": "entry:gateway:http:GET:/orders/:param",
+                          "loc": "src/orders/orders.controller.ts:30",
+                          "reach": "alive",
                           "edge": {
                             "type": "handles",
-                            "confidence": "static",
                             "params": [
                               "string"
                             ],
@@ -270,16 +218,6 @@
         }
       ]
     }
-  ],
-  "truncated": "5 more nodes past depth 6; raise depth",
-  "stoppedBy": [
-    "depth"
-  ],
-  "frontier": [
-    "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
-    "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
-    "entry:billing:http:POST:/invoices",
-    "entry:gateway:http:GET:/orders/:param"
   ],
   "complete": false,
   "left": [

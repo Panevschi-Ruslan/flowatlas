@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:38:07.688Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:45:59.337Z",
   "configHash": "8629e6e75be8",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 787,
+      "durationMs": 938,
       "packages": {
         "name": "own-origin-requests-catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 827,
+      "durationMs": 966,
       "packages": {
         "name": "own-origin-requests-shop",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 816,
+      "durationMs": 977,
       "packages": {
         "name": "own-origin-requests-site",
         "runtime": [

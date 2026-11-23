@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-10T14:22:04.214Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:09.306Z",
   "configHash": "cac6119013e8",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1621,
+      "durationMs": 1445,
       "packages": {
         "name": "interceptor-host-admin",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 10,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1579,
+      "durationMs": 1411,
       "packages": {
         "name": "interceptor-host-api",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 12,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1549,
+      "durationMs": 1424,
       "packages": {
         "name": "interceptor-host-web",
         "runtime": [

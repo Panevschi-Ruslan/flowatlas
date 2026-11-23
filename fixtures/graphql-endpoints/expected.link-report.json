@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:45:31.031Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:35:42.002Z",
   "configHash": "661177013669",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 16,
       "types": 5,
       "unresolved": 5,
-      "durationMs": 1044,
+      "durationMs": 1068,
       "packages": {
         "name": "graphql-endpoints-api",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 14,
       "types": 0,
       "unresolved": 13,
-      "durationMs": 806,
+      "durationMs": 901,
       "packages": {
         "name": "graphql-endpoints-web",
         "runtime": [

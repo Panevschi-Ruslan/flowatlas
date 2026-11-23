@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-05T22:27:04.115Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:45:54.006Z",
   "configHash": "16b4f26f6454",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 15,
       "types": 2,
       "unresolved": 2,
-      "durationMs": 731,
+      "durationMs": 1091,
       "packages": {
         "name": "orpc-contract-orders",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 673,
+      "durationMs": 1036,
       "packages": {
         "name": "orpc-contract-shop",
         "runtime": [

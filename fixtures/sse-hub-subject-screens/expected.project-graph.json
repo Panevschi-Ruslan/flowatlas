@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T16:01:32.293Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:49:29.465Z",
   "services": [
     {
       "name": "boards-api",
@@ -42,7 +42,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-alerts-badge"
+        "selector": "app-alerts-badge",
+        "unreferenced": true
       }
     },
     {
@@ -87,7 +88,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-archive-panel"
+        "selector": "app-archive-panel",
+        "unreferenced": true
       }
     },
     {
@@ -146,7 +148,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-board-page"
+        "selector": "app-board-page",
+        "unreferenced": true
       }
     },
     {
@@ -205,7 +208,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-card-timeline"
+        "selector": "app-card-timeline",
+        "unreferenced": true
       }
     },
     {
@@ -278,7 +282,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-crew-panel"
+        "selector": "app-crew-panel",
+        "unreferenced": true
       }
     },
     {

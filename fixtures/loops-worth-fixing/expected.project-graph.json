@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T21:46:52.042Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:38:02.733Z",
   "services": [
     {
       "name": "parcels",

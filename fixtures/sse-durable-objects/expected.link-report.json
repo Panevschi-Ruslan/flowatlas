@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T13:57:04.647Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:49:25.081Z",
   "configHash": "6a8221edd12d",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 23,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1442,
+      "durationMs": 3862,
       "packages": {
         "name": "board-web",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 16,
       "types": 2,
       "unresolved": 5,
-      "durationMs": 2197,
+      "durationMs": 5121,
       "packages": {
         "name": "digest-worker",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 31,
       "types": 9,
       "unresolved": 3,
-      "durationMs": 2267,
+      "durationMs": 5624,
       "packages": {
         "name": "gateway",
         "runtime": [
@@ -71,7 +71,7 @@
       "edges": 19,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2515,
+      "durationMs": 6297,
       "packages": {
         "name": "planner",
         "runtime": [

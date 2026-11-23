@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "angular-basic",
-  "generatedAt": "2026-11-20T17:31:35.576Z",
+  "generatedAt": "2026-11-23T14:32:04.132Z",
   "nodes": [
     {
       "id": "angular-basic#node_modules/@angular/common:HttpClient",
@@ -278,7 +278,8 @@
           "returns": "{cancelled:string;opened:type:angular-basic#OrderDto}"
         },
         "standalone": true,
-        "selector": "app-order-card"
+        "selector": "app-order-card",
+        "unreferenced": true
       }
     },
     {
@@ -445,7 +446,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -1099,6 +1101,17 @@
       "line": 63,
       "params": [],
       "returns": "string"
+    },
+    {
+      "from": "angular-basic#src/app/order-card.component.ts:OrderCardComponent",
+      "to": "angular-basic#src/app/highlight.directive.ts:HighlightDirective",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/order-card.component.ts",
+      "line": 17,
+      "meta": {
+        "renders": "article"
+      }
     },
     {
       "from": "angular-basic#src/app/order-card.component.ts:OrderCardComponent",

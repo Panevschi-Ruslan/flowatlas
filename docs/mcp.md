@@ -309,8 +309,17 @@ A row's ids are its `id` and, on a gap, its `gapId` (`gap:<service>|<file>|<reas
 | a `meta` key | when it says again a field of the row (`meta.kind` beside `kind`), a part of the row's id (a way in's `meta.method` and `meta.path`), or a word of its `label` (a request's `meta.method` and `meta.path` beside `GET /orders/:param`) |
 | null, `false`, `[]`, `{}` | on every row below the answer; the answer's own fields stay, since an empty `consumers` or `dead: false` there is the answer |
 | `next` past two calls | when the list was cut, `next` is the paging call alone |
+| `truncated`, `stoppedBy`, `frontier` | where the answer (or one of the answers of a call asked several things) says `left`, which says each cut; `next` holds the call that walks on (P370) |
+| a tree's `node` wrapper | a row of a tree (`get_flow`, `who_calls`) is said as the node itself with `edge` and `children` beside its fields: `{"id": …, "line": 31, "edge": "calls", "children": […]}` (P370) |
+| an edge's `confidence: "static"` | the confidence an edge has unless it says otherwise; an edge with nothing left but its type is said as the type (`"edge": "handles"`), one with types or a weaker confidence as an object (P370) |
 
 `id`, `gapId`, `complete`, `left`, `reach` and `from` are never left out.
+
+On the fixtures the compact snapshots cover, P370's three rules take a further
+8% off thirty answers (60,262 characters to 55,635): `get_flow` at detail 1
+0.83-0.85 of P365's compact answer, at detail 2 0.88-0.90, a cut `get_flow`
+0.83, `who_calls` 0.78-0.88; the rows of a tree were about 30% wrapper and
+edge. With the unreached chain ends no longer listed by `impact`, 53,453.
 
 `line` rather than a shortened `loc` reads one way only: a number is a line of
 the file the id names. A field the compaction does not know is kept, so a field
@@ -356,7 +365,17 @@ question is answered in the call that asked it.
       that step's gap id, and `behind`, the code the chain stops at when it is
       not the row itself; a way in that is a maybe (a request one segment
       off) says in `behind` why `dead` says it may be called.
-    - `unreached`: no way in reaches it, and no unread call could.
+    - `unreached`: no way in reaches it, and no unread call could - also
+      where `dead` says `likely-dead` of code whose name its repository
+      writes nowhere but at its declaration (`evidence.unreferenced`: no call,
+      no reference by name or string key, no template binding, no value
+      handed on; comments do not count) and its file holds no step the
+      reading could not follow, since an unread call writes the name it
+      calls (P370). A front end's methods and components are judged this way;
+      not a member of a class that extends or implements anything, a
+      decorated member, a framework's `ng…` hook, nor anything in a
+      repository whose manifest publishes an entry (`main`, `module`,
+      `exports`, `types`).
     - `dead`: as `dead` answers.
     - `outside`: something outside the project calls it - a webhook, a bot
       update or command, a cron, a screen opened at its address, a public
@@ -729,7 +748,12 @@ said aloud with its service where that is not the row's, or `channel <name>`);
 `reach` on each (detail 1 is enough to say which could break). A chain that
 stops before any way in, at code an unread call could reach, is a row of its
 own with `reach: "maybe"`, `gap` and `via`, counted in `maybe` and in `left`
-(`gaps: 1 chain stops at an unread call before any way in`). A link or a
+(`gaps: 1 chain stops at an unread call before any way in`). A chain that
+ends at code whose name its repository writes nowhere else, in a file with no
+unread call, is no way anything could break: it is counted in `unreached`
+and not listed (P370; on the main fixture the web's four client methods
+nothing calls and the component nothing renders left the maybe rows, and the
+answer of 12 rows became 7). A link or a
 navigation onto a screen or a component is no call into it, so the walk does
 not go back along one. It is bounded by 4,000 nodes; `entriesByService`,
 `reachedByService` and `servicesWithoutEntry` still name the services whose

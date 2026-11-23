@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-10-16T23:29:25.463Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:45:21.998Z",
   "configHash": "ef851b9ed9cb",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 573,
+      "durationMs": 1968,
       "packages": {
         "name": "@sibling-types/web",
         "runtime": [

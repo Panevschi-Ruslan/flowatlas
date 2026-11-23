@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-14T18:09:27.740Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:35:31.932Z",
   "services": [
     {
       "name": "catalog",

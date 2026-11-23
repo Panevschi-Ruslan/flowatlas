@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-12T19:18:13.836Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:50:26.923Z",
   "configHash": "154f487813ac",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 805,
+      "durationMs": 938,
       "packages": {
         "name": "@shop/api",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 6,
-      "durationMs": 821,
+      "durationMs": 960,
       "packages": {
         "name": "files",
         "runtime": [],
@@ -48,7 +48,7 @@
       "edges": 18,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 853,
+      "durationMs": 1001,
       "packages": {
         "name": "store",
         "runtime": [
@@ -68,7 +68,7 @@
       "edges": 6,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 809,
+      "durationMs": 944,
       "packages": {
         "name": "@shop/web",
         "runtime": [

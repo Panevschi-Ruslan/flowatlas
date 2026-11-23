@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T22:48:57.003Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:50:04.123Z",
   "configHash": "b675a12d6b6a",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 9,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 2111,
+      "durationMs": 769,
       "packages": {
         "name": "payments",
         "runtime": [

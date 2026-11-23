@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-08T14:25:09.008Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:41:23.111Z",
   "configHash": "1ce3a97766e6",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1447,
       "packages": {
         "name": "shop-billing",
         "runtime": [],
@@ -30,7 +30,7 @@
       "edges": 23,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 642,
+      "durationMs": 1383,
       "packages": {
         "name": "shop-ledger",
         "runtime": [],
@@ -48,7 +48,7 @@
       "edges": 32,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 0,
+      "durationMs": 1462,
       "packages": {
         "name": "shop-orders",
         "runtime": [
@@ -69,7 +69,7 @@
       "edges": 8,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 1460,
       "packages": {
         "name": "shop-platform",
         "runtime": [
@@ -89,7 +89,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 1401,
       "packages": {
         "name": "shop-reports",
         "runtime": [

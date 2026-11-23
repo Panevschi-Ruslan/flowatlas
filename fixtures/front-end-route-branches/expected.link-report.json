@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:33:35.828Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:35:22.695Z",
   "configHash": "0951e08a1408",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 20,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 770,
+      "durationMs": 844,
       "packages": {
         "name": "front-end-route-branches-console",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 17,
       "types": 0,
       "unresolved": 8,
-      "durationMs": 798,
+      "durationMs": 882,
       "packages": {
         "name": "front-end-route-branches-site",
         "runtime": [
@@ -53,7 +53,7 @@
       "edges": 27,
       "types": 1,
       "unresolved": 14,
-      "durationMs": 812,
+      "durationMs": 924,
       "packages": {
         "name": "front-end-route-branches-wiki",
         "runtime": [

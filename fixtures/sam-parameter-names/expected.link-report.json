@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:39:50.692Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:47:05.455Z",
   "configHash": "cab7c90028a4",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 24,
       "types": 1,
       "unresolved": 7,
-      "durationMs": 3595,
+      "durationMs": 816,
       "packages": {
         "name": "ledger",
         "runtime": [

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:33:02.437Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:34:40.093Z",
   "configHash": "10c93f0052af",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1556,
+      "durationMs": 1740,
       "packages": {
         "name": "dev-proxy-joins-admin",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1502,
+      "durationMs": 1669,
       "packages": {
         "name": "dev-proxy-joins-billing",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1464,
+      "durationMs": 1661,
       "packages": {
         "name": "dev-proxy-joins-catalog",
         "runtime": [
@@ -68,7 +68,7 @@
       "edges": 5,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1586,
+      "durationMs": 1731,
       "packages": {
         "name": "dev-proxy-joins-jobs",
         "runtime": [
@@ -86,7 +86,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1543,
+      "durationMs": 1585,
       "packages": {
         "name": "dev-proxy-joins-legacy",
         "runtime": [
@@ -105,7 +105,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1551,
+      "durationMs": 1697,
       "packages": {
         "name": "dev-proxy-joins-orders",
         "runtime": [
@@ -123,7 +123,7 @@
       "edges": 6,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1599,
+      "durationMs": 1695,
       "packages": {
         "name": "dev-proxy-joins-store",
         "runtime": [
@@ -142,7 +142,7 @@
       "edges": 6,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1533,
+      "durationMs": 1681,
       "packages": {
         "name": "dev-proxy-joins-storefront",
         "runtime": [
@@ -160,7 +160,7 @@
       "edges": 13,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1565,
+      "durationMs": 1681,
       "packages": {
         "name": "dev-proxy-joins-web",
         "runtime": [

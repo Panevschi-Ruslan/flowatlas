@@ -1,6 +1,7 @@
 import {
   FlowatlasError,
   SCHEMA_VERSION,
+  schemaMismatchSaid,
   type FlowatlasConfig,
   type GraphEdge,
   type GraphNode,
@@ -36,11 +37,8 @@ const packageOfTypeId = (id: string): string | undefined => /^type:([^#]+)#/.exe
 /** A graph from another version of the model cannot be merged with this one. */
 const assertCurrent = (graph: RepoGraph): void => {
   if (graph.schemaVersion === SCHEMA_VERSION) return;
-  throw new FlowatlasError(
-    'schema-version-mismatch',
-    `graph.json of ${graph.repo} is schema v${graph.schemaVersion}, expected v${SCHEMA_VERSION}`,
-    'Re-run extract for that repository.',
-  );
+  const said = schemaMismatchSaid(graph.schemaVersion);
+  throw new FlowatlasError('schema-version-mismatch', `graph.json of ${graph.repo}: ${said.message}`, said.hint);
 };
 
 /**

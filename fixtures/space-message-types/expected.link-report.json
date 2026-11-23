@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T13:16:32.536Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:49:04.293Z",
   "configHash": "93bf054e22ea",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 30,
       "types": 6,
       "unresolved": 2,
-      "durationMs": 921,
+      "durationMs": 3471,
       "packages": {
         "name": "docs-api",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 57,
       "types": 7,
       "unresolved": 2,
-      "durationMs": 930,
+      "durationMs": 3292,
       "packages": {
         "name": "notify-worker",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 895,
+      "durationMs": 3286,
       "packages": {
         "name": "realtime-gateway",
         "runtime": [

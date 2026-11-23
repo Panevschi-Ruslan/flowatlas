@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:38:00.044Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:45:49.085Z",
   "configHash": "a27cd8f77c0e",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 19,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 762,
+      "durationMs": 1147,
       "packages": {
         "name": "nuxt4-shop",
         "runtime": [

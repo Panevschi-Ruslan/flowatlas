@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:41:18.287Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:35:08.998Z",
   "configHash": "5fb2999e8be5",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 5476,
+      "durationMs": 959,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 15,
       "types": 0,
       "unresolved": 6,
-      "durationMs": 7405,
+      "durationMs": 1347,
       "packages": {
         "name": "framework-made-receiver-parts-jobs",
         "runtime": [
@@ -53,7 +53,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 5930,
+      "durationMs": 921,
       "packages": {
         "name": "stock",
         "runtime": [
@@ -71,7 +71,7 @@
       "edges": 32,
       "types": 1,
       "unresolved": 2,
-      "durationMs": 6187,
+      "durationMs": 1027,
       "packages": {
         "name": "framework-made-receiver-parts-web",
         "runtime": [

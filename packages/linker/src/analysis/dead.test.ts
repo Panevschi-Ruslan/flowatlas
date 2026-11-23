@@ -766,10 +766,44 @@ describe('a screen the router registers (P363)', () => {
     expect(archive).toMatchObject({ verdict: 'alive', reason: 'routed at /archive; no link to it was read', evidence: { via: 'entry:web:screen:/archive', links: 0 } });
     expect(page).toMatchObject({ verdict: 'alive', evidence: { routedAt: ['/map'] } });
     expect(linked).toMatchObject({ verdict: 'alive', evidence: { callers: 1 } });
-    // Rendered by a tag, which is drawn by nothing: not a claim either way.
-    expect(badge).toMatchObject({ verdict: 'unknown' });
+    // No route, link or template that renders it by its tag (P370): code handing it on as a value still may.
+    expect(badge).toMatchObject({ verdict: 'likely-dead', evidence: {} });
     expect(entry).toMatchObject({ verdict: 'unknown', reason: 'a screen is opened at its address from outside the graph; no link to it was read' });
     // A screen is never a route nobody calls.
     expect(listed).toEqual([]);
+  });
+
+  it('says a component a template renders by its tag is reached through the one that renders it (P370)', () => {
+    const rendered = [
+      ...edges,
+      edge('web#src/map.ts:MapComponent', 'web#src/badge.ts:BadgeComponent', { type: 'calls', meta: { renders: 'app-badge' } }),
+    ];
+    const db = buildTestDb({ nodes, edges: rendered });
+    const badge = deadVerdict(db, db.report(), 'web#src/badge.ts:BadgeComponent');
+    db.close();
+    expect(badge).toMatchObject({ verdict: 'alive', reason: 'a link, a navigation or a parent reaches it' });
+  });
+
+  it('says unreferenced of a component and a method whose name the repository writes nowhere else (P370)', () => {
+    const marked = [
+      ...nodes.filter((item) => item.id !== 'web#src/badge.ts:BadgeComponent'),
+      node('web#src/badge.ts:BadgeComponent', { type: 'ui_component', label: 'BadgeComponent', meta: { unreferenced: true } }),
+      node('web#src/api.ts:ApiService', { type: 'provider', label: 'ApiService' }),
+      node('web#src/api.ts:ApiService.one', { type: 'method', label: 'ApiService.one' }),
+      node('web#src/api.ts:ApiService.legacy', { type: 'method', label: 'ApiService.legacy', meta: { unreferenced: true } }),
+      node('web#src/api.ts:ApiService.spare', { type: 'method', label: 'ApiService.spare' }),
+    ];
+    const used = [...edges, edge('web#src/map.ts:MapComponent', 'web#src/api.ts:ApiService', { type: 'injects' })];
+    const db = buildTestDb({ nodes: marked, edges: used });
+    const badge = deadVerdict(db, db.report(), 'web#src/badge.ts:BadgeComponent');
+    const legacy = deadVerdict(db, db.report(), 'web#src/api.ts:ApiService.legacy');
+    const spare = deadVerdict(db, db.report(), 'web#src/api.ts:ApiService.spare');
+    db.close();
+    expect(badge).toMatchObject({ verdict: 'likely-dead', evidence: { unreferenced: true } });
+    expect(legacy).toMatchObject({ verdict: 'likely-dead', evidence: { classReached: true, unreferenced: true } });
+    expect(legacy?.reason).toContain('written nowhere else');
+    // A name written somewhere: a call through a receiver the reading could not type may be the one.
+    expect(spare).toMatchObject({ verdict: 'likely-dead', evidence: { classReached: true } });
+    expect(spare?.evidence.unreferenced).toBeUndefined();
   });
 });

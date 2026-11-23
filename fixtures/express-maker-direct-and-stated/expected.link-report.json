@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:22:45.067Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:34:52.872Z",
   "configHash": "eeb64d430e24",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 12,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 0,
+      "durationMs": 860,
       "packages": {
         "name": "express-maker-api",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 828,
       "packages": {
         "name": "express-maker-shop",
         "runtime": [

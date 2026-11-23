@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:35:11.439Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:37:55.867Z",
   "configHash": "73b8a22633ac",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1543,
+      "durationMs": 2076,
       "packages": {
         "name": "listen-port-joins-admin",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 1,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1529,
+      "durationMs": 2110,
       "packages": {
         "name": "listen-port-joins-audit",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 1,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1591,
+      "durationMs": 2064,
       "packages": {
         "name": "listen-port-joins-catalog",
         "runtime": [
@@ -69,7 +69,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1784,
+      "durationMs": 2459,
       "packages": {
         "name": "listen-port-joins-jobs",
         "runtime": [
@@ -88,7 +88,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1747,
+      "durationMs": 2340,
       "packages": {
         "name": "listen-port-joins-ledger",
         "runtime": [
@@ -107,7 +107,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1503,
+      "durationMs": 2172,
       "packages": {
         "name": "listen-port-joins-orders",
         "runtime": [
@@ -125,7 +125,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1531,
+      "durationMs": 2099,
       "packages": {
         "name": "listen-port-joins-stock",
         "runtime": [
@@ -143,7 +143,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1670,
+      "durationMs": 2123,
       "packages": {
         "name": "listen-port-joins-storefront",
         "runtime": [
@@ -161,7 +161,7 @@
       "edges": 21,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1584,
+      "durationMs": 2253,
       "packages": {
         "name": "listen-port-joins-web",
         "runtime": [

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "sveltekit-server-routes",
-  "generatedAt": "2026-11-05T22:30:34.197Z",
+  "generatedAt": "2026-11-23T14:49:58.662Z",
   "nodes": [
     {
       "id": "entry:sveltekit-server-routes:http:DELETE:/api/orders/:param",

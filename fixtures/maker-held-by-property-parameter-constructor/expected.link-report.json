@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-18T17:01:17.228Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:38:15.099Z",
   "configHash": "7e5ebaeda238",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4073,
+      "durationMs": 2487,
       "packages": {
         "name": "maker-held-api",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 3721,
+      "durationMs": 2450,
       "packages": {
         "name": "maker-held-jobs",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 3630,
+      "durationMs": 2465,
       "packages": {
         "name": "maker-held-shop",
         "runtime": [

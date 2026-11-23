@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T22:45:46.583Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:47:01.675Z",
   "configHash": "b5d161d861f0",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 15,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1659,
+      "durationMs": 834,
       "packages": {
         "name": "catalog",
         "runtime": [

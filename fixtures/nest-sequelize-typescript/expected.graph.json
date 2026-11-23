@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "nest-sequelize-typescript",
-  "generatedAt": "2026-11-07T17:39:50.313Z",
+  "generatedAt": "2026-11-23T14:44:37.042Z",
   "nodes": [
     {
       "id": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:12:12",

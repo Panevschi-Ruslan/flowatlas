@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-14T18:08:26.905Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:40.000Z",
   "configHash": "26a63c9d7e85",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 6,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 653,
+      "durationMs": 1174,
       "packages": {
         "name": "bookings",
         "runtime": [],
@@ -30,7 +30,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 646
+      "durationMs": 1208
     }
   ],
   "httpOut": {

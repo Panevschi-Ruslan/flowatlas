@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:38:13.222Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:39:29.289Z",
   "services": [
     {
       "name": "gateway",
@@ -2092,7 +2092,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-checkout"
+        "selector": "app-checkout",
+        "unreferenced": true
       }
     },
     {

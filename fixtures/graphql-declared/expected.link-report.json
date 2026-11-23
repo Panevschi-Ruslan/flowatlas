@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-05T17:52:16.713Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:35:39.824Z",
   "configHash": "67d10c150b78",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 4
+      "durationMs": 3
     },
     {
       "name": "shop",
@@ -23,7 +23,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 596,
+      "durationMs": 864,
       "packages": {
         "name": "graphql-shop",
         "runtime": [

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T14:43:42.002Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:36:21.701Z",
   "services": [
     {
       "name": "api",
@@ -1008,7 +1008,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-orders"
+        "selector": "app-orders",
+        "unreferenced": true
       }
     },
     {

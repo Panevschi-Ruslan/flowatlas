@@ -187,9 +187,8 @@
         "type": "provider",
         "line": 15,
         "kind": "injectable",
-        "reach": "maybe",
-        "from": "behind",
-        "behind": "web#src/app/orders-api.service.ts:OrdersApiService.advance"
+        "reach": "unreached",
+        "from": "none"
       },
       {
         "id": "orders#src/app.module.ts:AppModule",
@@ -226,7 +225,6 @@
       }
     ]
   },
-  "truncated": "routes 3 more, classes 1 more; next page offset 10",
   "nextOffset": 10,
   "complete": false,
   "left": [

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-17T19:02:10.511Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:19.325Z",
   "configHash": "c0e8235f16ef",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 10,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 852,
+      "durationMs": 1165,
       "packages": {
         "name": "shop-jobs",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 902,
+      "durationMs": 1259,
       "packages": {
         "name": "stock",
         "runtime": [

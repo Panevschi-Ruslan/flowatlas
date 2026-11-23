@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:26:55.375Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:35:55.628Z",
   "configHash": "bc4a4584505a",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 923,
+      "durationMs": 1439,
       "packages": {
         "name": "graphql-admin",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 11,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 837,
+      "durationMs": 1325,
       "packages": {
         "name": "graphql-catalog",
         "runtime": [
@@ -53,7 +53,7 @@
       "edges": 15,
       "types": 3,
       "unresolved": 1,
-      "durationMs": 1034,
+      "durationMs": 1579,
       "packages": {
         "name": "graphql-orders",
         "runtime": [
@@ -75,7 +75,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 836,
+      "durationMs": 1333,
       "packages": {
         "name": "graphql-web",
         "runtime": [

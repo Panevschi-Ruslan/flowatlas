@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "nest-followed-tokens",
-  "generatedAt": "2026-11-08T17:05:09.136Z",
+  "generatedAt": "2026-11-23T14:42:22.474Z",
   "nodes": [
     {
       "id": "entry:nest-followed-tokens:http:POST:/orders/:param",

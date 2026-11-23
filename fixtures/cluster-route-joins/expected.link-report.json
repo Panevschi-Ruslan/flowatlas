@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-08T17:03:52.991Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:34:08.469Z",
   "configHash": "997a5f86e60d",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 953,
+      "durationMs": 1410,
       "packages": {
         "name": "cluster-route-joins-billing",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 951,
+      "durationMs": 1427,
       "packages": {
         "name": "cluster-route-joins-catalog",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 21,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 945,
+      "durationMs": 1457,
       "packages": {
         "name": "cluster-route-joins-jobs",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1017,
+      "durationMs": 1457,
       "packages": {
         "name": "cluster-route-joins-orders",
         "runtime": [
@@ -84,7 +84,7 @@
       "edges": 3,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 987,
+      "durationMs": 1453,
       "packages": {
         "name": "cluster-route-joins-stock",
         "runtime": [
@@ -102,7 +102,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 935,
+      "durationMs": 1353,
       "packages": {
         "name": "cluster-route-joins-web",
         "runtime": [

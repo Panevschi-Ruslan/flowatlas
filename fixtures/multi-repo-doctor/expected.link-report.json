@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-10-17T04:49:59.448Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:40:20.002Z",
   "configHash": "9376cf8f01b0",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 719,
+      "durationMs": 6888,
       "packages": {
         "name": "doctor-billing",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 19,
       "types": 4,
       "unresolved": 7,
-      "durationMs": 764,
+      "durationMs": 6826,
       "packages": {
         "name": "doctor-gateway",
         "runtime": [
@@ -58,7 +58,7 @@
       "edges": 38,
       "types": 3,
       "unresolved": 17,
-      "durationMs": 750,
+      "durationMs": 7595,
       "packages": {
         "name": "doctor-orders",
         "runtime": [

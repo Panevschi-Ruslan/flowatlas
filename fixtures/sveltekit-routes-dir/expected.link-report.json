@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:40:15.307Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:49:57.300Z",
   "configHash": "4191b8cde503",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 9,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 741,
+      "durationMs": 781,
       "packages": {
         "name": "svelte-moved-routes",
         "runtime": [],

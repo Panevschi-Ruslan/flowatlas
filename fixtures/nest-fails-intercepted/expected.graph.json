@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "nest-fails-intercepted",
-  "generatedAt": "2026-11-07T17:38:55.230Z",
+  "generatedAt": "2026-11-23T14:42:12.643Z",
   "nodes": [
     {
       "id": "entry:nest-fails-intercepted:http:GET:/books/:param",

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:38:40.793Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:53:59.621Z",
   "services": [
     {
       "name": "docs",

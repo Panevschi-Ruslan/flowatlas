@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-15T16:12:58.944Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:34:37.009Z",
   "configHash": "0b5657709b73",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 739,
+      "durationMs": 991,
       "packages": {
         "name": "shop-billing",
         "runtime": [],
@@ -30,7 +30,7 @@
       "edges": 10,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 764,
+      "durationMs": 1039,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 18,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 816,
+      "durationMs": 1053,
       "packages": {
         "name": "shop-jobs",
         "runtime": [
@@ -67,7 +67,7 @@
       "edges": 15,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 774
+      "durationMs": 1020
     }
   ],
   "httpOut": {

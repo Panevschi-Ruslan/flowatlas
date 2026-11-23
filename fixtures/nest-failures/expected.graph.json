@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "nest-failures",
-  "generatedAt": "2026-11-07T17:38:56.380Z",
+  "generatedAt": "2026-11-23T14:42:18.557Z",
   "nodes": [
     {
       "id": "entry:nest-failures:http:DELETE:/orders/:param",

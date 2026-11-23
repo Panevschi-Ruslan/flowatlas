@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-10-16T23:27:49.921Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:33:02.928Z",
   "configHash": "34d5fa7d819b",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 655,
+      "durationMs": 4249,
       "packages": {
         "name": "payments",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 10,
       "types": 0,
       "unresolved": 7,
-      "durationMs": 671,
+      "durationMs": 4823,
       "packages": {
         "name": "storefront",
         "runtime": [

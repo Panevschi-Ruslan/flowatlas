@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-10T14:18:19.813Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:38:53.689Z",
   "configHash": "70acd3434793",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 902,
+      "durationMs": 4691,
       "packages": {
         "name": "admin",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 2,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1293,
+      "durationMs": 6524,
       "packages": {
         "name": "catalog-api",
         "runtime": [
@@ -49,7 +49,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1237,
+      "durationMs": 6913,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -68,7 +68,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 892,
+      "durationMs": 4739,
       "packages": {
         "name": "storefront",
         "runtime": [

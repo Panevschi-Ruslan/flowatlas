@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:41:43.481Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:37:12.663Z",
   "configHash": "208ebdce4c7a",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 13,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 755,
+      "durationMs": 864,
       "packages": {
         "name": "bookshop",
         "runtime": [

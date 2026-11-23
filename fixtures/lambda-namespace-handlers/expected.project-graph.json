@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-12T18:48:03.271Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:37:16.680Z",
   "services": [
     {
       "name": "desk",

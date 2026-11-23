@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T21:45:02.340Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:40:54.598Z",
   "configHash": "8cac6b423694",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 3626,
+      "durationMs": 3289,
       "packages": {
         "name": "shop-orders",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 6,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 3066,
+      "durationMs": 3205,
       "packages": {
         "name": "shop-platform",
         "runtime": [],

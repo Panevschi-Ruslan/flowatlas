@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-12T18:57:58.317Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:49:44.235Z",
   "services": [
     {
       "name": "lending",

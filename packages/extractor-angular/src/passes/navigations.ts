@@ -84,7 +84,12 @@ const writtenOf = (method: string, argument: TsNode | undefined, extras: TsNode 
   if (path === undefined) return { code: argument.getText().replace(/\s+/g, ' ').slice(0, 60) };
   // `{ relativeTo: this.route }`: under the route the component is shown at, which is not read here.
   const relative = extras !== undefined && Node.isObjectLiteralExpression(extras) && extras.getProperty('relativeTo') !== undefined && !path.startsWith('/');
-  return relative ? { relative: path } : { path };
+  if (relative) return { relative: path };
+  // An address that is nothing but values read at run time (`[entry.route]`) names no route to look for: code (P370).
+  if (path.includes(':param') && path.split('/').every((segment) => segment === '' || segment === ':param')) {
+    return { code: argument.getText().replace(/\s+/g, ' ').slice(0, 60) };
+  }
+  return { path };
 };
 
 /** The pieces of an array or an argument list written as text, split at their own commas. */
@@ -222,16 +227,19 @@ export const landNavigation = (ctx: AngularExtractContext, landing: NavigationLa
   });
 };
 
-/** The navigation a call makes on the router, when it makes one. */
-export const routerCall = (node: TsNode): { readonly method: string; readonly written: Written } | undefined => {
+/** The navigation a call makes on the router, when it makes one, with the argument it names the address by. */
+export const routerCall = (node: TsNode): { readonly method: string; readonly written: Written; readonly argument?: TsNode } | undefined => {
   if (!Node.isCallExpression(node)) return undefined;
   const callee = node.getExpression();
   if (!Node.isPropertyAccessExpression(callee)) return undefined;
   const method = callee.getName();
   if (!ROUTER_METHODS.has(method) || !isRouter(callee.getExpression())) return undefined;
   const [argument, extras] = (node as CallExpression).getArguments();
-  return { method, written: writtenOf(method, argument, extras) };
+  return { method, written: writtenOf(method, argument, extras), ...(argument === undefined ? {} : { argument }) };
 };
+
+/** Whether a router method's address is one string (`navigateByUrl`, `parseUrl`) rather than an array of segments. */
+export const navigatesByUrl = (method: string): boolean => ROUTER_METHODS.get(method)?.byUrl === true;
 
 /**
  * Where an Angular application's code navigates (P276): `navigate([...])` and

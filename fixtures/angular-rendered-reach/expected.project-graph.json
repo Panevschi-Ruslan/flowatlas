@@ -1,0 +1,898 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:13.838Z",
+  "services": [
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog-web",
+      "repo": "./catalog-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "catalog-api",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ItemsController"
+        ],
+        "providers": [
+          "ItemsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "catalog-api#src/items.controller.ts:ItemsController",
+      "type": "provider",
+      "label": "ItemsController",
+      "repo": "catalog-api",
+      "file": "src/items.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/items.controller.ts:ItemsController.findOne",
+      "type": "method",
+      "label": "ItemsController.findOne",
+      "repo": "catalog-api",
+      "file": "src/items.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string;title:string}"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/items.service.ts:ItemsService",
+      "type": "provider",
+      "label": "ItemsService",
+      "repo": "catalog-api",
+      "file": "src/items.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/items.service.ts:ItemsService.findOne",
+      "type": "method",
+      "label": "ItemsService.findOne",
+      "repo": "catalog-api",
+      "file": "src/items.service.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string;title:string}"
+        }
+      }
+    },
+    {
+      "id": "catalog-web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "catalog-web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "catalog-web#node_modules/@angular/router:Router",
+      "type": "provider",
+      "label": "Router",
+      "repo": "catalog-web",
+      "file": "node_modules/@angular/router",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/router",
+        "external": true
+      }
+    },
+    {
+      "id": "catalog-web#src/app/app.component.ts:AppComponent",
+      "type": "ui_component",
+      "label": "AppComponent",
+      "repo": "catalog-web",
+      "file": "src/app/app.component.ts",
+      "line": 21,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-root"
+      }
+    },
+    {
+      "id": "catalog-web#src/app/app.component.ts:AppComponent.go",
+      "type": "method",
+      "label": "AppComponent.go",
+      "repo": "catalog-web",
+      "file": "src/app/app.component.ts",
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "entry",
+              "type": "type:catalog-web#NavEntry"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog-web#src/app/catalog-page.component.ts:CatalogPageComponent",
+      "type": "ui_component",
+      "label": "CatalogPageComponent",
+      "repo": "catalog-web",
+      "file": "src/app/catalog-page.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-catalog-page",
+        "route": "/catalog"
+      }
+    },
+    {
+      "id": "catalog-web#src/app/item-card.component.ts:ItemCardComponent",
+      "type": "ui_component",
+      "label": "ItemCardComponent",
+      "repo": "catalog-web",
+      "file": "src/app/item-card.component.ts",
+      "line": 12,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-item-card"
+      }
+    },
+    {
+      "id": "catalog-web#src/app/item-card.component.ts:ItemCardComponent.load",
+      "type": "method",
+      "label": "ItemCardComponent.load",
+      "repo": "catalog-web",
+      "file": "src/app/item-card.component.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog-web#src/app/items-api.service.ts:ItemsApiService",
+      "type": "provider",
+      "label": "ItemsApiService",
+      "repo": "catalog-web",
+      "file": "src/app/items-api.service.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "catalog-web#src/app/items-api.service.ts:ItemsApiService.one",
+      "type": "method",
+      "label": "ItemsApiService.one",
+      "repo": "catalog-web",
+      "file": "src/app/items-api.service.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string;title:string}"
+        }
+      }
+    },
+    {
+      "id": "catalog-web#src/app/items-api.service.ts:ItemsApiService.oneLegacy",
+      "type": "method",
+      "label": "ItemsApiService.oneLegacy",
+      "repo": "catalog-web",
+      "file": "src/app/items-api.service.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string;title:string}"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService",
+      "type": "provider",
+      "label": "ItemsLookupService",
+      "repo": "catalog-web",
+      "file": "src/app/items-lookup.service.ts",
+      "line": 14,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey",
+      "type": "method",
+      "label": "ItemsLookupService.byKey",
+      "repo": "catalog-web",
+      "file": "src/app/items-lookup.service.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string;title:string}"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "catalog-web#src/app/legacy-badge.component.ts:LegacyBadgeComponent",
+      "type": "ui_component",
+      "label": "LegacyBadgeComponent",
+      "repo": "catalog-web",
+      "file": "src/app/legacy-badge.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-legacy-badge",
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "catalog-web#src/app/promo-dialog.component.ts:PromoDialogComponent",
+      "type": "ui_component",
+      "label": "PromoDialogComponent",
+      "repo": "catalog-web",
+      "file": "src/app/promo-dialog.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-promo-dialog"
+      }
+    },
+    {
+      "id": "catalog-web#src/app/reports-page.component.ts:ReportsPageComponent",
+      "type": "ui_component",
+      "label": "ReportsPageComponent",
+      "repo": "catalog-web",
+      "file": "src/app/reports-page.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-reports-page",
+        "route": "/reports"
+      }
+    },
+    {
+      "id": "catalog-web#src/app/settings-page.component.ts:SettingsPageComponent",
+      "type": "ui_component",
+      "label": "SettingsPageComponent",
+      "repo": "catalog-web",
+      "file": "src/app/settings-page.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-settings-page",
+        "route": "/settings"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/items/:param",
+      "type": "entry",
+      "label": "GET /items/:param",
+      "repo": "catalog-api",
+      "file": "src/items.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items/:param",
+        "rawPath": "/items/:id",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-web:screen:/catalog",
+      "type": "entry",
+      "label": "/catalog",
+      "repo": "catalog-web",
+      "file": "src/app/app.routes.ts",
+      "line": 8,
+      "kind": "screen",
+      "meta": {
+        "path": "/catalog",
+        "by": "angular-routes",
+        "screens": [
+          "CatalogPageComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:catalog-web:screen:/reports",
+      "type": "entry",
+      "label": "/reports",
+      "repo": "catalog-web",
+      "file": "src/app/app.routes.ts",
+      "line": 10,
+      "kind": "screen",
+      "meta": {
+        "path": "/reports",
+        "by": "angular-routes",
+        "screens": [
+          "ReportsPageComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:catalog-web:screen:/settings",
+      "type": "entry",
+      "label": "/settings",
+      "repo": "catalog-web",
+      "file": "src/app/app.routes.ts",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/settings",
+        "by": "angular-routes",
+        "screens": [
+          "SettingsPageComponent"
+        ]
+      }
+    },
+    {
+      "id": "repo:catalog-api",
+      "type": "repo",
+      "label": "catalog-api",
+      "repo": "catalog-api",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:catalog-web",
+      "type": "repo",
+      "label": "catalog-web",
+      "repo": "catalog-web",
+      "meta": {
+        "stats": {
+          "files": 12,
+          "filesRead": 12,
+          "filesUnreadable": 0,
+          "classes": 9,
+          "templates": 7,
+          "skippedExternalCalls": {
+            "@angular/router": 2,
+            "rxjs": 1,
+            "@angular/common": 3
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_action:catalog-web#src/app/app.component.ts:26:17",
+      "type": "ui_action",
+      "label": "click=\"go(entry)\"",
+      "repo": "catalog-web",
+      "file": "src/app/app.component.ts",
+      "line": 26,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "go(entry)",
+        "component": "catalog-web#src/app/app.component.ts:AppComponent",
+        "template": "src/app/app.component.ts",
+        "args": [
+          "entry"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:catalog-web#src/app/item-card.component.ts:14:22",
+      "type": "ui_action",
+      "label": "click=\"load('42')\"",
+      "repo": "catalog-web",
+      "file": "src/app/item-card.component.ts",
+      "line": 14,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "load('42')",
+        "component": "catalog-web#src/app/item-card.component.ts:ItemCardComponent",
+        "template": "src/app/item-card.component.ts",
+        "args": [
+          "'42'"
+        ]
+      }
+    },
+    {
+      "id": "ui_api_call:catalog-web#src/app/items-api.service.ts:18:12",
+      "type": "ui_api_call",
+      "label": "GET /items/:param",
+      "repo": "catalog-web",
+      "file": "src/app/items-api.service.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/items/:param",
+        "path": "/items/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "{id:string;title:string}",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "ui_api_call:catalog-web#src/app/items-api.service.ts:22:12",
+      "type": "ui_api_call",
+      "label": "GET /items/:param",
+      "repo": "catalog-web",
+      "file": "src/app/items-api.service.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/items/:param",
+        "path": "/items/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "{id:string;title:string}",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "ui_api_call:catalog-web#src/app/items-lookup.service.ts:22:12",
+      "type": "ui_api_call",
+      "label": "GET /items/:param",
+      "repo": "catalog-web",
+      "file": "src/app/items-lookup.service.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/items/:param",
+        "path": "/items/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "{id:string;title:string}",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "catalog-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "catalog-api#src/items.controller.ts:ItemsController",
+      "to": "catalog-api#src/items.service.ts:ItemsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/items.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "catalog-api#src/items.controller.ts:ItemsController.findOne",
+      "to": "catalog-api#src/items.service.ts:ItemsService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string;title:string}",
+      "file": "src/items.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "catalog-web#src/app/app.component.ts:AppComponent",
+      "to": "catalog-web#node_modules/@angular/router:Router",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/app.component.ts",
+      "line": 35
+    },
+    {
+      "from": "catalog-web#src/app/catalog-page.component.ts:CatalogPageComponent",
+      "to": "catalog-web#src/app/item-card.component.ts:ItemCardComponent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog-page.component.ts",
+      "line": 8,
+      "meta": {
+        "renders": "app-item-card"
+      }
+    },
+    {
+      "from": "catalog-web#src/app/item-card.component.ts:ItemCardComponent",
+      "to": "catalog-web#src/app/items-api.service.ts:ItemsApiService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/item-card.component.ts",
+      "line": 20
+    },
+    {
+      "from": "catalog-web#src/app/item-card.component.ts:ItemCardComponent",
+      "to": "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/item-card.component.ts",
+      "line": 21
+    },
+    {
+      "from": "catalog-web#src/app/item-card.component.ts:ItemCardComponent.load",
+      "to": "catalog-web#src/app/items-api.service.ts:ItemsApiService.one",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string;title:string}",
+      "file": "src/app/item-card.component.ts",
+      "line": 25
+    },
+    {
+      "from": "catalog-web#src/app/items-api.service.ts:ItemsApiService",
+      "to": "catalog-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/items-api.service.ts",
+      "line": 15
+    },
+    {
+      "from": "catalog-web#src/app/items-api.service.ts:ItemsApiService.one",
+      "to": "ui_api_call:catalog-web#src/app/items-api.service.ts:18:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items-api.service.ts",
+      "line": 18
+    },
+    {
+      "from": "catalog-web#src/app/items-api.service.ts:ItemsApiService.oneLegacy",
+      "to": "ui_api_call:catalog-web#src/app/items-api.service.ts:22:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items-api.service.ts",
+      "line": 22
+    },
+    {
+      "from": "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService",
+      "to": "catalog-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/items-lookup.service.ts",
+      "line": 17
+    },
+    {
+      "from": "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService",
+      "to": "catalog-web#node_modules/@angular/router:Router",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/items-lookup.service.ts",
+      "line": 18
+    },
+    {
+      "from": "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey",
+      "to": "ui_api_call:catalog-web#src/app/items-lookup.service.ts:22:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items-lookup.service.ts",
+      "line": 22
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/items/:param",
+      "to": "catalog-api#src/items.controller.ts:ItemsController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string;title:string}",
+      "file": "src/items.controller.ts",
+      "line": 9,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:catalog-web:screen:/catalog",
+      "to": "catalog-web#src/app/catalog-page.component.ts:CatalogPageComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 8,
+      "meta": {
+        "route": "/catalog"
+      }
+    },
+    {
+      "from": "entry:catalog-web:screen:/reports",
+      "to": "catalog-web#src/app/reports-page.component.ts:ReportsPageComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 10,
+      "meta": {
+        "route": "/reports"
+      }
+    },
+    {
+      "from": "entry:catalog-web:screen:/settings",
+      "to": "catalog-web#src/app/settings-page.component.ts:SettingsPageComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 9,
+      "meta": {
+        "route": "/settings"
+      }
+    },
+    {
+      "from": "ui_action:catalog-web#src/app/app.component.ts:26:17",
+      "to": "catalog-web#src/app/app.component.ts:AppComponent.go",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.component.ts",
+      "line": 26
+    },
+    {
+      "from": "ui_action:catalog-web#src/app/app.component.ts:26:17",
+      "to": "catalog-web#src/app/reports-page.component.ts:ReportsPageComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/app.component.ts",
+      "line": 26,
+      "meta": {
+        "navigates": "/reports",
+        "route": "/reports",
+        "page": "src/app/reports-page.component.ts"
+      }
+    },
+    {
+      "from": "ui_action:catalog-web#src/app/app.component.ts:26:17",
+      "to": "catalog-web#src/app/settings-page.component.ts:SettingsPageComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/app.component.ts",
+      "line": 26,
+      "meta": {
+        "navigates": "/settings",
+        "route": "/settings",
+        "page": "src/app/settings-page.component.ts"
+      }
+    },
+    {
+      "from": "ui_action:catalog-web#src/app/item-card.component.ts:14:22",
+      "to": "catalog-web#src/app/item-card.component.ts:ItemCardComponent.load",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/item-card.component.ts",
+      "line": 14
+    },
+    {
+      "from": "ui_api_call:catalog-web#src/app/items-api.service.ts:18:12",
+      "to": "entry:catalog-api:http:GET:/items/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items-api.service.ts",
+      "line": 18,
+      "returns": "{id:string;title:string}",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "from": "ui_api_call:catalog-web#src/app/items-api.service.ts:22:12",
+      "to": "entry:catalog-api:http:GET:/items/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items-api.service.ts",
+      "line": 22,
+      "returns": "{id:string;title:string}",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "from": "ui_api_call:catalog-web#src/app/items-lookup.service.ts:22:12",
+      "to": "entry:catalog-api:http:GET:/items/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items-lookup.service.ts",
+      "line": 22,
+      "returns": "{id:string;title:string}",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog-api"
+      }
+    }
+  ],
+  "types": {
+    "type:catalog-web#NavEntry": {
+      "name": "NavEntry",
+      "kind": "object",
+      "declaredIn": "catalog-web#src/app/app.component.ts",
+      "structuralHash": "428c9a1b1ee77c6a",
+      "fields": [
+        {
+          "name": "label",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "route",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app/app.component.ts",
+      "line": 26,
+      "reason": "navigation-unresolved",
+      "level": "action",
+      "message": "src/app/app.component.ts navigates to /help, which no configured route answers, so the navigation joins nothing",
+      "hint": "Correct the address, or configure a route that answers it.",
+      "symbol": "AppComponent (click) -> go navigates to /help",
+      "meta": {
+        "cause": "navigation-unresolved",
+        "why": "missing",
+        "navigates": "/help"
+      },
+      "service": "catalog-web"
+    },
+    {
+      "file": "src/app/app.component.ts",
+      "line": 38,
+      "reason": "navigation-unresolved",
+      "level": "info",
+      "message": "src/app/app.component.ts navigates to an address written as code ([entry.route]), so which screen it shows is not read",
+      "hint": "Write the address from the root, as literals or an array of them.",
+      "symbol": "AppComponent.go navigates to [entry.route]",
+      "meta": {
+        "cause": "navigation-unresolved",
+        "why": "dynamic",
+        "navigates": "[entry.route]"
+      },
+      "service": "catalog-web"
+    },
+    {
+      "file": "src/app/items-lookup.service.ts",
+      "line": 26,
+      "reason": "navigation-unresolved",
+      "level": "action",
+      "message": "src/app/items-lookup.service.ts navigates to /archive, which no configured route answers, so the navigation joins nothing",
+      "hint": "Correct the address, or configure a route that answers it.",
+      "symbol": "ItemsLookupService.openArchive navigates to /archive",
+      "meta": {
+        "cause": "navigation-unresolved",
+        "why": "missing",
+        "navigates": "/archive"
+      },
+      "service": "catalog-web"
+    }
+  ]
+}

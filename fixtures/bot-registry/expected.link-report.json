@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T21:41:12.250Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:29.953Z",
   "configHash": "00bbce722abb",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 24,
       "types": 3,
       "unresolved": 3,
-      "durationMs": 1936,
+      "durationMs": 1505,
       "packages": {
         "name": "bot-registry",
         "runtime": [

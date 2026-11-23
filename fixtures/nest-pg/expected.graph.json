@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "nest-pg",
-  "generatedAt": "2026-11-07T17:39:36.109Z",
+  "generatedAt": "2026-11-23T14:44:21.228Z",
   "nodes": [
     {
       "id": "db_query:nest-pg#src/orders/orders.service.ts:10:12",

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-07T18:29:15.619Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:46:54.797Z",
   "services": [
     {
       "name": "orders",
@@ -818,7 +818,8 @@
             }
           ],
           "returns": "any"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -837,7 +838,8 @@
             }
           ],
           "returns": "any"
-        }
+        },
+        "unreferenced": true
       }
     },
     {

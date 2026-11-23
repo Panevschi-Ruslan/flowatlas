@@ -1,4 +1,4 @@
-import { isMessageTypeNode, type GraphNode } from '@flowatlas/core';
+import { isMessageTypeNode, UNREFERENCED_META, type GraphNode } from '@flowatlas/core';
 import { messageTypeFacts, unreachedHandler, unselectedSaid } from './message-types.js';
 import type { GraphDb } from '../db/reader.js';
 import type { LinkReport } from '../report.js';
@@ -127,6 +127,8 @@ export interface DeadEvidence {
   links?: number;
   unresolvedInjects?: number;
   classReached?: true;
+  /** Its name is written nowhere in its repository but where it is declared, so no unread call could name it (P370). */
+  unreferenced?: true;
   via?: string;
   seen?: { count: number; lastSeen: string | null; window: string };
   neverSeen?: { window: string; confidence: NeverSeenConfidence };
@@ -1000,10 +1002,13 @@ const methodAnswer = (db: GraphDb, context: ProviderContext, method: GraphNode):
   if (holder === undefined) return { verdict: 'likely-dead', reason: 'nothing calls it; it belongs to no class the graph holds', evidence: {} };
   const used = providerAnswer(db, context, holder);
   if (used.verdict === 'alive' || used.verdict === 'unknown') {
+    const unreferenced = method.meta?.[UNREFERENCED_META] === true;
     return {
       verdict: 'likely-dead',
-      reason: `nothing calls it, though its class is ${used.verdict === 'alive' ? 'used' : 'reached from outside'}: a call through a receiver the reading could not type may`,
-      evidence: { classReached: true, ...(used.evidence.outside === undefined ? {} : { outside: used.evidence.outside }) },
+      reason: unreferenced
+        ? `nothing calls it, though its class is ${used.verdict === 'alive' ? 'used' : 'reached from outside'}, and its name is written nowhere else in its repository`
+        : `nothing calls it, though its class is ${used.verdict === 'alive' ? 'used' : 'reached from outside'}: a call through a receiver the reading could not type may`,
+      evidence: { classReached: true, ...(unreferenced ? { unreferenced: true as const } : {}), ...(used.evidence.outside === undefined ? {} : { outside: used.evidence.outside }) },
     };
   }
   return { verdict: used.verdict, reason: `nothing calls it and its class is not reached (${used.reason})`, evidence: used.evidence };
@@ -1295,17 +1300,28 @@ const routedAnswer = (db: GraphDb, component: GraphNode): Answered | undefined =
 
 /**
  * A component (P363): alive where the router shows it or a link, a
- * navigation or a parent reaches it; otherwise `unknown`, since a component
- * a template renders by its tag is reached by nothing the graph draws.
+ * navigation or a parent that renders it by its tag reaches it (P370: an
+ * Angular template's tags are read against the components' selectors, as
+ * JSX's are); otherwise `likely-dead`, since a component handed on as a
+ * value (a dialog opened with it, an outlet made with it) is rendered by
+ * nothing the graph draws, and with `unreferenced` where its name is written
+ * nowhere else in its repository, so nothing could hand it on.
  */
 const componentAnswer = (db: GraphDb, component: GraphNode): Answered => {
   const routed = routedAnswer(db, component);
   if (routed !== undefined) return routed;
   const reaching = linksTo(db, component.id);
   if (reaching.length > 0) return { verdict: 'alive', reason: 'a link, a navigation or a parent reaches it', evidence: aliveBy(reaching) };
+  if (component.meta?.[UNREFERENCED_META] === true) {
+    return {
+      verdict: 'likely-dead',
+      reason: 'no route shows it, no link lands on it and no template renders it, and its name is written nowhere else in its repository',
+      evidence: { unreferenced: true },
+    };
+  }
   return {
-    verdict: 'unknown',
-    reason: 'no route shows it and no link the reading followed lands on it; a template that renders it by its tag is not drawn',
+    verdict: 'likely-dead',
+    reason: 'no route shows it, no link the reading followed lands on it and no template read renders it; code that hands it on as a value may',
     evidence: {},
   };
 };

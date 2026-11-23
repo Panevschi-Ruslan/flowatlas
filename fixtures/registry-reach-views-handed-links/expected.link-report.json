@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:38:38.741Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:46:39.097Z",
   "configHash": "481b5ee8317e",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 14,
       "types": 4,
       "unresolved": 13,
-      "durationMs": 805,
+      "durationMs": 1104,
       "packages": {
         "name": "registry-reach-views-handed-links-console",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 17,
       "types": 0,
       "unresolved": 16,
-      "durationMs": 819,
+      "durationMs": 1104,
       "packages": {
         "name": "registry-reach-views-handed-links-site",
         "runtime": [

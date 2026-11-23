@@ -454,6 +454,15 @@ const SOCKET_CASES = [
  */
 const graphqlFixture = join(root, 'fixtures', 'graphql-gateway');
 const graphqlPlain = { config: join(graphqlFixture, 'flowatlas.config.json'), color: false, ascii: true };
+/** impact as the graph server answers it (P370): the chains to each way in, the rows with their crossing, the maybe and the unreached. */
+const renderedPlain = { config: join(root, 'fixtures', 'angular-rendered-reach', 'flowatlas.config.json'), color: false, ascii: true };
+const RENDERED_TARGET = 'catalog-api#src/items.service.ts:ItemsService.findOne';
+const RENDERED_CASES = [
+  ['impact.rendered-child.tree.txt', (io) => runImpact(RENDERED_TARGET, { ...renderedPlain, format: 'tree' }, io)],
+  ['impact.rendered-child.json', (io) => runImpact(RENDERED_TARGET, { ...renderedPlain, format: 'json' }, io)],
+  ['impact.rendered-child.verbose.json', (io) => runImpact(RENDERED_TARGET, { ...renderedPlain, format: 'json', verbose: true }, io)],
+];
+
 const GRAPHQL_CASES = [
   ['flow.orders-page.tree.txt', (io) => runFlow('web#src/orders/OrdersPage.tsx:OrdersPage', { ...graphqlPlain, format: 'tree' }, io)],
   ['impact.order-customer.tree.txt', (io) => runImpact('entry:orders:graphql:Order.customer', { ...graphqlPlain, format: 'tree' }, io)],
@@ -1259,6 +1268,7 @@ const SUITES = [
   { dir: socketFixture, owned: false, cases: SOCKET_CASES },
   { dir: lambdaFixture, owned: false, cases: LAMBDA_CASES },
   { dir: join(graphqlFixture, 'expected.cli'), owned: true, cases: GRAPHQL_CASES },
+  { dir: join(root, 'fixtures', 'angular-rendered-reach', 'expected.cli'), owned: true, cases: RENDERED_CASES },
   { dir: join(federationFixture, 'expected.cli'), owned: true, cases: FEDERATION_CASES },
   { dir: join(composedFixture, 'expected.cli'), owned: true, cases: COMPOSED_CASES },
   { dir: join(interfacesFixture, 'expected.cli'), owned: true, cases: INTERFACES_CASES },

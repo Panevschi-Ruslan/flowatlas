@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:30:14.403Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:46:10.572Z",
   "configHash": "7c602655c404",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2444,
+      "durationMs": 2414,
       "packages": {
         "name": "port-sources-joins-admin",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2422,
+      "durationMs": 2395,
       "packages": {
         "name": "port-sources-joins-audit",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2591,
+      "durationMs": 2737,
       "packages": {
         "name": "port-sources-joins-billing",
         "runtime": [
@@ -68,7 +68,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2360,
+      "durationMs": 2266,
       "packages": {
         "name": "port-sources-joins-catalog",
         "runtime": [
@@ -86,7 +86,7 @@
       "edges": 7,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 730,
+      "durationMs": 962,
       "packages": {
         "name": "port-sources-joins-jobs",
         "runtime": [
@@ -104,7 +104,7 @@
       "edges": 1,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 2321,
+      "durationMs": 2277,
       "packages": {
         "name": "port-sources-joins-ledger",
         "runtime": [
@@ -124,7 +124,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2371,
+      "durationMs": 2298,
       "packages": {
         "name": "port-sources-joins-notify",
         "runtime": [
@@ -142,7 +142,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2398,
+      "durationMs": 2320,
       "packages": {
         "name": "port-sources-joins-orders",
         "runtime": [
@@ -160,7 +160,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2364,
+      "durationMs": 2200,
       "packages": {
         "name": "port-sources-joins-search",
         "runtime": [
@@ -178,7 +178,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2441,
+      "durationMs": 2343,
       "packages": {
         "name": "port-sources-joins-shop",
         "runtime": [],
@@ -198,7 +198,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2285,
+      "durationMs": 2340,
       "packages": {
         "name": "port-sources-joins-stock",
         "runtime": [
@@ -216,7 +216,7 @@
       "edges": 33,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2286,
+      "durationMs": 2159,
       "packages": {
         "name": "port-sources-joins-web",
         "runtime": [

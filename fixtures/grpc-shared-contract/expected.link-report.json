@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:47:09.862Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:36:08.801Z",
   "configHash": "0a68605c088b",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 5,
       "unresolved": 0,
-      "durationMs": 13
+      "durationMs": 3
     },
     {
       "name": "catalog",
@@ -23,7 +23,7 @@
       "edges": 3,
       "types": 6,
       "unresolved": 1,
-      "durationMs": 3044,
+      "durationMs": 1353,
       "packages": {
         "name": "grpc-shared-contract-catalog",
         "runtime": [
@@ -41,7 +41,7 @@
       "edges": 2,
       "types": 5,
       "unresolved": 0,
-      "durationMs": 3025,
+      "durationMs": 1313,
       "packages": {
         "name": "grpc-shared-contract-payments",
         "runtime": [
@@ -61,7 +61,7 @@
       "edges": 22,
       "types": 1,
       "unresolved": 2,
-      "durationMs": 3596,
+      "durationMs": 1397,
       "packages": {
         "name": "grpc-shared-contract-storefront",
         "runtime": [

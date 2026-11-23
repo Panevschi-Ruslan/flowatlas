@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "nest-redis-v4",
-  "generatedAt": "2026-11-07T17:39:43.166Z",
+  "generatedAt": "2026-11-23T14:44:30.447Z",
   "nodes": [
     {
       "id": "cache_op:nest-redis-v4#src/feed/feed.service.ts:24:11",

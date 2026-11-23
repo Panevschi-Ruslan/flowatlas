@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "job-flows-from-callers",
-  "generatedAt": "2026-11-18T12:24:37.200Z",
+  "generatedAt": "2026-11-23T14:36:49.961Z",
   "nodes": [
     {
       "id": "channel:archive-order",

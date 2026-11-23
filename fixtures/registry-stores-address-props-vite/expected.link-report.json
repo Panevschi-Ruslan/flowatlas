@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:38:40.793Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:46:41.983Z",
   "configHash": "7c524233745c",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 2,
       "unresolved": 9,
-      "durationMs": 1006,
+      "durationMs": 1500,
       "packages": {
         "name": "registry-stores-address-props-vite-docs",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 12,
       "types": 0,
       "unresolved": 9,
-      "durationMs": 1003,
+      "durationMs": 1476,
       "packages": {
         "name": "registry-stores-address-props-vite-handbook",
         "runtime": [
@@ -51,7 +51,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 929,
+      "durationMs": 1398,
       "packages": {
         "name": "registry-stores-address-props-vite-jobs",
         "runtime": [
@@ -69,7 +69,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 923,
+      "durationMs": 1398,
       "packages": {
         "name": "registry-stores-address-props-vite-planner",
         "runtime": [],
@@ -89,7 +89,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 938,
+      "durationMs": 1400,
       "packages": {
         "name": "registry-stores-address-props-vite-store",
         "runtime": [

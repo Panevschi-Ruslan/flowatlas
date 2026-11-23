@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-18T13:16:03.405Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:46:34.246Z",
   "services": [
     {
       "name": "web",

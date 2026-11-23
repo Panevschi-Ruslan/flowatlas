@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "nest-subpath-imports",
-  "generatedAt": "2026-11-07T17:39:52.665Z",
+  "generatedAt": "2026-11-23T14:44:39.934Z",
   "nodes": [
     {
       "id": "entry:nest-subpath-imports:http:GET:/health-check",

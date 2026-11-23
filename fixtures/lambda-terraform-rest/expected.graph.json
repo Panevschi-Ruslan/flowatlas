@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "lending-library-loans",
-  "generatedAt": "2026-11-12T18:48:36.696Z",
+  "generatedAt": "2026-11-23T14:37:39.287Z",
   "nodes": [
     {
       "id": "entry:lending-library-loans:http:GET:/loans/:param",

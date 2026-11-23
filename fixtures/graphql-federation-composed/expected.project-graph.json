@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:41:29.102Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:35:47.191Z",
   "services": [
     {
       "name": "gateway",
@@ -697,7 +697,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -1106,7 +1107,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -1121,7 +1123,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     }
   ],

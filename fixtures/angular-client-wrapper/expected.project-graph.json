@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-08T12:50:09.166Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:06.521Z",
   "services": [
     {
       "name": "angular-client-wrapper",
@@ -484,7 +484,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-translations-tab"
+        "selector": "app-translations-tab",
+        "unreferenced": true
       }
     },
     {

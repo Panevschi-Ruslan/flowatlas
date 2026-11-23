@@ -1,0 +1,18 @@
+{
+  "services": [
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "nestjs",
+      "baseUrlEnv": ["CATALOG_API_URL"]
+    },
+    {
+      "name": "catalog-web",
+      "repo": "./catalog-web",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"],
+      "apiTarget": { "apiUrl": "catalog-api" }
+    }
+  ],
+  "output": ".flowatlas"
+}

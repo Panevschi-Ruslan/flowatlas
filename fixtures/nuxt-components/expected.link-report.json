@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:37:47.398Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:45:32.545Z",
   "configHash": "a27cd8f77c0e",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 64,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 809,
+      "durationMs": 1217,
       "packages": {
         "name": "components-shop",
         "runtime": [

@@ -10,26 +10,16 @@
   },
   "callers": [
     {
-      "node": {
-        "id": "entry:angular-basic:screen:/reports",
-        "loc": "src/app/app.routes.ts:26",
-        "reach": "outside"
-      },
-      "edge": {
-        "type": "handles",
-        "confidence": "static"
-      }
+      "id": "entry:angular-basic:screen:/reports",
+      "loc": "src/app/app.routes.ts:26",
+      "reach": "outside",
+      "edge": "handles"
     },
     {
-      "node": {
-        "id": "ui_action:angular-basic#src/app/checkout.component.ts:28:10",
-        "label": "routerLink=\"/reports\"",
-        "kind": "route"
-      },
-      "edge": {
-        "type": "triggers",
-        "confidence": "static"
-      },
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:28:10",
+      "label": "routerLink=\"/reports\"",
+      "kind": "route",
+      "edge": "triggers",
       "topOfChain": true,
       "gapsInFile": 2
     }

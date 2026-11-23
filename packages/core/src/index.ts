@@ -143,7 +143,7 @@ export type {
   UnresolvedLevel,
 } from './model/graph.js';
 
-export { SCHEMA_VERSION } from './schema/version.js';
+export { SCHEMA_VERSION, schemaMismatchSaid } from './schema/version.js';
 export {
   assertSchemaVersion,
   graphEdgeSchema,
@@ -1253,3 +1253,4 @@ export {
   type ObjectBinding,
   type WorkerConfig,
 } from './worker-config.js';
+export { markUnreferenced, namesWritten, noteMarkup, publishesEntry, UNREFERENCED_META } from './unreferenced.js';

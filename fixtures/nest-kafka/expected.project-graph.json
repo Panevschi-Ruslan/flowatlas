@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:39:08.735Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:43:25.630Z",
   "services": [
     {
       "name": "nest-kafka",

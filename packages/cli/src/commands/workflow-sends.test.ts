@@ -77,7 +77,9 @@ describe('impact without --depth', () => {
       { config: join(dir, 'flowatlas.config.json'), format: 'json', entriesOnly: true },
       { out: (text) => (out += text), err: () => undefined, tty: false },
     );
-    expect((JSON.parse(out) as { entries: string[] }).entries).toContain('entry:members:http:POST:/checkouts');
+    // The tool's answer (P370): rows by id.
+    const rows = (JSON.parse(out) as { entries: Array<{ id: string }> }).entries;
+    expect(rows.map((row) => row.id)).toContain('entry:members:http:POST:/checkouts');
   });
 });
 

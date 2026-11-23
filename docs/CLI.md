@@ -860,6 +860,22 @@ navigates, or hands back `router.createUrlTree([...])` or
 carries `meta.redirects: true`, as does the same in a class's method
 (`fixtures/front-end-route-helpers`).
 
+An Angular template's elements are read against the selectors of every
+component and directive the repository declares (P370), matched as Angular
+matches them (`app-item-card`, `[appTooltip]`, `button.primary`): a `calls`
+edge from the component whose template writes the element to each one it is,
+`static`, with `meta.renders` the tag, as a JSX tag is read. A child a routed
+screen renders is reached through it, and a component no route, link,
+navigation or template reaches is `likely-dead`, not `unknown`. A click that
+hands a loop's element to a method of the component (`@for (entry of entries)
+{ <button (click)="go(entry)"> }`, `go(item) { this.router.navigate([item.route]) }`)
+is followed into the method's parameter: its navigation's address is read
+over the list the loop walks as a bound `routerLink` is, a `triggers` edge from
+the click to the screen at each address and a row for one no route answers.
+An address that is nothing but values read at run time (`navigate([item.route])`)
+is a `dynamic` row naming the code rather than a `missing` one naming `:param`
+(`fixtures/angular-rendered-reach`).
+
 Routes and navigations P288 left open are read too (P291). A route table
 written over a list's items (`configs.map((config) => <Route
 path={config.path} component={config.component} />)`, the list a hook, a
@@ -2226,12 +2242,39 @@ so no walk passes it, and its row names the method as it is written.
 
 ### `flowatlas impact <symbol>`
 
-Every entry point that can reach a symbol, and what lies between. The symbol can
-be a node id or a name close enough to identify one.
+Every way in, in any service, that could break if a symbol changes, and what
+lies between. The symbol can be a node id or a name close enough to identify
+one.
+
+The answer is the graph server's `impact` (P370), by the same function: one
+walk back from the symbol past every way in to the callers beyond it, with the
+hops that place code in what holds it (a screen that shows the component, or
+renders the child, whose method requests the route). The tree draws the chain
+back to each row, a node on several chains drawn once where the walk met it
+first. Under it: `Reachable from:` grouped by kind, then `Could break:`, each
+way in with its service, whether it runs (`reach`) and `via`, the crossing
+nearest the symbol it came through; `Maybe, behind a call the reading could not
+follow:`, each chain that stops before any way in where an unread call could
+reach it, with its `gap`; `Unreached:`, how many chains end at code whose name
+its repository writes nowhere else; and what the answer left, each a `Left:`
+line.
+
+`--format json` prints the tool's answer, compact on one line as an agent is
+handed it; with `--verbose` the whole answer, pretty-printed. `--max-nodes` is
+the page of rows and `--offset` the row to start at, as the answer's
+`nextOffset` says; `--depth` draws the chains that many hops back, the rows past
+it still listed under the tree.
+
+```sh
+flowatlas impact "ItemsService.findOne"
+flowatlas impact "ItemsService.findOne" --format json --verbose
+```
 
 | Extra flag | Does |
 |---|---|
-| `--entries-only` | list the entry points instead of the whole chain |
+| `--entries-only` | hang the rows under the symbol instead of the chains to them |
+| `--offset <n>` | the row to start the list at |
+| `--verbose` | with `--format json`, the whole answer, pretty-printed |
 
 ### `flowatlas path <from> <to>`
 

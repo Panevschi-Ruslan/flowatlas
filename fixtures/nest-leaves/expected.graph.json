@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "nest-leaves",
-  "generatedAt": "2026-11-07T17:39:15.906Z",
+  "generatedAt": "2026-11-23T14:43:47.438Z",
   "nodes": [
     {
       "id": "cache_op:nest-leaves#src/orders/orders.service.ts:19:12",

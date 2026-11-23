@@ -8,6 +8,39 @@ only one of them moved.
 
 ### Added
 
+- **What P363-P367 left open (P370).** `flowatlas impact` answers as the
+  graph server's `impact` does, by the same function (`impactOf`, one walk):
+  the tree draws the chain back to each way in that could break, in any
+  service, and under it each row with whether it runs and `via`, the maybe
+  rows with their gap, the unreached count and what was left; `--format json`
+  prints the tool's answer, compact on one line, and whole with `--verbose`;
+  `--offset` pages it, and `--depth` bounds the chains drawn. A method or a
+  component whose name its repository writes nowhere but at its declaration
+  (no call, reference by name or string key, template binding or value handed
+  on; comments do not count; in a front end, not a member of a class that
+  extends or implements anything, a decorated member, an `ng…` hook, nor
+  anything in a repository whose manifest publishes an entry) is marked
+  `unreferenced`: `dead` says `likely-dead` with `evidence.unreferenced`, and
+  `reach` says `unreached` rather than `maybe` where its file holds no step the
+  reading could not follow; `impact` counts such chain ends in `unreached`
+  instead of listing them as maybe rows. Compact answers leave out
+  `truncated`, `stoppedBy` and `frontier` where `left` says each, say a tree's
+  row as its node with `edge` and `children` beside it, and an edge's
+  `confidence: "static"` goes, an edge with nothing else said as its type.
+  `SCHEMA_VERSION` is 8 for the `task` and `screen` entry kinds
+  (`schema/*.v8.schema.json`): a graph of 7 is said to be older and rebuilt
+  (a server with `mcp.rebuild: on-change` starts the rebuild), and a graph
+  newer than the reader says a newer flowatlas reads it. An Angular
+  template's elements are matched against the repository's component and
+  directive selectors into `calls` edges (`meta.renders`), as JSX tags are,
+  so a child a routed screen renders is reached through it and a component
+  nothing reaches is `likely-dead` rather than `unknown`; a click handing a
+  loop's element to a method (`(click)="go(entry)"`) is followed into the
+  method's parameter, its navigation read over the list as a bound
+  `routerLink` is; and an address that is nothing but values read at run time
+  is a `dynamic` row naming the code, not a `missing` one naming `:param`.
+  New fixture `angular-rendered-reach`.
+
 - **Reach that never hides a maybe, and impact that answers "what could
   break" in one call (P367).** `reach` is `alive`, `maybe`, `unreached`,
   `dead` or `outside`, and no longer `unknown`: `maybe` is `dead`'s

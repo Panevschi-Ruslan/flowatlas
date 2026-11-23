@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-08T12:46:21.032Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:39:16.171Z",
   "configHash": "df4e82d2e373",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 7922,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 7928,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 8095,
       "packages": {
         "name": "payments",
         "runtime": [
@@ -69,7 +69,7 @@
       "edges": 27,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 9164,
       "packages": {
         "name": "storefront",
         "runtime": [

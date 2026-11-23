@@ -283,7 +283,7 @@ read again and the others come from the cache.
 | Command | Answers |
 |---|---|
 | `flowatlas flow <entry>` | follow one way in through every service it reaches |
-| `flowatlas impact <symbol>` | every entry point that reaches a symbol |
+| `flowatlas impact <symbol>` | every way in, in any service, that could break if a symbol changes: the graph server's `impact` answer |
 | `flowatlas channel <name>` | who publishes to a channel and who handles it |
 | `flowatlas path <from> <to>` | how one node reaches another, by the shortest ways, across services; says when it is the other way round |
 | `uses: Panevschi-Ruslan/flowatlas/action@v0.7.0` | the GitHub Action: one pull request comment, kept up to date, saying what the change reaches across the repositories and whether it breaks a contract or a rule ([CI](docs/ci.md#the-action)) |

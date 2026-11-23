@@ -1,6 +1,7 @@
 import type { Project } from 'ts-morph';
 import { join } from 'node:path';
 import {
+  markUnreferenced,
   AdapterRegistry,
   builtInShapesFor,
   countSources,
@@ -219,6 +220,9 @@ export const extractAngular = (
   // Hashes reach through references, so nothing can be written until every type
   // that any pass collected is known.
   if (options.noTypes !== true) ctx.types.finalize();
+
+  // The methods and components whose name the repository writes nowhere else (P370).
+  markUnreferenced(base.builder, base.project, base.repoDir, base.pkg as Readonly<Record<string, unknown>>);
 
   // Where the application's dev server listens (P254).
   const listen = listeningOf(base);

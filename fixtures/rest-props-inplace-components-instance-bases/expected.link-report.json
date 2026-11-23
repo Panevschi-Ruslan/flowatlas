@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-18T16:46:50.805Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:46:49.153Z",
   "configHash": "5fb2999e8be5",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 779,
+      "durationMs": 1161,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 12,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 1013,
+      "durationMs": 1404,
       "packages": {
         "name": "rest-props-inplace-components-instance-bases-jobs",
         "runtime": [
@@ -51,7 +51,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 777,
+      "durationMs": 1153,
       "packages": {
         "name": "stock",
         "runtime": [
@@ -69,7 +69,7 @@
       "edges": 37,
       "types": 1,
       "unresolved": 8,
-      "durationMs": 837,
+      "durationMs": 1210,
       "packages": {
         "name": "rest-props-inplace-components-instance-bases-web",
         "runtime": [

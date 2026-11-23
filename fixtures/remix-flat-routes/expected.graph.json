@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "remix-flat-routes",
-  "generatedAt": "2026-10-08T21:01:57.165Z",
+  "generatedAt": "2026-11-23T14:46:43.847Z",
   "nodes": [
     {
       "id": "entry:remix-flat-routes:http:DELETE:/api/orders/:param",

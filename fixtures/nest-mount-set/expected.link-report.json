@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-10-16T23:29:03.154Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:44:17.847Z",
   "configHash": "5058ec93d4d4",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 639,
+      "durationMs": 1772,
       "packages": {
         "name": "nest-mount-set-api",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 472,
+      "durationMs": 1480,
       "packages": {
         "name": "nest-mount-set-web",
         "runtime": [

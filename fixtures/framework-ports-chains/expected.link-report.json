@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:56:33.100Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:35:11.563Z",
   "configHash": "54382dd0cbd9",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 895,
+      "durationMs": 1120,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 892,
+      "durationMs": 1090,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 2,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 1116,
+      "durationMs": 1338,
       "packages": {
         "name": "reviews",
         "runtime": [
@@ -70,7 +70,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 888,
+      "durationMs": 1092,
       "packages": {
         "name": "status",
         "runtime": [
@@ -88,7 +88,7 @@
       "edges": 20,
       "types": 0,
       "unresolved": 9,
-      "durationMs": 971,
+      "durationMs": 1167,
       "packages": {
         "name": "framework-ports-chains-web",
         "runtime": [

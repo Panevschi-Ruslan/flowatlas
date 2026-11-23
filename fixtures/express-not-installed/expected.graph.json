@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "express-not-installed",
-  "generatedAt": "2026-11-18T12:22:49.168Z",
+  "generatedAt": "2026-11-23T14:34:54.213Z",
   "nodes": [
     {
       "id": "entry:express-not-installed:http:GET:/admin",

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T21:42:59.903Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:35:42.002Z",
   "services": [
     {
       "name": "api",
@@ -1255,7 +1255,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -1275,7 +1276,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {

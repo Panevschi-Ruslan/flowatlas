@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "express-traced-handlers",
-  "generatedAt": "2026-11-07T17:36:38.949Z",
+  "generatedAt": "2026-11-23T14:34:57.774Z",
   "nodes": [
     {
       "id": "entry:express-traced-handlers:http:GET:/loans",

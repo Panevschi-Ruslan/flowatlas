@@ -1,0 +1,68 @@
+{
+  "answers": [
+    {
+      "asked": "catalog-web#src/app/item-card.component.ts:ItemCardComponent",
+      "id": "catalog-web#src/app/item-card.component.ts:ItemCardComponent",
+      "type": "ui_component",
+      "kind": "standalone",
+      "service": "catalog-web",
+      "loc": "src/app/item-card.component.ts:12",
+      "verdict": "alive",
+      "reason": "a link, a navigation or a parent reaches it",
+      "evidence": {
+        "callers": 1,
+        "caller": "catalog-web#src/app/catalog-page.component.ts:CatalogPageComponent"
+      },
+      "from": "screen /catalog"
+    },
+    {
+      "asked": "catalog-web#src/app/legacy-badge.component.ts:LegacyBadgeComponent",
+      "id": "catalog-web#src/app/legacy-badge.component.ts:LegacyBadgeComponent",
+      "type": "ui_component",
+      "kind": "standalone",
+      "service": "catalog-web",
+      "loc": "src/app/legacy-badge.component.ts:4",
+      "verdict": "likely-dead",
+      "reason": "no route shows it, no link lands on it and no template renders it, and its name is written nowhere else in its repository",
+      "evidence": {
+        "unreferenced": true
+      },
+      "from": "none"
+    },
+    {
+      "asked": "catalog-web#src/app/promo-dialog.component.ts:PromoDialogComponent",
+      "id": "catalog-web#src/app/promo-dialog.component.ts:PromoDialogComponent",
+      "type": "ui_component",
+      "kind": "standalone",
+      "service": "catalog-web",
+      "loc": "src/app/promo-dialog.component.ts:4",
+      "verdict": "likely-dead",
+      "reason": "no route shows it, no link the reading followed lands on it and no template read renders it; code that hands it on as a value may",
+      "evidence": {},
+      "from": "behind"
+    },
+    {
+      "asked": "catalog-web#src/app/settings-page.component.ts:SettingsPageComponent",
+      "id": "catalog-web#src/app/settings-page.component.ts:SettingsPageComponent",
+      "type": "ui_component",
+      "kind": "standalone",
+      "service": "catalog-web",
+      "loc": "src/app/settings-page.component.ts:4",
+      "verdict": "alive",
+      "reason": "routed at /settings; 1 link read lands on it",
+      "evidence": {
+        "via": "entry:catalog-web:screen:/settings",
+        "routedAt": [
+          "/settings"
+        ],
+        "links": 1
+      },
+      "from": "screen /settings"
+    }
+  ],
+  "next": [
+    "get_source({symbol: \"catalog-web#src/app/legacy-badge.component.ts:LegacyBadgeComponent\"})",
+    "get_source({symbol: \"catalog-web#src/app/promo-dialog.component.ts:PromoDialogComponent\"})",
+    "cant_follow({service: \"catalog-web\"})"
+  ]
+}

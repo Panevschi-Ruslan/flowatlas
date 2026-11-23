@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T22:46:33.741Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:47:45.450Z",
   "services": [
     {
       "name": "notices",

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:26:18.396Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:34:05.543Z",
   "configHash": "57445902addd",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1504,
+      "durationMs": 2106,
       "packages": {
         "name": "cluster-port-joins-audit",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1715,
+      "durationMs": 2596,
       "packages": {
         "name": "cluster-port-joins-billing",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 21,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1500,
+      "durationMs": 2266,
       "packages": {
         "name": "cluster-port-joins-jobs",
         "runtime": [
@@ -68,7 +68,7 @@
       "edges": 4,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 1743,
+      "durationMs": 2552,
       "packages": {
         "name": "cluster-port-joins-ledger",
         "runtime": [
@@ -88,7 +88,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1442,
+      "durationMs": 2362,
       "packages": {
         "name": "cluster-port-joins-notify",
         "runtime": [
@@ -106,7 +106,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1551,
+      "durationMs": 2151,
       "packages": {
         "name": "cluster-port-joins-orders",
         "runtime": [
@@ -124,7 +124,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1511,
+      "durationMs": 2147,
       "packages": {
         "name": "cluster-port-joins-search",
         "runtime": [
@@ -142,7 +142,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1469,
+      "durationMs": 2257,
       "packages": {
         "name": "cluster-port-joins-shop",
         "runtime": [
@@ -161,7 +161,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1401,
+      "durationMs": 2236,
       "packages": {
         "name": "cluster-port-joins-stock",
         "runtime": [

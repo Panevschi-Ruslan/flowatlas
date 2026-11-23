@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-18T13:28:27.557Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:47.183Z",
   "services": [
     {
       "name": "cms",

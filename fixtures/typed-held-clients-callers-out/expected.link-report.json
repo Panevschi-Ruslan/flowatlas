@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-17T19:09:30.786Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:50:09.711Z",
   "configHash": "961b06bd179f",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 960,
+      "durationMs": 861,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 14,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 993,
+      "durationMs": 906,
       "packages": {
         "name": "typed-held-clients-shop",
         "runtime": [
@@ -49,7 +49,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 972,
+      "durationMs": 855,
       "packages": {
         "name": "stock",
         "runtime": [

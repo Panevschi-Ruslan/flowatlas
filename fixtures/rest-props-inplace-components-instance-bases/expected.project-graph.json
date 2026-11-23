@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-18T16:46:50.805Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:46:49.153Z",
   "services": [
     {
       "name": "web",
@@ -624,7 +624,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -1299,7 +1300,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -1352,7 +1354,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -1390,7 +1393,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -1405,7 +1409,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -1420,7 +1425,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {

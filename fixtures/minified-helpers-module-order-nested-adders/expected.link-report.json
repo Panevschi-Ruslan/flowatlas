@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:35:25.063Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:38:27.887Z",
   "configHash": "88469d944ef5",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 744,
+      "durationMs": 1825,
       "packages": {
         "name": "cms",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 13,
       "types": 1,
       "unresolved": 18,
-      "durationMs": 864,
+      "durationMs": 2021,
       "packages": {
         "name": "minified-helpers-module-order-nested-adders-console",
         "runtime": [
@@ -54,7 +54,7 @@
       "edges": 12,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 814,
+      "durationMs": 1887,
       "packages": {
         "name": "poller",
         "runtime": [

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-14T18:09:27.740Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:35:31.932Z",
   "configHash": "50c8c911f4ee",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 4,
       "types": 1,
       "unresolved": 4,
-      "durationMs": 819,
+      "durationMs": 1996,
       "packages": {
         "name": "library-catalog",
         "runtime": [],
@@ -30,7 +30,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 805,
+      "durationMs": 1955,
       "packages": {
         "name": "library-loans",
         "runtime": [],
@@ -48,7 +48,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 805,
+      "durationMs": 1865,
       "packages": {
         "name": "library-reviews",
         "runtime": [],
@@ -66,7 +66,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 889,
+      "durationMs": 1974,
       "packages": {
         "name": "library-stock",
         "runtime": [],
@@ -84,7 +84,7 @@
       "edges": 10,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 803
+      "durationMs": 1840
     }
   ],
   "httpOut": {

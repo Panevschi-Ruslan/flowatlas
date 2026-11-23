@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-15T16:03:37.112Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:37.239Z",
   "configHash": "3b477cbe50be",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 966,
+      "durationMs": 2606,
       "packages": {
         "name": "branch-settings-offered-ports-api",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 16,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 970,
+      "durationMs": 2656,
       "packages": {
         "name": "branch-settings-offered-ports-jobs",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 966,
+      "durationMs": 2630,
       "packages": {
         "name": "branch-settings-offered-ports-legacy",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 969,
+      "durationMs": 2653,
       "packages": {
         "name": "branch-settings-offered-ports-orders",
         "runtime": [
@@ -84,7 +84,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 967,
+      "durationMs": 2558,
       "packages": {
         "name": "branch-settings-offered-ports-shop",
         "runtime": [

@@ -28,7 +28,10 @@ import { loadObserved } from './observed.js';
  *   itself. The row names it: `gap`, the unread call's gap id, and `behind`,
  *   the code the chain stops at (or, for the row itself, why it may still be
  *   called).
- * - `unreached`: no way in reaches it, and no unread call could.
+ * - `unreached`: no way in reaches it, and no unread call could: nothing read
+ *   reaches it, or `dead` says `likely-dead` of code whose name its
+ *   repository writes nowhere else (`unreferenced`, P370) in a file with no
+ *   unread call - an unread call writes the name it calls.
  * - `dead`: as `dead` answers.
  * - `outside`: something outside the project calls it - a webhook, a bot
  *   update or command, a cron, a screen opened at its address, a public
@@ -194,12 +197,20 @@ export interface WayInFound {
 export const viaSaid = (via: Crossing, row: Pick<GraphNode, 'repo'>): string =>
   via.repo !== '' && via.repo !== row.repo ? `${via.said} (${via.repo})` : via.said;
 
-interface Walked {
+/** How a walk reached a node: the node it stepped back from, and the edge, where the hop was one (P370). */
+export interface WalkedFrom {
+  from: string;
+  edge?: GraphEdge;
+}
+
+export interface Walked {
   found: WayInFound[];
   /** Code nothing read calls, where a chain ended without a way in, nearest first. */
   tops: WayInFound[];
   /** Every node met, the start's own left out. */
   met: GraphNode[];
+  /** Each node met, by id: the node nearer the start it was reached from, which draws the walk as a tree (P370). */
+  parents: Map<string, WalkedFrom>;
   read: number;
   cut: boolean;
 }
@@ -242,6 +253,12 @@ export interface ReachReader {
    * so many ends cost little; `of` says the same of each.
    */
   maybeEnd(node: GraphNode): boolean;
+  /**
+   * Whether the end of a chain is code no unread call could reach because its
+   * name is written nowhere else in its repository (P370): `unreached`, not a
+   * maybe, so impact counts it apart rather than listing it.
+   */
+  unreachedEnd(node: GraphNode): boolean;
   /** What was not computed, for the answer's `left`. */
   left(): string[];
 }
@@ -345,6 +362,7 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
     const found: WayInFound[] = [];
     const tops: WayInFound[] = [];
     const met: GraphNode[] = [];
+    const parents = new Map<string, WalkedFrom>();
     const queue: Array<{ node: GraphNode; depth: number; held: boolean; via?: Crossing; ran?: true }> = [];
     for (const start of starts) {
       // A handler a consumer runs is held as the consumer's is: where its class or file is shown.
@@ -355,6 +373,7 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
         const node = graph.node(method);
         if (node === undefined || seen.has(method)) continue;
         seen.add(method);
+        parents.set(method, { from: start.id });
         queue.push({ node, depth: 1, held: false });
       }
     }
@@ -386,11 +405,12 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
         seen.add(step.id);
         const reached = graph.node(step.id);
         if (reached === undefined) continue;
+        parents.set(step.id, { from: node.id, ...(step.edge === undefined ? {} : { edge: step.edge }) });
         const via = item.via ?? crossingOf(node, step.edge);
         queue.push({ node: reached, depth: depth + 1, held: step.held, ...(via === undefined ? {} : { via }), ...(step.ran === true ? { ran: true as const } : {}) });
       }
     }
-    return { found, tops, met, read, cut };
+    return { found, tops, met, parents, read, cut };
   };
 
   /** A row's walk, on the answer's budget. */
@@ -400,11 +420,21 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
     return walked;
   };
 
+  /**
+   * A verdict's reach, where the code's name is written nowhere else in its
+   * repository and its file holds no unread call: `unreached`, since an
+   * unread call writes the name it calls (P370).
+   */
+  const settled = (node: GraphNode, answer: DeadAnswer): Reach => {
+    const reach = reachOfVerdict(node, answer);
+    return reach === 'maybe' && answer.evidence.unreferenced === true && gapsIn(node) === undefined ? 'unreached' : reach;
+  };
+
   /** The verdict of a node `dead` judges, or the liveliest of the code a site is written in, as `reach`. */
   const reachOf = (node: GraphNode): { reach: Reach; answer: DeadAnswer } | undefined => {
     if (JUDGED_TYPES.includes(node.type)) {
       const answer = verdictOf(node.id);
-      return answer === undefined ? undefined : { reach: reachOfVerdict(node, answer), answer };
+      return answer === undefined ? undefined : { reach: settled(node, answer), answer };
     }
     let best: { caller: GraphNode; answer: DeadAnswer } | undefined;
     for (const edge of graph.edgesTo(node.id, SITE_CALLERS)) {
@@ -413,7 +443,7 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
       const answer = verdictOf(caller.id);
       if (answer !== undefined && (best === undefined || VERDICT_ORDER[answer.verdict] > VERDICT_ORDER[best.answer.verdict])) best = { caller, answer };
     }
-    return best === undefined ? undefined : { reach: reachOfVerdict(best.caller, best.answer), answer: best.answer };
+    return best === undefined ? undefined : { reach: settled(best.caller, best.answer), answer: best.answer };
   };
 
   /**
@@ -486,6 +516,8 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
         };
       }
     }
+    // Code nothing names is reached from nowhere, though what holds it is shown somewhere (P370).
+    if (row.reach === 'unreached' && judgedReach?.answer.evidence.unreferenced === true) row = { reach: 'unreached', from: 'none' };
     // A maybe nothing was walked back from (a way in, a walk cut short) says why `dead` says it may be called; a walked
     // one says it with `from`, and with `gap` and `behind` where an unread call or another chain end was met.
     if (row.reach === 'maybe' && row.from === undefined && judgedReach !== undefined) row = { ...row, behind: judgedReach.answer.reason };
@@ -500,6 +532,10 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
     maybeEnd: (node) => {
       const reach = reachOf(node)?.reach;
       return reach === 'maybe' || reach === 'outside' || (reach === 'alive' && gapsIn(node) !== undefined);
+    },
+    unreachedEnd: (node) => {
+      const judged = reachOf(node);
+      return judged?.reach === 'unreached' && judged.answer.evidence.unreferenced === true;
     },
     left: () => [
       ...(unjudged === 0 ? [] : [`reach: not computed for ${unjudged} row${unjudged === 1 ? '' : 's'} past ${MAX_JUDGED}`]),

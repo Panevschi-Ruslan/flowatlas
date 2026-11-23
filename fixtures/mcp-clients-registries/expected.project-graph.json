@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T22:21:16.468Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:38:20.008Z",
   "services": [
     {
       "name": "assistant",

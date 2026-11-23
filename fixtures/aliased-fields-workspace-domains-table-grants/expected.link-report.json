@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-17T18:25:46.941Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:01.937Z",
   "configHash": "23f8db3e2220",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 2445,
+      "durationMs": 1170,
       "packages": {
         "name": "shop-gateway",
         "runtime": [],
@@ -30,7 +30,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 2844,
+      "durationMs": 1298,
       "packages": {
         "name": "shop-jobs",
         "runtime": [
@@ -49,7 +49,7 @@
       "edges": 10,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 3201,
+      "durationMs": 1350,
       "packages": {
         "name": "stock",
         "runtime": [
@@ -71,7 +71,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2482
+      "durationMs": 1171
     }
   ],
   "httpOut": {

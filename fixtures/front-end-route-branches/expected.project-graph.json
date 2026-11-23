@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:33:35.828Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:52:52.496Z",
   "services": [
     {
       "name": "wiki",

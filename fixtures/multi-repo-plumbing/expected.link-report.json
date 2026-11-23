@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-10-17T07:12:48.980Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:41:16.950Z",
   "configHash": "b6a231168445",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 33,
       "types": 3,
       "unresolved": 1,
-      "durationMs": 737,
+      "durationMs": 2111,
       "packages": {
         "name": "billing",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 46,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 783,
+      "durationMs": 2168,
       "packages": {
         "name": "gateway",
         "runtime": [
@@ -55,7 +55,7 @@
       "edges": 69,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 749,
+      "durationMs": 1994,
       "packages": {
         "name": "orders",
         "runtime": [

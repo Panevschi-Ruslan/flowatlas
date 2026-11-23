@@ -1,23 +1,34 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { CssSelector, SelectorMatcher } from '@angular/compiler';
 import {
   findMethod,
+  methodBodies,
   methodNamedOn,
   lineOf,
   makeLeafId,
   NAVIGATES_META,
   normalizeFilePath,
   normalizePath,
+  noteMarkup,
   siteOf,
   type ClassMethod,
 } from '@flowatlas/core';
-import type { ClassDeclaration } from 'ts-morph';
+import { Node, type ClassDeclaration, type Node as TsNode } from 'ts-morph';
 import type { AngularExtractContext, RouteEntry } from '../context.js';
 import { componentDecorator, type IndexedClass } from '../index-classes.js';
 import { readAddress, type ListedReading } from '../listed.js';
-import { parseAngularTemplate, type TemplateEvent, type TemplateHandler } from '../template.js';
+import {
+  readAngularTemplate,
+  type AddressPart,
+  type TemplateAddress,
+  type TemplateElement,
+  type TemplateEvent,
+  type TemplateHandler,
+  type TemplateRead,
+} from '../template.js';
 import { metadataOf, propertyOf, stringProperty } from '../util/metadata.js';
-import { holdsRouterAs, landNavigation, writtenOfText } from './navigations.js';
+import { holdsRouterAs, landNavigation, navigatesByUrl, routerCall, writtenOfText } from './navigations.js';
 import { definePass } from './types.js';
 
 /** The router's methods a template's handler navigates with. */
@@ -85,6 +96,95 @@ const templateOf = (
 const routesFor = (routes: readonly RouteEntry[], link: string): RouteEntry[] => {
   const wanted = normalizePath(link);
   return routes.filter((route) => route.path === wanted);
+};
+
+/** An expression past its parentheses, `!` and `as`. */
+const unwrappedCode = (node: TsNode): TsNode => {
+  let current = node;
+  for (let step = 0; step < 8; step += 1) {
+    if (Node.isParenthesizedExpression(current) || Node.isNonNullExpression(current) || Node.isAsExpression(current)) current = current.getExpression();
+    else return current;
+  }
+  return current;
+};
+
+/**
+ * What code reads off a method's parameter, as the template's read of the
+ * argument it was handed (P370): `entry.route`, in `go(entry)` called as
+ * `go(item)`, is `item.route`.
+ */
+const readThrough = (node: TsNode, params: ReadonlyMap<string, TemplateRead>): TemplateRead | undefined => {
+  const members: string[] = [];
+  let at = unwrappedCode(node);
+  for (let depth = 0; depth < 12; depth += 1) {
+    if (Node.isPropertyAccessExpression(at)) {
+      members.unshift(at.getName());
+      at = unwrappedCode(at.getExpression());
+      continue;
+    }
+    if (Node.isElementAccessExpression(at)) {
+      const key = at.getArgumentExpression();
+      if (key === undefined || !(Node.isStringLiteral(key) || Node.isNoSubstitutionTemplateLiteral(key))) return undefined;
+      members.unshift(key.getLiteralValue());
+      at = unwrappedCode(at.getExpression());
+      continue;
+    }
+    if (!Node.isIdentifier(at)) return undefined;
+    const handed = params.get(at.getText());
+    if (handed === undefined) return undefined;
+    return {
+      root: handed.root,
+      steps: [...handed.steps, ...members.map((member) => ({ member }))],
+      text: [handed.text, ...members].join('.'),
+      ...(handed.own === true ? { own: true as const } : {}),
+    };
+  }
+  return undefined;
+};
+
+/** The pieces of an address the code writes: text, and reads off the parameters. */
+const partsThrough = (node: TsNode, params: ReadonlyMap<string, TemplateRead>): AddressPart[] | undefined => {
+  const at = unwrappedCode(node);
+  if (Node.isStringLiteral(at) || Node.isNoSubstitutionTemplateLiteral(at)) return [{ text: at.getLiteralValue() }];
+  if (Node.isTemplateExpression(at)) {
+    const parts: AddressPart[] = [];
+    if (at.getHead().getLiteralText() !== '') parts.push({ text: at.getHead().getLiteralText() });
+    for (const span of at.getTemplateSpans()) {
+      const inner = partsThrough(span.getExpression(), params);
+      if (inner === undefined) return undefined;
+      parts.push(...inner);
+      if (span.getLiteral().getLiteralText() !== '') parts.push({ text: span.getLiteral().getLiteralText() });
+    }
+    return parts;
+  }
+  if (Node.isBinaryExpression(at) && at.getOperatorToken().getText() === '+') {
+    const left = partsThrough(at.getLeft(), params);
+    const right = partsThrough(at.getRight(), params);
+    return left === undefined || right === undefined ? undefined : [...left, ...right];
+  }
+  const read = readThrough(at, params);
+  return read === undefined ? undefined : [{ read }];
+};
+
+/**
+ * The address a navigation in a method spells from what the template hands
+ * the method (P370): the array `navigate` is given, or the one string
+ * `navigateByUrl` is; undefined where it reads nothing handed.
+ */
+const addressThrough = (method: string, argument: TsNode, params: ReadonlyMap<string, TemplateRead>): TemplateAddress | undefined => {
+  const at = unwrappedCode(argument);
+  if (!navigatesByUrl(method) && Node.isArrayLiteralExpression(at)) {
+    const parts: AddressPart[] = [];
+    for (const element of at.getElements()) {
+      const inner = partsThrough(element, params);
+      if (inner === undefined || inner.length !== 1) return undefined;
+      parts.push(inner[0] as AddressPart);
+    }
+    return parts.some((part) => 'read' in part) ? { parts, segments: true } : undefined;
+  }
+  if (!navigatesByUrl(method)) return undefined;
+  const parts = partsThrough(at, params);
+  return parts === undefined || !parts.some((part) => 'read' in part) ? undefined : { parts, segments: false };
 };
 
 /** Whether an address is nothing but holes - `:param`, `/:param` - which names no route to look for (P363). */
@@ -264,6 +364,13 @@ export const templatesPass = definePass('templates', (ctx) => {
     }
     if (navigating.length > 0 && navigating.length === event.handlers.length) return;
 
+    // `(click)="go(item)"` in a loop, where `go(entry)` navigates to `[entry.route]`: read over the list too (P370).
+    for (const handler of event.handlers) {
+      if (handler.kind !== 'method' || handler.reads === undefined) continue;
+      const method = handlerMethod(indexed.declaration, handler);
+      if (method !== undefined) navigatedThrough(indexed, event, template, id, handler, method);
+    }
+
     let handled = false;
     for (const handler of event.handlers) {
       const method = handlerMethod(indexed.declaration, handler);
@@ -334,6 +441,57 @@ export const templatesPass = definePass('templates', (ctx) => {
       level: 'nothing',
       hint: 'The binding is an assignment, or a call on something that is not an injected class, so no method node answers it.',
       symbol,
+    });
+  };
+
+  /**
+   * A navigation a component's method makes to an address it spells from its
+   * parameters, where the template hands the method what it reads (P370):
+   * `(click)="go(item)"` inside `@for (item of items)`, with
+   * `go(entry) { this.router.navigate([entry.route]); }`, is the click
+   * navigating to each entry's `route`, read over the list as a link
+   * `[routerLink]="item.route"` is: a `triggers` edge from the click to the
+   * screen at each address, a row for one no route answers, and one for what
+   * was not read.
+   */
+  const navigatedThrough = (
+    indexed: IndexedClass,
+    event: TemplateEvent,
+    template: TemplateText,
+    id: string,
+    handler: Extract<TemplateHandler, { kind: 'method' }>,
+    method: ClassMethod,
+  ): void => {
+    const fn = Node.isPropertyDeclaration(method) ? method.getInitializer() : method;
+    if (fn === undefined || !(Node.isMethodDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn))) return;
+    const params = new Map<string, TemplateRead>();
+    fn.getParameters().forEach((parameter, at) => {
+      const read = handler.reads?.[at];
+      if (read !== undefined && Node.isIdentifier(parameter.getNameNode())) params.set(parameter.getName(), read);
+    });
+    if (params.size === 0) return;
+    const owner = method.getParent();
+    const body = Node.isClassDeclaration(owner) ? methodBodies(owner).find((found) => found.declaration === method)?.body : undefined;
+    if (body === undefined) return;
+    body.forEachDescendant((node) => {
+      const call = routerCall(node);
+      if (call?.argument === undefined) return;
+      const address = addressThrough(call.method, call.argument, params);
+      if (address === undefined) return;
+      const read = readAddress(address, { loops: event.loops ?? new Map(), owner: indexed.declaration });
+      const landing = {
+        from: id,
+        file: template.file,
+        line: event.line,
+        symbol: `${indexed.name} (${event.name}) -> ${handler.method}`,
+        method: call.method,
+        ensure: () => undefined,
+        type: 'triggers' as const,
+      };
+      for (const path of read.paths) landNavigation(ctx, { ...landing, written: { path } });
+      if (read.paths.length === 0 || read.unread.length > 0) {
+        landNavigation(ctx, { ...landing, written: { code: `${call.argument.getText().replace(/\s+/g, ' ')}${read.unread.length === 0 ? '' : ` (${read.unread.join('; ')})`}`.slice(0, 160) } });
+      }
     });
   };
 
@@ -428,6 +586,56 @@ export const templatesPass = definePass('templates', (ctx) => {
     }
   };
 
+  /**
+   * The components and directives a template's elements are, by their
+   * selectors (P370): every one the repository declares, matched as Angular
+   * matches them (`app-order-card`, `[appTooltip]`, `button.primary`). Two
+   * components cannot share an element, so each match is the one; a
+   * directive on it is matched beside the component.
+   */
+  let matcher: SelectorMatcher<IndexedClass> | undefined;
+  const declaredBySelector = (): SelectorMatcher<IndexedClass> => {
+    if (matcher !== undefined) return matcher;
+    matcher = new SelectorMatcher<IndexedClass>();
+    for (const indexed of [...ctx.classes.withRole('component'), ...ctx.classes.withRole('directive')]) {
+      const selector = ctx.builder.getNode(indexed.id)?.meta?.['selector'];
+      if (typeof selector !== 'string' || selector.trim() === '') continue;
+      try {
+        matcher.addSelectables(CssSelector.parse(selector), indexed);
+      } catch {
+        // A selector Angular would not parse matches nothing Angular renders either.
+      }
+    }
+    return matcher;
+  };
+
+  /**
+   * The components and directives a template renders by their tags (P370):
+   * a `calls` edge from the component whose template writes the element to
+   * each one it is, at the element, `static`, as a JSX tag is read
+   * (`renders` the tag), so a component a routed one renders is reached
+   * through it and one no template renders is said `likely-dead`.
+   */
+  const rendered = (indexed: IndexedClass, elements: readonly TemplateElement[], template: TemplateText): void => {
+    const drawn = new Set<string>();
+    for (const element of elements) {
+      declaredBySelector().match(element.selector, (_selector, child) => {
+        if (child.id === indexed.id || drawn.has(child.id)) return;
+        drawn.add(child.id);
+        ctx.ensureClassNode(child.declaration);
+        ctx.builder.addEdge({
+          from: indexed.id,
+          to: child.id,
+          type: 'calls',
+          confidence: 'static',
+          file: template.file,
+          line: element.line,
+          meta: { renders: element.name },
+        });
+      });
+    }
+  };
+
   for (const indexed of ctx.classes.withRole('component')) {
     lifecycle(indexed);
 
@@ -445,7 +653,9 @@ export const templatesPass = definePass('templates', (ctx) => {
     }
 
     ctx.stats.templates += 1;
-    const events = parseAngularTemplate(template.source, template.file, {
+    // A template in its own file binds names the sources do not write: counted as written (P370).
+    if (template.file !== indexed.file) noteMarkup(ctx.builder, template.source);
+    const { events, elements } = readAngularTemplate(template.source, template.file, {
       startLine: template.startLine,
       startColumn: template.startColumn,
       onError: (message, line) => {
@@ -459,5 +669,6 @@ export const templatesPass = definePass('templates', (ctx) => {
       },
     });
     for (const event of events) action(indexed, event, template);
+    rendered(indexed, elements, template);
   }
 });

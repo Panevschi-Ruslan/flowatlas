@@ -233,8 +233,8 @@ export type { Format, QueryOptions, QuerySettings } from './options.js';
 export { present, processIo } from './query/answer.js';
 export type { Answer, QueryIo } from './query/answer.js';
 export { collectSource, collectTypes } from './query/detail.js';
-export { callersOf, groupEntries, reachableSummary } from './query/callers.js';
-export type { Callers, ReachableGroup } from './query/callers.js';
+export { groupEntries, reachableSummary } from './query/callers.js';
+export type { ReachableGroup } from './query/callers.js';
 export { channelIdOf, resolveChannel, resolveEntry, resolveSymbol } from './query/refs.js';
 export {
   CONFIDENCE_MARK,

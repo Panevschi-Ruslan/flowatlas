@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-12T18:51:04.226Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:40:30.317Z",
   "services": [
     {
       "name": "platform-events",

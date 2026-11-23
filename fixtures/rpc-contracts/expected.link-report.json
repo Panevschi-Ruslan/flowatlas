@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:40:16.601Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:46:54.797Z",
   "configHash": "eb766482cbf1",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 4,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1189,
       "packages": {
         "name": "rpc-contracts-billing",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1051,
       "packages": {
         "name": "rpc-contracts-ledger",
         "runtime": [
@@ -51,7 +51,7 @@
       "edges": 4,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1197,
       "packages": {
         "name": "rpc-contracts-orders",
         "runtime": [
@@ -71,7 +71,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 1225,
       "packages": {
         "name": "rpc-contracts-portal",
         "runtime": [
@@ -90,7 +90,7 @@
       "edges": 25,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1380,
       "packages": {
         "name": "rpc-contracts-worker",
         "runtime": [

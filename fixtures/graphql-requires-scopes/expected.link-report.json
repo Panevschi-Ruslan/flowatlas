@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-08T17:04:01.041Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:36:00.604Z",
   "configHash": "ce393bba271f",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1334,
       "packages": {
         "name": "requires-catalog",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1357,
       "packages": {
         "name": "requires-inventory",
         "runtime": [
@@ -54,7 +54,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 8
+      "durationMs": 11
     },
     {
       "name": "shipping",
@@ -65,7 +65,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1382,
       "packages": {
         "name": "requires-shipping",
         "runtime": [
@@ -86,7 +86,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 654,
+      "durationMs": 1373,
       "packages": {
         "name": "requires-shop",
         "runtime": [

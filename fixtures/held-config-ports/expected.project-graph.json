@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:24:13.689Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:36:14.698Z",
   "services": [
     {
       "name": "catalog",
@@ -640,7 +640,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     }
   ],

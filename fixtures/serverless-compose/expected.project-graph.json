@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T13:16:36.053Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:47:31.517Z",
   "services": [
     {
       "name": "jobs",

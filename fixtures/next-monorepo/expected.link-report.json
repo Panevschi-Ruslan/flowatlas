@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:12:46.789Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:45:14.019Z",
   "configHash": "ef851b9ed9cb",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 878,
+      "durationMs": 1446,
       "packages": {
         "name": "@next-monorepo/web",
         "runtime": [

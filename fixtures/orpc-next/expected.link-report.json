@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:38:05.814Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:45:56.968Z",
   "configHash": "eb0f8a5034e2",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 36,
       "types": 2,
       "unresolved": 3,
-      "durationMs": 876,
+      "durationMs": 1373,
       "packages": {
         "name": "orpc-next-api",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 9,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 784,
+      "durationMs": 1263,
       "packages": {
         "name": "orpc-next-web",
         "runtime": [

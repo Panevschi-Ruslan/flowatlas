@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-10-16T11:01:54.038Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:37:20.663Z",
   "services": [
     {
       "name": "scans",

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "nest-interface-dispatch",
-  "generatedAt": "2026-10-16T15:11:44.316Z",
+  "generatedAt": "2026-11-23T14:43:09.375Z",
   "nodes": [
     {
       "id": "config_key:nest-interface-dispatch#BASECAMP_URL",

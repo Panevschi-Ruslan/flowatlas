@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T13:57:04.647Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:49:25.081Z",
   "services": [
     {
       "name": "planner",
@@ -220,7 +220,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {

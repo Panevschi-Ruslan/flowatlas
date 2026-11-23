@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "nest-mikro-orm-knex-not-installed",
-  "generatedAt": "2026-11-07T17:39:25.513Z",
+  "generatedAt": "2026-11-23T14:44:07.109Z",
   "nodes": [
     {
       "id": "db_query:nest-mikro-orm-knex-not-installed#src/inventory/inventory-level.repository.ts:24:12",

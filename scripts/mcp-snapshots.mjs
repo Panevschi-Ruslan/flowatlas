@@ -244,6 +244,37 @@ const CALLING_SIDE_COMPACT_CASES = [
 ];
 
 /**
+ * A child component a routed screen renders by its tag, a click handing a
+ * loop's element to a method that navigates, and client methods nothing calls
+ * whose names the repository writes nowhere else, one in a file with a step
+ * the reading could not follow (P370).
+ */
+const RENDERED_REACH_TARGET = 'catalog-api#src/items.service.ts:ItemsService.findOne';
+const RENDERED_REACH_CASES = [
+  ['impact.rendered-child', 'impact', { symbol: RENDERED_REACH_TARGET }],
+  [
+    'dead.components',
+    'dead',
+    {
+      ids: [
+        'catalog-web#src/app/item-card.component.ts:ItemCardComponent',
+        'catalog-web#src/app/legacy-badge.component.ts:LegacyBadgeComponent',
+        'catalog-web#src/app/promo-dialog.component.ts:PromoDialogComponent',
+        'catalog-web#src/app/settings-page.component.ts:SettingsPageComponent',
+      ],
+    },
+  ],
+  ['find_symbol.unreferenced', 'find_symbol', { queries: ['oneLegacy', 'byKey'] }],
+  ['who_calls.menu-screen', 'who_calls', { symbol: 'catalog-web#src/app/reports-page.component.ts:ReportsPageComponent' }],
+];
+/** The same impact and a flow through the rendered child, compact (P370). */
+const RENDERED_REACH_COMPACT_CASES = [
+  ['impact.rendered-child', 'impact', { symbol: RENDERED_REACH_TARGET, verbose: false }],
+  ['get_flow.catalog-screen', 'get_flow', { entry: 'entry:catalog-web:screen:/catalog', verbose: false }],
+  ['get_flow.catalog-screen-detail-2', 'get_flow', { entry: 'entry:catalog-web:screen:/catalog', detail: 2, verbose: false }],
+];
+
+/**
  * Answers that finish in one call (P364): each row of code with whether it
  * runs and the nearest way in (a screen for a handler the router shows, none
  * for one no way in reaches), each list saying whether it is complete and what
@@ -609,6 +640,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'impact-calling-side'),
     outDir: join(root, 'fixtures', 'impact-calling-side', 'expected.mcp.compact'),
     cases: CALLING_SIDE_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'angular-rendered-reach'),
+    outDir: join(root, 'fixtures', 'angular-rendered-reach', 'expected.mcp'),
+    cases: RENDERED_REACH_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'angular-rendered-reach'),
+    outDir: join(root, 'fixtures', 'angular-rendered-reach', 'expected.mcp.compact'),
+    cases: RENDERED_REACH_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

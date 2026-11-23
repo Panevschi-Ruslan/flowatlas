@@ -20,9 +20,8 @@
         "loc": "src/app/orders-api.service.ts:21",
         "service": "web",
         "kind": "http",
-        "reach": "maybe",
-        "from": "behind",
-        "behind": "web#src/app/checkout.component.ts:CheckoutComponent"
+        "reach": "unreached",
+        "from": "none"
       },
       "edge": {
         "type": "hits",

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "express-path-array",
-  "generatedAt": "2026-11-07T17:36:36.422Z",
+  "generatedAt": "2026-11-23T14:34:55.011Z",
   "nodes": [
     {
       "id": "entry:express-path-array:http:GET:/api/i/:param",

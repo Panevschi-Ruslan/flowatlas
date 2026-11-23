@@ -15,7 +15,10 @@ import {
   SafeKeyedRead,
   SafePropertyRead,
   ThisReceiver,
+  createCssSelectorFromNode,
+  type CssSelector,
   TmplAstBoundAttribute,
+  type TmplAstElement,
   TmplAstRecursiveVisitor,
   tmplAstVisitAll,
   type AST,
@@ -56,7 +59,13 @@ export type TemplateEventKind =
  * is a name the component never declared and never should (R105).
  */
 export type TemplateHandler =
-  | { readonly kind: 'method'; readonly method: string; readonly args: string[] }
+  | {
+      readonly kind: 'method';
+      readonly method: string;
+      readonly args: string[];
+      /** What each argument reads, where it is a read (`go(item)`, `open(item.slug)`), which the method's parameters stand for (P370). */
+      readonly reads?: ReadonlyArray<TemplateRead | undefined>;
+    }
   | {
       readonly kind: 'member';
       readonly property: string;
@@ -122,6 +131,27 @@ export interface TemplateEvent {
   /** 1-based, already offset into the file the template lives in. */
   line: number;
   column: number;
+}
+
+/**
+ * An element a template writes (P370): the selector Angular matches the
+ * declared components and directives against, its tag, and where it is.
+ */
+export interface TemplateElement {
+  readonly selector: CssSelector;
+  readonly name: string;
+  /** 1-based, already offset into the file the template lives in. */
+  readonly line: number;
+}
+
+/** Every element a template writes, an element inside `*ngIf`, `@if` or `<ng-template>` as much as any other. */
+class ElementCollector extends TmplAstRecursiveVisitor {
+  readonly elements: Array<{ selector: CssSelector; name: string; line: number }> = [];
+
+  override visitElement(element: TmplAstElement): void {
+    this.elements.push({ selector: createCssSelectorFromNode(element), name: element.name, line: element.sourceSpan.start.line });
+    super.visitElement(element);
+  }
 }
 
 export interface ParseTemplateOptions {
@@ -268,6 +298,15 @@ const handlersOf = (handler: AST, locals: ReadonlySet<string>): TemplateHandler[
   const text = String((handler as { source?: string }).source ?? '');
   const argsOf = (call: Call | SafeCall): string[] =>
     call.args.map((argument) => text.slice(argument.span.start, argument.span.end));
+  /** A component method's call with what each argument reads, where any reads something (P370). */
+  const methodCall = (method: string, call: Call | SafeCall): TemplateHandler => {
+    // `$event` is what the event carries at run time, which nothing here reads.
+    const reads = call.args.map((argument) => {
+      const read = readOf(argument, text);
+      return read?.root === '$event' ? undefined : read;
+    });
+    return { kind: 'method', method, args: argsOf(call), ...(reads.some((read) => read !== undefined) ? { reads } : {}) };
+  };
 
   return written.map((expression): TemplateHandler => {
     if (!(expression instanceof Call) && !(expression instanceof SafeCall)) {
@@ -282,12 +321,12 @@ const handlersOf = (handler: AST, locals: ReadonlySet<string>): TemplateHandler[
     // `this.` is the one spelling that cannot be a local: it is the component by
     // definition, so a name reached through it is never shadowed by a template.
     if (receiver instanceof ThisReceiver) {
-      return { kind: 'method', method: callee.name, args: argsOf(expression) };
+      return methodCall(callee.name, expression);
     }
     if (receiver instanceof ImplicitReceiver) {
       return locals.has(callee.name)
         ? { kind: 'local', local: callee.name, method: callee.name, args: argsOf(expression) }
-        : { kind: 'method', method: callee.name, args: argsOf(expression) };
+        : methodCall(callee.name, expression);
     }
     if (
       (receiver instanceof PropertyRead || receiver instanceof SafePropertyRead) &&
@@ -442,7 +481,7 @@ class EventCollector extends TmplAstRecursiveVisitor {
       kind: kindOf(event.name),
       source: String((event.handler as { source?: string }).source ?? ''),
       handlers,
-      ...(handlers.some((handler) => handler.kind === 'member' && handler.address !== undefined) ? this.#scope() : {}),
+      ...(handlers.some((handler) => (handler.kind === 'member' && handler.address !== undefined) || (handler.kind === 'method' && handler.reads !== undefined)) ? this.#scope() : {}),
       line: event.sourceSpan.start.line,
       column: event.sourceSpan.start.col,
     });
@@ -492,13 +531,22 @@ export const parseAngularTemplate = (
   source: string,
   file: string,
   options: ParseTemplateOptions = {},
-): TemplateEvent[] => {
+): TemplateEvent[] => readAngularTemplate(source, file, options).events;
+
+/** A template's triggers and the elements it writes (P370), from one parse. */
+export const readAngularTemplate = (
+  source: string,
+  file: string,
+  options: ParseTemplateOptions = {},
+): { events: TemplateEvent[]; elements: TemplateElement[] } => {
   const parsed = parseTemplate(source, file, { preserveWhitespaces: false });
   const collector = new EventCollector(
     options.placeholder ?? DEFAULT_PLACEHOLDER,
     localsOf(parsed.nodes),
   );
   tmplAstVisitAll(collector, parsed.nodes);
+  const elements = new ElementCollector();
+  tmplAstVisitAll(elements, parsed.nodes);
 
   const startLine = options.startLine ?? 1;
   const startColumn = options.startColumn ?? 1;
@@ -507,11 +555,12 @@ export const parseAngularTemplate = (
     options.onError?.(error.msg, (error.span.start.line ?? 0) + startLine);
   }
 
-  return collector.events
+  const events = collector.events
     .map((event) => ({
       ...event,
       line: event.line + startLine,
       column: event.line === 0 ? event.column + startColumn : event.column + 1,
     }))
     .sort((a, b) => a.line - b.line || a.column - b.column || (a.name < b.name ? -1 : 1));
+  return { events, elements: elements.elements.map((element) => ({ ...element, line: element.line + startLine })) };
 };

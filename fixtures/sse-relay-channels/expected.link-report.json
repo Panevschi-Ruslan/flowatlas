@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T14:49:55.474Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:49:32.911Z",
   "configHash": "9968b986e1bb",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 2,
       "unresolved": 3,
-      "durationMs": 1112,
+      "durationMs": 1729,
       "packages": {
         "name": "edge",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 19,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 780,
+      "durationMs": 1203,
       "packages": {
         "name": "portal",
         "runtime": [
@@ -49,7 +49,7 @@
       "edges": 31,
       "types": 0,
       "unresolved": 7,
-      "durationMs": 1300,
+      "durationMs": 1997,
       "packages": {
         "name": "shipping",
         "runtime": [

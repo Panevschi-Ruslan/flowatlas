@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:40:11.761Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:49:53.530Z",
   "configHash": "4191b8cde503",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 16,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 744,
+      "durationMs": 861,
       "packages": {
         "name": "svelte-shop",
         "runtime": [],

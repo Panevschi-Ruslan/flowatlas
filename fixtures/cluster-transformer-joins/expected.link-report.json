@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-12T19:00:04.635Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:34:18.230Z",
   "configHash": "a20a8bb09035",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1262,
+      "durationMs": 1160,
       "packages": {
         "name": "cluster-transformer-joins-jobs",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1295,
+      "durationMs": 1164,
       "packages": {
         "name": "cluster-transformer-joins-orders",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1260,
+      "durationMs": 1095,
       "packages": {
         "name": "cluster-transformer-joins-payments",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1317,
+      "durationMs": 1156,
       "packages": {
         "name": "cluster-transformer-joins-stock",
         "runtime": [

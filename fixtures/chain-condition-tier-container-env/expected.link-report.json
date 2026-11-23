@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-17T18:30:04.785Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:33:32.207Z",
   "configHash": "4af818eb3b2d",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2029,
+      "durationMs": 2597,
       "packages": {
         "name": "chain-condition-tier-container-env-archive",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2021,
+      "durationMs": 2646,
       "packages": {
         "name": "chain-condition-tier-container-env-billing",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2080,
+      "durationMs": 2644,
       "packages": {
         "name": "chain-condition-tier-container-env-east",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2016,
+      "durationMs": 2735,
       "packages": {
         "name": "chain-condition-tier-container-env-inventory",
         "runtime": [
@@ -84,7 +84,7 @@
       "edges": 18,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 2121,
+      "durationMs": 2744,
       "packages": {
         "name": "chain-condition-tier-container-env-jobs",
         "runtime": [
@@ -102,7 +102,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2069,
+      "durationMs": 2683,
       "packages": {
         "name": "chain-condition-tier-container-env-primary",
         "runtime": [
@@ -120,7 +120,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2121,
+      "durationMs": 2602,
       "packages": {
         "name": "chain-condition-tier-container-env-west",
         "runtime": [

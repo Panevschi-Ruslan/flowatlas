@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:35:13.916Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:53:26.952Z",
   "services": [
     {
       "name": "wiki",
@@ -92,7 +92,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -111,7 +112,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -134,7 +136,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -148,7 +151,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {

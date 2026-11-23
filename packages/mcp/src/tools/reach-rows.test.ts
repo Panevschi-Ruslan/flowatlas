@@ -60,8 +60,9 @@ describe('reach and the nearest way in on each row', () => {
   it('says a handler no way in reaches sits behind the component nothing renders, a maybe and never a no (P367)', async () => {
     const answer = await call('who_consumes', { channel: CHANNEL, type: 'TICKET_REOPENED' });
     expect(answer.consumers).toHaveLength(1);
-    // No route shows the panel and nothing read renders it, but a render the reading does not draw could.
-    expect(answer.consumers[0]).toMatchObject({ id: ARCHIVE, reach: 'maybe', from: 'behind', behind: 'console#src/screens/ArchivePanel.tsx:ArchivePanel' });
+    // No route shows the panel, nothing renders it and its name is written nowhere else (P370): that chain is
+    // unreached. The method that publishes the type is called by nothing read, a maybe, and the row says so.
+    expect(answer.consumers[0]).toMatchObject({ id: ARCHIVE, reach: 'maybe', from: 'behind', behind: 'desk-api#src/tickets/tickets.service.ts:TicketsService.reopen' });
   });
 
   it('places a publish at the route that runs it', async () => {

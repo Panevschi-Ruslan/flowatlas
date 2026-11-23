@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "pg-no-table",
-  "generatedAt": "2026-11-07T17:40:34.701Z",
+  "generatedAt": "2026-11-23T14:46:03.124Z",
   "nodes": [
     {
       "id": "db_query:pg-no-table#src/orders/orders.service.ts:10:12",

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-08T12:51:35.102Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:41:13.031Z",
   "configHash": "5b50e4d34a30",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 18,
       "types": 2,
       "unresolved": 2,
-      "durationMs": 1146,
+      "durationMs": 1553,
       "packages": {
         "name": "shop-catalog",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 4,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 1205,
+      "durationMs": 1503,
       "packages": {
         "name": "shop-orders",
         "runtime": [
@@ -53,7 +53,7 @@
       "edges": 3,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1143,
+      "durationMs": 1510,
       "packages": {
         "name": "shop-platform",
         "runtime": [
@@ -73,7 +73,7 @@
       "edges": 14,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 1269,
+      "durationMs": 1631,
       "packages": {
         "name": "shop-reports",
         "runtime": [

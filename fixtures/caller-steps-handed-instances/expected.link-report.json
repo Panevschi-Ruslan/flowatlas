@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:32:04.677Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:53.783Z",
   "configHash": "481b5ee8317e",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 21,
       "types": 1,
       "unresolved": 17,
-      "durationMs": 835,
+      "durationMs": 4387,
       "packages": {
         "name": "caller-steps-handed-instances-console",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 10,
-      "durationMs": 763,
+      "durationMs": 4053,
       "packages": {
         "name": "caller-steps-handed-instances-site",
         "runtime": [

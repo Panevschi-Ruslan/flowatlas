@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T21:39:02.292Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:34:11.462Z",
   "configHash": "e91e37df0d41",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 9,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2758,
+      "durationMs": 1344,
       "packages": {
         "name": "cluster-templating-joins-jobs",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2864,
+      "durationMs": 1354,
       "packages": {
         "name": "cluster-templating-joins-orders",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2813,
+      "durationMs": 1312,
       "packages": {
         "name": "cluster-templating-joins-payments",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2902,
+      "durationMs": 1321,
       "packages": {
         "name": "cluster-templating-joins-stock",
         "runtime": [

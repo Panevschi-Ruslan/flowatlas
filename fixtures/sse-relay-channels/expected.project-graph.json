@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T14:49:55.474Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:49:32.911Z",
   "services": [
     {
       "name": "shipping",
@@ -822,7 +822,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {

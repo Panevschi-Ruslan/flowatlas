@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-17T18:30:10.712Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:33:44.253Z",
   "configHash": "1d893611b805",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 3391,
+      "durationMs": 2576,
       "packages": {
         "name": "claimants-nested-chain-env-port-api",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 3359,
+      "durationMs": 2660,
       "packages": {
         "name": "claimants-nested-chain-env-port-archive",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 3413,
+      "durationMs": 2717,
       "packages": {
         "name": "claimants-nested-chain-env-port-audit",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 3299,
+      "durationMs": 2745,
       "packages": {
         "name": "claimants-nested-chain-env-port-catalog",
         "runtime": [
@@ -84,7 +84,7 @@
       "edges": 16,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 3405,
+      "durationMs": 2674,
       "packages": {
         "name": "claimants-nested-chain-env-port-jobs",
         "runtime": [
@@ -102,7 +102,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 3441,
+      "durationMs": 2661,
       "packages": {
         "name": "claimants-nested-chain-env-port-legacy",
         "runtime": [
@@ -120,7 +120,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 3413,
+      "durationMs": 2743,
       "packages": {
         "name": "claimants-nested-chain-env-port-orders",
         "runtime": [
@@ -138,7 +138,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 3423,
+      "durationMs": 2607,
       "packages": {
         "name": "claimants-nested-chain-env-port-reports",
         "runtime": [
@@ -156,7 +156,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 3426,
+      "durationMs": 2649,
       "packages": {
         "name": "claimants-nested-chain-env-port-stock",
         "runtime": [

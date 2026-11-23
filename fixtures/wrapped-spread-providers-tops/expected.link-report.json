@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-18T13:21:06.447Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:50:45.808Z",
   "configHash": "b53475ee89bf",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 9,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1208,
+      "durationMs": 1679,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 12,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 1476,
+      "durationMs": 2060,
       "packages": {
         "name": "wrapped-spread-providers-tops-jobs",
         "runtime": [
@@ -51,7 +51,7 @@
       "edges": 6,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1209
+      "durationMs": 1675
     },
     {
       "name": "stock",
@@ -62,7 +62,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1273,
+      "durationMs": 1640,
       "packages": {
         "name": "stock",
         "runtime": [
@@ -80,7 +80,7 @@
       "edges": 44,
       "types": 0,
       "unresolved": 9,
-      "durationMs": 1291,
+      "durationMs": 1708,
       "packages": {
         "name": "wrapped-spread-providers-tops-web",
         "runtime": [

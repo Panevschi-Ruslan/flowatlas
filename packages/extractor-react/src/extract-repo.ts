@@ -1,6 +1,7 @@
 import type { Project } from 'ts-morph';
 import { join } from 'node:path';
 import {
+  markUnreferenced,
   AdapterRegistry,
   LISTEN_META,
   listeningOf,
@@ -252,6 +253,9 @@ export const extractBrowser = (base: ExtractContext, options: FrontendExtractOpt
   // Hashes reach through references, so nothing can be written until every type
   // that any pass collected is known.
   if (options.noTypes !== true) ctx.types.finalize();
+
+  // The methods and components whose name the repository writes nowhere else (P370).
+  markUnreferenced(base.builder, base.project, base.repoDir, base.pkg as Readonly<Record<string, unknown>>);
 
   // This half may be one of two readings of the same directory, and a
   // repository is one node however many halves wrote it. Writing it first and

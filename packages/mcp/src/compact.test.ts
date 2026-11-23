@@ -207,4 +207,47 @@ describe('compact answers (P365)', () => {
     expect(compact.entries[0]).toMatchObject({ reach: 'maybe', gap: answer.entries[0]!.gap, behind: answer.entries[0]!.behind });
     expect(compact.target).toEqual({ id: target, line: 8 });
   });
+
+  it('says a tree row as its node with the edge beside it, a static edge as its type, and leaves what left says (P370)', () => {
+    const answer = {
+      root: {
+        node: { id: 'entry:shop:http:GET:/orders', type: 'entry', label: 'GET /orders', service: 'shop', kind: 'http' },
+        children: [
+          {
+            node: { id: 'shop#src/orders.ts:Orders.list', type: 'method', label: 'Orders.list', loc: 'src/orders.ts:4' },
+            edge: { type: 'handles', confidence: 'static' },
+            children: [
+              {
+                node: { id: 'shop#src/db.ts:Db.read', type: 'method', label: 'Db.read', loc: 'src/db.ts:2' },
+                edge: { type: 'calls', confidence: 'heuristic', returns: 'type:shop#Row' },
+                children: [],
+              },
+            ],
+          },
+        ],
+      },
+      truncated: '1 more nodes past depth 2; raise depth',
+      stoppedBy: ['depth'],
+      frontier: ['shop#src/db.ts:Db.read'],
+      complete: false,
+      left: ['depth: 1 callers past depth 2, from the frontier rows'],
+    };
+    expect(compactAnswer(answer)).toEqual({
+      root: {
+        id: 'entry:shop:http:GET:/orders',
+        children: [
+          {
+            id: 'shop#src/orders.ts:Orders.list',
+            line: 4,
+            edge: 'handles',
+            children: [{ id: 'shop#src/db.ts:Db.read', line: 2, edge: { type: 'calls', confidence: 'heuristic', returns: 'type:shop#Row' } }],
+          },
+        ],
+      },
+      complete: false,
+      left: ['depth: 1 callers past depth 2, from the frontier rows'],
+    });
+    // Without `left`, a cut is said where it always was.
+    expect(compactAnswer({ truncated: 'x', stoppedBy: ['depth'], complete: true })).toEqual({ truncated: 'x', stoppedBy: ['depth'], complete: true });
+  });
 });

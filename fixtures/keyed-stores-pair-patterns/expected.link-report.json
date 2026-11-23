@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:34:30.288Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:37:01.229Z",
   "configHash": "cfed8ae18f4e",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 26,
       "types": 2,
       "unresolved": 20,
-      "durationMs": 823,
+      "durationMs": 1111,
       "packages": {
         "name": "keyed-stores-pair-patterns-console",
         "runtime": [

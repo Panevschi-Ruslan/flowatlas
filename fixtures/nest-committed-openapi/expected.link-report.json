@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-10-17T21:31:23.194Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:41:38.589Z",
   "configHash": "1c7c4600c4fd",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 4,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1008,
       "packages": {
         "name": "committed-openapi-shop",
         "runtime": [

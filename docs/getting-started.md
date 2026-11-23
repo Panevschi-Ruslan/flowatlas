@@ -329,7 +329,14 @@ pnpm flowatlas impact OrdersService.create --entries-only --config fixtures/mult
 →  OrdersService.create  orders/src/orders/orders.service.ts:40
   ◆  POST /orders        orders/src/orders/orders.controller.ts:31
 Reachable from: 1 http entry (orders)
+Could break:
+  POST /orders (orders)  dead
 ```
+
+Each way in that could break is listed with whether it runs (`dead` here:
+nothing in the fixture requests the route) and, on the calling side, `via`,
+the route or channel it came through; `--format json` prints what the graph
+server's `impact` tool answers.
 
 Give it a table and it names the routes that write it. Give it a method and it
 names the ones in other people's services.

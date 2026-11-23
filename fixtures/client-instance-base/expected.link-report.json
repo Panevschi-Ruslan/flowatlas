@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-05T22:10:41.094Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:33:47.454Z",
   "configHash": "663d3c50b3e8",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 886,
+      "durationMs": 1309,
       "packages": {
         "name": "client-instance-base-admin",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 2,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1121,
+      "durationMs": 1655,
       "packages": {
         "name": "client-instance-base-billing",
         "runtime": [
@@ -51,7 +51,7 @@
       "edges": 3,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 908,
+      "durationMs": 1355,
       "packages": {
         "name": "client-instance-base-console",
         "runtime": [
@@ -71,7 +71,7 @@
       "edges": 2,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1128,
+      "durationMs": 1614,
       "packages": {
         "name": "client-instance-base-orders",
         "runtime": [
@@ -90,7 +90,7 @@
       "edges": 12,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 888,
+      "durationMs": 1298,
       "packages": {
         "name": "client-instance-base-shop",
         "runtime": [

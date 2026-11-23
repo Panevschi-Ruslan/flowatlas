@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:38:09.551Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:53:49.187Z",
   "services": [
     {
       "name": "console",

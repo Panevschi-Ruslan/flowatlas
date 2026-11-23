@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-18T13:15:42.446Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:36:11.505Z",
   "configHash": "4b1b60a6f992",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 12,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 927,
+      "durationMs": 1048,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 887,
+      "durationMs": 1071,
       "packages": {
         "name": "jobs",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 885,
+      "durationMs": 1021,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 14,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 961
+      "durationMs": 1099
     }
   ],
   "httpOut": {

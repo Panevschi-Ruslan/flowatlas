@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:23:13.742Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:43.623Z",
   "configHash": "1155eb3aaa12",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 1392,
       "packages": {
         "name": "admin",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 1392,
       "packages": {
         "name": "jobs",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 1406,
       "packages": {
         "name": "shop",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 1546,
       "packages": {
         "name": "stock",
         "runtime": [

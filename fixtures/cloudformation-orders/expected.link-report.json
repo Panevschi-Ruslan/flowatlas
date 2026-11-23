@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:45:08.896Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:33:53.513Z",
   "configHash": "183a5926c584",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 54,
       "types": 12,
       "unresolved": 6,
-      "durationMs": 3325,
+      "durationMs": 1174,
       "packages": {
         "name": "orders",
         "runtime": [

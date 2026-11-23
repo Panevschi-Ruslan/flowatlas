@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-21T18:14:59.818Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:36:28.877Z",
   "configHash": "d49f404e0051",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 6,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 748,
+      "durationMs": 1057,
       "packages": {
         "name": "backoffice-web",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 7,
       "types": 1,
       "unresolved": 4,
-      "durationMs": 920,
+      "durationMs": 1256,
       "packages": {
         "name": "ops-bot",
         "runtime": [
@@ -56,7 +56,7 @@
       "edges": 12,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 893,
+      "durationMs": 1212,
       "packages": {
         "name": "shop-api",
         "runtime": [

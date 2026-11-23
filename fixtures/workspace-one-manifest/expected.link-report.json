@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T12:56:26.208Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:50:33.327Z",
   "configHash": "0a3c704eef94",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 5,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 982,
+      "durationMs": 3090,
       "packages": {
         "name": "shop-workspace",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 7,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 993,
+      "durationMs": 3183,
       "packages": {
         "name": "shop-workspace",
         "runtime": [

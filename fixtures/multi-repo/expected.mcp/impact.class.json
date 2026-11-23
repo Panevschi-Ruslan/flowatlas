@@ -97,67 +97,16 @@
       "kind": "http",
       "reach": "maybe",
       "behind": "no http_calls/hits from any repo (may be a public API); a request that found no route is one segment off it"
-    },
-    {
-      "id": "web#src/app/checkout.component.ts:CheckoutComponent",
-      "type": "ui_component",
-      "label": "CheckoutComponent",
-      "loc": "src/app/checkout.component.ts:12",
-      "service": "web",
-      "kind": "standalone",
-      "reach": "maybe",
-      "from": "behind",
-      "via": "GET /orders/:param (orders)"
-    },
-    {
-      "id": "web#src/app/orders-api.service.ts:OrdersApiService.invoice",
-      "type": "method",
-      "label": "OrdersApiService.invoice",
-      "loc": "src/app/orders-api.service.ts:60",
-      "service": "web",
-      "reach": "maybe",
-      "from": "behind",
-      "via": "GET /orders/:param (orders)"
-    },
-    {
-      "id": "web#src/app/orders-api.service.ts:OrdersApiService.one",
-      "type": "method",
-      "label": "OrdersApiService.one",
-      "loc": "src/app/orders-api.service.ts:72",
-      "service": "web",
-      "reach": "maybe",
-      "from": "behind",
-      "via": "GET /orders/:param (orders)"
-    },
-    {
-      "id": "web#src/app/orders-api.service.ts:OrdersApiService.probe",
-      "type": "method",
-      "label": "OrdersApiService.probe",
-      "loc": "src/app/orders-api.service.ts:123",
-      "service": "web",
-      "reach": "maybe",
-      "from": "behind",
-      "via": "GET /orders/:param (orders)"
-    },
-    {
-      "id": "web#src/app/orders-api.service.ts:OrdersApiService.twoBlind",
-      "type": "method",
-      "label": "OrdersApiService.twoBlind",
-      "loc": "src/app/orders-api.service.ts:138",
-      "service": "web",
-      "reach": "maybe",
-      "from": "behind",
-      "via": "GET /orders/:param (orders)"
     }
   ],
-  "total": 14,
+  "total": 9,
   "reached": 42,
   "entriesByService": {
     "orders": 4,
     "billing": 3,
     "gateway": 2
   },
-  "maybe": 5,
+  "unreached": 5,
   "reachedByService": {
     "orders": 10,
     "billing": 11,
@@ -171,10 +120,7 @@
     "channel:invoice.requested",
     "channel:order.created"
   ],
-  "complete": false,
-  "left": [
-    "gaps: 5 chains stop at an unread call before any way in: the maybe rows"
-  ],
+  "complete": true,
   "next": [
     "get_flow({entry: \"entry:billing:event:invoice.requested\"})",
     "describe_for_prompt({id: \"entry:billing:event:invoice.requested\"})",

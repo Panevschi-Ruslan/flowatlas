@@ -1,0 +1,44 @@
+{
+  "answers": [
+    {
+      "asked": "oneLegacy",
+      "matches": [
+        {
+          "id": "catalog-web#src/app/items-api.service.ts:ItemsApiService.oneLegacy",
+          "type": "method",
+          "label": "ItemsApiService.oneLegacy",
+          "loc": "src/app/items-api.service.ts:21",
+          "service": "catalog-web",
+          "reach": "unreached",
+          "from": "none"
+        }
+      ],
+      "total": 1,
+      "complete": true
+    },
+    {
+      "asked": "byKey",
+      "matches": [
+        {
+          "id": "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey",
+          "type": "method",
+          "label": "ItemsLookupService.byKey",
+          "loc": "src/app/items-lookup.service.ts:21",
+          "service": "catalog-web",
+          "reach": "maybe",
+          "from": "behind",
+          "gap": "gap:catalog-web|src/app/items-lookup.service.ts|navigation-unresolved"
+        }
+      ],
+      "total": 1,
+      "complete": true
+    }
+  ],
+  "complete": true,
+  "next": [
+    "impact({symbol: \"catalog-web#src/app/items-api.service.ts:ItemsApiService.oneLegacy\"})",
+    "impact({symbol: \"catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey\"})",
+    "get_source({symbol: \"catalog-web#src/app/items-api.service.ts:ItemsApiService.oneLegacy\"})",
+    "get_source({symbol: \"catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey\"})"
+  ]
+}

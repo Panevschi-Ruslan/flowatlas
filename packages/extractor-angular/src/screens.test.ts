@@ -350,3 +350,104 @@ export class QueueComponent {}
     expect(reasons(graph)).not.toContain('handler-not-a-method');
   });
 });
+
+describe('a component a template renders by its tag (P370)', () => {
+  const files = {
+    'app.routes.ts': `import { provideRouter } from '@angular/router';
+import { PageComponent } from './page.component';
+export const config = provideRouter([{ path: 'page', component: PageComponent }]);
+`,
+    'page.component.ts': `import { Component } from '@angular/core';
+@Component({
+  selector: 'app-page',
+  template: '@if (ready) { <app-card></app-card> } <div appTip class="x"></div> <app-page></app-page>',
+})
+export class PageComponent { ready = true; }
+`,
+    'card.component.ts': `import { Component } from '@angular/core';
+@Component({ selector: 'app-card', template: '<p>card</p>' })
+export class CardComponent {}
+`,
+    'tip.directive.ts': `import { Directive } from '@angular/core';
+@Directive({ selector: '[appTip]' })
+export class TipDirective {}
+`,
+    'unused.component.ts': `import { Component } from '@angular/core';
+@Component({ selector: 'app-unused', template: '<p>unused</p>' })
+export class UnusedComponent {}
+`,
+  };
+
+  it('draws a calls edge to each component and directive an element is, by the selectors, and none to itself', () => {
+    const graph = extract(files);
+    const byId = new Map(graph.nodes.map((node) => [node.id, node]));
+    const rendered = graph.edges
+      .filter((edge) => edge.type === 'calls' && edge.meta?.['renders'] !== undefined)
+      .map((edge) => `${String(byId.get(edge.from)?.label)} -> ${String(byId.get(edge.to)?.label)} <${String(edge.meta?.['renders'])}>`)
+      .sort();
+    expect(rendered).toEqual(['PageComponent -> CardComponent <app-card>', 'PageComponent -> TipDirective <div>']);
+  });
+
+  it('marks a component whose name the repository writes nowhere else as unreferenced', () => {
+    const graph = extract(files);
+    const unreferenced = graph.nodes.filter((node) => node.meta?.['unreferenced'] === true).map((node) => node.label);
+    expect(unreferenced).toEqual(['UnusedComponent']);
+  });
+});
+
+describe("a click handing a loop's element to a method that navigates (P370)", () => {
+  const files = {
+    'app.routes.ts': `import { provideRouter } from '@angular/router';
+import { MenuComponent } from './menu.component';
+import { SettingsComponent } from './settings.component';
+import { ReportsComponent } from './reports.component';
+export const config = provideRouter([
+  { path: 'menu', component: MenuComponent },
+  { path: 'settings', component: SettingsComponent },
+  { path: 'reports', component: ReportsComponent },
+]);
+`,
+    'menu.component.ts': `import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+const ENTRIES = [{ route: '/settings' }, { route: '/reports' }, { route: '/help' }];
+@Component({
+  selector: 'app-menu',
+  template: '@for (entry of entries; track entry.route) { <button (click)="go(entry)">go</button> } <a *ngFor="let link of entries" (click)="open(link.route)">x</a>',
+})
+export class MenuComponent {
+  readonly entries = ENTRIES;
+  constructor(private readonly router: Router) {}
+  go(item: { route: string }): void { this.router.navigate([item.route]); }
+  open(path: string): void { this.router.navigateByUrl(path); }
+}
+`,
+    'settings.component.ts': `import { Component } from '@angular/core';
+@Component({ selector: 'app-settings', template: '<p></p>' })
+export class SettingsComponent {}
+`,
+    'reports.component.ts': `import { Component } from '@angular/core';
+@Component({ selector: 'app-reports', template: '<p></p>' })
+export class ReportsComponent {}
+`,
+  };
+
+  it("follows the element into the method's parameter, and lands on each entry's screen", () => {
+    const graph = extract(files);
+    const byId = new Map(graph.nodes.map((node) => [node.id, node]));
+    const clicks = graph.edges
+      .filter((edge) => edge.type === 'triggers' && edge.meta?.['navigates'] !== undefined)
+      .map((edge) => `${String(byId.get(edge.from)?.meta?.['handler'])}: ${String(edge.meta?.['navigates'])} -> ${String(byId.get(edge.to)?.label)}`)
+      .sort();
+    expect(clicks).toEqual([
+      'go(entry): /reports -> ReportsComponent',
+      'go(entry): /settings -> SettingsComponent',
+      'open(link.route): /reports -> ReportsComponent',
+      'open(link.route): /settings -> SettingsComponent',
+    ]);
+    // An entry no route answers is named; the method's own navigation, read at run time, is code and not `:param`.
+    const unresolved = rows(graph, 'navigation-unresolved').map((row) => row.symbol).sort();
+    expect(unresolved).toContain('MenuComponent (click) -> go navigates to /help');
+    expect(unresolved).toContain('MenuComponent.go navigates to [item.route]');
+    expect(unresolved.some((symbol) => symbol?.includes(':param') === true)).toBe(false);
+  });
+});

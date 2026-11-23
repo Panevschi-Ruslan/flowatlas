@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "nest-kysely",
-  "generatedAt": "2026-11-07T17:39:14.422Z",
+  "generatedAt": "2026-11-23T14:43:43.730Z",
   "nodes": [
     {
       "id": "db_query:nest-kysely#src/assets/assets.service.ts:16:12",

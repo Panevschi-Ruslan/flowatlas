@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:12:25.637Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:34:29.241Z",
   "configHash": "c1dfa39278cb",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2612,
       "packages": {
         "name": "container-script-environment-accounts",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2693,
       "packages": {
         "name": "container-script-environment-admin",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2694,
       "packages": {
         "name": "container-script-environment-api",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2412,
       "packages": {
         "name": "container-script-environment-billing",
         "runtime": [
@@ -84,7 +84,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2655,
       "packages": {
         "name": "container-script-environment-catalog",
         "runtime": [
@@ -102,7 +102,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2670,
       "packages": {
         "name": "container-script-environment-jobs",
         "runtime": [
@@ -120,7 +120,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2754,
       "packages": {
         "name": "container-script-environment-ledger",
         "runtime": [
@@ -138,7 +138,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2649,
       "packages": {
         "name": "container-script-environment-orders",
         "runtime": [
@@ -156,7 +156,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2577,
       "packages": {
         "name": "container-script-environment-stock",
         "runtime": [
@@ -174,7 +174,7 @@
       "edges": 16,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2499,
       "packages": {
         "name": "container-script-environment-web",
         "runtime": [],

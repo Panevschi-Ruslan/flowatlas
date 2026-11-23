@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-10-16T23:28:07.650Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:37:09.379Z",
   "configHash": "282b0556a44c",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 18,
       "types": 8,
       "unresolved": 5,
-      "durationMs": 518,
+      "durationMs": 1226,
       "packages": {
         "name": "bike-share-stations",
         "runtime": [

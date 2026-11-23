@@ -28,6 +28,17 @@
  * was asked about) or of a row it is inside goes, and a `file` an id beside it
  * holds (the row's own, another field's, the target's) goes too (P367).
  *
+ * Where an answer (or one of the answers of a call asked several things)
+ * says `left`, its `truncated`, `stoppedBy` and `frontier` go: `left` says
+ * each cut, and `next` the call that walks on from the frontier (P370).
+ *
+ * A row of a tree (`{node, edge, children}`, as get_flow, who_calls and a
+ * walk write it) is said as the node itself with `edge` and `children` beside
+ * its fields, and an edge's `confidence` goes where it is `static`, which an
+ * edge is unless it says otherwise; an edge with nothing left but its type is
+ * said as the type (`"edge": "calls"`). The tree's shape is how a page draws
+ * it, not something an agent reads (P370).
+ *
  * Below the answer's own fields, a field that is null, false, or an empty list
  * or object goes too. The answer's own fields stay as they are: an empty list
  * there (no consumer) or a `false` (`dead: false`) is the answer. `next` keeps
@@ -50,6 +61,12 @@ export const COMPACT_MAX_NEXT = 2;
  * too, whatever else says it.
  */
 const KEPT: ReadonlySet<string> = new Set(['id', 'gapId', 'complete', 'left', 'reach', 'from', 'gap', 'behind']);
+
+/** The fields `left` says, on an answer that says it (P370). */
+const SAID_BY_LEFT: ReadonlySet<string> = new Set(['truncated', 'stoppedBy', 'frontier']);
+
+/** The confidence an edge has unless it says otherwise. */
+const DEFAULT_CONFIDENCE = 'static';
 
 /** The fields that name the row, each dropped only by its own rule above. */
 const IDENTITY: ReadonlySet<string> = new Set(['type', 'label', 'kind', 'service', 'loc']);
@@ -206,6 +223,28 @@ const saidByIds = (key: string, value: string, ids: readonly string[]): boolean 
   }
 };
 
+/** An edge as a compact tree says it: without `confidence: static`, and as its type alone when that is all it says. */
+const edgeSaid = (edge: unknown): unknown => {
+  if (!isPlain(edge)) return edge;
+  const { confidence, ...rest } = edge;
+  const kept = confidence === DEFAULT_CONFIDENCE || confidence === undefined ? rest : { ...rest, confidence };
+  const keys = Object.keys(kept);
+  return keys.length === 1 && typeof kept.type === 'string' ? kept.type : kept;
+};
+
+/**
+ * A row of a tree, `{node, edge, children, …}`, as the node with the rest
+ * beside its fields (P370); any other object as it is, and a row whose
+ * fields would meet the node's as it is too.
+ */
+const flattened = (row: Plain): Plain => {
+  const node = row.node;
+  if (!isPlain(node) || typeof node.id !== 'string' || !('children' in row || 'edge' in row)) return row;
+  const { node: _node, edge, children, ...rest } = row;
+  if (Object.keys(rest).some((key) => key in node)) return row;
+  return { ...node, ...(edge === undefined ? {} : { edge: edgeSaid(edge) }), ...rest, ...(children === undefined ? {} : { children }) };
+};
+
 /** `under` holds the ids of the rows a value is inside, which a field below may only name again. */
 const compactValue = (value: unknown, depth: number, under: readonly string[]): unknown => {
   if (Array.isArray(value)) return value.map((item) => compactValue(item, depth, under));
@@ -213,7 +252,9 @@ const compactValue = (value: unknown, depth: number, under: readonly string[]): 
   return compactObject(value, depth, under);
 };
 
-const compactObject = (row: Plain, depth: number, under: readonly string[]): Plain => {
+const compactObject = (given: Plain, depth: number, under: readonly string[]): Plain => {
+  const row = flattened(given);
+  const leftSays = Array.isArray(row.left) && row.left.length > 0;
   const ids = ID_KEYS.map((key) => row[key]).filter((value): value is string => typeof value === 'string');
   const fullIds = [...ids, ...metaIds(row.meta)];
   // The ids that may hold a `file` beside them: the row's, its fields' and meta's in full, and those it is inside.
@@ -227,6 +268,12 @@ const compactObject = (row: Plain, depth: number, under: readonly string[]): Pla
     }
     const blankable = depth > 0;
     if (blankable && isBlank(value)) continue;
+    if (leftSays && SAID_BY_LEFT.has(key)) continue;
+    // How a tree's row was reached: never a part of an id, whatever its type's name.
+    if (key === 'edge' && depth > 0) {
+      out[key] = compactValue(value, depth + 1, inside);
+      continue;
+    }
     // A field naming the row it is inside (`meta.selects[].consumer` on that consumer's row), or the answer's target.
     if (typeof value === 'string' && under.includes(value)) continue;
     // A file an id beside it says already (`file` beside a failure's `at`, or beside the target that `at` was).

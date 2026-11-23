@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-17T21:03:49.207Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:50:15.283Z",
   "configHash": "0a8241ab0356",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2570,
+      "durationMs": 2271,
       "packages": {
         "name": "unloaded-env-image-environment-api",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2461,
+      "durationMs": 2232,
       "packages": {
         "name": "unloaded-env-image-environment-audit",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2462,
+      "durationMs": 2248,
       "packages": {
         "name": "unloaded-env-image-environment-bare",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 3,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2461,
+      "durationMs": 2241,
       "packages": {
         "name": "unloaded-env-image-environment-billing",
         "runtime": [
@@ -84,7 +84,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2472,
+      "durationMs": 2207,
       "packages": {
         "name": "unloaded-env-image-environment-catalog",
         "runtime": [
@@ -102,7 +102,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2478,
+      "durationMs": 2233,
       "packages": {
         "name": "unloaded-env-image-environment-inventory",
         "runtime": [
@@ -120,7 +120,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2447,
+      "durationMs": 2206,
       "packages": {
         "name": "unloaded-env-image-environment-ledger",
         "runtime": [
@@ -138,7 +138,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2455,
+      "durationMs": 2207,
       "packages": {
         "name": "unloaded-env-image-environment-loaded",
         "runtime": [
@@ -157,7 +157,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2554,
+      "durationMs": 2232,
       "packages": {
         "name": "unloaded-env-image-environment-orders",
         "runtime": [
@@ -175,7 +175,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2518,
+      "durationMs": 2120,
       "packages": {
         "name": "unloaded-env-image-environment-stock",
         "runtime": [
@@ -193,7 +193,7 @@
       "edges": 20,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2628,
+      "durationMs": 2225,
       "packages": {
         "name": "unloaded-env-image-environment-web",
         "runtime": [],

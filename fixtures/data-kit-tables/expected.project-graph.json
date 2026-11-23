@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-18T12:21:11.187Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:34:33.833Z",
   "services": [
     {
       "name": "loans",

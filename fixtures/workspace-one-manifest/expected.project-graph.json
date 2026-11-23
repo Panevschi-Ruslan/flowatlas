@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T12:56:26.208Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:50:33.327Z",
   "services": [
     {
       "name": "orders",

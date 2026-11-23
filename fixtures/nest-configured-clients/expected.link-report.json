@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-08T14:25:10.014Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:41:40.840Z",
   "configHash": "165ce2eef21e",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 919,
       "packages": {
         "name": "@shop/ledger",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 924,
       "packages": {
         "name": "@shop/orders",
         "runtime": [
@@ -54,7 +54,7 @@
       "edges": 10,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 1159,
       "packages": {
         "name": "@shop/worker",
         "runtime": [

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:33:33.942Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:52:50.434Z",
   "services": [
     {
       "name": "storefront",
@@ -93,7 +93,8 @@
         "signature": {
           "params": [],
           "returns": "void"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -125,7 +126,8 @@
         "signature": {
           "params": [],
           "returns": "void"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -144,7 +146,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -1166,7 +1169,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -1197,7 +1201,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {

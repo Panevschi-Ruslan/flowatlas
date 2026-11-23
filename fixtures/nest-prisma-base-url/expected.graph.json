@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "nest-prisma-base-url",
-  "generatedAt": "2026-11-09T22:24:36.650Z",
+  "generatedAt": "2026-11-23T14:44:23.328Z",
   "nodes": [
     {
       "id": "db_query:nest-prisma-base-url#src/coupons/coupon-audit.ts:36:12",

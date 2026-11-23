@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:38:35.999Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:41:32.120Z",
   "services": [
     {
       "name": "nest-broker-markers",

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:12:49.543Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:45:18.029Z",
   "configHash": "ef851b9ed9cb",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 6,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 771,
+      "durationMs": 1277,
       "packages": {
         "name": "@next-reexport/web",
         "runtime": [

@@ -1,6 +1,6 @@
 import { existsSync, statSync } from 'node:fs';
 import { isAbsolute, resolve } from 'node:path';
-import { SCHEMA_VERSION, loadConfig, type FlowatlasConfig } from '@flowatlas/core';
+import { SCHEMA_VERSION, loadConfig, schemaMismatchSaid, type FlowatlasConfig } from '@flowatlas/core';
 import { openGraphDb, type GraphDb } from '@flowatlas/linker';
 
 export interface SourceRoots {
@@ -120,7 +120,11 @@ export class DbHandle implements SourceRoots {
       const found = this.#db.schemaVersion();
       if (found !== SCHEMA_VERSION) {
         this.#close();
-        return { error: `schema-mismatch ${found} vs ${SCHEMA_VERSION}; run flowatlas build` };
+        // Older: rebuilt; newer: a newer flowatlas reads it, and this one says so rather than misread it (P370).
+        const said = schemaMismatchSaid(found);
+        // A server told to rebuild when the graph is behind (`mcp.rebuild: on-change`) rebuilds an older one now.
+        const rebuilding = found < SCHEMA_VERSION && this.onStale?.() === true;
+        return { error: `${said.message}. ${rebuilding ? 'A rebuild was started; ask again when it is done.' : said.hint}` };
       }
       this.#changed();
     }

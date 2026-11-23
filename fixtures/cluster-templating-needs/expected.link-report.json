@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:31:17.561Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:34:14.587Z",
   "configHash": "a20a8bb09035",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 783,
+      "durationMs": 1501,
       "packages": {
         "name": "cluster-templating-needs-jobs",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 786,
+      "durationMs": 1436,
       "packages": {
         "name": "cluster-templating-needs-orders",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 771,
+      "durationMs": 1409,
       "packages": {
         "name": "cluster-templating-needs-payments",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 767,
+      "durationMs": 1442,
       "packages": {
         "name": "cluster-templating-needs-stock",
         "runtime": [

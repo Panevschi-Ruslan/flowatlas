@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-15T15:02:11.576Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:22.100Z",
   "services": [
     {
       "name": "storefront",

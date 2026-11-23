@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:26:46.850Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:35:44.537Z",
   "configHash": "6380be62f418",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 1032,
+      "durationMs": 1370,
       "packages": {
         "name": "federation-customers",
         "runtime": [
@@ -35,7 +35,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 831,
+      "durationMs": 1100,
       "packages": {
         "name": "federation-gateway",
         "runtime": [
@@ -56,7 +56,7 @@
       "edges": 11,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 821,
+      "durationMs": 1146,
       "packages": {
         "name": "federation-orders",
         "runtime": [
@@ -77,7 +77,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 817,
+      "durationMs": 1104,
       "packages": {
         "name": "federation-web",
         "runtime": [

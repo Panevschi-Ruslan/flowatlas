@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-15T14:55:44.058Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:35:28.372Z",
   "configHash": "5876305cc38d",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 1212,
+      "durationMs": 1397,
       "packages": {
         "name": "shop-catalog",
         "runtime": [],
@@ -30,7 +30,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 6,
-      "durationMs": 1122,
+      "durationMs": 1255,
       "packages": {
         "name": "shop-orders",
         "runtime": [],
@@ -48,7 +48,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 1109,
+      "durationMs": 1276,
       "packages": {
         "name": "shop-reviews",
         "runtime": [],
@@ -66,7 +66,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 1088,
+      "durationMs": 1254,
       "packages": {
         "name": "shop-shipping",
         "runtime": [],
@@ -84,7 +84,7 @@
       "edges": 12,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1126
+      "durationMs": 1270
     }
   ],
   "httpOut": {

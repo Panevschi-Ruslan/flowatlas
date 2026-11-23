@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-18T13:16:07.210Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:47:17.616Z",
   "configHash": "a2d21c501a57",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 14,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 790,
+      "durationMs": 871,
       "packages": {
         "name": "shop",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 743,
+      "durationMs": 862,
       "packages": {
         "name": "site",
         "runtime": [
@@ -51,7 +51,7 @@
       "edges": 21,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 793
+      "durationMs": 911
     }
   ],
   "httpOut": {

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "repo": "angular-nav-catalog",
-  "generatedAt": "2026-11-20T17:31:41.484Z",
+  "generatedAt": "2026-11-23T14:32:11.854Z",
   "nodes": [
     {
       "id": "angular-nav-catalog#node_modules/@angular/router:Router",
@@ -320,6 +320,17 @@
     }
   ],
   "edges": [
+    {
+      "from": "angular-nav-catalog#src/app/layout/shell.component.ts:ShellComponent",
+      "to": "angular-nav-catalog#src/app/layout/sidebar.component.ts:SidebarComponent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/layout/shell.component.ts",
+      "line": 7,
+      "meta": {
+        "renders": "app-sidebar"
+      }
+    },
     {
       "from": "angular-nav-catalog#src/app/layout/sidebar.component.ts:SidebarComponent",
       "to": "angular-nav-catalog#node_modules/@angular/router:Router",

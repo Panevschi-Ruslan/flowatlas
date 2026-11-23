@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:37:51.019Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:45:37.456Z",
   "configHash": "a27cd8f77c0e",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 27,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 793,
+      "durationMs": 1057,
       "packages": {
         "name": "layered-shop",
         "runtime": [

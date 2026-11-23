@@ -393,9 +393,9 @@ describe('reading a list a page at a time', () => {
     expect((await call('find_symbol', { query: 'orders', maxNodes: 1, offset: 1 })).matches[0].id).not.toBe(found.matches[0].id);
     const symbol = 'orders#src/orders/orders.service.ts:OrdersService.findOne';
     const impact = await call('impact', { symbol, maxNodes: 1 });
-    // Billing's call reaches it too (P209): its three ways in, and the two that reach billing; and
-    // the five ends of chains in the web an unread call could reach, as maybe rows (P367).
-    expect(impact).toMatchObject({ total: 12, nextOffset: 1 });
+    // Billing's call reaches it too (P209): its three ways in, and the two that reach billing. The web's
+    // chain ends are written nowhere else in it (P370): counted as unreached, not listed.
+    expect(impact).toMatchObject({ total: 7, nextOffset: 1 });
     expect(impact.next[0]).toBe(`impact({symbol: ${JSON.stringify(symbol)}, maxNodes: 1, offset: 1})`);
     const emits = await call('who_emits', { channel: 'order.created', offset: 1 });
     expect(emits).toMatchObject({ producers: [], total: 1 });
@@ -628,16 +628,12 @@ describe('working backwards', () => {
     // The ways in on the calling side say the crossing they come through; the target's own route says none (P367).
     expect(ways.find((entry: { id: string }) => entry.id === 'entry:gateway:http:GET:/orders/:param').via).toBe('GET /orders/:param (orders)');
     expect(ways.find((entry: { id: string }) => entry.id === 'entry:orders:http:GET:/orders/:param').via).toBeUndefined();
-    // The web's chains end at a component no route shows and client methods nothing read calls: maybe rows, after the ways in.
+    // The web's chains end at a component no route shows and client methods nothing calls, whose names the web
+    // writes nowhere else, in files with no step the reading could not follow: unreached, counted apart (P370).
     const maybes = answer.entries.filter((entry: { reach: string }) => entry.reach === 'maybe');
-    expect(maybes.map((entry: { id: string }) => entry.id)).toEqual([
-      'web#src/app/checkout.component.ts:CheckoutComponent',
-      'web#src/app/orders-api.service.ts:OrdersApiService.invoice',
-      'web#src/app/orders-api.service.ts:OrdersApiService.one',
-      'web#src/app/orders-api.service.ts:OrdersApiService.probe',
-      'web#src/app/orders-api.service.ts:OrdersApiService.twoBlind',
-    ]);
-    expect(answer.maybe).toBe(5);
+    expect(maybes).toEqual([]);
+    expect(answer.unreached).toBe(5);
+    expect(answer.maybe).toBeUndefined();
     // Every service the chain runs into, whether or not a way in was found
     // above it, because a change is visible in all of them (R03).
     expect(Object.keys(answer.reachedByService).sort()).toEqual(['billing', 'gateway', 'orders', 'web']);

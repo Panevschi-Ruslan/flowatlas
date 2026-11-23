@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:29:15.112Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:35:49.395Z",
   "configHash": "55998fbdbe7e",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 6,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 724,
+      "durationMs": 954,
       "packages": {
         "name": "gaps-catalog",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 5,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 729,
+      "durationMs": 952,
       "packages": {
         "name": "gaps-reviews",
         "runtime": [
@@ -53,7 +53,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 7
+      "durationMs": 8
     },
     {
       "name": "shop",
@@ -64,7 +64,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 703,
+      "durationMs": 905,
       "packages": {
         "name": "gaps-shop",
         "runtime": [

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-15T17:18:32.159Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:33:28.051Z",
   "configHash": "01887afcf3aa",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1486,
       "packages": {
         "name": "chain-candidates-written-fallback-api",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1565,
       "packages": {
         "name": "chain-candidates-written-fallback-archive",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 14,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 0,
+      "durationMs": 1422,
       "packages": {
         "name": "chain-candidates-written-fallback-jobs",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1506,
       "packages": {
         "name": "chain-candidates-written-fallback-legacy",
         "runtime": [
@@ -84,7 +84,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1462,
       "packages": {
         "name": "chain-candidates-written-fallback-orders",
         "runtime": [
@@ -102,7 +102,7 @@
       "edges": 10,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1543,
+      "durationMs": 1989,
       "packages": {
         "name": "chain-candidates-written-fallback-portal",
         "runtime": [
@@ -122,7 +122,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1576,
       "packages": {
         "name": "chain-candidates-written-fallback-shop",
         "runtime": [

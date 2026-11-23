@@ -7,3 +7,7 @@
             => members ~  event eventbridge/library/library.members/CheckoutRequested  members/infra/main.tf:92
               @  POST /checkouts                                          members/infra/main.tf:92
 Reachable from: 1 http entry (members), 1 invoke (members), 1 workflow (circulation)
+Could break:
+  workflow circulation-checkout (circulation)  alive
+  POST /checkouts (members)  dead, via channel eventbridge/library/library.members/CheckoutRequested
+  members-check-standing (members)  outside

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:38:26.111Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:46:21.025Z",
   "configHash": "72110bdba2d9",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1620,
+      "durationMs": 2371,
       "packages": {
         "name": "proxy-chain-joins-admin",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1604,
+      "durationMs": 2274,
       "packages": {
         "name": "proxy-chain-joins-billing",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1545,
+      "durationMs": 2314,
       "packages": {
         "name": "proxy-chain-joins-catalog",
         "runtime": [
@@ -68,7 +68,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1600,
+      "durationMs": 2405,
       "packages": {
         "name": "proxy-chain-joins-gateway",
         "runtime": [
@@ -87,7 +87,7 @@
       "edges": 3,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1549,
+      "durationMs": 2230,
       "packages": {
         "name": "proxy-chain-joins-jobs",
         "runtime": [
@@ -105,7 +105,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1514,
+      "durationMs": 2263,
       "packages": {
         "name": "proxy-chain-joins-kiosk",
         "runtime": [
@@ -125,7 +125,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1541,
+      "durationMs": 2287,
       "packages": {
         "name": "proxy-chain-joins-ledger",
         "runtime": [
@@ -143,7 +143,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1597,
+      "durationMs": 2236,
       "packages": {
         "name": "proxy-chain-joins-orders",
         "runtime": [
@@ -161,7 +161,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1578,
+      "durationMs": 2105,
       "packages": {
         "name": "proxy-chain-joins-web",
         "runtime": [

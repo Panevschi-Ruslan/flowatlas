@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-18T17:20:53.725Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:50:18.760Z",
   "configHash": "2ad437930b88",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 977,
+      "durationMs": 1049,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1097,
+      "durationMs": 1195,
       "packages": {
         "name": "infra",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 6,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 1011,
+      "durationMs": 1087,
       "packages": {
         "name": "shop-jobs",
         "runtime": [
@@ -69,7 +69,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 964,
+      "durationMs": 1048,
       "packages": {
         "name": "stock",
         "runtime": [
@@ -87,7 +87,7 @@
       "edges": 30,
       "types": 2,
       "unresolved": 2,
-      "durationMs": 1037
+      "durationMs": 1115
     }
   ],
   "httpOut": {

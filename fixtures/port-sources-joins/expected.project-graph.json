@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:45:11.121Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:46:10.572Z",
   "services": [
     {
       "name": "orders",
@@ -90,7 +90,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-root"
+        "selector": "app-root",
+        "unreferenced": true
       }
     },
     {

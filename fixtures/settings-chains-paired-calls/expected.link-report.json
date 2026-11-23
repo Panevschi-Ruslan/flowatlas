@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-14T17:54:45.019Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:48:30.635Z",
   "configHash": "4a9eaa283634",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 874,
+      "durationMs": 3461,
       "packages": {
         "name": "inventory",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 837,
+      "durationMs": 3340,
       "packages": {
         "name": "ledger",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 20,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 927,
+      "durationMs": 3671,
       "packages": {
         "name": "market",
         "runtime": [
@@ -69,7 +69,7 @@
       "edges": 2,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 1056,
+      "durationMs": 3920,
       "packages": {
         "name": "reviews",
         "runtime": [

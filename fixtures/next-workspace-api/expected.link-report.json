@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T18:19:12.932Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:45:25.743Z",
   "configHash": "ef851b9ed9cb",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 22,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 697,
+      "durationMs": 2059,
       "packages": {
         "name": "@shop/web",
         "runtime": [

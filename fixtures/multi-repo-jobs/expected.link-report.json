@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-09T21:48:04.647Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:41:05.311Z",
   "configHash": "7cf4ce18d325",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 9,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 1586,
+      "durationMs": 4717,
       "packages": {
         "name": "mailer",
         "runtime": [
@@ -35,7 +35,7 @@
       "edges": 22,
       "types": 0,
       "unresolved": 12,
-      "durationMs": 1837,
+      "durationMs": 5243,
       "packages": {
         "name": "shop",
         "runtime": [

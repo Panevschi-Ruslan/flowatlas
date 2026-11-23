@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-17T20:48:35.518Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:34:22.212Z",
   "configHash": "824d3cd40a8b",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2459,
       "packages": {
         "name": "compose-include-shell-env-audit",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2457,
       "packages": {
         "name": "compose-include-shell-env-billing",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2454,
       "packages": {
         "name": "compose-include-shell-env-catalog",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2570,
       "packages": {
         "name": "compose-include-shell-env-ledger",
         "runtime": [
@@ -84,7 +84,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2498,
       "packages": {
         "name": "compose-include-shell-env-orders",
         "runtime": [
@@ -102,7 +102,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2556,
       "packages": {
         "name": "compose-include-shell-env-stock",
         "runtime": [
@@ -120,7 +120,7 @@
       "edges": 12,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2346,
       "packages": {
         "name": "compose-include-shell-env-web",
         "runtime": [],

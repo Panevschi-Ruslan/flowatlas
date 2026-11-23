@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:33:38.009Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:35:25.342Z",
   "configHash": "bc7eb680f0b5",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1104,
+      "durationMs": 1153,
       "packages": {
         "name": "front-end-route-helpers-catalog",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 1073,
+      "durationMs": 1153,
       "packages": {
         "name": "front-end-route-helpers-console",
         "runtime": [
@@ -53,7 +53,7 @@
       "edges": 25,
       "types": 0,
       "unresolved": 8,
-      "durationMs": 1089,
+      "durationMs": 1197,
       "packages": {
         "name": "front-end-route-helpers-desk",
         "runtime": [
@@ -75,7 +75,7 @@
       "edges": 6,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1045,
+      "durationMs": 1188,
       "packages": {
         "name": "front-end-route-helpers-panel",
         "runtime": [
@@ -94,7 +94,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 1108,
+      "durationMs": 1186,
       "packages": {
         "name": "front-end-route-helpers-sites",
         "runtime": [
@@ -113,7 +113,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1069,
+      "durationMs": 1178,
       "packages": {
         "name": "front-end-route-helpers-stand",
         "runtime": [],

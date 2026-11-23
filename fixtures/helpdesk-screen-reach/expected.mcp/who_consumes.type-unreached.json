@@ -17,7 +17,7 @@
       "via": "if",
       "reach": "maybe",
       "from": "behind",
-      "behind": "console#src/screens/ArchivePanel.tsx:ArchivePanel"
+      "behind": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen"
     }
   ],
   "total": 1,

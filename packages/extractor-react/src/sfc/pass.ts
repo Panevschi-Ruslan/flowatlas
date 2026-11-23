@@ -1,4 +1,4 @@
-import { addScreenEntry, hasDependency, makeLeafId, makeSymbolId, startLineOf, type EmbeddedFile, type NamedFunction } from '@flowatlas/core';
+import { addScreenEntry, hasDependency, makeLeafId, noteMarkup, makeSymbolId, startLineOf, type EmbeddedFile, type NamedFunction } from '@flowatlas/core';
 import { nuxtNamesOf, nuxtPagesOf, sveltekitPagesOf } from '@flowatlas/adapters-entry';
 import type { Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
@@ -172,6 +172,7 @@ export const sfcPass = definePass('components', (ctx: ReactExtractContext) => {
     const scope: ComponentScope = { component, named, values, script };
     scopes.push(scope);
     markup.push({ component, made, script });
+    noteMarkup(ctx.builder, made.text);
 
     const events = made.format.extension === '.svelte' ? svelteMarkupEvents(made.text) : vueTemplateEvents(made.text);
     for (const event of events) action(ctx, scope, event, made.file, stores);

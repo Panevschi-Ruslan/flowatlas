@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T13:16:38.646Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:48:04.231Z",
   "services": [
     {
       "name": "members",

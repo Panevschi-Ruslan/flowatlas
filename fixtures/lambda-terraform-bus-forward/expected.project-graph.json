@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-12T18:48:11.850Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:37:25.822Z",
   "services": [
     {
       "name": "circulation",

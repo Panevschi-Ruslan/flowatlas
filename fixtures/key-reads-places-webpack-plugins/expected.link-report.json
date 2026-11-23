@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-20T17:34:28.437Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:36:58.455Z",
   "configHash": "88469d944ef5",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 822,
+      "durationMs": 1386,
       "packages": {
         "name": "cms",
         "runtime": [
@@ -36,7 +36,7 @@
       "edges": 24,
       "types": 2,
       "unresolved": 19,
-      "durationMs": 864,
+      "durationMs": 1446,
       "packages": {
         "name": "key-reads-places-webpack-plugins-console",
         "runtime": [
@@ -56,7 +56,7 @@
       "edges": 24,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 820,
+      "durationMs": 1382,
       "packages": {
         "name": "poller",
         "runtime": [

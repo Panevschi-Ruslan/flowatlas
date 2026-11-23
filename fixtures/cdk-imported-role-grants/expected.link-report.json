@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-15T14:48:40.540Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:33:17.816Z",
   "configHash": "f12d467d3a76",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 11,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 1189,
+      "durationMs": 1239,
       "packages": {
         "name": "stock",
         "runtime": [

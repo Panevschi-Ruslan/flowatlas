@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:47:19.273Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:42:32.973Z",
   "configHash": "96461efb3e91",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 9,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 4261,
+      "durationMs": 4387,
       "packages": {
         "name": "nest-grpc-services-gateway",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 3,
       "types": 6,
       "unresolved": 1,
-      "durationMs": 4991,
+      "durationMs": 4389,
       "packages": {
         "name": "nest-grpc-services-orders",
         "runtime": [
