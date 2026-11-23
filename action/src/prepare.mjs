@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
-import { checkoutPlan, cloneOf, parseRepositories, servicesOf, versionOf } from './lib.mjs';
+import { checkoutPlan, cloneOf, parseRepositories, readJsonOrStop, servicesOf, versionOf } from './lib.mjs';
 
 const input = (name) => process.env[`INPUT_${name.toUpperCase().replace(/-/g, '_')}`] ?? '';
 const run = (command, args, options = {}) => execFileSync(command, args, { stdio: 'inherit', ...options });
@@ -15,7 +15,9 @@ const output = (name, value) => appendFileSync(process.env.GITHUB_OUTPUT ?? '/de
 
 const configPath = resolve(input('config') || 'flowatlas.config.json');
 const token = input('token');
-const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH ?? '', 'utf8') || '{}');
+// Read once: a configuration that does not parse stops the step before anything is installed or cloned.
+const config = readJsonOrStop(configPath, 'the configuration');
+const event = readJsonOrStop(process.env.GITHUB_EVENT_PATH ?? '', 'the event file', {});
 const publishing = input('publish') === 'true';
 const base = input('base') || event.pull_request?.base?.sha || (publishing ? 'HEAD' : '');
 if (base === '') {
@@ -38,7 +40,7 @@ if (!publishing) {
 }
 
 // The other repositories, where the configuration expects them.
-const plan = checkoutPlan(servicesOf(configPath), parseRepositories(input('repositories')));
+const plan = checkoutPlan(servicesOf(configPath, config), parseRepositories(input('repositories')));
 for (const name of plan.unknown) console.log(`::warning::repositories names ${name}, which the configuration does not`);
 for (const name of plan.missing) console.log(`::warning::${name} is not checked out and repositories does not name it; the diff runs without it`);
 for (const item of plan.fetch) {
@@ -78,7 +80,6 @@ try {
 }
 
 // The base graphs, cached under the commit, the configuration and the version that read them (D3).
-const config = JSON.parse(readFileSync(configPath, 'utf8'));
 const outputDir = resolve(dirname(configPath), config.output ?? '.flowatlas');
 const configHash = createHash('sha256').update(readFileSync(configPath)).digest('hex').slice(0, 12);
 output('cache-path', join(outputDir, 'cache'));

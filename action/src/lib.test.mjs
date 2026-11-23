@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { canComment, checkoutPlan, cloneOf, docsCheck, docsNote, exitOf, markerOf, nothingChanged, outputLines, parseRepositories, saysSomething, upsertComment, versionOf } from './lib.mjs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { canComment, checkoutPlan, cloneOf, docsCheck, docsNote, exitOf, markerOf, nothingChanged, outputLines, parseRepositories, readJson, readJsonOrStop, safeParse, saysSomething, servicesOf, upsertComment, versionOf } from './lib.mjs';
 
 /** Who comments with the job's own token. */
 const ACTIONS = { login: 'github-actions[bot]', type: 'Bot' };
@@ -119,6 +122,42 @@ describe('what the action reads and decides', () => {
       { name: 'billing', repo: 'acme/billing' },
     ]);
     assert.throws(() => parseRepositories('orders acme/orders'), /line 1/);
+  });
+
+  it('parses JSON without throwing, and says why it could not', () => {
+    assert.deepEqual(safeParse('{"services": []}'), { ok: true, value: { services: [] } });
+    const broken = safeParse('{"services": [');
+    assert.equal(broken.ok, false);
+    assert.equal(typeof broken.error, 'string');
+  });
+
+  it('names the configuration file a parse failed in', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'flowatlas-action-'));
+    try {
+      const configPath = join(dir, 'flowatlas.config.json');
+      writeFileSync(configPath, '{"services": [');
+      assert.throws(() => servicesOf(configPath), (error) => error.message.startsWith(`the configuration ${configPath} is not valid JSON: `));
+      writeFileSync(configPath, '{"services": [{"name": "orders", "repo": "orders"}]}');
+      assert.deepEqual(servicesOf(configPath), [{ name: 'orders', dir: join(dir, 'orders') }]);
+      // An empty event file is no event; an empty file with no stand-in is still not JSON.
+      const eventPath = join(dir, 'event.json');
+      writeFileSync(eventPath, '');
+      assert.deepEqual(readJson(eventPath, 'the event file', {}), {});
+      assert.throws(() => readJson(eventPath, 'the event file'), /^Error: the event file .* is not valid JSON: /);
+      // No event path is no event; a file that is not there says so, by its code.
+      assert.deepEqual(readJson('', 'the event file', {}), {});
+      assert.throws(() => readJson(join(dir, 'gone.json'), 'the configuration'), /^Error: the configuration .*gone\.json could not be read: ENOENT$/);
+      // A step stops on it with one line, never a stack trace.
+      writeFileSync(configPath, '{');
+      const said = [];
+      assert.equal(readJsonOrStop(configPath, 'the configuration', undefined, (message) => (said.push(message), 'stopped')), 'stopped');
+      assert.match(said[0], /^the configuration .* is not valid JSON: /);
+      // A configuration already read is not read again.
+      const elsewhere = join(dir, 'elsewhere', 'billing');
+      assert.deepEqual(servicesOf(configPath, { services: [{ name: 'billing', repo: elsewhere }] }), [{ name: 'billing', dir: elsewhere }]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it('fetches only the services not checked out and named, and says the rest', () => {

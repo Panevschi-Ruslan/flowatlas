@@ -106,4 +106,17 @@ describe('the run step, with the inputs it defaults to (P231)', () => {
       writeFileSync(controller, was);
     }
   });
+
+  it('stops with one error line and exit 2 on a configuration that is not JSON, never exit 1 or a stack trace', () => {
+    const was = readFileSync(config, 'utf8');
+    try {
+      writeFileSync(config, was.slice(0, -2));
+      const run = runStep();
+      assert.equal(run.status, 2, run.log);
+      assert.match(run.log, /^::error::the configuration .*flowatlas\.config\.json is not valid JSON: /m);
+      assert.doesNotMatch(run.log, /^\s+at /m);
+    } finally {
+      writeFileSync(config, was);
+    }
+  });
 });

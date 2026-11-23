@@ -8,14 +8,14 @@
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { canComment, docsCheck, docsNote, exitOf, markerOf, nothingChanged, outputLines, saysSomething, upsertComment } from './lib.mjs';
+import { canComment, docsCheck, docsNote, exitOf, markerOf, nothingChanged, outputLines, readJsonOrStop, saysSomething, upsertComment } from './lib.mjs';
 
 const input = (name) => process.env[`INPUT_${name.toUpperCase().replace(/-/g, '_')}`] ?? '';
 const configPath = process.env.FLOWATLAS_CONFIG ?? resolve(input('config') || 'flowatlas.config.json');
 const base = process.env.FLOWATLAS_BASE ?? input('base');
 const failOn = new Set(input('fail-on').split(',').map((item) => item.trim()).filter((item) => item !== ''));
-const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH ?? '', 'utf8') || '{}');
-const config = JSON.parse(readFileSync(configPath, 'utf8'));
+const event = readJsonOrStop(process.env.GITHUB_EVENT_PATH ?? '', 'the event file', {});
+const config = readJsonOrStop(configPath, 'the configuration');
 const outputDir = resolve(dirname(configPath), config.output ?? '.flowatlas');
 const commentFile = join(outputDir, 'pull-request-comment.md');
 // The branch's graph as diff read it, kept for the docs check.
@@ -52,7 +52,7 @@ if (input('sarif') === 'true') {
 const docs = docsCheck({ wanted: input('docs-check') === 'true', configPath, headDb, run: flowatlas });
 if (docs.skipped !== undefined) console.log(`::warning::the docs check did not run: ${docs.skipped}`);
 
-const facts = JSON.parse(readFileSync(join(outputDir, 'diff-comment.json'), 'utf8'));
+const facts = readJsonOrStop(join(outputDir, 'diff-comment.json'), 'the diff summary flowatlas wrote');
 const written = readFileSync(commentFile, 'utf8');
 const quiet = input('comment-when') !== 'always' && !saysSomething(facts);
 const body = `${quiet ? nothingChanged(markerOf(written), base) : written}${docs.skipped === undefined ? '' : docsNote(docs.skipped)}`;

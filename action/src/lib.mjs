@@ -26,9 +26,52 @@ export const parseRepositories = (text) => {
   return found;
 };
 
+/**
+ * JSON text read without throwing: `{ ok: true, value }`, or `{ ok: false,
+ * error }` with the parser's message, so the caller says which file it was.
+ */
+export const safeParse = (text) => {
+  try {
+    return { ok: true, value: JSON.parse(text) };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
+  }
+};
+
+/**
+ * A JSON file's value, or an error naming what the file is and why it could
+ * not be read or parsed. No path or an empty file is `empty` where one is
+ * given (a run with no event).
+ */
+export const readJson = (path, what, empty) => {
+  if (path === '' && empty !== undefined) return empty;
+  let text;
+  try {
+    text = readFileSync(path, 'utf8');
+  } catch (error) {
+    throw new Error(`${what} ${path} could not be read: ${error.code ?? error.message}`);
+  }
+  if (text === '' && empty !== undefined) return empty;
+  const parsed = safeParse(text);
+  if (!parsed.ok) throw new Error(`${what} ${path} is not valid JSON: ${parsed.error}`);
+  return parsed.value;
+};
+
+/**
+ * readJson for a step: a file that does not read is one `::error::` line and
+ * exit 2, the code for a run that could not run, never a stack trace and the
+ * exit 1 a check failing on a break uses. `stop` is injectable for tests.
+ */
+export const readJsonOrStop = (path, what, empty, stop = (message) => (console.log(`::error::${message}`), process.exit(2))) => {
+  try {
+    return readJson(path, what, empty);
+  } catch (error) {
+    return stop(error.message);
+  }
+};
+
 /** Each service of a configuration and where its repository should be, as the configuration says it. */
-export const servicesOf = (configPath) => {
-  const config = JSON.parse(readFileSync(configPath, 'utf8'));
+export const servicesOf = (configPath, config = readJson(configPath, 'the configuration')) => {
   const base = dirname(resolve(configPath));
   return (config.services ?? []).map((service) => ({
     name: service.name,
