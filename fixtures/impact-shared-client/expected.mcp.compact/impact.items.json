@@ -1,0 +1,53 @@
+{
+  "target": {
+    "id": "market-api#src/items.service.ts:ItemsService.listByShop",
+    "line": 11,
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:kiosk-web:screen:/browse",
+      "loc": "src/app/app.routes.ts:7",
+      "reach": "outside",
+      "via": "GET /api/items (market-api)"
+    },
+    {
+      "id": "entry:market-api:http:GET:/api/items",
+      "loc": "src/items.controller.ts:9",
+      "reach": "alive"
+    },
+    {
+      "id": "entry:market-bot:bot_command:items",
+      "loc": "src/market-bot.ts:14",
+      "reach": "outside",
+      "via": "GET /api/items (market-api)"
+    },
+    {
+      "id": "entry:market-web:screen:/history",
+      "loc": "src/app/app.routes.ts:12",
+      "reach": "outside",
+      "via": "GET /api/items (market-api)"
+    }
+  ],
+  "total": 4,
+  "reached": 21,
+  "entriesByService": {
+    "market-api": 1,
+    "market-bot": 1,
+    "kiosk-web": 1,
+    "market-web": 1
+  },
+  "reachedByService": {
+    "market-api": 2,
+    "kiosk-web": 6,
+    "market-web": 9,
+    "market-bot": 4
+  },
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:kiosk-web:screen:/browse\"})",
+    "describe_for_prompt({id: \"entry:kiosk-web:screen:/browse\"})"
+  ]
+}

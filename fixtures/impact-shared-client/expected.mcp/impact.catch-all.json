@@ -1,0 +1,51 @@
+{
+  "target": {
+    "id": "entry:market-api:http:ALL:/api/*",
+    "type": "entry",
+    "label": "ALL /api/*",
+    "loc": "src/fallback.controller.ts:9",
+    "service": "market-api",
+    "kind": "http",
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:kiosk-web:screen:/order",
+      "type": "entry",
+      "label": "/order",
+      "loc": "src/app/app.routes.ts:8",
+      "service": "kiosk-web",
+      "kind": "screen",
+      "reach": "outside",
+      "via": "ALL /api/* (market-api)"
+    },
+    {
+      "id": "entry:market-web:screen:/reports",
+      "type": "entry",
+      "label": "/reports",
+      "loc": "src/app/app.routes.ts:14",
+      "service": "market-web",
+      "kind": "screen",
+      "reach": "outside",
+      "via": "ALL /api/* (market-api)"
+    }
+  ],
+  "total": 2,
+  "reached": 12,
+  "entriesByService": {
+    "kiosk-web": 1,
+    "market-web": 1
+  },
+  "reachedByService": {
+    "kiosk-web": 6,
+    "market-web": 6
+  },
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:kiosk-web:screen:/order\"})",
+    "describe_for_prompt({id: \"entry:kiosk-web:screen:/order\"})",
+    "impact({symbol: \"entry:kiosk-web:screen:/order\"})"
+  ]
+}

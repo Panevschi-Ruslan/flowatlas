@@ -16,8 +16,7 @@
       "kind": "sse",
       "via": "if",
       "reach": "alive",
-      "from": "screen /queue",
-      "ways": 2
+      "from": "screen /queue"
     },
     {
       "id": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
@@ -28,8 +27,7 @@
       "kind": "sse",
       "via": "if",
       "reach": "alive",
-      "from": "screen /tickets/:param",
-      "ways": 3
+      "from": "screen /tickets/:param"
     }
   ],
   "total": 2,

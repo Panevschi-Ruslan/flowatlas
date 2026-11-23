@@ -71,10 +71,10 @@ describe('reach and the nearest way in on each row', () => {
     expect(answer.complete).toBe(true);
   });
 
-  it('counts the ways in where there are several, its own service first', async () => {
+  it('places a screen subscription in its screen, its own service first, and counts no route publishing to it (P371)', async () => {
     const answer = await call('who_consumes', { channel: CHANNEL, type: 'TICKET_CLOSED' });
     expect(answer.consumers[0]).toMatchObject({ id: TICKET, from: 'screen /tickets/:param' });
-    expect(answer.consumers[0].ways).toBeGreaterThan(1);
+    expect(answer.consumers[0].ways).toBeUndefined();
   });
 
   it('says reach on the rows of who_calls, find_symbol and search, and not at detail 0', async () => {

@@ -267,6 +267,29 @@ const RENDERED_REACH_CASES = [
   ['find_symbol.unreferenced', 'find_symbol', { queries: ['oneLegacy', 'byKey'] }],
   ['who_calls.menu-screen', 'who_calls', { symbol: 'catalog-web#src/app/reports-page.component.ts:ReportsPageComponent' }],
 ];
+/**
+ * A front-end client injected by screens that call other methods of it, and
+ * screens whose stream subscriptions call the method (P371): impact lists the
+ * screens that call it, never the routes that publish to the channel those
+ * subscriptions listen on, the screens behind them, or a screen that injects
+ * the client for something else; a request a catch-all answers stays apart.
+ */
+const SHARED_CLIENT_ITEMS = 'market-api#src/items.service.ts:ItemsService.listByShop';
+const SHARED_CLIENT_DESKS = 'market-api#src/desks.service.ts:DesksService.ackCall';
+const SHARED_CLIENT_CASES = [
+  ['impact.items', 'impact', { symbol: SHARED_CLIENT_ITEMS }],
+  ['impact.desks', 'impact', { symbol: SHARED_CLIENT_DESKS }],
+  ['impact.stream-connect', 'impact', { symbol: 'market-web#src/app/shop-events.service.ts:ShopEventsService.connect' }],
+  ['impact.catch-all', 'impact', { symbol: 'entry:market-api:http:ALL:/api/*' }],
+  ['who_calls.shared-client', 'who_calls', { symbol: 'market-web#src/app/items.client.ts:ItemsClient.getHistory', depth: 2 }],
+  ['find_symbol.ways', 'find_symbol', { queries: ['getHistory', 'StaffBoardService.ackCall', 'ShopEventsService.connect'] }],
+];
+/** The two impacts, compact: what an agent is handed. */
+const SHARED_CLIENT_COMPACT_CASES = [
+  ['impact.items', 'impact', { symbol: SHARED_CLIENT_ITEMS, verbose: false }],
+  ['impact.desks', 'impact', { symbol: SHARED_CLIENT_DESKS, verbose: false }],
+];
+
 /** The same impact and a flow through the rendered child, compact (P370). */
 const RENDERED_REACH_COMPACT_CASES = [
   ['impact.rendered-child', 'impact', { symbol: RENDERED_REACH_TARGET, verbose: false }],
@@ -650,6 +673,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'angular-rendered-reach'),
     outDir: join(root, 'fixtures', 'angular-rendered-reach', 'expected.mcp.compact'),
     cases: RENDERED_REACH_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'impact-shared-client'),
+    outDir: join(root, 'fixtures', 'impact-shared-client', 'expected.mcp'),
+    cases: SHARED_CLIENT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'impact-shared-client'),
+    outDir: join(root, 'fixtures', 'impact-shared-client', 'expected.mcp.compact'),
+    cases: SHARED_CLIENT_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

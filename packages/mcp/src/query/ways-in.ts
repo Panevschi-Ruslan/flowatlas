@@ -315,26 +315,94 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
   const done = new Map<string, RowReach>();
 
   /**
+   * The calls into a node written where a way in that hands it work is
+   * registered (P371): `bot.command('items', (ctx) => this.showItems(ctx))`
+   * is the command's call, made when the command arrives, not one the method
+   * holding the registration makes when it runs.
+   */
+  const registeredAt = (node: GraphNode): Set<string> => {
+    const sites = new Set<string>();
+    for (const edge of graph.edgesTo(node.id, ['handles'])) {
+      const entry = graph.node(edge.from);
+      if (entry?.type === 'entry' && entry.file !== undefined && entry.line !== undefined) sites.add(`${entry.repo}\u0000${entry.file}\u0000${entry.line}`);
+    }
+    return sites;
+  };
+  const isRegistration = (node: GraphNode, edge: GraphEdge, sites: Set<string>): boolean =>
+    edge.type === 'calls' && edge.file !== undefined && edge.line !== undefined && sites.has(`${node.repo}\u0000${edge.file}\u0000${edge.line}`) && graph.node(edge.from)?.repo === node.repo;
+
+  /**
+   * Whether a consumer is a subscription a screen holds (P371): its handlers
+   * run in a component, and a way in shows that component (a walk from the
+   * handlers, never crossing a channel, bounded as a row's is, meets a way in
+   * on a path through a component). It runs where the screen is shown, so
+   * the screen is the way in that breaks; what publishes to the channel
+   * pushes a message to an open screen and does not start the code behind
+   * it. A consumer no screen holds - a back end's worker, run by the message
+   * - is walked back onto its channel as before. Judged once per consumer per
+   * answer.
+   */
+  const placedCache = new Map<string, boolean>();
+  const isPlaced = (consumer: GraphNode, handlers: readonly GraphEdge[]): boolean => {
+    const known = placedCache.get(consumer.id);
+    if (known !== undefined) return known;
+    placedCache.set(consumer.id, false);
+    const starts = handlers.map((edge) => graph.node(edge.to)).filter((node): node is GraphNode => node !== undefined);
+    let placed = false;
+    if (starts.length > 0) {
+      const walked = walk(starts, ROW_WALK, false, false);
+      const shown = (id: string): boolean => {
+        for (let at: string | undefined = id, hops = 0; at !== undefined && hops <= ROW_WALK; at = walked.parents.get(at)?.from, hops += 1) {
+          if (graph.node(at)?.type === 'ui_component') return true;
+        }
+        return false;
+      };
+      placed = walked.found.some((way) => shown(way.node.id));
+    }
+    placedCache.set(consumer.id, placed);
+    return placed;
+  };
+
+  /**
    * The hops back from a node: the edges every caller walk follows, and the
    * hops that place code in what holds it - a consumer runs in its handler, a
    * component's method runs where the component is shown, a handler's class
    * is built where it is injected, and a template's action belongs to its
    * file's component.
+   *
+   * Code with callers the reading knows runs where they run: the hop from a
+   * method or function to what holds it is taken from a component's method
+   * (it runs only where the component is shown), and otherwise only where the
+   * code is reached as a whole - a handler a consumer runs, placed by what
+   * holds it alone - or has no such caller (P371). A consumer placed in code
+   * a way in reaches is not walked back onto its channel; `channels: false`
+   * never walks a consumer back onto one.
    */
-  const stepsBack = (node: GraphNode, held: boolean, isStart: boolean, holdersOnly = false): Step[] => {
+  const stepsBack = (node: GraphNode, held: boolean, isStart: boolean, holdersOnly = false, channels = true): Step[] => {
     // A consumer runs where its handler is held: the request that opened its
     // stream is shared by every screen that opens one, so it says nothing of which.
     const handlers = node.type === 'consumer' ? graph.edgesFrom(node.id, ['handles']) : [];
-    let into = holdersOnly ? [] : graph.edgesTo(node.id, REVERSE_EDGES).filter((edge) => handlers.length === 0 || edge.type !== 'triggers');
+    const sites = holdersOnly ? new Set<string>() : registeredAt(node);
+    let into = holdersOnly
+      ? []
+      : graph
+          .edgesTo(node.id, REVERSE_EDGES)
+          .filter((edge) => (handlers.length === 0 || edge.type !== 'triggers') && (sites.size === 0 || !isRegistration(node, edge, sites)));
     // A consumer that chooses by type runs on the types it selects, not on every publish of their channel.
     const typed = node.type === 'consumer' ? into.filter((edge) => edge.type === 'consumes' && isMessageTypeNode(graph.node(edge.from))) : [];
     if (typed.length > 0) into = into.filter((edge) => edge.type !== 'consumes' || typed.includes(edge));
+    if (handlers.length > 0 && into.some((edge) => edge.type === 'consumes') && (!channels || isPlaced(node, handlers))) {
+      into = into.filter((edge) => edge.type !== 'consumes');
+    }
     const steps: Step[] = into.map((edge) => ({ id: edge.from, held: false, edge }));
     for (const edge of handlers) steps.push({ id: edge.to, held: true, ran: true });
+    // Callers the reading knows: a consumer handing its message to the code is placement, not a call.
+    const called = into.some((edge) => edge.type === 'calls' || edge.type === 'triggers' || (edge.type === 'handles' && !edge.from.startsWith('consumer:')));
+    const wholly = held && (holdersOnly || !called);
     if (node.type === 'method' || node.type === 'function') {
       const owner = ownerOf(node.id);
       const holder = owner === undefined ? undefined : graph.node(owner);
-      if (holder !== undefined && (holder.type === 'ui_component' || held)) steps.push({ id: holder.id, held: true });
+      if (holder !== undefined && (holder.type === 'ui_component' || wholly)) steps.push({ id: holder.id, held: true });
     }
     if (CLASS_TYPES.has(node.type) && (held || isStart)) {
       for (const edge of graph.edgesTo(node.id, ['injects'])) steps.push({ id: edge.from, held: true });
@@ -345,7 +413,7 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
       }
     }
     // A template's action, and a module's function a consumer runs, belong to the components of their file.
-    if (node.type === 'ui_action' || (node.type === 'function' && held)) {
+    if (node.type === 'ui_action' || (node.type === 'function' && wholly)) {
       for (const component of componentsIn(node.repo, node.file)) steps.push({ id: component.id, held: true });
     }
     return steps;
@@ -355,8 +423,9 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
    * Back from the starts to the ways in on each path. A row's walk stops at
    * the first way in on a path; impact's walks on past each one (`through`),
    * to the callers beyond it, saying the crossing each was reached through.
+   * With `channels` false no consumer is walked back onto its channel.
    */
-  const walk = (starts: readonly GraphNode[], limit: number, through: boolean): Walked => {
+  const walk =(starts: readonly GraphNode[], limit: number, through: boolean, channels = true): Walked => {
     const startIds = new Set(starts.map((start) => start.id));
     const seen = new Set<string>(startIds);
     const found: WayInFound[] = [];
@@ -397,8 +466,8 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
       // Impact's walk lists every way in, so a handler a consumer runs is placed by what holds it alone:
       // whatever else calls the handler (the code that subscribes it, say) does not reach the consumer.
       const steps = through
-        ? stepsBack(node, item.held, isStart, item.ran === true).filter((step) => crossesInto(node, step))
-        : stepsBack(node, item.held, isStart);
+        ? stepsBack(node, item.held, isStart, item.ran === true, channels).filter((step) => crossesInto(node, step))
+        : stepsBack(node, item.held, isStart, false, channels);
       if (!wayIn && steps.length === 0) tops.push({ node, depth, ...(item.via === undefined ? {} : { via: item.via }) });
       for (const step of steps) {
         if (seen.has(step.id)) continue;

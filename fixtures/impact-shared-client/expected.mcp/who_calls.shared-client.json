@@ -1,0 +1,82 @@
+{
+  "target": {
+    "id": "market-web#src/app/items.client.ts:ItemsClient.getHistory",
+    "type": "method",
+    "label": "ItemsClient.getHistory",
+    "loc": "src/app/items.client.ts:16",
+    "service": "market-web",
+    "reach": "alive",
+    "from": "screen /history"
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "market-web#src/app/history-page.component.ts:HistoryPageComponent.refresh",
+        "type": "method",
+        "label": "HistoryPageComponent.refresh",
+        "loc": "src/app/history-page.component.ts:27",
+        "reach": "alive",
+        "from": "screen /history"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "string"
+        ],
+        "returns": "string[]"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "market-web#src/app/history-page.component.ts:HistoryPageComponent.ngOnInit",
+            "type": "method",
+            "label": "HistoryPageComponent.ngOnInit",
+            "loc": "src/app/history-page.component.ts:21",
+            "reach": "alive",
+            "from": "screen /history"
+          },
+          "edge": {
+            "type": "calls",
+            "confidence": "static",
+            "returns": "void"
+          },
+          "children": []
+        },
+        {
+          "node": {
+            "id": "consumer:market-web#src/app/history-page.component.ts:HistoryPageComponent.refresh",
+            "type": "consumer",
+            "label": "HistoryPageComponent.refresh",
+            "loc": "src/app/history-page.component.ts:27",
+            "kind": "sse",
+            "reach": "alive",
+            "from": "screen /history"
+          },
+          "edge": {
+            "type": "handles",
+            "confidence": "static"
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "truncated": "3 more nodes past depth 2; raise depth",
+  "stoppedBy": [
+    "depth"
+  ],
+  "frontier": [
+    "market-web#src/app/history-page.component.ts:HistoryPageComponent.ngOnInit",
+    "consumer:market-web#src/app/history-page.component.ts:HistoryPageComponent.refresh"
+  ],
+  "complete": false,
+  "left": [
+    "depth: 3 callers past depth 2, from the frontier rows"
+  ],
+  "next": [
+    "who_calls({symbol: \"market-web#src/app/items.client.ts:ItemsClient.getHistory\", depth: 4})",
+    "impact({symbol: \"market-web#src/app/items.client.ts:ItemsClient.getHistory\"})",
+    "get_source({symbol: \"market-web#src/app/items.client.ts:ItemsClient.getHistory\"})"
+  ]
+}

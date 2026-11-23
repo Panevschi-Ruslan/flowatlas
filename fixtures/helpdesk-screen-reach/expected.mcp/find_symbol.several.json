@@ -10,8 +10,7 @@
           "loc": "src/screens/TicketScreen.tsx:7",
           "service": "console",
           "reach": "alive",
-          "from": "screen /tickets/:param",
-          "ways": 3
+          "from": "screen /tickets/:param"
         },
         {
           "id": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
@@ -21,8 +20,7 @@
           "service": "console",
           "kind": "sse",
           "reach": "alive",
-          "from": "screen /tickets/:param",
-          "ways": 3
+          "from": "screen /tickets/:param"
         }
       ],
       "total": 2,

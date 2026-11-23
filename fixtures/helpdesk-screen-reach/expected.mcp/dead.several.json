@@ -12,8 +12,7 @@
       "evidence": {
         "via": "channel:desk:*:events"
       },
-      "from": "screen /queue",
-      "ways": 2
+      "from": "screen /queue"
     },
     {
       "asked": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen",
@@ -30,7 +29,6 @@
     }
   ],
   "next": [
-    "impact({symbol: \"consumer:console#src/screens/QueueScreen.tsx:onQueueEvent\"})",
     "get_source({symbol: \"desk-api#src/tickets/tickets.service.ts:TicketsService.reopen\"})",
     "cant_follow({service: \"desk-api\"})"
   ]

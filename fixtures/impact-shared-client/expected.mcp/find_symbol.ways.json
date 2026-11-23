@@ -1,0 +1,71 @@
+{
+  "answers": [
+    {
+      "asked": "getHistory",
+      "matches": [
+        {
+          "id": "market-web#src/app/items.client.ts:ItemsClient.getHistory",
+          "type": "method",
+          "label": "ItemsClient.getHistory",
+          "loc": "src/app/items.client.ts:16",
+          "service": "market-web",
+          "reach": "alive",
+          "from": "screen /history"
+        }
+      ],
+      "total": 1,
+      "complete": true
+    },
+    {
+      "asked": "StaffBoardService.ackCall",
+      "matches": [
+        {
+          "id": "market-web#src/app/staff-board.service.ts:StaffBoardService.ackCall",
+          "type": "method",
+          "label": "StaffBoardService.ackCall",
+          "loc": "src/app/staff-board.service.ts:12",
+          "service": "market-web",
+          "reach": "alive",
+          "from": "screen /staff"
+        }
+      ],
+      "total": 1,
+      "complete": true
+    },
+    {
+      "asked": "ShopEventsService.connect",
+      "matches": [
+        {
+          "id": "consumer:market-web#src/app/shop-events.service.ts:ShopEventsService.connect",
+          "type": "consumer",
+          "label": "ShopEventsService.connect",
+          "loc": "src/app/shop-events.service.ts:22",
+          "service": "market-web",
+          "kind": "sse",
+          "reach": "alive",
+          "from": "screen /history",
+          "ways": 2
+        },
+        {
+          "id": "market-web#src/app/shop-events.service.ts:ShopEventsService.connect",
+          "type": "method",
+          "label": "ShopEventsService.connect",
+          "loc": "src/app/shop-events.service.ts:19",
+          "service": "market-web",
+          "reach": "alive",
+          "from": "screen /history",
+          "ways": 2
+        }
+      ],
+      "total": 2,
+      "complete": true
+    }
+  ],
+  "complete": true,
+  "next": [
+    "impact({symbol: \"market-web#src/app/items.client.ts:ItemsClient.getHistory\"})",
+    "impact({symbol: \"market-web#src/app/staff-board.service.ts:StaffBoardService.ackCall\"})",
+    "impact({symbol: \"consumer:market-web#src/app/shop-events.service.ts:ShopEventsService.connect\"})",
+    "get_source({symbol: \"market-web#src/app/items.client.ts:ItemsClient.getHistory\"})"
+  ]
+}

@@ -393,10 +393,21 @@ question is answered in the call that asked it.
     each path (it does not walk past one), the row's own service first, then
     the nearest; besides the edges every caller walk follows, a consumer runs
     in its handler, a component's method and a handler's file where the
-    component is shown, and a handler's class where it is injected. A
-    consumer that chooses by type is walked through the types it selects, not
-    every publish of its channel. `ways` counts the ways in where there are
-    several. A way in's own row has no `from`.
+    component is shown, and a handler's class where it is injected. Code
+    with callers the reading knows runs where they run: the hop from a
+    method to its class, and from the class to what injects it, is taken
+    from a component's method, from a handler a consumer runs, and from code
+    nothing read calls, never from a method its callers are walked from
+    (P371). A consumer whose handlers run in a component a way in shows (a
+    screen's subscription to a stream) runs in that screen, and is not walked
+    back onto its channel: what publishes to it pushes a message to an open
+    screen, it does not start the code behind it. A consumer no screen holds
+    (a back end's worker) is walked back onto its channel as before. A call written where a way in is registered
+    (`bot.command('items', (ctx) => this.showItems(ctx))`) is the way in's,
+    not the registering method's. A consumer that chooses by type is walked
+    through the types it selects, not every publish of its channel. `ways`
+    counts the ways in where there are several. A way in's own row has no
+    `from`.
   - The walk reads at most 300 nodes per row and 20,000 per answer, each node
     and its edges read from the database once per answer, and at most 400
     rows are judged: `walkCut: true` says a row's walk stopped at its bound
@@ -741,7 +752,12 @@ in, in any repository, could break", in one call (P367). It walks back from the
 target past every way in it meets to the callers beyond it, with the hops that
 place code in what holds it (as `from` walks): a screen that shows the
 component whose method requests the route, a bot command whose handler does,
-a consumer of a channel the chain publishes to. `entries` holds them all: the
+a consumer of a channel the chain publishes to. It lists only ways in that run
+the target: a screen that injects a client for its other methods is not one,
+and a screen's subscription is placed in the screen, not walked back onto its
+channel to every route that publishes to it and every screen calling those
+(P371; on the `impact-shared-client` fixture 13 rows became 4 and 10 became
+2). `entries` holds them all: the
 target's own ways in, and each on the calling side with `via`, the crossing
 nearest the target it came through (`PATCH /orders/status (shop-api)`, a route
 said aloud with its service where that is not the row's, or `channel <name>`);

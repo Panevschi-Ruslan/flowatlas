@@ -2442,6 +2442,23 @@ only one of them moved.
 
 ### Fixed
 
+- **`impact` lists only the ways in that call the changed code (P371).** A
+  screen's subscription to a stream is placed in the screen and no longer
+  walked back onto its channel: the routes that publish to it, and every
+  screen and bot calling those, were listed as ways in that could break, each
+  with the target's route as `via`. A consumer whose handlers run in
+  no component a way in shows (a back end's worker, run by the message) is
+  still walked onto its channel, with `via: channel <name>`. The hop from a method to its class, and from the class to what
+  injects it, is no longer taken from a method whose callers the walk
+  follows, so a screen that injects a client for its other methods is not
+  listed. A call written at the line a way in is registered at
+  (`bot.command('items', (ctx) => this.showItems(ctx))`) is the way in's, not
+  the registering method's, which had made a `maybe` row. The same walk gives
+  `reach`, `from` and `ways` on rows and `flowatlas impact`'s tree. On the new
+  `impact-shared-client` fixture impact on a list method answers 4 rows where
+  it answered 13 (959 characters compact, from 2,395), and `complete: true`;
+  on an acknowledge method 2 where it answered 10.
+
 - **`flowatlas agents` writes only into the project it was run for (P366).**
   Run in a git repository of its own made below a project's root, `install`
   found that project's configuration and wrote the guide, the blocks and the
