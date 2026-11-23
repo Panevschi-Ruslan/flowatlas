@@ -118,7 +118,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -128,7 +129,10 @@
       "repo": "koa-router-register",
       "file": "server/routes/api/jobs/jobs.ts",
       "line": 24,
-      "kind": "function"
+      "kind": "function",
+      "meta": {
+        "fieldsRead": []
+      }
     },
     {
       "id": "koa-router-register#server/routes/api/products/products.ts:POST products.list@8",
@@ -146,7 +150,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

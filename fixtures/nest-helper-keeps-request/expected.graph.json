@@ -255,7 +255,8 @@
             }
           ],
           "returns": "boolean"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

@@ -236,7 +236,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 12
+          }
+        ]
       }
     },
     {
@@ -267,7 +273,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 24
+          }
+        ]
       }
     },
     {
@@ -286,7 +298,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "data.template",
+            "line": 17
+          }
+        ]
       }
     },
     {
@@ -317,7 +335,15 @@
             }
           ],
           "returns": "{queued:true}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "nest-bullmq#src/mail/mail.service.ts:MailService.sendWelcome",
+            "line": 26,
+            "why": "handed to this.mail.add"
+          }
+        ]
       }
     },
     {
@@ -367,7 +393,31 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 17
+          },
+          {
+            "field": "data",
+            "line": 19
+          },
+          {
+            "field": "data",
+            "line": 22
+          },
+          {
+            "field": "data.since",
+            "in": "nest-bullmq#src/mail/mail.processor.ts:MailProcessor.digest",
+            "line": 34
+          },
+          {
+            "field": "data.to",
+            "in": "nest-bullmq#src/mail/mail.processor.ts:MailProcessor.send",
+            "line": 30
+          }
+        ]
       }
     },
     {
@@ -510,7 +560,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "data.reportId",
+            "line": 31
+          }
+        ]
       }
     },
     {

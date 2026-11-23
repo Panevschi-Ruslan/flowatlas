@@ -208,7 +208,8 @@
             }
           ],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -222,7 +223,8 @@
         "signature": {
           "params": [],
           "returns": "boolean"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

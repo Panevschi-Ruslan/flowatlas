@@ -614,7 +614,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "commentId",
+            "line": 16
+          }
+        ]
       }
     },
     {
@@ -641,7 +647,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "url",
+            "line": 26
+          }
+        ]
       }
     },
     {
@@ -664,7 +676,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "memberId",
+            "line": 21
+          }
+        ]
       }
     },
     {
@@ -687,7 +705,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -710,7 +729,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "usedBytes",
+            "line": 31
+          }
+        ]
       }
     },
     {
@@ -1087,7 +1112,23 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 24
+          },
+          {
+            "field": "docId",
+            "in": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushArchive",
+            "line": 37
+          },
+          {
+            "field": "docId",
+            "in": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushComment",
+            "line": 33
+          }
+        ]
       }
     },
     {
@@ -1184,7 +1225,19 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 27
+          }
+        ],
+        "fieldsUnread": [
+          {
+            "line": 27,
+            "why": "handed to this.handlers[event.type]"
+          }
+        ]
       }
     },
     {
@@ -1253,7 +1306,38 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 25
+          },
+          {
+            "field": "commentId",
+            "in": "notify-worker#src/handlers/notices.service.ts:Notices.comment",
+            "line": 17,
+            "when": [
+              "COMMENT_ADDED"
+            ]
+          },
+          {
+            "field": "type",
+            "in": "notify-worker#src/handlers/notices.service.ts:Notices.digest",
+            "line": 13,
+            "when": [
+              "MEMBER_JOINED",
+              "EXPORT_FINISHED"
+            ]
+          },
+          {
+            "field": "docId",
+            "in": "notify-worker#src/handlers/notices.service.ts:Notices.docPublished",
+            "line": 9,
+            "when": [
+              "DOC_PUBLISHED"
+            ]
+          }
+        ]
       }
     },
     {
@@ -1336,7 +1420,21 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 17
+          },
+          {
+            "field": "url",
+            "in": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.notifyOwner",
+            "line": 22,
+            "when": [
+              "EXPORT_FINISHED"
+            ]
+          }
+        ]
       }
     },
     {
@@ -1397,7 +1495,20 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 21
+          },
+          {
+            "field": "usedBytes",
+            "line": 21,
+            "when": [
+              "QUOTA_WARNING"
+            ]
+          }
+        ]
       }
     },
     {
@@ -1553,7 +1664,19 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 25
+          }
+        ],
+        "fieldsUnread": [
+          {
+            "line": 26,
+            "why": "handed to handler"
+          }
+        ]
       }
     },
     {
@@ -1865,7 +1988,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

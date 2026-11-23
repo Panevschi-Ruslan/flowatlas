@@ -430,7 +430,14 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 12,
+            "why": "handed to publishHoldCancelled"
+          }
+        ]
       }
     },
     {
@@ -453,7 +460,14 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 7,
+            "why": "handed to publishHoldPlaced"
+          }
+        ]
       }
     },
     {
@@ -533,7 +547,22 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 8,
+            "why": "handed to publishLoanCreated"
+          },
+          {
+            "line": 9,
+            "why": "handed to auditLoan"
+          },
+          {
+            "line": 10,
+            "why": "handed to res.status(201).json"
+          }
+        ]
       }
     },
     {
@@ -556,7 +585,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -636,7 +666,18 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 9,
+            "why": "handed to queueReturn"
+          },
+          {
+            "line": 10,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -659,7 +700,14 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 15,
+            "why": "handed to queueReturns"
+          }
+        ]
       }
     },
     {
@@ -682,7 +730,14 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 20,
+            "why": "handed to queueOverdue"
+          }
+        ]
       }
     },
     {

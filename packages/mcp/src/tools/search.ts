@@ -7,8 +7,11 @@ import {
   groupFailures,
   type FailureGroup,
   gapIdOf,
+  FIELDS_READ_META,
   isMessageTypeNode,
   isRule,
+  makeMessageTypeId,
+  type FieldRead,
   rowKindOf,
   placeIdOf,
   rankByReach,
@@ -25,6 +28,7 @@ import { z } from 'zod';
 import { projectDetail, truncate } from '../query/detail.js';
 import { hintsFor, MAX_NEXT, withNext, withoutShown, type Identified, type RowShown } from '../query/next.js';
 import { reachReader, type ReachReader } from '../query/ways-in.js';
+import { shapeFields, topField } from '../query/fields.js';
 import type { CompactNode } from '../query/types.js';
 import { rankMatches } from './entries.js';
 import {
@@ -57,7 +61,7 @@ import {
  * function it is written in (P94), for get_source and who_calls; its `gapId`,
  * `gap:<service>|<file>|<reason>`, is the one `flowatlas accept` takes.
  */
-export const SEARCH_KINDS = ['routes', 'channels', 'messages', 'tables', 'types', 'gaps', 'fails', 'classes'] as const;
+export const SEARCH_KINDS = ['routes', 'channels', 'messages', 'tables', 'types', 'gaps', 'fails', 'classes', 'fields'] as const;
 export type SearchKind = (typeof SEARCH_KINDS)[number];
 
 /** Node types that are a class in the code: what DI wires and what a page renders. */
@@ -140,7 +144,22 @@ export interface MessageHit {
   unselected?: string;
 }
 
-type Hit = CompactNode | GapHit | TypeHit | FailHit | MessageHit;
+/**
+ * A field of a message or a request body (P368), by its name: what it
+ * crosses (a type of message, a channel, or a route), and how many places
+ * read it and how many publishes or requests send it.
+ */
+export interface FieldHit {
+  /** The type of message, channel or route the field crosses: what who_consumes or check_contract takes. */
+  id: string;
+  type: 'field';
+  /** The field. */
+  label: string;
+  read: number;
+  sent: number;
+}
+
+type Hit = CompactNode | GapHit | TypeHit | FailHit | MessageHit | FieldHit;
 
 interface SearchQuery {
   db: GraphDb;
@@ -351,6 +370,64 @@ const fails: Finder = ({ db, text, service, limit, offset }) => {
   return cut(rows, limit, offset);
 };
 
+
+/**
+ * Fields read and sent, by name (P368): each read written on a handler, a
+ * guard or a middleware, placed on what it is read from, and each field a
+ * publish or a request sends.
+ */
+const fields: Finder = ({ db, text, service, limit, offset }) => {
+  const wanted = text.toLowerCase();
+  const matches = (name: string): boolean => name.toLowerCase().includes(wanted);
+  const hits = new Map<string, FieldHit>();
+  const bump = (on: string, name: string, side: 'read' | 'sent'): void => {
+    const key = `${on}\u0000${name}`;
+    const hit = hits.get(key) ?? { id: on, type: 'field' as const, label: name, read: 0, sent: 0 };
+    hit[side] += 1;
+    hits.set(key, hit);
+  };
+  for (const node of db.allNodes()) {
+    const reads = node.meta?.[FIELDS_READ_META];
+    if (!Array.isArray(reads) || (service !== undefined && node.repo !== service)) continue;
+    const rows = (reads as FieldRead[]).filter((row) => matches(topField(row.field)));
+    if (rows.length === 0) continue;
+    // What the code is handed the value from: a route, or a channel through a consumer.
+    const routes = db.edgesTo(node.id, ['handles', 'guarded_by']).filter((edge) => db.node(edge.from)?.type === 'entry').map((edge) => edge.from);
+    const channels = db
+      .edgesTo(node.id, ['handles'])
+      .filter((edge) => db.node(edge.from)?.type === 'consumer')
+      .flatMap((edge) => db.edgesTo(edge.from, ['consumes']).map((into) => into.from));
+    for (const row of rows) {
+      const name = topField(row.field);
+      for (const route of routes) bump(route, name, 'read');
+      for (const channel of channels) {
+        const typed = (row.when ?? []).map((value) => makeMessageTypeId(channel, value)).filter((id) => db.node(id) !== undefined);
+        for (const on of typed.length === 0 ? [channel] : typed) bump(on, name, 'read');
+      }
+    }
+  }
+  for (const producer of db.nodesByType('producer')) {
+    if (service !== undefined && producer.repo !== service) continue;
+    const edges = db.edgesFrom(producer.id, ['emits']);
+    const typed = edges.filter((edge) => isMessageTypeNode(db.node(edge.to)));
+    for (const edge of typed.length === 0 ? edges : typed) {
+      const value = db.node(edge.to)?.meta?.['messageType'];
+      for (const name of shapeFields(db, edge.params?.[0], typeof value === 'string' ? value : undefined) ?? []) if (matches(name)) bump(edge.to, name, 'sent');
+    }
+  }
+  for (const edge of db.allEdges()) {
+    if (edge.type !== 'http_calls' || (service !== undefined && db.node(edge.from)?.repo !== service)) continue;
+    for (const name of shapeFields(db, edge.params?.[0]) ?? []) if (matches(name)) bump(edge.to, name, 'sent');
+  }
+  const rows = [...hits.values()].sort(
+    (a, b) =>
+      Number(b.label.toLowerCase() === wanted) - Number(a.label.toLowerCase() === wanted) ||
+      b.read + b.sent - (a.read + a.sent) ||
+      (a.id < b.id ? -1 : a.id > b.id ? 1 : a.label < b.label ? -1 : 1),
+  );
+  return cut(rows, limit, offset);
+};
+
 const FINDERS: ReadonlyMap<SearchKind, Finder> = new Map<SearchKind, Finder>([
   ['routes', routes],
   ['channels', nodesOf(['channel'])],
@@ -360,6 +437,7 @@ const FINDERS: ReadonlyMap<SearchKind, Finder> = new Map<SearchKind, Finder>([
   ['gaps', gaps],
   ['fails', fails],
   ['classes', nodesOf(CLASS_TYPES)],
+  ['fields', fields],
 ]);
 
 /**
@@ -368,6 +446,14 @@ const FINDERS: ReadonlyMap<SearchKind, Finder> = new Map<SearchKind, Finder>([
  */
 const hintsOfHit = (hit: Hit): string[] => {
   // A node's `type` is any string, so the narrowing is said rather than inferred.
+  if (hit.type === 'field') {
+    const found = hit as FieldHit;
+    const node = found.id.startsWith('entry:') ? undefined : found.id;
+    if (node === undefined) return [callOf('check_contract', { edge: found.id, field: found.label })];
+    const type = found.id.includes('#') ? found.id.slice(found.id.lastIndexOf('#') + 1) : undefined;
+    const channel = type === undefined ? found.id : found.id.slice(0, found.id.lastIndexOf('#'));
+    return [callOf('who_consumes', { channel, type, field: found.label }), callOf('check_contract', { channel, type, field: found.label })];
+  }
   if (hit.type === 'message_type') {
     const found = hit as MessageHit;
     const channel = found.id.slice(0, found.id.length - found.label.length - 1);
@@ -414,6 +500,8 @@ export const searchOutput = {
         producers: z.array(z.string()).optional(),
         handlers: z.array(z.string()).optional(),
         unselected: z.string().optional(),
+        read: z.number().optional(),
+        sent: z.number().optional(),
         ...reachOutput,
       }),
     ),
@@ -470,7 +558,7 @@ export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
     'search',
     {
       title: 'Search everything',
-      description: 'One query over routes, channels, messages, tables, types, gaps, failures and classes.',
+      description: 'One query over routes, channels, messages, tables, types, gaps, failures, classes and fields read or sent.',
       inputSchema: {
         query: z.string().min(1).optional(),
         queries: severalInput(),

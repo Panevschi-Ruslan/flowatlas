@@ -695,7 +695,10 @@
       "label": "GqlAuthGuard",
       "repo": "orders",
       "file": "src/orders/gql-auth.guard.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "fieldsRead": []
+      }
     },
     {
       "id": "orders#src/orders/orders.resolver.ts:OrdersResolver",

@@ -46,7 +46,8 @@
                 }
               ],
               "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-            }
+            },
+            "fieldsRead": []
           }
         },
         "edge": {

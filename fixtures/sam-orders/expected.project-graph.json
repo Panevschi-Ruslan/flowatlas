@@ -1112,7 +1112,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1131,7 +1132,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1150,7 +1152,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1188,7 +1191,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1207,7 +1211,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

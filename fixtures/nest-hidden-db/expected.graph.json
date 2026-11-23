@@ -195,7 +195,21 @@
             }
           ],
           "returns": "type:nest-hidden-db#Order"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "in": "nest-hidden-db#src/orders/order.store.ts:OrderStore.save",
+            "line": 14
+          }
+        ],
+        "fieldsUnread": [
+          {
+            "in": "nest-hidden-db#src/data/mongo-store.ts:MongoStore.put",
+            "line": 16,
+            "why": "handed to this.rows.set"
+          }
+        ]
       }
     },
     {
@@ -214,7 +228,8 @@
             }
           ],
           "returns": "type:nest-hidden-db#Order"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

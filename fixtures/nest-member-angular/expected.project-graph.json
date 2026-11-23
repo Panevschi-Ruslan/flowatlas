@@ -154,7 +154,21 @@
             }
           ],
           "returns": "{id:string;label:string}"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "email",
+            "line": 17
+          },
+          {
+            "field": "id",
+            "line": 18
+          },
+          {
+            "field": "id",
+            "line": 19
+          }
+        ]
       }
     },
     {

@@ -421,7 +421,8 @@
         "signature": {
           "params": [],
           "returns": "number"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -440,7 +441,14 @@
             }
           ],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 2,
+            "why": "handed to readBody"
+          }
+        ]
       }
     },
     {
@@ -459,7 +467,14 @@
             }
           ],
           "returns": "type:shop#Order[]"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 4,
+            "why": "handed to getQuery"
+          }
+        ]
       }
     },
     {
@@ -478,7 +493,14 @@
             }
           ],
           "returns": "type:shop#Order"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 8,
+            "why": "handed to readValidatedBody"
+          }
+        ]
       }
     },
     {
@@ -497,7 +519,14 @@
             }
           ],
           "returns": "{removed:unknown}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 4,
+            "why": "handed to getRouterParam"
+          }
+        ]
       }
     },
     {
@@ -516,7 +545,14 @@
             }
           ],
           "returns": "type:shop#Order"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 4,
+            "why": "handed to getRouterParam"
+          }
+        ]
       }
     },
     {
@@ -535,7 +571,18 @@
             }
           ],
           "returns": "type:shop#Order"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 3,
+            "why": "handed to getRouterParam"
+          },
+          {
+            "line": 4,
+            "why": "handed to readBody"
+          }
+        ]
       }
     },
     {

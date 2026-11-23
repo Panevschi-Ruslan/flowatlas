@@ -93,7 +93,21 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "borrowerId",
+            "line": 17
+          },
+          {
+            "field": "itemIds",
+            "line": 17
+          },
+          {
+            "field": "itemIds.length",
+            "line": 18
+          }
+        ]
       }
     },
     {
@@ -787,7 +801,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

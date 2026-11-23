@@ -48,7 +48,8 @@
             }
           ],
           "returns": "any"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -71,7 +72,8 @@
             }
           ],
           "returns": "any"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -94,7 +96,8 @@
             }
           ],
           "returns": "any"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -317,7 +320,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -336,7 +340,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -588,7 +593,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -602,7 +608,8 @@
         "signature": {
           "params": [],
           "returns": "any"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

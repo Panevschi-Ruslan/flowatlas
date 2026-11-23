@@ -95,7 +95,13 @@
             }
           ],
           "returns": "type:catalog-api#Item"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "title",
+            "line": 18
+          }
+        ]
       }
     },
     {
@@ -109,7 +115,8 @@
         "signature": {
           "params": [],
           "returns": "type:catalog-api#Item[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -215,7 +222,8 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -229,7 +237,8 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

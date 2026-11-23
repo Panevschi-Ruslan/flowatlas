@@ -70,7 +70,8 @@
         "signature": {
           "params": [],
           "returns": "{status:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -84,7 +85,8 @@
         "signature": {
           "params": [],
           "returns": "{status:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -110,7 +112,8 @@
         "signature": {
           "params": [],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -124,7 +127,8 @@
         "signature": {
           "params": [],
           "returns": "type:catalog-api#Item[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -143,7 +147,8 @@
             }
           ],
           "returns": "type:catalog-api#Item"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -162,7 +167,8 @@
             }
           ],
           "returns": "{id:string;price:number}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -176,7 +182,8 @@
         "signature": {
           "params": [],
           "returns": "{queued:boolean}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -195,7 +202,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -218,7 +226,13 @@
             }
           ],
           "returns": "type:catalog-api#Item"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "title",
+            "line": 42
+          }
+        ]
       }
     },
     {
@@ -249,7 +263,8 @@
             }
           ],
           "returns": "{code:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -280,7 +295,13 @@
             }
           ],
           "returns": "{received:string}"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 8
+          }
+        ]
       }
     },
     {

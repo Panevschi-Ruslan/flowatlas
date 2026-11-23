@@ -1197,7 +1197,14 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 3,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -1244,7 +1251,14 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 3,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -1263,7 +1277,14 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 3,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -1301,7 +1322,14 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 3,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -1320,7 +1348,14 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 3,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -1339,7 +1374,8 @@
             }
           ],
           "returns": "{statusCode:number}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

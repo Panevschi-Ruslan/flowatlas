@@ -502,7 +502,19 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "in": "shop-api#src/chat-updates.service.ts:ChatUpdatesService.handleUpdate",
+            "line": 10
+          },
+          {
+            "field": "text",
+            "in": "shop-api#src/chat-updates.service.ts:ChatUpdatesService.handleUpdate",
+            "line": 10
+          }
+        ]
       }
     },
     {
@@ -587,7 +599,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 11
+          },
+          {
+            "field": "status",
+            "line": 11
+          }
+        ]
       }
     },
     {

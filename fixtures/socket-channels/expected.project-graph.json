@@ -63,7 +63,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -82,7 +83,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -113,7 +115,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "in": "api#src/orders/orders.service.ts:OrdersService.cancel",
+            "line": 8
+          }
+        ]
       }
     },
     {
@@ -178,7 +187,15 @@
             }
           ],
           "returns": "type:api#OrderSummary"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "api#src/orders/orders.service.ts:OrdersService.summarise",
+            "line": 12,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -259,7 +276,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

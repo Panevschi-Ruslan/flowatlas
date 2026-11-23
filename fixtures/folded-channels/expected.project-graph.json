@@ -125,7 +125,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "state",
+            "line": 12
+          }
+        ]
       }
     },
     {
@@ -567,7 +573,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 38
+          }
+        ]
       }
     },
     {
@@ -586,7 +598,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 34
+          }
+        ]
       }
     },
     {
@@ -619,7 +637,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 30
+          }
+        ]
       }
     }
   ],

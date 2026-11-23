@@ -202,7 +202,8 @@
         "signature": {
           "params": [],
           "returns": "type:@prisma/client#Order"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -216,7 +217,8 @@
         "signature": {
           "params": [],
           "returns": "type:@prisma/client#Order[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -235,7 +237,8 @@
             }
           ],
           "returns": "type:@prisma/client#Order"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

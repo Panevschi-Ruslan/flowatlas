@@ -155,7 +155,8 @@
             }
           ],
           "returns": "type:react-router-config#Project"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -268,7 +269,13 @@
             }
           ],
           "returns": "type:react-router-config#Project"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 9
+          }
+        ]
       }
     },
     {
@@ -282,7 +289,8 @@
         "signature": {
           "params": [],
           "returns": "type:react-router-config#Project[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -301,7 +309,8 @@
             }
           ],
           "returns": "any"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -320,7 +329,8 @@
             }
           ],
           "returns": "type:react-router-config#Task"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -339,7 +349,8 @@
             }
           ],
           "returns": "{user:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -358,7 +369,8 @@
             }
           ],
           "returns": "{saved:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -377,7 +389,8 @@
             }
           ],
           "returns": "type:react-router-config#Project"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

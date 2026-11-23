@@ -126,7 +126,8 @@
         "signature": {
           "params": [],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -165,7 +166,8 @@
         "signature": {
           "params": [],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -205,7 +207,8 @@
         "signature": {
           "params": [],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -231,7 +234,8 @@
         "signature": {
           "params": [],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

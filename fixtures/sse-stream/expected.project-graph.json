@@ -196,7 +196,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 45,
+            "why": "handed to JSON.parse"
+          }
+        ]
       }
     },
     {
@@ -262,7 +269,8 @@
             }
           ],
           "returns": "MessageEvent<any>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -297,7 +305,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

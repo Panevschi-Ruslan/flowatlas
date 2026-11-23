@@ -329,7 +329,8 @@
             }
           ],
           "returns": "type:axios#AxiosResponse<type:nest-leaves#OrderDto>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -343,7 +344,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

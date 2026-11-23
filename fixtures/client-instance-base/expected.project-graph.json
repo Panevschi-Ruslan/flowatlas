@@ -129,7 +129,13 @@
             }
           ],
           "returns": "type:billing#Item"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 20
+          }
+        ]
       }
     },
     {
@@ -143,7 +149,8 @@
         "signature": {
           "params": [],
           "returns": "type:billing#Item[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -313,7 +320,13 @@
             }
           ],
           "returns": "type:orders#Item"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 20
+          }
+        ]
       }
     },
     {
@@ -327,7 +340,8 @@
         "signature": {
           "params": [],
           "returns": "type:orders#Item[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

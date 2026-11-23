@@ -54,7 +54,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -138,7 +139,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -161,7 +163,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "total",
+            "line": 37
+          }
+        ]
       }
     },
     {
@@ -202,7 +210,8 @@
             }
           ],
           "returns": "type:express#Response<unknown>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -225,7 +234,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

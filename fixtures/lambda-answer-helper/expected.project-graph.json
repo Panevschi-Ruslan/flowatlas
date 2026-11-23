@@ -381,7 +381,14 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 14,
+            "why": "handed to kit.readJson"
+          }
+        ]
       }
     },
     {
@@ -400,7 +407,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -428,7 +436,17 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "riderId",
+            "line": 14
+          },
+          {
+            "field": "stationId",
+            "line": 14
+          }
+        ]
       }
     },
     {
@@ -447,7 +465,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -489,7 +508,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     }
   ],

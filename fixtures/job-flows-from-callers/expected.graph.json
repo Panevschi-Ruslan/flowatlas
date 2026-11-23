@@ -502,6 +502,16 @@
             "text": "run",
             "at": 8
           }
+        ],
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 8
+          },
+          {
+            "field": "name",
+            "line": 8
+          }
         ]
       }
     },
@@ -843,7 +853,8 @@
             "text": "mail to",
             "at": 40
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -877,6 +888,12 @@
             "level": "log",
             "text": "receipt for",
             "at": 53
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "data.orderId",
+            "line": 53
           }
         ]
       }
@@ -951,6 +968,12 @@
             "text": "invoice for",
             "at": 65
           }
+        ],
+        "fieldsRead": [
+          {
+            "field": "data.orderId",
+            "line": 65
+          }
         ]
       }
     },
@@ -974,7 +997,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -997,7 +1021,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "followUp",
+            "line": 35
+          }
+        ]
       }
     },
     {
@@ -1020,7 +1050,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orders",
+            "line": 42
+          },
+          {
+            "field": "importId",
+            "line": 45
+          }
+        ]
       }
     },
     {
@@ -1043,7 +1083,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1066,7 +1107,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "email",
+            "line": 13
+          }
+        ]
       }
     },
     {

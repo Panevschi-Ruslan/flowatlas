@@ -74,7 +74,8 @@
             }
           ],
           "returns": "any"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -97,7 +98,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -120,7 +122,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -143,7 +146,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -166,7 +170,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -189,7 +194,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -794,7 +800,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -813,7 +820,8 @@
             }
           ],
           "returns": "any"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1103,7 +1111,8 @@
             }
           ],
           "returns": "any"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1122,7 +1131,8 @@
             }
           ],
           "returns": "any"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1145,7 +1155,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     }
   ],

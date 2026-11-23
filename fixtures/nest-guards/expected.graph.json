@@ -543,7 +543,8 @@
         "signature": {
           "params": [],
           "returns": "number"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -557,7 +558,8 @@
         "signature": {
           "params": [],
           "returns": "number"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -571,7 +573,8 @@
         "signature": {
           "params": [],
           "returns": "number"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -609,7 +612,10 @@
       "label": "ApiKeyGuard",
       "repo": "nest-guards",
       "file": "src/guards/api-key.guard.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "fieldsRead": []
+      }
     },
     {
       "id": "nest-guards#src/guards/roles.guard.ts:RolesGuard",
@@ -617,7 +623,10 @@
       "label": "RolesGuard",
       "repo": "nest-guards",
       "file": "src/guards/roles.guard.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "fieldsRead": []
+      }
     },
     {
       "id": "nest-guards#src/guards/throttle.guard.ts:ThrottleGuard",
@@ -625,7 +634,10 @@
       "label": "ThrottleGuard",
       "repo": "nest-guards",
       "file": "src/guards/throttle.guard.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "fieldsRead": []
+      }
     },
     {
       "id": "nest-guards#src/interceptors/logging.interceptor.ts:LoggingInterceptor",
@@ -633,7 +645,10 @@
       "label": "LoggingInterceptor",
       "repo": "nest-guards",
       "file": "src/interceptors/logging.interceptor.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "fieldsRead": []
+      }
     },
     {
       "id": "nest-guards#src/interceptors/metrics.interceptor.ts:MetricsInterceptor",
@@ -643,7 +658,8 @@
       "file": "src/interceptors/metrics.interceptor.ts",
       "line": 10,
       "meta": {
-        "module": "AppModule"
+        "module": "AppModule",
+        "fieldsRead": []
       }
     },
     {
@@ -676,7 +692,10 @@
       "repo": "nest-guards",
       "file": "src/middleware/logger.middleware.ts",
       "line": 3,
-      "kind": "class"
+      "kind": "class",
+      "meta": {
+        "fieldsRead": []
+      }
     },
     {
       "id": "nest-guards#src/orders/orders.controller.ts:OrdersController",
@@ -701,7 +720,8 @@
         "signature": {
           "params": [],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -715,7 +735,8 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -729,7 +750,8 @@
         "signature": {
           "params": [],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

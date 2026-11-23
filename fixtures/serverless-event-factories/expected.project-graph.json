@@ -774,7 +774,14 @@
             }
           ],
           "returns": "{statusCode:201;body:string}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 4,
+            "why": "handed to JSON.parse"
+          }
+        ]
       }
     },
     {
@@ -812,7 +819,14 @@
             }
           ],
           "returns": "{statusCode:202;body:''}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 5,
+            "why": "handed to JSON.parse"
+          }
+        ]
       }
     },
     {
@@ -850,7 +864,14 @@
             }
           ],
           "returns": "{statusCode:202;body:''}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 7,
+            "why": "handed to JSON.parse"
+          }
+        ]
       }
     },
     {
@@ -869,7 +890,14 @@
             }
           ],
           "returns": "{statusCode:200;body:string}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 2,
+            "why": "handed to JSON.parse"
+          }
+        ]
       }
     },
     {

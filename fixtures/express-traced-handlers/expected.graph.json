@@ -190,7 +190,13 @@
             }
           ],
           "returns": "type:express#Response<unknown>"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "isbn",
+            "line": 20
+          }
+        ]
       }
     },
     {
@@ -213,7 +219,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -236,7 +243,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -259,7 +267,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

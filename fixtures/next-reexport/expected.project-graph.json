@@ -147,7 +147,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 22,
+            "why": "handed to recordDelivery"
+          }
+        ]
       }
     },
     {
@@ -170,7 +177,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -203,7 +211,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     }
   ],

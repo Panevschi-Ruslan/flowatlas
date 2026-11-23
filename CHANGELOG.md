@@ -70,6 +70,33 @@ only one of them moved.
   `who_consumes` with a type and `search` on a type name every handler in one
   call where they answered `unsure` with no consumer.
 
+- **Which code reads or sends a field, in one call (P368).** The reading
+  writes, on the handler of every HTTP route and of every consumer that
+  chooses for itself, and on every guard, interceptor, pipe and middleware a
+  route runs first, the fields of the message or the body it reads
+  (`meta.fieldsRead`: the field, the function it is read in, the line, and the
+  types of message a `switch`, an `if` or an early return on the
+  discriminator reads it under), following member reads, destructuring, a
+  local that is the value again, the value handed to the repository's own
+  functions (bounded), and a body however the code reaches it (`@Body()`,
+  `@Body('x')`, `req.body`, `ctx.request.body`, `await c.req.json()`, a
+  guard's `getRequest()`); a use it cannot follow (spread, handed to a library,
+  indexed by a variable, its keys walked) is `meta.fieldsUnread`, never
+  dropped. `who_consumes` and `who_emits` take `field` and keep only the
+  handlers that read it (each with `readIn`, the function and line) or the
+  publishes that send it, a union narrowed to the type asked; at detail 2
+  each row says `reads` or `sends`. `check_contract` takes a route (said aloud
+  too) and answers `reads`, every body field the handler, guards, pipes,
+  interceptors and middleware read, with `layer`; takes `channel` and `type`
+  and answers `missing` (read, not sent) and `unused` (sent, never read) with
+  where, a channel of several types compared type by type; and on a request
+  edge says the same for its body. `search` finds a field by its name under
+  `fields`. The instructions' channel, shape and search lines say `field`
+  (2,488 characters), and the guide `flowatlas agents install` writes says a
+  field question is one call. On the new fixture, `fields-read-and-sent`,
+  each of the three field questions takes one call.
+
+
 - **Reach that never hides a maybe, and impact that answers "what could
   break" in one call (P367).** `reach` is `alive`, `maybe`, `unreached`,
   `dead` or `outside`, and no longer `unknown`: `maybe` is `dead`'s

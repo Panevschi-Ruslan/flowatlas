@@ -67,7 +67,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -518,7 +519,8 @@
             }
           ],
           "returns": "{id:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -565,7 +567,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 9
+          }
+        ]
       }
     },
     {
@@ -584,7 +592,8 @@
             }
           ],
           "returns": "{id:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -785,7 +794,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -804,7 +814,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

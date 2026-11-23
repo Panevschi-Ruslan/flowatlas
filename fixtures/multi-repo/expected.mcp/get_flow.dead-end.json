@@ -31,7 +31,8 @@
                 }
               ],
               "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
-            }
+            },
+            "fieldsRead": []
           }
         },
         "edge": {

@@ -400,7 +400,8 @@
         "signature": {
           "params": [],
           "returns": "{allowed:true}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -437,7 +438,8 @@
         "signature": {
           "params": [],
           "returns": "null"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -451,7 +453,8 @@
         "signature": {
           "params": [],
           "returns": "never[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -465,7 +468,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -479,7 +483,8 @@
         "signature": {
           "params": [],
           "returns": "{user:'someone'}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -493,7 +498,8 @@
         "signature": {
           "params": [],
           "returns": "null"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

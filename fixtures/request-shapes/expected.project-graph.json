@@ -219,7 +219,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -238,7 +239,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -257,7 +259,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -280,7 +283,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -299,7 +303,8 @@
             }
           ],
           "returns": "type:catalog-api#Item"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -322,7 +327,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "price",
+            "line": 19
+          },
+          {
+            "field": "sku",
+            "line": 19
+          }
+        ]
       }
     },
     {
@@ -640,7 +655,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -663,7 +679,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -686,7 +703,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -709,7 +727,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -732,7 +751,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 31,
+            "why": "handed to UpdateOrder.parse"
+          }
+        ]
       }
     },
     {
@@ -755,7 +781,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 53,
+            "why": "handed to RefundRequest.safeParse"
+          }
+        ]
       }
     },
     {
@@ -778,7 +811,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "customerId",
+            "line": 9
+          },
+          {
+            "field": "total",
+            "line": 9
+          }
+        ]
       }
     },
     {
@@ -801,7 +844,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "count",
+            "line": 39
+          }
+        ]
       }
     },
     {
@@ -1043,7 +1092,17 @@
             }
           ],
           "returns": "type:next#NextResponse"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "customerId",
+            "line": 19
+          },
+          {
+            "field": "customerId",
+            "line": 22
+          }
+        ]
       }
     },
     {
@@ -1066,7 +1125,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

@@ -1,5 +1,25 @@
 {
   "entry": "entry:billing:http:POST:/invoices",
+  "reads": [
+    {
+      "field": "orderId",
+      "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+      "line": 31,
+      "layer": "handler"
+    },
+    {
+      "field": "orderId",
+      "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+      "line": 33,
+      "layer": "handler"
+    },
+    {
+      "field": "amount",
+      "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+      "line": 38,
+      "layer": "handler"
+    }
+  ],
   "traffic": {
     "samples": 2,
     "window": {
@@ -33,6 +53,7 @@
     ]
   },
   "callers": 1,
+  "complete": true,
   "next": [
     "check_contract({from: \"http_out:gateway#src/clients/billing.client.ts:33:12\", to: \"entry:billing:http:POST:/invoices\"})"
   ]

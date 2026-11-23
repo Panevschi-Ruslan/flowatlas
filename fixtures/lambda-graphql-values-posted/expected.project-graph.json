@@ -180,7 +180,8 @@
             }
           ],
           "returns": "{statusCode:number;body:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

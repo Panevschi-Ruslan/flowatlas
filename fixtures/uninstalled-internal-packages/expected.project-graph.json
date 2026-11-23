@@ -110,7 +110,24 @@
             }
           ],
           "returns": "string"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "deposit",
+            "in": "loans-api#src/loans/loans.service.ts:LoansService.approve",
+            "line": 18
+          },
+          {
+            "field": "bookId",
+            "in": "loans-api#src/loans/loans.service.ts:LoansService.approve",
+            "line": 21
+          },
+          {
+            "field": "memberId",
+            "in": "loans-api#src/loans/loans.service.ts:LoansService.approve",
+            "line": 21
+          }
+        ]
       }
     },
     {
@@ -129,7 +146,8 @@
             }
           ],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T16:09:28.061Z",
+  "builtAt": "2026-11-23T16:37:05.051Z",
   "services": [
     {
       "name": "market-api",
@@ -159,7 +159,14 @@
         "adapter": "redis-pubsub",
         "relay": "entry:market-api:http:GET:/api/shops/:param/events",
         "entryId": "entry:market-api:event:shop:*:events",
-        "decorator": "subscribe"
+        "decorator": "subscribe",
+        "subscriptions": [
+          {
+            "line": 13,
+            "column": 56,
+            "through": "listener.subscribe"
+          }
+        ]
       }
     },
     {
@@ -936,7 +943,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -967,7 +975,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -986,7 +995,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1005,7 +1015,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1019,7 +1030,8 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1186,7 +1198,8 @@
         "signature": {
           "params": [],
           "returns": "never"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1217,7 +1230,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 16
+          },
+          {
+            "field": "shopId",
+            "line": 16
+          }
+        ]
       }
     },
     {
@@ -1236,7 +1259,8 @@
             }
           ],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1321,7 +1345,8 @@
             }
           ],
           "returns": "MessageEvent<any>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1354,7 +1379,7 @@
       "label": "AppModule",
       "repo": "market-bot",
       "file": "src/app.module.ts",
-      "line": 8,
+      "line": 6,
       "kind": "static",
       "meta": {
         "controllers": [],
@@ -2134,7 +2159,7 @@
           "classes": 10,
           "templates": 7,
           "skippedExternalCalls": {
-            "rxjs": 8,
+            "rxjs": 13,
             "@angular/common": 7
           }
         },
@@ -4079,22 +4104,6 @@
       "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
       "symbol": "listener.unsubscribe",
       "service": "market-api"
-    },
-    {
-      "file": "src/app.module.ts",
-      "line": 9,
-      "reason": "module-import-dynamic",
-      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
-      "symbol": "AppModule imports HttpModule",
-      "service": "market-bot"
-    },
-    {
-      "file": "src/app.module.ts",
-      "line": 9,
-      "reason": "module-import-dynamic",
-      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
-      "symbol": "AppModule imports ConfigModule",
-      "service": "market-bot"
     },
     {
       "file": "src/market-bot.ts",

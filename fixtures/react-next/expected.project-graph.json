@@ -529,7 +529,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -552,7 +553,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 15,
+            "why": "handed to patchOrder"
+          }
+        ]
       }
     },
     {
@@ -566,7 +574,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -585,7 +594,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 11,
+            "why": "handed to saveOrder"
+          }
+        ]
       }
     },
     {
@@ -801,7 +817,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

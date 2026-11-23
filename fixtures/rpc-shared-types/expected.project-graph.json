@@ -83,7 +83,8 @@
         "signature": {
           "params": [],
           "returns": "{total:0}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -97,7 +98,8 @@
         "signature": {
           "params": [],
           "returns": "never[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -111,7 +113,8 @@
         "signature": {
           "params": [],
           "returns": "{id:'p-1'}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -130,7 +133,8 @@
             }
           ],
           "returns": "{id:any;name:'Green tea'}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -144,7 +148,8 @@
         "signature": {
           "params": [],
           "returns": "never[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -158,7 +163,8 @@
         "signature": {
           "params": [],
           "returns": "{headers:{x-total:string};body:never[]}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -177,7 +183,8 @@
             }
           ],
           "returns": "{status:200;body:{id:any;name:string}}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -191,7 +198,8 @@
         "signature": {
           "params": [],
           "returns": "never[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -210,7 +218,8 @@
             }
           ],
           "returns": "{sku:any;count:0}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -241,7 +250,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 12,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -2889,7 +2905,17 @@
             }
           ],
           "returns": "{id:string;sku:'sku-1';quantity:1}"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "quantity",
+            "line": 10
+          },
+          {
+            "field": "sku",
+            "line": 10
+          }
+        ]
       }
     },
     {

@@ -146,7 +146,14 @@
             }
           ],
           "returns": "type:shop#ProductDto"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 24,
+            "why": "spread into another value"
+          }
+        ]
       }
     },
     {
@@ -165,7 +172,8 @@
             }
           ],
           "returns": "type:shop#ProductDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -185,7 +193,8 @@
             }
           ],
           "returns": "type:shop#ProductDto[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -204,7 +213,8 @@
             }
           ],
           "returns": "type:shop#ReviewDto[]"
-        }
+        },
+        "fieldsRead": []
       }
     }
   ],

@@ -237,7 +237,15 @@
             }
           ],
           "returns": "type:nest-mongoose#OrderDocument"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "nest-mongoose#src/orders/orders.service.ts:OrdersService.create",
+            "line": 22,
+            "why": "handed to OrderModel.create"
+          }
+        ]
       }
     },
     {
@@ -251,7 +259,8 @@
         "signature": {
           "params": [],
           "returns": "type:nest-mongoose#OrderDocument[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -265,7 +274,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

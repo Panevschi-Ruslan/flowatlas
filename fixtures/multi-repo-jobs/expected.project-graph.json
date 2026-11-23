@@ -246,7 +246,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "data.url",
+            "line": 8
+          }
+        ]
       }
     },
     {
@@ -277,7 +283,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "data.to",
+            "line": 16
+          }
+        ]
       }
     },
     {
@@ -296,7 +308,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "data.to",
+            "line": 11
+          }
+        ]
       }
     },
     {
@@ -599,7 +617,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "url",
+            "line": 31
+          }
+        ]
       }
     },
     {
@@ -618,7 +642,15 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "shop#src/mail/mail-queue.service.ts:MailQueueService.send",
+            "line": 19,
+            "why": "handed to this.queue.add"
+          }
+        ]
       }
     },
     {
@@ -637,7 +669,20 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "shop#src/mail/mail-queue.service.ts:MailQueueService.sendPair",
+            "line": 28,
+            "why": "put inside another value"
+          },
+          {
+            "in": "shop#src/mail/mail-queue.service.ts:MailQueueService.sendPair",
+            "line": 29,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -656,7 +701,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -675,7 +721,15 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "shop#src/mail/mail-queue.service.ts:MailQueueService.send",
+            "line": 19,
+            "why": "handed to this.queue.add"
+          }
+        ]
       }
     }
   ],

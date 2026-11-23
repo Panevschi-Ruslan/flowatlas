@@ -137,7 +137,28 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "title",
+            "line": 25
+          }
+        ],
+        "fieldsUnread": [
+          {
+            "line": 24,
+            "why": "handed to queueForShelving"
+          },
+          {
+            "line": 26,
+            "why": "handed to res.status(201).json"
+          },
+          {
+            "in": "catalogue#src/catalogue-events.ts:CatalogueEvents.catalogued",
+            "line": 28,
+            "why": "handed to JSON.stringify"
+          }
+        ]
       }
     },
     {
@@ -160,7 +181,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

@@ -142,7 +142,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -161,7 +162,8 @@
             }
           ],
           "returns": "{id:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

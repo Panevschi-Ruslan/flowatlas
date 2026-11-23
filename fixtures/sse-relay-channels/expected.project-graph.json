@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-23T14:32:55.905Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T16:44:53.627Z",
   "services": [
     {
       "name": "shipping",
@@ -454,7 +454,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 16,
+            "why": "handed to streamSSE"
+          }
+        ]
       }
     },
     {
@@ -473,7 +480,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 27,
+            "why": "handed to c.env.ROOMS.get(id).fetch"
+          }
+        ]
       }
     },
     {
@@ -843,7 +857,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -1040,7 +1055,8 @@
         "signature": {
           "params": [],
           "returns": "MessageEvent<any>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1059,7 +1075,8 @@
             }
           ],
           "returns": "MessageEvent<any>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1078,7 +1095,8 @@
             }
           ],
           "returns": "MessageEvent<any>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1109,7 +1127,18 @@
             }
           ],
           "returns": "MessageEvent<any>"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 17,
+            "why": "handed to listener.subscribe"
+          },
+          {
+            "line": 18,
+            "why": "handed to listener.unsubscribe"
+          }
+        ]
       }
     },
     {
@@ -1148,7 +1177,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "courierId",
+            "line": 19
+          }
+        ]
       }
     },
     {
@@ -1171,7 +1206,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1194,7 +1230,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

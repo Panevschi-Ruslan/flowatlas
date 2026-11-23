@@ -197,7 +197,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -281,7 +282,8 @@
             }
           ],
           "returns": "type:fastify#FastifyReply"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -304,7 +306,8 @@
             }
           ],
           "returns": "type:fastify#FastifyReply"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -327,7 +330,14 @@
             }
           ],
           "returns": "type:fastify#FastifyReply"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "total",
+            "in": "fastify-service#src/orders/orders.routes.ts:ordersRoutes",
+            "line": 39
+          }
+        ]
       }
     },
     {
@@ -368,7 +378,8 @@
             }
           ],
           "returns": "type:fastify#FastifyReply"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -391,7 +402,8 @@
             }
           ],
           "returns": "type:fastify#FastifyReply"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

@@ -142,7 +142,13 @@
             }
           ],
           "returns": "string"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "userId",
+            "line": 25
+          }
+        ]
       }
     },
     {
@@ -156,7 +162,8 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -189,7 +196,8 @@
             }
           ],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -208,7 +216,8 @@
             }
           ],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -383,7 +392,8 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

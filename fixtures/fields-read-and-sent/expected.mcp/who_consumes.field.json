@@ -1,0 +1,40 @@
+{
+  "channel": {
+    "id": "channel:order_updates",
+    "type": "channel",
+    "label": "order_updates",
+    "loc": "src/orders/orders.service.ts:11",
+    "service": "shop-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady",
+      "type": "consumer",
+      "label": "BotService.handleOrderReady",
+      "loc": "src/bot/bot.service.ts:16",
+      "service": "ops-bot",
+      "kind": "event",
+      "selectedIn": "EventsController.receive",
+      "via": "switch",
+      "reach": "alive",
+      "from": "POST /events/orders",
+      "ways": 3,
+      "readIn": [
+        {
+          "id": "ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady",
+          "line": 17
+        }
+      ]
+    }
+  ],
+  "total": 1,
+  "type": "ORDER_READY",
+  "field": "label",
+  "complete": true,
+  "next": [
+    "check_contract({channel: \"channel:order_updates\", type: \"ORDER_READY\", field: \"label\"})",
+    "who_emits({channel: \"channel:order_updates\", type: \"ORDER_READY\", field: \"label\"})",
+    "impact({symbol: \"consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady\"})",
+    "get_source({symbol: \"consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady\"})"
+  ]
+}

@@ -264,7 +264,8 @@
         "signature": {
           "params": [],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -278,7 +279,8 @@
         "signature": {
           "params": [],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -292,7 +294,8 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -323,7 +326,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 8
+          }
+        ]
       }
     },
     {
@@ -342,7 +351,8 @@
             }
           ],
           "returns": "number"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

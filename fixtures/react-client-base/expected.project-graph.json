@@ -252,7 +252,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 15
+          }
+        ]
       }
     },
     {
@@ -275,7 +281,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 13
+          }
+        ]
       }
     },
     {
@@ -298,7 +310,17 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 17
+          },
+          {
+            "field": "title",
+            "line": 17
+          }
+        ]
       }
     },
     {

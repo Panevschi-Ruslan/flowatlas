@@ -255,6 +255,13 @@ describe('the tools a session is offered', () => {
    * `reach` in the output schemas: 12,443 read and 34,470 in all, 30,734 for
    * the nineteen tools below; the ceilings moved to them, rounded up to the
    * next 50.
+   *
+   * Then P368 gave `who_emits` and `who_consumes` a `field`, `check_contract`
+   * a `channel`, a `type`, a `field` and a description of what it answers on
+   * a route and on a channel, `search` the kind `fields`, and the output
+   * schemas `field`, `readIn`, `reads` and `sends`: 12,855 read and 35,179 in
+   * all, 31,443 for the nineteen tools below; the ceilings moved by that, to
+   * the next 50.
    */
   /**
    * The instructions are re-sent on every turn (P366): 6,435 characters
@@ -270,8 +277,8 @@ describe('the tools a session is offered', () => {
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(12450);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(34500);
+    expect(read.length).toBeLessThan(12900);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(35200);
   });
 
   /**
@@ -309,7 +316,7 @@ describe('the tools a session is offered', () => {
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
       expect(read.length).toBeLessThan(99999);
-      expect(JSON.stringify({ tools }).length).toBeLessThan(30750);
+      expect(JSON.stringify({ tools }).length).toBeLessThan(31450);
     } finally {
       await plain.close();
     }

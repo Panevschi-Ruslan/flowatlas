@@ -32,7 +32,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 7,
+            "why": "handed to handler.handle"
+          }
+        ]
       }
     },
     {
@@ -67,7 +74,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 7,
+            "why": "handed to handler.handle"
+          }
+        ]
       }
     },
     {
@@ -87,7 +101,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -141,7 +156,8 @@
             }
           ],
           "returns": "{id:string;sku:string;quantity:number}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -182,7 +198,8 @@
         "signature": {
           "params": [],
           "returns": "{day:string;total:number}[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -205,7 +222,8 @@
         "signature": {
           "params": [],
           "returns": "{ok:true}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -244,7 +262,14 @@
             }
           ],
           "returns": "{id:string;sku:string;quantity:number;status:string}[]"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 5,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -263,7 +288,14 @@
             }
           ],
           "returns": "{sku:string;quantity:number;id:'o-2'}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 11,
+            "why": "spread into another value"
+          }
+        ]
       }
     },
     {

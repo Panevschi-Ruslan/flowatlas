@@ -260,7 +260,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 12
+          }
+        ]
       }
     },
     {
@@ -341,7 +347,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 12
+          }
+        ]
       }
     },
     {
@@ -372,7 +384,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 23
+          }
+        ]
       }
     },
     {
@@ -792,7 +810,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -856,7 +875,8 @@
       "file": "src/auth/auth.guard.ts",
       "line": 10,
       "meta": {
-        "module": "AppModule"
+        "module": "AppModule",
+        "fieldsRead": []
       }
     },
     {
@@ -970,7 +990,8 @@
         "signature": {
           "params": [],
           "returns": "{ok:boolean}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1001,7 +1022,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "customerId",
+            "line": 14
+          }
+        ]
       }
     },
     {
@@ -1347,7 +1374,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 13
+          }
+        ]
       }
     },
     {
@@ -1378,7 +1411,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "customerId",
+            "line": 12
+          }
+        ]
       }
     },
     {
@@ -1392,7 +1431,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

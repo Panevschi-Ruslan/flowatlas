@@ -223,7 +223,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -242,7 +243,13 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -261,7 +268,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

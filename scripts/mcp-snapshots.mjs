@@ -321,6 +321,30 @@ const TYPED_HANDLER_COMPACT_CASES = [
 ];
 
 /**
+ * Fields read and sent (P368): which handler reads one field of a type of
+ * message, which code on a route's path reads one field of the body (a guard,
+ * where the handler ignores it), and a type whose handler reads a field its
+ * publish does not send; with the detail-2 lists, the whole channel compared
+ * type by type, a search by a field's name and the request edge.
+ */
+const FIELDS_CASES = [
+  ['who_consumes.field', 'who_consumes', { channel: 'order_updates', type: 'ORDER_READY', field: 'label' }],
+  ['who_consumes.detail-2', 'who_consumes', { channel: 'order_updates', detail: 2 }],
+  ['who_emits.field', 'who_emits', { channel: 'order_updates', type: 'ORDER_READY', field: 'label' }],
+  ['check_contract.route-field', 'check_contract', { edge: 'PATCH /api/orders/:id/cancel', field: 'userRef' }],
+  ['check_contract.route', 'check_contract', { edge: 'POST /api/orders/:id/ready' }],
+  ['check_contract.type', 'check_contract', { channel: 'desk_events', type: 'HELP_REQUESTED' }],
+  ['check_contract.channel', 'check_contract', { channel: 'order_updates' }],
+  ['search.field', 'search', { query: 'label', kinds: ['fields'] }],
+];
+/** The three questions compact (P365): what an agent is handed for each, in one call. */
+const FIELDS_COMPACT_CASES = [
+  ['who_consumes.field', 'who_consumes', { channel: 'order_updates', type: 'ORDER_READY', field: 'label', verbose: false }],
+  ['check_contract.route-field', 'check_contract', { edge: 'PATCH /api/orders/:id/cancel', field: 'userRef', verbose: false }],
+  ['check_contract.type', 'check_contract', { channel: 'desk_events', type: 'HELP_REQUESTED', verbose: false }],
+];
+
+/**
  * Answers that finish in one call (P364): each row of code with whether it
  * runs and the nearest way in (a screen for a handler the router shows, none
  * for one no way in reaches), each list saying whether it is complete and what
@@ -716,6 +740,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'typed-handlers-bus-wide-subscribers'),
     outDir: join(root, 'fixtures', 'typed-handlers-bus-wide-subscribers', 'expected.mcp.compact'),
     cases: TYPED_HANDLER_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'fields-read-and-sent'),
+    outDir: join(root, 'fixtures', 'fields-read-and-sent', 'expected.mcp'),
+    cases: FIELDS_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'fields-read-and-sent'),
+    outDir: join(root, 'fixtures', 'fields-read-and-sent', 'expected.mcp.compact'),
+    cases: FIELDS_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

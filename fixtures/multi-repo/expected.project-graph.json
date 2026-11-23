@@ -99,7 +99,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "amount",
+            "line": 30
+          },
+          {
+            "field": "orderId",
+            "line": 30
+          }
+        ]
       }
     },
     {
@@ -118,7 +128,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 19
+          },
+          {
+            "field": "total.amount",
+            "line": 19
+          }
+        ]
       }
     },
     {
@@ -149,7 +169,24 @@
             }
           ],
           "returns": "type:billing#InvoiceDto"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "in": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+            "line": 31
+          },
+          {
+            "field": "orderId",
+            "in": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+            "line": 33
+          },
+          {
+            "field": "amount",
+            "in": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+            "line": 38
+          }
+        ]
       }
     },
     {
@@ -168,7 +205,8 @@
             }
           ],
           "returns": "type:billing#InvoiceDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1033,7 +1071,8 @@
             }
           ],
           "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1052,7 +1091,19 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "total.amount",
+            "in": "gateway#src/clients/payments.client.ts:PaymentsClient.charge",
+            "line": 35
+          },
+          {
+            "field": "total.currency",
+            "in": "gateway#src/clients/payments.client.ts:PaymentsClient.charge",
+            "line": 36
+          }
+        ]
       }
     },
     {
@@ -1071,7 +1122,8 @@
             }
           ],
           "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1090,7 +1142,19 @@
             }
           ],
           "returns": "type:axios#AxiosResponse<type:gateway#InvoiceDto>"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "in": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice",
+            "line": 34
+          },
+          {
+            "field": "total.amount",
+            "in": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice",
+            "line": 35
+          }
+        ]
       }
     },
     {
@@ -1109,7 +1173,14 @@
             }
           ],
           "returns": "type:axios#AxiosResponse<unknown>"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "in": "gateway#src/clients/payments.client.ts:PaymentsClient.pay",
+            "line": 24
+          }
+        ]
       }
     },
     {
@@ -1128,7 +1199,8 @@
             }
           ],
           "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1147,7 +1219,8 @@
             }
           ],
           "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1166,7 +1239,8 @@
             }
           ],
           "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1369,7 +1443,8 @@
             }
           ],
           "returns": "{target:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1400,7 +1475,8 @@
             }
           ],
           "returns": "{target:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1451,7 +1527,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1470,7 +1547,24 @@
             }
           ],
           "returns": "type:@fx/contracts#OrderDto"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "customerId",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 43
+          },
+          {
+            "field": "total.amount",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 45
+          },
+          {
+            "field": "total.currency",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 46
+          }
+        ]
       }
     },
     {
@@ -1489,7 +1583,8 @@
             }
           ],
           "returns": "type:@fx/contracts#OrderDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1503,7 +1598,8 @@
         "signature": {
           "params": [],
           "returns": "type:@fx/contracts#OrderDto[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

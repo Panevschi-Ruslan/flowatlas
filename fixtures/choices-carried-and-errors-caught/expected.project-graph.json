@@ -44,7 +44,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -489,7 +490,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "kind",
+            "line": 9
+          }
+        ]
       }
     },
     {
@@ -512,7 +519,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -535,7 +543,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -554,7 +563,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "data.orderId",
+            "line": 11
+          },
+          {
+            "field": "data.email",
+            "line": 12
+          }
+        ]
       }
     },
     {
@@ -648,7 +667,19 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "data.orderId",
+            "in": "jobs#src/workers.ts:startRefunds",
+            "line": 24
+          },
+          {
+            "field": "data.orderId",
+            "in": "jobs#src/workers.ts:startRefunds",
+            "line": 25
+          }
+        ]
       }
     },
     {
@@ -667,7 +698,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

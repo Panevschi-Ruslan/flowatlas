@@ -170,7 +170,8 @@
             }
           ],
           "returns": "type:express#Response<unknown>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -756,7 +757,8 @@
             }
           ],
           "returns": "type:express#Response<unknown>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1001,7 +1003,8 @@
             }
           ],
           "returns": "any"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1020,7 +1023,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

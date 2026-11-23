@@ -24,7 +24,11 @@
       },
       "reach": "alive",
       "from": "event order.created",
-      "ways": 2
+      "ways": 2,
+      "reads": [
+        "id",
+        "total"
+      ]
     }
   ],
   "total": 1,

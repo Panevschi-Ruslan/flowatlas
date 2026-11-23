@@ -743,7 +743,8 @@
             }
           ],
           "returns": "{items:string[]}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1038,7 +1039,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

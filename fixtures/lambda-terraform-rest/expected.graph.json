@@ -458,7 +458,25 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "borrowerId",
+            "line": 18
+          },
+          {
+            "field": "isbn",
+            "line": 18
+          },
+          {
+            "field": "borrowerId",
+            "line": 19
+          },
+          {
+            "field": "isbn",
+            "line": 20
+          }
+        ]
       }
     },
     {
@@ -495,7 +513,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -514,7 +533,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -561,7 +581,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

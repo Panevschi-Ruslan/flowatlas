@@ -230,7 +230,14 @@
             }
           ],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 2,
+            "why": "handed to readBody"
+          }
+        ]
       }
     },
     {
@@ -249,7 +256,14 @@
             }
           ],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 2,
+            "why": "handed to getQuery"
+          }
+        ]
       }
     },
     {

@@ -54,6 +54,8 @@ export const AGENT_HABITS: readonly string[] = Object.freeze([
 /** The rules the full guide states after the habits, loaded when the guide is. */
 export const AGENT_RULES: readonly string[] = Object.freeze([
   'Narrow, then read: find the id (find_symbol, list_entries or search), ask what it connects to, then read only the steps that matter.',
+  // P368: a question about a field of a message or a body is one call, not a read of every handler.
+  'Who reads or sends a field of a message or a body is one call: who_consumes or who_emits with `field`, or check_contract on a route or a `channel`.',
   'Where an answer says the graph could not read something (`unresolvedOnPath`, `cant_follow`), search those files yourself.',
   'An answer with `stale` was built before the files it cites changed: run `flowatlas build` and ask again.',
 ]);

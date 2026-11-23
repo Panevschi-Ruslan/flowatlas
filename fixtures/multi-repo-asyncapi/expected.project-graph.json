@@ -275,7 +275,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "invoiceId",
+            "line": 18
+          }
+        ]
       }
     },
     {

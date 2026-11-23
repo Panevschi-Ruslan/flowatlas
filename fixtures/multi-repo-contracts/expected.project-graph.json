@@ -98,7 +98,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1362,7 +1363,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1381,7 +1383,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1412,7 +1415,8 @@
             }
           ],
           "returns": "type:orders#AddressDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1431,7 +1435,15 @@
             }
           ],
           "returns": "type:orders#CreateDraftDto[]"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "orders#src/orders/orders.service.ts:OrdersService.storeDrafts",
+            "line": 81,
+            "why": "handed to this.drafts.save"
+          }
+        ]
       }
     },
     {
@@ -1450,7 +1462,29 @@
             }
           ],
           "returns": "type:orders#OrderDto"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "customerId",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 65
+          },
+          {
+            "field": "total",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 66
+          },
+          {
+            "field": "customerId",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 70
+          },
+          {
+            "field": "total.amount",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 70
+          }
+        ]
       }
     },
     {
@@ -1469,7 +1503,8 @@
             }
           ],
           "returns": "type:orders#CreateDraftDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1488,7 +1523,8 @@
             }
           ],
           "returns": "type:orders#OrderDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1507,7 +1543,29 @@
             }
           ],
           "returns": "type:orders#OrderDto"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "customerId",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 65
+          },
+          {
+            "field": "total",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 66
+          },
+          {
+            "field": "customerId",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 70
+          },
+          {
+            "field": "total.amount",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 70
+          }
+        ]
       }
     },
     {
@@ -1526,7 +1584,8 @@
             }
           ],
           "returns": "type:orders#CreateDraftDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1545,7 +1604,8 @@
             }
           ],
           "returns": "type:@fx/wire#MoneyDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1564,7 +1624,8 @@
             }
           ],
           "returns": "type:orders#CreateDraftDto|type:orders#LockedDraftDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1583,7 +1644,15 @@
             }
           ],
           "returns": "type:orders#CreateDraftDto"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "orders#src/orders/orders.service.ts:OrdersService.storeDraft",
+            "line": 28,
+            "why": "handed to this.drafts.save"
+          }
+        ]
       }
     },
     {
@@ -1602,7 +1671,15 @@
             }
           ],
           "returns": "type:orders#CreateDraftDto"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "orders#src/orders/orders.service.ts:OrdersService.storeDraft",
+            "line": 28,
+            "why": "handed to this.drafts.save"
+          }
+        ]
       }
     },
     {
@@ -1816,7 +1893,13 @@
             }
           ],
           "returns": "type:orders#OrderDto"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 17
+          }
+        ]
       }
     },
     {
@@ -1847,7 +1930,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1866,7 +1950,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

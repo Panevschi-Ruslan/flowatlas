@@ -39,7 +39,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -53,7 +54,8 @@
         "signature": {
           "params": [],
           "returns": "{orders:0}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

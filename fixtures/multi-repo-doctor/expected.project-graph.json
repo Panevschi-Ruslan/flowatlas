@@ -76,6 +76,16 @@
               "order.created"
             ]
           }
+        ],
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 21
+          },
+          {
+            "field": "total",
+            "line": 21
+          }
         ]
       }
     },
@@ -115,7 +125,8 @@
               "order.refunded"
             ]
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1037,7 +1048,19 @@
             }
           ],
           "returns": "type:orders#OrderDto"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 46
+          },
+          {
+            "field": "total",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 46
+          }
+        ]
       }
     },
     {
@@ -1056,7 +1079,8 @@
             }
           ],
           "returns": "type:orders#OrderDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1075,7 +1099,19 @@
             }
           ],
           "returns": "type:orders#OrderDto"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 46
+          },
+          {
+            "field": "total",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 46
+          }
+        ]
       }
     },
     {

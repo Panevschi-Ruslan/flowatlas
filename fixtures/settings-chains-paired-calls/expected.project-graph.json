@@ -316,7 +316,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -339,7 +340,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -395,7 +397,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -409,7 +412,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -438,7 +442,8 @@
         "signature": {
           "params": [],
           "returns": "{listings:any;entries:any;reviews:unknown}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

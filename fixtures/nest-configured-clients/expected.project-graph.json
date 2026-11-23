@@ -404,7 +404,17 @@
             }
           ],
           "returns": "any"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "quantity",
+            "line": 10
+          },
+          {
+            "field": "sku",
+            "line": 10
+          }
+        ]
       }
     },
     {

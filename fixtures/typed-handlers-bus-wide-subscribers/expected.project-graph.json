@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-23T14:34:06.422Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T16:45:41.473Z",
   "services": [
     {
       "name": "shop",
@@ -76,6 +76,16 @@
               "order_updates"
             ]
           }
+        ],
+        "fieldsRead": [
+          {
+            "field": "label",
+            "line": 16
+          },
+          {
+            "field": "orderId",
+            "line": 16
+          }
         ]
       }
     },
@@ -102,6 +112,12 @@
             "args": [
               "order_updates"
             ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 28
           }
         ]
       }
@@ -130,6 +146,12 @@
               "order_updates"
             ]
           }
+        ],
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 34
+          }
         ]
       }
     },
@@ -157,6 +179,12 @@
               "order_updates"
             ]
           }
+        ],
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 22
+          }
         ]
       }
     },
@@ -183,6 +211,12 @@
             "args": [
               "order_updates"
             ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 40
           }
         ]
       }
@@ -215,7 +249,55 @@
             }
           ],
           "returns": "string"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "message",
+            "line": 19
+          },
+          {
+            "field": "message.type",
+            "line": 21
+          },
+          {
+            "field": "message.label",
+            "in": "bot#src/bot/bot.ts:Bot.handleOrderReady",
+            "line": 16,
+            "when": [
+              "ORDER_READY"
+            ]
+          },
+          {
+            "field": "message.orderId",
+            "in": "bot#src/bot/bot.ts:Bot.handleOrderReady",
+            "line": 16,
+            "when": [
+              "ORDER_READY"
+            ]
+          },
+          {
+            "field": "message.orderId",
+            "in": "bot#src/bot/bot.ts:Bot.handleRefund",
+            "line": 34,
+            "when": [
+              "ORDER_REFUNDED"
+            ]
+          },
+          {
+            "field": "message.orderId",
+            "in": "bot#src/bot/bot.ts:Bot.handleStatus",
+            "line": 22,
+            "when": [
+              "STATUS_CHANGED",
+              "ORDER_CANCELLED"
+            ]
+          },
+          {
+            "field": "message.type",
+            "in": "bot#src/bot/bot.ts:Bot.log",
+            "line": 40
+          }
+        ]
       }
     },
     {
@@ -1329,7 +1411,8 @@
         "signature": {
           "params": [],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1360,7 +1443,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1379,7 +1463,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1482,7 +1567,8 @@
         "signature": {
           "params": [],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1536,7 +1622,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "length",
+            "line": 22
+          }
+        ]
       }
     },
     {
@@ -1599,7 +1691,8 @@
         "signature": {
           "params": [],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1676,7 +1769,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1695,7 +1789,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 11
+          }
+        ]
       }
     },
     {
@@ -1718,7 +1818,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "label",
+            "line": 16
+          }
+        ]
       }
     },
     {
@@ -1737,7 +1843,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1760,7 +1867,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "status",
+            "line": 21
+          }
+        ]
       }
     },
     {
@@ -1901,7 +2014,8 @@
         "signature": {
           "params": [],
           "returns": "type:@nestjs/common#MessageEvent"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1937,7 +2051,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {

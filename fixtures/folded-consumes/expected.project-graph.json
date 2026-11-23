@@ -263,6 +263,12 @@
               "order:closed"
             ]
           }
+        ],
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 53
+          }
         ]
       }
     },

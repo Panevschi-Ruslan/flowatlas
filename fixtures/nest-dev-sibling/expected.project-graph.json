@@ -91,7 +91,21 @@
             }
           ],
           "returns": "{id:string}"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "email",
+            "line": 9
+          },
+          {
+            "field": "id",
+            "line": 9
+          },
+          {
+            "field": "id",
+            "line": 10
+          }
+        ]
       }
     },
     {

@@ -323,7 +323,15 @@
             }
           ],
           "returns": "{accepted:true}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "nest-broker-markers#src/bus/event-bus.service.ts:EventBusService.publish",
+            "line": 19,
+            "why": "handed to listener"
+          }
+        ]
       }
     },
     {
@@ -696,6 +704,12 @@
               "order.cancelled"
             ]
           }
+        ],
+        "fieldsRead": [
+          {
+            "field": "reason",
+            "line": 34
+          }
         ]
       }
     },
@@ -722,6 +736,12 @@
             "args": [
               "order.created"
             ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 27
           }
         ]
       }

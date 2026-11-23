@@ -229,7 +229,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 27
+          }
+        ]
       }
     },
     {
@@ -248,7 +254,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "amount",
+            "line": 39
+          }
+        ]
       }
     },
     {
@@ -279,7 +291,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "reason",
+            "line": 15
+          }
+        ]
       }
     },
     {

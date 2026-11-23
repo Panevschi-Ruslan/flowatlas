@@ -216,7 +216,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -235,7 +236,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -254,7 +256,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -273,7 +276,8 @@
             }
           ],
           "returns": "type:remix-flat-routes#Order"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -292,7 +296,13 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "total",
+            "line": 9
+          }
+        ]
       }
     },
     {
@@ -306,7 +316,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -325,7 +336,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

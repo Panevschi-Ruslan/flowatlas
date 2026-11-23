@@ -272,7 +272,8 @@
             }
           ],
           "returns": "type:gateway#Order"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -291,7 +292,8 @@
             }
           ],
           "returns": "type:gateway#Order"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

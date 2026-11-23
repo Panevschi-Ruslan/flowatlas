@@ -82,7 +82,8 @@
             }
           ],
           "returns": "type:nest-no-data#Message"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -101,7 +102,8 @@
             }
           ],
           "returns": "type:nest-no-data#Message"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

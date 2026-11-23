@@ -263,7 +263,14 @@
             }
           ],
           "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 12,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {

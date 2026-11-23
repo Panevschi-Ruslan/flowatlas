@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T16:35:14.896Z",
+  "configHash": "bde030226f67",
+  "services": [
+    {
+      "name": "ops-bot",
+      "repo": "./ops-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 24,
+      "edges": 18,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 2535,
+      "packages": {
+        "name": "ops-bot",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop-api",
+      "repo": "./shop-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 25,
+      "edges": 21,
+      "types": 6,
+      "unresolved": 0,
+      "durationMs": 2447,
+      "packages": {
+        "name": "shop-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 1,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 1,
+    "uncalled": [
+      "entry:ops-bot:http:POST:/events/orders",
+      "entry:shop-api:http:POST:/api/desks/:param/help",
+      "entry:shop-api:http:POST:/api/orders/:param/ready"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 8,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 50,
+    "edges": 46,
+    "types": 8,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 0
+  }
+}

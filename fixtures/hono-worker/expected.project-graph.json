@@ -32,7 +32,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -51,7 +52,13 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "text",
+            "line": 30
+          }
+        ]
       }
     },
     {
@@ -70,7 +77,13 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "text",
+            "line": 36
+          }
+        ]
       }
     },
     {
@@ -98,7 +111,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -125,7 +139,10 @@
       "label": "ApiKeyGuard",
       "repo": "api",
       "file": "src/auth/api-key.guard.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "fieldsRead": []
+      }
     },
     {
       "id": "api#src/orders/orders.controller.ts:OrdersController",
@@ -159,7 +176,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -178,7 +196,8 @@
             }
           ],
           "returns": "type:api#Order[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -270,7 +289,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -289,7 +309,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -308,7 +329,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -327,7 +349,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -346,7 +369,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -365,7 +389,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -384,7 +409,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -436,7 +462,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

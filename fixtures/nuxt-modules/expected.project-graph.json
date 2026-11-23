@@ -199,7 +199,8 @@
         "signature": {
           "params": [],
           "returns": "{total:0}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -233,7 +234,14 @@
             }
           ],
           "returns": "{recorded:unknown}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 2,
+            "why": "handed to readBody"
+          }
+        ]
       }
     },
     {
@@ -448,7 +456,8 @@
         "signature": {
           "params": [],
           "returns": "{id:string;name:string}[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -509,7 +518,8 @@
             }
           ],
           "returns": "{id:string}[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

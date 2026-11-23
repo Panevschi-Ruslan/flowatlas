@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-23T14:32:42.963Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T16:44:44.468Z",
   "services": [
     {
       "name": "planner",
@@ -220,7 +220,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -931,7 +932,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -959,7 +961,13 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "url",
+            "line": 9
+          }
+        ]
       }
     },
     {
@@ -982,7 +990,22 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 17,
+            "why": "handed to env.DIGESTS.get(env.DIGESTS.idFromName('daily')).fetch"
+          },
+          {
+            "line": 21,
+            "why": "handed to env.TEAM_FEEDS.getByName(team[1]).fetch"
+          },
+          {
+            "line": 24,
+            "why": "handed to env.DIGESTS.get(env.DIGESTS.idFromName('watch')).fetch"
+          }
+        ]
       }
     },
     {
@@ -1343,7 +1366,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1362,7 +1386,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 16,
+            "why": "handed to c.env.BOARD_FEEDS.get(id).fetch"
+          }
+        ]
       }
     },
     {
@@ -1381,7 +1412,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 38,
+            "why": "handed to c.env.ARCHIVE.get(c.env.ARCHIVE.idFromName(c.req.param('boar"
+          }
+        ]
       }
     },
     {
@@ -1400,7 +1438,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 21,
+            "why": "handed to presenceFor(c.env, c.req.param('boardId')).fetch"
+          }
+        ]
       }
     },
     {
@@ -1419,7 +1464,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 41,
+            "why": "handed to c.env.LEDGER.get(c.env.LEDGER.newUniqueId()).fetch"
+          }
+        ]
       }
     },
     {
@@ -1438,7 +1490,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1457,7 +1510,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "in": "gateway#src/objects/presence-hub.ts:PresenceHub.announce",
+            "line": 29
+          }
+        ]
       }
     },
     {
@@ -1627,7 +1687,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "teamId",
+            "line": 10
+          },
+          {
+            "field": "title",
+            "line": 10
+          }
+        ]
       }
     },
     {
@@ -1646,7 +1716,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "summary",
+            "line": 20
+          }
+        ]
       }
     },
     {
@@ -1665,7 +1741,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "text",
+            "line": 15
+          }
+        ]
       }
     },
     {

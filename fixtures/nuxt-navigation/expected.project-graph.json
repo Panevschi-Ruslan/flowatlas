@@ -397,7 +397,8 @@
         "signature": {
           "params": [],
           "returns": "{id:string}[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -411,7 +412,8 @@
         "signature": {
           "params": [],
           "returns": "{seen:true}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

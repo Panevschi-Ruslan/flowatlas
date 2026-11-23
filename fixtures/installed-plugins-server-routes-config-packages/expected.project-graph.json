@@ -66,7 +66,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -85,7 +86,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -104,7 +106,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -123,7 +126,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -142,7 +146,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -161,7 +166,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -175,7 +181,8 @@
         "signature": {
           "params": [],
           "returns": "{ok:true}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -438,7 +445,8 @@
         "signature": {
           "params": [],
           "returns": "{ok:true}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1045,7 +1053,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1068,7 +1077,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     }
   ],

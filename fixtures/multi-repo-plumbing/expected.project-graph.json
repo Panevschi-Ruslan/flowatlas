@@ -368,7 +368,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 14
+          },
+          {
+            "field": "total",
+            "line": 14
+          }
+        ]
       }
     },
     {
@@ -399,7 +409,29 @@
             }
           ],
           "returns": "type:billing#InvoiceDto"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "in": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+            "line": 17
+          },
+          {
+            "field": "orderId",
+            "in": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+            "line": 19
+          },
+          {
+            "field": "amount",
+            "in": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+            "line": 20
+          },
+          {
+            "field": "orderId",
+            "in": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+            "line": 20
+          }
+        ]
       }
     },
     {
@@ -418,7 +450,8 @@
             }
           ],
           "returns": "type:billing#InvoiceDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1156,7 +1189,8 @@
             "text": "POST /orders/{id}/cancel",
             "at": 27
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1182,7 +1216,8 @@
             "text": "GET /orders/{id}",
             "at": 20
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1211,6 +1246,12 @@
             "level": "log",
             "text": "POST /orders/{id}/invoice",
             "at": 35
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "amount",
+            "line": 37
           }
         ]
       }
@@ -1751,7 +1792,8 @@
             "text": "POST /orders/{id}/archive",
             "at": 30
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1777,7 +1819,8 @@
             "text": "POST /orders/{id}/cancel",
             "at": 36
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1802,6 +1845,23 @@
             "level": "log",
             "text": "POST /orders",
             "at": 24
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "customerId",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 29
+          },
+          {
+            "field": "customerId",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 31
+          },
+          {
+            "field": "total",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 31
           }
         ]
       }
@@ -1829,7 +1889,8 @@
             "text": "GET /orders/{id}",
             "at": 17
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {

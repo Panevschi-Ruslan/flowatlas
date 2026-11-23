@@ -1,0 +1,14 @@
+{
+  "entry": "entry:shop-api:http:POST:/api/orders/:param/ready",
+  "reads": [
+    {
+      "field": "label",
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.ready",
+      "line": 27,
+      "layer": "handler"
+    }
+  ],
+  "note": "no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches",
+  "callers": 0,
+  "complete": true
+}

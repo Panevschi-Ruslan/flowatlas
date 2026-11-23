@@ -917,11 +917,11 @@ window longer than the file holds says `short: true` and every row is `weak`.
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `who_emits` | everything that publishes on a channel, across every repository; with `type`, what publishes that type of message on it | `channel` (required), `type`, `service`, `offset` |
-| `who_consumes` | everything that handles messages from it; empty means nothing does; with `type`, the code that selects that type of message, or why nothing does | `channel` (required), `type`, `service`, `offset` |
+| `who_emits` | everything that publishes on a channel, across every repository; with `type`, what publishes that type of message on it; with `field`, only the publishes that send that field | `channel` (required), `type`, `field`, `service`, `offset` |
+| `who_consumes` | everything that handles messages from it; empty means nothing does; with `type`, the code that selects that type of message, or why nothing does; with `field`, only the handlers that read that field, each with where | `channel` (required), `type`, `field`, `service`, `offset` |
 | `get_type` | the structure of a type, with what it refers to expanded to a depth | `type` (required), `depth` |
 | `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it | `type` (required), `service`, `offset` |
-| `check_contract` | what one side of a crossing sends against what the other expects; on an entry, what traffic carried into it against its code | `edge` (a crossing or an entry id), or `from` and `to` |
+| `check_contract` | what one side of a crossing sends against what the other expects; on an entry, the fields of the body each piece of code on its path reads, and what traffic carried into it against its code; on a channel or one type of message, the fields read and not sent and sent and never read | `edge` (a crossing, an entry id or a route said aloud), or `from` and `to`, or `channel` and `type`; `field` |
 | `get_spec` | a service's routes as the OpenAPI 3.1 document `flowatlas spec` writes, or its channel ends as AsyncAPI 3.0, as JSON text; with `path`, one operation and only the schemas it uses (P118) | `service` (required), `kind`, `path`, `maxChars` |
 
 A channel that carries several kinds of message told apart by a field
@@ -1002,6 +1002,51 @@ would win), it lists every crossing from one into the other: each request
 crossing is `{ from, to, type, via?, status, check }`, worst `status` first,
 `check` the call that checks it in full; `byStatus` counts them and `maxNodes`
 bounds the list. With none it says so, and how many go the other way.
+
+**Fields read and sent (P368).** The reading writes, on the handler of every
+HTTP route and of every consumer that chooses for itself, and on every guard,
+interceptor, pipe and middleware a route runs first, which fields of what it
+is handed it reads: `meta.fieldsRead`, rows `{ field, in?, line, when? }`
+(`field` dotted from the payload, `in` the function it is read in where that
+is not the node's own, `when` the types of message a `switch`, an `if` or an
+early return on the discriminator reads it under), and `meta.fieldsUnread`,
+each use it could not follow with why: the whole value spread, put inside
+another, handed to a function outside the repository (`handed to
+this.logger.log`), indexed by a variable, its keys walked, gathered by a rest
+pattern, or a walk cut by its bounds (4 calls deep, 30 functions, 80 reads).
+It follows a member read (`evt.label`, `evt?.label`, `evt['label']`), a
+destructuring, a local that is the value again (`const e = raw as Evt`), the
+value handed to a function of the repository, and a request's body however
+the code reaches it: `@Body()`, `@Body('x')`, `@Payload()`, `@MessageBody()`,
+`@Req()`, `req.body.x`, `ctx.request.body.x`, `await c.req.json()`,
+`c.req.valid('json')`, and a guard's `context.switchToHttp().getRequest()`. A
+value only compared, tested or returned is not a read. A name holding a field
+already read is not read again: only a key past it is.
+
+`who_consumes` with `field` keeps the handlers that read it, under `type` where
+one is asked (a read inside another type's choice is not this type's; a
+handler a dispatch chose reads what its chooser reads under that type), each
+with `readIn: [{ id, line }]`; a handler not read for fields, or one that hands
+the message where the reading could not follow, is said in `left`.
+`who_emits` with `field` keeps the publishes whose payload's shape holds it,
+narrowed to the member of a union whose discriminator is the type asked. At
+`detail: 2`, without `field`, each consumer row says `reads` and each publish
+`sends`. `search` finds a field by its name under `fields`: one row per type
+of message, channel or route it crosses, `{ id, label, read, sent }`, whose
+`next` is the `who_consumes` or `check_contract` that names the code.
+
+`check_contract` given a route (an entry id, or said aloud: `PATCH
+/orders/:id/cancel`) answers `reads`, every field of the body the code on the
+request's path reads, `{ field, id, line, layer }`, the layer `guard`,
+`interceptor`, `pipe`, `middleware` or `handler`, so a body the handler
+ignores and a guard reads names the guard; `field` keeps one. Given a
+`channel` (and a `type`), it lists the `producers` with what each `sends`, the
+`consumers` with what each `reads`, `missing` (a field a handler reads and a
+publish does not send, at the first place it is read, with `notSentBy` where
+only some publishes leave it out) and `unused` (sent, read by nothing, with
+`sentBy`); without `type` a channel that carries types is compared type by
+type. On a request edge into an entry, `fields` holds the same two lists for
+the body it sends against what the route's path reads.
 
 `get_spec` writes the document from the database as it stands, through the
 wire rules, so a schema says what goes over the wire; a shape it could not read

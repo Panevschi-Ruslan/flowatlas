@@ -60,7 +60,8 @@
             }
           ],
           "returns": "type:api#Order"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -79,7 +80,13 @@
             }
           ],
           "returns": "type:api#Order"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 27
+          }
+        ]
       }
     },
     {
@@ -98,7 +105,8 @@
             }
           ],
           "returns": "type:api#Order"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -112,7 +120,8 @@
         "signature": {
           "params": [],
           "returns": "type:api#Order[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

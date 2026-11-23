@@ -245,7 +245,10 @@
       "label": "ApiKeyGuard",
       "repo": "nest-incremental",
       "file": "src/guards/api-key.guard.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "fieldsRead": []
+      }
     },
     {
       "id": "nest-incremental#src/orders/orders.controller.ts:OrdersController",
@@ -275,7 +278,19 @@
             }
           ],
           "returns": "type:nest-incremental#OrderDto"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "customerId",
+            "in": "nest-incremental#src/orders/orders.service.ts:OrdersService.create",
+            "line": 22
+          },
+          {
+            "field": "total",
+            "in": "nest-incremental#src/orders/orders.service.ts:OrdersService.create",
+            "line": 23
+          }
+        ]
       }
     },
     {
@@ -294,7 +309,8 @@
             }
           ],
           "returns": "type:nest-incremental#OrderDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

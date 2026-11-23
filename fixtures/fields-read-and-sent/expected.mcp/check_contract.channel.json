@@ -1,0 +1,65 @@
+{
+  "channel": "channel:order_updates",
+  "producers": [
+    {
+      "id": "producer:shop-api#src/orders/orders.service.ts:11:11",
+      "type": "producer",
+      "label": "event order_updates",
+      "loc": "src/orders/orders.service.ts:11",
+      "service": "shop-api",
+      "kind": "event",
+      "reach": "alive",
+      "from": "POST /api/orders/:param/ready",
+      "sends": [
+        "type",
+        "orderId",
+        "label"
+      ]
+    },
+    {
+      "id": "producer:shop-api#src/orders/orders.service.ts:16:11",
+      "type": "producer",
+      "label": "event order_updates",
+      "loc": "src/orders/orders.service.ts:16",
+      "service": "shop-api",
+      "kind": "event",
+      "reach": "alive",
+      "from": "PATCH /api/orders/:param/cancel",
+      "sends": [
+        "type",
+        "orderId",
+        "reason"
+      ]
+    }
+  ],
+  "consumers": [
+    {
+      "id": "consumer:ops-bot#src/events/events.controller.ts:EventsController.receive",
+      "type": "consumer",
+      "label": "EventsController.receive",
+      "loc": "src/events/events.controller.ts:10",
+      "service": "ops-bot",
+      "kind": "event",
+      "reach": "alive",
+      "from": "POST /events/orders",
+      "ways": 3,
+      "reads": [
+        "label",
+        "orderId",
+        "reason",
+        "type"
+      ]
+    }
+  ],
+  "missing": [],
+  "unused": [
+    {
+      "type": "ORDER_READY",
+      "field": "orderId",
+      "sentBy": [
+        "producer:shop-api#src/orders/orders.service.ts:11:11"
+      ]
+    }
+  ],
+  "complete": true
+}

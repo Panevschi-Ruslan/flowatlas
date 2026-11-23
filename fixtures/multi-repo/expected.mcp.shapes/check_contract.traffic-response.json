@@ -1,5 +1,6 @@
 {
   "entry": "entry:gateway:http:GET:/orders/:param",
+  "reads": [],
   "traffic": {
     "samples": 1,
     "window": {
@@ -35,6 +36,7 @@
     }
   },
   "callers": 2,
+  "complete": true,
   "next": [
     "check_contract({from: \"ui_api_call:web#src/app/orders-api.service.ts:21:12\", to: \"entry:gateway:http:GET:/orders/:param\"})",
     "check_contract({from: \"ui_api_call:web#src/app/orders-api.service.ts:73:12\", to: \"entry:gateway:http:GET:/orders/:param\"})"

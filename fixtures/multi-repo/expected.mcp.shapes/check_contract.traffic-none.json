@@ -1,5 +1,26 @@
 {
   "entry": "entry:orders:http:POST:/orders",
+  "reads": [
+    {
+      "field": "customerId",
+      "id": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "line": 43,
+      "layer": "handler"
+    },
+    {
+      "field": "total.amount",
+      "id": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "line": 45,
+      "layer": "handler"
+    },
+    {
+      "field": "total.currency",
+      "id": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "line": 46,
+      "layer": "handler"
+    }
+  ],
   "note": "no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches",
-  "callers": 0
+  "callers": 0,
+  "complete": true
 }

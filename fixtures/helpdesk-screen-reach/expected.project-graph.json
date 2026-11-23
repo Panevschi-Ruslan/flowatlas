@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-23T14:23:12.608Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T16:36:52.173Z",
   "services": [
     {
       "name": "desk-api",
@@ -204,7 +204,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "unreferenced": true
       }
     },
     {
@@ -463,7 +464,8 @@
             }
           ],
           "returns": "MessageEvent<any>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -502,7 +504,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "agentId",
+            "line": 10
+          }
+        ]
       }
     },
     {
@@ -525,7 +533,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

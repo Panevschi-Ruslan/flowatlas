@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:32:13.838Z",
+  "builtAt": "2026-11-23T16:33:04.822Z",
   "services": [
     {
       "name": "catalog-api",
@@ -62,7 +62,8 @@
             }
           ],
           "returns": "{id:string;title:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

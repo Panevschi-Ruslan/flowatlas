@@ -354,7 +354,8 @@
         "signature": {
           "params": [],
           "returns": "{ok:true}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -397,7 +398,8 @@
         "signature": {
           "params": [],
           "returns": "{results:never[]}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -411,7 +413,8 @@
         "signature": {
           "params": [],
           "returns": "{name:string}[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -729,7 +732,8 @@
         "signature": {
           "params": [],
           "returns": "{alerts:never[]}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -743,7 +747,8 @@
         "signature": {
           "params": [],
           "returns": "{cart:never[]}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -757,7 +762,8 @@
         "signature": {
           "params": [],
           "returns": "{menu:never[]}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -771,7 +777,8 @@
         "signature": {
           "params": [],
           "returns": "{total:0}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -785,7 +792,8 @@
         "signature": {
           "params": [],
           "returns": "{products:never[]}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -799,7 +807,8 @@
         "signature": {
           "params": [],
           "returns": "{session:never[]}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -813,7 +822,8 @@
         "signature": {
           "params": [],
           "returns": "{visits:never[]}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

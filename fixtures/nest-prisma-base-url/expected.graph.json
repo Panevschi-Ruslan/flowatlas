@@ -407,7 +407,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -421,7 +422,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -440,7 +442,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -545,7 +548,8 @@
       "file": "src/guards/api-token.guard.ts",
       "line": 4,
       "meta": {
-        "module": "CouponsModule"
+        "module": "CouponsModule",
+        "fieldsRead": []
       }
     },
     {

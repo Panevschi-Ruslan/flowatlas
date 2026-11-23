@@ -240,7 +240,8 @@
         "signature": {
           "params": [],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -297,7 +298,8 @@
         "signature": {
           "params": [],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -323,7 +325,8 @@
         "signature": {
           "params": [],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -380,7 +383,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "exportId",
+            "line": 16
+          }
+        ]
       }
     },
     {
@@ -411,7 +420,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "exportId",
+            "line": 15
+          }
+        ]
       }
     },
     {
@@ -442,7 +457,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "to",
+            "line": 14
+          }
+        ]
       }
     },
     {

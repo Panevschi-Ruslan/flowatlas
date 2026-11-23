@@ -307,7 +307,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "amount",
+            "line": 14
+          }
+        ]
       }
     },
     {
@@ -326,7 +332,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -494,7 +501,13 @@
             }
           ],
           "returns": "string"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "amount",
+            "line": 11
+          }
+        ]
       }
     },
     {

@@ -4,9 +4,13 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import { loadObserved } from '../query/observed.js';
+import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
+import { reachReader } from '../query/ways-in.js';
+import { bodyReadsOf, channelContract, requestFields } from './fields-contract.js';
 import {
   callOf,
   commonInput,
+  completeOf,
   READ_ONLY,
   withDb,
   type ContractFinding,
@@ -280,11 +284,15 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
     'check_contract',
     {
       title: 'Check a contract',
-      description: 'Whether what one side of a crossing sends is what the other side expects.',
+      description:
+        'Whether what one side of a crossing sends is what the other expects. On a route (`GET /x` or id): the body fields read on its path, guards included; on a `channel` (and `type`): fields read, not sent (`missing`), and sent, never read (`unused`). `field` keeps one.',
       inputSchema: {
-        edge: z.string().optional().describe('"<from> -http_calls-> <to>", or an entry id'),
+        edge: z.string().optional().describe('"<from> -http_calls-> <to>", or an entry'),
         from: z.string().optional(),
         to: z.string().optional(),
+        channel: z.string().optional(),
+        type: z.string().optional(),
+        field: z.string().optional(),
         // `maxNodes` only. This answers about one crossing, so there is no tree
         // to thin and `detail` had nothing to apply itself to — it was declared,
         // ignored, and answered `detail: 3` with a note saying the level had
@@ -295,23 +303,44 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
     },
     (input) =>
       withDb(ctx.handle, (db) => {
+        const field = input.field?.trim() || undefined;
+        // A channel, or one type of message on it (P368): what each end sends and reads.
+        if (input.channel !== undefined) {
+          return channelContract(db, reachReader(db, ctx.handle, 1), { channel: input.channel, type: input.type, field, maxNodes: input.maxNodes });
+        }
+        // An entry said aloud, `PATCH /orders/:id/cancel`, is the entry it names (P368).
+        const said = input.edge !== undefined && parseEdgeRef(input.edge) === undefined && !isEntryId(input.edge.trim()) ? resolveEntryRef(db, input.edge) : undefined;
+        if (said !== undefined && !isResolved(said)) {
+          return withNext(
+            { error: `${JSON.stringify(input.edge)} names no one entry`, candidates: said.candidates.slice(0, 5).map((node) => node.id) },
+            said.candidates.slice(0, 2).map((node) => callOf('check_contract', { edge: node.id, field })),
+          );
+        }
+        const entryAsked = said !== undefined && isResolved(said) ? said.id : input.edge?.trim();
         // An entry on its own (P113): what traffic carried into it against its code, and the calls into it.
-        if (input.edge !== undefined && parseEdgeRef(input.edge) === undefined && isEntryId(input.edge.trim())) {
-          const entry = input.edge.trim();
+        if (entryAsked !== undefined && parseEdgeRef(entryAsked) === undefined && isEntryId(entryAsked)) {
+          const entry = entryAsked;
           if (db.node(entry) === undefined) return { error: `no entry ${entry}` };
           const into = db
             .edgesTo(entry, [...REQUEST_EDGES])
             .sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
           const traffic = trafficFor(ctx, entry);
+          // What the code on the request's path reads of the body (P368).
+          const body = bodyReadsOf(db, entry, field);
           return withNext(
             {
               entry,
+              ...(field === undefined ? {} : { field }),
+              reads: body.reads,
               ...(traffic === undefined
-                ? { note: 'no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches' }
+                ? field === undefined
+                  ? { note: 'no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches' }
+                  : {}
                 : { traffic }),
               callers: into.length,
+              ...completeOf(body.left),
             },
-            into.slice(0, MAX_NEXT).map((edge) => callOf('check_contract', { from: edge.from, to: edge.to })),
+            into.slice(0, MAX_NEXT).map((edge) => callOf('check_contract', { from: edge.from, to: edge.to, field })),
           );
         }
         const parsed =
@@ -373,6 +402,8 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
 
         const shown = findings.slice(0, input.maxNodes).map(wireFinding);
         const traffic = isEntryId(edge.to) ? trafficFor(ctx, edge.to, edge) : undefined;
+        // The body's fields, sent against read on the route's path (P368).
+        const fields = isEntryId(edge.to) ? requestFields(db, { id: edge.from, params: edge.params }, edge.to, field) : undefined;
         const shapes = [request.left, request.right, response.left, response.right].filter(
           (id): id is string => typeof id === 'string' && id.startsWith('type:'),
         );
@@ -386,6 +417,12 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
             ? {}
             : { cut: `${findings.length - shown.length} more finding(s); raise maxNodes` }),
           ...(traffic === undefined ? {} : { traffic }),
+          ...(fields === undefined
+            ? {}
+            : {
+                ...(fields.missing.length + fields.unused.length === 0 ? {} : { fields: { missing: fields.missing, unused: fields.unused } }),
+                ...completeOf(fields.left),
+              }),
         }, [...new Set(shapes)].slice(0, 2).map((id) => `get_type({type: ${JSON.stringify(id)}})`));
       }),
   );

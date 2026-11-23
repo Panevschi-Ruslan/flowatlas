@@ -202,7 +202,15 @@
             }
           ],
           "returns": "type:nest-typeorm#Order"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "nest-typeorm#src/orders/orders.service.ts:OrdersService.create",
+            "line": 27,
+            "why": "handed to this.orders.save"
+          }
+        ]
       }
     },
     {
@@ -216,7 +224,8 @@
         "signature": {
           "params": [],
           "returns": "type:nest-typeorm#Order[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -230,7 +239,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -249,7 +259,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

@@ -402,7 +402,8 @@
             }
           ],
           "returns": "{id:any}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -416,7 +417,8 @@
         "signature": {
           "params": [],
           "returns": "{refunded:true}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -426,7 +428,10 @@
       "repo": "orders",
       "file": "src/router.ts",
       "line": 17,
-      "kind": "function"
+      "kind": "function",
+      "meta": {
+        "fieldsRead": []
+      }
     },
     {
       "id": "orders#src/router.ts:router.handler@21",
@@ -467,7 +472,8 @@
             }
           ],
           "returns": "type:express#Response<unknown>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -506,7 +512,8 @@
             }
           ],
           "returns": "{sku:string;quantity:number;shipped:boolean;id:string}[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

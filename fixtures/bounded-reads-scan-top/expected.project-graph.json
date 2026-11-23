@@ -281,7 +281,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -304,7 +305,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "price",
+            "line": 14
+          },
+          {
+            "field": "account",
+            "line": 15
+          }
+        ]
       }
     },
     {

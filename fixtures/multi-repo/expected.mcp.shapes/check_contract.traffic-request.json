@@ -1,5 +1,19 @@
 {
   "entry": "entry:gateway:http:POST:/orders/:param/invoice",
+  "reads": [
+    {
+      "field": "id",
+      "id": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice",
+      "line": 34,
+      "layer": "handler"
+    },
+    {
+      "field": "total.amount",
+      "id": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice",
+      "line": 35,
+      "layer": "handler"
+    }
+  ],
   "traffic": {
     "samples": 1,
     "window": {
@@ -36,6 +50,7 @@
     ]
   },
   "callers": 3,
+  "complete": true,
   "next": [
     "check_contract({from: \"ui_api_call:web#src/app/orders-api.service.ts:123:3\", to: \"entry:gateway:http:POST:/orders/:param/invoice\"})",
     "check_contract({from: \"ui_api_call:web#src/app/orders-api.service.ts:138:3\", to: \"entry:gateway:http:POST:/orders/:param/invoice\"})",

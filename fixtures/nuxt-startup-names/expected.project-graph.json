@@ -360,7 +360,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -374,7 +375,8 @@
         "signature": {
           "params": [],
           "returns": "{armed:true}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -388,7 +390,8 @@
         "signature": {
           "params": [],
           "returns": "{tenant:'north'}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -402,7 +405,8 @@
         "signature": {
           "params": [],
           "returns": "{counted:true}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

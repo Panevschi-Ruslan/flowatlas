@@ -384,6 +384,12 @@
             "text": "thumbnail of",
             "at": 11
           }
+        ],
+        "fieldsRead": [
+          {
+            "field": "data.imageUrl",
+            "line": 11
+          }
         ]
       }
     },
@@ -410,6 +416,12 @@
             "text": "catalog of",
             "at": 15
           }
+        ],
+        "fieldsRead": [
+          {
+            "field": "data.storeId",
+            "line": 15
+          }
         ]
       }
     },
@@ -435,6 +447,12 @@
             "level": "log",
             "text": "receipt for",
             "at": 7
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "data.orderId",
+            "line": 7
           }
         ]
       }
@@ -542,6 +560,12 @@
             "text": "audit",
             "at": 6
           }
+        ],
+        "fieldsRead": [
+          {
+            "field": "data.action",
+            "line": 6
+          }
         ]
       }
     },
@@ -576,6 +600,12 @@
             "level": "log",
             "text": "report for",
             "at": 16
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "data.storeId",
+            "line": 16
           }
         ]
       }
@@ -633,7 +663,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "url",
+            "line": 14
+          }
+        ]
       }
     },
     {
@@ -656,7 +692,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -679,7 +716,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

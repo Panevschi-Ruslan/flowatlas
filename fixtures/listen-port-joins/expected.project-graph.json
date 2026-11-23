@@ -69,7 +69,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -88,7 +89,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -107,7 +109,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -424,7 +427,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -438,7 +442,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -480,7 +485,8 @@
         "signature": {
           "params": [],
           "returns": "unknown[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -503,7 +509,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -526,7 +533,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -804,7 +812,8 @@
         "signature": {
           "params": [],
           "returns": "{status:'ok'}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -818,7 +827,8 @@
         "signature": {
           "params": [],
           "returns": "{available:3}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -862,7 +872,8 @@
         "signature": {
           "params": [],
           "returns": "{items:never[]}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

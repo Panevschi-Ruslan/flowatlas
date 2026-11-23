@@ -429,7 +429,8 @@
       "file": "src/admin.guard.ts",
       "line": 4,
       "meta": {
-        "module": "AppModule"
+        "module": "AppModule",
+        "fieldsRead": []
       }
     },
     {

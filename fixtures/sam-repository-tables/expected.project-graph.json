@@ -552,7 +552,14 @@
             }
           ],
           "returns": "{statusCode:201;body:string}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 7,
+            "why": "handed to JSON.parse"
+          }
+        ]
       }
     },
     {
@@ -627,7 +634,14 @@
             }
           ],
           "returns": "{statusCode:204}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 4,
+            "why": "handed to JSON.parse"
+          }
+        ]
       }
     }
   ],

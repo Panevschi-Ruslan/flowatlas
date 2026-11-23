@@ -628,7 +628,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -651,7 +652,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -674,7 +676,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "couponCode",
+            "line": 20
+          },
+          {
+            "field": "skus",
+            "line": 20
+          }
+        ]
       }
     },
     {
@@ -697,7 +709,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "quantity",
+            "line": 8
+          },
+          {
+            "field": "sku",
+            "line": 8
+          }
+        ]
       }
     },
     {

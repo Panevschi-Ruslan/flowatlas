@@ -30,7 +30,8 @@
             }
           ],
           "returns": "type:minihttp#Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -62,7 +63,8 @@
             }
           ],
           "returns": "type:minihttp#Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -85,7 +87,8 @@
             }
           ],
           "returns": "type:minihttp#Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -108,7 +111,8 @@
             }
           ],
           "returns": "type:minihttp#Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

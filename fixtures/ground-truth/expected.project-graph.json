@@ -64,7 +64,8 @@
             }
           ],
           "returns": "{params:object}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -78,7 +79,8 @@
         "signature": {
           "params": [],
           "returns": "{name:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -109,7 +111,8 @@
             }
           ],
           "returns": "{id:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -132,7 +135,13 @@
             }
           ],
           "returns": "{id:string;name:string}"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 24
+          }
+        ]
       }
     },
     {
@@ -217,7 +226,8 @@
             }
           ],
           "returns": "{kind:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

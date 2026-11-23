@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "builtAt": "2026-11-23T14:34:06.422Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T16:45:41.473Z",
   "configHash": "c9420ed7b09a",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 16,
       "types": 6,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1786,
       "packages": {
         "name": "bot",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 70,
       "types": 2,
       "unresolved": 3,
-      "durationMs": 0,
+      "durationMs": 1770,
       "packages": {
         "name": "shop",
         "runtime": [
@@ -53,7 +53,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1527,
       "packages": {
         "name": "web",
         "runtime": [

@@ -191,7 +191,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -232,7 +233,8 @@
             }
           ],
           "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

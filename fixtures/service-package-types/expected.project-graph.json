@@ -50,7 +50,8 @@
             }
           ],
           "returns": "{sku:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -108,7 +109,8 @@
         "signature": {
           "params": [],
           "returns": "{ok:boolean}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

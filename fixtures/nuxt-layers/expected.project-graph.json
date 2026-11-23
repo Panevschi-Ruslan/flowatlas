@@ -200,7 +200,8 @@
         "signature": {
           "params": [],
           "returns": "{name:'Corner Shop'}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -229,7 +230,8 @@
         "signature": {
           "params": [],
           "returns": "{mode:'light'}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -317,7 +319,8 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -488,7 +491,14 @@
             }
           ],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 2,
+            "why": "handed to readBody"
+          }
+        ]
       }
     },
     {
@@ -521,7 +531,8 @@
         "signature": {
           "params": [],
           "returns": "{ok:true;by:'shop'}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

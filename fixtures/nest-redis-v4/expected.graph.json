@@ -243,7 +243,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "length",
+            "line": 37
+          }
+        ]
       }
     },
     {
@@ -262,7 +268,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "length",
+            "line": 41
+          }
+        ]
       }
     },
     {
@@ -281,7 +293,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "length",
+            "line": 45
+          }
+        ]
       }
     },
     {

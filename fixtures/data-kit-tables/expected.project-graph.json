@@ -732,7 +732,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -755,7 +756,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -778,7 +780,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -801,7 +804,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "amount",
+            "line": 53
+          }
+        ]
       }
     },
     {
@@ -824,7 +833,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 21,
+            "why": "handed to archive"
+          }
+        ]
       }
     },
     {
@@ -847,7 +863,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "isbn",
+            "line": 12
+          },
+          {
+            "field": "memberId",
+            "line": 12
+          }
+        ]
       }
     },
     {
@@ -870,7 +896,21 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "memberId",
+            "line": 26
+          },
+          {
+            "field": "name",
+            "line": 26
+          },
+          {
+            "field": "memberId",
+            "line": 27
+          }
+        ]
       }
     },
     {
@@ -893,7 +933,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "memberId",
+            "line": 37
+          }
+        ]
       }
     },
     {
@@ -916,7 +962,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

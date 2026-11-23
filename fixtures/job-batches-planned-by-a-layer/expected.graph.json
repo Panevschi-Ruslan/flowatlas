@@ -576,6 +576,12 @@
             "text": "invoice for",
             "at": 37
           }
+        ],
+        "fieldsRead": [
+          {
+            "field": "data.orderId",
+            "line": 37
+          }
         ]
       }
     },
@@ -595,7 +601,25 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "data.email",
+            "line": 22
+          },
+          {
+            "field": "data.email",
+            "line": 23
+          },
+          {
+            "field": "name",
+            "line": 23
+          },
+          {
+            "field": "id",
+            "line": 24
+          }
+        ]
       }
     },
     {
@@ -705,6 +729,12 @@
             "text": "maintenance",
             "at": 34
           }
+        ],
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 34
+          }
         ]
       }
     },
@@ -728,7 +758,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -751,7 +782,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "email",
+            "line": 13
+          }
+        ]
       }
     },
     {

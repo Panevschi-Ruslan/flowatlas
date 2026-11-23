@@ -110,7 +110,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "amount",
+            "line": 12
+          }
+        ]
       }
     },
     {
@@ -334,7 +340,17 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "quantity",
+            "line": 12
+          },
+          {
+            "field": "sku",
+            "line": 12
+          }
+        ]
       }
     },
     {
@@ -353,7 +369,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

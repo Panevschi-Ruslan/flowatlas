@@ -213,7 +213,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -236,7 +237,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -259,7 +261,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -282,7 +285,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -305,7 +309,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "item",
+            "line": 15
+          },
+          {
+            "field": "quantity",
+            "line": 15
+          }
+        ]
       }
     },
     {
@@ -328,7 +342,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "cart",
+            "line": 27
+          }
+        ]
       }
     },
     {
@@ -351,7 +371,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "code",
+            "line": 23
+          }
+        ]
       }
     },
     {

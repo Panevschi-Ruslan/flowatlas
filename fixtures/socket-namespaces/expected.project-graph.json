@@ -55,7 +55,8 @@
         "signature": {
           "params": [],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -139,7 +140,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "videoId",
+            "line": 67
+          }
+        ]
       }
     },
     {
@@ -158,7 +165,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "videoId",
+            "line": 71
+          }
+        ]
       }
     },
     {

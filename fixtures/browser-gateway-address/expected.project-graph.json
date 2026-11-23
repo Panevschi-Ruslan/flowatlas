@@ -32,7 +32,14 @@
             }
           ],
           "returns": "{statusCode:201;body:string}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 2,
+            "why": "handed to JSON.parse"
+          }
+        ]
       }
     },
     {
@@ -51,7 +58,8 @@
             }
           ],
           "returns": "{statusCode:204;body:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -65,7 +73,8 @@
         "signature": {
           "params": [],
           "returns": "{statusCode:200;body:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

@@ -122,7 +122,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 13
+          },
+          {
+            "field": "total",
+            "line": 13
+          }
+        ]
       }
     },
     {
@@ -318,7 +328,17 @@
             }
           ],
           "returns": "{accepted:boolean}"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 10
+          },
+          {
+            "field": "total",
+            "line": 10
+          }
+        ]
       }
     },
     {
