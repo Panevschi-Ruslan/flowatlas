@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:49:32.911Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-23T14:32:55.905Z",
   "services": [
     {
       "name": "shipping",
@@ -293,6 +293,13 @@
           "message"
         ],
         "entryId": null,
+        "subscriptions": [
+          {
+            "line": 10,
+            "column": 40,
+            "through": "EventSource.message"
+          }
+        ],
         "routes": [
           "entry:shipping:http:GET:/workspaces/:param/warehouses/:param/packing"
         ]
@@ -361,7 +368,14 @@
         "adapter": "redis-pubsub",
         "relay": "entry:shipping:http:GET:/workspaces/:param/events",
         "entryId": "entry:shipping:event:workspace:*:events",
-        "decorator": "subscribe"
+        "decorator": "subscribe",
+        "subscriptions": [
+          {
+            "line": 22,
+            "column": 66,
+            "through": "listener.subscribe"
+          }
+        ]
       }
     },
     {
@@ -391,7 +405,14 @@
         "kind": "message",
         "adapter": "redis-pubsub",
         "decorator": "subscribe",
-        "entryId": null
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 17,
+            "column": 40,
+            "through": "listener.subscribe"
+          }
+        ]
       }
     },
     {
@@ -822,8 +843,7 @@
             }
           ],
           "returns": "unknown"
-        },
-        "unreferenced": true
+        }
       }
     },
     {

@@ -1,0 +1,66 @@
+{
+  "channel": {
+    "id": "channel:desk_alerts",
+    "type": "channel",
+    "label": "desk_alerts",
+    "loc": "src/desk/desk-watcher.service.ts:23",
+    "service": "shop"
+  },
+  "consumers": [
+    {
+      "id": "consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+      "type": "consumer",
+      "label": "DeskWatcher.onModuleInit",
+      "loc": "src/desk/desk-watcher.service.ts:23",
+      "service": "shop",
+      "kind": "event",
+      "reach": "alive",
+      "from": "event desk_alerts",
+      "ways": 3
+    },
+    {
+      "id": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "type": "consumer",
+      "label": "AuditFeed.onModuleInit",
+      "loc": "src/notify/audit-feed.service.ts:23",
+      "service": "shop",
+      "kind": "event",
+      "reach": "alive",
+      "from": "POST /desks/:param/close",
+      "ways": 7
+    },
+    {
+      "id": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+      "type": "consumer",
+      "label": "MetricsService.count",
+      "loc": "src/notify/metrics.service.ts:17",
+      "service": "shop",
+      "kind": "event",
+      "reach": "alive",
+      "from": "POST /orders"
+    },
+    {
+      "id": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "type": "consumer",
+      "label": "NotifyService.onModuleInit",
+      "loc": "src/notify/notify.service.ts:24",
+      "service": "shop",
+      "kind": "event",
+      "reach": "alive",
+      "from": "POST /desks/:param/close",
+      "ways": 7
+    }
+  ],
+  "total": 4,
+  "types": [
+    "DESK_CLOSED",
+    "HELP_REQUESTED"
+  ],
+  "complete": true,
+  "next": [
+    "who_consumes({channel: \"channel:desk_alerts\", type: \"DESK_CLOSED\"})",
+    "who_emits({channel: \"channel:desk_alerts\"})",
+    "impact({symbol: \"consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit\"})",
+    "get_source({symbol: \"consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit\"})"
+  ]
+}

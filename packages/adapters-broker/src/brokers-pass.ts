@@ -50,6 +50,12 @@ import {
   precedenceOf,
   precedenceRows,
   withdrawDescribedCalls,
+  delegateOf,
+  EVERY_CHANNEL_META,
+  isWrittenFunction,
+  methodNamedOn,
+  SUBSCRIPTIONS_META,
+  subscriptionsOf,
 } from '@flowatlas/core';
 // The context and the body walk, from the package neither extractor owns. This
 // import is the whole of R46's answer at this end: a channel reader is not part
@@ -1406,6 +1412,12 @@ export const extractBrokers = (ctx: PassContext): void => {
               ...(pattern.describedBy === undefined ? {} : { describedBy: pattern.describedBy }),
             },
           });
+          // A handler written in place that does more than delegate (P369):
+          // the method that registered it stands for it in the graph, and the
+          // function itself is read for the types it chooses, where it is written.
+          if (handler !== undefined && target === undefined && isWrittenFunction(handler)) {
+            recordSubscriptionAt(consumerId, handler, `${callee.getExpression().getText().slice(0, 40)}.${spelling}`);
+          }
           ctx.builder.addEdge({
             from: consumerId,
             to: handlerId,
@@ -1441,6 +1453,124 @@ export const extractBrokers = (ctx: PassContext): void => {
         }
       }
     }
+
+    // A subscription to every channel of a bus at once (P369).
+    for (const call of calls) {
+      if (readBy.has(call)) continue;
+      const wide = busWideSubscription(call, owner);
+      if (wide === undefined) continue;
+      const { spec, spelling, handed, subscribe } = wide;
+      // The method it hands every message to, where it only delegates; else the method that subscribes stands for it.
+      const delegate = isWrittenFunction(handed) ? delegateOf(handed) : undefined;
+      const target = isWrittenFunction(handed) ? (delegate === undefined ? undefined : referencedMethod(delegate, owner)) : referencedMethod(handed, owner);
+      const handlerMethod = target ?? method;
+      const handlerId = ctx.methodIdOf(handlerMethod);
+      if (handlerId === undefined) continue;
+      const consumerId = `consumer:${makeSymbolId(ctx.repo, file, className, handlerMethod.getName())}`;
+      const { line } = lineColOf(call);
+      ctx.ensureMethodNode(handlerMethod);
+      ctx.builder.addNode({
+        id: consumerId,
+        type: 'consumer',
+        label: `${className}.${handlerMethod.getName()}`,
+        repo: ctx.repo,
+        file,
+        line,
+        kind: 'event',
+        meta: { kind: 'event', adapter: spec.name, decorator: spelling, entryId: null, [EVERY_CHANNEL_META]: spec.name },
+      });
+      const node = ctx.builder.getNode(consumerId);
+      if (node !== undefined && node.meta?.[EVERY_CHANNEL_META] === undefined) node.meta = { ...node.meta, [EVERY_CHANNEL_META]: spec.name };
+      // Read where it is written: the `subscribe` with the operators in front
+      // of it, or the function handed to the call itself.
+      if (subscribe !== undefined) recordSubscriptionAt(consumerId, subscribe, `${className}.${spelling}`);
+      else if (isWrittenFunction(handed)) recordSubscriptionAt(consumerId, handed, `${className}.${spelling}`);
+      ctx.builder.addEdge({ from: consumerId, to: handlerId, type: 'handles', confidence: 'static', file, line });
+    }
+  };
+
+  /** Past the parentheses and casts around a function handed over. */
+  const bareOf = (node: TsNode): TsNode => {
+    let at = node;
+    while (Node.isParenthesizedExpression(at) || Node.isAsExpression(at) || Node.isNonNullExpression(at)) at = at.getExpression();
+    return at;
+  };
+
+  /** A method of the class handed over by reference: `this.onEvent`, `this.onEvent.bind(this)`. */
+  const referencedMethod = (handed: TsNode, owner: ClassDeclaration): ClassMethod | undefined => {
+    let at = bareOf(handed);
+    if (Node.isCallExpression(at)) {
+      const callee = at.getExpression();
+      if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'bind') return undefined;
+      at = callee.getExpression();
+    }
+    if (!Node.isPropertyAccessExpression(at) || !Node.isThisExpression(at.getExpression())) return undefined;
+    return methodNamedOn(owner, at.getName());
+  };
+
+  /**
+   * Records where a consumer's messages arrive (P362, P369): a `subscribe`
+   * call, read with the operators in front of it, or a function written in
+   * place. The message-type reading reads it there rather than in the method
+   * that registered it.
+   */
+  const recordSubscriptionAt = (consumerId: string, at: TsNode, through: string): void => {
+    const node = ctx.builder.getNode(consumerId);
+    if (node === undefined) return;
+    const start = bareOf(at);
+    const place = lineColOf(start);
+    const known = subscriptionsOf(node);
+    if (known.some((each) => each.line === place.line && each.column === place.column)) return;
+    node.meta = {
+      ...node.meta,
+      [SUBSCRIPTIONS_META]: [...known, { line: place.line, column: place.column, through }].sort((a, b) => a.line - b.line || a.column - b.column),
+    };
+  };
+
+  /**
+   * A call on a project's own bus that names no channel and hands over what
+   * runs on every message (P369): `bus.all().subscribe(fn)`,
+   * `bus.all().pipe(…).subscribe(fn)`, `bus.onAny(fn)`. The bus is a receiver
+   * a description the project wrote names - its publishing or its subscribing
+   * call - and the method is none of the ones the description reads. Every
+   * argument is a function, so none of them is a channel.
+   */
+  const busWideSubscription = (
+    call: CallExpression,
+    owner: ClassDeclaration,
+  ): { spec: BrokerSpec; spelling: string; handed: TsNode; subscribe?: CallExpression } | undefined => {
+    const callee = call.getExpression();
+    if (!Node.isPropertyAccessExpression(callee)) return undefined;
+    const spelling = callee.getName();
+    const receiver = callee.getExpression();
+    const spec = specs.find((each) => {
+      const own = [...each.producerPatterns, ...(each.subscriberPatterns ?? [])].filter(
+        (pattern) => pattern.receiverType !== undefined && (pattern as { receiverPackages?: unknown }).receiverPackages === undefined,
+      );
+      if (own.length === 0) return false;
+      // One of the calls the description reads is not a subscription to everything.
+      if (own.some((pattern) => methodMatches(spelling, pattern.method))) return false;
+      return own.some((pattern) => receiverEvidence(receiver, pattern) !== undefined);
+    });
+    if (spec === undefined) return undefined;
+    const args = call.getArguments();
+    if (!args.every((arg) => isWrittenFunction(arg) || referencedMethod(arg, owner) !== undefined)) return undefined;
+    if (args.length > 0) return { spec, spelling, handed: args[0] as TsNode };
+    // The answer subscribed: directly, or through the operators of a `pipe`.
+    let answer: TsNode = call;
+    for (let step = 0; step < 8; step += 1) {
+      const access = answer.getParent();
+      if (access === undefined || !Node.isPropertyAccessExpression(access) || access.getExpression() !== answer) return undefined;
+      const next = access.getParent();
+      if (next === undefined || !Node.isCallExpression(next) || next.getExpression() !== access) return undefined;
+      if (access.getName() === 'subscribe') {
+        const [handed] = next.getArguments();
+        return handed === undefined ? undefined : { spec, spelling, handed, subscribe: next };
+      }
+      if (access.getName() !== 'pipe' && access.getName() !== 'asObservable') return undefined;
+      answer = next;
+    }
+    return undefined;
   };
 
   /**

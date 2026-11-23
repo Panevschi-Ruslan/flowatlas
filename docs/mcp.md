@@ -943,6 +943,20 @@ that are. `dead` and `impact` take a type node like any channel; a type
 published on a channel whose consumers choose by type, and chosen by none, is
 the finding `message-type-unselected`.
 
+A handler that chooses no type in its body is still read for the types it
+takes (P369): the code calling it under a `case` or an `if` on the message it
+hands it (`via` that choice, the caller's file in `selects`), and failing
+that the declared type of its parameter where its discriminator is a literal
+(`via: parameter`); where the two differ the caller's choice is drawn and a
+`message-type-differs` row says so. A choice handing the message to a
+function of the repository's own that chooses again is followed into it, and
+a handler written in place - a subscription's callback, a stream listener in
+a hook - is read where it is written. A subscriber to every channel of a
+project's own bus at once (`bus.all().subscribe(...)`) is a consumer of every
+channel a publish through that bus in its service writes to, narrowed by what
+its callback and the method it hands on to choose; so `who_consumes` with a
+type and `search` on the type name it.
+
 `get_type` at `detail: 0` names the type and its fields (or its members); at 1
 it says what each field is, where the type is declared, and names each type it
 refers to with its fields' names under `nested`, keyed by id; at 2 it adds the

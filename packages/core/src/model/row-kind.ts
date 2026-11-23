@@ -153,6 +153,8 @@ const NOTES: readonly string[] = [
   // A declared failure no request answered in the observed window (cli/doctor/runtime.ts, P106):
   // evidence beside the code, nothing missed.
   'failure-declared-unseen',
+  // A handler whose parameter's type says one type of message and whose caller's branch says another; the branch is drawn (P369)
+  'message-type-differs',
 ];
 
 // Something about the code, true whatever the reader managed.

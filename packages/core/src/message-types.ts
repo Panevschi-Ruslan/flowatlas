@@ -73,8 +73,22 @@ export const SELECTS_OTHERS_META = 'selectsOthers';
 /** On a consumer drawn for a selection: the consumer whose handler selected it. */
 export const SELECTED_BY_META = 'selectedBy';
 
-/** How a selection was written. */
-export type SelectionVia = 'switch' | 'if' | 'guard' | 'map' | 'decorator' | 'filter';
+/**
+ * How a selection was written. `parameter` (P369): the handler chooses nothing
+ * in its body, and the declared type of the parameter it is handed the message
+ * in has a discriminator whose type is a literal - `handle(event:
+ * OrderReady)` where `OrderReady` says `type: 'ORDER_READY'`.
+ */
+export type SelectionVia = 'switch' | 'if' | 'guard' | 'map' | 'decorator' | 'filter' | 'parameter';
+
+/**
+ * On a consumer that subscribes to every channel of a bus at once (P369) - a
+ * call on the bus that names no channel, its answer subscribed, such as
+ * `bus.all().subscribe(…)`: the name of the bus's description, whose channels
+ * the linker joins it to, every channel a publish through that bus in the same
+ * service writes to.
+ */
+export const EVERY_CHANNEL_META = 'everyChannelOf';
 
 /** One type a consumer selects, and the consumer that handles it. */
 export interface Selection {

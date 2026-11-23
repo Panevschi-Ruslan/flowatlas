@@ -1,0 +1,41 @@
+{
+  "channel": {
+    "id": "channel:order_updates",
+    "type": "channel",
+    "label": "order_updates",
+    "loc": "src/orders/orders.service.ts:10",
+    "service": "shop"
+  },
+  "consumers": [
+    {
+      "id": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+      "type": "consumer",
+      "label": "Bot.handlePlaced",
+      "loc": "src/bot/bot.ts:26",
+      "service": "bot",
+      "kind": "event",
+      "via": "parameter",
+      "reach": "alive",
+      "from": "POST /orders (shop)"
+    },
+    {
+      "id": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+      "type": "consumer",
+      "label": "MetricsService.count",
+      "loc": "src/notify/metrics.service.ts:17",
+      "service": "shop",
+      "kind": "event",
+      "via": "if",
+      "reach": "alive",
+      "from": "POST /orders"
+    }
+  ],
+  "total": 2,
+  "type": "ORDER_PLACED",
+  "complete": true,
+  "next": [
+    "who_emits({channel: \"channel:order_updates\", type: \"ORDER_PLACED\"})",
+    "impact({symbol: \"consumer:bot#src/bot/bot.ts:Bot.handlePlaced\"})",
+    "get_source({symbol: \"consumer:bot#src/bot/bot.ts:Bot.handlePlaced\"})"
+  ]
+}

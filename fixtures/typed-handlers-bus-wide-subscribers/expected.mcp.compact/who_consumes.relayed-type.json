@@ -1,0 +1,44 @@
+{
+  "channel": {
+    "id": "channel:order_updates",
+    "loc": "src/orders/orders.service.ts:10",
+    "service": "shop"
+  },
+  "consumers": [
+    {
+      "id": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+      "line": 14,
+      "kind": "event",
+      "via": "switch",
+      "reach": "alive",
+      "from": "POST /events/relay",
+      "ways": 2
+    },
+    {
+      "id": "consumer:shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
+      "line": 51,
+      "kind": "event",
+      "selectedIn": "NotifyService.onModuleInit",
+      "via": "switch",
+      "reach": "alive",
+      "from": "POST /orders/:param/ready",
+      "ways": 7
+    },
+    {
+      "id": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+      "line": 14,
+      "kind": "sse",
+      "via": "if",
+      "reach": "alive",
+      "from": "POST /orders/:param/cancel (shop)",
+      "ways": 2
+    }
+  ],
+  "total": 3,
+  "type": "ORDER_READY",
+  "complete": true,
+  "next": [
+    "who_emits({channel: \"channel:order_updates\", type: \"ORDER_READY\"})",
+    "impact({symbol: \"consumer:bot#src/bot/bot.ts:Bot.handleOrderReady\"})"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "query": "HELP_REQUESTED",
+  "counts": {
+    "messages": 1
+  },
+  "results": {
+    "messages": [
+      {
+        "id": "channel:desk_alerts#HELP_REQUESTED",
+        "type": "message_type",
+        "label": "HELP_REQUESTED",
+        "channel": "desk_alerts",
+        "service": "shop",
+        "producers": [
+          "producer:shop#src/desk/desk.service.ts:10:5"
+        ],
+        "handlers": [
+          "consumer:shop#src/notify/notify.service.ts:NotifyService.pageStaff"
+        ],
+        "sites": 2,
+        "reach": "alive",
+        "from": "POST /desks/:param/help"
+      }
+    ]
+  },
+  "complete": true,
+  "next": [
+    "who_consumes({channel: \"channel:desk_alerts\", type: \"HELP_REQUESTED\"})",
+    "who_emits({channel: \"channel:desk_alerts\", type: \"HELP_REQUESTED\"})"
+  ]
+}

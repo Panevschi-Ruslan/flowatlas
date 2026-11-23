@@ -283,8 +283,9 @@ const nearestFunction = (node: TsNode): TsNode | undefined =>
 
 /** The function a selection's branch runs: a method or a function of the repository's own, or a node an earlier pass drew. */
 export type ChosenHandler =
-  | { readonly kind: 'method'; readonly method: ClassMethod }
-  | { readonly kind: 'function'; readonly fn: NamedFunction }
+  // `argument`: which of the call's arguments hands the message on, where one does (P369).
+  | { readonly kind: 'method'; readonly method: ClassMethod; readonly argument?: number }
+  | { readonly kind: 'function'; readonly fn: NamedFunction; readonly argument?: number }
   | { readonly kind: 'node'; readonly id: string }
   | { readonly kind: 'self' };
 
@@ -295,15 +296,23 @@ export interface ReadSelection {
   readonly line: number;
   readonly handler: ChosenHandler;
   readonly heuristic?: true;
+  /** The file the choice is written in, relative to the repository, where it is not the handler's own (P369). */
+  readonly file?: string;
 }
 
 export interface SelectionReading {
   readonly selections: readonly ReadSelection[];
-  readonly unread: readonly { readonly line: number; readonly text: string; readonly why: string }[];
+  readonly unread: readonly { readonly line: number; readonly text: string; readonly why: string; readonly file?: string }[];
   /** A default branch that hands every other type on the same way. */
   readonly others: boolean;
   /** Read as a predicate (P362): the types the function answers `true` for, or `false` for where `positive` is false. */
   readonly predicate?: { readonly field: DiscriminatorField; readonly values: readonly string[]; readonly positive: boolean };
+  /**
+   * Where the function chooses nothing and hands the message to a function of
+   * the repository's own (P369): that function, and the argument it is handed
+   * the message in, so the choice it makes is read as this one's.
+   */
+  readonly handsTo?: ChosenHandler;
 }
 
 /** How a function is read for the types it chooses, beyond as a handler of its own. */
@@ -316,6 +325,14 @@ export interface SelectionOptions {
    * each is handled by what it calls; where it chooses, only these are kept.
    */
   readonly given?: { readonly field: DiscriminatorField; readonly values: readonly string[]; readonly line: number };
+  /** Which parameter the message is handed in: the first by default (P369). */
+  readonly parameter?: number;
+  /**
+   * Every parameter that can hold a message is one (P369): a function read for
+   * the calls it makes under a choice, whatever parameter it was handed the
+   * message in - a route's body beside its parameters.
+   */
+  readonly everyParameter?: true;
 }
 
 /** What a reading of one handler can ask the repository about. */
@@ -332,6 +349,31 @@ const ENVELOPES = new Set(['data', 'payload', 'body', 'detail', 'message']);
 
 /** The classes a set of values the code writes out is made with. */
 const SET_CLASSES: ReadonlySet<string> = new Set(['Set', 'ReadonlySet']);
+
+/** Whether a parameter's type can be a message: anything but a plain value - a string, a number, a flag. */
+const mayHoldMessage = (type: Type): boolean =>
+  type.isAny() || type.isUnknown() || type.isObject() || type.isUnion() || type.isIntersection() || type.isTypeParameter();
+
+/**
+ * The types a handler takes by the declared type of the parameter it is handed
+ * the message in (P369): `handle(event: OrderReady)` where `OrderReady` says
+ * `type: 'ORDER_READY'`, or a union of literals there. Nothing where the
+ * parameter is a union of messages - the whole set a channel carries, taken
+ * alike - nor where the discriminator is a plain string.
+ */
+export const parameterSelection = (fn: FunctionLike, index = 0): { field: DiscriminatorField; values: string[]; line: number } | undefined => {
+  const parameter = fn.getParameters()[index];
+  if (parameter === undefined || parameter.getTypeNode() === undefined) return undefined;
+  const type = parameter.getType().getNonNullableType();
+  if (type.isAny() || type.isUnknown() || type.isUnion() || !type.isObject()) return undefined;
+  for (const field of DISCRIMINATOR_FIELDS) {
+    const property = type.getProperty(field);
+    if (property === undefined) continue;
+    const values = literalsOfType(property.getTypeAtLocation(parameter));
+    return values === undefined || values.length === 0 ? undefined : { field, values, line: parameter.getStartLineNumber() };
+  }
+  return undefined;
+};
 
 /** Whether a type can hold a discriminator's value. */
 const stringish = (type: Type): boolean =>
@@ -421,10 +463,14 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
     }
   };
 
-  const [first] = fn.getParameters();
-  if (first !== undefined) {
-    const name = first.getNameNode();
-    if (Node.isIdentifier(name)) messages.add(first);
+  const parameters = fn.getParameters();
+  const seeds =
+    options.everyParameter === true
+      ? parameters.filter((parameter) => mayHoldMessage(parameter.getType()))
+      : parameters.slice(options.parameter ?? 0, (options.parameter ?? 0) + 1);
+  for (const seed of seeds) {
+    const name = seed.getNameNode();
+    if (Node.isIdentifier(name)) messages.add(seed);
     else takeBindings(name, true);
   }
   // Aliases, in the order they are written: a parsed copy, an envelope's
@@ -477,6 +523,12 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
     return undefined;
   };
 
+  /** Which of a call's arguments hands the message on, where one does. */
+  const messageArgument = (call: CallExpression): number | undefined => {
+    const index = call.getArguments().findIndex((argument) => [argument, ...argument.getDescendants()].some((each) => isMessage(each)));
+    return index < 0 ? undefined : index;
+  };
+
   /** The handler a branch runs: the first own call handed the message, else the first own call, else the branch itself. */
   const handlerIn = (statements: readonly TsNode[], within: TsNode): ChosenHandler => {
     const calls = statements
@@ -486,7 +538,10 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
     for (const call of calls) {
       const resolved = resolveCall(call, within);
       if (resolved === undefined) continue;
-      if (passesMessage(call)) return resolved;
+      if (passesMessage(call)) {
+        const argument = messageArgument(call);
+        return argument === undefined || (resolved.kind !== 'method' && resolved.kind !== 'function') ? resolved : { ...resolved, argument };
+      }
       fallback ??= resolved;
     }
     return fallback ?? { kind: 'self' };
@@ -781,6 +836,14 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
     const statements = body === undefined ? [] : Node.isBlock(body) ? body.getStatements() : [body];
     const handler = handlerIn(statements, fn);
     for (const type of given.values) selections.push({ type, field: given.field, via: 'filter', line: given.line, handler });
+    return { selections, unread, others };
+  }
+  if (selections.length === 0 && unread.length === 0 && messages.size > 0) {
+    // Chooses nothing itself, and hands the message on to a function of the repository's own (P369).
+    const body = fn.getBody();
+    const statements = body === undefined ? [] : Node.isBlock(body) ? body.getStatements() : [body];
+    const passed = handlerIn(statements, fn);
+    if ((passed.kind === 'method' || passed.kind === 'function') && passed.argument !== undefined) return { selections, unread, others, handsTo: passed };
   }
   return { selections, unread, others };
 };
@@ -859,11 +922,20 @@ export const readSubscription = (subscribe: CallExpression, owner: ClassDeclarat
     return { selections, unread, others: false };
   }
   const read = readSelections(callback, owner, lookup, given === undefined ? {} : { given });
-  return { selections: read.selections, unread: [...unread, ...read.unread], others: read.others };
+  return { selections: read.selections, unread: [...unread, ...read.unread], others: read.others, ...(read.handsTo === undefined ? {} : { handsTo: read.handsTo }) };
 };
 
-/** The `subscribe` call written at a line and column of a file. */
-const subscribeAt = (host: MessageTypeHost, file: string | undefined, line: number, column: number): CallExpression | undefined => {
+/**
+ * What is written at a line and column of a file, where a consumer's messages
+ * arrive: a function written in place (P369), the first function starting
+ * there, or the `subscribe` call starting there (P362).
+ */
+const subscriptionAt = (
+  host: MessageTypeHost,
+  file: string | undefined,
+  line: number,
+  column: number,
+): { readonly fn: FunctionLike } | { readonly subscribe: CallExpression } | undefined => {
   if (file === undefined) return undefined;
   const source = host.project.getSourceFile(resolvePath(host.repoDir, file));
   if (source === undefined) return undefined;
@@ -873,14 +945,102 @@ const subscribeAt = (host: MessageTypeHost, file: string | undefined, line: numb
   } catch {
     return undefined;
   }
-  // Every node from the token written there out to the outermost one starting there; the `subscribe` among them.
+  // Every node from the token written there out to the outermost one starting there; the function or the `subscribe` among them.
   let call: CallExpression | undefined;
   for (let at = source.getDescendantAtPos(position); at !== undefined && at.getStart() === position; at = at.getParent()) {
+    if (isFunctionLike(at)) return { fn: at };
     if (!Node.isCallExpression(at)) continue;
     const callee = peel(at.getExpression());
     if (Node.isPropertyAccessExpression(callee) && callee.getName() === 'subscribe') call = at;
   }
-  return call;
+  return call === undefined ? undefined : { subscribe: call };
+};
+
+/** The class a node is written in, where it is written in one. */
+const classAround = (node: TsNode): ClassDeclaration | undefined => node.getFirstAncestor((each): each is ClassDeclaration => Node.isClassDeclaration(each));
+
+/** The function a chosen handler runs, and the class it is written in. */
+const functionOfHandler = (handler: ChosenHandler): { fn: FunctionLike; owner?: ClassDeclaration } | undefined => {
+  if (handler.kind === 'method') {
+    const fn = functionOf(handler.method);
+    if (fn === undefined) return undefined;
+    const owner = classAround(handler.method);
+    return owner === undefined ? { fn } : { fn, owner };
+  }
+  if (handler.kind === 'function') {
+    const declaration = handler.fn.declaration;
+    const fn = isFunctionLike(declaration)
+      ? declaration
+      : Node.isVariableDeclaration(declaration)
+        ? (() => {
+            const initializer = declaration.getInitializer();
+            return initializer !== undefined && isFunctionLike(initializer) ? initializer : undefined;
+          })()
+        : undefined;
+    return fn === undefined ? undefined : { fn };
+  }
+  return undefined;
+};
+
+/** A handler as the one a choice runs, no longer as one to follow into. */
+const withoutArgument = (handler: ChosenHandler): ChosenHandler =>
+  handler.kind === 'method' ? { kind: 'method', method: handler.method } : handler.kind === 'function' ? { kind: 'function', fn: handler.fn } : handler;
+
+/** How many functions deep a choice is followed into the handlers it hands the message to (P369). */
+const MOST_NESTED = 2;
+
+/** How many of a handler's callers are read for the choice they call it under (P369). */
+const MOST_CALLERS = 8;
+
+/**
+ * A choice followed into the function it hands the message to (P369): where
+ * a branch hands the message to a function of the repository's own that
+ * chooses again - a guard letting two types through to a method that
+ * `switch`es on them - each type is drawn onto the handler the inner choice
+ * runs. A type the inner function does not choose stays with it.
+ */
+const followedIn = (
+  selections: readonly ReadSelection[],
+  lookupFor: (handler: ChosenHandler) => SelectionLookup,
+  fileOf: (node: TsNode) => string,
+  depth = 0,
+): { selections: ReadSelection[]; unread: { line: number; text: string; why: string; file?: string }[] } => {
+  if (depth >= MOST_NESTED) return { selections: [...selections], unread: [] };
+  const out: ReadSelection[] = [];
+  const unread: { line: number; text: string; why: string; file?: string }[] = [];
+  const read = new Map<FunctionLike, SelectionReading>();
+  for (const selection of selections) {
+    const { handler } = selection;
+    const behind = (handler.kind === 'method' || handler.kind === 'function') && handler.argument !== undefined ? functionOfHandler(handler) : undefined;
+    if (behind === undefined) {
+      out.push(selection);
+      continue;
+    }
+    let inner = read.get(behind.fn);
+    if (inner === undefined) {
+      inner = readSelections(behind.fn, behind.owner, lookupFor(handler), { parameter: (handler as { argument: number }).argument });
+      read.set(behind.fn, inner);
+      const file = fileOf(behind.fn);
+      unread.push(...inner.unread.map((row) => ({ ...row, file })));
+    }
+    const kept = inner.selections.filter((each) => each.type === selection.type);
+    if (kept.length === 0) {
+      out.push(selection);
+      continue;
+    }
+    const file = fileOf(behind.fn);
+    // A branch of the inner choice that calls nothing of its own is handled by the inner function itself.
+    const itself = withoutArgument(handler);
+    const deeper = followedIn(
+      kept.map((each) => ({ ...each, file, handler: each.handler.kind === 'self' ? itself : each.handler })),
+      lookupFor,
+      fileOf,
+      depth + 1,
+    );
+    out.push(...deeper.selections);
+    unread.push(...deeper.unread);
+  }
+  return { selections: out, unread };
 };
 
 // ---------------------------------------------------------------------------
@@ -973,7 +1133,13 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
   const edges = builder.edges;
   const handlesFrom = new Map<string, GraphEdge[]>();
   const callsFrom = new Map<string, GraphEdge[]>();
+  const callsTo = new Map<string, GraphEdge[]>();
   for (const edge of edges) {
+    if (edge.type === 'calls') {
+      const list = callsTo.get(edge.to) ?? [];
+      list.push(edge);
+      callsTo.set(edge.to, list);
+    }
     const into = edge.type === 'handles' ? handlesFrom : edge.type === 'calls' ? callsFrom : undefined;
     if (into === undefined) continue;
     const list = into.get(edge.from) ?? [];
@@ -981,6 +1147,79 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
     into.set(edge.from, list);
   }
   let decorated: { value: string; method: ClassMethod }[] | undefined;
+  const relative = (node: TsNode): string => {
+    const path = node.getSourceFile().getFilePath();
+    const root = resolvePath(host.repoDir);
+    return path.startsWith(root + sep) ? path.slice(root.length + 1).split(sep).join('/') : path;
+  };
+  /** How a function's calls are looked up, by the node it stands for. */
+  const lookupOf = (id: string | undefined): SelectionLookup => ({
+    repoDir: host.repoDir,
+    calledAt: (line) => {
+      const targets = [...new Set((id === undefined ? [] : (callsFrom.get(id) ?? [])).filter((edge) => edge.line === line).map((edge) => edge.to))].filter((each) => {
+        const node = builder.getNode(each);
+        return node?.type === 'method' || node?.type === 'function';
+      });
+      return targets.length === 1 ? targets[0] : undefined;
+    },
+    decorated: () => (decorated ??= decoratedMethods(host)),
+  });
+  /** The id of the node a chosen handler is, without drawing it. */
+  const idOfHandler = (handler: ChosenHandler): string | undefined =>
+    handler.kind === 'node'
+      ? handler.id
+      : handler.kind === 'method'
+        ? host.methodIdOf?.(handler.method)
+        : handler.kind === 'function'
+          ? host.functionIdOf?.(handler.fn)
+          : undefined;
+
+  /**
+   * A function that chooses nothing and hands the message on to one of the
+   * repository's own (P369) - `({ scopeId, data }) => this.dispatch(scopeId,
+   * data)` - chooses what that one chooses, read with the message in the
+   * parameter it is handed in.
+   */
+  const deepen = (reading: SelectionReading): SelectionReading => {
+    const to = reading.handsTo;
+    if (reading.selections.length > 0 || to === undefined || (to.kind !== 'method' && to.kind !== 'function')) return reading;
+    const behind = functionOfHandler(to);
+    if (behind === undefined) return reading;
+    const inner = readSelections(behind.fn, behind.owner, lookupOf(idOfHandler(to)), { parameter: to.argument ?? 0 });
+    if (inner.selections.length === 0 && inner.unread.length === 0) return reading;
+    const file = relative(behind.fn);
+    const itself = withoutArgument(to);
+    return {
+      selections: inner.selections.map((each) => ({ ...each, file, handler: each.handler.kind === 'self' ? itself : each.handler })),
+      unread: [...reading.unread, ...inner.unread.map((row) => ({ ...row, file }))],
+      others: inner.others,
+    };
+  };
+
+  /**
+   * The types a handler is run for by the code that calls it (P369): each
+   * function of the repository that calls it under a choice on the message it
+   * hands it - a route's `switch (event.type)` calling `bot.handleReady(event)`
+   * under `case 'ORDER_READY'`. Read as any handler is, every parameter of the
+   * caller that can hold a message being one.
+   */
+  const dispatchedTo = (target: GraphNode): ReadSelection[] => {
+    const callers = [...new Set((callsTo.get(target.id) ?? []).map((edge) => edge.from))].sort().slice(0, MOST_CALLERS);
+    const out: ReadSelection[] = [];
+    for (const callerId of callers) {
+      const caller = builder.getNode(callerId);
+      if (caller === undefined || (caller.type !== 'method' && caller.type !== 'function')) continue;
+      const declaration = declarationOfNode(host, caller);
+      if (declaration === undefined) continue;
+      const read = readSelections(declaration.fn, declaration.owner, lookupOf(callerId), { everyParameter: true });
+      const file = relative(declaration.fn);
+      for (const selection of read.selections) {
+        if (idOfHandler(selection.handler) !== target.id) continue;
+        out.push({ ...selection, handler: { kind: 'self' }, file });
+      }
+    }
+    return out;
+  };
 
   const consumers = builder.nodes.filter((node) => node.type === 'consumer' && node.meta?.[SELECTED_BY_META] === undefined);
   for (const consumer of consumers) {
@@ -993,32 +1232,61 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
     const subscriptions = subscriptionsOf(consumer);
     const found = subscriptions.length > 0 ? undefined : target === consumer ? declarationAt(host, consumer.file, consumer.line) : declarationOfNode(host, target);
     if (found === undefined && subscriptions.length === 0) continue;
-    const lookup: SelectionLookup = {
-      repoDir: host.repoDir,
-      calledAt: (line) => {
-        const targets = [...new Set((callsFrom.get(target.id) ?? []).filter((edge) => edge.line === line).map((edge) => edge.to))].filter((id) => {
-          const node = builder.getNode(id);
-          return node?.type === 'method' || node?.type === 'function';
-        });
-        return targets.length === 1 ? targets[0] : undefined;
-      },
-      decorated: () => (decorated ??= decoratedMethods(host)),
-    };
+    const lookup = lookupOf(target.id);
     const readings = subscriptions.flatMap((each) => {
-      const subscribe = subscribeAt(host, consumer.file, each.line, each.column);
-      if (subscribe === undefined) return [];
-      const owner = subscribe.getFirstAncestor((node): node is ClassDeclaration => Node.isClassDeclaration(node));
-      return [readSubscription(subscribe, owner, lookup)];
+      const at = subscriptionAt(host, consumer.file, each.line, each.column);
+      if (at === undefined) return [];
+      if ('fn' in at) return [deepen(readSelections(at.fn, classAround(at.fn), lookup))];
+      return [deepen(readSubscription(at.subscribe, classAround(at.subscribe), lookup))];
     });
-    const reading: SelectionReading =
+    const read: SelectionReading =
       found !== undefined
-        ? readSelections(found.fn, found.owner, lookup)
+        ? deepen(readSelections(found.fn, found.owner, lookup))
         : { selections: readings.flatMap((each) => each.selections), unread: readings.flatMap((each) => each.unread), others: readings.some((each) => each.others) };
     const file = target.file ?? consumer.file ?? '';
 
+    // A handler that chooses nothing in its body (P369): the code calling it
+    // under a choice says which types it runs for, and failing that the
+    // declared type of its parameter; where both say, and differ, the caller's
+    // choice is drawn and a row says so.
+    let own: readonly ReadSelection[] = read.selections;
+    if (own.length === 0 && read.unread.length === 0 && found !== undefined && (target.type === 'method' || target.type === 'function')) {
+      const dispatched = dispatchedTo(target);
+      const declared = parameterSelection(found.fn);
+      if (dispatched.length > 0) {
+        own = dispatched;
+        const said = [...new Set(dispatched.map((each) => each.type))].sort();
+        if (declared !== undefined && (declared.values.length !== said.length || declared.values.some((value) => !said.includes(value)))) {
+          host.report({
+            file,
+            line: declared.line,
+            reason: 'message-type-differs',
+            level: 'info',
+            hint: `The parameter's type says ${declared.values.join(', ')}; the code that calls it does so for ${said.join(', ')} (${dispatched[0]!.file ?? file}:${dispatched[0]!.line}). The caller's choice is drawn.`,
+            symbol: consumer.label,
+          });
+        }
+      } else if (declared !== undefined) {
+        own = declared.values.map((type) => ({ type, field: declared.field, via: 'parameter' as const, line: declared.line, handler: { kind: 'self' as const } }));
+      }
+    }
+    // Each choice followed into the function it hands the message to, where that chooses again.
+    const followed = followedIn(own, (handler) => lookupOf(idOfHandler(handler)), relative);
+    const reading: SelectionReading = { selections: followed.selections, unread: read.unread, others: read.others };
+    for (const row of followed.unread) {
+      host.report({
+        file: row.file ?? file,
+        line: row.line,
+        reason: 'message-type-unread',
+        level: 'info',
+        hint: `${row.why} So which handler takes which type of message here is not drawn.`,
+        symbol: consumer.label,
+      });
+    }
+
     for (const row of reading.unread) {
       host.report({
-        file,
+        file: row.file ?? file,
         line: row.line,
         reason: 'message-type-unread',
         level: 'info',
@@ -1087,7 +1355,13 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
         consumer: consumerId,
         via: selection.via,
         line: selection.line,
-        ...(target.file === undefined || target.file === consumer.file ? {} : { file: target.file }),
+        ...(selection.file !== undefined
+          ? selection.file === consumer.file
+            ? {}
+            : { file: selection.file }
+          : target.file === undefined || target.file === consumer.file
+            ? {}
+            : { file: target.file }),
         ...(selection.heuristic === true ? { heuristic: true as const } : {}),
       });
     }

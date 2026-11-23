@@ -41,6 +41,35 @@ only one of them moved.
   is a `dynamic` row naming the code, not a `missing` one naming `:param`.
   New fixture `angular-rendered-reach`.
 
+- **Consumers the reading missed, and types it could not tie to a handler
+  (P369).** A handler that chooses no type in its body is read for the types
+  it takes: the code calling it under a `case` or an `if` on the message it
+  hands it says which (`bot.handleReady(event)` under `case 'ORDER_READY'` in
+  the route that relays the channel), and failing that the declared type of
+  the parameter it is handed the message in, where its discriminator is a
+  literal (`handleReady(event: OrderReady)`, `via: parameter`); where both say
+  and differ, the caller's choice is drawn and a `message-type-differs` row
+  (info) says so. A choice that hands the message to a function of the
+  repository's own that chooses again is followed into it, two functions deep,
+  so a constant set gating a callback that hands on to a method's `switch`
+  draws each type onto the handler the `switch` runs; a callback that only
+  hands the message on chooses what the method it hands it to chooses, read in
+  the parameter it is handed in. A subscription to every channel of a
+  project's own bus at once - a call on the receiver a broker description
+  names that names no channel and whose answer is subscribed
+  (`this.bus.all().subscribe(...)`) or that is handed only functions - is a
+  consumer (`meta.everyChannelOf`), joined by the linker to every channel a
+  publish through that bus in the same service writes to (`via:
+  every-channel`), and narrowed by the types its callback and what it hands on
+  to choose; one that names a bus nothing in its service publishes through is
+  a `subscription-matches-nothing` row. A handler written in place that does
+  more than delegate - a subscription's callback, a stream listener in a hook
+  or a method - is read for its types where it is written (its position in
+  `meta.subscriptions`), no longer as the method or component it is written
+  in. On the new fixture `typed-handlers-bus-wide-subscribers`,
+  `who_consumes` with a type and `search` on a type name every handler in one
+  call where they answered `unsure` with no consumer.
+
 - **Reach that never hides a maybe, and impact that answers "what could
   break" in one call (P367).** `reach` is `alive`, `maybe`, `unreached`,
   `dead` or `outside`, and no longer `unknown`: `maybe` is `dead`'s

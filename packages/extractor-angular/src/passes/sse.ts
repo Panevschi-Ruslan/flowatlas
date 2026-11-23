@@ -4,6 +4,7 @@ import {
   EVENT_SOURCE,
   isEventSourceConstruction,
   isWrittenFunction,
+  lineAndColumnAt,
   makeExternalApiId,
   makeLeafId,
   methodBodies,
@@ -198,6 +199,10 @@ export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
       if (handlerId === undefined) continue;
       ctx.ensureMethodNode(handler);
       const line = listeners[0] === undefined ? at.line : siteOf(listeners[0].site).line;
+      // A listener written in place that does more than delegate (P369): the
+      // method it is written in stands for it, and the listener itself is read
+      // for the types it chooses, where it is written.
+      const inPlace = handler === method ? listeners.filter((listener) => isWrittenFunction(listener.handler) && delegateOf(listener.handler) === undefined) : [];
       for (const callId of callIds) {
         recordStreamConsumer(ctx.builder, {
           repo: ctx.repo,
@@ -209,6 +214,21 @@ export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
           events: listeners.map((listener) => listener.event),
           confidence: 'static',
         });
+        for (const listener of inPlace) {
+          let written: TsNode = listener.handler;
+          while (Node.isParenthesizedExpression(written) || Node.isAsExpression(written)) written = written.getExpression();
+          recordStreamConsumer(ctx.builder, {
+            repo: ctx.repo,
+            callId,
+            handlerId,
+            label: `${className}.${handler.getName()}`,
+            file,
+            line,
+            events: listeners.map((each) => each.event),
+            confidence: 'static',
+            subscription: { ...lineAndColumnAt(written.getSourceFile(), written.getStart()), through: `${EVENT_SOURCE}.${listener.event ?? 'message'}` },
+          });
+        }
       }
       for (const listener of listeners) handOn(listener, handler, owner, handlerId, calls);
     }

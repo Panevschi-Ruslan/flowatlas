@@ -450,6 +450,7 @@ export const PAGE_WORDS = Object.freeze({
     'pattern-unmatched': 'pattern rule matches nothing',
     'payload-type-unknown': 'no payload on the channel',
     'message-type-unread': 'type of message not read',
+    'message-type-differs': 'handler typed for another message',
     'procedure-ambiguous': 'procedure declared twice',
     'procedure-branch-unread': 'procedure branch not followed',
     'procedure-call-mismatch': 'procedure called the wrong way',

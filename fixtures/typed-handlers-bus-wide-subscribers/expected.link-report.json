@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-23T14:34:06.422Z",
+  "configHash": "c9420ed7b09a",
+  "services": [
+    {
+      "name": "bot",
+      "repo": "./bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 17,
+      "edges": 16,
+      "types": 6,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "bot",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 70,
+      "edges": 70,
+      "types": 2,
+      "unresolved": 3,
+      "durationMs": 0,
+      "packages": {
+        "name": "shop",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/common",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 5,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "web",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 1,
+    "resolved": 1,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 9,
+    "called": 1,
+    "uncalled": [
+      "entry:bot:http:POST:/events/relay",
+      "entry:shop:http:POST:/desks/:param/close",
+      "entry:shop:http:POST:/desks/:param/help",
+      "entry:shop:http:POST:/orders",
+      "entry:shop:http:POST:/orders/:param/cancel",
+      "entry:shop:http:POST:/orders/:param/ready",
+      "entry:shop:http:POST:/orders/:param/refund",
+      "entry:shop:http:POST:/orders/:param/status"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 8,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 98,
+    "edges": 115,
+    "types": 8,
+    "missed": 3,
+    "sites": 3,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 3
+  }
+}

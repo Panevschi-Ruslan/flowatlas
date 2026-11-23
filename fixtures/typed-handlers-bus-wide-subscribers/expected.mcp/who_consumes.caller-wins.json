@@ -1,0 +1,31 @@
+{
+  "channel": {
+    "id": "channel:order_updates",
+    "type": "channel",
+    "label": "order_updates",
+    "loc": "src/orders/orders.service.ts:10",
+    "service": "shop"
+  },
+  "consumers": [
+    {
+      "id": "consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+      "type": "consumer",
+      "label": "Bot.handleRefund",
+      "loc": "src/bot/bot.ts:32",
+      "service": "bot",
+      "kind": "event",
+      "via": "switch",
+      "reach": "alive",
+      "from": "POST /events/relay",
+      "ways": 2
+    }
+  ],
+  "total": 1,
+  "type": "ORDER_REFUNDED",
+  "complete": true,
+  "next": [
+    "who_emits({channel: \"channel:order_updates\", type: \"ORDER_REFUNDED\"})",
+    "impact({symbol: \"consumer:bot#src/bot/bot.ts:Bot.handleRefund\"})",
+    "get_source({symbol: \"consumer:bot#src/bot/bot.ts:Bot.handleRefund\"})"
+  ]
+}

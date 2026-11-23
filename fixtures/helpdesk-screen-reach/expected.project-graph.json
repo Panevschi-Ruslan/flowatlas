@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:53:17.995Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-23T14:23:12.608Z",
   "services": [
     {
       "name": "desk-api",
@@ -204,8 +204,7 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        },
-        "unreferenced": true
+        }
       }
     },
     {
@@ -407,7 +406,14 @@
         "adapter": "redis-pubsub",
         "relay": "entry:desk-api:http:GET:/desks/:param/events",
         "entryId": "entry:desk-api:event:desk:*:events",
-        "decorator": "subscribe"
+        "decorator": "subscribe",
+        "subscriptions": [
+          {
+            "line": 13,
+            "column": 56,
+            "through": "listener.subscribe"
+          }
+        ]
       }
     },
     {

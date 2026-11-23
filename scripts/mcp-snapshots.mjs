@@ -298,6 +298,29 @@ const RENDERED_REACH_COMPACT_CASES = [
 ];
 
 /**
+ * Handlers that choose no type in their body, and subscribers to every channel
+ * of a bus (P369): a bot's handlers tied to their types by the route calling
+ * them under a `switch` and by their parameters' types, a service choosing in a
+ * callback on every channel and in the method it hands on to, a handler
+ * written in place where it subscribes, and a screen's stream listener written
+ * in a hook.
+ */
+const TYPED_HANDLER_CASES = [
+  ['who_consumes.relayed-type', 'who_consumes', { channel: 'order_updates', type: 'ORDER_READY' }],
+  ['who_consumes.parameter-type', 'who_consumes', { channel: 'order_updates', type: 'ORDER_PLACED' }],
+  ['who_consumes.caller-wins', 'who_consumes', { channel: 'order_updates', type: 'ORDER_REFUNDED' }],
+  ['who_consumes.every-channel', 'who_consumes', { channel: 'desk_alerts', type: 'HELP_REQUESTED' }],
+  ['who_consumes.in-place', 'who_consumes', { channel: 'desk_alerts', type: 'DESK_CLOSED' }],
+  ['who_consumes.channel', 'who_consumes', { channel: 'desk_alerts' }],
+  ['search.message', 'search', { query: 'HELP_REQUESTED' }],
+];
+
+const TYPED_HANDLER_COMPACT_CASES = [
+  ['who_consumes.relayed-type', 'who_consumes', { channel: 'order_updates', type: 'ORDER_READY', verbose: false }],
+  ['search.message', 'search', { query: 'HELP_REQUESTED', verbose: false }],
+];
+
+/**
  * Answers that finish in one call (P364): each row of code with whether it
  * runs and the nearest way in (a screen for a handler the router shows, none
  * for one no way in reaches), each list saying whether it is complete and what
@@ -683,6 +706,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'impact-shared-client'),
     outDir: join(root, 'fixtures', 'impact-shared-client', 'expected.mcp.compact'),
     cases: SHARED_CLIENT_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'typed-handlers-bus-wide-subscribers'),
+    outDir: join(root, 'fixtures', 'typed-handlers-bus-wide-subscribers', 'expected.mcp'),
+    cases: TYPED_HANDLER_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'typed-handlers-bus-wide-subscribers'),
+    outDir: join(root, 'fixtures', 'typed-handlers-bus-wide-subscribers', 'expected.mcp.compact'),
+    cases: TYPED_HANDLER_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

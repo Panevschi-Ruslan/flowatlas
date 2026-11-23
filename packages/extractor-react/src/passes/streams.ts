@@ -5,6 +5,7 @@ import {
   EVENT_SOURCE,
   isEventSourceConstruction,
   isWrittenFunction,
+  lineAndColumnAt,
   makeExternalApiId,
   makeLeafId,
   normalizeFilePath,
@@ -27,6 +28,13 @@ import { definePass } from './types.js';
 
 /** How many functions out a handler handed in as an argument is followed. */
 const HANDED_DEPTH = 3;
+
+/** Where a function written in place starts, past the parentheses around it: its line and column. */
+const lineColumnOf = (fn: TsNode): { line: number; column: number } => {
+  let at = fn;
+  while (Node.isParenthesizedExpression(at) || Node.isAsExpression(at)) at = at.getExpression();
+  return lineAndColumnAt(at.getSourceFile(), at.getStart());
+};
 
 /** The function a declaration names, as the checker sees it: an import is the declaration it imports. */
 const declarationOf = (name: TsNode): TsNode | undefined => {
@@ -231,9 +239,15 @@ export const streamsPass = definePass('streams', (ctx: ReactExtractContext) => {
           reported.add(`${file}:${line}`);
           continue;
         }
+        // A listener written in place that does more than delegate (P369): the
+        // function it is written in stands for it, and the listener itself is
+        // read for the types it chooses, where it is written.
+        const written = isWrittenFunction(listener.handler) ? listener.handler : undefined;
+        const around = written === undefined ? undefined : enclosingIndexed(ctx, written);
         for (const handler of handlers) {
           ctx.ensureFunctionNode(handler.fn);
           if (!drawn.includes(handler.id)) drawn.push(handler.id);
+          const inPlace = written !== undefined && around !== undefined && around.id === handler.id ? lineColumnOf(written) : undefined;
           recordStreamConsumer(ctx.builder, {
             repo: ctx.repo,
             callId: id,
@@ -243,6 +257,7 @@ export const streamsPass = definePass('streams', (ctx: ReactExtractContext) => {
             line,
             events: [listener.event],
             confidence: 'static',
+            ...(inPlace === undefined ? {} : { subscription: { ...inPlace, through: `${EVENT_SOURCE}.${listener.event ?? 'message'}` } }),
           });
         }
       }

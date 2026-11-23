@@ -1227,6 +1227,7 @@ export { classNeverMade, subjectRelayOf, subjectsPushedBy, type SubjectRelay, ty
 export {
   DISCRIMINATOR_FIELDS,
   DISCRIMINATOR_META,
+  EVERY_CHANNEL_META,
   isDiscriminatorField,
   isMessageTypeNode,
   makeMessageTypeId,

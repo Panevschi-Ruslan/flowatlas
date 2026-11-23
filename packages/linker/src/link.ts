@@ -55,6 +55,7 @@ import {
   type ProcedureOutcome,
 } from './procedure-link.js';
 import { joinChannelPatterns } from './pattern-link.js';
+import { joinEveryChannel } from './every-channel-link.js';
 import { matchTakenPublishes } from './takes-link.js';
 import { joinReferences } from './reference-link.js';
 import { joinStreamRelays } from './stream-relay-link.js';
@@ -986,6 +987,8 @@ export const linkGraphs = (
   // declared, which only the whole project knows (P51).
   found.push(...keepWhereDeclared(nodes, edges, [merged.unresolved, found]));
   found.push(...joinChannelPatterns(nodes, edges));
+  // A subscriber to every channel of a bus, joined to each channel the bus carries (P369).
+  found.push(...joinEveryChannel(nodes, edges));
   // What a consumer takes of its channel, asked of every publish onto it (P52).
   found.push(...matchTakenPublishes(nodes, edges));
   // A job added to a queue whose every handler names another (P271).

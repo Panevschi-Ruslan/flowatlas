@@ -512,6 +512,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The type of this message is not written where it is sent, or the choice a consumer makes on it is not one the code states. Write the type as a literal, a constant or an enum member at the send, and choose on it with a switch, an if or a record written out.',
   'message-type-unselected': () =>
     'This type of message is published on a channel whose consumers choose what to do by type, and none of them chooses it. Handle it, or stop publishing it.',
+  'message-type-differs': () =>
+    "A handler's parameter is typed for one type of message, and the code that calls it does so under a choice of another. The caller's choice is drawn, since it is what runs the handler. Type the parameter for what it is handed, or call it under the type it is written for.",
 
   // Streams of server-sent events (P359)
   'stream-relay-unread': () =>
