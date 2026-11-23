@@ -54,36 +54,7 @@
         "events": [
           "message"
         ],
-        "subscriptions": [
-          {
-            "line": 13,
-            "column": 17,
-            "through": "BoardFeed.events$"
-          }
-        ],
         "discriminator": "type",
-        "selects": [
-          {
-            "type": "CARD_ARCHIVED",
-            "via": "if",
-            "line": 14
-          },
-          {
-            "type": "CARD_IMPORTED",
-            "via": "if",
-            "line": 14
-          },
-          {
-            "type": "CARD_MOVED",
-            "via": "if",
-            "line": 14
-          },
-          {
-            "type": "CARD_PINNED",
-            "via": "if",
-            "line": 14
-          }
-        ],
         "routes": [
           "entry:boards-api:http:GET:/api/boards/:param/events"
         ]
@@ -100,5 +71,6 @@
   "next": [
     "who_emits({channel: \"channel:board:*:events\", type: \"CARD_MOVED\"})",
     "impact({symbol: \"consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load\"})"
-  ]
+  ],
+  "note": "rows of a list leave out their structured facts (selects, subscriptions): get_flow({entry: id}) or impact({symbol: id}) at detail 2 gives one node's, verbose: true every row's"
 }

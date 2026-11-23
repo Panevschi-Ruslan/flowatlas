@@ -9,7 +9,8 @@
       "id": "entry:store-api:http:GET:/api/shops/items",
       "line": 8,
       "reach": "alive",
-      "by": "store-api#src/items.controller.ts:ItemsController.list"
+      "by": "store-api#src/items.controller.ts:ItemsController.list",
+      "rowsVia": 4
     },
     {
       "id": "entry:store-bot:bot_command:items",

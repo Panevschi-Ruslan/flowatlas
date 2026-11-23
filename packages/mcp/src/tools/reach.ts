@@ -511,14 +511,24 @@ export const impactOf = (db: GraphDb, handle: Pick<DbHandle, 'config' | 'path'>,
     .sort();
 
   const { items, total, truncated, nextOffset } = truncate(listed, maxNodes, input.offset);
-  // Whether each way in runs (P364), the crossing it reaches the target through (P367), and the code that handles it (P374).
+  // How many of the rows listed, on any page, reach the target through each way in they cross (P375): a route the
+  // screens and bots listed request is a way in itself, and the rows say which reach through it.
+  const throughIt = new Map<string, number>();
+  for (const way of listed) {
+    const crossed = way.via?.id;
+    if (crossed !== undefined && crossed !== way.node.id) throughIt.set(crossed, (throughIt.get(crossed) ?? 0) + 1);
+  }
+  // Whether each way in runs (P364), the crossing it reaches the target through (P367), the code that handles it
+  // (P374), and the rows that reach it through this one (P375).
   const rows = items.map((way) => {
     const row = reader.annotate(projectDetail(way.node, detail));
     if (detail < 1) return row;
+    const viaIt = throughIt.get(way.node.id);
     return {
       ...row,
       ...(way.via === undefined ? {} : { via: viaSaid(way.via, way.node) }),
       ...(way.by === undefined ? {} : { by: way.by.id }),
+      ...(viaIt === undefined ? {} : { rowsVia: viaIt }),
     };
   });
   const targetReach = detail < 1 ? undefined : reader.of(target.id).reach;
@@ -956,7 +966,7 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
     {
       title: 'Blast radius',
       description:
-        'Every way in whose code calls a symbol, in any service: callers past a route name it in `via`; a chain stopped by an unread call is a `maybe` row; ways in only past a channel are counted in `throughChannels`. Detail 1 is enough.',
+        'Every way in whose code calls a symbol, in any service, each with `by`, the code handling it (not a way in); a row reaching it through a listed route names that route in `via`, the route counts them in `rowsVia`; a chain stopped by an unread call is a `maybe` row; ways in only past a channel are counted in `throughChannels`. Detail 1 is enough.',
       inputSchema: {
         symbol: z.string().describe('node id or name'),
         channel: z.string().optional().describe('list one of throughChannels'),

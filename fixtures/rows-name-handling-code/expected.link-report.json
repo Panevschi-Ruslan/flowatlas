@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T19:20:11.224Z",
+  "builtAt": "2026-11-23T23:01:51.197Z",
   "configHash": "aee96646c2a2",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./shop-api",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 49,
-      "edges": 41,
-      "types": 12,
+      "nodes": 60,
+      "edges": 46,
+      "types": 13,
       "unresolved": 2,
-      "durationMs": 0,
+      "durationMs": 1005,
       "packages": {
         "name": "shop-api",
         "runtime": [
@@ -29,11 +29,11 @@
       "repo": "./shop-web",
       "type": "angular",
       "extractor": "@flowatlas/extractor-angular",
-      "nodes": 27,
-      "edges": 28,
-      "types": 1,
+      "nodes": 38,
+      "edges": 37,
+      "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 788,
       "packages": {
         "name": "shop-web",
         "runtime": [
@@ -57,8 +57,8 @@
     "dynamic": 0
   },
   "ui": {
-    "total": 2,
-    "resolved": 2,
+    "total": 4,
+    "resolved": 4,
     "unresolved": 0,
     "byReason": {}
   },
@@ -69,9 +69,11 @@
     "noProducers": []
   },
   "routes": {
-    "total": 6,
-    "called": 2,
+    "total": 10,
+    "called": 4,
     "uncalled": [
+      "entry:shop-api:http:DELETE:/api/reports/:param",
+      "entry:shop-api:http:GET:/api/reports/weekly",
       "entry:shop-api:http:PATCH:/api/orders/:param/note",
       "entry:shop-api:http:POST:/api/desks/:param/help",
       "entry:shop-api:http:POST:/api/orders/:param/expire",
@@ -80,14 +82,14 @@
     "duplicated": []
   },
   "types": {
-    "total": 13,
+    "total": 15,
     "sharedPackage": 0
   },
   "unresolved": [],
   "totals": {
-    "nodes": 77,
-    "edges": 81,
-    "types": 13,
+    "nodes": 99,
+    "edges": 97,
+    "types": 15,
     "missed": 2,
     "sites": 2,
     "notes": 0,

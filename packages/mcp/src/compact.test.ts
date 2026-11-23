@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compactAnswer, compactNext, compactOutputSchema, isIdTail, locBeside, serviceOfId } from './compact.js';
+import { compactAnswer, compactNext, compactOutputSchema, isIdTail, listNote, locBeside, serviceOfId } from './compact.js';
 
 describe('compact answers (P365)', () => {
   it('reads the service an id names by the id grammar, and none from a channel', () => {
@@ -180,8 +180,8 @@ describe('compact answers (P365)', () => {
     const target = 'shop-api#src/orders.service.ts:OrdersService.updateStatus';
     const answer = {
       target: { id: target, type: 'method', label: 'OrdersService.updateStatus', loc: 'src/orders.service.ts:8' },
-      entries: [
-        {
+      // One node, not a list's row, whose structured facts stay (P375).
+      entry: {
           id: 'entry:shop-api:http:PATCH:/orders/status',
           meta: {
             fails: [
@@ -193,18 +193,17 @@ describe('compact answers (P365)', () => {
           reach: 'maybe',
           gap: 'gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver',
           behind: 'ops-bot#src/ops-bot.ts:OpsBot.handleStatus',
-        },
-      ],
+      },
     };
     const compact = compactAnswer(answer) as typeof answer;
-    expect(compact.entries[0]!.meta.fails).toEqual([
+    expect(compact.entry.meta.fails).toEqual([
       { status: 409, exception: 'ConflictException', line: 9, source: 'throw' },
       { exception: 'NotFoundException', at: 'shop-api#src/stock.service.ts:StockService.take', line: 4 },
       // A file no id beside it holds stays.
       { exception: 'BadRequestException', at: 'shop-api#src/stock.service.ts:StockService.take', file: 'src/other.ts', line: 7 },
     ]);
     // What a maybe sits behind is never left out.
-    expect(compact.entries[0]).toMatchObject({ reach: 'maybe', gap: answer.entries[0]!.gap, behind: answer.entries[0]!.behind });
+    expect(compact.entry).toMatchObject({ reach: 'maybe', gap: answer.entry.gap, behind: answer.entry.behind });
     expect(compact.target).toEqual({ id: target, line: 8 });
   });
 
@@ -249,5 +248,43 @@ describe('compact answers (P365)', () => {
     });
     // Without `left`, a cut is said where it always was.
     expect(compactAnswer({ truncated: 'x', stoppedBy: ['depth'], complete: true })).toEqual({ truncated: 'x', stoppedBy: ['depth'], complete: true });
+  });
+});
+
+describe('a list row keeps its plain facts (P375)', () => {
+  const heavy = {
+    adapter: 'nestjs-http',
+    guards: ['ClientGuard'],
+    access: { guards: [{ id: 'shop#src/auth.ts:ClientGuard', layer: 'guard' }] },
+    fails: [{ status: 404, exception: 'NotFoundException', at: 'shop#src/orders.ts:Orders.cancel' }],
+  };
+
+  it('leaves out the structured facts of a list row, and says so once, naming the calls that give them', () => {
+    const answer = {
+      target: { id: 'shop#src/orders.ts:Orders.cancel', type: 'method', meta: { signature: { params: ['string'] } } },
+      entries: [
+        { id: 'entry:shop:http:PATCH:/orders/:param', type: 'entry', meta: heavy },
+        { id: 'entry:shop:http:DELETE:/orders/:param', type: 'entry', meta: { fails: heavy.fails } },
+      ],
+      complete: true,
+    };
+    expect(compactAnswer(answer)).toEqual({
+      target: { id: 'shop#src/orders.ts:Orders.cancel', meta: { signature: { params: ['string'] } } },
+      entries: [{ id: 'entry:shop:http:PATCH:/orders/:param', meta: { adapter: 'nestjs-http', guards: ['ClientGuard'] } }, { id: 'entry:shop:http:DELETE:/orders/:param' }],
+      complete: true,
+      note: listNote(['access', 'fails']),
+    });
+    expect(listNote(['fails', 'access'])).toContain('(access, fails)');
+  });
+
+  it('adds to a note the answer has, and leaves the steps of a tree whole', () => {
+    expect(compactAnswer({ matches: [{ id: 'shop#src/a.ts:A.b', meta: { signature: { returns: 'x' } } }], note: 'detail clamped to 2; use get_source' })).toEqual({
+      matches: [{ id: 'shop#src/a.ts:A.b' }],
+      note: `detail clamped to 2; use get_source; ${listNote(['signature'])}`,
+    });
+    const tree = { root: { node: { id: 'entry:shop:http:GET:/a', meta: { fails: heavy.fails } }, children: [{ node: { id: 'shop#src/a.ts:A.b', meta: { fails: heavy.fails } }, children: [] }] } };
+    const kept = compactAnswer(tree) as { root: { meta?: unknown; children: Array<{ meta?: unknown }> }; note?: string };
+    expect(kept.root.children[0]!.meta).toEqual({ fails: heavy.fails });
+    expect(kept.note).toBeUndefined();
   });
 });

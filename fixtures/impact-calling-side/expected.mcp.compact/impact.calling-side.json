@@ -16,7 +16,8 @@
       "id": "entry:shop-api:http:PATCH:/orders/status",
       "line": 9,
       "reach": "alive",
-      "by": "shop-api#src/orders.controller.ts:OrdersController.setStatus"
+      "by": "shop-api#src/orders.controller.ts:OrdersController.setStatus",
+      "rowsVia": 2
     },
     {
       "id": "entry:shop-api:http:POST:/hooks/chat",

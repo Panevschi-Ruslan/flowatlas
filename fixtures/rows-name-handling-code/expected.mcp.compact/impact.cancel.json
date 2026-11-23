@@ -1,15 +1,16 @@
 {
   "target": {
     "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
-    "line": 15,
+    "line": 17,
     "reach": "alive"
   },
   "entries": [
     {
       "id": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
-      "line": 20,
+      "line": 21,
       "reach": "alive",
-      "by": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+      "by": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "rowsVia": 1
     },
     {
       "id": "entry:shop-api:http:POST:/bot/staff/webhook",
@@ -19,7 +20,7 @@
     },
     {
       "id": "entry:shop-web:screen:/orders/:param",
-      "loc": "src/app/app.routes.ts:7",
+      "loc": "src/app/app.routes.ts:8",
       "reach": "outside",
       "via": "PATCH /api/orders/:param/cancel (shop-api)",
       "by": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent"

@@ -192,6 +192,8 @@ interface FileGaps {
 export interface Crossing {
   said: string;
   repo: string;
+  /** The way in crossed, where it is one (a route requested): a row listing it is the one the others reach through (P375). */
+  id?: string;
 }
 
 /** A way in a walk met, with the crossing it was reached through, if any. */
@@ -269,7 +271,7 @@ export interface Walked {
 const crossingOf = (node: GraphNode, edge: GraphEdge | undefined): Crossing | undefined => {
   if (edge === undefined) return undefined;
   if (node.type === 'entry' && REQUEST_EDGES.has(edge.type)) {
-    return { said: node.kind === undefined || node.kind === 'http' ? node.label : `${node.kind} ${node.label}`, repo: node.repo };
+    return { said: node.kind === undefined || node.kind === 'http' ? node.label : `${node.kind} ${node.label}`, repo: node.repo, id: node.id };
   }
   if (node.type === 'channel' && edge.type === 'emits') return { said: `channel ${node.label}`, repo: '' };
   return undefined;

@@ -3,7 +3,7 @@
     "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
     "type": "method",
     "label": "OrdersService.cancel",
-    "loc": "src/orders/orders.service.ts:15",
+    "loc": "src/orders/orders.service.ts:17",
     "service": "shop-api",
     "reach": "alive"
   },
@@ -12,11 +12,12 @@
       "id": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
       "type": "entry",
       "label": "PATCH /api/orders/:param/cancel",
-      "loc": "src/orders/orders.controller.ts:20",
+      "loc": "src/orders/orders.controller.ts:21",
       "service": "shop-api",
       "kind": "http",
       "reach": "alive",
-      "by": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+      "by": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "rowsVia": 1
     },
     {
       "id": "entry:shop-api:http:POST:/bot/staff/webhook",
@@ -32,7 +33,7 @@
       "id": "entry:shop-web:screen:/orders/:param",
       "type": "entry",
       "label": "/orders/:param",
-      "loc": "src/app/app.routes.ts:7",
+      "loc": "src/app/app.routes.ts:8",
       "service": "shop-web",
       "kind": "screen",
       "reach": "outside",

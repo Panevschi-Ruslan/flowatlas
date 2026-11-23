@@ -36,6 +36,12 @@ holds ones for `@angular/core`, `@angular/common`, `@angular/router` and `rxjs`.
   browser as server-sent events.
 - `AlertRelay` subscribes to every channel of the bus (`bus.all()`) and pages
   the staff on `HELP_REQUESTED`.
+- `OrdersService.cancel` refuses four ways (404, 409, 410, 400), and the
+  cancel route runs `ShopOpenGuard` (503) beside `ClientGuard`: every way in
+  reaching the method can fail six ways (P375).
+- `ReportsController` declares four routes under `/api/reports`: `daily`,
+  `weekly`, `export` and a delete. The reports screen requests `daily` and
+  `export`; nothing requests the other two.
 
 ## The front end - `shop-web` (Angular)
 
@@ -44,6 +50,8 @@ holds ones for `@angular/core`, `@angular/common`, `@angular/router` and `rxjs`.
 - `LiveEvents` pushes each frame of the stream into a subject, `stream$`.
 - `/desks` (`DeskBoardComponent`) subscribes to `stream$`, filtered to
   `HELP_REQUESTED`, and reloads: the subscription that runs.
+- `/reports` (`ReportsComponent`) reads the daily report on load and exports
+  through `ReportsClient`.
 - `OrderNotices` subscribes to `stream$` in `initialize` with a callback that
   only hands the event to `handle`, whose branch on `HELP_REQUESTED` shows a
   toast with one of its fields. Nothing injects `OrderNotices` and nothing
@@ -64,6 +72,12 @@ holds ones for `@angular/core`, `@angular/common`, `@angular/router` and `rxjs`.
   `DeskBoardComponent.reload`, and `OrderNotices.handle`, `reach: dead`, its
   class built by nothing. Before, the third was `Toast.showInfo`, alive from
   `screen /desks` through the toast's other callers.
+- `impact` on `OrdersService.cancel` at detail 2, compact: the rows without
+  their `fails` and `access`, a `note` saying so; the route says `rowsVia: 1`,
+  the order screen reaching the method through it (P375).
+- `dead` on `ReportsController`: each of its four routes judged, `uncalled: 2`;
+  `list_entries({in: "ReportsController", reach: "dead"})`: exactly the
+  weekly report and the delete (P375).
 - `search` for `HELP_REQUESTED`: one row, `desk_alerts`. Before, one per
   channel the bus carries, the cart channels holding only the every-channel
   subscriber's selection.

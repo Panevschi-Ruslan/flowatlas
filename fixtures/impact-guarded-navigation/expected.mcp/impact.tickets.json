@@ -26,7 +26,8 @@
       "service": "store-api",
       "kind": "http",
       "reach": "alive",
-      "by": "store-api#src/tickets.controller.ts:TicketsController.ack"
+      "by": "store-api#src/tickets.controller.ts:TicketsController.ack",
+      "rowsVia": 1
     },
     {
       "id": "entry:store-web:screen:/board",

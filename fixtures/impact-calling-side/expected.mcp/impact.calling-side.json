@@ -27,7 +27,8 @@
       "service": "shop-api",
       "kind": "http",
       "reach": "alive",
-      "by": "shop-api#src/orders.controller.ts:OrdersController.setStatus"
+      "by": "shop-api#src/orders.controller.ts:OrdersController.setStatus",
+      "rowsVia": 2
     },
     {
       "id": "entry:shop-api:http:POST:/hooks/chat",

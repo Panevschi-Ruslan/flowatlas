@@ -330,6 +330,9 @@ const HANDLING_CASES = [
   ['who_consumes.never-subscribed', 'who_consumes', { channel: 'desk_alerts', type: 'HELP_REQUESTED' }],
   ['who_consumes.channel', 'who_consumes', { channel: 'desk_alerts' }],
   ['search.every-channel-type', 'search', { query: 'HELP_REQUESTED' }],
+  // A controller's routes, each judged, and the two no code calls, in one small call (P375).
+  ['dead.class-routes', 'dead', { id: 'ReportsController' }],
+  ['list_entries.class-uncalled', 'list_entries', { in: 'ReportsController', reach: 'dead' }],
 ];
 /** The impact, the guard's read and the consumers, compact: what an agent is handed. */
 const HANDLING_COMPACT_CASES = [
@@ -337,6 +340,10 @@ const HANDLING_COMPACT_CASES = [
   ['check_contract.default-key', 'check_contract', { edge: 'PATCH /api/orders/:id/cancel', field: 'userRef', verbose: false }],
   ['who_consumes.never-subscribed', 'who_consumes', { channel: 'desk_alerts', type: 'HELP_REQUESTED', verbose: false }],
   ['search.every-channel-type', 'search', { query: 'HELP_REQUESTED', verbose: false }],
+  // At detail 2 the rows keep their plain facts, the target all of its own (P375).
+  ['impact.cancel-detail-2', 'impact', { symbol: HANDLING_CANCEL, detail: 2, verbose: false }],
+  ['dead.class-routes', 'dead', { id: 'ReportsController', verbose: false }],
+  ['list_entries.class-uncalled', 'list_entries', { in: 'ReportsController', reach: 'dead', verbose: false }],
 ];
 
 /**

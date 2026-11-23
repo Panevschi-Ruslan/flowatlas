@@ -9,7 +9,8 @@
       "id": "entry:market-api:http:POST:/api/staff/desks/:param/ack-call",
       "line": 14,
       "reach": "alive",
-      "by": "market-api#src/desks.controller.ts:DesksController.ackCall"
+      "by": "market-api#src/desks.controller.ts:DesksController.ackCall",
+      "rowsVia": 1
     },
     {
       "id": "entry:market-web:screen:/staff",

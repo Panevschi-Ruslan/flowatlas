@@ -45,6 +45,15 @@
  * there (no consumer) or a `false` (`dead: false`) is the answer. `next` keeps
  * the paging call alone when the list was cut, and otherwise at most two calls.
  *
+ * A row of a list (an element of a list below the answer's own fields, with
+ * an `id`, and not a row of a tree, whose steps are one flow's) keeps from its
+ * `meta` only its plain facts: strings, numbers, booleans and lists of them
+ * (P375). Its structured facts (`fails`, `access`, `decorators`, `signature`:
+ * records and lists of records) are one node's, for the call that answers
+ * about that node; the answer says once, in `note`, which went and which call
+ * gives them. A list asked at `detail: 2` was paying for every exception any
+ * code under each route can throw, on every row.
+ *
  * A field it does not know is kept, so a field a later tool adds is handed on
  * whole. `verbose: true` on any tool skips this and answers as before.
  * `get_source` is never compacted: what it returns is code, said once already.
@@ -81,6 +90,38 @@ const ID_KEYS = ['id', 'gapId'] as const;
 const ID_SEPARATORS = '#:/.|@ ';
 
 type Plain = Record<string, unknown>;
+
+/** What one compaction left out of a list's rows, said once at the top (P375). */
+interface Pass {
+  leftOut: Set<string>;
+}
+
+/** The most `meta` keys the note names. */
+const NOTE_KEYS = 5;
+
+/** A plain fact: a string, a number, a boolean, or a list of them. */
+const isPlainFact = (value: unknown): boolean => {
+  const scalar = (item: unknown): boolean => typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean';
+  return scalar(value) || (Array.isArray(value) && value.every(scalar));
+};
+
+/** What the answer says when a list's rows left out their structured facts (P375). */
+export const listNote = (keys: readonly string[]): string => {
+  const named = [...keys].sort();
+  const shown = named.slice(0, NOTE_KEYS).join(', ') + (named.length > NOTE_KEYS ? ', ...' : '');
+  return `rows of a list leave out their structured facts (${shown}): get_flow({entry: id}) or impact({symbol: id}) at detail 2 gives one node's, verbose: true every row's`;
+};
+
+/** A list row's `meta` with only its plain facts, the keys left out noted in `pass`. */
+const plainMeta = (meta: Plain, pass: Pass): Plain => {
+  const kept: Plain = {};
+  for (const [key, value] of Object.entries(meta)) {
+    if (isPlainFact(value)) kept[key] = value;
+    // Nothing is no structured fact: it goes as every blank field does, unsaid.
+    else if (!isBlank(value)) pass.leftOut.add(key);
+  }
+  return kept;
+};
 
 const isPlain = (value: unknown): value is Plain => typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -248,15 +289,20 @@ const flattened = (row: Plain): Plain => {
   return { ...node, ...(edge === undefined ? {} : { edge: edgeSaid(edge) }), ...rest, ...(children === undefined ? {} : { children }) };
 };
 
-/** `under` holds the ids of the rows a value is inside, which a field below may only name again. */
-const compactValue = (value: unknown, depth: number, under: readonly string[]): unknown => {
-  if (Array.isArray(value)) return value.map((item) => compactValue(item, depth, under));
+/**
+ * `under` holds the ids of the rows a value is inside, which a field below may
+ * only name again; `inList` whether the value is an element of a list.
+ */
+const compactValue = (value: unknown, depth: number, under: readonly string[], pass: Pass, inList = false): unknown => {
+  if (Array.isArray(value)) return value.map((item) => compactValue(item, depth, under, pass, true));
   if (!isPlain(value)) return value;
-  return compactObject(value, depth, under);
+  return compactObject(value, depth, under, pass, inList);
 };
 
-const compactObject = (given: Plain, depth: number, under: readonly string[]): Plain => {
+const compactObject = (given: Plain, depth: number, under: readonly string[], pass: Pass, inList: boolean): Plain => {
   const row = flattened(given);
+  // A row of a list to choose among, not a step of a tree (P375).
+  const listRow = inList && depth > 0 && !isPlain(given.node) && !('children' in given) && typeof row.id === 'string';
   const leftSays = Array.isArray(row.left) && row.left.length > 0;
   const ids = ID_KEYS.map((key) => row[key]).filter((value): value is string => typeof value === 'string');
   const fullIds = [...ids, ...metaIds(row.meta)];
@@ -266,7 +312,7 @@ const compactObject = (given: Plain, depth: number, under: readonly string[]): P
   const out: Plain = {};
   for (const [key, value] of Object.entries(row)) {
     if (KEPT.has(key)) {
-      out[key] = compactValue(value, depth + 1, inside);
+      out[key] = compactValue(value, depth + 1, inside, pass);
       continue;
     }
     const blankable = depth > 0;
@@ -274,7 +320,7 @@ const compactObject = (given: Plain, depth: number, under: readonly string[]): P
     if (leftSays && SAID_BY_LEFT.has(key)) continue;
     // How a tree's row was reached: never a part of an id, whatever its type's name.
     if (key === 'edge' && depth > 0) {
-      out[key] = compactValue(value, depth + 1, inside);
+      out[key] = compactValue(value, depth + 1, inside, pass);
       continue;
     }
     // A field naming the row it is inside (`meta.selects[].consumer` on that consumer's row), or the answer's target.
@@ -294,11 +340,12 @@ const compactObject = (given: Plain, depth: number, under: readonly string[]): P
     let said: unknown = value;
     if (key === 'meta' && isPlain(value)) {
       said = metaBeside(value, row, ids);
+      if (listRow) said = plainMeta(said as Plain, pass);
       if (isBlank(said)) continue;
     } else if (key === 'next' && Array.isArray(value) && value.every((call) => typeof call === 'string')) {
       said = compactNext(value as string[], row.nextOffset);
     }
-    const compacted = compactValue(said, depth + 1, inside);
+    const compacted = compactValue(said, depth + 1, inside, pass);
     if (blankable && isBlank(compacted)) continue;
     out[key] = compacted;
   }
@@ -310,7 +357,13 @@ const targetIdOf = (answer: unknown): string[] =>
   isPlain(answer) && isPlain(answer.target) && typeof answer.target.id === 'string' ? [answer.target.id] : [];
 
 /** The answer with every fact its ids already say left out (see above); anything else as it was. */
-export const compactAnswer = <T>(answer: T): T => compactValue(answer, 0, targetIdOf(answer)) as T;
+export const compactAnswer = <T>(answer: T): T => {
+  const pass: Pass = { leftOut: new Set() };
+  const out = compactValue(answer, 0, targetIdOf(answer), pass);
+  if (pass.leftOut.size === 0 || !isPlain(out)) return out as T;
+  const said = listNote([...pass.leftOut]);
+  return { ...out, note: typeof out.note === 'string' ? `${out.note}; ${said}` : said } as T;
+};
 
 /**
  * An output schema as the server lists it (P365): no field is required,

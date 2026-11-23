@@ -1,0 +1,19 @@
+{
+  "declaredBy": "shop-api#src/reports/reports.controller.ts:ReportsController",
+  "entries": [
+    {
+      "id": "entry:shop-api:http:DELETE:/api/reports/:param",
+      "loc": "src/reports/reports.controller.ts:31"
+    },
+    {
+      "id": "entry:shop-api:http:GET:/api/reports/weekly",
+      "loc": "src/reports/reports.controller.ts:21"
+    }
+  ],
+  "total": 2,
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:shop-api:http:DELETE:/api/reports/:param\"})",
+    "describe_for_prompt({id: \"entry:shop-api:http:DELETE:/api/reports/:param\"})"
+  ]
+}

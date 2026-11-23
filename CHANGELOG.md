@@ -31,6 +31,33 @@ only one of them moved.
   (1,758, incomplete). The budget also fails a complete answer whose `next`
   asks the same call further, reads a list said once beside several answers,
   and compares a list a row must say whole.
+- **List answers stay lean at any detail, and a class's routes in one small
+  call (P375).** A row of a list (`impact`'s entries and maybe rows,
+  `list_entries`, `find_symbol`, `search`, `who_consumes`, `who_emits`, a
+  `dead` list's candidates) keeps from its `meta` only its plain facts in a
+  compact answer, whatever the `detail`: strings, numbers, booleans and lists
+  of them. Its structured facts - a route's `fails` and `access`, a method's
+  `signature`, a consumer's `selects` - are one node's, and the answer says
+  once, in `note`, which went and that `get_flow` or `impact` at detail 2
+  gives one node's, `verbose: true` every row's; the target of `impact` keeps
+  its own. `dead` on a class lists each way in it declares under `waysIn`,
+  each with its verdict and, alive, who calls it first, with `uncalled`
+  counting those no code calls; on a file, the ways in written in it or
+  handled there. `list_entries` takes `in` (a class, a method or a file: its
+  own ways in, each row with `reach`) and `reach` (one verdict). An `impact`
+  row that other listed rows reach the target through (a route the screens
+  and bots listed request) says `rowsVia`, how many, and impact's description
+  says `by` is the code handling a way in, not a way in. The
+  `rows-name-handling-code` fixture gains a cancel method refusing four ways
+  behind a second guard and a reports controller with four routes the reports
+  screen requests two of, with snapshots and four answer-budget questions:
+  `impact` at detail 2 answers 1,580 characters where it answered 2,717,
+  `list_entries` of the back end's routes at detail 2 2,288 from 4,376,
+  `search` 974 from 2,083, and `list_entries({in, reach: "dead"})` exactly
+  the two uncalled routes in 475. Every `impact` answer whose route row
+  others reach through grows by its `rowsVia` (12 characters on each of five
+  budgeted answers); the listing grows 345 characters for the two inputs and
+  the descriptions (all tools 13,312, core 5,836).
 - **What a pilot after P368-P373 got wrong (P374).** Each row of `impact`
   (and each `throughChannels` sample, now `{id, by?}`) says `by`, the code
   that handles its way in on the chain to the target: a screen's component, a

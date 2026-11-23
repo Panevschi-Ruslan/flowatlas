@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 8,
-  "generatedAt": "2026-11-23T19:20:11.933Z",
+  "generatedAt": "2026-11-23T23:01:51.697Z",
   "edges": [
     {
       "edge": {
@@ -61,6 +61,50 @@
           "ignoredBy": null
         }
       ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/reports.client.ts:18:12",
+        "to": "entry:shop-api:http:GET:/api/reports/daily",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/reports.client.ts:18:12|hits|entry:shop-api:http:GET:/api/reports/daily",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#ReportRow[]",
+        "symbol": "shop-api#src/reports/reports.controller.ts:ReportsController.daily"
+      },
+      "receiver": {
+        "service": "shop-web",
+        "typeId": "type:shop-web#ReportRow[]",
+        "symbol": "shop-web#src/app/reports.client.ts:ReportsClient.daily"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/reports.client.ts:22:12",
+        "to": "entry:shop-api:http:POST:/api/reports/export",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/reports.client.ts:22:12|hits|entry:shop-api:http:POST:/api/reports/export",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{rows:number}",
+        "symbol": "shop-api#src/reports/reports.controller.ts:ReportsController.export"
+      },
+      "receiver": {
+        "service": "shop-web",
+        "typeId": "{rows:number}",
+        "symbol": "shop-web#src/app/reports.client.ts:ReportsClient.exportAll"
+      },
+      "findings": [],
       "rulesApplied": []
     }
   ],
@@ -163,11 +207,11 @@
     },
     {
       "edge": {
-        "from": "producer:shop-api#src/orders/orders.service.ts:16:5",
+        "from": "producer:shop-api#src/orders/orders.service.ts:23:5",
         "to": "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit",
         "type": "emits"
       },
-      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:16:5|emits|consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit",
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:23:5|emits|consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit",
       "direction": "payload",
       "reason": "no-type-on-receiver",
       "message": "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit declares no type for what it expects",
@@ -175,11 +219,11 @@
     },
     {
       "edge": {
-        "from": "producer:shop-api#src/orders/orders.service.ts:20:5",
+        "from": "producer:shop-api#src/orders/orders.service.ts:27:5",
         "to": "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit",
         "type": "emits"
       },
-      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:20:5|emits|consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit",
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:27:5|emits|consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit",
       "direction": "payload",
       "reason": "no-type-on-receiver",
       "message": "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit declares no type for what it expects",
@@ -220,14 +264,38 @@
       "reason": "no-type-on-sender",
       "message": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel declares no type for what it sends",
       "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/reports.client.ts:18:12",
+        "to": "entry:shop-api:http:GET:/api/reports/daily",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/reports.client.ts:18:12|hits|entry:shop-api:http:GET:/api/reports/daily",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-web#src/app/reports.client.ts:ReportsClient.daily declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/reports.client.ts:22:12",
+        "to": "entry:shop-api:http:POST:/api/reports/export",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/reports.client.ts:22:12|hits|entry:shop-api:http:POST:/api/reports/export",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-web#src/app/reports.client.ts:ReportsClient.exportAll declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
     }
   ],
   "summary": {
-    "edges": 1,
+    "edges": 3,
     "shared": 0,
-    "identical": 0,
-    "hash_differs": 1,
-    "unchecked": 10,
+    "identical": 1,
+    "hash_differs": 2,
+    "unchecked": 12,
     "errors": 0,
     "warnings": 1,
     "infos": 0,

@@ -27,7 +27,8 @@
       "service": "market-api",
       "kind": "http",
       "reach": "alive",
-      "by": "market-api#src/items.controller.ts:ItemsController.list"
+      "by": "market-api#src/items.controller.ts:ItemsController.list",
+      "rowsVia": 3
     },
     {
       "id": "entry:market-bot:bot_command:items",

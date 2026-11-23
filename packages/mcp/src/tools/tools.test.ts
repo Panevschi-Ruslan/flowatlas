@@ -268,6 +268,13 @@ describe('the tools a session is offered', () => {
    * moved to them, rounded up to the next 50 (the second with room for the
    * next). Measured with both: 12,967 read, 35,291 in all, 31,555 for the
    * nineteen tools; the ceilings just above.
+   *
+   * P375 gave `list_entries` `in` (a class, a method or a file: its own ways in)
+   * and `reach` (one verdict), and said in the descriptions of `impact`, `dead`
+   * and `list_entries` what `by` and `rowsVia` are, that `dead` on a class or a
+   * file judges each way in it declares, and that `in` lists a class's own:
+   * 13,312 read, 36,070 in all, 32,334 for the nineteen tools; the ceilings moved to them,
+   * rounded up to the next 50.
    */
   /**
    * The instructions are re-sent on every turn (P366): 6,435 characters
@@ -283,8 +290,8 @@ describe('the tools a session is offered', () => {
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(13000);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(35350);
+    expect(read.length).toBeLessThan(13350);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(36100);
   });
 
   /**
@@ -322,7 +329,7 @@ describe('the tools a session is offered', () => {
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
       expect(read.length).toBeLessThan(99999);
-      expect(JSON.stringify({ tools }).length).toBeLessThan(31600);
+      expect(JSON.stringify({ tools }).length).toBeLessThan(32350);
     } finally {
       await plain.close();
     }

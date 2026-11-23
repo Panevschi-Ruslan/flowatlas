@@ -1,17 +1,19 @@
 import { normalizePath, type GraphNode } from '@flowatlas/core';
-import type { GraphDb } from '@flowatlas/linker';
+import { deadJudge, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, truncate } from '../query/detail.js';
 import { sampledIn } from '../query/observed.js';
 import { rankMatches } from '../query/names.js';
 import { nextFor, withNext, withoutShown, withTraceFor } from '../query/next.js';
-import { reachReader, type ReachReader } from '../query/ways-in.js';
+import { declaredBy, isDeclared } from '../query/declared.js';
+import { deadOptionsOf, reachOfVerdict, reachReader, REACHES, type Reach, type ReachReader } from '../query/ways-in.js';
 import {
   answerEach,
   answersOutput,
   askedOf,
   bound,
+  callOf,
   commonInput,
   completeOf,
   completeOutput,
@@ -60,7 +62,8 @@ export { nearNames, rankMatches, type Ranked } from '../query/names.js';
 
 /** What list_entries answers: one page of entries, and how many there are. */
 export const listEntriesOutput = {
-  entries: z.array(nodeOutput),
+  entries: z.array(reachedNodeOutput),
+  declaredBy: z.string().optional(),
   ...pageOutput,
   ...completeOutput,
   note: z.string().optional(),
@@ -120,11 +123,14 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
     'list_entries',
     {
       title: 'List entry points',
-      description: 'Ways in: routes, procedures, screens, bot commands, jobs, handlers.',
+      description:
+        'Ways in: routes, procedures, screens, bot commands, jobs, handlers; `in` a class, method or file lists its own, with `reach`.',
       inputSchema: {
         service: serviceInput,
         kind: z.enum(ENTRY_KINDS).optional(),
         pathPrefix: z.string().optional().describe('routes under this path'),
+        in: z.string().optional(),
+        reach: z.enum(REACHES as [Reach, ...Reach[]]).optional(),
         ...commonInput,
         ...pageInput,
       },
@@ -135,21 +141,56 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
       withDb(ctx.handle, (db) => {
         const { detail, maxNodes, note } = bound(input);
         const prefix = input.pathPrefix === undefined ? undefined : normalizePath(input.pathPrefix);
+        // The ways in one class, method or file declares (P375), rather than every one under a path.
+        const declared = input.in === undefined ? undefined : declaredBy(db, input.in, input.service);
+        if (declared !== undefined && !isDeclared(declared)) {
+          return declared.candidates.length === 0
+            ? { error: `no class, method or file matches ${JSON.stringify(input.in)}`, next: [callOf('find_symbol', { query: input.in })] }
+            : withNext(
+                { candidates: declared.candidates.map((node) => projectDetail(node, 1)) },
+                declared.candidates.slice(0, 2).map((node) => callOf('list_entries', { in: node.id })),
+              );
+        }
+        const judge = input.reach === undefined && declared === undefined ? undefined : deadJudge(db, db.report(), deadOptionsOf(ctx.handle));
+        const reachOf = (entry: GraphNode): Reach | undefined => {
+          const answer = judge?.(entry.id);
+          return answer === undefined ? undefined : reachOfVerdict(entry, answer);
+        };
+        const inDeclared = declared === undefined ? undefined : new Set(declared.entries.map((entry) => entry.id));
         const all = db
           .nodesByType('entry', input.kind)
           .filter(inService(input.service))
+          .filter((entry) => inDeclared === undefined || inDeclared.has(entry.id))
           .filter((entry) => {
             if (prefix === undefined) return true;
             const path = normalizePath(String(entry.meta?.['path'] ?? ''));
             return path === prefix || path.startsWith(prefix === '/' ? '/' : `${prefix}/`);
           })
+          // Judged last, so only the rows the other filters kept are judged.
+          .filter((entry) => input.reach === undefined || reachOf(entry) === input.reach)
           .sort(inReadingOrder);
 
         const { items, total, truncated, nextOffset } = truncate(all, maxNodes, input.offset);
-        const args = { service: input.service, kind: input.kind, pathPrefix: input.pathPrefix, detail: input.detail, maxNodes };
+        const args = {
+          service: input.service,
+          kind: input.kind,
+          pathPrefix: input.pathPrefix,
+          in: input.in,
+          reach: input.reach,
+          detail: input.detail,
+          maxNodes,
+        };
+        // Asked about one class's ways in, each row says whether it runs; asked for one reach, the call said it.
+        const withReach = (entry: GraphNode): object => {
+          const row = projectDetail(entry, detail);
+          const reach = declared === undefined || input.reach !== undefined || detail < 1 ? undefined : reachOf(entry);
+          return reach === undefined ? row : { ...row, reach };
+        };
+        const owner = declared === undefined ? undefined : (declared.node?.id ?? declared.file);
         return withNext(
           {
-            entries: items.map((entry) => projectDetail(entry, detail)),
+            ...(owner === undefined ? {} : { declaredBy: owner }),
+            entries: items.map(withReach),
             total,
             ...(nextOffset === undefined ? {} : { truncated, nextOffset }),
             ...completeOf([pageLeft(total, items.length, input.offset, nextOffset)]),

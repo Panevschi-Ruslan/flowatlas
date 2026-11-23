@@ -16,7 +16,8 @@
       "id": "entry:market-api:http:GET:/api/items",
       "line": 9,
       "reach": "alive",
-      "by": "market-api#src/items.controller.ts:ItemsController.list"
+      "by": "market-api#src/items.controller.ts:ItemsController.list",
+      "rowsVia": 3
     },
     {
       "id": "entry:market-bot:bot_command:items",

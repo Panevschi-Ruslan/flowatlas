@@ -1,6 +1,8 @@
+import type { GraphNode } from '@flowatlas/core';
 import {
   deadChannels,
   deadEntries,
+  deadJudge,
   deadMethods,
   deadProviders,
   deadVerdict,
@@ -15,6 +17,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, truncate } from '../query/detail.js';
 import { resolveChannelRef } from '../query/channel-ref.js';
+import { declaredBy, isDeclared } from '../query/declared.js';
 import { isResolved, resolveSymbol, type EntryRef } from '../query/entry-ref.js';
 import { nearNames } from '../query/names.js';
 import { MAX_NEXT, withNext, withoutShown } from '../query/next.js';
@@ -134,6 +137,7 @@ const verdictNext = (id: string, verdict: DeadVerdict, evidence: DeadEvidence, s
 
 const evidenceOutput = z.record(z.string(), z.unknown());
 
+
 const deadRowOutput = z.object({
   id: z.string(),
   type: z.string(),
@@ -157,6 +161,7 @@ export const deadOutput = {
   class: z.string().optional(),
   role: z.string().optional(),
   evidence: evidenceOutput.optional(),
+  uncalled: z.number().optional(),
   from: reachOutput.from,
   ways: reachOutput.ways,
   walkCut: reachOutput.walkCut,
@@ -165,6 +170,9 @@ export const deadOutput = {
   alsoAnswers: z.array(z.string()).optional(),
   channelUsed: z.string().optional(),
   rows: z.array(deadRowOutput).optional(),
+  file: z.string().optional(),
+  /** Each way in a class or a file declares, judged (P375): `{id, verdict, reason?, callers?, caller?}`. */
+  waysIn: z.array(z.record(z.string(), z.unknown())).optional(),
   counts: z.record(z.string(), z.number()).optional(),
   excludedEntryKinds: z.array(z.string()).optional(),
   ...pageOutput,
@@ -175,11 +183,54 @@ export const deadOutput = {
   next: nextOutput,
 };
 
+/** The ways in a class, a method or a file declares, each with its verdict (P375): an alive one with who calls it first, any other with why. */
+const waysInJudged = (db: GraphDb, ctx: ToolContext, entries: readonly GraphNode[]): Array<Record<string, unknown>> => {
+  const judge = deadJudge(db, db.report(), deadOptionsOf(ctx.handle));
+  return entries.flatMap((entry) => {
+    const answer = judge(entry.id);
+    if (answer === undefined) return [];
+    const { callers, caller } = answer.evidence;
+    return [
+      {
+        id: entry.id,
+        verdict: answer.verdict,
+        ...(answer.verdict === 'alive' ? {} : { reason: answer.reason }),
+        ...(typeof callers === 'number' && callers > 0 ? { callers } : {}),
+        ...(typeof caller === 'string' && caller !== '' ? { caller } : {}),
+      },
+    ];
+  });
+};
+
+/**
+ * What `dead` lists the ways in of: a class (a controller, a bot's class), which declares them by its methods
+ * handling them. A method's verdict is its way in's already, and a component's names the screens it is routed at.
+ */
+const DECLARING_TYPES: ReadonlySet<string> = new Set(['provider']);
+
+/** Whether a way in judged is one no code calls: `dead`, or `likely-dead` (a call read in part could reach it). */
+const isUncalled = (row: Record<string, unknown>): boolean => row['verdict'] === 'dead' || row['verdict'] === 'likely-dead';
+
+/** The ways in judged, how many no code calls, and the code of the first to read before removing it. */
+const waysInSaid = (waysIn: ReadonlyArray<Record<string, unknown>>): { said: object; next: string[] } => {
+  const uncalled = waysIn.filter(isUncalled);
+  return {
+    said: { waysIn, uncalled: uncalled.length, complete: true },
+    next: uncalled.slice(0, 1).map((row) => callOf('get_source', { symbol: String(row['id']) })),
+  };
+};
+
 /**
  * One node, by any name a tool takes; a channel by its bare name too, and as
  * a value it takes (`tenant:42:events`) when nothing else answers to it (P360).
+ * A file is answered by the ways in it declares (P375).
  */
 const answerOne = (db: GraphDb, ctx: ToolContext, reader: ReachReader, ref: string): object => {
+  const byFile = db.node(ref.trim()) === undefined ? declaredBy(db, ref) : undefined;
+  if (byFile !== undefined && isDeclared(byFile) && byFile.file !== undefined && byFile.entries.length > 0) {
+    const { said, next } = waysInSaid(waysInJudged(db, ctx, byFile.entries));
+    return withNext({ file: byFile.file, ...said }, next);
+  }
   const channel = db.node(`channel:${ref.trim()}`);
   const named = channel === undefined ? resolveSymbol(db, ref) : { id: channel.id, node: channel };
   const valued = isResolved(named) || named.candidates.length > 0 ? undefined : resolveChannelRef(db, ref);
@@ -208,6 +259,11 @@ const answerOne = (db: GraphDb, ctx: ToolContext, reader: ReachReader, ref: stri
   const loc = locOf(answer);
   // Where it is reached from (P364), so an alive answer needs no who_calls after it.
   const { from, ways, walkCut, gap, behind } = reader.of(answer.id);
+  // A class answers for the ways in it declares too, each judged (P375): which routes of a controller no code calls is
+  // this one answer.
+  const declared = DECLARING_TYPES.has(found.node.type) ? declaredBy(db, found.node.id) : undefined;
+  const declaredSaid =
+    declared === undefined || !isDeclared(declared) || declared.entries.length === 0 ? undefined : waysInSaid(waysInJudged(db, ctx, declared.entries));
   return withNext(
     {
       id: answer.id,
@@ -220,19 +276,25 @@ const answerOne = (db: GraphDb, ctx: ToolContext, reader: ReachReader, ref: stri
       ...(answer.class === undefined ? {} : { class: answer.class }),
       ...(answer.role === undefined ? {} : { role: answer.role }),
       evidence: wireEvidence(answer.evidence),
-      ...(from === undefined ? {} : { from }),
-      ...(ways === undefined ? {} : { ways }),
-      ...(walkCut === undefined ? {} : { walkCut }),
+      // The ways in a class declares, each judged, say where it is reached from: not the nearest of them again.
+      ...(from === undefined || declaredSaid !== undefined ? {} : { from }),
+      ...(ways === undefined || declaredSaid !== undefined ? {} : { ways }),
+      ...(walkCut === undefined || declaredSaid !== undefined ? {} : { walkCut }),
       // A maybe's unread call and the code its chain stops at (P367); `reason` already says why otherwise.
       ...(gap === undefined ? {} : { gap }),
       ...(behind === undefined || behind === answer.reason ? {} : { behind }),
       ...(found.alsoAnswers === undefined ? {} : { alsoAnswers: found.alsoAnswers }),
       ...(found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed }),
+      ...(declaredSaid?.said ?? {}),
     },
     [
-      ...withoutShown(verdictNext(answer.id, answer.verdict, answer.evidence, answer.service), [{ id: answer.id, ...(from === undefined ? {} : { from }) }]),
-      // Several ways in, of which `from` names the nearest: impact lists them all.
-      ...(ways === undefined ? [] : [callOf('impact', { symbol: answer.id })]),
+      // The code of the first way in it declares that no code calls, which is what to read before removing it.
+      ...(declaredSaid?.next ?? []),
+      ...(declaredSaid !== undefined
+        ? []
+        : withoutShown(verdictNext(answer.id, answer.verdict, answer.evidence, answer.service), [{ id: answer.id, ...(from === undefined ? {} : { from }) }])),
+      // Several ways in, of which `from` names the nearest: impact lists them all, unless the answer judged each.
+      ...(ways === undefined || declaredSaid !== undefined ? [] : [callOf('impact', { symbol: answer.id })]),
     ].slice(0, MAX_NEXT),
   );
 };
@@ -243,7 +305,7 @@ export const registerDead = (server: McpServer, ctx: ToolContext): void => {
     {
       title: 'Is this dead',
       description:
-        "Whether a node is `dead`, `likely-dead` (a call read in part could reach it: `couldHit`), `unknown` or `alive`, and what could make that wrong; or a service's dead rows, verdict first.",
+        "Whether a node is `dead`, `likely-dead` (a call read in part could reach it: `couldHit`), `unknown` or `alive`, and what could make that wrong; a class or a file also judges each way in it declares (`waysIn`); or a service's dead rows, verdict first.",
       inputSchema: {
         id: z.string().optional(),
         ids: severalInput(),

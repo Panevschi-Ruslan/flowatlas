@@ -15,7 +15,8 @@
       "id": "entry:store-api:http:POST:/api/tickets/:param/ack",
       "line": 8,
       "reach": "alive",
-      "by": "store-api#src/tickets.controller.ts:TicketsController.ack"
+      "by": "store-api#src/tickets.controller.ts:TicketsController.ack",
+      "rowsVia": 1
     },
     {
       "id": "entry:store-web:screen:/board",

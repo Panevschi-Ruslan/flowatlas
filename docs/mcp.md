@@ -312,6 +312,7 @@ A row's ids are its `id` and, on a gap, its `gapId` (`gap:<service>|<file>|<reas
 | `truncated`, `stoppedBy`, `frontier` | where the answer (or one of the answers of a call asked several things) says `left`, which says each cut; `next` holds the call that walks on (P370) |
 | a tree's `node` wrapper | a row of a tree (`get_flow`, `who_calls`) is said as the node itself with `edge` and `children` beside its fields: `{"id": …, "line": 31, "edge": "calls", "children": […]}` (P370) |
 | an edge's `confidence: "static"` | the confidence an edge has unless it says otherwise; an edge with nothing left but its type is said as the type (`"edge": "handles"`), one with types or a weaker confidence as an object (P370) |
+| a list row's structured `meta` | on a row of a list (an element of a list below the answer's own fields, with an `id`, not a step of a tree), a `meta` value that is a record or a list of records: a route's `fails` and `access`, a method's `signature`, a consumer's `selects` and `subscriptions`. Strings, numbers, booleans and lists of them stay. The answer says once, in `note`, which keys went and that `get_flow({entry: id})` or `impact({symbol: id})` at detail 2 gives one node's and `verbose: true` every row's (P375) |
 
 `id`, `gapId`, `complete`, `left`, `reach` and `from` are never left out.
 
@@ -324,7 +325,17 @@ edge. With the unreached chain ends no longer listed by `impact`, 53,453.
 `line` rather than a shortened `loc` reads one way only: a number is a line of
 the file the id names. A field the compaction does not know is kept, so a field
 a tool adds is handed on whole. `detail` means the same in both: `detail: 2`'s
-`meta` stays, less its repeats. `get_source` is never compacted, and neither is
+`meta` stays, less its repeats, on one node (`impact`'s and `who_calls`'
+target, `who_consumes`' channel, a step of `get_flow`); a row of a list keeps
+its plain facts only, since what a list is asked for is which rows, and the
+heavy facts of one node are that node's call (P375): asked at detail 2,
+`impact` handed every row every exception any code under its route can throw,
+several times the size of the same rows at detail 1. On the `rows-name-handling-code`
+fixture, whose cancel route refuses six ways behind two guards, `impact` at
+detail 2 answers 1,580 characters where it answered 2,717 (verbose: 4,253),
+`list_entries` of the back end's routes at detail 2 2,288 from 4,376,
+`find_symbol` 2,238 from 3,750, `search` 974 from 2,083 and `who_consumes`
+2,157 from 2,771. `get_source` is never compacted, and neither is
 the Markdown of `describe_for_prompt`; the page, the exported graph and the
 reports show everything. Since a compact answer may leave any field out, the
 `outputSchema` a tool lists requires none, and a row that may say `loc` may say
@@ -376,6 +387,12 @@ first and then each question; `--update` re-records the sizes (never the
 right answers) and prints each beside what it was. **A change that grows an
 answer re-records with `--update` and says why in its commit**, so a growth is
 read before it is accepted rather than slipping in with a snapshot.
+
+P375 added four: `impact` at detail 2 (1,580 characters, the rows without
+their failures and guards), the route row counting the rows reached through it
+(`rowsVia`), `dead` on a controller judging each of its four routes (1,025)
+and `list_entries` with `in` and `reach: "dead"`, exactly the two routes no
+code calls (475).
 
 On P373's tree a turn carries about 3,960 characters of instructions, guide
 block and skill description (about 990 tokens), 9,340 with the core tools
@@ -633,7 +650,7 @@ pages, cursors, retries, literal lists, batch calls, migrations) are not rows;
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `dead` | whether one node is dead, with what could make that wrong; or, without `id`, every row `flowatlas dead` lists, verdict first | `id`, or `service` and `kind` (`entries`, `channels`, `providers`, `methods`), `maxNodes`, `offset` |
+| `dead` | whether one node is dead, with what could make that wrong; on a class or a file, each way in it declares, judged (`waysIn`); or, without `id`, every row `flowatlas dead` lists, verdict first | `id` (or `ids`), or `service` and `kind` (`entries`, `channels`, `providers`, `methods`), `maxNodes`, `offset` |
 | `findings` | every finding counted by kind with the top three of each; with `kind`, one kind ranked by reach | `kind` (`n-plus-one`, `unguarded`, `contract-break`, `one-ended-channel`, `rule`, or a finding's reason), `service`, `maxNodes`, `offset` |
 | `check_rules` | the architecture rules of the configuration (P114), checked over the graph: each rule's status (`held`, `broken`, `unchecked`), each violation with its two ends, where it crosses (`loc`), the edge kind, the weakest confidence, `heuristic` for a guess, the rule's note and `next` (`get_flow` on the way in it starts behind, `get_source` on the crossing), the rules that could not be checked (`rule-matches-nothing`) and how many an accept excused | `rule`, `service`, `maxNodes`, `offset` |
 
@@ -677,7 +694,17 @@ or a call one segment off names it) or `alive`. Its **evidence**:
 
 `dead({id})` takes a way in, a channel (by its bare name too), a class, a
 method or a function, by any name the other tools take; a controller is as
-alive as its liveliest route. Without `id` it lists entries, channels and
+alive as its liveliest route. On a class (a controller, a bot's class) it also
+lists each way in the class declares by its methods handling them, under
+`waysIn`, each `{id, verdict, reason?, callers?, caller?}`: an alive one with
+how many call it and the first, any other with why; `uncalled` counts those
+judged `dead` or `likely-dead`, `next` is `get_source` on the first of them,
+and the answer is `complete`. "Which routes of this controller does no code
+call" is that one answer, where listing every route under a path and reading
+off the controller's was the way (P375). A
+file (`src/reports/reports.controller.ts`, or the end of its path) answers the
+same for the ways in written in it or handled by code written in it, as
+`{file, waysIn, uncalled, complete}`. Without `id` it lists entries, channels and
 classes (methods only with `kind: "methods"`), dead first, counted under
 `counts`; `excludedEntryKinds` names the kinds never listed.
 
@@ -699,7 +726,7 @@ accepted with `flowatlas accept` under `accepted`.
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix`, `offset` |
+| `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix`, `in` (a class, method or file: the ways in it declares, each row with `reach`, the answer with `declaredBy`), `reach` (only the rows with that reach, `dead` for the ones no code calls), `offset` |
 | `find_symbol` | fuzzy search over every node, by substring or camel-case initials | `query` (required), `types`, `service`, `offset` |
 | `search` | one query over routes and other ways in, channels, types of message, tables, types, gaps, what ways in can fail with, and classes, grouped by kind, with `counts` of each | `query` (required), `kinds`, `limit` (10 rows per kind), `service`, `offset` |
 
@@ -849,7 +876,14 @@ handler calling a bot's method) that class's method, so the file holding the
 code a way in runs is the id's, with no search after it. A function written in
 the way in's own file is routing, passed over while the chain holds other code
 before it leaves the way in's own code; where it holds none, it is `by`. A
-compact answer leaves `by` out where it is the target. On the
+compact answer leaves `by` out where it is the target. `by` is code, not a way
+in: a route's handler is where the route's work starts, and the route is the
+row. A row reached through another listed one - a screen whose client
+requests a route that is itself a row - names that route in `via`, and the
+route says `rowsVia`, how many of the rows listed (on any page) reach the
+target through it (P375): asked which ways in could break and the files
+holding their code, the route's handler file is the route's, and the screens
+and bots counted under it break through it. On the
 `rows-name-handling-code` fixture, impact on the cancel method names the
 route's handler, the bot class behind the webhook in the worker file, and the
 order screen's component. On the `impact-guarded-navigation` fixture, impact on

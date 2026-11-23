@@ -9,7 +9,8 @@
       "id": "entry:catalog-api:http:GET:/items/:param",
       "line": 9,
       "reach": "alive",
-      "by": "catalog-api#src/items.controller.ts:ItemsController.findOne"
+      "by": "catalog-api#src/items.controller.ts:ItemsController.findOne",
+      "rowsVia": 2
     },
     {
       "id": "entry:catalog-web:screen:/catalog",

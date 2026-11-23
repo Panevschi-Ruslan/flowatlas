@@ -73,7 +73,8 @@
       "service": "orders",
       "kind": "http",
       "reach": "alive",
-      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "rowsVia": 5
     },
     {
       "id": "entry:orders:http:GET:/orders/latest",

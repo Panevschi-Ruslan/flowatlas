@@ -71,7 +71,8 @@
       "service": "orders",
       "kind": "http",
       "reach": "alive",
-      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "rowsVia": 5
     }
   ],
   "total": 6,

@@ -16,7 +16,8 @@
       "service": "store-api",
       "kind": "http",
       "reach": "alive",
-      "by": "store-api#src/items.controller.ts:ItemsController.list"
+      "by": "store-api#src/items.controller.ts:ItemsController.list",
+      "rowsVia": 4
     },
     {
       "id": "entry:store-bot:bot_command:items",
