@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T16:37:05.051Z",
+  "builtAt": "2026-11-23T16:46:01.871Z",
   "configHash": "639dbe5fc77e",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 14,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2015,
+      "durationMs": 1414,
       "packages": {
         "name": "kiosk-web",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 34,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 2755,
+      "durationMs": 2264,
       "packages": {
         "name": "market-api",
         "runtime": [
@@ -54,7 +54,7 @@
       "edges": 13,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2233,
+      "durationMs": 1646,
       "packages": {
         "name": "market-bot",
         "runtime": [
@@ -77,7 +77,7 @@
       "edges": 60,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2018,
+      "durationMs": 1416,
       "packages": {
         "name": "market-web",
         "runtime": [

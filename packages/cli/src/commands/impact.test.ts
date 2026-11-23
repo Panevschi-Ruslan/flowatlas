@@ -48,6 +48,21 @@ describe('flowatlas impact (P370)', () => {
     expect(JSON.parse(run({ format: 'json', verbose: true }))).toEqual(toolAnswer());
   });
 
+  it('counts what lies only beyond a channel under the rows, and draws the chains to it with --channel (P372)', () => {
+    let text = '';
+    const guarded = { config: join(ROOT, 'fixtures', 'impact-guarded-navigation', 'flowatlas.config.json'), color: false, ascii: true, format: 'tree' as const };
+    const out = { out: (chunk: string) => void (text += chunk), err: () => {} };
+    runImpact('store-api#src/items.service.ts:ItemsService.listByShop', guarded, out);
+    expect(text).toContain('Only beyond a channel, calling none of it');
+    expect(text).toContain('shop:*:orders  4 ways in, taken by StoreBot.onStatusEvent (store-bot): DELETE /api/orders/:param (store-api)');
+    expect(text).not.toContain('LoginComponent');
+    expect(text).not.toContain('/analytics');
+    text = '';
+    runImpact('store-api#src/items.service.ts:ItemsService.listByShop', { ...guarded, channel: 'shop:*:orders' }, out);
+    expect(text).toContain('OrdersAdminComponent');
+    expect(text).toContain('/orders (store-web)  outside, via channel shop:*:orders');
+  });
+
   it('hangs the rows under the target with --entries-only, and draws the chains to --depth', () => {
     const only = run({ format: 'tree', entriesOnly: true });
     expect(only).not.toContain('ItemCardComponent.load');

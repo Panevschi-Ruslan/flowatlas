@@ -1,4 +1,4 @@
-import { wasMissed, type GraphNode } from '@flowatlas/core';
+import { isMessageTypeNode, wasMissed, type GraphNode } from '@flowatlas/core';
 import { methodsOf, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -7,7 +7,7 @@ import { isResolved, resolveSymbol, type EntryRef } from '../query/entry-ref.js'
 import { REVERSE_EDGES } from '../query/flow.js';
 import { truncationMessage, type FlowNode, type WalkLimit } from '../query/types.js';
 import { MAX_NEXT, nextFor, withNext, withoutShown, type RowShown } from '../query/next.js';
-import { annotateTree, reachReader, viaSaid, type ReachReader, type Walked, type WayInFound } from '../query/ways-in.js';
+import { annotateTree, reachReader, viaSaid, type ReachReader, type Walked, type WalkedFrom, type WayInFound } from '../query/ways-in.js';
 import type { DbHandle } from '../query/db.js';
 import { figuresOf, loadObservedCounts, markObserved, nodeAmbiguous, nodeRow } from '../query/observed.js';
 import { slimForest } from '../query/wire.js';
@@ -40,6 +40,12 @@ const MAX_FRONTIER = 8;
 
 /** The most nodes impact's walk reads before it stops and says so. */
 const IMPACT_WALK_NODES = 4000;
+
+/** The most nodes the walk beyond one channel reads (P372): its ways in are counted, a floor past it. */
+const CHANNEL_WALK_NODES = 1000;
+
+/** How many of the ways in beyond a channel its row names. */
+const CHANNEL_SAMPLE = 3;
 
 /**
  * An ambiguous name, answered with the candidates and the same call once per
@@ -271,7 +277,116 @@ export interface ImpactInput {
   detail: number;
   maxNodes: number;
   offset?: number | undefined;
+  /** A channel of `throughChannels`: list the ways in beyond it instead (P372). */
+  channel?: string | undefined;
 }
+
+/**
+ * The ways in reached only across one channel (P372): a consumer on the way
+ * to the code takes messages from it, and what publishes there - and what
+ * calls that - calls none of the code. Counted and sampled, not listed.
+ */
+export interface ThroughChannel {
+  /** The channel's name as written, and the message type the consumer chooses, if it chooses one. */
+  channel: string;
+  type?: string;
+  /** The node the consumer consumes: the channel, or its message type. */
+  from: GraphNode;
+  /** The consumer nearest the code, and how many on the way take messages from it. */
+  consumer: GraphNode;
+  consumers: number;
+  ways: WayInFound[];
+  /** The walk beyond the channel stopped at its bound: `ways` is a floor. */
+  cut: boolean;
+  walked: Walked;
+}
+
+/** A channel, or a message type of one, as `throughChannels` says it. */
+const channelSaid = (db: GraphDb, node: GraphNode): { channel: string; type?: string } => {
+  if (!isMessageTypeNode(node)) return { channel: node.label };
+  const channelId = typeof node.meta?.channel === 'string' ? node.meta.channel : undefined;
+  const channel = channelId === undefined ? undefined : db.node(channelId);
+  const type = typeof node.meta?.messageType === 'string' ? node.meta.messageType : undefined;
+  return { channel: channel?.label ?? node.label, ...(type === undefined ? {} : { type }) };
+};
+
+/** Whether the channel `channel` asks for is this one: by its name, its id, or a message type's channel. */
+const isChannelAsked = (through: ThroughChannel, asked: string): boolean =>
+  through.channel === asked || through.from.id === asked || `channel:${through.channel}` === asked;
+
+const byDepthThenId = (a: WayInFound, b: WayInFound): number =>
+  a.depth - b.depth || (a.node.id < b.node.id ? -1 : a.node.id > b.node.id ? 1 : 0);
+
+/**
+ * The channels a walk did not cross (P372), each walked on from by itself
+ * past every way in, its ways in those the walk to the code did not meet.
+ */
+const throughChannelsOf = (db: GraphDb, reader: ReachReader, walked: Walked, keep: (way: WayInFound) => boolean): ThroughChannel[] => {
+  const groups = new Map<string, { from: GraphNode; consumers: GraphNode[] }>();
+  for (const crossing of walked.crossings) {
+    const group = groups.get(crossing.from.id);
+    if (group === undefined) groups.set(crossing.from.id, { from: crossing.from, consumers: [crossing.consumer] });
+    else if (!group.consumers.some((consumer) => consumer.id === crossing.consumer.id)) group.consumers.push(crossing.consumer);
+  }
+  const met = new Set(walked.found.map((way) => way.node.id));
+  const rows: ThroughChannel[] = [];
+  for (const group of groups.values()) {
+    const beyond = reader.across(group.from, CHANNEL_WALK_NODES);
+    const ways = beyond.found.filter((way) => way.node.type === 'entry' && !met.has(way.node.id) && keep(way));
+    rows.push({
+      ...channelSaid(db, group.from),
+      from: group.from,
+      consumer: group.consumers[0]!,
+      consumers: group.consumers.length,
+      ways: [...ways].sort(byDepthThenId),
+      cut: beyond.cut,
+      walked: beyond,
+    });
+  }
+  const key = (row: ThroughChannel): string => `${row.channel}\u0000${row.type ?? ''}`;
+  return rows.sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
+};
+
+/** What `entriesNone` says when ways in lie only beyond channels (P372). */
+const beyondSaid = (ways: number): string =>
+  `no way in calls this; ${ways} way${ways === 1 ? ' in lies' : 's in lie'} beyond a channel a consumer on the way takes messages from: throughChannels`;
+
+/** One channel's row of `throughChannels`: how many ways in lie beyond it, and the nearest few. */
+const throughRow = (through: ThroughChannel): object => ({
+  channel: through.channel,
+  ...(through.type === undefined ? {} : { type: through.type }),
+  consumer: through.consumer.id,
+  ...(through.consumers > 1 ? { consumers: through.consumers } : {}),
+  ways: through.ways.length,
+  sample: through.ways.slice(0, CHANNEL_SAMPLE).map((way) => way.node.id),
+  ...(through.cut ? { walkCut: true } : {}),
+});
+
+/**
+ * The walk to the code and the walks beyond the channels asked for, as one,
+ * so the command line draws the chain to each way in past a channel: the
+ * channel hangs under the consumer that takes messages from it.
+ */
+const joinedWalk = (walked: Walked, throughs: readonly ThroughChannel[]): Walked => {
+  const parents = new Map<string, WalkedFrom>(walked.parents);
+  const met = [...walked.met];
+  const seen = new Set(met.map((node) => node.id));
+  for (const through of throughs) {
+    if (!seen.has(through.from.id)) {
+      seen.add(through.from.id);
+      met.push(through.from);
+      parents.set(through.from.id, { from: through.consumer.id });
+    }
+    for (const node of through.walked.met) {
+      if (seen.has(node.id)) continue;
+      seen.add(node.id);
+      met.push(node);
+      const step = through.walked.parents.get(node.id);
+      if (step !== undefined) parents.set(node.id, step);
+    }
+  }
+  return { ...walked, met, parents };
+};
 
 /** impact's answer, and the walk it was read from, which the command line draws as a tree (P370). */
 export interface ImpactOf {
@@ -286,6 +401,8 @@ export interface ImpactOf {
   ways?: WayInFound[];
   maybes?: WayInFound[];
   servicesWithoutEntry?: string[];
+  /** The ways in reached only across a channel, by channel (P372); with `channel` asked, those listed. */
+  throughChannels?: ThroughChannel[];
 }
 
 /**
@@ -310,22 +427,36 @@ export const impactOf = (db: GraphDb, handle: Pick<DbHandle, 'config' | 'path'>,
   // screen that shows the component whose method requests the route, a bot
   // command whose handler does, each with the crossing it came through.
   const walked = reader.waysIn(forClass ? starts : [target], IMPACT_WALK_NODES);
+  const inScope = inService(input.service);
+  // What publishes to a channel a consumer on the way takes messages from calls none of the code (P372): walked on
+  // from by channel, said apart, and listed only when that channel is asked for.
+  const crossed = throughChannelsOf(db, reader, walked, (way) => !ownIds.has(way.node.id) && inScope(way.node));
+  const throughs = crossed.filter((through) => through.ways.length > 0);
   const channels = new Set<string>();
+  // Every channel a consumer on the way takes messages from, whether or not a way in lies beyond it.
+  for (const { from } of walked.crossings) {
+    channels.add(isMessageTypeNode(from) && typeof from.meta?.channel === 'string' ? from.meta.channel : from.id);
+  }
+  // What reaches it at all, beyond a channel too: a change is visible there, though nothing there calls it (R03).
   const reachedByService: Record<string, number> = {};
   let reached = 0;
-  for (const node of walked.met) {
-    if (ownIds.has(node.id)) continue;
+  const counted = new Set<string>(ownIds);
+  for (const node of [...walked.met, ...crossed.flatMap((through) => [through.from, ...through.walked.met])]) {
+    if (counted.has(node.id)) continue;
+    counted.add(node.id);
     reached += 1;
     reachedByService[node.repo] = (reachedByService[node.repo] ?? 0) + 1;
     if (node.type === 'channel') channels.add(node.id);
   }
 
-  const inScope = inService(input.service);
   const entriesByService: Record<string, number> = {};
   let elsewhere = 0;
   const ways: WayInFound[] = [];
   // The services a way in was found in, in any service asked or not: the others are reached without one.
   const withEntry = new Set<string>();
+  for (const through of crossed) {
+    for (const way of through.walked.found) if (way.node.type === 'entry' && !ownIds.has(way.node.id)) withEntry.add(way.node.repo);
+  }
   for (const way of walked.found) {
     // Its ways in are the rows: a consumer nothing read publishes to is walked past, and listed by its way in.
     if (ownIds.has(way.node.id) || way.node.type !== 'entry') continue;
@@ -342,8 +473,15 @@ export const impactOf = (db: GraphDb, handle: Pick<DbHandle, 'config' | 'path'>,
   // A chain that ends at code whose name its repository writes nowhere else: no unread call could reach it, so no
   // way in could break through it (P370). Counted, not listed.
   const unreachedEnds = walked.tops.filter((top) => !ownIds.has(top.node.id) && inScope(top.node) && reader.unreachedEnd(top.node)).length;
+  const asked = input.channel === undefined ? undefined : throughs.filter((through) => isChannelAsked(through, input.channel!));
+  const acrossWays: WayInFound[] = [];
+  for (const through of asked ?? []) {
+    for (const way of through.ways) if (!acrossWays.some((known) => known.node.id === way.node.id)) acrossWays.push(way);
+  }
+  const listedWays = asked === undefined ? ways : acrossWays;
+  const listedMaybes = asked === undefined ? maybes : [];
   const byId = (a: WayInFound, b: WayInFound): number => (a.node.id < b.node.id ? -1 : a.node.id > b.node.id ? 1 : 0);
-  const listed = [...ways.sort(byId), ...maybes.sort(byId)];
+  const listed = [...listedWays.sort(byId), ...listedMaybes.sort(byId)];
 
   // A change is visible in every service the chain runs into, whether or
   // not an entry point was found above it. Counting only the entry points
@@ -360,35 +498,48 @@ export const impactOf = (db: GraphDb, handle: Pick<DbHandle, 'config' | 'path'>,
     return detail < 1 || way.via === undefined ? row : { ...row, via: viaSaid(way.via, way.node) };
   });
   const targetReach = detail < 1 ? undefined : reader.of(target.id).reach;
-  const args = { symbol: target.id, service: input.service, detail: input.detail, maxNodes };
+  const args = { symbol: target.id, service: input.service, detail: input.detail, maxNodes, ...(input.channel === undefined ? {} : { channel: input.channel }) };
   // The walk's own limit is a cut, said where cuts are said (P94): it
   // used to be a note, which the detail clamp's note overwrote (P132).
   const walkCut = walked.cut
     ? `reachability stopped at the walk limit of ${IMPACT_WALK_NODES} nodes; entries past it are not listed`
     : undefined;
+  const acrossCut = (asked ?? []).filter((through) => through.cut).map((through) => through.channel);
   const cuts = [...(nextOffset === undefined ? [] : [truncated!]), ...(walkCut === undefined ? [] : [walkCut])];
   // No way in, said rather than left as an empty list, with where to look (P94).
   const entriesNone =
-    ways.length > 0
+    listedWays.length > 0
       ? undefined
-      : elsewhere > 0
-        ? `no way in of ${input.service ?? ''} reaches this; ${elsewhere} in other services do`
-        : reached > 0
-          ? 'nothing in the graph reaches this from a way in; the callers may be behind a gap'
-          : 'nothing reaches this';
+      : asked !== undefined
+        ? `no way in lies beyond a channel ${input.channel} on the way to this; throughChannels names those that do`
+        : elsewhere > 0
+          ? `no way in of ${input.service ?? ''} reaches this; ${elsewhere} in other services do`
+          : throughs.length > 0
+            ? beyondSaid(throughs.reduce((sum, through) => sum + through.ways.length, 0))
+            : reached > 0
+              ? 'nothing in the graph reaches this from a way in; the callers may be behind a gap'
+              : 'nothing reaches this';
+  // The ways in beyond the first channel, one call away (P372).
+  const across = asked === undefined && throughs.length > 0 ? [callOf('impact', { symbol: target.id, channel: throughs[0]!.channel })] : [];
   const leads =
-    entriesNone === undefined
-      ? nextFor(items[0]?.node)
-      : [
-          ...(elsewhere > 0 ? [callOf('impact', { symbol: target.id })] : []),
-          // Deeper callers only where something reaches it at all.
-          ...(reached > 0 && maybes.length === 0 ? [callOf('who_calls', { symbol: target.id, depth: 8 }, { ...COMMON_DEFAULTS, depth: DEFAULT_CALLER_DEPTH })] : []),
-          ...gapLeads(target),
-        ];
+    asked !== undefined
+      ? [callOf('impact', { symbol: target.id })]
+      : entriesNone === undefined
+        ? [...across, ...nextFor(items[0]?.node)]
+        : [
+            ...across,
+            ...(elsewhere > 0 ? [callOf('impact', { symbol: target.id })] : []),
+            // Deeper callers only where something reaches it at all.
+            ...(reached > 0 && maybes.length === 0 && throughs.length === 0
+              ? [callOf('who_calls', { symbol: target.id, depth: 8 }, { ...COMMON_DEFAULTS, depth: DEFAULT_CALLER_DEPTH })]
+              : []),
+            ...gapLeads(target),
+          ];
   const answer = withNext({
     target: { ...projectDetail(target, detail), ...(targetReach === undefined ? {} : { reach: targetReach }) },
     ...(found.alsoAnswers === undefined ? {} : { alsoAnswers: found.alsoAnswers }),
     ...(forClass ? { forMethods: starts.length } : {}),
+    ...(asked === undefined ? {} : { acrossChannel: input.channel }),
     entries: rows,
     total,
     ...(cuts.length === 0 ? {} : { truncated: cuts.join('; ') }),
@@ -397,9 +548,14 @@ export const impactOf = (db: GraphDb, handle: Pick<DbHandle, 'config' | 'path'>,
     // How many things reach it at all, so no entry points is telling
     // rather than indistinguishable from nothing reaching it.
     reached,
-    entriesByService,
-    ...(maybes.length === 0 ? {} : { maybe: maybes.length }),
-    ...(unreachedEnds === 0 ? {} : { unreached: unreachedEnds }),
+    entriesByService:
+      asked === undefined
+        ? entriesByService
+        : acrossWays.reduce<Record<string, number>>((counts, way) => ({ ...counts, [way.node.repo]: (counts[way.node.repo] ?? 0) + 1 }), {}),
+    ...(listedMaybes.length === 0 ? {} : { maybe: listedMaybes.length }),
+    ...(unreachedEnds === 0 || asked !== undefined ? {} : { unreached: unreachedEnds }),
+    // Reached only across a channel: counted by channel, never complete-blocking (P372).
+    ...(asked !== undefined || throughs.length === 0 ? {} : { throughChannels: throughs.map(throughRow) }),
     reachedByService,
     servicesWithoutEntry,
     channels: [...channels].sort(),
@@ -408,14 +564,33 @@ export const impactOf = (db: GraphDb, handle: Pick<DbHandle, 'config' | 'path'>,
     ...completeOf([
       pageLeft(total, items.length, input.offset ?? 0, nextOffset),
       walkCut !== undefined && `walk: stopped at ${IMPACT_WALK_NODES} nodes; ways in past it not listed`,
-      maybes.length > 0 &&
-        `gaps: ${maybes.length} chain${maybes.length === 1 ? ' stops' : 's stop'} at an unread call before any way in: the maybe row${maybes.length === 1 ? '' : 's'}`,
-      entriesNone !== undefined && reached > 0 && elsewhere === 0 && maybes.length === 0 && unreachedEnds < walked.tops.length && 'gaps: something reaches it but no way in does; its callers may be behind a gap',
+      acrossCut.length > 0 && `walk: stopped at ${CHANNEL_WALK_NODES} nodes beyond ${acrossCut.join(', ')}; ways in past it not listed`,
+      listedMaybes.length > 0 &&
+        `gaps: ${listedMaybes.length} chain${listedMaybes.length === 1 ? ' stops' : 's stop'} at an unread call before any way in: the maybe row${listedMaybes.length === 1 ? '' : 's'}`,
+      entriesNone !== undefined &&
+        asked === undefined &&
+        reached > 0 &&
+        elsewhere === 0 &&
+        maybes.length === 0 &&
+        throughs.length === 0 &&
+        unreachedEnds < walked.tops.length &&
+        'gaps: something reaches it but no way in does; its callers may be behind a gap',
       ...reader.left(),
     ]),
     ...(note === undefined ? {} : { note }),
   }, pagedNext({ tool: 'impact', args, nextOffset }, withoutShown(leads, rows)));
-  return { answer, detail, target, starts: forClass ? starts : [target], walked, listed: items, ways, maybes, servicesWithoutEntry };
+  return {
+    answer,
+    detail,
+    target,
+    starts: forClass ? starts : [target],
+    walked: asked === undefined ? walked : joinedWalk(walked, asked),
+    listed: items,
+    ways: listedWays,
+    maybes: listedMaybes,
+    servicesWithoutEntry,
+    throughChannels: asked ?? throughs,
+  };
 };
 
 export const registerReach = (server: McpServer, ctx: ToolContext): void => {
@@ -533,9 +708,10 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
     {
       title: 'Blast radius',
       description:
-        'Every way in that could break if a symbol changes, in any service: callers past a route or channel name it in `via`; a chain stopped by an unread call is a `maybe` row. Detail 1 is enough.',
+        'Every way in whose code calls a symbol, in any service: callers past a route name it in `via`; a chain stopped by an unread call is a `maybe` row; ways in only past a channel are counted in `throughChannels`. Detail 1 is enough.',
       inputSchema: {
         symbol: z.string().describe('node id or name'),
+        channel: z.string().optional().describe('list one of throughChannels'),
         service: serviceInput,
         ...commonInput,
         ...pageInput,

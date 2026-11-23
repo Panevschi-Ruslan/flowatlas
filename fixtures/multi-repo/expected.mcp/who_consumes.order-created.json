@@ -15,8 +15,7 @@
       "service": "billing",
       "kind": "event",
       "reach": "alive",
-      "from": "event order.created",
-      "ways": 2
+      "from": "event order.created"
     }
   ],
   "total": 1,

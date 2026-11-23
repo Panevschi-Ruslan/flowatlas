@@ -39,22 +39,26 @@
       "id": "entry:orders:http:GET:/orders/:param",
       "loc": "src/orders/orders.controller.ts:25",
       "reach": "alive"
-    },
-    {
-      "id": "entry:orders:http:POST:/orders",
-      "loc": "src/orders/orders.controller.ts:31",
-      "reach": "dead",
-      "via": "GET /orders/:param"
     }
   ],
-  "total": 7,
+  "total": 6,
   "reached": 39,
   "entriesByService": {
-    "orders": 2,
+    "orders": 1,
     "billing": 3,
     "gateway": 2
   },
   "unreached": 5,
+  "throughChannels": [
+    {
+      "channel": "order.created",
+      "consumer": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "ways": 1,
+      "sample": [
+        "entry:orders:http:POST:/orders"
+      ]
+    }
+  ],
   "reachedByService": {
     "orders": 7,
     "billing": 11,
@@ -70,7 +74,7 @@
   ],
   "complete": true,
   "next": [
-    "get_flow({entry: \"entry:billing:event:invoice.requested\"})",
-    "describe_for_prompt({id: \"entry:billing:event:invoice.requested\"})"
+    "impact({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\", channel: \"order.created\"})",
+    "get_flow({entry: \"entry:billing:event:invoice.requested\"})"
   ]
 }

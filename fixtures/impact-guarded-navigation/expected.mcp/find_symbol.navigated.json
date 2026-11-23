@@ -1,0 +1,69 @@
+{
+  "answers": [
+    {
+      "asked": "DashboardComponent.loadData",
+      "matches": [
+        {
+          "id": "store-web#src/app/dashboard.component.ts:DashboardComponent.loadData",
+          "type": "method",
+          "label": "DashboardComponent.loadData",
+          "loc": "src/app/dashboard.component.ts:20",
+          "service": "store-web",
+          "reach": "alive",
+          "from": "screen /dashboard"
+        }
+      ],
+      "total": 1,
+      "complete": true
+    },
+    {
+      "asked": "TicketBoardComponent.routeAction",
+      "matches": [
+        {
+          "id": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent.routeAction",
+          "type": "method",
+          "label": "TicketBoardComponent.routeAction",
+          "loc": "src/app/ticket-board.component.ts:20",
+          "service": "store-web",
+          "reach": "alive",
+          "from": "screen /board"
+        }
+      ],
+      "total": 1,
+      "complete": true
+    },
+    {
+      "asked": "StoreBot.onStatusEvent",
+      "matches": [
+        {
+          "id": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+          "type": "consumer",
+          "label": "StoreBot.onStatusEvent",
+          "loc": "src/store-bot.ts:21",
+          "service": "store-bot",
+          "kind": "message",
+          "reach": "alive",
+          "from": "event shop:*:orders"
+        },
+        {
+          "id": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+          "type": "method",
+          "label": "StoreBot.onStatusEvent",
+          "loc": "src/store-bot.ts:29",
+          "service": "store-bot",
+          "reach": "alive",
+          "from": "event shop:*:orders"
+        }
+      ],
+      "total": 2,
+      "complete": true
+    }
+  ],
+  "complete": true,
+  "next": [
+    "impact({symbol: \"store-web#src/app/dashboard.component.ts:DashboardComponent.loadData\"})",
+    "impact({symbol: \"store-web#src/app/ticket-board.component.ts:TicketBoardComponent.routeAction\"})",
+    "impact({symbol: \"consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent\"})",
+    "get_source({symbol: \"store-web#src/app/dashboard.component.ts:DashboardComponent.loadData\"})"
+  ]
+}

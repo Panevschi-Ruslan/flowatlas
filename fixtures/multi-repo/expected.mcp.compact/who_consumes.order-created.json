@@ -23,12 +23,7 @@
         "entryId": "entry:billing:event:order.created"
       },
       "reach": "alive",
-      "from": "event order.created",
-      "ways": 2,
-      "reads": [
-        "id",
-        "total"
-      ]
+      "from": "event order.created"
     }
   ],
   "total": 1,

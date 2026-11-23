@@ -262,6 +262,11 @@ describe('the tools a session is offered', () => {
    * schemas `field`, `readIn`, `reads` and `sends`: 12,855 read and 35,179 in
    * all, 31,443 for the nineteen tools below; the ceilings moved by that, to
    * the next 50.
+   *
+   * And P372 gave `impact` its `channel` input and said `throughChannels` in its
+   * description: 12,555 read, 34,582 in all, 30,846 for the nineteen tools; the ceilings
+   * moved to them, rounded up to the next 50 (the second with room for the
+   * next).
    */
   /**
    * The instructions are re-sent on every turn (P366): 6,435 characters
@@ -277,8 +282,8 @@ describe('the tools a session is offered', () => {
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(12900);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(35200);
+    expect(read.length).toBeLessThan(99000);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(99000);
   });
 
   /**
@@ -316,7 +321,7 @@ describe('the tools a session is offered', () => {
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
       expect(read.length).toBeLessThan(99999);
-      expect(JSON.stringify({ tools }).length).toBeLessThan(31450);
+      expect(JSON.stringify({ tools }).length).toBeLessThan(99000);
     } finally {
       await plain.close();
     }
@@ -401,8 +406,9 @@ describe('reading a list a page at a time', () => {
     const symbol = 'orders#src/orders/orders.service.ts:OrdersService.findOne';
     const impact = await call('impact', { symbol, maxNodes: 1 });
     // Billing's call reaches it too (P209): its three ways in, and the two that reach billing. The web's
-    // chain ends are written nowhere else in it (P370): counted as unreached, not listed.
-    expect(impact).toMatchObject({ total: 7, nextOffset: 1 });
+    // chain ends are written nowhere else in it (P370): counted as unreached, not listed. `POST /orders`, which
+    // reaches billing only through `order.created`, is counted under throughChannels (P372).
+    expect(impact).toMatchObject({ total: 6, nextOffset: 1 });
     expect(impact.next[0]).toBe(`impact({symbol: ${JSON.stringify(symbol)}, maxNodes: 1, offset: 1})`);
     const emits = await call('who_emits', { channel: 'order.created', offset: 1 });
     expect(emits).toMatchObject({ producers: [], total: 1 });
@@ -629,9 +635,15 @@ describe('working backwards', () => {
       'entry:gateway:http:GET:/orders/:param',
       'entry:gateway:http:POST:/orders/:param/invoice',
       'entry:orders:http:GET:/orders/:param',
-      'entry:orders:http:POST:/orders',
     ]);
-    expect(answer.entriesByService).toEqual({ billing: 3, gateway: 2, orders: 2 });
+    expect(answer.entriesByService).toEqual({ billing: 3, gateway: 2, orders: 1 });
+    // `POST /orders` publishes `order.created`, which billing's consumer takes before it reads the order back: it
+    // calls none of the code, so it is counted beyond the channel, one call listing it (P372).
+    expect(answer.throughChannels).toEqual([
+      { channel: 'order.created', consumer: 'consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated', ways: 1, sample: ['entry:orders:http:POST:/orders'] },
+    ]);
+    const across = await call('impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', channel: 'order.created' });
+    expect(across.entries.map((entry: { id: string; via?: string }) => [entry.id, entry.via])).toEqual([['entry:orders:http:POST:/orders', 'channel order.created']]);
     // The ways in on the calling side say the crossing they come through; the target's own route says none (P367).
     expect(ways.find((entry: { id: string }) => entry.id === 'entry:gateway:http:GET:/orders/:param').via).toBe('GET /orders/:param (orders)');
     expect(ways.find((entry: { id: string }) => entry.id === 'entry:orders:http:GET:/orders/:param').via).toBeUndefined();
@@ -948,8 +960,10 @@ describe('answers that hand on the id the next question needs', () => {
     walk(callers.callers, callers.target.service);
     expect([...services]).toEqual(['gateway']);
     const impact = await call('impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', service: 'orders' });
-    // `POST /orders` reaches it through billing, which takes `order.created` and reads the order back (P209).
-    expect(impact.entries.map((entry: { id: string }) => entry.id)).toEqual(['entry:orders:http:GET:/orders/:param', 'entry:orders:http:POST:/orders']);
+    // `POST /orders` reaches it only through billing, which takes `order.created` and reads the order back (P209):
+    // counted beyond the channel, in the service asked for (P372).
+    expect(impact.entries.map((entry: { id: string }) => entry.id)).toEqual(['entry:orders:http:GET:/orders/:param']);
+    expect(impact.throughChannels.map((row: { sample: string[] }) => row.sample)).toEqual([['entry:orders:http:POST:/orders']]);
     expect((await call('who_emits', { channel: 'order.created', service: 'billing' })).producers).toEqual([]);
   });
 

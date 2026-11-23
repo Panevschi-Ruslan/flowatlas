@@ -29,8 +29,7 @@
       "selectedIn": "SpaceEventsDispatcher.dispatch",
       "via": "switch",
       "reach": "alive",
-      "from": "event space:*:events",
-      "ways": 6
+      "from": "event space:*:events"
     },
     {
       "id": "consumer:notify-worker#src/handlers/welcome.handlers.ts:WelcomeHandlers.greet",

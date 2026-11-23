@@ -463,6 +463,15 @@ const RENDERED_CASES = [
   ['impact.rendered-child.verbose.json', (io) => runImpact(RENDERED_TARGET, { ...renderedPlain, format: 'json', verbose: true }, io)],
 ];
 
+/** impact past navigations, guards and a channel (P372): the chains, the rows, the channel's count, and its list. */
+const guardedPlain = { config: join(root, 'fixtures', 'impact-guarded-navigation', 'flowatlas.config.json'), color: false, ascii: true };
+const GUARDED_TARGET = 'store-api#src/items.service.ts:ItemsService.listByShop';
+const GUARDED_CASES = [
+  ['impact.items.tree.txt', (io) => runImpact(GUARDED_TARGET, { ...guardedPlain, format: 'tree' }, io)],
+  ['impact.tickets.tree.txt', (io) => runImpact('store-api#src/tickets.service.ts:TicketsService.acknowledge', { ...guardedPlain, format: 'tree' }, io)],
+  ['impact.items-across-channel.tree.txt', (io) => runImpact(GUARDED_TARGET, { ...guardedPlain, format: 'tree', channel: 'shop:*:orders' }, io)],
+];
+
 const GRAPHQL_CASES = [
   ['flow.orders-page.tree.txt', (io) => runFlow('web#src/orders/OrdersPage.tsx:OrdersPage', { ...graphqlPlain, format: 'tree' }, io)],
   ['impact.order-customer.tree.txt', (io) => runImpact('entry:orders:graphql:Order.customer', { ...graphqlPlain, format: 'tree' }, io)],
@@ -1269,6 +1278,7 @@ const SUITES = [
   { dir: lambdaFixture, owned: false, cases: LAMBDA_CASES },
   { dir: join(graphqlFixture, 'expected.cli'), owned: true, cases: GRAPHQL_CASES },
   { dir: join(root, 'fixtures', 'angular-rendered-reach', 'expected.cli'), owned: true, cases: RENDERED_CASES },
+  { dir: join(root, 'fixtures', 'impact-guarded-navigation', 'expected.cli'), owned: true, cases: GUARDED_CASES },
   { dir: join(federationFixture, 'expected.cli'), owned: true, cases: FEDERATION_CASES },
   { dir: join(composedFixture, 'expected.cli'), owned: true, cases: COMPOSED_CASES },
   { dir: join(interfacesFixture, 'expected.cli'), owned: true, cases: INTERFACES_CASES },

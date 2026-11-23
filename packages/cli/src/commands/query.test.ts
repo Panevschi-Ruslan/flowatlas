@@ -166,9 +166,11 @@ describe('asking what reaches a symbol', () => {
     // nothing at all (R03).
     const io = capture();
     runImpact('table:billing#Invoice', { db: dbPath, format: 'json' }, io);
-    const payload = parsed(io.stdout) as { reached: number; entries: string[] };
+    const payload = parsed(io.stdout) as { reached: number; entries: string[]; throughChannels?: Array<{ ways: number }> };
     expect(payload.reached).toBeGreaterThan(0);
-    expect(payload.entries.length).toBeGreaterThan(0);
+    // Only billing's consumer writes it, so the ways in lie beyond the channel it takes, counted apart (P372).
+    expect(payload.entries).toEqual([]);
+    expect(payload.throughChannels?.[0]?.ways).toBeGreaterThan(0);
   });
 
   it('names what publishes to the channel a handler is on', () => {

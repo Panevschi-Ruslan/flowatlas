@@ -63,7 +63,7 @@
                 "service": "billing",
                 "reach": "alive",
                 "from": "consumer invoice.requested",
-                "ways": 5
+                "ways": 4
               },
               "edge": {
                 "type": "http_calls",
@@ -82,7 +82,7 @@
                     "loc": "src/invoices/invoices.service.ts:30",
                     "reach": "alive",
                     "from": "consumer invoice.requested",
-                    "ways": 5
+                    "ways": 4
                   },
                   "edge": {
                     "type": "calls",
@@ -159,8 +159,7 @@
                         "label": "InvoicesConsumer.onOrderCreated",
                         "loc": "src/invoices/invoices.consumer.ts:17",
                         "reach": "alive",
-                        "from": "event order.created",
-                        "ways": 2
+                        "from": "event order.created"
                       },
                       "edge": {
                         "type": "calls",
@@ -182,8 +181,7 @@
                             "loc": "src/invoices/invoices.consumer.ts:17",
                             "kind": "event",
                             "reach": "alive",
-                            "from": "event order.created",
-                            "ways": 2
+                            "from": "event order.created"
                           },
                           "edge": {
                             "type": "handles",

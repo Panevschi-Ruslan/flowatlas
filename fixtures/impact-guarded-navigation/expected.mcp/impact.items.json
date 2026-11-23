@@ -1,0 +1,96 @@
+{
+  "target": {
+    "id": "store-api#src/items.service.ts:ItemsService.listByShop",
+    "type": "method",
+    "label": "ItemsService.listByShop",
+    "loc": "src/items.service.ts:6",
+    "service": "store-api",
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:store-api:http:GET:/api/shops/items",
+      "type": "entry",
+      "label": "GET /api/shops/items",
+      "loc": "src/items.controller.ts:8",
+      "service": "store-api",
+      "kind": "http",
+      "reach": "alive"
+    },
+    {
+      "id": "entry:store-bot:bot_command:items",
+      "type": "entry",
+      "label": "bot_command items",
+      "loc": "src/store-bot.ts:20",
+      "service": "store-bot",
+      "kind": "bot_command",
+      "reach": "outside",
+      "via": "GET /api/shops/items (store-api)"
+    },
+    {
+      "id": "entry:store-bot:event:shop:*:orders",
+      "type": "entry",
+      "label": "event shop:*:orders",
+      "loc": "src/store-bot.ts:21",
+      "service": "store-bot",
+      "kind": "event",
+      "reach": "alive",
+      "via": "GET /api/shops/items (store-api)"
+    },
+    {
+      "id": "entry:store-web:screen:/dashboard",
+      "type": "entry",
+      "label": "/dashboard",
+      "loc": "src/app/app.routes.ts:17",
+      "service": "store-web",
+      "kind": "screen",
+      "reach": "outside",
+      "via": "GET /api/shops/items (store-api)"
+    },
+    {
+      "id": "entry:store-web:screen:/history",
+      "type": "entry",
+      "label": "/history",
+      "loc": "src/app/app.routes.ts:18",
+      "service": "store-web",
+      "kind": "screen",
+      "reach": "outside",
+      "via": "GET /api/shops/items (store-api)"
+    }
+  ],
+  "total": 5,
+  "reached": 43,
+  "entriesByService": {
+    "store-api": 1,
+    "store-bot": 2,
+    "store-web": 2
+  },
+  "throughChannels": [
+    {
+      "channel": "shop:*:orders",
+      "consumer": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+      "ways": 4,
+      "sample": [
+        "entry:store-api:http:DELETE:/api/orders/:param",
+        "entry:store-api:http:PATCH:/api/orders/:param/status",
+        "entry:store-api:http:POST:/api/orders"
+      ]
+    }
+  ],
+  "reachedByService": {
+    "store-api": 14,
+    "store-web": 22,
+    "store-bot": 7
+  },
+  "servicesWithoutEntry": [],
+  "channels": [
+    "channel:shop:*:orders"
+  ],
+  "complete": true,
+  "next": [
+    "impact({symbol: \"store-api#src/items.service.ts:ItemsService.listByShop\", channel: \"shop:*:orders\"})",
+    "get_flow({entry: \"entry:store-api:http:GET:/api/shops/items\"})",
+    "describe_for_prompt({id: \"entry:store-api:http:GET:/api/shops/items\"})",
+    "impact({symbol: \"entry:store-api:http:GET:/api/shops/items\"})"
+  ]
+}

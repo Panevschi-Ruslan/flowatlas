@@ -1,4 +1,13 @@
-import { gapIdOf, isMessageTypeNode, recordsFollowCause, wasMissed, type GraphEdge, type GraphNode } from '@flowatlas/core';
+import {
+  gapIdOf,
+  isMessageTypeNode,
+  isRunsBeforeEdge,
+  NAVIGATES_META,
+  recordsFollowCause,
+  wasMissed,
+  type GraphEdge,
+  type GraphNode,
+} from '@flowatlas/core';
 import {
   deadJudge,
   JUDGED_TYPES,
@@ -211,6 +220,8 @@ export interface Walked {
   met: GraphNode[];
   /** Each node met, by id: the node nearer the start it was reached from, which draws the walk as a tree (P370). */
   parents: Map<string, WalkedFrom>;
+  /** The consumers impact's walk did not follow back onto their channel (P372), nearest first. */
+  crossings: ChannelCrossing[];
   read: number;
   cut: boolean;
 }
@@ -226,13 +237,39 @@ const crossingOf = (node: GraphNode, edge: GraphEdge | undefined): Crossing | un
 };
 
 /**
- * Whether impact's walk, which goes on past ways in, follows a hop. A link or
- * a navigation onto a screen or a component is no call into the code behind
- * it: the screen that links to another shows nothing of it and breaks with
- * none of its changes, so the walk does not go back along one.
+ * Whether a walk back follows a hop (P367, P372).
+ *
+ * - Never a navigation, however it is stored: a `calls` or `triggers` edge
+ *   with `meta.navigates` (`router.navigate([...])`, `navigateByUrl`, a link
+ *   a component renders, a guard's redirect), or a link onto a screen or a
+ *   component. The code that navigates shows the screen it lands on and calls
+ *   none of its code, so it breaks with none of its changes.
+ * - Never from what a router or a framework runs before a screen (a guard, a
+ *   resolver, a route middleware) back to the screens listing it, unless the
+ *   walk reached it through its own code: it is the code asked about, or it
+ *   calls code on the way to it (`ownCode`). A guard reached any other way
+ *   runs before the screens it guards and runs none of their code.
  */
-const crossesInto = (node: GraphNode, step: Step): boolean =>
-  !(step.edge?.type === 'triggers' && (node.type === 'ui_component' || (node.type === 'entry' && node.kind === 'screen')));
+const walksBack = (node: GraphNode, step: Step, ownCode: boolean): boolean => {
+  const edge = step.edge;
+  if (edge === undefined) return true;
+  if (typeof edge.meta?.[NAVIGATES_META] === 'string') return false;
+  if (edge.type === 'triggers' && (node.type === 'ui_component' || (node.type === 'entry' && node.kind === 'screen'))) return false;
+  return ownCode || !isRunsBeforeEdge(edge);
+};
+
+/**
+ * A consumer impact's walk did not follow back onto what it consumes (P372):
+ * the channel, or the message type it chooses, whose publishers start it.
+ * What publishes there calls none of the code asked about; it is said apart,
+ * in `throughChannels`, and not among the ways in.
+ */
+export interface ChannelCrossing {
+  consumer: GraphNode;
+  /** The channel, or the message type of one, the consumer consumes. */
+  from: GraphNode;
+  depth: number;
+}
 
 export interface ReachReader {
   /** The reach of one node, or nothing for a node the graph does not hold. */
@@ -243,9 +280,16 @@ export interface ReachReader {
    * Every way in that reaches the starts (P367), walked back past each way in
    * met to the callers beyond it, each with the crossing it was reached
    * through; the code chains end at with no way in; and every node met.
-   * Bounded by `limit` nodes, on its own budget.
+   * No consumer is walked back onto its channel: each is a crossing (P372),
+   * which `across` walks on from. Bounded by `limit` nodes, on its own budget.
    */
   waysIn(starts: readonly GraphNode[], limit: number): Walked;
+  /**
+   * The ways in beyond a channel or a message type a consumer consumes: its
+   * publishers, walked back past every way in as `waysIn` walks, channels
+   * beyond it crossed. Bounded by `limit` nodes, on its own budget.
+   */
+  across(from: GraphNode, limit: number): Walked;
   /**
    * Whether the end of a chain is one an unread call or a caller outside the
    * project could reach: judged `maybe` or `outside`, or in a file with a step
@@ -391,7 +435,7 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
     // A consumer that chooses by type runs on the types it selects, not on every publish of their channel.
     const typed = node.type === 'consumer' ? into.filter((edge) => edge.type === 'consumes' && isMessageTypeNode(graph.node(edge.from))) : [];
     if (typed.length > 0) into = into.filter((edge) => edge.type !== 'consumes' || typed.includes(edge));
-    if (handlers.length > 0 && into.some((edge) => edge.type === 'consumes') && (!channels || isPlaced(node, handlers))) {
+    if (into.some((edge) => edge.type === 'consumes') && (!channels || (handlers.length > 0 && isPlaced(node, handlers)))) {
       into = into.filter((edge) => edge.type !== 'consumes');
     }
     const steps: Step[] = into.map((edge) => ({ id: edge.from, held: false, edge }));
@@ -423,15 +467,18 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
    * Back from the starts to the ways in on each path. A row's walk stops at
    * the first way in on a path; impact's walks on past each one (`through`),
    * to the callers beyond it, saying the crossing each was reached through.
-   * With `channels` false no consumer is walked back onto its channel.
+   * With `channels` false no consumer is walked back onto its channel; with
+   * `collapse` none is either, and each consumer that would be - one no
+   * screen holds (P371) - is said in `crossings` (P372).
    */
-  const walk =(starts: readonly GraphNode[], limit: number, through: boolean, channels = true): Walked => {
+  const walk = (starts: readonly GraphNode[], limit: number, through: boolean, channels = true, collapse = false): Walked => {
     const startIds = new Set(starts.map((start) => start.id));
     const seen = new Set<string>(startIds);
     const found: WayInFound[] = [];
     const tops: WayInFound[] = [];
     const met: GraphNode[] = [];
     const parents = new Map<string, WalkedFrom>();
+    const crossings: ChannelCrossing[] = [];
     const queue: Array<{ node: GraphNode; depth: number; held: boolean; via?: Crossing; ran?: true }> = [];
     for (const start of starts) {
       // A handler a consumer runs is held as the consumer's is: where its class or file is shown.
@@ -465,10 +512,18 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
       }
       // Impact's walk lists every way in, so a handler a consumer runs is placed by what holds it alone:
       // whatever else calls the handler (the code that subscribes it, say) does not reach the consumer.
-      const steps = through
-        ? stepsBack(node, item.held, isStart, item.ran === true, channels).filter((step) => crossesInto(node, step))
-        : stepsBack(node, item.held, isStart, false, channels);
-      if (!wayIn && steps.length === 0) tops.push({ node, depth, ...(item.via === undefined ? {} : { via: item.via }) });
+      const back = stepsBack(node, item.held, isStart, through && item.ran === true, channels).filter((step) =>
+        walksBack(node, step, isStart || !item.held),
+      );
+      let steps = back;
+      if (collapse && node.type === 'consumer') {
+        steps = back.filter((step) => step.edge?.type !== 'consumes');
+        for (const step of back) {
+          const from = step.edge?.type === 'consumes' ? graph.node(step.id) : undefined;
+          if (from !== undefined) crossings.push({ consumer: node, from, depth });
+        }
+      }
+      if (!wayIn && back.length === 0) tops.push({ node, depth, ...(item.via === undefined ? {} : { via: item.via }) });
       for (const step of steps) {
         if (seen.has(step.id)) continue;
         seen.add(step.id);
@@ -479,14 +534,22 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
         queue.push({ node: reached, depth: depth + 1, held: step.held, ...(via === undefined ? {} : { via }), ...(step.ran === true ? { ran: true as const } : {}) });
       }
     }
-    return { found, tops, met, parents, read, cut };
+    return { found, tops, met, parents, crossings, read, cut };
   };
 
-  /** A row's walk, on the answer's budget. */
+  /**
+   * A row's walk, on the answer's budget: first the ways in whose code calls
+   * it, never across a channel, then, where it meets none, those beyond the
+   * channels its consumers take messages from (P372), so `ways` counts the
+   * callers and code only a message starts is still reached.
+   */
   const rowWalk = (start: GraphNode): Walked => {
-    const walked = walk([start], Math.min(ROW_WALK, budget), false);
+    const walked = walk([start], Math.min(ROW_WALK, budget), false, false);
     budget -= walked.read;
-    return walked;
+    if (walked.found.length > 0 || walked.cut || budget <= 0) return walked;
+    const across = walk([start], Math.min(ROW_WALK, budget), false);
+    budget -= across.read;
+    return across;
   };
 
   /**
@@ -597,7 +660,8 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
   return {
     of,
     annotate: (row) => (detail < 1 || row.id === undefined ? (row as typeof row & RowReach) : { ...row, ...of(row.id) }),
-    waysIn: (starts, limit) => walk(starts, limit, true),
+    waysIn: (starts, limit) => walk(starts, limit, true, true, true),
+    across: (from, limit) => walk([from], limit, true),
     maybeEnd: (node) => {
       const reach = reachOf(node)?.reach;
       return reach === 'maybe' || reach === 'outside' || (reach === 'alive' && gapsIn(node) !== undefined);

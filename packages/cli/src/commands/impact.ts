@@ -1,6 +1,6 @@
 import type { DetailLevel, GraphNode } from '@flowatlas/core';
 import type { Command } from 'commander';
-import { compactAnswer, impactOf, projectDetail, projectEdge, staleFor, type FlowNode, type ImpactOf } from '@flowatlas/mcp';
+import { compactAnswer, impactOf, projectDetail, projectEdge, staleFor, type FlowNode, type ImpactOf, type ThroughChannel } from '@flowatlas/mcp';
 import { handleFor, sourceRootsFor } from '../db.js';
 import { cannotRun } from '../exit.js';
 import { withQueryOptions, type QueryOptions } from '../options.js';
@@ -15,6 +15,8 @@ export interface ImpactOptions extends QueryOptions {
   offset?: string;
   /** With `--format json`: the tool's answer whole, as `verbose: true` asks it (P370). */
   verbose?: boolean;
+  /** A channel the answer says ways in lie beyond: list those instead, as the tool's `channel` (P372). */
+  channel?: string;
 }
 
 /** A row of impact's answer as the footer reads it: the fields the tool says beside each way in. */
@@ -41,13 +43,27 @@ const rowLine = (row: AnswerRow): string => {
   return `  ${name}${said.length === 0 ? '' : `  ${said.join(', ')}`}`;
 };
 
+/** How many ways in a channel the walk did not cross leads to, the nearest few named, and the consumer taking its messages (P372). */
+const throughLine = (through: ThroughChannel): string => {
+  const named = through.ways.slice(0, 3).map((way) => `${way.node.label}${way.node.repo === '' ? '' : ` (${way.node.repo})`}`);
+  const more = through.ways.length > named.length ? ', ...' : '';
+  const count = `${through.cut ? 'at least ' : ''}${through.ways.length} way${through.ways.length === 1 ? '' : 's'} in`;
+  return `  ${through.channel}${through.type === undefined ? '' : ` ${through.type}`}  ${count}, taken by ${through.consumer.label} (${through.consumer.repo}): ${named.join(', ')}${more}`;
+};
+
 /**
  * The lines under the tree: the ways in grouped as the report words them,
  * then each row of the answer with whether it runs and the crossing it came
  * through, the maybe rows apart, and what the answer says it left (P370).
  */
 const footerOf = (of: ImpactOf): string[] => {
-  const answer = of.answer as { entries?: AnswerRow[]; entriesNone?: string; left?: string[]; unreached?: number };
+  const answer = of.answer as {
+    entries?: AnswerRow[];
+    entriesNone?: string;
+    left?: string[];
+    unreached?: number;
+    acrossChannel?: string;
+  };
   const unreached = answer.unreached ?? 0;
   const rows = answer.entries ?? [];
   const maybeIds = new Set((of.maybes ?? []).map((way) => way.node.id));
@@ -58,11 +74,14 @@ const footerOf = (of: ImpactOf): string[] => {
       (of.ways ?? []).map((way) => way.node),
       of.servicesWithoutEntry ?? [],
     ),
-    ...(ways.length === 0 ? [] : ['Could break:', ...ways.map(rowLine)]),
+    ...(ways.length === 0 ? [] : [answer.acrossChannel === undefined ? 'Could break:' : `Beyond channel ${answer.acrossChannel}, calling none of it:`, ...ways.map(rowLine)]),
     ...(maybes.length === 0 ? [] : ['Maybe, behind a call the reading could not follow:', ...maybes.map(rowLine)]),
     ...(unreached === 0
       ? []
       : [`Unreached: ${unreached} chain${unreached === 1 ? ' ends' : 's end'} at code whose name its repository writes nowhere else, so nothing could break through ${unreached === 1 ? 'it' : 'them'}`]),
+    ...(answer.acrossChannel !== undefined || (of.throughChannels ?? []).length === 0
+      ? []
+      : ['Only beyond a channel, calling none of it (--channel <name> lists them):', ...(of.throughChannels ?? []).map(throughLine)]),
     ...(answer.entriesNone === undefined ? [] : [answer.entriesNone]),
     ...(answer.left ?? []).map((left) => `Left: ${left}`),
   ];
@@ -157,6 +176,7 @@ const answerImpact = (symbol: string, options: ImpactOptions, io: QueryIo): void
       detail: settings.detail,
       maxNodes: settings.maxNodes,
       ...(offset === undefined ? {} : { offset }),
+      ...(options.channel === undefined ? {} : { channel: options.channel }),
     });
 
     if (settings.format === 'json') {
@@ -201,6 +221,7 @@ export const registerImpact = (program: Command): void => {
     .option('--entries-only', 'list the ways in under the target instead of the chains to them')
     .option('--offset <n>', 'the row to start the list at, as the answer\'s nextOffset says')
     .option('--verbose', 'with --format json, the whole answer, pretty-printed, instead of the compact one')
+    .option('--channel <name>', 'list the ways in beyond a channel the answer counts under throughChannels')
     .action((symbol: string, options: ImpactOptions) => {
       runImpact(symbol, options);
     });

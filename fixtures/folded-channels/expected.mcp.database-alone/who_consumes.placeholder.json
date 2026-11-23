@@ -15,8 +15,7 @@
       "service": "worker",
       "kind": "event",
       "reach": "alive",
-      "from": "event order:*:closed",
-      "ways": 2
+      "from": "event order:*:closed"
     }
   ],
   "total": 1,

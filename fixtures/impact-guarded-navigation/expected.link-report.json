@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T16:45:58.311Z",
+  "configHash": "5e0e3d578191",
+  "services": [
+    {
+      "name": "store-api",
+      "repo": "./store-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 31,
+      "edges": 23,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 2256,
+      "packages": {
+        "name": "store-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "redis",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "store-bot",
+      "repo": "./store-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 17,
+      "edges": 14,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2230,
+      "packages": {
+        "name": "store-bot",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "redis",
+          "rxjs",
+          "telegraf"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "store-web",
+      "repo": "./store-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 60,
+      "edges": 62,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1437,
+      "packages": {
+        "name": "store-web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 1,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 4,
+    "resolved": 4,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 1,
+    "linked": 1,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 6,
+    "called": 4,
+    "uncalled": [
+      "entry:store-api:http:PATCH:/api/orders/:param/status",
+      "entry:store-api:http:POST:/api/hooks/chat"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 108,
+    "edges": 105,
+    "types": 0,
+    "missed": 1,
+    "sites": 1,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 1
+  }
+}

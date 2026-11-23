@@ -9,9 +9,5 @@
   "evidence": {
     "via": "channel:order:*:closed"
   },
-  "from": "event order:*:closed",
-  "ways": 2,
-  "next": [
-    "impact({symbol: \"consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed\"})"
-  ]
+  "from": "event order:*:closed"
 }

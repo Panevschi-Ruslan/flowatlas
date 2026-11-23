@@ -36,7 +36,7 @@
               "label": "GET /orders/:param",
               "reach": "alive",
               "from": "consumer invoice.requested",
-              "ways": 5,
+              "ways": 4,
               "edge": {
                 "type": "http_calls",
                 "returns": "type:billing#OrderView"
@@ -47,7 +47,7 @@
                   "line": 30,
                   "reach": "alive",
                   "from": "consumer invoice.requested",
-                  "ways": 5,
+                  "ways": 4,
                   "edge": "calls",
                   "children": [
                     {
@@ -97,7 +97,6 @@
                       "line": 17,
                       "reach": "alive",
                       "from": "event order.created",
-                      "ways": 2,
                       "edge": {
                         "type": "calls",
                         "params": [
@@ -112,7 +111,6 @@
                           "kind": "event",
                           "reach": "alive",
                           "from": "event order.created",
-                          "ways": 2,
                           "edge": {
                             "type": "handles",
                             "params": [

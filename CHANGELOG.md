@@ -2498,6 +2498,35 @@ only one of them moved.
 
 ### Fixed
 
+- **`impact` never walks back along a navigation, from a guard, or across a
+  channel into a flood (P372).** A method that navigates to a screen
+  (`router.navigate([...])`, `navigateByUrl`, a guard's redirect, a login
+  screen sending to the dashboard) is stored as a `calls` edge with
+  `meta.navigates`, which the walk read as a call of the screen's component:
+  impact on a board's method listed every screen that navigates to the board,
+  and on a dashboard's method every screen a guard redirecting to the
+  dashboard is listed on. A navigation is never walked back along, however it
+  is stored, and what a router or a framework runs before a screen (a guard or
+  resolver, `meta.guard`; a route middleware, `meta.middleware`; core's new
+  `isRunsBeforeEdge`) is walked back to the screens listing it only when the
+  walk reached it through its own code - impact on a method a guard calls
+  still lists every screen it guards. A consumer on the way that no screen
+  holds (a back end's worker, a bot re-fetching on a relayed event) is no
+  longer walked onto its channel to every route publishing there and every
+  screen calling those: they call none of the code, so they are counted apart
+  in `throughChannels` (`{channel, type?, consumer, ways, sample}`, never
+  complete-blocking), and `impact({symbol, channel})` (`flowatlas impact
+  --channel <name>`) lists one channel's ways in, each `via: "channel
+  <name>"`. Rows' `reach`, `from` and `ways` walk by the same rules, crossing
+  a channel only where no way in calls the code, so `ways` no longer counts
+  screens reached by navigation or a channel's publishers. On the new
+  `impact-guarded-navigation` fixture impact on a list method answers 5 rows
+  where it answered 17 (1,437 characters compact from 2,766), the channel's 4
+  ways in counted, and on an acknowledge method 3 where it answered 6 (797
+  from 1,244); multi-repo's `POST /orders`, reached only through billing's
+  `order.created`, moves from `entries` to `throughChannels`, as does
+  multi-repo-stepfunctions' `POST /checkouts`, whose event a rule hands to
+  the workflow.
 - **`impact` lists only the ways in that call the changed code (P371).** A
   screen's subscription to a stream is placed in the screen and no longer
   walked back onto its channel: the routes that publish to it, and every

@@ -77,9 +77,11 @@ describe('impact without --depth', () => {
       { config: join(dir, 'flowatlas.config.json'), format: 'json', entriesOnly: true },
       { out: (text) => (out += text), err: () => undefined, tty: false },
     );
-    // The tool's answer (P370): rows by id.
-    const rows = (JSON.parse(out) as { entries: Array<{ id: string }> }).entries;
-    expect(rows.map((row) => row.id)).toContain('entry:members:http:POST:/checkouts');
+    // The tool's answer (P370): rows by id. The route publishes the event a rule hands to the workflow, so it lies
+    // beyond that channel, counted apart (P372); the workflow it starts is a row.
+    const answer = JSON.parse(out) as { entries: Array<{ id: string }>; throughChannels: Array<{ sample: string[] }> };
+    expect(answer.entries.map((row) => row.id)).toContain('entry:circulation:workflow:circulation-checkout');
+    expect(answer.throughChannels.flatMap((row) => row.sample)).toContain('entry:members:http:POST:/checkouts');
   });
 });
 

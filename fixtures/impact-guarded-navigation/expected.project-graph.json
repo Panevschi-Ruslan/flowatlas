@@ -1,0 +1,3034 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T16:45:58.311Z",
+  "services": [
+    {
+      "name": "store-api",
+      "repo": "./store-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "store-web",
+      "repo": "./store-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    },
+    {
+      "name": "store-bot",
+      "repo": "./store-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "cache_op:store-api#src/events.service.ts:11:11",
+      "type": "cache_op",
+      "label": "other shop:*:orders",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 11,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:orders",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:store-bot#src/store-bot.ts:21:10",
+      "type": "cache_op",
+      "label": "other shop:*:orders",
+      "repo": "store-bot",
+      "file": "src/store-bot.ts",
+      "line": 21,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:orders",
+        "package": "redis",
+        "method": "pSubscribe"
+      }
+    },
+    {
+      "id": "channel:shop:*:orders",
+      "type": "channel",
+      "label": "shop:*:orders",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 11,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:shop:*:orders#ORDER_CHANGED",
+      "type": "channel",
+      "label": "shop:*:orders#ORDER_CHANGED",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 11,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:shop:*:orders",
+        "messageType": "ORDER_CHANGED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "config_key:store-bot#STORE_API_URL",
+      "type": "config_key",
+      "label": "STORE_API_URL",
+      "repo": "store-bot",
+      "file": "src/api.client.ts",
+      "line": 15,
+      "meta": {
+        "key": "STORE_API_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+      "type": "consumer",
+      "label": "StoreBot.onStatusEvent",
+      "repo": "store-bot",
+      "file": "src/store-bot.ts",
+      "line": 21,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "decorator": "pSubscribe",
+        "entryId": "entry:store-bot:event:shop:*:orders"
+      }
+    },
+    {
+      "id": "entry:store-api:http:DELETE:/api/orders/:param",
+      "type": "entry",
+      "label": "DELETE /api/orders/:param",
+      "repo": "store-api",
+      "file": "src/orders.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/api/orders/:param",
+        "rawPath": "/api/orders/:orderId",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:store-api:http:GET:/api/shops/items",
+      "type": "entry",
+      "label": "GET /api/shops/items",
+      "repo": "store-api",
+      "file": "src/items.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/shops/items",
+        "rawPath": "/api/shops/items",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:store-api:http:PATCH:/api/orders/:param/status",
+      "type": "entry",
+      "label": "PATCH /api/orders/:param/status",
+      "repo": "store-api",
+      "file": "src/orders.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/api/orders/:param/status",
+        "rawPath": "/api/orders/:orderId/status",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:store-api:http:POST:/api/hooks/chat",
+      "type": "entry",
+      "label": "POST /api/hooks/chat",
+      "repo": "store-api",
+      "file": "src/hooks.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/hooks/chat",
+        "rawPath": "/api/hooks/chat",
+        "controller": "HooksController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:store-api:http:POST:/api/orders",
+      "type": "entry",
+      "label": "POST /api/orders",
+      "repo": "store-api",
+      "file": "src/orders.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:store-api:http:POST:/api/tickets/:param/ack",
+      "type": "entry",
+      "label": "POST /api/tickets/:param/ack",
+      "repo": "store-api",
+      "file": "src/tickets.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/tickets/:param/ack",
+        "rawPath": "/api/tickets/:ticketId/ack",
+        "controller": "TicketsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:store-bot:bot_command:items",
+      "type": "entry",
+      "label": "bot_command items",
+      "repo": "store-bot",
+      "file": "src/store-bot.ts",
+      "line": 20,
+      "kind": "bot_command",
+      "meta": {
+        "key": "items",
+        "adapter": "telegraf-calls",
+        "registration": "command",
+        "trigger": "'items'",
+        "updateClass": "StoreBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:store-bot:event:shop:*:orders",
+      "type": "entry",
+      "label": "event shop:*:orders",
+      "repo": "store-bot",
+      "file": "src/store-bot.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "pattern": "shop:*:orders",
+        "adapter": "redis-pubsub"
+      }
+    },
+    {
+      "id": "entry:store-web:screen:/analytics",
+      "type": "entry",
+      "label": "/analytics",
+      "repo": "store-web",
+      "file": "src/app/app.routes.ts",
+      "line": 19,
+      "kind": "screen",
+      "meta": {
+        "path": "/analytics",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate authGuard",
+          "canActivate roleGuard"
+        ],
+        "screens": [
+          "AnalyticsComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:store-web:screen:/analytics/matrix",
+      "type": "entry",
+      "label": "/analytics/matrix",
+      "repo": "store-web",
+      "file": "src/app/app.routes.ts",
+      "line": 20,
+      "kind": "screen",
+      "meta": {
+        "path": "/analytics/matrix",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate authGuard",
+          "canActivate roleGuard"
+        ],
+        "screens": [
+          "MatrixComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:store-web:screen:/board",
+      "type": "entry",
+      "label": "/board",
+      "repo": "store-web",
+      "file": "src/app/app.routes.ts",
+      "line": 23,
+      "kind": "screen",
+      "meta": {
+        "path": "/board",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate authGuard"
+        ],
+        "screens": [
+          "TicketBoardComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:store-web:screen:/dashboard",
+      "type": "entry",
+      "label": "/dashboard",
+      "repo": "store-web",
+      "file": "src/app/app.routes.ts",
+      "line": 17,
+      "kind": "screen",
+      "meta": {
+        "path": "/dashboard",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate authGuard"
+        ],
+        "screens": [
+          "DashboardComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:store-web:screen:/history",
+      "type": "entry",
+      "label": "/history",
+      "repo": "store-web",
+      "file": "src/app/app.routes.ts",
+      "line": 18,
+      "kind": "screen",
+      "meta": {
+        "path": "/history",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate authGuard"
+        ],
+        "screens": [
+          "OrderHistoryComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:store-web:screen:/login",
+      "type": "entry",
+      "label": "/login",
+      "repo": "store-web",
+      "file": "src/app/app.routes.ts",
+      "line": 16,
+      "kind": "screen",
+      "meta": {
+        "path": "/login",
+        "by": "angular-routes",
+        "screens": [
+          "LoginComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:store-web:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "store-web",
+      "file": "src/app/app.routes.ts",
+      "line": 22,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate authGuard",
+          "canActivate roleGuard"
+        ],
+        "screens": [
+          "OrdersAdminComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:store-web:screen:/settings",
+      "type": "entry",
+      "label": "/settings",
+      "repo": "store-web",
+      "file": "src/app/app.routes.ts",
+      "line": 21,
+      "kind": "screen",
+      "meta": {
+        "path": "/settings",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate authGuard"
+        ],
+        "screens": [
+          "SettingsComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:store-web:screen:/tickets/:param",
+      "type": "entry",
+      "label": "/tickets/:param",
+      "repo": "store-web",
+      "file": "src/app/app.routes.ts",
+      "line": 26,
+      "kind": "screen",
+      "meta": {
+        "path": "/tickets/:param",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate authGuard"
+        ],
+        "screens": [
+          "TicketDetailComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:store-web:screen:/tickets/:param/edit",
+      "type": "entry",
+      "label": "/tickets/:param/edit",
+      "repo": "store-web",
+      "file": "src/app/app.routes.ts",
+      "line": 25,
+      "kind": "screen",
+      "meta": {
+        "path": "/tickets/:param/edit",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate authGuard"
+        ],
+        "screens": [
+          "TicketFormComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:store-web:screen:/tickets/new",
+      "type": "entry",
+      "label": "/tickets/new",
+      "repo": "store-web",
+      "file": "src/app/app.routes.ts",
+      "line": 24,
+      "kind": "screen",
+      "meta": {
+        "path": "/tickets/new",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate authGuard"
+        ],
+        "screens": [
+          "TicketFormComponent"
+        ]
+      }
+    },
+    {
+      "id": "http_out:store-bot#src/api.client.ts:15:43",
+      "type": "http_out",
+      "label": "GET /api/shops/items",
+      "repo": "store-bot",
+      "file": "src/api.client.ts",
+      "line": 15,
+      "meta": {
+        "method": "GET",
+        "url": "${STORE_API_URL}/api/shops/items",
+        "path": "/api/shops/items",
+        "baseUrlEnv": "STORE_API_URL",
+        "responseType": "string[]",
+        "bodyType": null,
+        "queryType": "{shopId:string}",
+        "queryKeys": [
+          "shopId"
+        ],
+        "targetService": "store-api"
+      }
+    },
+    {
+      "id": "producer:store-api#src/events.service.ts:11:11",
+      "type": "producer",
+      "label": "message shop:*:orders",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 11,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_CHANGED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "repo:store-api",
+      "type": "repo",
+      "label": "store-api",
+      "repo": "store-api",
+      "meta": {
+        "stats": {
+          "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
+          "classes": 9,
+          "skippedExternalCalls": {
+            "redis": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:store-bot",
+      "type": "repo",
+      "label": "store-bot",
+      "repo": "store-bot",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "@nestjs/axios": 1,
+            "@nestjs/config": 1,
+            "telegraf": 2,
+            "redis": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "telegraf-calls",
+            "entry-registries"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:store-web",
+      "type": "repo",
+      "label": "store-web",
+      "repo": "store-web",
+      "meta": {
+        "stats": {
+          "files": 18,
+          "filesRead": 18,
+          "filesUnreadable": 0,
+          "classes": 14,
+          "templates": 10,
+          "skippedExternalCalls": {
+            "rxjs": 5,
+            "@angular/common": 4,
+            "@angular/router": 3
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "store-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "store-api",
+      "file": "src/app.module.ts",
+      "line": 11,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ItemsController",
+          "TicketsController",
+          "HooksController",
+          "OrdersController"
+        ],
+        "providers": [
+          "ItemsService",
+          "TicketsService",
+          "OrdersService",
+          "EventsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "store-api#src/events.service.ts:EventsService",
+      "type": "provider",
+      "label": "EventsService",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "store-api#src/events.service.ts:EventsService.orderChanged",
+      "type": "method",
+      "label": "EventsService.orderChanged",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-api#src/hooks.controller.ts:HooksController",
+      "type": "provider",
+      "label": "HooksController",
+      "repo": "store-api",
+      "file": "src/hooks.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "store-api#src/hooks.controller.ts:HooksController.chat",
+      "type": "method",
+      "label": "HooksController.chat",
+      "repo": "store-api",
+      "file": "src/hooks.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{ticketId:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-api#src/items.controller.ts:ItemsController",
+      "type": "provider",
+      "label": "ItemsController",
+      "repo": "store-api",
+      "file": "src/items.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "store-api#src/items.controller.ts:ItemsController.list",
+      "type": "method",
+      "label": "ItemsController.list",
+      "repo": "store-api",
+      "file": "src/items.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "store-api#src/items.service.ts:ItemsService",
+      "type": "provider",
+      "label": "ItemsService",
+      "repo": "store-api",
+      "file": "src/items.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "store-api#src/items.service.ts:ItemsService.listByShop",
+      "type": "method",
+      "label": "ItemsService.listByShop",
+      "repo": "store-api",
+      "file": "src/items.service.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "store-api#src/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "store-api",
+      "file": "src/orders.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "store-api#src/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "store-api",
+      "file": "src/orders.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-api#src/orders.controller.ts:OrdersController.remove",
+      "type": "method",
+      "label": "OrdersController.remove",
+      "repo": "store-api",
+      "file": "src/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-api#src/orders.controller.ts:OrdersController.setStatus",
+      "type": "method",
+      "label": "OrdersController.setStatus",
+      "repo": "store-api",
+      "file": "src/orders.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-api#src/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "store-api",
+      "file": "src/orders.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "store-api#src/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "store-api",
+      "file": "src/orders.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-api#src/orders.service.ts:OrdersService.remove",
+      "type": "method",
+      "label": "OrdersService.remove",
+      "repo": "store-api",
+      "file": "src/orders.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-api#src/orders.service.ts:OrdersService.setStatus",
+      "type": "method",
+      "label": "OrdersService.setStatus",
+      "repo": "store-api",
+      "file": "src/orders.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-api#src/tickets.controller.ts:TicketsController",
+      "type": "provider",
+      "label": "TicketsController",
+      "repo": "store-api",
+      "file": "src/tickets.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "store-api#src/tickets.controller.ts:TicketsController.ack",
+      "type": "method",
+      "label": "TicketsController.ack",
+      "repo": "store-api",
+      "file": "src/tickets.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ticketId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-api#src/tickets.service.ts:TicketsService",
+      "type": "provider",
+      "label": "TicketsService",
+      "repo": "store-api",
+      "file": "src/tickets.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "store-api#src/tickets.service.ts:TicketsService.acknowledge",
+      "type": "method",
+      "label": "TicketsService.acknowledge",
+      "repo": "store-api",
+      "file": "src/tickets.service.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ticketId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-bot#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "store-bot",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "store-bot#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "store-bot",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "store-bot#src/api.client.ts:ApiClient",
+      "type": "provider",
+      "label": "ApiClient",
+      "repo": "store-bot",
+      "file": "src/api.client.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "store-bot#src/api.client.ts:ApiClient.getItems",
+      "type": "method",
+      "label": "ApiClient.getItems",
+      "repo": "store-bot",
+      "file": "src/api.client.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "store-bot#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "store-bot",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "StoreBot",
+          "ApiClient"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "store-bot#src/store-bot.ts:StoreBot",
+      "type": "provider",
+      "label": "StoreBot",
+      "repo": "store-bot",
+      "file": "src/store-bot.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "store-bot#src/store-bot.ts:StoreBot.onModuleInit",
+      "type": "method",
+      "label": "StoreBot.onModuleInit",
+      "repo": "store-bot",
+      "file": "src/store-bot.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+      "type": "method",
+      "label": "StoreBot.onStatusEvent",
+      "repo": "store-bot",
+      "file": "src/store-bot.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-bot#src/store-bot.ts:StoreBot.showItems",
+      "type": "method",
+      "label": "StoreBot.showItems",
+      "repo": "store-bot",
+      "file": "src/store-bot.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "store-web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "store-web#node_modules/@angular/router:Router",
+      "type": "provider",
+      "label": "Router",
+      "repo": "store-web",
+      "file": "node_modules/@angular/router",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/router",
+        "external": true
+      }
+    },
+    {
+      "id": "store-web#src/app/analytics.component.ts:AnalyticsComponent",
+      "type": "ui_component",
+      "label": "AnalyticsComponent",
+      "repo": "store-web",
+      "file": "src/app/analytics.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-analytics",
+        "route": "/analytics"
+      }
+    },
+    {
+      "id": "store-web#src/app/auth.guard.ts:authGuard",
+      "type": "function",
+      "label": "authGuard",
+      "repo": "store-web",
+      "file": "src/app/auth.guard.ts",
+      "line": 7
+    },
+    {
+      "id": "store-web#src/app/auth.guard.ts:roleGuard",
+      "type": "function",
+      "label": "roleGuard",
+      "repo": "store-web",
+      "file": "src/app/auth.guard.ts",
+      "line": 14
+    },
+    {
+      "id": "store-web#src/app/auth.service.ts:AuthService",
+      "type": "provider",
+      "label": "AuthService",
+      "repo": "store-web",
+      "file": "src/app/auth.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "store-web#src/app/auth.service.ts:AuthService.isSignedIn",
+      "type": "method",
+      "label": "AuthService.isSignedIn",
+      "repo": "store-web",
+      "file": "src/app/auth.service.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/auth.service.ts:AuthService.login",
+      "type": "method",
+      "label": "AuthService.login",
+      "repo": "store-web",
+      "file": "src/app/auth.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/auth.service.ts:AuthService.role",
+      "type": "method",
+      "label": "AuthService.role",
+      "repo": "store-web",
+      "file": "src/app/auth.service.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/dashboard.component.ts:DashboardComponent",
+      "type": "ui_component",
+      "label": "DashboardComponent",
+      "repo": "store-web",
+      "file": "src/app/dashboard.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-dashboard",
+        "route": "/dashboard"
+      }
+    },
+    {
+      "id": "store-web#src/app/dashboard.component.ts:DashboardComponent.loadData",
+      "type": "method",
+      "label": "DashboardComponent.loadData",
+      "repo": "store-web",
+      "file": "src/app/dashboard.component.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/dashboard.component.ts:DashboardComponent.ngOnInit",
+      "type": "method",
+      "label": "DashboardComponent.ngOnInit",
+      "repo": "store-web",
+      "file": "src/app/dashboard.component.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/items.client.ts:ItemsClient",
+      "type": "provider",
+      "label": "ItemsClient",
+      "repo": "store-web",
+      "file": "src/app/items.client.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "store-web#src/app/items.client.ts:ItemsClient.getItems",
+      "type": "method",
+      "label": "ItemsClient.getItems",
+      "repo": "store-web",
+      "file": "src/app/items.client.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/login.component.ts:LoginComponent",
+      "type": "ui_component",
+      "label": "LoginComponent",
+      "repo": "store-web",
+      "file": "src/app/login.component.ts",
+      "line": 7,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-login",
+        "route": "/login"
+      }
+    },
+    {
+      "id": "store-web#src/app/login.component.ts:LoginComponent.handleAuth",
+      "type": "method",
+      "label": "LoginComponent.handleAuth",
+      "repo": "store-web",
+      "file": "src/app/login.component.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/matrix.component.ts:MatrixComponent",
+      "type": "ui_component",
+      "label": "MatrixComponent",
+      "repo": "store-web",
+      "file": "src/app/matrix.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-matrix",
+        "route": "/analytics/matrix"
+      }
+    },
+    {
+      "id": "store-web#src/app/order-history.component.ts:OrderHistoryComponent",
+      "type": "ui_component",
+      "label": "OrderHistoryComponent",
+      "repo": "store-web",
+      "file": "src/app/order-history.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-order-history",
+        "route": "/history"
+      }
+    },
+    {
+      "id": "store-web#src/app/order-history.component.ts:OrderHistoryComponent.load",
+      "type": "method",
+      "label": "OrderHistoryComponent.load",
+      "repo": "store-web",
+      "file": "src/app/order-history.component.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/order-history.component.ts:OrderHistoryComponent.ngOnInit",
+      "type": "method",
+      "label": "OrderHistoryComponent.ngOnInit",
+      "repo": "store-web",
+      "file": "src/app/order-history.component.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent",
+      "type": "ui_component",
+      "label": "OrdersAdminComponent",
+      "repo": "store-web",
+      "file": "src/app/orders-admin.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-orders-admin",
+        "route": "/orders"
+      }
+    },
+    {
+      "id": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent.create",
+      "type": "method",
+      "label": "OrdersAdminComponent.create",
+      "repo": "store-web",
+      "file": "src/app/orders-admin.component.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent.remove",
+      "type": "method",
+      "label": "OrdersAdminComponent.remove",
+      "repo": "store-web",
+      "file": "src/app/orders-admin.component.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/orders.client.ts:OrdersClient",
+      "type": "provider",
+      "label": "OrdersClient",
+      "repo": "store-web",
+      "file": "src/app/orders.client.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "store-web#src/app/orders.client.ts:OrdersClient.create",
+      "type": "method",
+      "label": "OrdersClient.create",
+      "repo": "store-web",
+      "file": "src/app/orders.client.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/orders.client.ts:OrdersClient.remove",
+      "type": "method",
+      "label": "OrdersClient.remove",
+      "repo": "store-web",
+      "file": "src/app/orders.client.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/settings.component.ts:SettingsComponent",
+      "type": "ui_component",
+      "label": "SettingsComponent",
+      "repo": "store-web",
+      "file": "src/app/settings.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-settings",
+        "route": "/settings"
+      }
+    },
+    {
+      "id": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent",
+      "type": "ui_component",
+      "label": "TicketBoardComponent",
+      "repo": "store-web",
+      "file": "src/app/ticket-board.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-ticket-board",
+        "route": "/board"
+      }
+    },
+    {
+      "id": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent.resolve",
+      "type": "method",
+      "label": "TicketBoardComponent.resolve",
+      "repo": "store-web",
+      "file": "src/app/ticket-board.component.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ticketId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent.routeAction",
+      "type": "method",
+      "label": "TicketBoardComponent.routeAction",
+      "repo": "store-web",
+      "file": "src/app/ticket-board.component.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ticketId",
+              "type": "string"
+            },
+            {
+              "name": "action",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/ticket-board.service.ts:TicketBoardService",
+      "type": "provider",
+      "label": "TicketBoardService",
+      "repo": "store-web",
+      "file": "src/app/ticket-board.service.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "store-web#src/app/ticket-board.service.ts:TicketBoardService.acknowledge",
+      "type": "method",
+      "label": "TicketBoardService.acknowledge",
+      "repo": "store-web",
+      "file": "src/app/ticket-board.service.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ticketId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/ticket-detail.component.ts:TicketDetailComponent",
+      "type": "ui_component",
+      "label": "TicketDetailComponent",
+      "repo": "store-web",
+      "file": "src/app/ticket-detail.component.ts",
+      "line": 5,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-ticket-detail",
+        "route": "/tickets/:param"
+      }
+    },
+    {
+      "id": "store-web#src/app/ticket-detail.component.ts:TicketDetailComponent.close",
+      "type": "method",
+      "label": "TicketDetailComponent.close",
+      "repo": "store-web",
+      "file": "src/app/ticket-detail.component.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/ticket-form.component.ts:TicketFormComponent",
+      "type": "ui_component",
+      "label": "TicketFormComponent",
+      "repo": "store-web",
+      "file": "src/app/ticket-form.component.ts",
+      "line": 5,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-ticket-form",
+        "route": "/tickets/:param/edit /tickets/new"
+      }
+    },
+    {
+      "id": "store-web#src/app/ticket-form.component.ts:TicketFormComponent.submit",
+      "type": "method",
+      "label": "TicketFormComponent.submit",
+      "repo": "store-web",
+      "file": "src/app/ticket-form.component.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_action:store-web#src/app/dashboard.component.ts:16:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "store-web",
+      "file": "src/app/dashboard.component.ts",
+      "line": 16,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "store-web#src/app/dashboard.component.ts:DashboardComponent",
+        "template": "src/app/dashboard.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:store-web#src/app/login.component.ts:10:22",
+      "type": "ui_action",
+      "label": "click=\"handleAuth('me')\"",
+      "repo": "store-web",
+      "file": "src/app/login.component.ts",
+      "line": 10,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "handleAuth('me')",
+        "component": "store-web#src/app/login.component.ts:LoginComponent",
+        "template": "src/app/login.component.ts",
+        "args": [
+          "'me'"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:store-web#src/app/order-history.component.ts:16:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "store-web",
+      "file": "src/app/order-history.component.ts",
+      "line": 16,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "store-web#src/app/order-history.component.ts:OrderHistoryComponent",
+        "template": "src/app/order-history.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:store-web#src/app/orders-admin.component.ts:9:22",
+      "type": "ui_action",
+      "label": "click=\"create()\"",
+      "repo": "store-web",
+      "file": "src/app/orders-admin.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "create()",
+        "component": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent",
+        "template": "src/app/orders-admin.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:store-web#src/app/orders-admin.component.ts:9:61",
+      "type": "ui_action",
+      "label": "click=\"remove('1')\"",
+      "repo": "store-web",
+      "file": "src/app/orders-admin.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "remove('1')",
+        "component": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent",
+        "template": "src/app/orders-admin.component.ts",
+        "args": [
+          "'1'"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:store-web#src/app/ticket-board.component.ts:9:62",
+      "type": "ui_action",
+      "label": "click=\"resolve(ticket)\"",
+      "repo": "store-web",
+      "file": "src/app/ticket-board.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "resolve(ticket)",
+        "component": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent",
+        "template": "src/app/ticket-board.component.ts",
+        "args": [
+          "ticket"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:store-web#src/app/ticket-detail.component.ts:8:22",
+      "type": "ui_action",
+      "label": "click=\"close()\"",
+      "repo": "store-web",
+      "file": "src/app/ticket-detail.component.ts",
+      "line": 8,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "close()",
+        "component": "store-web#src/app/ticket-detail.component.ts:TicketDetailComponent",
+        "template": "src/app/ticket-detail.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:store-web#src/app/ticket-form.component.ts:8:22",
+      "type": "ui_action",
+      "label": "click=\"submit()\"",
+      "repo": "store-web",
+      "file": "src/app/ticket-form.component.ts",
+      "line": 8,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "submit()",
+        "component": "store-web#src/app/ticket-form.component.ts:TicketFormComponent",
+        "template": "src/app/ticket-form.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:store-web#src/app/items.client.ts:13:12",
+      "type": "ui_api_call",
+      "label": "GET /api/shops/items",
+      "repo": "store-web",
+      "file": "src/app/items.client.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/shops/items",
+        "path": "/api/shops/items",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string[]",
+        "bodyType": null,
+        "queryType": "{shopId:string}",
+        "queryKeys": [
+          "shopId"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "store-api"
+      }
+    },
+    {
+      "id": "ui_api_call:store-web#src/app/orders.client.ts:13:12",
+      "type": "ui_api_call",
+      "label": "POST /api/orders",
+      "repo": "store-web",
+      "file": "src/app/orders.client.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "queryType": "{shopId:string}",
+        "queryKeys": [
+          "shopId"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "store-api"
+      }
+    },
+    {
+      "id": "ui_api_call:store-web#src/app/orders.client.ts:17:12",
+      "type": "ui_api_call",
+      "label": "DELETE /api/orders/:param",
+      "repo": "store-web",
+      "file": "src/app/orders.client.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "url": "${apiUrl}/api/orders/:param",
+        "path": "/api/orders/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": null,
+        "queryType": "{shopId:string}",
+        "queryKeys": [
+          "shopId"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "store-api"
+      }
+    },
+    {
+      "id": "ui_api_call:store-web#src/app/ticket-board.service.ts:13:12",
+      "type": "ui_api_call",
+      "label": "POST /api/tickets/:param/ack",
+      "repo": "store-web",
+      "file": "src/app/ticket-board.service.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/api/tickets/:param/ack",
+        "path": "/api/tickets/:param/ack",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "store-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:shop:*:orders",
+      "to": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/store-bot.ts",
+      "line": 21
+    },
+    {
+      "from": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+      "to": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/store-bot.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:store-api:http:DELETE:/api/orders/:param",
+      "to": "store-api#src/orders.controller.ts:OrdersController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "query": "{shopId:string}",
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:store-api:http:GET:/api/shops/items",
+      "to": "store-api#src/items.controller.ts:ItemsController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/items.controller.ts",
+      "line": 8,
+      "meta": {
+        "query": "{shopId:string}"
+      }
+    },
+    {
+      "from": "entry:store-api:http:PATCH:/api/orders/:param/status",
+      "to": "store-api#src/orders.controller.ts:OrdersController.setStatus",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.controller.ts",
+      "line": 14,
+      "meta": {
+        "query": "{shopId:string}",
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:store-api:http:POST:/api/hooks/chat",
+      "to": "store-api#src/hooks.controller.ts:HooksController.chat",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{ticketId:string}"
+      ],
+      "returns": "void",
+      "file": "src/hooks.controller.ts",
+      "line": 9,
+      "meta": {
+        "body": "{ticketId:string}"
+      }
+    },
+    {
+      "from": "entry:store-api:http:POST:/api/orders",
+      "to": "store-api#src/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.controller.ts",
+      "line": 9,
+      "meta": {
+        "query": "{shopId:string}"
+      }
+    },
+    {
+      "from": "entry:store-api:http:POST:/api/tickets/:param/ack",
+      "to": "store-api#src/tickets.controller.ts:TicketsController.ack",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/tickets.controller.ts",
+      "line": 8,
+      "meta": {
+        "params": "{ticketId:string}"
+      }
+    },
+    {
+      "from": "entry:store-bot:bot_command:items",
+      "to": "store-bot#src/store-bot.ts:StoreBot.showItems",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/store-bot.ts",
+      "line": 25
+    },
+    {
+      "from": "entry:store-bot:event:shop:*:orders",
+      "to": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/store-bot.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:store-web:screen:/analytics",
+      "to": "store-web#src/app/analytics.component.ts:AnalyticsComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 19,
+      "meta": {
+        "route": "/analytics"
+      }
+    },
+    {
+      "from": "entry:store-web:screen:/analytics/matrix",
+      "to": "store-web#src/app/matrix.component.ts:MatrixComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 20,
+      "meta": {
+        "route": "/analytics/matrix"
+      }
+    },
+    {
+      "from": "entry:store-web:screen:/board",
+      "to": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 23,
+      "meta": {
+        "route": "/board"
+      }
+    },
+    {
+      "from": "entry:store-web:screen:/dashboard",
+      "to": "store-web#src/app/dashboard.component.ts:DashboardComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 17,
+      "meta": {
+        "route": "/dashboard"
+      }
+    },
+    {
+      "from": "entry:store-web:screen:/history",
+      "to": "store-web#src/app/order-history.component.ts:OrderHistoryComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 18,
+      "meta": {
+        "route": "/history"
+      }
+    },
+    {
+      "from": "entry:store-web:screen:/login",
+      "to": "store-web#src/app/login.component.ts:LoginComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 16,
+      "meta": {
+        "route": "/login"
+      }
+    },
+    {
+      "from": "entry:store-web:screen:/orders",
+      "to": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 22,
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
+      "from": "entry:store-web:screen:/settings",
+      "to": "store-web#src/app/settings.component.ts:SettingsComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 21,
+      "meta": {
+        "route": "/settings"
+      }
+    },
+    {
+      "from": "entry:store-web:screen:/tickets/:param",
+      "to": "store-web#src/app/ticket-detail.component.ts:TicketDetailComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 26,
+      "meta": {
+        "route": "/tickets/:param"
+      }
+    },
+    {
+      "from": "entry:store-web:screen:/tickets/:param/edit",
+      "to": "store-web#src/app/ticket-form.component.ts:TicketFormComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 25,
+      "meta": {
+        "route": "/tickets/:param/edit"
+      }
+    },
+    {
+      "from": "entry:store-web:screen:/tickets/new",
+      "to": "store-web#src/app/ticket-form.component.ts:TicketFormComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 24,
+      "meta": {
+        "route": "/tickets/new"
+      }
+    },
+    {
+      "from": "http_out:store-bot#src/api.client.ts:15:43",
+      "to": "entry:store-api:http:GET:/api/shops/items",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/api.client.ts",
+      "line": 15,
+      "returns": "string[]",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "store-api"
+      }
+    },
+    {
+      "from": "producer:store-api#src/events.service.ts:11:11",
+      "to": "channel:shop:*:orders",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/events.service.ts",
+      "line": 11
+    },
+    {
+      "from": "producer:store-api#src/events.service.ts:11:11",
+      "to": "channel:shop:*:orders#ORDER_CHANGED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/events.service.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "store-api#src/events.service.ts:EventsService.orderChanged",
+      "to": "cache_op:store-api#src/events.service.ts:11:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/events.service.ts",
+      "line": 11
+    },
+    {
+      "from": "store-api#src/events.service.ts:EventsService.orderChanged",
+      "to": "producer:store-api#src/events.service.ts:11:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/events.service.ts",
+      "line": 11
+    },
+    {
+      "from": "store-api#src/hooks.controller.ts:HooksController",
+      "to": "store-api#src/tickets.service.ts:TicketsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/hooks.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "store-api#src/hooks.controller.ts:HooksController.chat",
+      "to": "store-api#src/tickets.service.ts:TicketsService.acknowledge",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/hooks.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "store-api#src/items.controller.ts:ItemsController",
+      "to": "store-api#src/items.service.ts:ItemsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/items.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "store-api#src/items.controller.ts:ItemsController.list",
+      "to": "store-api#src/items.service.ts:ItemsService.listByShop",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/items.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "store-api#src/orders.controller.ts:OrdersController",
+      "to": "store-api#src/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "store-api#src/orders.controller.ts:OrdersController.create",
+      "to": "store-api#src/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "store-api#src/orders.controller.ts:OrdersController.remove",
+      "to": "store-api#src/orders.service.ts:OrdersService.remove",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "store-api#src/orders.controller.ts:OrdersController.setStatus",
+      "to": "store-api#src/orders.service.ts:OrdersService.setStatus",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "store-api#src/orders.service.ts:OrdersService",
+      "to": "store-api#src/events.service.ts:EventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders.service.ts",
+      "line": 7
+    },
+    {
+      "from": "store-api#src/orders.service.ts:OrdersService.create",
+      "to": "store-api#src/events.service.ts:EventsService.orderChanged",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.service.ts",
+      "line": 10
+    },
+    {
+      "from": "store-api#src/orders.service.ts:OrdersService.remove",
+      "to": "store-api#src/events.service.ts:EventsService.orderChanged",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.service.ts",
+      "line": 20
+    },
+    {
+      "from": "store-api#src/orders.service.ts:OrdersService.setStatus",
+      "to": "store-api#src/events.service.ts:EventsService.orderChanged",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.service.ts",
+      "line": 15
+    },
+    {
+      "from": "store-api#src/tickets.controller.ts:TicketsController",
+      "to": "store-api#src/tickets.service.ts:TicketsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/tickets.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "store-api#src/tickets.controller.ts:TicketsController.ack",
+      "to": "store-api#src/tickets.service.ts:TicketsService.acknowledge",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/tickets.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "store-bot#src/api.client.ts:ApiClient",
+      "to": "store-bot#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/api.client.ts",
+      "line": 10
+    },
+    {
+      "from": "store-bot#src/api.client.ts:ApiClient",
+      "to": "store-bot#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/api.client.ts",
+      "line": 11
+    },
+    {
+      "from": "store-bot#src/api.client.ts:ApiClient.getItems",
+      "to": "config_key:store-bot#STORE_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/api.client.ts",
+      "line": 15
+    },
+    {
+      "from": "store-bot#src/api.client.ts:ApiClient.getItems",
+      "to": "http_out:store-bot#src/api.client.ts:15:43",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.client.ts",
+      "line": 15
+    },
+    {
+      "from": "store-bot#src/store-bot.ts:StoreBot",
+      "to": "store-bot#src/api.client.ts:ApiClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/store-bot.ts",
+      "line": 17
+    },
+    {
+      "from": "store-bot#src/store-bot.ts:StoreBot.onModuleInit",
+      "to": "cache_op:store-bot#src/store-bot.ts:21:10",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/store-bot.ts",
+      "line": 21
+    },
+    {
+      "from": "store-bot#src/store-bot.ts:StoreBot.onModuleInit",
+      "to": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/store-bot.ts",
+      "line": 21
+    },
+    {
+      "from": "store-bot#src/store-bot.ts:StoreBot.onModuleInit",
+      "to": "store-bot#src/store-bot.ts:StoreBot.showItems",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/store-bot.ts",
+      "line": 20
+    },
+    {
+      "from": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+      "to": "store-bot#src/api.client.ts:ApiClient.getItems",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/store-bot.ts",
+      "line": 31
+    },
+    {
+      "from": "store-bot#src/store-bot.ts:StoreBot.showItems",
+      "to": "store-bot#src/api.client.ts:ApiClient.getItems",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/store-bot.ts",
+      "line": 26
+    },
+    {
+      "from": "store-web#src/app/analytics.component.ts:AnalyticsComponent",
+      "to": "store-web#src/app/auth.guard.ts:authGuard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 19,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/analytics",
+        "order": 0
+      }
+    },
+    {
+      "from": "store-web#src/app/analytics.component.ts:AnalyticsComponent",
+      "to": "store-web#src/app/auth.guard.ts:roleGuard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 19,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/analytics",
+        "order": 1
+      }
+    },
+    {
+      "from": "store-web#src/app/auth.guard.ts:authGuard",
+      "to": "store-web#src/app/auth.service.ts:AuthService.isSignedIn",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "boolean",
+      "file": "src/app/auth.guard.ts",
+      "line": 10
+    },
+    {
+      "from": "store-web#src/app/auth.guard.ts:authGuard",
+      "to": "store-web#src/app/login.component.ts:LoginComponent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/auth.guard.ts",
+      "line": 10,
+      "meta": {
+        "navigates": "/login",
+        "route": "/login",
+        "page": "src/app/login.component.ts",
+        "redirects": true
+      }
+    },
+    {
+      "from": "store-web#src/app/auth.guard.ts:roleGuard",
+      "to": "store-web#src/app/auth.service.ts:AuthService.role",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/app/auth.guard.ts",
+      "line": 17
+    },
+    {
+      "from": "store-web#src/app/auth.guard.ts:roleGuard",
+      "to": "store-web#src/app/dashboard.component.ts:DashboardComponent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/auth.guard.ts",
+      "line": 18,
+      "meta": {
+        "navigates": "/dashboard",
+        "route": "/dashboard",
+        "page": "src/app/dashboard.component.ts"
+      }
+    },
+    {
+      "from": "store-web#src/app/dashboard.component.ts:DashboardComponent",
+      "to": "store-web#src/app/auth.guard.ts:authGuard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 17,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/dashboard",
+        "order": 0
+      }
+    },
+    {
+      "from": "store-web#src/app/dashboard.component.ts:DashboardComponent",
+      "to": "store-web#src/app/items.client.ts:ItemsClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/dashboard.component.ts",
+      "line": 14
+    },
+    {
+      "from": "store-web#src/app/dashboard.component.ts:DashboardComponent.loadData",
+      "to": "store-web#src/app/items.client.ts:ItemsClient.getItems",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/app/dashboard.component.ts",
+      "line": 21
+    },
+    {
+      "from": "store-web#src/app/dashboard.component.ts:DashboardComponent.ngOnInit",
+      "to": "store-web#src/app/dashboard.component.ts:DashboardComponent.loadData",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/dashboard.component.ts",
+      "line": 17
+    },
+    {
+      "from": "store-web#src/app/items.client.ts:ItemsClient",
+      "to": "store-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 10
+    },
+    {
+      "from": "store-web#src/app/items.client.ts:ItemsClient.getItems",
+      "to": "ui_api_call:store-web#src/app/items.client.ts:13:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 13
+    },
+    {
+      "from": "store-web#src/app/login.component.ts:LoginComponent",
+      "to": "store-web#node_modules/@angular/router:Router",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/login.component.ts",
+      "line": 15
+    },
+    {
+      "from": "store-web#src/app/login.component.ts:LoginComponent",
+      "to": "store-web#src/app/auth.service.ts:AuthService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/login.component.ts",
+      "line": 14
+    },
+    {
+      "from": "store-web#src/app/login.component.ts:LoginComponent.handleAuth",
+      "to": "store-web#src/app/auth.service.ts:AuthService.login",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/login.component.ts",
+      "line": 19
+    },
+    {
+      "from": "store-web#src/app/login.component.ts:LoginComponent.handleAuth",
+      "to": "store-web#src/app/dashboard.component.ts:DashboardComponent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/login.component.ts",
+      "line": 20,
+      "meta": {
+        "navigates": "/dashboard",
+        "route": "/dashboard",
+        "page": "src/app/dashboard.component.ts"
+      }
+    },
+    {
+      "from": "store-web#src/app/matrix.component.ts:MatrixComponent",
+      "to": "store-web#src/app/auth.guard.ts:authGuard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 20,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/analytics/matrix",
+        "order": 0
+      }
+    },
+    {
+      "from": "store-web#src/app/matrix.component.ts:MatrixComponent",
+      "to": "store-web#src/app/auth.guard.ts:roleGuard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 20,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/analytics/matrix",
+        "order": 1
+      }
+    },
+    {
+      "from": "store-web#src/app/order-history.component.ts:OrderHistoryComponent",
+      "to": "store-web#src/app/auth.guard.ts:authGuard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 18,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/history",
+        "order": 0
+      }
+    },
+    {
+      "from": "store-web#src/app/order-history.component.ts:OrderHistoryComponent",
+      "to": "store-web#src/app/items.client.ts:ItemsClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/order-history.component.ts",
+      "line": 14
+    },
+    {
+      "from": "store-web#src/app/order-history.component.ts:OrderHistoryComponent.load",
+      "to": "store-web#src/app/items.client.ts:ItemsClient.getItems",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/app/order-history.component.ts",
+      "line": 21
+    },
+    {
+      "from": "store-web#src/app/order-history.component.ts:OrderHistoryComponent.ngOnInit",
+      "to": "store-web#src/app/order-history.component.ts:OrderHistoryComponent.load",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/order-history.component.ts",
+      "line": 17
+    },
+    {
+      "from": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent",
+      "to": "store-web#src/app/auth.guard.ts:authGuard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 22,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/orders",
+        "order": 0
+      }
+    },
+    {
+      "from": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent",
+      "to": "store-web#src/app/auth.guard.ts:roleGuard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 22,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/orders",
+        "order": 1
+      }
+    },
+    {
+      "from": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent",
+      "to": "store-web#src/app/orders.client.ts:OrdersClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders-admin.component.ts",
+      "line": 12
+    },
+    {
+      "from": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent.create",
+      "to": "store-web#src/app/orders.client.ts:OrdersClient.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/orders-admin.component.ts",
+      "line": 15
+    },
+    {
+      "from": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent.remove",
+      "to": "store-web#src/app/orders.client.ts:OrdersClient.remove",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/orders-admin.component.ts",
+      "line": 19
+    },
+    {
+      "from": "store-web#src/app/orders.client.ts:OrdersClient",
+      "to": "store-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders.client.ts",
+      "line": 10
+    },
+    {
+      "from": "store-web#src/app/orders.client.ts:OrdersClient.create",
+      "to": "ui_api_call:store-web#src/app/orders.client.ts:13:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.client.ts",
+      "line": 13
+    },
+    {
+      "from": "store-web#src/app/orders.client.ts:OrdersClient.remove",
+      "to": "ui_api_call:store-web#src/app/orders.client.ts:17:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.client.ts",
+      "line": 17
+    },
+    {
+      "from": "store-web#src/app/settings.component.ts:SettingsComponent",
+      "to": "store-web#src/app/auth.guard.ts:authGuard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 21,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/settings",
+        "order": 0
+      }
+    },
+    {
+      "from": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent",
+      "to": "store-web#src/app/auth.guard.ts:authGuard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 23,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/board",
+        "order": 0
+      }
+    },
+    {
+      "from": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent",
+      "to": "store-web#src/app/ticket-board.service.ts:TicketBoardService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/ticket-board.component.ts",
+      "line": 14
+    },
+    {
+      "from": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent.resolve",
+      "to": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent.routeAction",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/ticket-board.component.ts",
+      "line": 17
+    },
+    {
+      "from": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent.routeAction",
+      "to": "store-web#src/app/ticket-board.service.ts:TicketBoardService.acknowledge",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/ticket-board.component.ts",
+      "line": 21
+    },
+    {
+      "from": "store-web#src/app/ticket-board.service.ts:TicketBoardService",
+      "to": "store-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/ticket-board.service.ts",
+      "line": 10
+    },
+    {
+      "from": "store-web#src/app/ticket-board.service.ts:TicketBoardService.acknowledge",
+      "to": "ui_api_call:store-web#src/app/ticket-board.service.ts:13:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/ticket-board.service.ts",
+      "line": 13
+    },
+    {
+      "from": "store-web#src/app/ticket-detail.component.ts:TicketDetailComponent",
+      "to": "store-web#node_modules/@angular/router:Router",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/ticket-detail.component.ts",
+      "line": 11
+    },
+    {
+      "from": "store-web#src/app/ticket-detail.component.ts:TicketDetailComponent",
+      "to": "store-web#src/app/auth.guard.ts:authGuard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 26,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/tickets/:param",
+        "order": 0
+      }
+    },
+    {
+      "from": "store-web#src/app/ticket-detail.component.ts:TicketDetailComponent.close",
+      "to": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/ticket-detail.component.ts",
+      "line": 14,
+      "meta": {
+        "navigates": "/board",
+        "route": "/board",
+        "page": "src/app/ticket-board.component.ts",
+        "byUrl": true
+      }
+    },
+    {
+      "from": "store-web#src/app/ticket-form.component.ts:TicketFormComponent",
+      "to": "store-web#node_modules/@angular/router:Router",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/ticket-form.component.ts",
+      "line": 11
+    },
+    {
+      "from": "store-web#src/app/ticket-form.component.ts:TicketFormComponent",
+      "to": "store-web#src/app/auth.guard.ts:authGuard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 24,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/tickets/new",
+        "order": 0
+      }
+    },
+    {
+      "from": "store-web#src/app/ticket-form.component.ts:TicketFormComponent.submit",
+      "to": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/ticket-form.component.ts",
+      "line": 14,
+      "meta": {
+        "navigates": "/board",
+        "route": "/board",
+        "page": "src/app/ticket-board.component.ts"
+      }
+    },
+    {
+      "from": "ui_action:store-web#src/app/dashboard.component.ts:16:3",
+      "to": "store-web#src/app/dashboard.component.ts:DashboardComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/dashboard.component.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_action:store-web#src/app/login.component.ts:10:22",
+      "to": "store-web#src/app/login.component.ts:LoginComponent.handleAuth",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/login.component.ts",
+      "line": 10
+    },
+    {
+      "from": "ui_action:store-web#src/app/order-history.component.ts:16:3",
+      "to": "store-web#src/app/order-history.component.ts:OrderHistoryComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/order-history.component.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_action:store-web#src/app/orders-admin.component.ts:9:22",
+      "to": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders-admin.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_action:store-web#src/app/orders-admin.component.ts:9:61",
+      "to": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent.remove",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders-admin.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_action:store-web#src/app/ticket-board.component.ts:9:62",
+      "to": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent.resolve",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/ticket-board.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_action:store-web#src/app/ticket-detail.component.ts:8:22",
+      "to": "store-web#src/app/ticket-detail.component.ts:TicketDetailComponent.close",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/ticket-detail.component.ts",
+      "line": 8
+    },
+    {
+      "from": "ui_action:store-web#src/app/ticket-form.component.ts:8:22",
+      "to": "store-web#src/app/ticket-form.component.ts:TicketFormComponent.submit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/ticket-form.component.ts",
+      "line": 8
+    },
+    {
+      "from": "ui_api_call:store-web#src/app/items.client.ts:13:12",
+      "to": "entry:store-api:http:GET:/api/shops/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 13,
+      "returns": "string[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "store-api"
+      }
+    },
+    {
+      "from": "ui_api_call:store-web#src/app/orders.client.ts:13:12",
+      "to": "entry:store-api:http:POST:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders.client.ts",
+      "line": 13,
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "store-api"
+      }
+    },
+    {
+      "from": "ui_api_call:store-web#src/app/orders.client.ts:17:12",
+      "to": "entry:store-api:http:DELETE:/api/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders.client.ts",
+      "line": 17,
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "store-api"
+      }
+    },
+    {
+      "from": "ui_api_call:store-web#src/app/ticket-board.service.ts:13:12",
+      "to": "entry:store-api:http:POST:/api/tickets/:param/ack",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/ticket-board.service.ts",
+      "line": 13,
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "store-api"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/store-bot.ts",
+      "line": 26,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "StoreBot.showItems -> ctx.reply",
+      "meta": {
+        "cause": "interface-type"
+      },
+      "service": "store-bot"
+    }
+  ]
+}

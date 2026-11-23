@@ -701,7 +701,7 @@ route matched too. A helper's choices count: `423` finds the routes whose
 |---|---|---|
 | `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain; with `to`, only the shortest ways to that node | `entry` (required), `to`, `depth` (8, one more per workflow step), `maxChars` |
 | `who_calls` | everything that reaches a symbol, backwards across repositories | `symbol` (required), `depth` (3; 16 at most), `service` |
-| `impact` | every way in that could break if a symbol changes, in any service: its own, those past each crossing on the calling side with `via`, and `maybe` rows where a chain stops at an unread call | `symbol` (required), `service`, `offset` |
+| `impact` | every way in whose code calls a symbol, in any service: its own, those past each route on the calling side with `via`, and `maybe` rows where a chain stops at an unread call; the ways in only beyond a channel a consumer on the way takes messages from counted in `throughChannels` | `symbol` (required), `channel` (list one of `throughChannels`), `service`, `offset` |
 
 Asked about a class, `who_calls` and `impact` answer for every method of it
 something calls (P95): calls point at methods, never at the class. Each
@@ -771,7 +771,32 @@ and not listed (P370; on the main fixture the web's four client methods
 nothing calls and the component nothing renders left the maybe rows, and the
 answer of 12 rows became 7). A link or a
 navigation onto a screen or a component is no call into it, so the walk does
-not go back along one. It is bounded by 4,000 nodes; `entriesByService`,
+not go back along one, however it is stored: a `calls` or `triggers` edge with
+`meta.navigates` (a `router.navigate([...])` or `navigateByUrl` in a method, a
+login screen sending to the dashboard, a guard's redirect) as much as a link
+(P372). Nor does it walk from what a router or a framework runs before a
+screen - an Angular guard or resolver (`meta.guard`), a page's route
+middleware (`meta.middleware`) - back to the screens listing it, unless the
+walk reached it through its own code (it is the target, or it calls code on
+the way to the target), since it runs before the screens and runs none of
+their code: impact on a method a sign-in guard calls lists every screen the
+guard is on, and impact on a dashboard's method lists none of them because the
+guard redirects there. `entries` holds the ways in whose own code reaches the
+target by calls and requests. A consumer on the way that no screen holds (a
+back end's worker, a bot re-fetching on a relayed event) is not walked back
+onto its channel either: what publishes there calls none of the target, so the
+ways in beyond it - the publishers, and the screens and bots calling them - are
+counted apart, one row per channel (or message type a consumer chooses), in
+`throughChannels`: `{channel, type?, consumer, consumers?, ways, sample,
+walkCut?}`, `ways` how many lie beyond it, `sample` the nearest three. They are
+never complete-blocking. `impact({symbol, channel: "<name>"})` lists one
+channel's ways in as `entries`, each `via: "channel <name>"`, paged as usual,
+with `acrossChannel` naming it; `next` offers that call first. Each walk beyond
+a channel reads at most 1,000 nodes (`walkCut`, and with `channel` a `left`
+line, where it stopped). On the `impact-guarded-navigation` fixture, impact on
+a list method answers 5 rows where it answered 17 (1,437 characters compact,
+from 2,766) with the channel's four ways in counted, and on an acknowledge
+method 3 where it answered 6. It is bounded by 4,000 nodes; `entriesByService`,
 `reachedByService` and `servicesWithoutEntry` still name the services whose
 chains run into this one without an entry point of their own. At `detail` 2,
 a failure on an entry whose `at` is the target, and a `file` the id beside it

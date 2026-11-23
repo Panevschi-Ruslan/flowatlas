@@ -18,8 +18,7 @@
       "via": "if",
       "unreached": "nothing builds LegacyDigest: no module registers it and nothing injects it",
       "reach": "dead",
-      "from": "event space:*:events",
-      "ways": 6
+      "from": "event space:*:events"
     }
   ],
   "total": 1,

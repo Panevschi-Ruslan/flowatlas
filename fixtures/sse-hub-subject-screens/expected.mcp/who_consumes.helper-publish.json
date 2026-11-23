@@ -17,8 +17,7 @@
       "selectedIn": "OrderEventsController.receive",
       "via": "switch",
       "reach": "alive",
-      "from": "POST /events/orders",
-      "ways": 4
+      "from": "POST /events/orders"
     }
   ],
   "total": 1,

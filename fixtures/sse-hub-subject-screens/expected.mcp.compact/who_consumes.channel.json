@@ -83,7 +83,7 @@
       "kind": "sse",
       "reach": "alive",
       "from": "GET /api/boards/:param/events",
-      "ways": 10
+      "ways": 2
     },
     {
       "id": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
@@ -91,15 +91,14 @@
       "kind": "sse",
       "reach": "alive",
       "from": "GET /api/boards/:param/events",
-      "ways": 10
+      "ways": 2
     },
     {
       "id": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
       "loc": "src/worker.ts:17",
       "kind": "sse",
       "reach": "alive",
-      "from": "GET /api/boards/:param/crew/stream",
-      "ways": 9
+      "from": "GET /api/boards/:param/crew/stream"
     },
     {
       "id": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T16:37:05.051Z",
+  "builtAt": "2026-11-23T16:46:01.871Z",
   "services": [
     {
       "name": "market-api",
@@ -159,14 +159,7 @@
         "adapter": "redis-pubsub",
         "relay": "entry:market-api:http:GET:/api/shops/:param/events",
         "entryId": "entry:market-api:event:shop:*:events",
-        "decorator": "subscribe",
-        "subscriptions": [
-          {
-            "line": 13,
-            "column": 56,
-            "through": "listener.subscribe"
-          }
-        ]
+        "decorator": "subscribe"
       }
     },
     {
@@ -943,8 +936,7 @@
             }
           ],
           "returns": "void"
-        },
-        "fieldsRead": []
+        }
       }
     },
     {
@@ -975,8 +967,7 @@
             }
           ],
           "returns": "void"
-        },
-        "fieldsRead": []
+        }
       }
     },
     {
@@ -995,8 +986,7 @@
             }
           ],
           "returns": "void"
-        },
-        "fieldsRead": []
+        }
       }
     },
     {
@@ -1015,8 +1005,7 @@
             }
           ],
           "returns": "void"
-        },
-        "fieldsRead": []
+        }
       }
     },
     {
@@ -1030,8 +1019,7 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        },
-        "fieldsRead": []
+        }
       }
     },
     {
@@ -1198,8 +1186,7 @@
         "signature": {
           "params": [],
           "returns": "never"
-        },
-        "fieldsRead": []
+        }
       }
     },
     {
@@ -1230,17 +1217,7 @@
             }
           ],
           "returns": "void"
-        },
-        "fieldsRead": [
-          {
-            "field": "name",
-            "line": 16
-          },
-          {
-            "field": "shopId",
-            "line": 16
-          }
-        ]
+        }
       }
     },
     {
@@ -1259,8 +1236,7 @@
             }
           ],
           "returns": "string[]"
-        },
-        "fieldsRead": []
+        }
       }
     },
     {
@@ -1345,8 +1321,7 @@
             }
           ],
           "returns": "MessageEvent<any>"
-        },
-        "fieldsRead": []
+        }
       }
     },
     {

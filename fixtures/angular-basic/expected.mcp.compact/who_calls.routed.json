@@ -5,8 +5,7 @@
     "line": 4,
     "kind": "standalone",
     "reach": "alive",
-    "from": "screen /reports",
-    "ways": 2
+    "from": "screen /reports"
   },
   "callers": [
     {

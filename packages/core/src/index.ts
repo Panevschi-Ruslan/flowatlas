@@ -32,6 +32,8 @@ export {
   STARTS_META,
   NAVIGATES_META,
   isNavigationEdge,
+  isRunsBeforeEdge,
+  RUNS_BEFORE_META,
   STEP_OF_META,
   STEPS_META,
   isChannelId,

@@ -129,8 +129,14 @@ describe('dead, per type', () => {
     expect(await call('dead', { id: 'notify-worker#src/handlers/mention.handler.ts:MentionHandler' })).toMatchObject({ verdict: 'dead' });
   });
 
-  it('walks impact through the type only: a handler of one type is reached from the route that publishes it', async () => {
-    const answer = await call('impact', { symbol: 'consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.notifyOwner' });
-    expect(answer.entries.map((row: { id: string }) => row.id)).toEqual(['entry:docs-api:http:POST:/spaces/:param/exports/:param/done']);
+  it('walks impact through the type only: a handler of one type is reached from the route that publishes it, beyond the channel (P372)', async () => {
+    const symbol = 'consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.notifyOwner';
+    const answer = await call('impact', { symbol });
+    expect(answer.entries).toEqual([]);
+    expect(answer.throughChannels).toEqual([
+      { channel: 'space:*:events', type: 'EXPORT_FINISHED', consumer: symbol, ways: 1, sample: ['entry:docs-api:http:POST:/spaces/:param/exports/:param/done'] },
+    ]);
+    const across = await call('impact', { symbol, channel: 'space:*:events' });
+    expect(across.entries.map((row: { id: string }) => row.id)).toEqual(['entry:docs-api:http:POST:/spaces/:param/exports/:param/done']);
   });
 });

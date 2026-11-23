@@ -12,9 +12,5 @@
     ],
     "links": 1
   },
-  "from": "screen /settings",
-  "ways": 2,
-  "next": [
-    "impact({symbol: \"angular-basic#src/app/settings.component.ts:SettingsComponent\"})"
-  ]
+  "from": "screen /settings"
 }

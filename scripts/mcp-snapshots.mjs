@@ -290,6 +290,28 @@ const SHARED_CLIENT_COMPACT_CASES = [
   ['impact.desks', 'impact', { symbol: SHARED_CLIENT_DESKS, verbose: false }],
 ];
 
+/**
+ * Navigations, guards and a channel a bot re-fetches on (P372): impact never
+ * walks back along a navigation or from a guard to the screens it guards, and
+ * says what lies only beyond a channel apart, in `throughChannels`, one call
+ * listing it; a guard's own code reaches the screens it guards.
+ */
+const GUARDED_ITEMS = 'store-api#src/items.service.ts:ItemsService.listByShop';
+const GUARDED_TICKETS = 'store-api#src/tickets.service.ts:TicketsService.acknowledge';
+const GUARDED_CASES = [
+  ['impact.items', 'impact', { symbol: GUARDED_ITEMS }],
+  ['impact.tickets', 'impact', { symbol: GUARDED_TICKETS }],
+  ['impact.items-across-channel', 'impact', { symbol: GUARDED_ITEMS, channel: 'shop:*:orders' }],
+  ['impact.guard-own-code', 'impact', { symbol: 'store-web#src/app/auth.service.ts:AuthService.role' }],
+  ['find_symbol.navigated', 'find_symbol', { queries: ['DashboardComponent.loadData', 'TicketBoardComponent.routeAction', 'StoreBot.onStatusEvent'] }],
+];
+/** The two impacts and the channel's list, compact: what an agent is handed. */
+const GUARDED_COMPACT_CASES = [
+  ['impact.items', 'impact', { symbol: GUARDED_ITEMS, verbose: false }],
+  ['impact.tickets', 'impact', { symbol: GUARDED_TICKETS, verbose: false }],
+  ['impact.items-across-channel', 'impact', { symbol: GUARDED_ITEMS, channel: 'shop:*:orders', verbose: false }],
+];
+
 /** The same impact and a flow through the rendered child, compact (P370). */
 const RENDERED_REACH_COMPACT_CASES = [
   ['impact.rendered-child', 'impact', { symbol: RENDERED_REACH_TARGET, verbose: false }],
@@ -750,6 +772,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'fields-read-and-sent'),
     outDir: join(root, 'fixtures', 'fields-read-and-sent', 'expected.mcp.compact'),
     cases: FIELDS_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'impact-guarded-navigation'),
+    outDir: join(root, 'fixtures', 'impact-guarded-navigation', 'expected.mcp'),
+    cases: GUARDED_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'impact-guarded-navigation'),
+    outDir: join(root, 'fixtures', 'impact-guarded-navigation', 'expected.mcp.compact'),
+    cases: GUARDED_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

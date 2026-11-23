@@ -593,6 +593,20 @@ export const isNavigationEdge = (edge: { readonly type: string; readonly meta?: 
   edge.type === 'calls' && typeof edge.meta?.[NAVIGATES_META] === 'string';
 
 /**
+ * The keys of a `calls` edge's `meta` that say a router or a framework runs
+ * the callee before the screen the edge comes from is shown: an Angular
+ * route's guard or resolver (`guard`, P291), a page's route middleware
+ * (`middleware`, P255). The callee runs before the screen; it calls none of
+ * the screen's code, so a walk back from it to what lists it says only what
+ * the callee's own code can break (P372).
+ */
+export const RUNS_BEFORE_META = ['guard', 'middleware'] as const;
+
+/** Whether an edge is a screen listing what runs before it is shown (P372). */
+export const isRunsBeforeEdge = (edge: { readonly type: string; readonly meta?: Readonly<Record<string, unknown>> | null | undefined }): boolean =>
+  edge.type === 'calls' && RUNS_BEFORE_META.some((key) => typeof edge.meta?.[key] === 'string');
+
+/**
  * The reference an entry id answers to, or `undefined` for an id that is not
  * an entry's.
  *
