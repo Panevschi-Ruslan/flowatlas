@@ -201,6 +201,9 @@ export type { Overview, OverviewSection } from './overview/overview.js';
 export { renderOverview } from './overview/render.js';
 export { agentsStatus, installAgents, removeAgents, searchHookCommand, withSearchHook, withoutSearchHook } from './commands/agents.js';
 export type { AgentFileChange, AgentFileState, AgentsOptions, AgentsRun } from './commands/agents.js';
+// What the answer budget measures as the guide's share of every turn (P373).
+export { CORE_TOOLS, guideBody, guideDescription, sharedBlock } from './agents/template.js';
+export type { AgentGuide } from './agents/template.js';
 export { hookBlock, hookStatus, installHooks, removeHooks, withBlock, withoutBlock, HOOK_EVENTS, DEFAULT_HOOK_EVENTS } from './commands/hook.js';
 export type { HookChange, HookEvent, HookOptions, HookRun } from './commands/hook.js';
 export type { PathOptions, PathRun } from './commands/path.js';

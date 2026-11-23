@@ -45,7 +45,6 @@
       },
       "reach": "alive",
       "from": "POST /events/orders",
-      "ways": 3,
       "reads": [
         "label",
         "orderId",

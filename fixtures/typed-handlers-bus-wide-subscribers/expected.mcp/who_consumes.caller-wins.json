@@ -16,8 +16,7 @@
       "kind": "event",
       "via": "switch",
       "reach": "alive",
-      "from": "POST /events/relay",
-      "ways": 2
+      "from": "POST /events/relay"
     }
   ],
   "total": 1,

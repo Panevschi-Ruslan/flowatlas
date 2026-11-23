@@ -1621,8 +1621,18 @@ pnpm -r typecheck
 pnpm fixtures:run     # run the tool over every fixture
 pnpm -r test          # 5,397 tests
 pnpm invariants       # rules no test can express
-pnpm fixtures:check   # extraction, server and terminal snapshots, and the read gate
+pnpm fixtures:check   # extraction, server and terminal snapshots, the answer budget, and the read gate
 ```
+
+What an agent pays per question has a budget too: `pnpm answer:budget` (part
+of `fixtures:check`) asks a fixed list of agent questions of the fixtures,
+compact, and fails when an answer grows more than 10% (or 300 characters) past
+its recorded size, lists what it must not, misses what it must, or says it is
+incomplete where the right answer is complete
+([the answer budget](docs/mcp.md#the-answer-budget-p373)). **A change that
+grows an answer re-records with `node scripts/answer-budget.mjs --update` and
+says why in its commit.** The right answers in `scripts/answer-budget.json`
+are written by hand; `--update` never touches them.
 
 `fixtures:check` compares against recorded output, so the fixtures have to be run
 first, and a snapshot nobody compares is not a gate. It therefore prints two

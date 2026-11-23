@@ -342,6 +342,48 @@ deeper, each row's `loc` and `label` were longer, and the share left out is
 larger. `expected.mcp.compact` beside three fixtures holds compact answers
 beside the whole ones in `expected.mcp`.
 
+#### The answer budget (P373)
+
+What an agent pays for a question is the fixed overhead of a turn, times the
+turns it takes, plus the answers it was handed, each sent again on every later
+turn. The instructions and the listing have ceilings in the tool tests; the
+answers and the turns have the answer budget, `scripts/answer-budget.mjs`,
+part of `pnpm fixtures:check`. It asks a fixed list of questions an agent asks
+(`scripts/answer-budget.json`) of the fixtures' graphs, through the server, as
+an agent does: compact, no `verbose`. For each answer it records the
+characters of the text the agent is handed (tokens estimated as characters /
+4), the rows of the answer's main lists, whether it says `complete`, and how
+many calls the question takes when the agent follows what the answer names:
+the page `nextOffset` gives, or the same call asked further (a deeper
+`who_calls`), every call's characters counted.
+
+Beside each question is its right answer, written by hand and never
+recorded: the ids a list must hold, the ids it must not (on `impact`, the ways
+in that do not call the changed code), a list that must hold exactly the ids
+given, what a row must say (`dead`'s verdict, a row's `reach`) and whether the
+answer is complete. The gate fails when an answer grows more than 10% past its
+recorded size, or 300 characters if that is more; lists an id it must not;
+misses one it must; says `complete: false` where the right answer is
+complete; takes more calls than recorded; or answers complete and still took
+more than one. The fixed overhead is held the same way: the instructions, the
+guide block and skill description `flowatlas agents install` writes (read on
+every turn), and the listing a model reads for the core tools the guide has
+it load in one ToolSearch call, the tools the main fixture is offered and all
+of them.
+
+`node scripts/answer-budget.mjs --table` prints the table, the fixed overhead
+first and then each question; `--update` re-records the sizes (never the
+right answers) and prints each beside what it was. **A change that grows an
+answer re-records with `--update` and says why in its commit**, so a growth is
+read before it is accepted rather than slipping in with a snapshot.
+
+On P373's tree a turn carries about 3,960 characters of instructions, guide
+block and skill description (about 990 tokens), 9,340 with the core tools
+loaded. One `impact` call answers which ways in could break in 749 to 1,477
+characters; `who_calls` on the main fixture's service method takes three
+calls and 13,567 characters, since its default depth stops twice before the
+ways in.
+
 #### Answers that finish in one call (P364)
 
 An answer says what an assistant would otherwise check row by row, so the

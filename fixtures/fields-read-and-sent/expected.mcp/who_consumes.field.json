@@ -18,7 +18,6 @@
       "via": "switch",
       "reach": "alive",
       "from": "POST /events/orders",
-      "ways": 3,
       "readIn": [
         {
           "id": "ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady",

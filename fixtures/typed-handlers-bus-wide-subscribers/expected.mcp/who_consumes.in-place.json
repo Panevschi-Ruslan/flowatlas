@@ -17,8 +17,7 @@
       "selectedIn": "DeskWatcher.onModuleInit",
       "via": "if",
       "reach": "alive",
-      "from": "event desk_alerts",
-      "ways": 3
+      "from": "event desk_alerts"
     }
   ],
   "total": 1,

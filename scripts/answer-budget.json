@@ -1,0 +1,760 @@
+{
+  "about": "What an agent pays per question (P373): node scripts/answer-budget.mjs. questions and expect are written by hand, the right answer; fixed and recorded are measured, and only --update rewrites them.",
+  "tolerance": {
+    "ratio": 0.1,
+    "chars": 300
+  },
+  "fixedOn": "multi-repo",
+  "questions": [
+    {
+      "id": "impact.multi-repo",
+      "ask": "which ways in could break if OrdersService.findOne changes",
+      "fixture": "multi-repo",
+      "tool": "impact",
+      "args": {
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.findOne"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:orders:http:GET:/orders/:param",
+            "entry:gateway:http:GET:/orders/:param",
+            "entry:gateway:http:POST:/orders/:param/invoice"
+          ]
+        },
+        "notListed": {
+          "entries": [
+            "entry:orders:http:POST:/orders"
+          ]
+        }
+      },
+      "note": "P372: POST /orders reaches the method only across the order.created channel, so it is counted under throughChannels, not listed in entries."
+    },
+    {
+      "id": "impact.calling-side",
+      "ask": "which ways in could break if OrdersService.updateStatus changes",
+      "fixture": "impact-calling-side",
+      "tool": "impact",
+      "args": {
+        "symbol": "shop-api#src/orders.service.ts:OrdersService.updateStatus"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "lists": {
+          "entries": [
+            "entry:backoffice-web:screen:/board",
+            "entry:shop-api:http:PATCH:/orders/status",
+            "entry:shop-api:http:POST:/hooks/chat",
+            "ops-bot#src/ops-bot.ts:OpsBot.handleStatus"
+          ]
+        },
+        "rowsSay": {
+          "entries": {
+            "ops-bot#src/ops-bot.ts:OpsBot.handleStatus": {
+              "reach": "maybe"
+            }
+          }
+        },
+        "exact": [
+          "entries"
+        ]
+      }
+    },
+    {
+      "id": "impact.shared-client-items",
+      "ask": "which ways in could break if ItemsService.listByShop changes",
+      "fixture": "impact-shared-client",
+      "tool": "impact",
+      "args": {
+        "symbol": "market-api#src/items.service.ts:ItemsService.listByShop"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:market-api:http:GET:/api/items",
+            "entry:market-web:screen:/history",
+            "entry:kiosk-web:screen:/browse",
+            "entry:market-bot:bot_command:items"
+          ]
+        },
+        "notListed": {
+          "entries": [
+            "entry:market-api:http:POST:/api/items",
+            "entry:market-api:http:ALL:/api/*",
+            "entry:market-web:screen:/catalog",
+            "entry:market-web:screen:/reports",
+            "entry:market-web:screen:/settings",
+            "entry:kiosk-web:screen:/order"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      }
+    },
+    {
+      "id": "impact.shared-client-desks",
+      "ask": "which ways in could break if DesksService.ackCall changes",
+      "fixture": "impact-shared-client",
+      "tool": "impact",
+      "args": {
+        "symbol": "market-api#src/desks.service.ts:DesksService.ackCall"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:market-api:http:POST:/api/staff/desks/:param/ack-call",
+            "entry:market-web:screen:/staff"
+          ]
+        },
+        "notListed": {
+          "entries": [
+            "entry:market-api:http:POST:/api/staff/desks/:param/call",
+            "entry:market-web:screen:/staff/desks/:param"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      }
+    },
+    {
+      "id": "impact.rendered-reach",
+      "ask": "which ways in could break if ItemsService.findOne changes",
+      "fixture": "angular-rendered-reach",
+      "tool": "impact",
+      "args": {
+        "symbol": "catalog-api#src/items.service.ts:ItemsService.findOne"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "lists": {
+          "entries": [
+            "entry:catalog-api:http:GET:/items/:param",
+            "entry:catalog-web:screen:/catalog"
+          ]
+        },
+        "rowsSay": {
+          "entries": {
+            "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey": {
+              "reach": "maybe"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "who_calls.multi-repo",
+      "ask": "who calls OrdersService.findOne",
+      "fixture": "multi-repo",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.findOne"
+      },
+      "lists": [
+        "callers"
+      ],
+      "expect": {
+        "lists": {
+          "callers": [
+            "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+            "entry:orders:http:GET:/orders/:param",
+            "entry:gateway:http:GET:/orders/:param",
+            "entry:gateway:http:POST:/orders/:param/invoice",
+            "entry:billing:event:order.created"
+          ]
+        }
+      }
+    },
+    {
+      "id": "who_calls.helpdesk",
+      "ask": "who calls TicketsService.assign",
+      "fixture": "helpdesk-screen-reach",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "desk-api#src/tickets/tickets.service.ts:TicketsService.assign"
+      },
+      "lists": [
+        "callers"
+      ],
+      "expect": {
+        "lists": {
+          "callers": [
+            "entry:desk-api:http:POST:/desks/:param/tickets/:param/assign"
+          ]
+        }
+      }
+    },
+    {
+      "id": "who_consumes.helpdesk-type",
+      "ask": "which screens react to TICKET_ASSIGNED",
+      "fixture": "helpdesk-screen-reach",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "desk:*:events",
+        "type": "TICKET_ASSIGNED"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "consumers": [
+            "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+            "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent"
+          ]
+        },
+        "rowsSay": {
+          "consumers": {
+            "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent": {
+              "reach": "alive",
+              "from": "screen /queue"
+            },
+            "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent": {
+              "reach": "alive",
+              "from": "screen /tickets/:param"
+            }
+          }
+        },
+        "exact": [
+          "consumers"
+        ]
+      }
+    },
+    {
+      "id": "who_consumes.relayed-type",
+      "ask": "which handlers take ORDER_READY",
+      "fixture": "typed-handlers-bus-wide-subscribers",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "order_updates",
+        "type": "ORDER_READY"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "consumers": [
+            "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+            "consumer:shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
+            "consumer:web#src/screens/PickupBoard.tsx:PickupBoard"
+          ]
+        },
+        "exact": [
+          "consumers"
+        ]
+      }
+    },
+    {
+      "id": "who_consumes.every-channel",
+      "ask": "which handlers take HELP_REQUESTED",
+      "fixture": "typed-handlers-bus-wide-subscribers",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "desk_alerts",
+        "type": "HELP_REQUESTED"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "consumers": [
+            "consumer:shop#src/notify/notify.service.ts:NotifyService.pageStaff"
+          ]
+        }
+      }
+    },
+    {
+      "id": "search.type-name",
+      "ask": "where is HELP_REQUESTED sent and handled",
+      "fixture": "typed-handlers-bus-wide-subscribers",
+      "tool": "search",
+      "args": {
+        "query": "HELP_REQUESTED"
+      },
+      "lists": [
+        "results.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "messages": [
+            "channel:desk_alerts#HELP_REQUESTED"
+          ]
+        }
+      }
+    },
+    {
+      "id": "search.type-name-screens",
+      "ask": "where is TICKET_ASSIGNED sent and handled",
+      "fixture": "helpdesk-screen-reach",
+      "tool": "search",
+      "args": {
+        "query": "TICKET_ASSIGNED"
+      },
+      "lists": [
+        "results.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "messages": [
+            "channel:desk:*:events#TICKET_ASSIGNED"
+          ]
+        }
+      }
+    },
+    {
+      "id": "fields.handler-reads",
+      "ask": "which handler reads the label of ORDER_READY",
+      "fixture": "fields-read-and-sent",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "order_updates",
+        "type": "ORDER_READY",
+        "field": "label"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "consumers": [
+            "consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady"
+          ]
+        },
+        "exact": [
+          "consumers"
+        ]
+      }
+    },
+    {
+      "id": "fields.route-reads",
+      "ask": "which code on PATCH /api/orders/:id/cancel reads userRef",
+      "fixture": "fields-read-and-sent",
+      "tool": "check_contract",
+      "args": {
+        "edge": "PATCH /api/orders/:id/cancel",
+        "field": "userRef"
+      },
+      "lists": [
+        "reads"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "reads": [
+            "shop-api#src/auth/client.guard.ts:ClientGuard.clientRef"
+          ]
+        },
+        "rowsSay": {
+          "reads": {
+            "shop-api#src/auth/client.guard.ts:ClientGuard.clientRef": {
+              "layer": "guard"
+            }
+          }
+        },
+        "exact": [
+          "reads"
+        ]
+      }
+    },
+    {
+      "id": "fields.missing-unused",
+      "ask": "what HELP_REQUESTED's handler reads that its publish does not send",
+      "fixture": "fields-read-and-sent",
+      "tool": "check_contract",
+      "args": {
+        "channel": "desk_events",
+        "type": "HELP_REQUESTED"
+      },
+      "lists": [
+        "missing",
+        "unused"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "missing": [
+            "deskId"
+          ],
+          "unused": [
+            "deskNumber"
+          ]
+        },
+        "exact": [
+          "missing",
+          "unused"
+        ]
+      }
+    },
+    {
+      "id": "dead.components",
+      "ask": "are these four components dead",
+      "fixture": "angular-rendered-reach",
+      "tool": "dead",
+      "args": {
+        "ids": [
+          "catalog-web#src/app/item-card.component.ts:ItemCardComponent",
+          "catalog-web#src/app/legacy-badge.component.ts:LegacyBadgeComponent",
+          "catalog-web#src/app/promo-dialog.component.ts:PromoDialogComponent",
+          "catalog-web#src/app/settings-page.component.ts:SettingsPageComponent"
+        ]
+      },
+      "lists": [
+        "answers"
+      ],
+      "expect": {
+        "rowsSay": {
+          "answers": {
+            "catalog-web#src/app/item-card.component.ts:ItemCardComponent": {
+              "verdict": "alive"
+            },
+            "catalog-web#src/app/legacy-badge.component.ts:LegacyBadgeComponent": {
+              "verdict": "likely-dead"
+            },
+            "catalog-web#src/app/promo-dialog.component.ts:PromoDialogComponent": {
+              "verdict": "likely-dead"
+            },
+            "catalog-web#src/app/settings-page.component.ts:SettingsPageComponent": {
+              "verdict": "alive"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "dead.handler-and-method",
+      "ask": "is the queue screen's handler or TicketsService.reopen dead",
+      "fixture": "helpdesk-screen-reach",
+      "tool": "dead",
+      "args": {
+        "ids": [
+          "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+          "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen"
+        ]
+      },
+      "lists": [
+        "answers"
+      ],
+      "expect": {
+        "rowsSay": {
+          "answers": {
+            "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent": {
+              "verdict": "alive"
+            },
+            "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen": {
+              "verdict": "likely-dead"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "get_flow.route",
+      "ask": "how does GET /orders/:id flow, at detail 1",
+      "fixture": "multi-repo",
+      "tool": "get_flow",
+      "args": {
+        "entry": "entry:gateway:http:GET:/orders/:param"
+      },
+      "lists": [
+        "root"
+      ],
+      "expect": {
+        "lists": {
+          "root": [
+            "entry:gateway:http:GET:/orders/:param",
+            "entry:orders:http:GET:/orders/:param",
+            "orders#src/orders/orders.service.ts:OrdersService.findOne",
+            "table:orders#orders"
+          ]
+        }
+      }
+    },
+    {
+      "id": "get_flow.route-detail-2",
+      "ask": "how does GET /orders/:id flow, at detail 2",
+      "fixture": "multi-repo",
+      "tool": "get_flow",
+      "args": {
+        "entry": "entry:gateway:http:GET:/orders/:param",
+        "detail": 2
+      },
+      "lists": [
+        "root"
+      ],
+      "expect": {
+        "lists": {
+          "root": [
+            "entry:gateway:http:GET:/orders/:param",
+            "entry:orders:http:GET:/orders/:param",
+            "orders#src/orders/orders.service.ts:OrdersService.findOne",
+            "table:orders#orders"
+          ]
+        }
+      }
+    },
+    {
+      "id": "find_symbol.several",
+      "ask": "where are getHistory, StaffBoardService.ackCall and ShopEventsService.connect",
+      "fixture": "impact-shared-client",
+      "tool": "find_symbol",
+      "args": {
+        "queries": [
+          "getHistory",
+          "StaffBoardService.ackCall",
+          "ShopEventsService.connect"
+        ]
+      },
+      "lists": [
+        "matches"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "matches": [
+            "market-web#src/app/items.client.ts:ItemsClient.getHistory",
+            "market-web#src/app/staff-board.service.ts:StaffBoardService.ackCall",
+            "market-web#src/app/shop-events.service.ts:ShopEventsService.connect"
+          ]
+        }
+      }
+    },
+    {
+      "id": "find_symbol.unreferenced",
+      "ask": "where are oneLegacy and byKey, and do they run",
+      "fixture": "angular-rendered-reach",
+      "tool": "find_symbol",
+      "args": {
+        "queries": [
+          "oneLegacy",
+          "byKey"
+        ]
+      },
+      "lists": [
+        "matches"
+      ],
+      "expect": {
+        "complete": true,
+        "rowsSay": {
+          "matches": {
+            "catalog-web#src/app/items-api.service.ts:ItemsApiService.oneLegacy": {
+              "reach": "unreached"
+            },
+            "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey": {
+              "reach": "maybe"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "list_entries.paged",
+      "ask": "every way in, three to a page",
+      "fixture": "multi-repo",
+      "tool": "list_entries",
+      "args": {
+        "maxNodes": 3
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:gateway:http:GET:/orders/:param",
+            "entry:billing:event:order.created"
+          ]
+        }
+      }
+    }
+  ],
+  "fixed": {
+    "instructions": 2488,
+    "guideBlock": 1205,
+    "skillDescription": 268,
+    "listingCore": 5491,
+    "listingDefault": 10288,
+    "listingAll": 12967
+  },
+  "recorded": {
+    "impact.multi-repo": {
+      "chars": 1588,
+      "tokens": 397,
+      "rows": 6,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.calling-side": {
+      "chars": 1075,
+      "tokens": 269,
+      "rows": 4,
+      "complete": false,
+      "calls": 1
+    },
+    "impact.shared-client-items": {
+      "chars": 959,
+      "tokens": 240,
+      "rows": 4,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.shared-client-desks": {
+      "chars": 749,
+      "tokens": 188,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.rendered-reach": {
+      "chars": 1023,
+      "tokens": 256,
+      "rows": 3,
+      "complete": false,
+      "calls": 1
+    },
+    "who_calls.multi-repo": {
+      "chars": 13531,
+      "tokens": 3383,
+      "rows": 38,
+      "complete": false,
+      "calls": 3
+    },
+    "who_calls.helpdesk": {
+      "chars": 838,
+      "tokens": 210,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.helpdesk-type": {
+      "chars": 680,
+      "tokens": 170,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.relayed-type": {
+      "chars": 842,
+      "tokens": 211,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.every-channel": {
+      "chars": 555,
+      "tokens": 139,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "search.type-name": {
+      "chars": 535,
+      "tokens": 134,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "search.type-name-screens": {
+      "chars": 656,
+      "tokens": 164,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "fields.handler-reads": {
+      "chars": 667,
+      "tokens": 167,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "fields.route-reads": {
+      "chars": 394,
+      "tokens": 99,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "fields.missing-unused": {
+      "chars": 781,
+      "tokens": 196,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "dead.components": {
+      "chars": 1798,
+      "tokens": 450,
+      "rows": 4,
+      "complete": null,
+      "calls": 1
+    },
+    "dead.handler-and-method": {
+      "chars": 806,
+      "tokens": 202,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "get_flow.route": {
+      "chars": 1816,
+      "tokens": 454,
+      "rows": 10,
+      "complete": true,
+      "calls": 1
+    },
+    "get_flow.route-detail-2": {
+      "chars": 2766,
+      "tokens": 692,
+      "rows": 10,
+      "complete": true,
+      "calls": 1
+    },
+    "find_symbol.several": {
+      "chars": 965,
+      "tokens": 242,
+      "rows": 4,
+      "complete": true,
+      "calls": 1
+    },
+    "find_symbol.unreferenced": {
+      "chars": 656,
+      "tokens": 164,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "list_entries.paged": {
+      "chars": 2499,
+      "tokens": 625,
+      "rows": 17,
+      "complete": true,
+      "calls": 6
+    }
+  }
+}

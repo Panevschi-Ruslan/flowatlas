@@ -15,8 +15,7 @@
       "service": "shop",
       "kind": "event",
       "reach": "alive",
-      "from": "event desk_alerts",
-      "ways": 3
+      "from": "event desk_alerts"
     },
     {
       "id": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",

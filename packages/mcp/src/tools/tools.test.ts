@@ -266,7 +266,8 @@ describe('the tools a session is offered', () => {
    * And P372 gave `impact` its `channel` input and said `throughChannels` in its
    * description: 12,555 read, 34,582 in all, 30,846 for the nineteen tools; the ceilings
    * moved to them, rounded up to the next 50 (the second with room for the
-   * next).
+   * next). Measured with both: 12,967 read, 35,291 in all, 31,555 for the
+   * nineteen tools; the ceilings just above.
    */
   /**
    * The instructions are re-sent on every turn (P366): 6,435 characters
@@ -282,8 +283,8 @@ describe('the tools a session is offered', () => {
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(99000);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(99000);
+    expect(read.length).toBeLessThan(13000);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(35350);
   });
 
   /**
@@ -321,7 +322,7 @@ describe('the tools a session is offered', () => {
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
       expect(read.length).toBeLessThan(99999);
-      expect(JSON.stringify({ tools }).length).toBeLessThan(99000);
+      expect(JSON.stringify({ tools }).length).toBeLessThan(31600);
     } finally {
       await plain.close();
     }

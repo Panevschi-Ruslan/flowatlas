@@ -8,6 +8,28 @@ only one of them moved.
 
 ### Added
 
+- **An answer budget in the gate (P373).** `scripts/answer-budget.mjs`, run by
+  `pnpm fixtures:check` (and alone as `pnpm answer:budget`), asks 22 agent
+  questions of seven fixtures through the graph server as an agent asks them,
+  compact: which ways in could break (`impact`, five targets), who calls,
+  which handlers take a type of message, a search on a type's name, the three
+  questions about fields, `dead` with several ids, `get_flow` at detail 1 and
+  2, `find_symbol` with several queries and a paged `list_entries`. Each
+  answer's characters (and tokens, estimated as characters / 4), the rows of
+  its main lists, whether it says `complete` and the calls it takes when an
+  agent follows the page or the deeper walk it names are recorded in
+  `scripts/answer-budget.json` beside the right answer, written by hand: the
+  ids a list must hold, the ids it must not, a list that must hold exactly
+  those, what a row must say (a verdict, a `reach`) and `complete`. The gate
+  fails when an answer grows more than 10% (or 300 characters, whichever is
+  larger) past its budget, lists an id it must not, misses one it must, says
+  `complete: false` where the right answer is complete, or takes more calls
+  than recorded; `--update` re-records the sizes, never the expectations, and
+  prints before and after. The fixed overhead of every turn is recorded and
+  held the same way: the instructions, the guide block and skill description
+  `flowatlas agents install` writes, and the listing a model reads for the
+  core tools, the tools a project is offered and all of them. A change that
+  grows an answer re-records with `--update` and says why in its commit.
 - **What P363-P367 left open (P370).** `flowatlas impact` answers as the
   graph server's `impact` does, by the same function (`impactOf`, one walk):
   the tree draws the chain back to each way in that could break, in any

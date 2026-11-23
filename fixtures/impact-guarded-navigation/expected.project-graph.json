@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T16:45:58.311Z",
+  "builtAt": "2026-11-23T17:26:15.697Z",
   "services": [
     {
       "name": "store-api",
@@ -651,7 +651,18 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "ticketId",
+            "line": 11
+          },
+          {
+            "field": "ticketId.length",
+            "in": "store-api#src/tickets.service.ts:TicketsService.acknowledge",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -682,7 +693,8 @@
             }
           ],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -744,7 +756,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -767,7 +780,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -790,7 +804,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -898,7 +913,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1046,7 +1062,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

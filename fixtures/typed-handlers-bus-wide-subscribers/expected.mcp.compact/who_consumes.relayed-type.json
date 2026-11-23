@@ -11,8 +11,7 @@
       "kind": "event",
       "via": "switch",
       "reach": "alive",
-      "from": "POST /events/relay",
-      "ways": 2
+      "from": "POST /events/relay"
     },
     {
       "id": "consumer:shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
