@@ -17,7 +17,8 @@
       "service": "kiosk-web",
       "kind": "screen",
       "reach": "outside",
-      "via": "ALL /api/* (market-api)"
+      "via": "ALL /api/* (market-api)",
+      "by": "kiosk-web#src/app/order-page.component.ts:OrderPageComponent"
     },
     {
       "id": "entry:market-web:screen:/reports",
@@ -27,7 +28,8 @@
       "service": "market-web",
       "kind": "screen",
       "reach": "outside",
-      "via": "ALL /api/* (market-api)"
+      "via": "ALL /api/* (market-api)",
+      "by": "market-web#src/app/reports-page.component.ts:ReportsPageComponent"
     }
   ],
   "total": 2,

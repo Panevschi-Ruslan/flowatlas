@@ -15,7 +15,8 @@
       "loc": "src/app/app.routes.ts:12",
       "service": "market-web",
       "kind": "screen",
-      "reach": "outside"
+      "reach": "outside",
+      "by": "market-web#src/app/history-page.component.ts:HistoryPageComponent"
     },
     {
       "id": "entry:market-web:screen:/staff",
@@ -24,7 +25,8 @@
       "loc": "src/app/app.routes.ts:16",
       "service": "market-web",
       "kind": "screen",
-      "reach": "outside"
+      "reach": "outside",
+      "by": "market-web#src/app/staff-board.component.ts:StaffBoardComponent"
     }
   ],
   "total": 2,

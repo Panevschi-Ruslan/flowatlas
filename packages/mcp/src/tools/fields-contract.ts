@@ -12,6 +12,7 @@ import {
   shapeFields,
   topField,
   unwrapped,
+  unreadIn,
   type Reading,
 } from '../query/fields.js';
 import { withNext } from '../query/next.js';
@@ -64,13 +65,14 @@ export const compareFields = (
   senders: readonly Sender[],
   receivers: readonly Receiver[],
   field: string | undefined,
+  named: (use: { id: string }) => string,
 ): { missing: Missing[]; unused: Unused[]; left: string[] } => {
   const left: string[] = [];
   const known = senders.filter((sender): sender is { id: string; sends: string[] } => sender.sends !== undefined);
   for (const sender of senders) if (sender.sends === undefined) left.push(`unsure: ${sender.id} sends a shape not read`);
   for (const receiver of receivers) {
     if (!receiver.reading.known) left.push(`unread: ${receiver.label} was not read for the fields it reads`);
-    for (const use of receiver.reading.unread) left.push(`unsure: ${receiver.label}: ${use.why}, line ${use.line}`);
+    for (const use of receiver.reading.unread) left.push(`unsure: ${named(use)}: ${use.why}, line ${use.line}`);
   }
   const missing: Missing[] = [];
   const seen = new Set<string>();
@@ -165,7 +167,7 @@ export const channelContract = (
   const senders: Sender[] = producers.map((node) => ({ id: node.id, sends: producerSends(db, node, parent.id, wanted) }));
   const receivers: Receiver[] = consumers.map((node) => ({ id: node.id, label: node.label, reading: consumerReading(db, node, wanted) }));
   const compared = wanted === undefined ? byType(db, parent.id, consumers, field) : undefined;
-  const { missing, unused, left: unsure } = compared ?? compareFields(senders, receivers, field);
+  const { missing, unused, left: unsure } = compared ?? compareFields(senders, receivers, field, (use) => unreadIn(db, use));
   const shownProducers = producers.slice(0, input.maxNodes);
   const shownConsumers = consumers.slice(0, input.maxNodes);
   if (shownProducers.length < producers.length) left.push(`page: ${producers.length - shownProducers.length} more producers; raise maxNodes`);
@@ -222,6 +224,7 @@ const byType = (
       facts.producers.map((node) => ({ id: node.id, sends: producerSends(db, node, channel, value) })),
       takers.map((node) => ({ id: node.id, label: node.label, reading: consumerReading(db, node, value) })),
       field,
+      (use) => unreadIn(db, use),
     );
     for (const row of compared.missing) {
       const key = `${row.field}|${row.id}|${row.line}`;
@@ -240,12 +243,13 @@ const byType = (
   return { missing, unused, left: [...left] };
 };
 
-/** One read of the body on a request's path: the field, where, and the layer it runs in. */
+/** One read of the body on a request's path: the field, where, the layer it runs in, and how sure. */
 interface BodyRead {
   field: string;
   id: string;
   line: number;
   layer: string;
+  sureness?: string;
 }
 
 /**
@@ -263,12 +267,13 @@ export const bodyReadsOf = (db: GraphDb, entry: string, field: string | undefine
       all.known = false;
       continue;
     }
-    for (const use of step.reading.unread) left.push(`unsure: ${step.layer} ${label}: ${use.why}, line ${use.line}`);
+    // The method the use is in, not only the class a guard's rows are written on (P374).
+    for (const use of step.reading.unread) left.push(`unsure: ${step.layer} ${unreadIn(db, use)}: ${use.why}, line ${use.line}`);
     all.reads.push(...step.reading.reads);
     all.unread.push(...step.reading.unread);
     for (const site of step.reading.reads) {
       if (field !== undefined && !readsField(site.field, field)) continue;
-      reads.push({ field: site.field, id: site.id, line: site.line, layer: step.layer });
+      reads.push({ field: site.field, id: site.id, line: site.line, layer: step.layer, ...(site.sureness === undefined ? {} : { sureness: site.sureness }) });
     }
   }
   return { reads, names: fieldNames(all), left, reading: all };
@@ -284,6 +289,6 @@ export const requestFields = (
   const sends = shapeFields(db, caller.params?.[0]);
   const path = bodyReadsOf(db, entry, undefined);
   if (sends === undefined) return path.reading.reads.length === 0 ? undefined : { missing: [], unused: [], left: [`unsure: the body ${caller.id} sends is a shape not read`] };
-  const compared = compareFields([{ id: caller.id, sends }], [{ id: entry, label: db.node(entry)?.label ?? entry, reading: path.reading }], field);
+  const compared = compareFields([{ id: caller.id, sends }], [{ id: entry, label: db.node(entry)?.label ?? entry, reading: path.reading }], field, (use) => unreadIn(db, use));
   return { ...compared, left: [...new Set([...compared.left, ...path.left])] };
 };

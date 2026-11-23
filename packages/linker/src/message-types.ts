@@ -11,6 +11,7 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import { messageTypeFacts, unselectedSaid, type MessageTypeLookup } from './analysis/message-types.js';
+import { EVERY_CHANNEL_VIA } from './every-channel-link.js';
 import { cmp, edgeKey } from './order.js';
 
 /**
@@ -136,9 +137,14 @@ export const joinMessageTypes = (nodes: Map<string, GraphNode>, edges: Map<strin
       const channel = channelOf(edge.from);
       if (channel === undefined || !typed(channel)) continue;
       const carried = publishedOn(channel.id);
+      // A subscriber to every channel of a bus (P369) did not choose this
+      // channel: a type it selects is on it only where a publish there sends
+      // that type, or sends a type not read (a guess, drawn `heuristic`), never
+      // on a channel whose publishes send no type at all (P374).
+      const everyChannel = edge.meta?.['via'] === EVERY_CHANNEL_VIA;
       for (const selection of selections) {
         if (!nodes.has(selection.consumer)) continue;
-        const read = carried.types.size === 0 || carried.types.has(selection.type);
+        const read = carried.types.has(selection.type) || (carried.types.size === 0 && !everyChannel);
         if (!read && !carried.unread) continue;
         const type = typeNode(channel, selection.type, consumer.meta?.[DISCRIMINATOR_META], consumer);
         add({

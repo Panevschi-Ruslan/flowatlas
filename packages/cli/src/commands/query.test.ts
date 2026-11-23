@@ -149,9 +149,11 @@ describe('asking what reaches a symbol', () => {
   it('lists the ways in without the chain between, when asked', () => {
     const io = capture();
     runImpact('OrdersService.create', { db: dbPath, service: 'gateway', format: 'tree', entriesOnly: true }, io);
-    // The ways in hang off the target; the code between is not drawn (P370).
+    // The ways in hang off the target; the code between is not drawn (P370), only named on each row as the code
+    // that handles it (P374).
     expect(io.stdout).toContain('POST /orders');
-    expect(io.stdout).not.toContain('OrdersController.create');
+    expect(io.stdout.split('Reachable from')[0]).not.toContain('OrdersController.create');
+    expect(io.stdout).toContain('by OrdersController.create');
   });
 
   it('stops rather than guessing which service was meant', () => {

@@ -2252,8 +2252,10 @@ hops that place code in what holds it (a screen that shows the component, or
 renders the child, whose method requests the route). The tree draws the chain
 back to each row, a node on several chains drawn once where the walk met it
 first. Under it: `Reachable from:` grouped by kind, then `Could break:`, each
-way in with its service, whether it runs (`reach`) and `via`, the crossing
-nearest the symbol it came through; `Maybe, behind a call the reading could not
+way in with its service, whether it runs (`reach`), `via`, the crossing
+nearest the symbol it came through, and `by`, the code that handles it with
+its file and line (a screen's component, a route's handler, the bot class a
+worker's webhook hands its update to; P374); `Maybe, behind a call the reading could not
 follow:`, each chain that stops before any way in where an unread call could
 reach it, with its `gap`; `Unreached:`, how many chains end at code whose name
 its repository writes nowhere else; `Only beyond a channel, calling none of

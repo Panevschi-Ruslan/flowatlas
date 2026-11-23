@@ -15,7 +15,8 @@
       "loc": "src/hooks.controller.ts:9",
       "service": "store-api",
       "kind": "http",
-      "reach": "outside"
+      "reach": "outside",
+      "by": "store-api#src/hooks.controller.ts:HooksController.chat"
     },
     {
       "id": "entry:store-api:http:POST:/api/tickets/:param/ack",
@@ -24,7 +25,8 @@
       "loc": "src/tickets.controller.ts:8",
       "service": "store-api",
       "kind": "http",
-      "reach": "alive"
+      "reach": "alive",
+      "by": "store-api#src/tickets.controller.ts:TicketsController.ack"
     },
     {
       "id": "entry:store-web:screen:/board",
@@ -34,7 +36,8 @@
       "service": "store-web",
       "kind": "screen",
       "reach": "outside",
-      "via": "POST /api/tickets/:param/ack (store-api)"
+      "via": "POST /api/tickets/:param/ack (store-api)",
+      "by": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent"
     }
   ],
   "total": 3,

@@ -529,7 +529,25 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
     return index < 0 ? undefined : index;
   };
 
-  /** The handler a branch runs: the first own call handed the message, else the first own call, else the branch itself. */
+  /**
+   * Whether a call runs code of another class than the one read (P374): a
+   * method another class declares, or a call an earlier pass resolved through
+   * injection or an interface.
+   */
+  const intoAnotherClass = (resolved: ChosenHandler): boolean =>
+    resolved.kind === 'node' || (resolved.kind === 'method' && classAround(resolved.method) !== owner);
+
+  /** Whether a call hands on the message itself (or its wrapped content), not a part of it. */
+  const handsWhole = (call: CallExpression): boolean => call.getArguments().some((argument) => isMessage(argument));
+
+  /**
+   * The handler a branch runs: the first own call handed the message, else the
+   * first own call, else the branch itself. A call into another class is a
+   * handler only when it is handed the message itself (P374): a branch that
+   * shows a toast with one of its fields (`this.toast.show(evt.text)`) is
+   * handled where it is written, never by the toast, which every other caller
+   * of it would then make look reached.
+   */
   const handlerIn = (statements: readonly TsNode[], within: TsNode): ChosenHandler => {
     const calls = statements
       .flatMap((statement) => [statement, ...statement.getDescendants()])
@@ -538,11 +556,12 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
     for (const call of calls) {
       const resolved = resolveCall(call, within);
       if (resolved === undefined) continue;
-      if (passesMessage(call)) {
+      const foreign = intoAnotherClass(resolved);
+      if (foreign ? handsWhole(call) : passesMessage(call)) {
         const argument = messageArgument(call);
         return argument === undefined || (resolved.kind !== 'method' && resolved.kind !== 'function') ? resolved : { ...resolved, argument };
       }
-      fallback ??= resolved;
+      if (!foreign) fallback ??= resolved;
     }
     return fallback ?? { kind: 'self' };
   };

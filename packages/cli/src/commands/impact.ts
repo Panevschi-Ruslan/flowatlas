@@ -31,12 +31,17 @@ interface AnswerRow {
   behind?: string;
 }
 
-/** One row of the footer: the way in, its service, whether it runs, and the crossing it came through. */
-const rowLine = (row: AnswerRow): string => {
+/** The code that handles a way in, as the footer says it (P374): its name and where it is written. */
+const bySaid = (by: GraphNode): string =>
+  `by ${by.label}${by.file === undefined ? '' : ` ${by.file}${by.line === undefined ? '' : `:${by.line}`}`}`;
+
+/** One row of the footer: the way in, its service, whether it runs, the crossing it came through, and the code that handles it. */
+const rowLine = (row: AnswerRow, by: GraphNode | undefined): string => {
   const name = `${row.label ?? row.id}${row.service === undefined || row.service === '' ? '' : ` (${row.service})`}`;
   const said = [
     row.reach,
     row.via === undefined ? undefined : `via ${row.via}`,
+    by === undefined ? undefined : bySaid(by),
     row.gap === undefined ? undefined : `gap ${row.gap}`,
     row.behind === undefined ? undefined : `behind ${row.behind}`,
   ].filter((part): part is string => part !== undefined);
@@ -45,7 +50,9 @@ const rowLine = (row: AnswerRow): string => {
 
 /** How many ways in a channel the walk did not cross leads to, the nearest few named, and the consumer taking its messages (P372). */
 const throughLine = (through: ThroughChannel): string => {
-  const named = through.ways.slice(0, 3).map((way) => `${way.node.label}${way.node.repo === '' ? '' : ` (${way.node.repo})`}`);
+  const named = through.ways
+    .slice(0, 3)
+    .map((way) => `${way.node.label}${way.node.repo === '' ? '' : ` (${way.node.repo})`}${way.by === undefined ? '' : ` ${bySaid(way.by)}`}`);
   const more = through.ways.length > named.length ? ', ...' : '';
   const count = `${through.cut ? 'at least ' : ''}${through.ways.length} way${through.ways.length === 1 ? '' : 's'} in`;
   return `  ${through.channel}${through.type === undefined ? '' : ` ${through.type}`}  ${count}, taken by ${through.consumer.label} (${through.consumer.repo}): ${named.join(', ')}${more}`;
@@ -69,13 +76,15 @@ const footerOf = (of: ImpactOf): string[] => {
   const maybeIds = new Set((of.maybes ?? []).map((way) => way.node.id));
   const ways = rows.filter((row) => !maybeIds.has(row.id));
   const maybes = rows.filter((row) => maybeIds.has(row.id));
+  const handlers = new Map((of.listed ?? []).flatMap((way) => (way.by === undefined ? [] : [[way.node.id, way.by] as const])));
+  const line = (row: AnswerRow): string => rowLine(row, handlers.get(row.id));
   return [
     reachableSummary(
       (of.ways ?? []).map((way) => way.node),
       of.servicesWithoutEntry ?? [],
     ),
-    ...(ways.length === 0 ? [] : [answer.acrossChannel === undefined ? 'Could break:' : `Beyond channel ${answer.acrossChannel}, calling none of it:`, ...ways.map(rowLine)]),
-    ...(maybes.length === 0 ? [] : ['Maybe, behind a call the reading could not follow:', ...maybes.map(rowLine)]),
+    ...(ways.length === 0 ? [] : [answer.acrossChannel === undefined ? 'Could break:' : `Beyond channel ${answer.acrossChannel}, calling none of it:`, ...ways.map(line)]),
+    ...(maybes.length === 0 ? [] : ['Maybe, behind a call the reading could not follow:', ...maybes.map(line)]),
     ...(unreached === 0
       ? []
       : [`Unreached: ${unreached} chain${unreached === 1 ? ' ends' : 's end'} at code whose name its repository writes nowhere else, so nothing could break through ${unreached === 1 ? 'it' : 'them'}`]),

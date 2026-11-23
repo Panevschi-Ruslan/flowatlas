@@ -200,7 +200,46 @@ export interface WayInFound {
   depth: number;
   /** The crossing nearest the start on its path. */
   via?: Crossing;
+  /** The code that handles it on the way to the start (P374), where impact has said it: `handledBy`. */
+  by?: GraphNode;
 }
+
+/** The nodes that hold code a way in hands work to: what `by` may name. */
+const HANDLING_TYPES: ReadonlySet<string> = new Set(['method', 'function', 'ui_component', 'guard', 'interceptor', 'pipe', 'middleware']);
+
+/** Where a chain leaves the code of the way in it starts at: another way in, a request, a publish, a channel. */
+const CROSSING_TYPES: ReadonlySet<string> = new Set(['entry', 'ui_api_call', 'http_out', 'producer', 'channel', 'consumer']);
+
+/** The most hops `handledBy` follows from a way in. */
+const MOST_HANDLING_HOPS = 64;
+
+/**
+ * The code that handles a way in (P374): the first code on the walk's chain
+ * from the way in towards the start that is not routing - for a screen, the
+ * component it shows; for a route, a bot command or a consumer, the method
+ * or function it hands work to; for a webhook whose handler, written where
+ * the route is declared, hands the update to a class (a worker's inline
+ * handler calling a bot's method), the method of that class. Routing is a
+ * function written in the same file as the way in, passed over while the
+ * chain holds other code before it leaves the way in's own code (a request
+ * out, a publish, another way in); where it holds none, that function
+ * handles it. Undefined where the chain holds no code at all.
+ */
+export const handledBy = (parents: ReadonlyMap<string, WalkedFrom>, node: (id: string) => GraphNode | undefined, way: GraphNode): GraphNode | undefined => {
+  let routing: GraphNode | undefined;
+  let hops = 0;
+  for (let at = parents.get(way.id)?.from; at !== undefined && hops < MOST_HANDLING_HOPS; at = parents.get(at)?.from, hops += 1) {
+    const step = node(at);
+    if (step === undefined || CROSSING_TYPES.has(step.type)) break;
+    if (!HANDLING_TYPES.has(step.type)) continue;
+    if (step.type === 'function' && step.repo === way.repo && step.file !== undefined && step.file === way.file) {
+      routing ??= step;
+      continue;
+    }
+    return step;
+  }
+  return routing;
+};
 
 /** A crossing as `via` says it on a row: with its service after it where that is not the row's. */
 export const viaSaid = (via: Crossing, row: Pick<GraphNode, 'repo'>): string =>
@@ -518,7 +557,9 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
       let steps = back;
       if (collapse && node.type === 'consumer') {
         steps = back.filter((step) => step.edge?.type !== 'consumes');
-        for (const step of back) {
+        // A consumer that never runs (P374) is no crossing: nothing beyond its channel reaches the code through it.
+        const runs = reachOf(node)?.reach !== 'dead';
+        for (const step of runs ? back : []) {
           const from = step.edge?.type === 'consumes' ? graph.node(step.id) : undefined;
           if (from !== undefined) crossings.push({ consumer: node, from, depth });
         }
@@ -541,12 +582,13 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
    * A row's walk, on the answer's budget: first the ways in whose code calls
    * it, never across a channel, then, where it meets none, those beyond the
    * channels its consumers take messages from (P372), so `ways` counts the
-   * callers and code only a message starts is still reached.
+   * callers and code only a message starts is still reached. With `channels`
+   * false, only the first.
    */
-  const rowWalk = (start: GraphNode): Walked => {
+  const rowWalk = (start: GraphNode, channels = true): Walked => {
     const walked = walk([start], Math.min(ROW_WALK, budget), false, false);
     budget -= walked.read;
-    if (walked.found.length > 0 || walked.cut || budget <= 0) return walked;
+    if (walked.found.length > 0 || walked.cut || budget <= 0 || !channels) return walked;
     const across = walk([start], Math.min(ROW_WALK, budget), false);
     budget -= across.read;
     return across;
@@ -625,7 +667,9 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
     if (node.type !== 'entry' && judgedReach !== undefined) {
       if (budget <= 0) unwalked += 1;
       else {
-        const walked = rowWalk(node);
+        // A consumer judged never to run (its subscription made by code nothing runs, P374) is not reached by what
+        // publishes to its channel: the message has no subscription to arrive at.
+        const walked = rowWalk(node, !(node.type === 'consumer' && judgedReach.reach === 'dead'));
         const nearest = nearestOf(walked.found, node);
         const ways = new Set(walked.found.map((way) => way.node.id)).size;
         const nowhere = nearest === undefined && !walked.cut;

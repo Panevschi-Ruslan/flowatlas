@@ -1,0 +1,17 @@
+{
+  "entry": "entry:shop-api:http:PATCH:/api/orders/:param/note",
+  "reads": [
+    {
+      "field": "note",
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.note",
+      "line": 30,
+      "layer": "handler"
+    }
+  ],
+  "note": "no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches",
+  "callers": 0,
+  "complete": false,
+  "left": [
+    "unsure: guard NoteGuard.noteOf: spread into another value, line 16"
+  ]
+}

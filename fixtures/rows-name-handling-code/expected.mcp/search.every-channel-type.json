@@ -1,0 +1,32 @@
+{
+  "query": "HELP_REQUESTED",
+  "counts": {
+    "messages": 1
+  },
+  "results": {
+    "messages": [
+      {
+        "id": "channel:desk_alerts#HELP_REQUESTED",
+        "type": "message_type",
+        "label": "HELP_REQUESTED",
+        "channel": "desk_alerts",
+        "service": "shop-api",
+        "producers": [
+          "producer:shop-api#src/desk/desk.service.ts:10:5"
+        ],
+        "handlers": [
+          "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.pageStaff",
+          "consumer:shop-web#src/app/desk-board.component.ts:DeskBoardComponent.reload"
+        ],
+        "sites": 4,
+        "reach": "alive",
+        "from": "POST /api/desks/:param/help"
+      }
+    ]
+  },
+  "complete": true,
+  "next": [
+    "who_consumes({channel: \"channel:desk_alerts\", type: \"HELP_REQUESTED\"})",
+    "who_emits({channel: \"channel:desk_alerts\", type: \"HELP_REQUESTED\"})"
+  ]
+}

@@ -129,4 +129,41 @@ describe('readFields', () => {
       '9 indexed by key',
     ]);
   });
+
+  it('reads a key the code holds as a default, and a local assigned the body in one branch of several (P374)', () => {
+    const guard = read(
+      [
+        'type Req = { params: Record<string, unknown>; query: Record<string, unknown>; body?: Record<string, unknown> };',
+        "type Opts = { actsAs?: { in: 'param' | 'query' | 'body'; name: string } };",
+        'class Guard {',
+        '  supplied(req: Req, options: Opts) {',
+        "    const source = options.actsAs ?? { in: 'body', name: 'userRef' };",
+        '    let bag: Record<string, unknown> | undefined;',
+        "    if (source.in === 'param') bag = req.params;",
+        "    else if (source.in === 'query') bag = req.query;",
+        '    else bag = req.body;',
+        '    return bag?.[source.name];',
+        '  }',
+        '}',
+      ].join('\n'),
+      'Guard.supplied',
+      { kind: 'request' },
+    );
+    expect(guard.reads).toEqual([{ field: 'userRef', line: 10, sureness: 'default' }]);
+    expect(guard.unread).toEqual([]);
+
+    const keys = read(
+      [
+        'type Evt = Record<string, string>;',
+        "const KEY = 'label';",
+        "const NAMES = { id: 'orderId' };",
+        "function h(evt: Evt, field = 'note') {",
+        '  return evt[KEY] + evt[NAMES.id] + evt[field];',
+        '}',
+      ].join('\n'),
+      'h',
+    );
+    expect(keys.reads.map((row) => `${row.field}${row.sureness === undefined ? '' : ` (${row.sureness})`}`)).toEqual(['label', 'note (default)', 'orderId']);
+    expect(keys.unread).toEqual([]);
+  });
 });

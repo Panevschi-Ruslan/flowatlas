@@ -119,6 +119,37 @@ export class Closer {
   archive(id: string | undefined): void { void id; }
   log(line: string): void { void line; }
 }
+
+export class Toast {
+  show(text: string): void { void text; }
+}
+
+export class Forwarder {
+  take(evt: Evt): void { void evt; }
+}
+
+export class Notices {
+  constructor(private readonly bus: Bus, private readonly toast: Toast, private readonly closer: Closer, private readonly forward: Forwarder) {}
+
+  start(): void {
+    this.bus.all().subscribe(({ data }) => {
+      this.handle(data);
+    });
+  }
+
+  private handle(raw: unknown): void {
+    const evt = raw as Evt;
+    if (evt.type === 'HELP') {
+      this.toast.show('help at ' + evt.id);
+      return;
+    }
+    if (evt.type === 'CLOSED') {
+      this.closer.archive(evt.id);
+      return;
+    }
+    if (evt.type === 'MOVED') this.forward.take(evt);
+  }
+}
 `;
 
 const REPO = 'app';
@@ -238,6 +269,14 @@ describe('a subscription whose handler is written in place (P369)', () => {
     subscribedAt(builder, id, project, '/app/watchers.ts', (text) => text.startsWith('this.bus.all().subscribe(({ scope, data }) => this.count'));
     readMessageTypes(host);
     expect(said(builder, id)).toEqual(['PLACED:if:Counter.count']);
+  });
+
+  it('never draws a branch onto a call into another class handed only a field of the message, only one handed the message itself (P374)', () => {
+    const { project, builder, host, consumerAt } = setup();
+    const id = consumerAt('app#watchers.ts:Notices.start');
+    subscribedAt(builder, id, project, '/app/watchers.ts', (text) => text.startsWith('this.bus.all().subscribe(({ data }) =>'));
+    readMessageTypes(host);
+    expect(said(builder, id)).toEqual(['CLOSED:if:Notices.handle', 'HELP:if:Notices.handle', 'MOVED:if:Forwarder.take']);
   });
 
   it('reads a function written in place that does more than delegate, where it is written', () => {

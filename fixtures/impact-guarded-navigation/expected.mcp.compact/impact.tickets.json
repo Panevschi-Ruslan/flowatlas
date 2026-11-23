@@ -7,19 +7,22 @@
   "entries": [
     {
       "id": "entry:store-api:http:POST:/api/hooks/chat",
-      "loc": "src/hooks.controller.ts:9",
-      "reach": "outside"
+      "line": 9,
+      "reach": "outside",
+      "by": "store-api#src/hooks.controller.ts:HooksController.chat"
     },
     {
       "id": "entry:store-api:http:POST:/api/tickets/:param/ack",
-      "loc": "src/tickets.controller.ts:8",
-      "reach": "alive"
+      "line": 8,
+      "reach": "alive",
+      "by": "store-api#src/tickets.controller.ts:TicketsController.ack"
     },
     {
       "id": "entry:store-web:screen:/board",
       "loc": "src/app/app.routes.ts:23",
       "reach": "outside",
-      "via": "POST /api/tickets/:param/ack (store-api)"
+      "via": "POST /api/tickets/:param/ack (store-api)",
+      "by": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent"
     }
   ],
   "total": 3,

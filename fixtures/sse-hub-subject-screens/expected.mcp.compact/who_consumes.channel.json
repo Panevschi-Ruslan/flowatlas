@@ -58,8 +58,7 @@
       "line": 18,
       "kind": "sse",
       "reach": "dead",
-      "from": "POST /boards/:param/cards (boards-api)",
-      "ways": 8
+      "from": "none"
     },
     {
       "id": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
@@ -74,8 +73,7 @@
       "line": 8,
       "kind": "sse",
       "reach": "dead",
-      "from": "POST /boards/:param/cards (boards-api)",
-      "ways": 8
+      "from": "none"
     },
     {
       "id": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",

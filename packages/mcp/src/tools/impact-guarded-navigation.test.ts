@@ -83,10 +83,11 @@ describe('what lies only beyond a channel is counted apart, and listed on asking
         channel: 'shop:*:orders',
         consumer: 'consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent',
         ways: 4,
+        // Each with the code that handles it (P374).
         sample: [
-          'entry:store-api:http:DELETE:/api/orders/:param',
-          'entry:store-api:http:PATCH:/api/orders/:param/status',
-          'entry:store-api:http:POST:/api/orders',
+          { id: 'entry:store-api:http:DELETE:/api/orders/:param', by: 'store-api#src/orders.controller.ts:OrdersController.remove' },
+          { id: 'entry:store-api:http:PATCH:/api/orders/:param/status', by: 'store-api#src/orders.controller.ts:OrdersController.setStatus' },
+          { id: 'entry:store-api:http:POST:/api/orders', by: 'store-api#src/orders.controller.ts:OrdersController.create' },
         ],
       },
     ]);

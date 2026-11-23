@@ -24,7 +24,7 @@
                         @  PATCH /api/orders/:param/status    store-api/src/orders.controller.ts:14
 Reachable from: 3 http entries (store-api), 1 screen (store-web)
 Beyond channel shop:*:orders, calling none of it:
-  DELETE /api/orders/:param (store-api)  alive, via channel shop:*:orders
-  PATCH /api/orders/:param/status (store-api)  dead, via channel shop:*:orders
-  POST /api/orders (store-api)  alive, via channel shop:*:orders
-  /orders (store-web)  outside, via channel shop:*:orders
+  DELETE /api/orders/:param (store-api)  alive, via channel shop:*:orders, by OrdersController.remove src/orders.controller.ts:19
+  PATCH /api/orders/:param/status (store-api)  dead, via channel shop:*:orders, by OrdersController.setStatus src/orders.controller.ts:14
+  POST /api/orders (store-api)  alive, via channel shop:*:orders, by OrdersController.create src/orders.controller.ts:9
+  /orders (store-web)  outside, via channel shop:*:orders, by OrdersAdminComponent src/app/orders-admin.component.ts:6

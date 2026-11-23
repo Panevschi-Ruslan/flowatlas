@@ -312,6 +312,32 @@ const GUARDED_COMPACT_CASES = [
   ['impact.items-across-channel', 'impact', { symbol: GUARDED_ITEMS, channel: 'shop:*:orders', verbose: false }],
 ];
 
+/**
+ * What a pilot on a real project got wrong after P368-P373 (P374): impact's
+ * rows name the code that handles each way in (`by`: a route's handler, the
+ * bot class a worker's webhook hands its update to, a screen's component); a
+ * guard reads a body field through a key it holds as a default; a branch
+ * toasting a field is handled where it is written, and a consumer whose
+ * subscription is made in a class nothing builds never runs; a subscriber to
+ * every channel draws its type only where a publish sends it.
+ */
+const HANDLING_CANCEL = 'shop-api#src/orders/orders.service.ts:OrdersService.cancel';
+const HANDLING_CASES = [
+  ['impact.cancel', 'impact', { symbol: HANDLING_CANCEL }],
+  ['check_contract.default-key', 'check_contract', { edge: 'PATCH /api/orders/:id/cancel', field: 'userRef' }],
+  ['check_contract.unread-in-method', 'check_contract', { edge: 'PATCH /api/orders/:id/note' }],
+  ['who_consumes.never-subscribed', 'who_consumes', { channel: 'desk_alerts', type: 'HELP_REQUESTED' }],
+  ['who_consumes.channel', 'who_consumes', { channel: 'desk_alerts' }],
+  ['search.every-channel-type', 'search', { query: 'HELP_REQUESTED' }],
+];
+/** The impact, the guard's read and the consumers, compact: what an agent is handed. */
+const HANDLING_COMPACT_CASES = [
+  ['impact.cancel', 'impact', { symbol: HANDLING_CANCEL, verbose: false }],
+  ['check_contract.default-key', 'check_contract', { edge: 'PATCH /api/orders/:id/cancel', field: 'userRef', verbose: false }],
+  ['who_consumes.never-subscribed', 'who_consumes', { channel: 'desk_alerts', type: 'HELP_REQUESTED', verbose: false }],
+  ['search.every-channel-type', 'search', { query: 'HELP_REQUESTED', verbose: false }],
+];
+
 /** The same impact and a flow through the rendered child, compact (P370). */
 const RENDERED_REACH_COMPACT_CASES = [
   ['impact.rendered-child', 'impact', { symbol: RENDERED_REACH_TARGET, verbose: false }],
@@ -782,6 +808,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'impact-guarded-navigation'),
     outDir: join(root, 'fixtures', 'impact-guarded-navigation', 'expected.mcp.compact'),
     cases: GUARDED_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'rows-name-handling-code'),
+    outDir: join(root, 'fixtures', 'rows-name-handling-code', 'expected.mcp'),
+    cases: HANDLING_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'rows-name-handling-code'),
+    outDir: join(root, 'fixtures', 'rows-name-handling-code', 'expected.mcp.compact'),
+    cases: HANDLING_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

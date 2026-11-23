@@ -1,0 +1,74 @@
+{
+  "channel": {
+    "id": "channel:desk_alerts",
+    "type": "channel",
+    "label": "desk_alerts",
+    "loc": "src/desk/desk.service.ts:10",
+    "service": "shop-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit",
+      "type": "consumer",
+      "label": "AlertRelay.onModuleInit",
+      "loc": "src/notify/alert-relay.service.ts:21",
+      "service": "shop-api",
+      "kind": "event",
+      "reach": "alive",
+      "from": "PATCH /api/orders/:param/cancel",
+      "ways": 4
+    },
+    {
+      "id": "consumer:shop-api#src/stream/stream.controller.ts:StreamController.stream",
+      "type": "consumer",
+      "label": "StreamController.stream",
+      "loc": "src/stream/stream.controller.ts:15",
+      "service": "shop-api",
+      "kind": "event",
+      "reach": "alive",
+      "from": "event desk_alerts",
+      "ways": 2
+    },
+    {
+      "id": "consumer:shop-web#src/app/desk-board.component.ts:DeskBoardComponent.ngOnInit",
+      "type": "consumer",
+      "label": "DeskBoardComponent.ngOnInit",
+      "loc": "src/app/desk-board.component.ts:23",
+      "service": "shop-web",
+      "kind": "sse",
+      "reach": "alive",
+      "from": "screen /desks"
+    },
+    {
+      "id": "consumer:shop-web#src/app/live-events.service.ts:LiveEvents.connect",
+      "type": "consumer",
+      "label": "LiveEvents.connect",
+      "loc": "src/app/live-events.service.ts:24",
+      "service": "shop-web",
+      "kind": "sse",
+      "reach": "alive",
+      "from": "screen /desks"
+    },
+    {
+      "id": "consumer:shop-web#src/app/order-notices.service.ts:OrderNotices.initialize",
+      "type": "consumer",
+      "label": "OrderNotices.initialize",
+      "loc": "src/app/order-notices.service.ts:20",
+      "service": "shop-web",
+      "kind": "sse",
+      "reach": "dead",
+      "from": "none"
+    }
+  ],
+  "total": 5,
+  "types": [
+    "HELP_REQUESTED"
+  ],
+  "complete": true,
+  "next": [
+    "who_consumes({channel: \"channel:desk_alerts\", type: \"HELP_REQUESTED\"})",
+    "who_emits({channel: \"channel:desk_alerts\"})",
+    "impact({symbol: \"consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit\"})",
+    "get_source({symbol: \"consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit\"})"
+  ]
+}

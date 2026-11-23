@@ -79,9 +79,9 @@ describe('impact without --depth', () => {
     );
     // The tool's answer (P370): rows by id. The route publishes the event a rule hands to the workflow, so it lies
     // beyond that channel, counted apart (P372); the workflow it starts is a row.
-    const answer = JSON.parse(out) as { entries: Array<{ id: string }>; throughChannels: Array<{ sample: string[] }> };
+    const answer = JSON.parse(out) as { entries: Array<{ id: string }>; throughChannels: Array<{ sample: Array<{ id: string }> }> };
     expect(answer.entries.map((row) => row.id)).toContain('entry:circulation:workflow:circulation-checkout');
-    expect(answer.throughChannels.flatMap((row) => row.sample)).toContain('entry:members:http:POST:/checkouts');
+    expect(answer.throughChannels.flatMap((row) => row.sample.map((way) => way.id))).toContain('entry:members:http:POST:/checkouts');
   });
 });
 

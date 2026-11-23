@@ -17,7 +17,8 @@
       "service": "backoffice-web",
       "kind": "screen",
       "reach": "outside",
-      "via": "PATCH /orders/status (shop-api)"
+      "via": "PATCH /orders/status (shop-api)",
+      "by": "backoffice-web#src/status-board.component.ts:StatusBoardComponent"
     },
     {
       "id": "ops-bot#src/ops-bot.ts:OpsBot.handleStatus",

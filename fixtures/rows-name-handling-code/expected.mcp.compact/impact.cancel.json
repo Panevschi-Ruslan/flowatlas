@@ -1,0 +1,45 @@
+{
+  "target": {
+    "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+    "line": 15,
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+      "line": 20,
+      "reach": "alive",
+      "by": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+    },
+    {
+      "id": "entry:shop-api:http:POST:/bot/staff/webhook",
+      "loc": "src/worker.ts:16",
+      "reach": "outside",
+      "by": "shop-api#src/bot/staff-bot.service.ts:StaffBot.handleCallbackQuery"
+    },
+    {
+      "id": "entry:shop-web:screen:/orders/:param",
+      "loc": "src/app/app.routes.ts:7",
+      "reach": "outside",
+      "via": "PATCH /api/orders/:param/cancel (shop-api)",
+      "by": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent"
+    }
+  ],
+  "total": 3,
+  "reached": 11,
+  "entriesByService": {
+    "shop-api": 2,
+    "shop-web": 1
+  },
+  "reachedByService": {
+    "shop-api": 5,
+    "shop-web": 6
+  },
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:shop-api:http:PATCH:/api/orders/:param/cancel\"})",
+    "describe_for_prompt({id: \"entry:shop-api:http:PATCH:/api/orders/:param/cancel\"})"
+  ]
+}

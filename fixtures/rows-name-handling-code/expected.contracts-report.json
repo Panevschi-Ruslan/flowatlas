@@ -1,0 +1,236 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-23T19:20:11.933Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders.client.ts:13:12",
+        "to": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders.client.ts:13:12|hits|entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-web",
+        "typeId": "{userRef:string}",
+        "symbol": "shop-web#src/app/orders.client.ts:OrdersClient.cancel",
+        "writes": [
+          "userRef"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#CancelOrderBody",
+        "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+      },
+      "findings": [
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "ui_api_call:shop-web#src/app/orders.client.ts:13:12",
+            "to": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:shop-web#src/app/orders.client.ts:13:12|hits|entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+          "direction": "request",
+          "sender": {
+            "service": "shop-web",
+            "typeId": "{userRef:string}",
+            "symbol": "shop-web#src/app/orders.client.ts:OrdersClient.cancel",
+            "writes": [
+              "userRef"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "shop-api",
+            "typeId": "type:shop-api#CancelOrderBody",
+            "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+          },
+          "typeId": "type:shop-api#CancelOrderBody",
+          "field": "userRef",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`userRef` is optional for receiver shop-api and always sent by sender shop-web",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders.client.ts:13:12",
+        "to": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders.client.ts:13:12|hits|entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+      "direction": "request",
+      "sender": {
+        "service": "shop-web",
+        "typeId": "{userRef:string}",
+        "symbol": "shop-web#src/app/orders.client.ts:OrdersClient.cancel",
+        "writes": [
+          "userRef"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#CancelOrderBody",
+        "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+      },
+      "typeId": "type:shop-api#CancelOrderBody",
+      "field": "userRef",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`userRef` is optional for receiver shop-api and always sent by sender shop-web",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:shop-api#src/desk/desk.service.ts:10:5",
+        "to": "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/desk/desk.service.ts:10:5|emits|consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/desk/desk.service.ts:10:5",
+        "to": "consumer:shop-api#src/stream/stream.controller.ts:StreamController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/desk/desk.service.ts:10:5|emits|consumer:shop-api#src/stream/stream.controller.ts:StreamController.stream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "shop-api#src/stream/stream.controller.ts:StreamController.stream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/desk/desk.service.ts:10:5",
+        "to": "consumer:shop-web#src/app/desk-board.component.ts:DeskBoardComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/desk/desk.service.ts:10:5|emits|consumer:shop-web#src/app/desk-board.component.ts:DeskBoardComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop-web#src/app/desk-board.component.ts:DeskBoardComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/desk/desk.service.ts:10:5",
+        "to": "consumer:shop-web#src/app/live-events.service.ts:LiveEvents.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/desk/desk.service.ts:10:5|emits|consumer:shop-web#src/app/live-events.service.ts:LiveEvents.connect",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop-web#src/app/live-events.service.ts:LiveEvents.connect declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/desk/desk.service.ts:10:5",
+        "to": "consumer:shop-web#src/app/order-notices.service.ts:OrderNotices.initialize",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/desk/desk.service.ts:10:5|emits|consumer:shop-web#src/app/order-notices.service.ts:OrderNotices.initialize",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop-web#src/app/order-notices.service.ts:OrderNotices.initialize declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:16:5",
+        "to": "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:16:5|emits|consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:20:5",
+        "to": "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:20:5|emits|consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/live-events.service.ts:23:20",
+        "to": "entry:shop-api:http:GET:/api/events/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/live-events.service.ts:23:20|hits|entry:shop-api:http:GET:/api/events/stream",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-web#src/app/live-events.service.ts:LiveEvents.connect declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/live-events.service.ts:23:20",
+        "to": "entry:shop-api:http:GET:/api/events/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/live-events.service.ts:23:20|hits|entry:shop-api:http:GET:/api/events/stream",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop-web#src/app/live-events.service.ts:LiveEvents.connect declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders.client.ts:13:12",
+        "to": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders.client.ts:13:12|hits|entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    }
+  ],
+  "summary": {
+    "edges": 1,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 1,
+    "unchecked": 10,
+    "errors": 0,
+    "warnings": 1,
+    "infos": 0,
+    "ignored": 0
+  }
+}

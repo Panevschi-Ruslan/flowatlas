@@ -4,8 +4,8 @@
   @  workflow members-borrower-notices             members/statemachine/borrower-notices.json:1
 Reachable from: 1 invoke (members), 2 workflows (circulation, members)
 Could break:
-  workflow circulation-checkout (circulation)  alive
-  members-send-notice (members)  outside
-  workflow members-borrower-notices (members)  alive
+  workflow circulation-checkout (circulation)  alive, by CheckStanding [Task lambda:invoke] statemachine/checkout.asl.json:5
+  members-send-notice (members)  outside, by handler src/handlers/send-notice.ts:8
+  workflow members-borrower-notices (members)  alive, by SendNotice [Task lambda:invoke] statemachine/borrower-notices.json:5
 Only beyond a channel, calling none of it (--channel <name> lists them):
   eventbridge/library/library.members/CheckoutRequested  1 way in, taken by rule circulation-checkout-requested (circulation): POST /checkouts (members)

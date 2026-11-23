@@ -18,7 +18,8 @@
       "service": "billing",
       "kind": "event",
       "reach": "dead",
-      "via": "GET /orders/:param (orders)"
+      "via": "GET /orders/:param (orders)",
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested"
     },
     {
       "id": "entry:billing:event:order.created",
@@ -28,7 +29,8 @@
       "service": "billing",
       "kind": "event",
       "reach": "alive",
-      "via": "GET /orders/:param (orders)"
+      "via": "GET /orders/:param (orders)",
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
     },
     {
       "id": "entry:billing:http:POST:/invoices",
@@ -38,7 +40,8 @@
       "service": "billing",
       "kind": "http",
       "reach": "alive",
-      "via": "GET /orders/:param (orders)"
+      "via": "GET /orders/:param (orders)",
+      "by": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
     },
     {
       "id": "entry:gateway:http:GET:/orders/:param",
@@ -48,7 +51,8 @@
       "service": "gateway",
       "kind": "http",
       "reach": "alive",
-      "via": "GET /orders/:param (orders)"
+      "via": "GET /orders/:param (orders)",
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.findOne"
     },
     {
       "id": "entry:gateway:http:POST:/orders/:param/invoice",
@@ -58,7 +62,8 @@
       "service": "gateway",
       "kind": "http",
       "reach": "alive",
-      "via": "GET /orders/:param (orders)"
+      "via": "GET /orders/:param (orders)",
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.invoice"
     },
     {
       "id": "entry:orders:http:GET:/orders/:param",
@@ -67,7 +72,8 @@
       "loc": "src/orders/orders.controller.ts:25",
       "service": "orders",
       "kind": "http",
-      "reach": "alive"
+      "reach": "alive",
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
     },
     {
       "id": "entry:orders:http:GET:/orders/latest",
@@ -77,7 +83,8 @@
       "service": "orders",
       "kind": "http",
       "reach": "maybe",
-      "behind": "no http_calls/hits from any repo (may be a public API); a request whose address was read in part could reach it"
+      "behind": "no http_calls/hits from any repo (may be a public API); a request whose address was read in part could reach it",
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.latest"
     },
     {
       "id": "entry:orders:http:POST:/orders",
@@ -86,7 +93,8 @@
       "loc": "src/orders/orders.controller.ts:31",
       "service": "orders",
       "kind": "http",
-      "reach": "dead"
+      "reach": "dead",
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.create"
     },
     {
       "id": "entry:orders:http:POST:/orders/:param/archive",
@@ -96,11 +104,12 @@
       "service": "orders",
       "kind": "http",
       "reach": "maybe",
-      "behind": "no http_calls/hits from any repo (may be a public API); a request that found no route is one segment off it"
+      "behind": "no http_calls/hits from any repo (may be a public API); a request that found no route is one segment off it",
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.archive"
     }
   ],
   "total": 9,
-  "reached": 42,
+  "reached": 41,
   "entriesByService": {
     "orders": 4,
     "billing": 3,
@@ -109,7 +118,7 @@
   "unreached": 5,
   "reachedByService": {
     "orders": 10,
-    "billing": 11,
+    "billing": 10,
     "gateway": 8,
     "web": 13
   },
@@ -117,7 +126,6 @@
     "web"
   ],
   "channels": [
-    "channel:invoice.requested",
     "channel:order.created"
   ],
   "complete": true,

@@ -15,7 +15,8 @@
       "loc": "src/app/app.routes.ts:19",
       "service": "store-web",
       "kind": "screen",
-      "reach": "outside"
+      "reach": "outside",
+      "by": "store-web#src/app/analytics.component.ts:AnalyticsComponent"
     },
     {
       "id": "entry:store-web:screen:/analytics/matrix",
@@ -24,7 +25,8 @@
       "loc": "src/app/app.routes.ts:20",
       "service": "store-web",
       "kind": "screen",
-      "reach": "outside"
+      "reach": "outside",
+      "by": "store-web#src/app/matrix.component.ts:MatrixComponent"
     },
     {
       "id": "entry:store-web:screen:/orders",
@@ -33,7 +35,8 @@
       "loc": "src/app/app.routes.ts:22",
       "service": "store-web",
       "kind": "screen",
-      "reach": "outside"
+      "reach": "outside",
+      "by": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent"
     }
   ],
   "total": 3,

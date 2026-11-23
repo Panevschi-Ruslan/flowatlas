@@ -17,7 +17,8 @@
       "service": "store-api",
       "kind": "http",
       "reach": "alive",
-      "via": "channel shop:*:orders"
+      "via": "channel shop:*:orders",
+      "by": "store-api#src/orders.controller.ts:OrdersController.remove"
     },
     {
       "id": "entry:store-api:http:PATCH:/api/orders/:param/status",
@@ -27,7 +28,8 @@
       "service": "store-api",
       "kind": "http",
       "reach": "dead",
-      "via": "channel shop:*:orders"
+      "via": "channel shop:*:orders",
+      "by": "store-api#src/orders.controller.ts:OrdersController.setStatus"
     },
     {
       "id": "entry:store-api:http:POST:/api/orders",
@@ -37,7 +39,8 @@
       "service": "store-api",
       "kind": "http",
       "reach": "alive",
-      "via": "channel shop:*:orders"
+      "via": "channel shop:*:orders",
+      "by": "store-api#src/orders.controller.ts:OrdersController.create"
     },
     {
       "id": "entry:store-web:screen:/orders",
@@ -47,7 +50,8 @@
       "service": "store-web",
       "kind": "screen",
       "reach": "outside",
-      "via": "channel shop:*:orders"
+      "via": "channel shop:*:orders",
+      "by": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent"
     }
   ],
   "total": 4,

@@ -18,6 +18,15 @@ import { functionLikeOf, type FunctionLike } from './types/signatures.js';
  * under a `switch`, an `if` or an early return on the message's discriminator
  * is written under the type it chooses (`when`).
  *
+ * A key the code holds in a local or an option is read where the reading
+ * settles it to a string (P374): a `const`, a default parameter, or a member
+ * of an object literal written as the default behind `??` or `||`
+ * (`const source = options.at ?? { name: 'userRef' }; bag[source.name]`). One
+ * settled from a default is marked `sureness: 'default'`, since the options
+ * may name another. A local assigned the value in one branch and something
+ * else in another (`bag = req.params` / `bag = req.body`) holds the value for
+ * every read of it.
+ *
  * A use it cannot follow is said, never dropped: the whole value spread, put
  * inside another, handed to a function outside the repository, indexed by a
  * variable, or its keys walked. A value that is only compared, tested or
@@ -40,7 +49,12 @@ export interface FieldRead {
   line: number;
   /** The message types the read is made under, where a choice on the discriminator encloses it. */
   when?: string[];
+  /** `default`: read through a key settled from a default the code holds, which options may replace (P374). */
+  sureness?: FieldSureness;
 }
+
+/** How a read was settled where it is not plainly written: through a key held as a default (P374). */
+export type FieldSureness = 'default';
 
 /** A use of the value the reading could not follow, and why. */
 export interface FieldUnread {
@@ -68,7 +82,7 @@ export interface FieldsRead {
  * request through `switchToHttp()` and `getRequest()`.
  */
 export type ValueState =
-  | { kind: 'payload'; prefix: readonly string[] }
+  | { kind: 'payload'; prefix: readonly string[]; sureness?: FieldSureness }
   | { kind: 'request' }
   | { kind: 'context' };
 
@@ -159,7 +173,7 @@ const inOf = (walk: Walk, node: TsNode): string | undefined => {
   return undefined;
 };
 
-const addRead = (walk: Walk, path: readonly string[], node: TsNode, when: readonly string[] | undefined): void => {
+const addRead = (walk: Walk, path: readonly string[], node: TsNode, when: readonly string[] | undefined, sureness?: FieldSureness): void => {
   if (path.length === 0) return;
   const field = path.slice(0, 3).join('.');
   const at = inOf(walk, node);
@@ -170,7 +184,86 @@ const addRead = (walk: Walk, path: readonly string[], node: TsNode, when: readon
     walk.cut = `more than ${walk.options.maxReads ?? MAX_READS} reads`;
     return;
   }
-  walk.reads.set(key, { field, ...(at === undefined ? {} : { in: at }), line, ...(when === undefined || when.length === 0 ? {} : { when: [...when] }) });
+  walk.reads.set(key, {
+    field,
+    ...(at === undefined ? {} : { in: at }),
+    line,
+    ...(when === undefined || when.length === 0 ? {} : { when: [...when] }),
+    ...(sureness === undefined ? {} : { sureness }),
+  });
+};
+
+/** A string a key settles to, and how: plainly written, or a default the options may replace. */
+interface SettledKey {
+  key: string;
+  sureness?: FieldSureness;
+}
+
+/** How deep `settledKey` follows names to the value they hold. */
+const MOST_KEY_HOPS = 4;
+
+/** The object literal a value is written as, or the one written as its default behind `??` or `||`. */
+const objectOf = (node: TsNode | undefined, hops: number): { object: TsNode; sureness?: FieldSureness } | undefined => {
+  if (node === undefined || hops > MOST_KEY_HOPS) return undefined;
+  let at = node;
+  while (Node.isParenthesizedExpression(at) || Node.isAsExpression(at) || Node.isSatisfiesExpression(at) || Node.isNonNullExpression(at)) at = at.getExpression();
+  if (Node.isObjectLiteralExpression(at)) return { object: at };
+  if (Node.isBinaryExpression(at)) {
+    const operator = at.getOperatorToken().getKind();
+    if (operator !== SyntaxKind.QuestionQuestionToken && operator !== SyntaxKind.BarBarToken) return undefined;
+    const fallback = objectOf(at.getRight(), hops + 1);
+    return fallback === undefined ? undefined : { object: fallback.object, sureness: 'default' };
+  }
+  if (Node.isIdentifier(at)) {
+    const declaration = at.getSymbol()?.getDeclarations()[0];
+    if (declaration === undefined) return undefined;
+    if (Node.isVariableDeclaration(declaration) && declaration.getVariableStatement()?.getDeclarationKind() === 'const') {
+      return objectOf(declaration.getInitializer(), hops + 1);
+    }
+    if (Node.isParameterDeclaration(declaration)) {
+      const fallback = objectOf(declaration.getInitializer(), hops + 1);
+      return fallback === undefined ? undefined : { object: fallback.object, sureness: 'default' };
+    }
+  }
+  return undefined;
+};
+
+/**
+ * The string a key is, where the reading can settle it (P374): written out,
+ * a name whose type is one string, a `const` holding one, a parameter's
+ * default, or a member of an object literal the code holds - itself, or as
+ * the default behind `??` or `||`.
+ */
+const settledKey = (node: TsNode | undefined, hops = 0): SettledKey | undefined => {
+  if (node === undefined || hops > MOST_KEY_HOPS) return undefined;
+  const plain = stringOf(node);
+  if (plain !== undefined) return { key: plain };
+  let at = node;
+  while (Node.isParenthesizedExpression(at) || Node.isAsExpression(at) || Node.isNonNullExpression(at)) at = at.getExpression();
+  if (Node.isIdentifier(at)) {
+    const declaration = at.getSymbol()?.getDeclarations()[0];
+    if (declaration !== undefined && Node.isVariableDeclaration(declaration) && declaration.getVariableStatement()?.getDeclarationKind() === 'const') {
+      return settledKey(declaration.getInitializer(), hops + 1);
+    }
+    if (declaration !== undefined && Node.isParameterDeclaration(declaration)) {
+      const fallback = settledKey(declaration.getInitializer(), hops + 1);
+      return fallback === undefined ? undefined : { key: fallback.key, sureness: 'default' };
+    }
+    return undefined;
+  }
+  if (Node.isPropertyAccessExpression(at) || Node.isElementAccessExpression(at)) {
+    const name = Node.isPropertyAccessExpression(at) ? at.getName() : stringOf(at.getArgumentExpression());
+    if (name === undefined) return undefined;
+    const holder = objectOf(at.getExpression(), hops + 1);
+    if (holder === undefined || !Node.isObjectLiteralExpression(holder.object)) return undefined;
+    const property = holder.object.getProperty(name);
+    if (property === undefined || !Node.isPropertyAssignment(property)) return undefined;
+    const value = settledKey(property.getInitializer(), hops + 1);
+    if (value === undefined) return undefined;
+    const sureness = holder.sureness ?? value.sureness;
+    return { key: value.key, ...(sureness === undefined ? {} : { sureness }) };
+  }
+  return undefined;
 };
 
 const addUnread = (walk: Walk, node: TsNode, why: string, when: readonly string[] | undefined): void => {
@@ -185,6 +278,8 @@ const addUnread = (walk: Walk, node: TsNode, why: string, when: readonly string[
 interface Bindings {
   /** Every name in the function known to hold a state, by its declaration. */
   states: Map<TsNode, ValueState>;
+  /** The locals followed because the value is assigned to them (P374), each once. */
+  assigned: Set<TsNode>;
 }
 
 /**
@@ -277,8 +372,12 @@ const whenOf = (node: TsNode, fn: FunctionLike, bindings: Bindings): string[] | 
 };
 
 /** A state seen through one more key, or undefined where the key leaves what is followed. */
-const through = (state: ValueState, key: string, isCall: boolean): ValueState | undefined => {
-  if (state.kind === 'payload') return isCall ? undefined : { kind: 'payload', prefix: [...state.prefix, key] };
+const through = (state: ValueState, key: string, isCall: boolean, sureness?: FieldSureness): ValueState | undefined => {
+  if (state.kind === 'payload') {
+    if (isCall) return undefined;
+    const settled = sureness ?? state.sureness;
+    return { kind: 'payload', prefix: [...state.prefix, key], ...(settled === undefined ? {} : { sureness: settled }) };
+  }
   if (state.kind === 'request') {
     if (isCall) return BODY_CALLS.has(key) ? { kind: 'payload', prefix: [] } : undefined;
     if (key === 'body') return { kind: 'payload', prefix: [] };
@@ -340,7 +439,7 @@ const followValue = (
         (current.kind === 'request' && isCall && bodyByArgument(call) ? ({ kind: 'payload', prefix: [] } as const) : undefined);
       if (next === undefined) {
         // A method called on a part of the payload reads that part: `evt.label.trim()`.
-        if (fresh(current)) addRead(walk, current.prefix, parent, whenOf(parent, fn, bindings) ?? inherited);
+        if (fresh(current)) addRead(walk, current.prefix, parent, whenOf(parent, fn, bindings) ?? inherited, current.sureness);
         return;
       }
       current = next;
@@ -353,9 +452,11 @@ const followValue = (
     }
     if (Node.isElementAccessExpression(parent) && parent.getExpression() === node) {
       const argument = parent.getArgumentExpression();
-      const key = stringOf(argument);
+      // A key written out, or one the code holds in a local or an option the reading settles (P374).
+      const settled = settledKey(argument);
+      const key = settled?.key;
       if (key !== undefined) {
-        const next = through(current, key, false);
+        const next = through(current, key, false, settled?.sureness);
         if (next === undefined) return;
         current = next;
         node = parent;
@@ -367,7 +468,7 @@ const followValue = (
         continue;
       }
       if (current.kind === 'payload') {
-        if (fresh(current)) addRead(walk, current.prefix, parent, whenOf(parent, fn, bindings) ?? inherited);
+        if (fresh(current)) addRead(walk, current.prefix, parent, whenOf(parent, fn, bindings) ?? inherited, current.sureness);
         addUnread(walk, parent, `indexed by ${argument?.getText().slice(0, 40) ?? 'a value'}`, whenOf(parent, fn, bindings) ?? inherited);
       }
       return;
@@ -375,7 +476,7 @@ const followValue = (
     break;
   }
   const when = whenOf(node, fn, bindings) ?? inherited;
-  if (fresh(current)) addRead(walk, current.prefix, node, when);
+  if (fresh(current)) addRead(walk, current.prefix, node, when, current.sureness);
   settle(walk, fn, bindings, node, current, depth, when);
 };
 
@@ -412,6 +513,16 @@ const settle = (
   } else if (Node.isShorthandPropertyAssignment(parent) || (Node.isPropertyAssignment(parent) && parent.getInitializer() === node)) {
     addUnread(walk, parent, 'put inside another value', when);
   } else if (Node.isBinaryExpression(parent) && parent.getRight() === node && parent.getOperatorToken().getKind() === SyntaxKind.EqualsToken) {
+    // Assigned to a local of the function (in one branch of several, say): the local holds it for every read (P374).
+    const local = localAssigned(parent.getLeft(), fn);
+    if (local !== undefined) {
+      if (!bindings.assigned.has(local)) {
+        bindings.assigned.add(local);
+        bindings.states.set(local, state);
+        followName(walk, fn, bindings, local, state, depth, when);
+      }
+      return;
+    }
     addUnread(walk, parent, `stored in ${parent.getLeft().getText().slice(0, 40)}`, when);
   } else if (Node.isForInStatement(parent)) {
     addUnread(walk, parent, 'its keys walked', when);
@@ -423,6 +534,14 @@ const settle = (
       followName(walk, fn, bindings, first, state, depth, when);
     }
   }
+};
+
+/** The local a value is assigned to, where the left of an `=` names one declared in the function itself. */
+const localAssigned = (left: TsNode, fn: FunctionLike): (TsNode & { getNameNode(): TsNode }) | undefined => {
+  if (!Node.isIdentifier(left)) return undefined;
+  const declaration = left.getSymbol()?.getDeclarations()[0];
+  if (declaration === undefined || !Node.isVariableDeclaration(declaration) || !Node.isIdentifier(declaration.getNameNode())) return undefined;
+  return enclosingFunction(declaration) === fn ? declaration : undefined;
 };
 
 /** Every place a name bound to a state is used, in the function it is declared in. */
@@ -447,6 +566,8 @@ const followName = (
     if (parent !== undefined && Node.isPropertyAccessExpression(parent) && parent.getNameNode() === identifier) continue;
     if (parent !== undefined && (Node.isPropertyAssignment(parent) || Node.isBindingElement(parent)) && parent.getNameNode() === identifier) continue;
     if (parent !== undefined && Node.isVariableDeclaration(parent) && parent.getNameNode() === identifier) continue;
+    // The name assigned to, `bag = …`, is not a use of what it holds.
+    if (parent !== undefined && Node.isBinaryExpression(parent) && parent.getLeft() === identifier && parent.getOperatorToken().getKind() === SyntaxKind.EqualsToken) continue;
     const declared = identifier.getSymbol()?.getDeclarations() ?? [];
     if (declared.length > 0 && !declared.includes(declaration as never)) {
       // A shorthand `{ evt }` names the property's symbol; its value is still this name.
@@ -480,7 +601,7 @@ const destructure = (
     const next = through(state, key, false);
     if (next === undefined) continue;
     const at = whenOf(element, fn, bindings) ?? when;
-    if (next.kind === 'payload') addRead(walk, next.prefix, element, at);
+    if (next.kind === 'payload') addRead(walk, next.prefix, element, at, next.sureness);
     const name = element.getNameNode();
     if (Node.isIdentifier(name)) {
       bindings.states.set(element, next);
@@ -536,7 +657,7 @@ const readParameter = (
 ): void => {
   const parameter = fn.getParameters()[index];
   if (parameter === undefined) return;
-  const bindings: Bindings = { states: new Map() };
+  const bindings: Bindings = { states: new Map(), assigned: new Set() };
   const name = parameter.getNameNode();
   if (Node.isIdentifier(name)) {
     bindings.states.set(parameter, state);

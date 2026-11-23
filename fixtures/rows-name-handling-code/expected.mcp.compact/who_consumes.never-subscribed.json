@@ -1,0 +1,45 @@
+{
+  "channel": {
+    "id": "channel:desk_alerts",
+    "loc": "src/desk/desk.service.ts:10",
+    "service": "shop-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.pageStaff",
+      "line": 27,
+      "kind": "event",
+      "selectedIn": "AlertRelay.onModuleInit",
+      "via": "if",
+      "reach": "alive",
+      "from": "POST /api/desks/:param/help",
+      "ways": 4
+    },
+    {
+      "id": "consumer:shop-web#src/app/desk-board.component.ts:DeskBoardComponent.reload",
+      "line": 26,
+      "kind": "sse",
+      "selectedIn": "DeskBoardComponent.ngOnInit",
+      "via": "filter",
+      "reach": "alive",
+      "from": "screen /desks"
+    },
+    {
+      "id": "consumer:shop-web#src/app/order-notices.service.ts:OrderNotices.handle",
+      "line": 25,
+      "kind": "sse",
+      "selectedIn": "OrderNotices.initialize",
+      "via": "if",
+      "unreached": "nothing builds OrderNotices and nothing outside it calls OrderNotices.initialize, where the subscription is made",
+      "reach": "dead",
+      "from": "none"
+    }
+  ],
+  "total": 3,
+  "type": "HELP_REQUESTED",
+  "complete": true,
+  "next": [
+    "who_emits({channel: \"channel:desk_alerts\", type: \"HELP_REQUESTED\"})",
+    "impact({symbol: \"consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.pageStaff\"})"
+  ]
+}

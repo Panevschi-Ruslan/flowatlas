@@ -17,10 +17,10 @@
             &  bot_command items            store-bot/src/store-bot.ts:20
 Reachable from: 1 http entry (store-api), 1 bot command (store-bot), 1 consumer (store-bot), 2 screens (store-web)
 Could break:
-  GET /api/shops/items (store-api)  alive
-  bot_command items (store-bot)  outside, via GET /api/shops/items (store-api)
-  event shop:*:orders (store-bot)  alive, via GET /api/shops/items (store-api)
-  /dashboard (store-web)  outside, via GET /api/shops/items (store-api)
-  /history (store-web)  outside, via GET /api/shops/items (store-api)
+  GET /api/shops/items (store-api)  alive, by ItemsController.list src/items.controller.ts:8
+  bot_command items (store-bot)  outside, via GET /api/shops/items (store-api), by StoreBot.showItems src/store-bot.ts:25
+  event shop:*:orders (store-bot)  alive, via GET /api/shops/items (store-api), by StoreBot.onStatusEvent src/store-bot.ts:29
+  /dashboard (store-web)  outside, via GET /api/shops/items (store-api), by DashboardComponent src/app/dashboard.component.ts:6
+  /history (store-web)  outside, via GET /api/shops/items (store-api), by OrderHistoryComponent src/app/order-history.component.ts:6
 Only beyond a channel, calling none of it (--channel <name> lists them):
-  shop:*:orders  4 ways in, taken by StoreBot.onStatusEvent (store-bot): DELETE /api/orders/:param (store-api), PATCH /api/orders/:param/status (store-api), POST /api/orders (store-api), ...
+  shop:*:orders  4 ways in, taken by StoreBot.onStatusEvent (store-bot): DELETE /api/orders/:param (store-api) by OrdersController.remove src/orders.controller.ts:19, PATCH /api/orders/:param/status (store-api) by OrdersController.setStatus src/orders.controller.ts:14, POST /api/orders (store-api) by OrdersController.create src/orders.controller.ts:9, ...

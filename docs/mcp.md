@@ -830,12 +830,24 @@ onto its channel either: what publishes there calls none of the target, so the
 ways in beyond it - the publishers, and the screens and bots calling them - are
 counted apart, one row per channel (or message type a consumer chooses), in
 `throughChannels`: `{channel, type?, consumer, consumers?, ways, sample,
-walkCut?}`, `ways` how many lie beyond it, `sample` the nearest three. They are
-never complete-blocking. `impact({symbol, channel: "<name>"})` lists one
+walkCut?}`, `ways` how many lie beyond it, `sample` the nearest three, each
+`{id, by?}`. They are never complete-blocking. `impact({symbol, channel: "<name>"})` lists one
 channel's ways in as `entries`, each `via: "channel <name>"`, paged as usual,
 with `acrossChannel` naming it; `next` offers that call first. Each walk beyond
 a channel reads at most 1,000 nodes (`walkCut`, and with `channel` a `left`
-line, where it stopped). On the `impact-guarded-navigation` fixture, impact on
+line, where it stopped). Each row (and each sample) says `by`, the id of the
+code that handles the way in on its chain to the target (P374): for a screen
+the component it shows, for a route, a bot command or a consumer the method or
+function it hands work to, and for a webhook whose handler is written where
+the route is declared and hands the update to a class (a worker's inline
+handler calling a bot's method) that class's method, so the file holding the
+code a way in runs is the id's, with no search after it. A function written in
+the way in's own file is routing, passed over while the chain holds other code
+before it leaves the way in's own code; where it holds none, it is `by`. A
+compact answer leaves `by` out where it is the target. On the
+`rows-name-handling-code` fixture, impact on the cancel method names the
+route's handler, the bot class behind the webhook in the worker file, and the
+order screen's component. On the `impact-guarded-navigation` fixture, impact on
 a list method answers 5 rows where it answered 17 (1,437 characters compact,
 from 2,766) with the channel's four ways in counted, and on an acknowledge
 method 3 where it answered 6. It is bounded by 4,000 nodes; `entriesByService`,
@@ -1015,7 +1027,22 @@ takes (P369): the code calling it under a `case` or an `if` on the message it
 hands it (`via` that choice, the caller's file in `selects`), and failing
 that the declared type of its parameter where its discriminator is a literal
 (`via: parameter`); where the two differ the caller's choice is drawn and a
-`message-type-differs` row says so. A choice handing the message to a
+`message-type-differs` row says so.
+
+A branch's handler is the first call of the repository's own it makes that is
+handed the message, else the first such call, else the branch itself; a call
+into another class counts only when it is handed the message itself (P374).
+A branch showing a toast with one of the message's fields
+(`this.toast.showInfo(event.text)`) is handled by the function it is written
+in, never by the toast, whose other callers would make it look reached. A
+consumer whose subscription is made in code - the method calling `subscribe`
+(`subscriptions`), or, for a handler a dispatch chose, its chooser's - never
+runs where that method's class is built by nothing (no module registers it,
+nothing injects or imports it) and nothing outside the class calls it: `dead`
+says so (`nothing builds OrderNotices and nothing outside it calls
+OrderNotices.initialize, where the subscription is made`), its rows say
+`reach: "dead"` and `from: "none"`, its selections are `unreached`, and what
+publishes to its channel does not reach it. A choice handing the message to a
 function of the repository's own that chooses again is followed into it, and
 a handler written in place - a subscription's callback, a stream listener in
 a hook - is read where it is written. A subscriber to every channel of a
@@ -1073,7 +1100,7 @@ bounds the list. With none it says so, and how many go the other way.
 **Fields read and sent (P368).** The reading writes, on the handler of every
 HTTP route and of every consumer that chooses for itself, and on every guard,
 interceptor, pipe and middleware a route runs first, which fields of what it
-is handed it reads: `meta.fieldsRead`, rows `{ field, in?, line, when? }`
+is handed it reads: `meta.fieldsRead`, rows `{ field, in?, line, when?, sureness? }`
 (`field` dotted from the payload, `in` the function it is read in where that
 is not the node's own, `when` the types of message a `switch`, an `if` or an
 early return on the discriminator reads it under), and `meta.fieldsUnread`,
@@ -1088,7 +1115,18 @@ the code reaches it: `@Body()`, `@Body('x')`, `@Payload()`, `@MessageBody()`,
 `@Req()`, `req.body.x`, `ctx.request.body.x`, `await c.req.json()`,
 `c.req.valid('json')`, and a guard's `context.switchToHttp().getRequest()`. A
 value only compared, tested or returned is not a read. A name holding a field
-already read is not read again: only a key past it is.
+already read is not read again: only a key past it is. A key the code holds in
+a local or an option is read where the reading settles it to a string (P374):
+a `const`, a parameter's default, or a member of an object literal written as
+the default behind `??` or `||` (`const source = options.actsAs ?? { in:
+'body', name: 'userRef' }; bag?.[source.name]`), the row then saying
+`sureness: "default"`, since the options may name another; and a local
+assigned the value in one branch and something else in another (`bag =
+req.params` / `bag = req.query` / `bag = req.body`) holds it for every read of
+it, so the body's branch reads `userRef`. `check_contract`'s `reads` carry
+`sureness`, and each `left` line names the method or function a use the
+reading could not follow is in (`unsure: guard ClientGuard.suppliedId: ...`),
+never only the class a guard's rows are written on.
 
 `who_consumes` with `field` keeps the handlers that read it, under `type` where
 one is asked (a read inside another type's choice is not this type's; a

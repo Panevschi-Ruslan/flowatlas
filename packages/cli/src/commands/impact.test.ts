@@ -63,12 +63,21 @@ describe('flowatlas impact (P370)', () => {
     expect(text).toContain('/orders (store-web)  outside, via channel shop:*:orders');
   });
 
+  it('says the code that handles each way in, with where it is written (P374)', () => {
+    let text = '';
+    const options = { config: join(ROOT, 'fixtures', 'rows-name-handling-code', 'flowatlas.config.json'), color: false, ascii: true, format: 'tree' as const };
+    runImpact('shop-api#src/orders/orders.service.ts:OrdersService.cancel', options, { out: (chunk: string) => void (text += chunk), err: () => {} });
+    expect(text).toContain('POST /bot/staff/webhook (shop-api)  outside, by StaffBot.handleCallbackQuery src/bot/staff-bot.service.ts:');
+    expect(text).toContain('/orders/:param (shop-web)  outside, via PATCH /api/orders/:param/cancel (shop-api), by OrderDetailComponent src/app/order-detail.component.ts:');
+  });
+
   it('hangs the rows under the target with --entries-only, and draws the chains to --depth', () => {
     const only = run({ format: 'tree', entriesOnly: true });
     expect(only).not.toContain('ItemCardComponent.load');
     expect(only).toContain('/catalog');
     const shallow = run({ format: 'tree', depth: '2' });
-    expect(shallow).not.toContain('CatalogPageComponent');
+    // The tree stops at the depth; the rows under it still name the component that handles the screen (P374).
+    expect(shallow.split('Reachable from')[0]).not.toContain('CatalogPageComponent');
     expect(shallow).toContain('raise --depth');
   });
 });

@@ -15,7 +15,8 @@
       "loc": "src/items.controller.ts:9",
       "service": "catalog-api",
       "kind": "http",
-      "reach": "alive"
+      "reach": "alive",
+      "by": "catalog-api#src/items.controller.ts:ItemsController.findOne"
     },
     {
       "id": "entry:catalog-web:screen:/catalog",
@@ -25,7 +26,8 @@
       "service": "catalog-web",
       "kind": "screen",
       "reach": "outside",
-      "via": "GET /items/:param (catalog-api)"
+      "via": "GET /items/:param (catalog-api)",
+      "by": "catalog-web#src/app/catalog-page.component.ts:CatalogPageComponent"
     },
     {
       "id": "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey",

@@ -1,5 +1,6 @@
 import type { GraphEdge, GraphNode } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
+import { subscribingCode, unreachedHandler } from './analysis/message-types.js';
 import { joinMessageTypes, unselectedTypesOf } from './message-types.js';
 import { edgeKey } from './order.js';
 
@@ -226,5 +227,94 @@ describe('a type selected on a channel that never carries it (P362)', () => {
     expect(nodes.has(`${CHANNEL}#DESK_CALLED`)).toBe(true);
     const drawn = [...edges.values()].find((each) => each.from === `${CHANNEL}#DESK_CALLED`);
     expect(drawn?.confidence).toBe('heuristic');
+  });
+});
+
+describe('a subscriber to every channel of a bus (P374)', () => {
+  const DESKS = 'channel:desks';
+  const CARTS = 'channel:carts';
+  const RELAY = 'consumer:api#r.ts:Relay.start';
+  const joined = (cartsUnread: boolean) => {
+    const nodes = new Map<string, GraphNode>();
+    const edges = new Map<string, GraphEdge>();
+    const add = (each: GraphNode) => nodes.set(each.id, each);
+    const join = (each: GraphEdge) => edges.set(edgeKey(each), each);
+    add(node(DESKS, { type: 'channel', label: 'desks', meta: { channelKind: 'channel' } }));
+    add(node(CARTS, { type: 'channel', label: 'carts', meta: { channelKind: 'channel' } }));
+    add(node('producer:api#d.ts:1:1', { type: 'producer', file: 'd.ts', line: 1, meta: { messageTypes: ['HELP'], discriminator: 'type' } }));
+    // A cart's frame carries no type at all, or (asked) one not read.
+    add(node('producer:api#c.ts:1:1', { type: 'producer', file: 'c.ts', line: 1, meta: cartsUnread ? { messageTypeUnread: 'a string', discriminator: 'type' } : {} }));
+    add(node('api#r.ts:Relay.page', { label: 'Relay.page' }));
+    add(
+      node(RELAY, {
+        type: 'consumer',
+        label: 'Relay.start',
+        meta: { discriminator: 'type', selects: [{ type: 'HELP', consumer: 'consumer:api#r.ts:Relay.page', via: 'if', line: 3 }] },
+      }),
+    );
+    add(node('consumer:api#r.ts:Relay.page', { type: 'consumer', label: 'Relay.page', meta: { selectedBy: RELAY } }));
+    join(edge('producer:api#d.ts:1:1', DESKS, 'emits'));
+    join(edge('producer:api#c.ts:1:1', CARTS, 'emits'));
+    join(edge(DESKS, RELAY, 'consumes', { meta: { via: 'every-channel' } }));
+    join(edge(CARTS, RELAY, 'consumes', { meta: { via: 'every-channel' } }));
+    join(edge('consumer:api#r.ts:Relay.page', 'api#r.ts:Relay.page', 'handles'));
+    joinMessageTypes(nodes, edges);
+    return { nodes, edges };
+  };
+
+  it('draws a type it selects only on the channels whose publishes send it, not on one whose publishes send no type', () => {
+    const { nodes } = joined(false);
+    expect(nodes.has(`${DESKS}#HELP`)).toBe(true);
+    expect(nodes.has(`${CARTS}#HELP`)).toBe(false);
+  });
+
+  it('draws it as a guess on a channel with a publish whose type was not read', () => {
+    const { nodes, edges } = joined(true);
+    expect(nodes.has(`${CARTS}#HELP`)).toBe(true);
+    expect([...edges.values()].find((each) => each.from === `${CARTS}#HELP`)?.confidence).toBe('heuristic');
+  });
+});
+
+describe('a consumer whose subscription is made in code nothing runs (P374)', () => {
+  const lookupOf = (nodes: GraphNode[], edges: GraphEdge[]) => ({
+    node: (id: string) => nodes.find((each) => each.id === id),
+    edgesTo: (id: string, types?: readonly string[]) => edges.filter((each) => each.to === id && (types === undefined || types.includes(each.type))),
+    edgesFrom: (id: string, types?: readonly string[]) => edges.filter((each) => each.from === id && (types === undefined || types.includes(each.type))),
+    nodesByType: (type: string) => nodes.filter((each) => each.type === type),
+  });
+  const SUBSCRIBER = 'consumer:web#n.ts:Notices.start';
+  const CHOSEN = 'consumer:web#n.ts:Notices.handle';
+  const graph = (over: { injected?: boolean; calledFromOutside?: boolean } = {}) => {
+    const nodes: GraphNode[] = [
+      node('web#n.ts:Notices', { type: 'provider', repo: 'web', label: 'Notices', meta: { providedIn: 'root' } }),
+      node('web#n.ts:Notices.start', { repo: 'web', label: 'Notices.start' }),
+      node('web#n.ts:Notices.handle', { repo: 'web', label: 'Notices.handle' }),
+      node('web#t.ts:Toast.show', { repo: 'web', label: 'Toast.show' }),
+      node('web#s.ts:Screen.init', { repo: 'web', label: 'Screen.init' }),
+      node(SUBSCRIBER, { type: 'consumer', repo: 'web', label: 'Notices.start', meta: { subscriptions: [{ line: 3, column: 5, through: 'Live.stream$' }] } }),
+      node(CHOSEN, { type: 'consumer', repo: 'web', label: 'Notices.handle', meta: { selectedBy: SUBSCRIBER } }),
+    ];
+    const edges: GraphEdge[] = [
+      edge(SUBSCRIBER, 'web#n.ts:Notices.start', 'handles'),
+      edge(CHOSEN, 'web#n.ts:Notices.handle', 'handles'),
+      edge('web#n.ts:Notices.start', 'web#n.ts:Notices.handle', 'calls'),
+      edge('web#n.ts:Notices.handle', 'web#t.ts:Toast.show', 'calls'),
+      ...(over.injected === true ? [edge('web#s.ts:Screen', 'web#n.ts:Notices', 'injects')] : []),
+      ...(over.calledFromOutside === true ? [edge('web#s.ts:Screen.init', 'web#n.ts:Notices.start', 'calls')] : []),
+    ];
+    return lookupOf(nodes, edges);
+  };
+
+  it('never runs, nor does the handler its dispatch chose, where nothing builds the class and nothing outside it calls it', () => {
+    const lookup = graph();
+    expect(subscribingCode(lookup, lookup.node(CHOSEN)!)?.id).toBe('web#n.ts:Notices.start');
+    expect(unreachedHandler(lookup, lookup.node(SUBSCRIBER)!)).toContain('nothing builds Notices');
+    expect(unreachedHandler(lookup, lookup.node(CHOSEN)!)).toContain('Notices.start, where the subscription is made');
+  });
+
+  it('may run where something injects the class or calls its methods from outside it', () => {
+    for (const lookup of [graph({ injected: true }), graph({ calledFromOutside: true })]) {
+      expect(unreachedHandler(lookup, lookup.node(CHOSEN)!)).toBeUndefined();
+    }
   });
 });

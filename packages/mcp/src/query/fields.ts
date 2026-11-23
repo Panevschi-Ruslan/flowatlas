@@ -5,6 +5,7 @@ import {
   makeMessageTypeId,
   parseTypeRef,
   type FieldRead,
+  type FieldSureness,
   type FieldUnread,
   type GraphNode,
   type TypeRefAst,
@@ -18,11 +19,12 @@ import type { GraphDb } from '@flowatlas/linker';
  * publish or a request was read to send.
  */
 
-/** One place a field is read: the field, the function, the line. */
+/** One place a field is read: the field, the function, the line, and how sure, where it is read through a default key. */
 export interface FieldSite {
   field: string;
   id: string;
   line: number;
+  sureness?: FieldSureness;
 }
 
 /** One use of the value the reading could not follow. */
@@ -89,7 +91,7 @@ export const readingOf = (db: GraphDb, id: string, type?: string): Reading => {
     known: true,
     reads: (reads as FieldRead[])
       .filter((row) => underType(row.when, type))
-      .map((row) => ({ field: row.field, id: row.in ?? id, line: row.line })),
+      .map((row) => ({ field: row.field, id: row.in ?? id, line: row.line, ...(row.sureness === undefined ? {} : { sureness: row.sureness }) })),
     unread: (Array.isArray(unread) ? (unread as FieldUnread[]) : [])
       .filter((row) => underType(row.when, type))
       .map((row) => ({ id: row.in ?? id, line: row.line, why: row.why })),
@@ -105,6 +107,13 @@ const merge = (a: Reading, b: Reading): Reading => {
     unread: [...a.unread, ...b.unread.filter((row) => !seenUnread.has(`${row.why}|${row.id}|${row.line}`))],
   };
 };
+
+/**
+ * The code a use the reading could not follow is in, as `left` names it
+ * (P374): the method or function itself (`ClientGuard.suppliedId`), never
+ * only the class a guard's rows are written on.
+ */
+export const unreadIn = (db: GraphDb, use: Pick<UnreadSite, 'id'>): string => db.node(use.id)?.label ?? use.id;
 
 /** The function a consumer or an entry hands to, by its `handles` edge. */
 const handlerOf = (db: GraphDb, id: string): string | undefined => db.edgesFrom(id, ['handles'])[0]?.to;

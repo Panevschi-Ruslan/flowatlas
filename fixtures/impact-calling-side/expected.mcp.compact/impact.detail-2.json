@@ -30,11 +30,12 @@
         ]
       },
       "reach": "outside",
-      "via": "PATCH /orders/status (shop-api)"
+      "via": "PATCH /orders/status (shop-api)",
+      "by": "backoffice-web#src/status-board.component.ts:StatusBoardComponent"
     },
     {
       "id": "entry:shop-api:http:PATCH:/orders/status",
-      "loc": "src/orders.controller.ts:9",
+      "line": 9,
       "meta": {
         "controller": "OrdersController",
         "adapter": "nestjs-http",
@@ -47,11 +48,12 @@
           }
         ]
       },
-      "reach": "alive"
+      "reach": "alive",
+      "by": "shop-api#src/orders.controller.ts:OrdersController.setStatus"
     },
     {
       "id": "entry:shop-api:http:POST:/hooks/chat",
-      "loc": "src/chat-hook.controller.ts:9",
+      "line": 9,
       "meta": {
         "controller": "ChatHookController",
         "adapter": "nestjs-http",
@@ -64,7 +66,8 @@
           }
         ]
       },
-      "reach": "outside"
+      "reach": "outside",
+      "by": "shop-api#src/chat-hook.controller.ts:ChatHookController.receive"
     },
     {
       "id": "ops-bot#src/ops-bot.ts:OpsBot.handleStatus",

@@ -2,8 +2,10 @@ import {
   HANDS_ON_META,
   isMessageTypeNode,
   MESSAGE_TYPE_UNREAD_META,
+  SELECTED_BY_META,
   SELECTION_UNREAD_META,
   selectionsOf,
+  SUBSCRIPTIONS_META,
   UNREACHED_META,
   type GraphEdge,
   type GraphNode,
@@ -67,6 +69,61 @@ const classIdOf = (symbol: string): string | undefined => {
   return cut < 0 || dot < cut ? undefined : symbol.slice(0, dot);
 };
 
+/** How many choosers back the code that makes a consumer's subscription is looked for. */
+const MOST_CHOOSERS = 3;
+
+/**
+ * The code a consumer's subscription is made in (P374): the function a
+ * consumer that records where it subscribes (`subscriptions`) hands to - the
+ * method whose body calls `subscribe` - or, for a consumer a chooser's
+ * dispatch drew (`selectedBy`), its chooser's. Undefined for a consumer a
+ * framework subscribes for (a decorated handler), whose subscription no code
+ * of the project makes.
+ */
+export const subscribingCode = (lookup: MessageTypeLookup, consumer: GraphNode, depth = 0): GraphNode | undefined => {
+  const subscriptions = consumer.meta?.[SUBSCRIPTIONS_META];
+  if (Array.isArray(subscriptions) && subscriptions.length > 0) {
+    const [handles] = lookup.edgesFrom(consumer.id, ['handles']);
+    const handler = handles === undefined ? undefined : lookup.node(handles.to);
+    return handler !== undefined && (handler.type === 'method' || handler.type === 'function') ? handler : undefined;
+  }
+  const chooser = consumer.meta?.[SELECTED_BY_META];
+  if (typeof chooser !== 'string' || depth >= MOST_CHOOSERS) return undefined;
+  const node = lookup.node(chooser);
+  return node === undefined ? undefined : subscribingCode(lookup, node, depth + 1);
+};
+
+/** The edges by which code outside a class reaches one of its methods. */
+const REACHING_EDGES = ['calls', 'handles', 'triggers', 'guarded_by'] as const;
+
+/**
+ * Why a consumer whose subscription is made in code never runs (P374): the
+ * code is a method of a class nothing builds - no module registers it,
+ * nothing injects or imports it - and nothing outside the class calls any of
+ * its methods, so the method that subscribes never runs and what the
+ * channel's publishers send never reaches the handler. Whoever else calls
+ * what the handler calls (a toast every screen shows) does not make it run.
+ */
+const neverSubscribed = (lookup: MessageTypeLookup, consumer: GraphNode): string | undefined => {
+  const code = subscribingCode(lookup, consumer);
+  if (code === undefined || code.type !== 'method') return undefined;
+  const classId = classIdOf(code.id);
+  const owner = classId === undefined ? undefined : lookup.node(classId);
+  if (owner === undefined || owner.type !== 'provider' || owner.kind === 'controller' || owner.kind === 'external') return undefined;
+  if (owner.meta?.['module'] !== undefined || owner.meta?.['exported'] !== undefined) return undefined;
+  if (lookup.edgesTo(owner.id).some((edge) => edge.type === 'injects' || edge.type === 'imports' || edge.type === 'calls' || edge.type === 'handles')) return undefined;
+  const inClass = (id: string): boolean => id.startsWith(`${owner.id}.`);
+  for (const method of lookup.nodesByType('method')) {
+    if (!inClass(method.id)) continue;
+    for (const edge of lookup.edgesTo(method.id, REACHING_EDGES)) {
+      // A consumer handing its messages to the class is the subscription itself, not code that builds the class.
+      if (inClass(edge.from) || lookup.node(edge.from)?.type === 'consumer') continue;
+      return undefined;
+    }
+  }
+  return `nothing builds ${owner.label} and nothing outside it calls ${code.label}, where the subscription is made`;
+};
+
 /**
  * Why the handler a consumer runs never runs: its class is a provider of a
  * service whose classes a container builds, and nothing builds it - no module
@@ -81,6 +138,8 @@ export const unreachedHandler = (lookup: MessageTypeLookup, consumer: GraphNode,
   // Said by the reader that drew it: a screen subscribed through a service nothing makes (P362).
   const said = consumer.meta?.[UNREACHED_META];
   if (typeof said === 'string') return said;
+  const unsubscribed = neverSubscribed(lookup, consumer);
+  if (unsubscribed !== undefined) return unsubscribed;
   const [handles] = lookup.edgesFrom(consumer.id, ['handles']);
   const classId = handles === undefined ? undefined : classIdOf(handles.to);
   const owner = classId === undefined ? undefined : lookup.node(classId);

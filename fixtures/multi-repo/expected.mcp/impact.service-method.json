@@ -16,7 +16,8 @@
       "service": "billing",
       "kind": "event",
       "reach": "dead",
-      "via": "GET /orders/:param (orders)"
+      "via": "GET /orders/:param (orders)",
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested"
     },
     {
       "id": "entry:billing:event:order.created",
@@ -26,7 +27,8 @@
       "service": "billing",
       "kind": "event",
       "reach": "alive",
-      "via": "GET /orders/:param (orders)"
+      "via": "GET /orders/:param (orders)",
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
     },
     {
       "id": "entry:billing:http:POST:/invoices",
@@ -36,7 +38,8 @@
       "service": "billing",
       "kind": "http",
       "reach": "alive",
-      "via": "GET /orders/:param (orders)"
+      "via": "GET /orders/:param (orders)",
+      "by": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
     },
     {
       "id": "entry:gateway:http:GET:/orders/:param",
@@ -46,7 +49,8 @@
       "service": "gateway",
       "kind": "http",
       "reach": "alive",
-      "via": "GET /orders/:param (orders)"
+      "via": "GET /orders/:param (orders)",
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.findOne"
     },
     {
       "id": "entry:gateway:http:POST:/orders/:param/invoice",
@@ -56,7 +60,8 @@
       "service": "gateway",
       "kind": "http",
       "reach": "alive",
-      "via": "GET /orders/:param (orders)"
+      "via": "GET /orders/:param (orders)",
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.invoice"
     },
     {
       "id": "entry:orders:http:GET:/orders/:param",
@@ -65,11 +70,12 @@
       "loc": "src/orders/orders.controller.ts:25",
       "service": "orders",
       "kind": "http",
-      "reach": "alive"
+      "reach": "alive",
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
     }
   ],
   "total": 6,
-  "reached": 39,
+  "reached": 38,
   "entriesByService": {
     "orders": 1,
     "billing": 3,
@@ -82,13 +88,16 @@
       "consumer": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
       "ways": 1,
       "sample": [
-        "entry:orders:http:POST:/orders"
+        {
+          "id": "entry:orders:http:POST:/orders",
+          "by": "orders#src/orders/orders.controller.ts:OrdersController.create"
+        }
       ]
     }
   ],
   "reachedByService": {
     "orders": 7,
-    "billing": 11,
+    "billing": 10,
     "gateway": 8,
     "web": 13
   },
@@ -96,7 +105,6 @@
     "web"
   ],
   "channels": [
-    "channel:invoice.requested",
     "channel:order.created"
   ],
   "complete": true,

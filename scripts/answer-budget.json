@@ -591,6 +591,149 @@
           ]
         }
       }
+    },
+    {
+      "id": "impact.handling-code",
+      "ask": "which ways in could break if OrdersService.cancel changes, and which file holds the code each one runs",
+      "fixture": "rows-name-handling-code",
+      "tool": "impact",
+      "args": {
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.cancel"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+            "entry:shop-api:http:POST:/bot/staff/webhook",
+            "entry:shop-web:screen:/orders/:param"
+          ]
+        },
+        "rowsSay": {
+          "entries": {
+            "entry:shop-api:http:PATCH:/api/orders/:param/cancel": {
+              "by": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+            },
+            "entry:shop-api:http:POST:/bot/staff/webhook": {
+              "by": "shop-api#src/bot/staff-bot.service.ts:StaffBot.handleCallbackQuery"
+            },
+            "entry:shop-web:screen:/orders/:param": {
+              "by": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent"
+            }
+          }
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P374: each row names the code that handles it - the webhook the bot class its worker hands the update to, never the worker file."
+    },
+    {
+      "id": "fields.default-key",
+      "ask": "which code on PATCH /api/orders/:id/cancel reads userRef, read through a key the guard holds as a default",
+      "fixture": "rows-name-handling-code",
+      "tool": "check_contract",
+      "args": {
+        "edge": "PATCH /api/orders/:id/cancel",
+        "field": "userRef"
+      },
+      "lists": [
+        "reads"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "reads": [
+            "shop-api#src/auth/client.guard.ts:ClientGuard.suppliedId"
+          ]
+        },
+        "rowsSay": {
+          "reads": {
+            "shop-api#src/auth/client.guard.ts:ClientGuard.suppliedId": {
+              "layer": "guard",
+              "sureness": "default"
+            }
+          }
+        },
+        "exact": [
+          "reads"
+        ]
+      }
+    },
+    {
+      "id": "who_consumes.never-subscribed",
+      "ask": "which code reacts to HELP_REQUESTED on desk_alerts, and does it run",
+      "fixture": "rows-name-handling-code",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "desk_alerts",
+        "type": "HELP_REQUESTED"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "consumers": [
+            "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.pageStaff",
+            "consumer:shop-web#src/app/desk-board.component.ts:DeskBoardComponent.reload",
+            "consumer:shop-web#src/app/order-notices.service.ts:OrderNotices.handle"
+          ]
+        },
+        "notListed": {
+          "consumers": [
+            "consumer:shop-web#src/app/toast.service.ts:Toast.showInfo"
+          ]
+        },
+        "rowsSay": {
+          "consumers": {
+            "consumer:shop-web#src/app/desk-board.component.ts:DeskBoardComponent.reload": {
+              "reach": "alive"
+            },
+            "consumer:shop-web#src/app/order-notices.service.ts:OrderNotices.handle": {
+              "reach": "dead"
+            }
+          }
+        },
+        "exact": [
+          "consumers"
+        ]
+      },
+      "note": "P374: the notice service nothing builds handles the type where it is written, never in the toast it calls, and never runs."
+    },
+    {
+      "id": "search.every-channel-type",
+      "ask": "where is HELP_REQUESTED sent and handled, a subscriber to every channel among its handlers",
+      "fixture": "rows-name-handling-code",
+      "tool": "search",
+      "args": {
+        "query": "HELP_REQUESTED"
+      },
+      "lists": [
+        "results.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "messages": [
+            "channel:desk_alerts#HELP_REQUESTED"
+          ]
+        },
+        "notListed": {
+          "messages": [
+            "channel:cart_canceled#HELP_REQUESTED",
+            "channel:cart_expired#HELP_REQUESTED"
+          ]
+        },
+        "exact": [
+          "messages"
+        ]
+      },
+      "note": "P374: the every-channel subscriber draws its type only on the channel that publishes it."
     }
   ],
   "fixed": {
@@ -603,36 +746,36 @@
   },
   "recorded": {
     "impact.multi-repo": {
-      "chars": 1588,
-      "tokens": 397,
+      "chars": 1889,
+      "tokens": 473,
       "rows": 6,
       "complete": true,
       "calls": 1
     },
     "impact.calling-side": {
-      "chars": 1075,
-      "tokens": 269,
+      "chars": 1232,
+      "tokens": 308,
       "rows": 4,
       "complete": false,
       "calls": 1
     },
     "impact.shared-client-items": {
-      "chars": 959,
-      "tokens": 240,
+      "chars": 1177,
+      "tokens": 295,
       "rows": 4,
       "complete": true,
       "calls": 1
     },
     "impact.shared-client-desks": {
-      "chars": 749,
-      "tokens": 188,
+      "chars": 861,
+      "tokens": 216,
       "rows": 2,
       "complete": true,
       "calls": 1
     },
     "impact.rendered-reach": {
-      "chars": 1023,
-      "tokens": 256,
+      "chars": 1139,
+      "tokens": 285,
       "rows": 3,
       "complete": false,
       "calls": 1
@@ -755,6 +898,34 @@
       "rows": 17,
       "complete": true,
       "calls": 6
+    },
+    "impact.handling-code": {
+      "chars": 1007,
+      "tokens": 252,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "fields.default-key": {
+      "chars": 422,
+      "tokens": 106,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.never-subscribed": {
+      "chars": 1074,
+      "tokens": 269,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "search.every-channel-type": {
+      "chars": 631,
+      "tokens": 158,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
     }
   }
 }

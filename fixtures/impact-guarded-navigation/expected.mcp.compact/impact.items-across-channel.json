@@ -8,27 +8,31 @@
   "entries": [
     {
       "id": "entry:store-api:http:DELETE:/api/orders/:param",
-      "loc": "src/orders.controller.ts:19",
+      "line": 19,
       "reach": "alive",
-      "via": "channel shop:*:orders"
+      "via": "channel shop:*:orders",
+      "by": "store-api#src/orders.controller.ts:OrdersController.remove"
     },
     {
       "id": "entry:store-api:http:PATCH:/api/orders/:param/status",
-      "loc": "src/orders.controller.ts:14",
+      "line": 14,
       "reach": "dead",
-      "via": "channel shop:*:orders"
+      "via": "channel shop:*:orders",
+      "by": "store-api#src/orders.controller.ts:OrdersController.setStatus"
     },
     {
       "id": "entry:store-api:http:POST:/api/orders",
-      "loc": "src/orders.controller.ts:9",
+      "line": 9,
       "reach": "alive",
-      "via": "channel shop:*:orders"
+      "via": "channel shop:*:orders",
+      "by": "store-api#src/orders.controller.ts:OrdersController.create"
     },
     {
       "id": "entry:store-web:screen:/orders",
       "loc": "src/app/app.routes.ts:22",
       "reach": "outside",
-      "via": "channel shop:*:orders"
+      "via": "channel shop:*:orders",
+      "by": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent"
     }
   ],
   "total": 4,

@@ -8,6 +8,34 @@ only one of them moved.
 
 ### Added
 
+- **What a pilot after P368-P373 got wrong (P374).** Each row of `impact`
+  (and each `throughChannels` sample, now `{id, by?}`) says `by`, the code
+  that handles its way in on the chain to the target: a screen's component, a
+  route's, a bot command's or a consumer's handler, and for a webhook whose
+  handler is written where the route is declared and hands the update to a
+  class (a worker's inline handler calling a bot's method), that class's
+  method; `flowatlas impact` says it on each row with its file and line. A
+  field read through a key the code holds is read where the reading settles
+  the key (a `const`, a parameter's default, a member of an object literal
+  written as the default behind `??` or `||`), marked `sureness: "default"`,
+  and a local assigned the value in one branch of several (`bag = req.body`)
+  holds it for every read; every `left` line of `check_contract` names the
+  method a use it could not follow is in, never only the guard's class. A
+  branch of a dispatch is handled by a call into another class only when it
+  hands that call the message itself, so a branch toasting a field is handled
+  where it is written, never by the toast; and a consumer whose subscription
+  is made by a method of a class nothing builds and nothing outside it calls
+  never runs (`dead`, `reach: dead`, its selections `unreached`), whatever
+  publishes to its channel. A subscriber to every channel of a bus draws the
+  types it selects only on the channels whose publishes send them (or a type
+  not read, as a guess), never on one whose publishes send no type. A compact
+  answer keeps a row's `field` when it is spelled as the tail of the id of the
+  method reading it. A new fixture, `rows-name-handling-code`, with verbose and
+  compact snapshots, a CLI tree and four answer-budget questions: `search` for
+  the type answers one row where it answered three (631 characters from
+  1,126), the guard's field one read in its method, complete (422 from 354,
+  unanswered), and `who_consumes` the notice service's own handler, `dead`,
+  where it named the toast, alive through every screen calling it.
 - **An answer budget in the gate (P373).** `scripts/answer-budget.mjs`, run by
   `pnpm fixtures:check` (and alone as `pnpm answer:budget`), asks 22 agent
   questions of seven fixtures through the graph server as an agent asks them,

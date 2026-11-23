@@ -641,7 +641,7 @@ describe('working backwards', () => {
     // `POST /orders` publishes `order.created`, which billing's consumer takes before it reads the order back: it
     // calls none of the code, so it is counted beyond the channel, one call listing it (P372).
     expect(answer.throughChannels).toEqual([
-      { channel: 'order.created', consumer: 'consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated', ways: 1, sample: ['entry:orders:http:POST:/orders'] },
+      { channel: 'order.created', consumer: 'consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated', ways: 1, sample: [{ id: 'entry:orders:http:POST:/orders', by: 'orders#src/orders/orders.controller.ts:OrdersController.create' }] },
     ]);
     const across = await call('impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', channel: 'order.created' });
     expect(across.entries.map((entry: { id: string; via?: string }) => [entry.id, entry.via])).toEqual([['entry:orders:http:POST:/orders', 'channel order.created']]);
@@ -964,7 +964,7 @@ describe('answers that hand on the id the next question needs', () => {
     // `POST /orders` reaches it only through billing, which takes `order.created` and reads the order back (P209):
     // counted beyond the channel, in the service asked for (P372).
     expect(impact.entries.map((entry: { id: string }) => entry.id)).toEqual(['entry:orders:http:GET:/orders/:param']);
-    expect(impact.throughChannels.map((row: { sample: string[] }) => row.sample)).toEqual([['entry:orders:http:POST:/orders']]);
+    expect(impact.throughChannels.map((row: { sample: Array<{ id: string }> }) => row.sample.map((way) => way.id))).toEqual([['entry:orders:http:POST:/orders']]);
     expect((await call('who_emits', { channel: 'order.created', service: 'billing' })).producers).toEqual([]);
   });
 

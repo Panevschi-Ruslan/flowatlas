@@ -15,7 +15,8 @@
       "loc": "src/desks.controller.ts:14",
       "service": "market-api",
       "kind": "http",
-      "reach": "alive"
+      "reach": "alive",
+      "by": "market-api#src/desks.controller.ts:DesksController.ackCall"
     },
     {
       "id": "entry:market-web:screen:/staff",
@@ -25,7 +26,8 @@
       "service": "market-web",
       "kind": "screen",
       "reach": "outside",
-      "via": "POST /api/staff/desks/:param/ack-call (market-api)"
+      "via": "POST /api/staff/desks/:param/ack-call (market-api)",
+      "by": "market-web#src/app/staff-board.component.ts:StaffBoardComponent"
     }
   ],
   "total": 2,

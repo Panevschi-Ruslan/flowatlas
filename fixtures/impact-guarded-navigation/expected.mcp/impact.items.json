@@ -15,7 +15,8 @@
       "loc": "src/items.controller.ts:8",
       "service": "store-api",
       "kind": "http",
-      "reach": "alive"
+      "reach": "alive",
+      "by": "store-api#src/items.controller.ts:ItemsController.list"
     },
     {
       "id": "entry:store-bot:bot_command:items",
@@ -25,7 +26,8 @@
       "service": "store-bot",
       "kind": "bot_command",
       "reach": "outside",
-      "via": "GET /api/shops/items (store-api)"
+      "via": "GET /api/shops/items (store-api)",
+      "by": "store-bot#src/store-bot.ts:StoreBot.showItems"
     },
     {
       "id": "entry:store-bot:event:shop:*:orders",
@@ -35,7 +37,8 @@
       "service": "store-bot",
       "kind": "event",
       "reach": "alive",
-      "via": "GET /api/shops/items (store-api)"
+      "via": "GET /api/shops/items (store-api)",
+      "by": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent"
     },
     {
       "id": "entry:store-web:screen:/dashboard",
@@ -45,7 +48,8 @@
       "service": "store-web",
       "kind": "screen",
       "reach": "outside",
-      "via": "GET /api/shops/items (store-api)"
+      "via": "GET /api/shops/items (store-api)",
+      "by": "store-web#src/app/dashboard.component.ts:DashboardComponent"
     },
     {
       "id": "entry:store-web:screen:/history",
@@ -55,7 +59,8 @@
       "service": "store-web",
       "kind": "screen",
       "reach": "outside",
-      "via": "GET /api/shops/items (store-api)"
+      "via": "GET /api/shops/items (store-api)",
+      "by": "store-web#src/app/order-history.component.ts:OrderHistoryComponent"
     }
   ],
   "total": 5,
@@ -71,9 +76,18 @@
       "consumer": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
       "ways": 4,
       "sample": [
-        "entry:store-api:http:DELETE:/api/orders/:param",
-        "entry:store-api:http:PATCH:/api/orders/:param/status",
-        "entry:store-api:http:POST:/api/orders"
+        {
+          "id": "entry:store-api:http:DELETE:/api/orders/:param",
+          "by": "store-api#src/orders.controller.ts:OrdersController.remove"
+        },
+        {
+          "id": "entry:store-api:http:PATCH:/api/orders/:param/status",
+          "by": "store-api#src/orders.controller.ts:OrdersController.setStatus"
+        },
+        {
+          "id": "entry:store-api:http:POST:/api/orders",
+          "by": "store-api#src/orders.controller.ts:OrdersController.create"
+        }
       ]
     }
   ],

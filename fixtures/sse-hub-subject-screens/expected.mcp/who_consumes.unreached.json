@@ -18,8 +18,7 @@
       "via": "if",
       "unreached": "nothing injects or makes LegacyBoardFeed: no constructor is handed it, no inject() asks for it and no new builds it",
       "reach": "dead",
-      "from": "POST /boards/:param/title (boards-api)",
-      "ways": 8
+      "from": "none"
     }
   ],
   "total": 1,

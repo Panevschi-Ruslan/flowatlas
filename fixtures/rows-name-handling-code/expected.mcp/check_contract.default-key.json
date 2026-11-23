@@ -1,0 +1,18 @@
+{
+  "entry": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+  "field": "userRef",
+  "reads": [
+    {
+      "field": "userRef",
+      "id": "shop-api#src/auth/client.guard.ts:ClientGuard.suppliedId",
+      "line": 34,
+      "layer": "guard",
+      "sureness": "default"
+    }
+  ],
+  "callers": 1,
+  "complete": true,
+  "next": [
+    "check_contract({from: \"ui_api_call:shop-web#src/app/orders.client.ts:13:12\", to: \"entry:shop-api:http:PATCH:/api/orders/:param/cancel\", field: \"userRef\"})"
+  ]
+}

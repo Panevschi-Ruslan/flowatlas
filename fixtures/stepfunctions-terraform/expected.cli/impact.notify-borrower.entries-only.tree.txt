@@ -4,6 +4,6 @@
   @  workflow lending-loan-renewal   lending/statemachine/loan-renewal.asl.json:1
 Reachable from: 1 invoke (lending), 2 workflows (lending)
 Could break:
-  lending-notify-borrower (lending)  outside
-  workflow lending-loan-approval (lending)  alive
-  workflow lending-loan-renewal (lending)  outside
+  lending-notify-borrower (lending)  outside, by handler src/handlers/notify-borrower.ts:10
+  workflow lending-loan-approval (lending)  alive, by CheckBorrowerStanding [Task lambda:invoke] statemachine/loan-approval.asl.json:5
+  workflow lending-loan-renewal (lending)  outside, by CheckBorrowerStanding [Task lambda:invoke] statemachine/loan-renewal.asl.json:5

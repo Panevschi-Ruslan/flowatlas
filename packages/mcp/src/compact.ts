@@ -15,7 +15,8 @@
  *   is a symbol's whose tail is `Class.member`;
  * - `service` when the id names it;
  * - the file of `loc` when the id holds it: `loc` becomes `line` (a number),
- *   or goes when the id holds the line too;
+ *   or goes when the id holds the line too; a way in's `loc` becomes `line`
+ *   too where its `by`, the code handling it, is written in that file (P374);
  * - `label` when it is the id's tail, as written or said aloud (`GET /orders`
  *   beside `entry:shop:http:GET:/orders`);
  * - `kind` when the way in's id says it (`entry:<service>:<kind>:…`);
@@ -58,9 +59,11 @@ export const COMPACT_MAX_NEXT = 2;
 /**
  * Fields never dropped, by any rule but their own: whether the answer is the
  * whole answer, and whether and from where a row is reached. A row's id stays
- * too, whatever else says it.
+ * too, whatever else says it, and a row's `field`, the name of a field read or
+ * sent, which may be spelled as the tail of the id of the method reading it
+ * (`note` read in `Controller.note`) and says something else (P374).
  */
-const KEPT: ReadonlySet<string> = new Set(['id', 'gapId', 'complete', 'left', 'reach', 'from', 'gap', 'behind']);
+const KEPT: ReadonlySet<string> = new Set(['id', 'gapId', 'complete', 'left', 'reach', 'from', 'gap', 'behind', 'field']);
 
 /** The fields `left` says, on an answer that says it (P370). */
 const SAID_BY_LEFT: ReadonlySet<string> = new Set(['truncated', 'stoppedBy', 'frontier']);
@@ -280,7 +283,8 @@ const compactObject = (given: Plain, depth: number, under: readonly string[]): P
     if (key === 'file' && typeof value === 'string' && holders.some((id) => holdsFile(id, value))) continue;
     if (ids.length > 0 && typeof value === 'string' && IDENTITY.has(key)) {
       if (key === 'loc') {
-        const left = locBesideAll(ids, value);
+        // A way in's file is said by the code handling it, where that is written in the same file (P374).
+        const left = locBesideAll(typeof row.by === 'string' ? [...ids, row.by] : ids, value);
         if (left !== undefined) Object.assign(out, left);
         continue;
       }

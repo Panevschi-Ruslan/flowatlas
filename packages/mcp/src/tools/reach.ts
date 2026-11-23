@@ -7,7 +7,7 @@ import { isResolved, resolveSymbol, type EntryRef } from '../query/entry-ref.js'
 import { REVERSE_EDGES } from '../query/flow.js';
 import { truncationMessage, type FlowNode, type WalkLimit } from '../query/types.js';
 import { MAX_NEXT, nextFor, withNext, withoutShown, type RowShown } from '../query/next.js';
-import { annotateTree, reachReader, viaSaid, type ReachReader, type Walked, type WalkedFrom, type WayInFound } from '../query/ways-in.js';
+import { annotateTree, handledBy, reachReader, viaSaid, type ReachReader, type Walked, type WalkedFrom, type WayInFound } from '../query/ways-in.js';
 import type { DbHandle } from '../query/db.js';
 import { figuresOf, loadObservedCounts, markObserved, nodeAmbiguous, nodeRow } from '../query/observed.js';
 import { slimForest } from '../query/wire.js';
@@ -333,6 +333,7 @@ const throughChannelsOf = (db: GraphDb, reader: ReachReader, walked: Walked, kee
   for (const group of groups.values()) {
     const beyond = reader.across(group.from, CHANNEL_WALK_NODES);
     const ways = beyond.found.filter((way) => way.node.type === 'entry' && !met.has(way.node.id) && keep(way));
+    for (const way of ways) withHandler(db, beyond, way);
     rows.push({
       ...channelSaid(db, group.from),
       from: group.from,
@@ -347,6 +348,15 @@ const throughChannelsOf = (db: GraphDb, reader: ReachReader, walked: Walked, kee
   return rows.sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
 };
 
+/** A way in with the code that handles it on the walk's chain (P374), said once. */
+const withHandler = (db: GraphDb, walked: Pick<Walked, 'parents'>, way: WayInFound): WayInFound => {
+  if (way.by === undefined) {
+    const by = handledBy(walked.parents, (id) => db.node(id), way.node);
+    if (by !== undefined && by.id !== way.node.id) way.by = by;
+  }
+  return way;
+};
+
 /** What `entriesNone` says when ways in lie only beyond channels (P372). */
 const beyondSaid = (ways: number): string =>
   `no way in calls this; ${ways} way${ways === 1 ? ' in lies' : 's in lie'} beyond a channel a consumer on the way takes messages from: throughChannels`;
@@ -358,7 +368,7 @@ const throughRow = (through: ThroughChannel): object => ({
   consumer: through.consumer.id,
   ...(through.consumers > 1 ? { consumers: through.consumers } : {}),
   ways: through.ways.length,
-  sample: through.ways.slice(0, CHANNEL_SAMPLE).map((way) => way.node.id),
+  sample: through.ways.slice(0, CHANNEL_SAMPLE).map((way) => ({ id: way.node.id, ...(way.by === undefined ? {} : { by: way.by.id }) })),
   ...(through.cut ? { walkCut: true } : {}),
 });
 
@@ -465,7 +475,7 @@ export const impactOf = (db: GraphDb, handle: Pick<DbHandle, 'config' | 'path'>,
       elsewhere += 1;
       continue;
     }
-    ways.push(way);
+    ways.push(withHandler(db, walked, way));
     entriesByService[way.node.repo] = (entriesByService[way.node.repo] ?? 0) + 1;
   }
   // A chain that ends before any way in, where an unread call could reach it: a maybe row, with the gap.
@@ -492,10 +502,15 @@ export const impactOf = (db: GraphDb, handle: Pick<DbHandle, 'config' | 'path'>,
     .sort();
 
   const { items, total, truncated, nextOffset } = truncate(listed, maxNodes, input.offset);
-  // Whether each way in runs (P364) and the crossing it reaches the target through (P367).
+  // Whether each way in runs (P364), the crossing it reaches the target through (P367), and the code that handles it (P374).
   const rows = items.map((way) => {
     const row = reader.annotate(projectDetail(way.node, detail));
-    return detail < 1 || way.via === undefined ? row : { ...row, via: viaSaid(way.via, way.node) };
+    if (detail < 1) return row;
+    return {
+      ...row,
+      ...(way.via === undefined ? {} : { via: viaSaid(way.via, way.node) }),
+      ...(way.by === undefined ? {} : { by: way.by.id }),
+    };
   });
   const targetReach = detail < 1 ? undefined : reader.of(target.id).reach;
   const args = { symbol: target.id, service: input.service, detail: input.detail, maxNodes, ...(input.channel === undefined ? {} : { channel: input.channel }) };

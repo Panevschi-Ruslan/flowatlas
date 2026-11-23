@@ -13,5 +13,5 @@
                         @  workflow loan-approval                         circulation/statemachine/loan-approval.asl.json:1
 Reachable from: 2 workflows (circulation, notifications)
 Could break:
-  workflow loan-approval (circulation)  outside
-  workflow borrower-notifications (notifications)  alive
+  workflow loan-approval (circulation)  outside, by ShapeApplication [Pass] statemachine/loan-approval.asl.json:5
+  workflow borrower-notifications (notifications)  alive, by ChooseChannel [Choice] workflows/borrower-notifications.asl.yaml:4

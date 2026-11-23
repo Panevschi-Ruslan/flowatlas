@@ -15,7 +15,8 @@
       "loc": "src/tickets/tickets.controller.ts:13",
       "service": "desk-api",
       "kind": "http",
-      "reach": "dead"
+      "reach": "dead",
+      "by": "desk-api#src/tickets/tickets.controller.ts:TicketsController.close"
     }
   ],
   "total": 1,

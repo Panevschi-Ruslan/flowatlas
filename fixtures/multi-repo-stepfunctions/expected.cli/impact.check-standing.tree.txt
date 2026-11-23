@@ -4,7 +4,7 @@
       @  workflow circulation-checkout                    circulation/statemachine/checkout.asl.json:1
 Reachable from: 1 invoke (members), 1 workflow (circulation)
 Could break:
-  workflow circulation-checkout (circulation)  alive
-  members-check-standing (members)  outside
+  workflow circulation-checkout (circulation)  alive, by CheckStanding [Task lambda:invoke] statemachine/checkout.asl.json:5
+  members-check-standing (members)  outside, by handler src/handlers/check-standing.ts:8
 Only beyond a channel, calling none of it (--channel <name> lists them):
   eventbridge/library/library.members/CheckoutRequested  1 way in, taken by rule circulation-checkout-requested (circulation): POST /checkouts (members)

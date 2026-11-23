@@ -472,6 +472,12 @@ const GUARDED_CASES = [
   ['impact.items-across-channel.tree.txt', (io) => runImpact(GUARDED_TARGET, { ...guardedPlain, format: 'tree', channel: 'shop:*:orders' }, io)],
 ];
 
+/** impact's rows with the code that handles each way in (P374): a route's handler, the bot class behind a webhook, a screen's component. */
+const handlingPlain = { config: join(root, 'fixtures', 'rows-name-handling-code', 'flowatlas.config.json'), color: false, ascii: true };
+const HANDLING_CASES = [
+  ['impact.cancel.tree.txt', (io) => runImpact('shop-api#src/orders/orders.service.ts:OrdersService.cancel', { ...handlingPlain, format: 'tree' }, io)],
+];
+
 const GRAPHQL_CASES = [
   ['flow.orders-page.tree.txt', (io) => runFlow('web#src/orders/OrdersPage.tsx:OrdersPage', { ...graphqlPlain, format: 'tree' }, io)],
   ['impact.order-customer.tree.txt', (io) => runImpact('entry:orders:graphql:Order.customer', { ...graphqlPlain, format: 'tree' }, io)],
@@ -1279,6 +1285,7 @@ const SUITES = [
   { dir: join(graphqlFixture, 'expected.cli'), owned: true, cases: GRAPHQL_CASES },
   { dir: join(root, 'fixtures', 'angular-rendered-reach', 'expected.cli'), owned: true, cases: RENDERED_CASES },
   { dir: join(root, 'fixtures', 'impact-guarded-navigation', 'expected.cli'), owned: true, cases: GUARDED_CASES },
+  { dir: join(root, 'fixtures', 'rows-name-handling-code', 'expected.cli'), owned: true, cases: HANDLING_CASES },
   { dir: join(federationFixture, 'expected.cli'), owned: true, cases: FEDERATION_CASES },
   { dir: join(composedFixture, 'expected.cli'), owned: true, cases: COMPOSED_CASES },
   { dir: join(interfacesFixture, 'expected.cli'), owned: true, cases: INTERFACES_CASES },

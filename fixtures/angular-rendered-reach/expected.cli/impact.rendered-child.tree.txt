@@ -11,8 +11,8 @@
         -> ItemsLookupService.byKey        catalog-web/src/app/items-lookup.service.ts:21
 Reachable from: 1 http entry (catalog-api), 1 screen (catalog-web)
 Could break:
-  GET /items/:param (catalog-api)  alive
-  /catalog (catalog-web)  outside, via GET /items/:param (catalog-api)
+  GET /items/:param (catalog-api)  alive, by ItemsController.findOne src/items.controller.ts:9
+  /catalog (catalog-web)  outside, via GET /items/:param (catalog-api), by CatalogPageComponent src/app/catalog-page.component.ts:4
 Maybe, behind a call the reading could not follow:
   ItemsLookupService.byKey (catalog-web)  maybe, via GET /items/:param (catalog-api), gap gap:catalog-web|src/app/items-lookup.service.ts|navigation-unresolved
 Unreached: 1 chain ends at code whose name its repository writes nowhere else, so nothing could break through it

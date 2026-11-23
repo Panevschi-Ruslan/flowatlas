@@ -13,11 +13,15 @@ import { cmp, edgeKey } from './order.js';
  * publish through it has been read. Here they are: every channel a publish
  * through that bus, in the same service, writes to. Each gets a `consumes`
  * edge, `static` - the bus hands the subscriber every frame it carries - with
- * `via: every-channel`. The types the subscriber chooses are drawn on each of
- * them by the message types' join, as for any consumer.
+ * `via: every-channel`. The types the subscriber chooses are drawn by the
+ * message types' join only on those of them where a publish sends that type
+ * (or a type not read), since the subscriber chose no channel (P374).
  *
  * A subscriber whose bus carries nothing read is one `info` row.
  */
+/** The `via` on the `consumes` edge joining a subscriber to every channel of a bus to each of them. */
+export const EVERY_CHANNEL_VIA = 'every-channel';
+
 export const joinEveryChannel = (nodes: Map<string, GraphNode>, edges: Map<string, GraphEdge>): Unresolved[] => {
   const subscribers = [...nodes.values()]
     .filter((node) => node.type === 'consumer' && typeof node.meta?.[EVERY_CHANNEL_META] === 'string')
@@ -61,7 +65,7 @@ export const joinEveryChannel = (nodes: Map<string, GraphNode>, edges: Map<strin
         confidence: 'static',
         ...(subscriber.file === undefined ? {} : { file: subscriber.file }),
         ...(subscriber.line === undefined ? {} : { line: subscriber.line }),
-        meta: { via: 'every-channel' },
+        meta: { via: EVERY_CHANNEL_VIA },
       };
       if (!edges.has(edgeKey(edge))) edges.set(edgeKey(edge), edge);
     }
