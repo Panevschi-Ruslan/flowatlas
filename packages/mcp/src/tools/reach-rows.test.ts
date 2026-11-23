@@ -139,7 +139,7 @@ describe('whether a list is the whole answer', () => {
     const answer = await call('who_calls', { symbol: ASSIGN, depth: 1 });
     expect(answer.complete).toBe(false);
     expect(answer.left).toEqual(['depth: 1 callers past depth 1, from the frontier rows']);
-    expect(answer.next[0]).toBe(`who_calls({symbol: ${JSON.stringify(ASSIGN)}, depth: 2})`);
+    expect(answer.next[0]).toBe(`who_calls({symbol: ${JSON.stringify(ASSIGN)}})`);
   });
 
   it('names a page left', async () => {

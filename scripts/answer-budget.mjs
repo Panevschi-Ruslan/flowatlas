@@ -28,7 +28,8 @@
  * recorded size by more than 10% or 300 characters, whichever is larger; when
  * a list misses an id it must hold or holds one it must not; when an answer
  * says `complete: false` where the right answer is complete; and when a
- * question answered complete takes more than one call. A change that grows
+ * question answered complete takes more than one call, or names the same
+ * call asked further in `next` (P376). A change that grows
  * an answer re-records with `--update` and says why in its commit.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -39,7 +40,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createFlowatlasServer } from '@flowatlas/mcp';
 import { loadConfig } from '@flowatlas/core';
 import { CORE_TOOLS, guideDescription, missingCandidatesFor, reasonCatalog, sharedBlock } from '../packages/cli/dist/index.js';
-import { ceilingOf, followOn, overBudget, rowsByList, tokensOf, wrongIn } from './answer-budget-rules.mjs';
+import { asksFurther, ceilingOf, followOn, overBudget, rowsByList, tokensOf, wrongIn } from './answer-budget-rules.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const budgetPath = join(root, 'scripts', 'answer-budget.json');
@@ -151,6 +152,8 @@ for (const [fixtureName, questions] of byFixture) {
       const result = await ask(client, question);
       after[question.id] = result.measured;
       for (const wrong of wrongIn(question.expect ?? {}, result)) problems.push(`${question.id}: ${wrong}`);
+      const further = asksFurther(question.tool, question.args, result.first);
+      if (further !== undefined) problems.push(`${question.id}: ${further}`);
       if (update) continue;
       const was = before[question.id];
       if (was === undefined) {

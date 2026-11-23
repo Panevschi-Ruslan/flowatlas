@@ -380,9 +380,14 @@ read before it is accepted rather than slipping in with a snapshot.
 On P373's tree a turn carries about 3,960 characters of instructions, guide
 block and skill description (about 990 tokens), 9,340 with the core tools
 loaded. One `impact` call answers which ways in could break in 749 to 1,477
-characters; `who_calls` on the main fixture's service method takes three
-calls and 13,567 characters, since its default depth stops twice before the
-ways in.
+characters; `who_calls` on the main fixture's service method took three
+calls and 13,567 characters, since its default depth stopped twice before the
+ways in. Since P376 it answers in one call of 2,004, the ways in listed once
+each.
+
+A complete answer whose `next` still names the same call asked further (a
+deeper `who_calls`, the next page) fails the budget too (P376): the agent
+would ask it, so the answer was not the whole answer after all.
 
 #### Answers that finish in one call (P364)
 
@@ -742,7 +747,7 @@ route matched too. A helper's choices count: `423` finds the routes whose
 | Tool | Answers | Takes |
 |---|---|---|
 | `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain; with `to`, only the shortest ways to that node | `entry` (required), `to`, `depth` (8, one more per workflow step), `maxChars` |
-| `who_calls` | everything that reaches a symbol, backwards across repositories | `symbol` (required), `depth` (3; 16 at most), `service` |
+| `who_calls` | everything that reaches a symbol, backwards across repositories, up to every way in: the nearest callers as a tree, then each way in once under `waysIn` | `symbol` or `symbols` (required), `depth` (unset: walk to the ways in; 16 at most: the tree alone), `service` |
 | `impact` | every way in whose code calls a symbol, in any service: its own, those past each route on the calling side with `via`, and `maybe` rows where a chain stops at an unread call; the ways in only beyond a channel a consumer on the way takes messages from counted in `throughChannels` | `symbol` (required), `channel` (list one of `throughChannels`), `service`, `offset` |
 
 Asked about a class, `who_calls` and `impact` answer for every method of it
@@ -860,11 +865,42 @@ gap", or "nothing reaches this"), and `next` names a deeper `who_calls`, the
 service's `cant_follow` and a gap search on the file. A walk that stopped at
 its own limit (4,000 nodes) says so in `truncated`.
 
-`who_calls` walks breadth first to `depth` (3; 16 at most) and counts what it
-left: a cut tree says `truncated: "n more nodes past depth 3; raise depth"`,
+**who_calls up to the ways in (P376).** Asked without `depth`, `who_calls`
+answers "who calls this, up to the ways in" in one call. `callers` is the tree
+of the nearest callers, two hops (one on a class or on several symbols: each
+method's or symbol's direct callers); past it the chains are not drawn, so the
+answer does not grow with how far the ways in are. `waysIn` lists every way in
+the walk reaches, each once, nearest first: its row with `reach`, `hops` (how
+many steps back it is) and `by` (the code that handles it on the chain, as
+impact says it). The walk is impact's (`waysIn`, P367 and P372): back past
+every way in to the callers beyond it (the gateway route that requests the
+route, the screen whose component requests that), never along a navigation
+or a guard's redirect, and never from a consumer back across its channel: the
+ways in only past a channel are counted under `throughChannels`, as impact
+counts them, and `impact({symbol, channel})` lists them. A chain that ends
+before any way in where an unread call could reach it is a `maybe` row (with
+`gap` or `behind`), one no unread call could reach is counted in `unreached`,
+and with no way in at all `waysInNone` says why. The walk reads at most 4,000
+nodes per symbol and 20,000 for all asked together; past either, `left` says
+so. `next` never names a deeper `who_calls`: the answer reached the ways in.
+
+On a class, `waysIn` says which methods each way in reaches in `reaches` (by
+the method's own name, as `calls` on its callers says it), and asked several
+`symbols`, each answer under `answers` holds its target and direct callers
+while `waysIn` is said once for all of them, `reaches` naming the symbols
+(by label) a way in reaches where it reaches only some. On the
+`callers-walked-to-ways-in` fixture, `who_calls` on a method whose report
+route is five calls down answers in one call of 2,828 characters where a depth
+of 3 took three calls and 11,993, and on its class in 2,926 where it took three
+and 20,854.
+
+With `depth`, `who_calls` walks breadth first to that depth (16 at most) and
+draws the tree alone, as before, and counts what it left: a cut tree says
+`truncated: "n more nodes past depth 3; ask without depth for every way in"`,
 `stoppedBy` (`depth`, `maxNodes`, the one that left out more first), and
-`frontier`, the rows on the depth line with callers past it, to ask on from
-when 16 is not enough. A caller the graph holds no node for is a `missing` row.
+`frontier`, the rows on the depth line with callers past it; `next` names the
+same call without `depth`, which walks to every way in. A caller the graph
+holds no node for is a `missing` row.
 A row that is no way in and that nothing calls carries `topOfChain: true` and
 `gapsInFile`, the gaps in its file that may be hiding its caller (the target
 itself says so at the top of the answer); `next` then names `cant_follow` for

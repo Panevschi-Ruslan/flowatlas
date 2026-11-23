@@ -1,0 +1,100 @@
+{
+  "target": {
+    "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+    "line": 25,
+    "reach": "alive",
+    "from": "GET /orders/:param"
+  },
+  "callers": [
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "line": 25,
+      "reach": "alive",
+      "from": "GET /orders/:param",
+      "edge": {
+        "type": "calls",
+        "params": [
+          "string"
+        ],
+        "returns": "type:@fx/contracts#OrderDto"
+      },
+      "children": [
+        {
+          "id": "entry:orders:http:GET:/orders/:param",
+          "loc": "src/orders/orders.controller.ts:25",
+          "reach": "alive",
+          "edge": {
+            "type": "handles",
+            "params": [
+              "string"
+            ],
+            "returns": "type:@fx/contracts#OrderDto"
+          }
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "line": 25,
+      "reach": "alive",
+      "hops": 2,
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+    },
+    {
+      "id": "entry:billing:event:invoice.requested",
+      "line": 28,
+      "reach": "dead",
+      "hops": 6,
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested"
+    },
+    {
+      "id": "entry:billing:event:order.created",
+      "line": 17,
+      "reach": "alive",
+      "hops": 6,
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
+    },
+    {
+      "id": "entry:billing:http:POST:/invoices",
+      "line": 15,
+      "reach": "alive",
+      "hops": 6,
+      "by": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
+    },
+    {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "line": 30,
+      "reach": "alive",
+      "hops": 6,
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.findOne"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "line": 40,
+      "reach": "alive",
+      "hops": 10,
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.invoice"
+    }
+  ],
+  "unreached": 5,
+  "throughChannels": [
+    {
+      "channel": "order.created",
+      "consumer": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "ways": 1,
+      "sample": [
+        {
+          "id": "entry:orders:http:POST:/orders",
+          "by": "orders#src/orders/orders.controller.ts:OrdersController.create"
+        }
+      ]
+    }
+  ],
+  "complete": true,
+  "next": [
+    "impact({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\", channel: \"order.created\"})",
+    "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})"
+  ]
+}

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { ceilingOf, followOn, listsOf, overBudget, parseCall, rowsByList, tokensOf, wrongIn } from './answer-budget-rules.mjs';
+import { asksFurther, ceilingOf, followOn, listsOf, overBudget, parseCall, rowsByList, tokensOf, wrongIn } from './answer-budget-rules.mjs';
 
 const tolerance = { ratio: 0.1, chars: 300 };
 
@@ -22,6 +22,10 @@ test('reads the rows of a list, a tree, a search by kind and several answers', (
   assert.deepEqual([...listsOf(search, ['results.*']).keys()], ['messages', 'routes']);
   const several = { answers: [{ matches: [{ id: 'x' }] }, { matches: [{ id: 'y' }] }] };
   assert.deepEqual(rowsByList([several], ['matches']).get('matches').map((row) => row.id), ['x', 'y']);
+  // A list said once beside several answers, for all of them (P376).
+  const shared = { answers: [{ callers: [{ id: 'c1' }] }, { callers: [{ id: 'c2' }] }], waysIn: [{ id: 'w' }] };
+  assert.deepEqual(rowsByList([shared], ['callers', 'waysIn']).get('waysIn').map((row) => row.id), ['w']);
+  assert.deepEqual(rowsByList([shared], ['callers', 'waysIn']).get('callers').map((row) => row.id), ['c1', 'c2']);
   const verdicts = { answers: [{ id: 'x', verdict: 'alive' }] };
   assert.deepEqual(rowsByList([verdicts], ['answers']).get('answers'), [{ id: 'x', verdict: 'alive' }]);
   // Pages of one question add up.
@@ -48,6 +52,12 @@ test('fails an answer that lists what it must not, misses what it must, or says 
     'entries lists extra, past the 3 it must hold exactly',
     'says complete: false where the right answer is complete',
   ]);
+  // A field a row must say may be a list, compared whole.
+  const ways = { waysIn: [{ id: 'route', reaches: ['a', 'b'] }] };
+  assert.deepEqual(wrongIn({ rowsSay: { waysIn: { route: { reaches: ['a', 'b'] } } } }, { first: ways, lists: rowsByList([ways], ['waysIn']), measured: { complete: null, calls: 1 } }), []);
+  assert.deepEqual(wrongIn({ rowsSay: { waysIn: { route: { reaches: ['a'] } } } }, { first: ways, lists: rowsByList([ways], ['waysIn']), measured: { complete: null, calls: 1 } }), [
+    'waysIn says reaches: ["a","b"] on route, where it is ["a"]',
+  ]);
   const field = { missing: [{ field: 'deskId', id: 'handler' }] };
   assert.deepEqual(wrongIn({ lists: { missing: ['deskId'] } }, { first: field, lists: rowsByList([field], ['missing']), measured: { complete: false, calls: 1 } }), []);
 });
@@ -69,6 +79,17 @@ test('follows the page an answer names, or the same question asked further, and 
   assert.equal(followOn('impact', args, { complete: false, next: ['get_flow({entry: "e"})'] }), undefined);
   assert.equal(followOn('who_calls', args, { complete: false, next: ['who_calls({symbol: "other", depth: 6})'] }), undefined);
   assert.equal(followOn('who_calls', args, { complete: true, next: ['who_calls({symbol: "a#b.ts:C.d", depth: 6})'] }), undefined);
+});
+
+test('fails a complete answer whose next asks the same call further (P376)', () => {
+  const args = { symbol: 'a#b.ts:C.d' };
+  assert.equal(
+    asksFurther('who_calls', args, { complete: true, next: ['who_calls({symbol: "a#b.ts:C.d", depth: 6})'] }),
+    'answered complete, yet next asks it further: who_calls({"symbol":"a#b.ts:C.d","depth":6})',
+  );
+  assert.equal(asksFurther('who_calls', args, { complete: true, next: ['get_flow({entry: "e"})'] }), undefined);
+  // An answer that is not complete may name the call that walks on.
+  assert.equal(asksFurther('who_calls', args, { complete: false, next: ['who_calls({symbol: "a#b.ts:C.d", depth: 6})'] }), undefined);
 });
 
 test('every question names its fixture, tool, lists and a right answer, and ids are unique', () => {

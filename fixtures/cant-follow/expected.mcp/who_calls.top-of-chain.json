@@ -12,6 +12,8 @@
   "topOfChain": true,
   "gapsInFile": 2,
   "callers": [],
+  "waysIn": [],
+  "waysInNone": "nothing reaches this",
   "complete": false,
   "left": [
     "gaps: 2 unread in its file, any may call it"

@@ -690,13 +690,13 @@ describe('working backwards', () => {
     expect(impact.next.every((hint: string) => hint.startsWith('impact('))).toBe(true);
   });
 
-  it('counts the callers it left past its depth, and names the rows to ask on from (P94)', async () => {
+  it('counts the callers it left past its depth, and names the call that walks to every way in (P94, P376)', async () => {
     const answer = await call('who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 2 });
     // The route's two callers past the cut: the gateway's call and billing's (P209).
-    expect(answer.truncated).toBe('2 more nodes past depth 2; raise depth');
+    expect(answer.truncated).toBe('2 more nodes past depth 2; ask without depth for every way in');
     expect(answer.stoppedBy).toEqual(['depth']);
     expect(answer.frontier).toEqual(['entry:orders:http:GET:/orders/:param']);
-    expect(answer.next[0]).toBe('who_calls({symbol: "orders#src/orders/orders.service.ts:OrdersService.findOne", depth: 4})');
+    expect(answer.next[0]).toBe('who_calls({symbol: "orders#src/orders/orders.service.ts:OrdersService.findOne"})');
   });
 
   it('says nothing was cut when the walk ran out of callers', async () => {

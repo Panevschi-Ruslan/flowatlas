@@ -1,0 +1,170 @@
+{
+  "target": {
+    "id": "stock-api#src/stock/stock.service.ts:StockService.level",
+    "line": 13,
+    "reach": "alive",
+    "from": "cron StockJobs.nightly",
+    "ways": 4
+  },
+  "callers": [
+    {
+      "id": "stock-api#src/checkout/checkout.service.ts:CheckoutService.cancel",
+      "line": 15,
+      "reach": "alive",
+      "from": "DELETE /checkout/:param",
+      "edge": {
+        "type": "calls",
+        "params": [
+          "string"
+        ],
+        "returns": "number"
+      },
+      "children": [
+        {
+          "id": "stock-api#src/checkout/checkout.controller.ts:CheckoutController.cancel",
+          "line": 13,
+          "reach": "alive",
+          "from": "DELETE /checkout/:param",
+          "edge": {
+            "type": "calls",
+            "params": [
+              "string",
+              "number"
+            ],
+            "returns": "number"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
+      "line": 9,
+      "reach": "alive",
+      "from": "POST /checkout",
+      "edge": {
+        "type": "calls",
+        "params": [
+          "string"
+        ],
+        "returns": "number"
+      },
+      "children": [
+        {
+          "id": "stock-api#src/checkout/checkout.controller.ts:CheckoutController.place",
+          "line": 8,
+          "reach": "alive",
+          "from": "POST /checkout",
+          "edge": {
+            "type": "calls",
+            "params": [
+              "string",
+              "number"
+            ],
+            "returns": "boolean"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stock-api#src/reports/report.builder.ts:ReportBuilder.row",
+      "line": 17,
+      "reach": "alive",
+      "from": "GET /reports/daily",
+      "edge": {
+        "type": "calls",
+        "params": [
+          "string"
+        ],
+        "returns": "number"
+      },
+      "children": [
+        {
+          "id": "stock-api#src/reports/report.builder.ts:ReportBuilder.section",
+          "line": 13,
+          "reach": "alive",
+          "from": "GET /reports/daily",
+          "edge": {
+            "type": "calls",
+            "params": [
+              "string"
+            ],
+            "returns": "string"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly",
+      "line": 10,
+      "reach": "alive",
+      "from": "cron StockJobs.nightly",
+      "edge": {
+        "type": "calls",
+        "params": [
+          "string"
+        ],
+        "returns": "number"
+      },
+      "children": [
+        {
+          "id": "entry:stock-api:cron:StockJobs.nightly",
+          "loc": "src/stock/stock.jobs.ts:10",
+          "reach": "outside",
+          "edge": {
+            "type": "handles",
+            "returns": "void"
+          }
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:stock-api:cron:StockJobs.nightly",
+      "line": 10,
+      "reach": "outside",
+      "hops": 2,
+      "by": "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly"
+    },
+    {
+      "id": "entry:stock-api:http:DELETE:/checkout/:param",
+      "line": 13,
+      "reach": "alive",
+      "hops": 3,
+      "by": "stock-api#src/checkout/checkout.controller.ts:CheckoutController.cancel"
+    },
+    {
+      "id": "entry:stock-api:http:POST:/checkout",
+      "line": 8,
+      "reach": "alive",
+      "hops": 3,
+      "by": "stock-api#src/checkout/checkout.controller.ts:CheckoutController.place"
+    },
+    {
+      "id": "entry:stock-api:http:GET:/reports/daily",
+      "line": 8,
+      "reach": "alive",
+      "hops": 6,
+      "by": "stock-api#src/reports/reports.controller.ts:ReportsController.daily"
+    },
+    {
+      "id": "entry:store-web:screen:/checkout",
+      "loc": "src/app/app.routes.ts:7",
+      "reach": "outside",
+      "hops": 8,
+      "by": "store-web#src/app/checkout.component.ts:CheckoutComponent"
+    },
+    {
+      "id": "entry:store-web:screen:/reports",
+      "loc": "src/app/app.routes.ts:8",
+      "reach": "outside",
+      "hops": 11,
+      "by": "store-web#src/app/report.component.ts:ReportComponent"
+    }
+  ],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:stock-api:cron:StockJobs.nightly\"})",
+    "describe_for_prompt({id: \"entry:stock-api:cron:StockJobs.nightly\"})"
+  ]
+}

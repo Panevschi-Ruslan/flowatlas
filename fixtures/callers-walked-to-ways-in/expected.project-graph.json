@@ -1,0 +1,1269 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T23:03:25.088Z",
+  "services": [
+    {
+      "name": "stock-api",
+      "repo": "./stock-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "store-web",
+      "repo": "./store-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:stock-api:cron:StockJobs.nightly",
+      "type": "entry",
+      "label": "cron StockJobs.nightly",
+      "repo": "stock-api",
+      "file": "src/stock/stock.jobs.ts",
+      "line": 10,
+      "kind": "cron",
+      "meta": {
+        "expression": "0 3 * * *",
+        "trigger": "Cron",
+        "adapter": "nestjs-schedule"
+      }
+    },
+    {
+      "id": "entry:stock-api:http:DELETE:/checkout/:param",
+      "type": "entry",
+      "label": "DELETE /checkout/:param",
+      "repo": "stock-api",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/checkout/:param",
+        "rawPath": "/checkout/:sku",
+        "controller": "CheckoutController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stock-api:http:GET:/reports/daily",
+      "type": "entry",
+      "label": "GET /reports/daily",
+      "repo": "stock-api",
+      "file": "src/reports/reports.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/reports/daily",
+        "rawPath": "/reports/daily",
+        "controller": "ReportsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stock-api:http:POST:/checkout",
+      "type": "entry",
+      "label": "POST /checkout",
+      "repo": "stock-api",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/checkout",
+        "rawPath": "/checkout",
+        "controller": "CheckoutController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:store-web:screen:/checkout",
+      "type": "entry",
+      "label": "/checkout",
+      "repo": "store-web",
+      "file": "src/app/app.routes.ts",
+      "line": 7,
+      "kind": "screen",
+      "meta": {
+        "path": "/checkout",
+        "by": "angular-routes",
+        "screens": [
+          "CheckoutComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:store-web:screen:/reports",
+      "type": "entry",
+      "label": "/reports",
+      "repo": "store-web",
+      "file": "src/app/app.routes.ts",
+      "line": 8,
+      "kind": "screen",
+      "meta": {
+        "path": "/reports",
+        "by": "angular-routes",
+        "screens": [
+          "ReportComponent"
+        ]
+      }
+    },
+    {
+      "id": "repo:stock-api",
+      "type": "repo",
+      "label": "stock-api",
+      "repo": "stock-api",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 8,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "nestjs-schedule"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:store-web",
+      "type": "repo",
+      "label": "store-web",
+      "repo": "store-web",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "templates": 2,
+          "skippedExternalCalls": {
+            "rxjs": 3,
+            "@angular/common": 3
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "stock-api",
+      "file": "src/app.module.ts",
+      "line": 10,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "CheckoutController",
+          "ReportsController"
+        ],
+        "providers": [
+          "StockService",
+          "StockJobs",
+          "CheckoutService",
+          "ReportsService",
+          "ReportBuilder"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "stock-api#src/checkout/checkout.controller.ts:CheckoutController",
+      "type": "provider",
+      "label": "CheckoutController",
+      "repo": "stock-api",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stock-api#src/checkout/checkout.controller.ts:CheckoutController.cancel",
+      "type": "method",
+      "label": "CheckoutController.cancel",
+      "repo": "stock-api",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{qty:number}"
+            }
+          ],
+          "returns": "number"
+        },
+        "fieldsRead": [
+          {
+            "field": "qty",
+            "line": 15
+          }
+        ]
+      }
+    },
+    {
+      "id": "stock-api#src/checkout/checkout.controller.ts:CheckoutController.place",
+      "type": "method",
+      "label": "CheckoutController.place",
+      "repo": "stock-api",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{sku:string;qty:number}"
+            }
+          ],
+          "returns": "boolean"
+        },
+        "fieldsRead": [
+          {
+            "field": "qty",
+            "line": 10
+          },
+          {
+            "field": "sku",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "stock-api#src/checkout/checkout.service.ts:CheckoutService",
+      "type": "provider",
+      "label": "CheckoutService",
+      "repo": "stock-api",
+      "file": "src/checkout/checkout.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stock-api#src/checkout/checkout.service.ts:CheckoutService.cancel",
+      "type": "method",
+      "label": "CheckoutService.cancel",
+      "repo": "stock-api",
+      "file": "src/checkout/checkout.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "qty",
+              "type": "number"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
+      "type": "method",
+      "label": "CheckoutService.place",
+      "repo": "stock-api",
+      "file": "src/checkout/checkout.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "qty",
+              "type": "number"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/reports/report.builder.ts:ReportBuilder",
+      "type": "provider",
+      "label": "ReportBuilder",
+      "repo": "stock-api",
+      "file": "src/reports/report.builder.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stock-api#src/reports/report.builder.ts:ReportBuilder.build",
+      "type": "method",
+      "label": "ReportBuilder.build",
+      "repo": "stock-api",
+      "file": "src/reports/report.builder.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "skus",
+              "type": "string[]"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/reports/report.builder.ts:ReportBuilder.row",
+      "type": "method",
+      "label": "ReportBuilder.row",
+      "repo": "stock-api",
+      "file": "src/reports/report.builder.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/reports/report.builder.ts:ReportBuilder.section",
+      "type": "method",
+      "label": "ReportBuilder.section",
+      "repo": "stock-api",
+      "file": "src/reports/report.builder.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/reports/reports.controller.ts:ReportsController",
+      "type": "provider",
+      "label": "ReportsController",
+      "repo": "stock-api",
+      "file": "src/reports/reports.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stock-api#src/reports/reports.controller.ts:ReportsController.daily",
+      "type": "method",
+      "label": "ReportsController.daily",
+      "repo": "stock-api",
+      "file": "src/reports/reports.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stock-api#src/reports/reports.service.ts:ReportsService",
+      "type": "provider",
+      "label": "ReportsService",
+      "repo": "stock-api",
+      "file": "src/reports/reports.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stock-api#src/reports/reports.service.ts:ReportsService.daily",
+      "type": "method",
+      "label": "ReportsService.daily",
+      "repo": "stock-api",
+      "file": "src/reports/reports.service.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/stock/stock.jobs.ts:StockJobs",
+      "type": "provider",
+      "label": "StockJobs",
+      "repo": "stock-api",
+      "file": "src/stock/stock.jobs.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly",
+      "type": "method",
+      "label": "StockJobs.nightly",
+      "repo": "stock-api",
+      "file": "src/stock/stock.jobs.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/stock/stock.service.ts:StockService",
+      "type": "provider",
+      "label": "StockService",
+      "repo": "stock-api",
+      "file": "src/stock/stock.service.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stock-api#src/stock/stock.service.ts:StockService.level",
+      "type": "method",
+      "label": "StockService.level",
+      "repo": "stock-api",
+      "file": "src/stock/stock.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/stock/stock.service.ts:StockService.release",
+      "type": "method",
+      "label": "StockService.release",
+      "repo": "stock-api",
+      "file": "src/stock/stock.service.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "qty",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/stock/stock.service.ts:StockService.reserve",
+      "type": "method",
+      "label": "StockService.reserve",
+      "repo": "stock-api",
+      "file": "src/stock/stock.service.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "qty",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/stock/stock.service.ts:StockService.restock",
+      "type": "method",
+      "label": "StockService.restock",
+      "repo": "stock-api",
+      "file": "src/stock/stock.service.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "store-web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "store-web#src/app/checkout.component.ts:CheckoutComponent",
+      "type": "ui_component",
+      "label": "CheckoutComponent",
+      "repo": "store-web",
+      "file": "src/app/checkout.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-checkout",
+        "route": "/checkout"
+      }
+    },
+    {
+      "id": "store-web#src/app/checkout.component.ts:CheckoutComponent.cancel",
+      "type": "method",
+      "label": "CheckoutComponent.cancel",
+      "repo": "store-web",
+      "file": "src/app/checkout.component.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/checkout.component.ts:CheckoutComponent.place",
+      "type": "method",
+      "label": "CheckoutComponent.place",
+      "repo": "store-web",
+      "file": "src/app/checkout.component.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/report.component.ts:ReportComponent",
+      "type": "ui_component",
+      "label": "ReportComponent",
+      "repo": "store-web",
+      "file": "src/app/report.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-report",
+        "route": "/reports"
+      }
+    },
+    {
+      "id": "store-web#src/app/report.component.ts:ReportComponent.ngOnInit",
+      "type": "method",
+      "label": "ReportComponent.ngOnInit",
+      "repo": "store-web",
+      "file": "src/app/report.component.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/store.client.ts:StoreClient",
+      "type": "provider",
+      "label": "StoreClient",
+      "repo": "store-web",
+      "file": "src/app/store.client.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "store-web#src/app/store.client.ts:StoreClient.cancel",
+      "type": "method",
+      "label": "StoreClient.cancel",
+      "repo": "store-web",
+      "file": "src/app/store.client.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/store.client.ts:StoreClient.daily",
+      "type": "method",
+      "label": "StoreClient.daily",
+      "repo": "store-web",
+      "file": "src/app/store.client.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/store.client.ts:StoreClient.place",
+      "type": "method",
+      "label": "StoreClient.place",
+      "repo": "store-web",
+      "file": "src/app/store.client.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "qty",
+              "type": "number"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "ui_action:store-web#src/app/checkout.component.ts:9:22",
+      "type": "ui_action",
+      "label": "click=\"place()\"",
+      "repo": "store-web",
+      "file": "src/app/checkout.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "place()",
+        "component": "store-web#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:store-web#src/app/checkout.component.ts:9:62",
+      "type": "ui_action",
+      "label": "click=\"cancel()\"",
+      "repo": "store-web",
+      "file": "src/app/checkout.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "cancel()",
+        "component": "store-web#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:store-web#src/app/report.component.ts:16:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "store-web",
+      "file": "src/app/report.component.ts",
+      "line": 16,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "store-web#src/app/report.component.ts:ReportComponent",
+        "template": "src/app/report.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:store-web#src/app/store.client.ts:13:12",
+      "type": "ui_api_call",
+      "label": "POST /checkout",
+      "repo": "store-web",
+      "file": "src/app/store.client.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/checkout",
+        "path": "/checkout",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "boolean",
+        "bodyType": "{sku:string;qty:number}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "qty",
+          "sku"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "stock-api"
+      }
+    },
+    {
+      "id": "ui_api_call:store-web#src/app/store.client.ts:17:12",
+      "type": "ui_api_call",
+      "label": "DELETE /checkout/:param",
+      "repo": "store-web",
+      "file": "src/app/store.client.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "url": "${apiUrl}/checkout/:param",
+        "path": "/checkout/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "number",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "stock-api"
+      }
+    },
+    {
+      "id": "ui_api_call:store-web#src/app/store.client.ts:21:12",
+      "type": "ui_api_call",
+      "label": "GET /reports/daily",
+      "repo": "store-web",
+      "file": "src/app/store.client.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/reports/daily",
+        "path": "/reports/daily",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "stock-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:stock-api:cron:StockJobs.nightly",
+      "to": "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/stock/stock.jobs.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:stock-api:http:DELETE:/checkout/:param",
+      "to": "stock-api#src/checkout/checkout.controller.ts:CheckoutController.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{qty:number}"
+      ],
+      "returns": "number",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 13,
+      "meta": {
+        "params": "{sku:string}",
+        "body": "{qty:number}"
+      }
+    },
+    {
+      "from": "entry:stock-api:http:GET:/reports/daily",
+      "to": "stock-api#src/reports/reports.controller.ts:ReportsController.daily",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/reports/reports.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:stock-api:http:POST:/checkout",
+      "to": "stock-api#src/checkout/checkout.controller.ts:CheckoutController.place",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{sku:string;qty:number}"
+      ],
+      "returns": "boolean",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 8,
+      "meta": {
+        "body": "{sku:string;qty:number}"
+      }
+    },
+    {
+      "from": "entry:store-web:screen:/checkout",
+      "to": "store-web#src/app/checkout.component.ts:CheckoutComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 7,
+      "meta": {
+        "route": "/checkout"
+      }
+    },
+    {
+      "from": "entry:store-web:screen:/reports",
+      "to": "store-web#src/app/report.component.ts:ReportComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 8,
+      "meta": {
+        "route": "/reports"
+      }
+    },
+    {
+      "from": "stock-api#src/checkout/checkout.controller.ts:CheckoutController",
+      "to": "stock-api#src/checkout/checkout.service.ts:CheckoutService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "stock-api#src/checkout/checkout.controller.ts:CheckoutController.cancel",
+      "to": "stock-api#src/checkout/checkout.service.ts:CheckoutService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "number",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "stock-api#src/checkout/checkout.controller.ts:CheckoutController.place",
+      "to": "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "boolean",
+      "file": "src/checkout/checkout.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "stock-api#src/checkout/checkout.service.ts:CheckoutService",
+      "to": "stock-api#src/stock/stock.service.ts:StockService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/checkout/checkout.service.ts",
+      "line": 7
+    },
+    {
+      "from": "stock-api#src/checkout/checkout.service.ts:CheckoutService.cancel",
+      "to": "stock-api#src/stock/stock.service.ts:StockService.level",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/checkout/checkout.service.ts",
+      "line": 17
+    },
+    {
+      "from": "stock-api#src/checkout/checkout.service.ts:CheckoutService.cancel",
+      "to": "stock-api#src/stock/stock.service.ts:StockService.release",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/checkout/checkout.service.ts",
+      "line": 16
+    },
+    {
+      "from": "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
+      "to": "stock-api#src/stock/stock.service.ts:StockService.level",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/checkout/checkout.service.ts",
+      "line": 10
+    },
+    {
+      "from": "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
+      "to": "stock-api#src/stock/stock.service.ts:StockService.reserve",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/checkout/checkout.service.ts",
+      "line": 11
+    },
+    {
+      "from": "stock-api#src/reports/report.builder.ts:ReportBuilder",
+      "to": "stock-api#src/stock/stock.service.ts:StockService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/reports/report.builder.ts",
+      "line": 7
+    },
+    {
+      "from": "stock-api#src/reports/report.builder.ts:ReportBuilder.build",
+      "to": "stock-api#src/reports/report.builder.ts:ReportBuilder.section",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/reports/report.builder.ts",
+      "line": 10,
+      "meta": {
+        "inLoop": {
+          "kind": "map",
+          "line": 10
+        }
+      }
+    },
+    {
+      "from": "stock-api#src/reports/report.builder.ts:ReportBuilder.row",
+      "to": "stock-api#src/stock/stock.service.ts:StockService.level",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/reports/report.builder.ts",
+      "line": 18
+    },
+    {
+      "from": "stock-api#src/reports/report.builder.ts:ReportBuilder.section",
+      "to": "stock-api#src/reports/report.builder.ts:ReportBuilder.row",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/reports/report.builder.ts",
+      "line": 14
+    },
+    {
+      "from": "stock-api#src/reports/reports.controller.ts:ReportsController",
+      "to": "stock-api#src/reports/reports.service.ts:ReportsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "stock-api#src/reports/reports.controller.ts:ReportsController.daily",
+      "to": "stock-api#src/reports/reports.service.ts:ReportsService.daily",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/reports/reports.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "stock-api#src/reports/reports.service.ts:ReportsService",
+      "to": "stock-api#src/reports/report.builder.ts:ReportBuilder",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 6
+    },
+    {
+      "from": "stock-api#src/reports/reports.service.ts:ReportsService.daily",
+      "to": "stock-api#src/reports/report.builder.ts:ReportBuilder.build",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string[]"
+      ],
+      "returns": "string[]",
+      "file": "src/reports/reports.service.ts",
+      "line": 9
+    },
+    {
+      "from": "stock-api#src/stock/stock.jobs.ts:StockJobs",
+      "to": "stock-api#src/stock/stock.service.ts:StockService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/stock/stock.jobs.ts",
+      "line": 8
+    },
+    {
+      "from": "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly",
+      "to": "stock-api#src/stock/stock.service.ts:StockService.level",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/stock/stock.jobs.ts",
+      "line": 12
+    },
+    {
+      "from": "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly",
+      "to": "stock-api#src/stock/stock.service.ts:StockService.restock",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/stock/stock.jobs.ts",
+      "line": 12
+    },
+    {
+      "from": "store-web#src/app/checkout.component.ts:CheckoutComponent",
+      "to": "store-web#src/app/store.client.ts:StoreClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 14
+    },
+    {
+      "from": "store-web#src/app/checkout.component.ts:CheckoutComponent.cancel",
+      "to": "store-web#src/app/store.client.ts:StoreClient.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/app/checkout.component.ts",
+      "line": 21
+    },
+    {
+      "from": "store-web#src/app/checkout.component.ts:CheckoutComponent.place",
+      "to": "store-web#src/app/store.client.ts:StoreClient.place",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "boolean",
+      "file": "src/app/checkout.component.ts",
+      "line": 17
+    },
+    {
+      "from": "store-web#src/app/report.component.ts:ReportComponent",
+      "to": "store-web#src/app/store.client.ts:StoreClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/report.component.ts",
+      "line": 14
+    },
+    {
+      "from": "store-web#src/app/report.component.ts:ReportComponent.ngOnInit",
+      "to": "store-web#src/app/store.client.ts:StoreClient.daily",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/app/report.component.ts",
+      "line": 17
+    },
+    {
+      "from": "store-web#src/app/store.client.ts:StoreClient",
+      "to": "store-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/store.client.ts",
+      "line": 10
+    },
+    {
+      "from": "store-web#src/app/store.client.ts:StoreClient.cancel",
+      "to": "ui_api_call:store-web#src/app/store.client.ts:17:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/store.client.ts",
+      "line": 17
+    },
+    {
+      "from": "store-web#src/app/store.client.ts:StoreClient.daily",
+      "to": "ui_api_call:store-web#src/app/store.client.ts:21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/store.client.ts",
+      "line": 21
+    },
+    {
+      "from": "store-web#src/app/store.client.ts:StoreClient.place",
+      "to": "ui_api_call:store-web#src/app/store.client.ts:13:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/store.client.ts",
+      "line": 13
+    },
+    {
+      "from": "ui_action:store-web#src/app/checkout.component.ts:9:22",
+      "to": "store-web#src/app/checkout.component.ts:CheckoutComponent.place",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_action:store-web#src/app/checkout.component.ts:9:62",
+      "to": "store-web#src/app/checkout.component.ts:CheckoutComponent.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_action:store-web#src/app/report.component.ts:16:3",
+      "to": "store-web#src/app/report.component.ts:ReportComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/report.component.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_api_call:store-web#src/app/store.client.ts:13:12",
+      "to": "entry:stock-api:http:POST:/checkout",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/store.client.ts",
+      "line": 13,
+      "params": [
+        "{sku:string;qty:number}"
+      ],
+      "returns": "boolean",
+      "meta": {
+        "via": "api-target",
+        "targetService": "stock-api"
+      }
+    },
+    {
+      "from": "ui_api_call:store-web#src/app/store.client.ts:17:12",
+      "to": "entry:stock-api:http:DELETE:/checkout/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/store.client.ts",
+      "line": 17,
+      "returns": "number",
+      "meta": {
+        "via": "api-target",
+        "targetService": "stock-api"
+      }
+    },
+    {
+      "from": "ui_api_call:store-web#src/app/store.client.ts:21:12",
+      "to": "entry:stock-api:http:GET:/reports/daily",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/store.client.ts",
+      "line": 21,
+      "returns": "string[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "stock-api"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": []
+}

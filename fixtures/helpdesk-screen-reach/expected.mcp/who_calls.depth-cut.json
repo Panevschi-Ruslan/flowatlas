@@ -31,7 +31,7 @@
       "children": []
     }
   ],
-  "truncated": "1 more nodes past depth 1; raise depth",
+  "truncated": "1 more node past depth 1; ask without depth for every way in",
   "stoppedBy": [
     "depth"
   ],
@@ -43,7 +43,7 @@
     "depth: 1 callers past depth 1, from the frontier rows"
   ],
   "next": [
-    "who_calls({symbol: \"desk-api#src/tickets/tickets.service.ts:TicketsService.assign\", depth: 2})",
+    "who_calls({symbol: \"desk-api#src/tickets/tickets.service.ts:TicketsService.assign\"})",
     "impact({symbol: \"desk-api#src/tickets/tickets.service.ts:TicketsService.assign\"})",
     "get_source({symbol: \"desk-api#src/tickets/tickets.service.ts:TicketsService.assign\"})"
   ]

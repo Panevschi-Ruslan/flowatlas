@@ -222,7 +222,7 @@
     "depth: 5 callers past depth 6, from the frontier rows"
   ],
   "next": [
-    "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\", depth: 12})",
+    "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\"})",
     "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})"
   ]
 }

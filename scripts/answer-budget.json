@@ -161,26 +161,41 @@
     },
     {
       "id": "who_calls.multi-repo",
-      "ask": "who calls OrdersService.findOne",
+      "ask": "who calls OrdersService.findOne, up to the ways in",
       "fixture": "multi-repo",
       "tool": "who_calls",
       "args": {
         "symbol": "orders#src/orders/orders.service.ts:OrdersService.findOne"
       },
       "lists": [
-        "callers"
+        "callers",
+        "waysIn"
       ],
       "expect": {
+        "complete": true,
         "lists": {
           "callers": [
-            "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+            "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+          ],
+          "waysIn": [
             "entry:orders:http:GET:/orders/:param",
             "entry:gateway:http:GET:/orders/:param",
             "entry:gateway:http:POST:/orders/:param/invoice",
-            "entry:billing:event:order.created"
+            "entry:billing:http:POST:/invoices",
+            "entry:billing:event:order.created",
+            "entry:billing:event:invoice.requested"
+          ]
+        },
+        "exact": [
+          "waysIn"
+        ],
+        "notListed": {
+          "waysIn": [
+            "entry:orders:http:POST:/orders"
           ]
         }
-      }
+      },
+      "note": "P376: one call walks to every way in, each listed once in waysIn; POST /orders reaches the method only across the order.created channel (P372), so it is counted under throughChannels, not listed."
     },
     {
       "id": "who_calls.helpdesk",
@@ -191,14 +206,164 @@
         "symbol": "desk-api#src/tickets/tickets.service.ts:TicketsService.assign"
       },
       "lists": [
-        "callers"
+        "callers",
+        "waysIn"
       ],
       "expect": {
+        "complete": true,
         "lists": {
-          "callers": [
+          "waysIn": [
             "entry:desk-api:http:POST:/desks/:param/tickets/:param/assign"
           ]
+        },
+        "exact": [
+          "waysIn"
+        ]
+      }
+    },
+    {
+      "id": "who_calls.long-chain",
+      "ask": "who calls StockService.level, up to the ways in",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "stock-api#src/stock/stock.service.ts:StockService.level"
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "callers": [
+            "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
+            "stock-api#src/checkout/checkout.service.ts:CheckoutService.cancel",
+            "stock-api#src/reports/report.builder.ts:ReportBuilder.row",
+            "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly"
+          ],
+          "waysIn": [
+            "entry:stock-api:http:POST:/checkout",
+            "entry:stock-api:http:DELETE:/checkout/:param",
+            "entry:stock-api:http:GET:/reports/daily",
+            "entry:stock-api:cron:StockJobs.nightly",
+            "entry:store-web:screen:/checkout",
+            "entry:store-web:screen:/reports"
+          ]
+        },
+        "exact": [
+          "waysIn"
+        ]
+      },
+      "note": "P376: GET /reports/daily is five calls from the method and the report screen further; a walk to a fixed depth of 3 stopped before both."
+    },
+    {
+      "id": "who_calls.class-shared-callers",
+      "ask": "who calls the methods of StockService, and from which ways in",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "stock-api#src/stock/stock.service.ts:StockService"
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "callers": [
+            "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
+            "stock-api#src/checkout/checkout.service.ts:CheckoutService.cancel",
+            "stock-api#src/reports/report.builder.ts:ReportBuilder.row",
+            "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly"
+          ],
+          "waysIn": [
+            "entry:stock-api:http:POST:/checkout",
+            "entry:stock-api:http:DELETE:/checkout/:param",
+            "entry:stock-api:http:GET:/reports/daily",
+            "entry:stock-api:cron:StockJobs.nightly",
+            "entry:store-web:screen:/checkout",
+            "entry:store-web:screen:/reports"
+          ]
+        },
+        "exact": [
+          "waysIn"
+        ],
+        "rowsSay": {
+          "waysIn": {
+            "entry:stock-api:http:POST:/checkout": {
+              "reaches": [
+                "level",
+                "reserve"
+              ]
+            },
+            "entry:stock-api:http:DELETE:/checkout/:param": {
+              "reaches": [
+                "level",
+                "release"
+              ]
+            },
+            "entry:stock-api:cron:StockJobs.nightly": {
+              "reaches": [
+                "level",
+                "restock"
+              ]
+            },
+            "entry:stock-api:http:GET:/reports/daily": {
+              "reaches": [
+                "level"
+              ]
+            },
+            "entry:store-web:screen:/checkout": {
+              "reaches": [
+                "level",
+                "release",
+                "reserve"
+              ]
+            },
+            "entry:store-web:screen:/reports": {
+              "reaches": [
+                "level"
+              ]
+            }
+          }
         }
+      },
+      "note": "P376: each way in once, saying which of the four methods it reaches; none reaches all four."
+    },
+    {
+      "id": "who_calls.several-symbols",
+      "ask": "who calls StockService.reserve and StockService.restock",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "who_calls",
+      "args": {
+        "symbols": [
+          "stock-api#src/stock/stock.service.ts:StockService.reserve",
+          "stock-api#src/stock/stock.service.ts:StockService.restock"
+        ]
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "callers": [
+            "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
+            "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly"
+          ],
+          "waysIn": [
+            "entry:stock-api:http:POST:/checkout",
+            "entry:stock-api:cron:StockJobs.nightly",
+            "entry:store-web:screen:/checkout"
+          ]
+        },
+        "exact": [
+          "callers",
+          "waysIn"
+        ]
       }
     },
     {
@@ -740,9 +905,9 @@
     "instructions": 2488,
     "guideBlock": 1205,
     "skillDescription": 268,
-    "listingCore": 5491,
-    "listingDefault": 10288,
-    "listingAll": 12967
+    "listingCore": 5499,
+    "listingDefault": 10296,
+    "listingAll": 12975
   },
   "recorded": {
     "impact.multi-repo": {
@@ -781,16 +946,37 @@
       "calls": 1
     },
     "who_calls.multi-repo": {
-      "chars": 13531,
-      "tokens": 3383,
-      "rows": 38,
-      "complete": false,
-      "calls": 3
+      "chars": 2004,
+      "tokens": 501,
+      "rows": 8,
+      "complete": true,
+      "calls": 1
     },
     "who_calls.helpdesk": {
-      "chars": 838,
-      "tokens": 210,
-      "rows": 2,
+      "chars": 1027,
+      "tokens": 257,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.long-chain": {
+      "chars": 2828,
+      "tokens": 707,
+      "rows": 14,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.class-shared-callers": {
+      "chars": 2926,
+      "tokens": 732,
+      "rows": 13,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.several-symbols": {
+      "chars": 1554,
+      "tokens": 389,
+      "rows": 5,
       "complete": true,
       "calls": 1
     },

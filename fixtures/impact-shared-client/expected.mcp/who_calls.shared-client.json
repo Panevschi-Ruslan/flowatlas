@@ -62,7 +62,7 @@
       ]
     }
   ],
-  "truncated": "3 more nodes past depth 2; raise depth",
+  "truncated": "3 more nodes past depth 2; ask without depth for every way in",
   "stoppedBy": [
     "depth"
   ],
@@ -75,7 +75,7 @@
     "depth: 3 callers past depth 2, from the frontier rows"
   ],
   "next": [
-    "who_calls({symbol: \"market-web#src/app/items.client.ts:ItemsClient.getHistory\", depth: 4})",
+    "who_calls({symbol: \"market-web#src/app/items.client.ts:ItemsClient.getHistory\"})",
     "impact({symbol: \"market-web#src/app/items.client.ts:ItemsClient.getHistory\"})",
     "get_source({symbol: \"market-web#src/app/items.client.ts:ItemsClient.getHistory\"})"
   ]

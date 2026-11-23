@@ -196,6 +196,7 @@ const HUB_SUBJECT_CASES = [
 const COMPACT_CASES = [
   ['get_flow.cross-service', 'get_flow', { entry: 'entry:gateway:http:GET:/orders/:param', depth: 8, verbose: false }],
   ['who_calls.cross-service', 'who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 6, verbose: false }],
+  ['who_calls.to-ways-in', 'who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', verbose: false }],
   ['impact.service-method', 'impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', verbose: false }],
   ['list_entries.truncated', 'list_entries', { maxNodes: 3, verbose: false }],
   ['find_symbol.partial', 'find_symbol', { query: 'fetchOne', verbose: false }],
@@ -337,6 +338,21 @@ const HANDLING_COMPACT_CASES = [
   ['who_consumes.never-subscribed', 'who_consumes', { channel: 'desk_alerts', type: 'HELP_REQUESTED', verbose: false }],
   ['search.every-channel-type', 'search', { query: 'HELP_REQUESTED', verbose: false }],
 ];
+
+/**
+ * who_calls walked to the ways in (P376): a method whose report route is five
+ * calls down, the class whose four methods share callers, and two of its
+ * methods asked together; and the same method with a depth, the tree alone.
+ */
+const CALLERS_STOCK = 'stock-api#src/stock/stock.service.ts:StockService';
+const CALLERS_CASES = [
+  ['who_calls.to-ways-in', 'who_calls', { symbol: `${CALLERS_STOCK}.level` }],
+  ['who_calls.class', 'who_calls', { symbol: CALLERS_STOCK }],
+  ['who_calls.several', 'who_calls', { symbols: [`${CALLERS_STOCK}.reserve`, `${CALLERS_STOCK}.restock`] }],
+  ['who_calls.depth-cut', 'who_calls', { symbol: `${CALLERS_STOCK}.level`, depth: 3 }],
+];
+/** The same, compact: what an agent is handed. */
+const CALLERS_COMPACT_CASES = CALLERS_CASES.slice(0, 3).map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
 
 /** The same impact and a flow through the rendered child, compact (P370). */
 const RENDERED_REACH_COMPACT_CASES = [
@@ -818,6 +834,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'rows-name-handling-code'),
     outDir: join(root, 'fixtures', 'rows-name-handling-code', 'expected.mcp.compact'),
     cases: HANDLING_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'callers-walked-to-ways-in'),
+    outDir: join(root, 'fixtures', 'callers-walked-to-ways-in', 'expected.mcp'),
+    cases: CALLERS_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'callers-walked-to-ways-in'),
+    outDir: join(root, 'fixtures', 'callers-walked-to-ways-in', 'expected.mcp.compact'),
+    cases: CALLERS_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

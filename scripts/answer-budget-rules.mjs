@@ -15,7 +15,8 @@ export const tokensOf = (chars) => Math.ceil(chars / 4);
  * under a key (`results.*`, a search's lists by kind, each named by its kind),
  * and under `answers` (several asked in one call) each answer's lists merged
  * by name, or each answer as a row of `answers` when the answers are
- * themselves the rows (`dead` with `ids`).
+ * themselves the rows (`dead` with `ids`), with a list said beside them for
+ * all of them (`waysIn`).
  */
 export const listsOf = (answer, names) => {
   const found = new Map();
@@ -38,7 +39,9 @@ export const listsOf = (answer, names) => {
       if (names.includes('answers')) add('answers', [each]);
       else one(each);
     }
-  } else one(answer);
+  }
+  // A list said once for all the answers (who_calls's waysIn, P376) is the call's own.
+  one(answer);
   return found;
 };
 
@@ -84,15 +87,31 @@ const WALKS_ON = new Set(['offset', 'depth', 'maxNodes']);
 export const followOn = (tool, args, answer) => {
   if (answer.complete !== false) return undefined;
   if (typeof answer.nextOffset === 'number') return { args: { ...args, offset: answer.nextOffset }, paged: true };
+  const call = furtherIn(tool, args, answer);
+  return call === undefined ? undefined : { args: call.args, paged: 'offset' in call.args && call.args.offset !== args.offset };
+};
+
+/**
+ * The call of `next` that asks the same question further: the same tool and
+ * inputs, but how far it walks or the page. Undefined where `next` names none.
+ */
+export const furtherIn = (tool, args, answer) => {
   for (const text of answer.next ?? []) {
     const call = parseCall(text);
     if (call === undefined || call.tool !== tool) continue;
     const keys = new Set([...Object.keys(args), ...Object.keys(call.args)]);
     const same = [...keys].every((key) => WALKS_ON.has(key) || JSON.stringify(args[key]) === JSON.stringify(call.args[key]));
     const further = [...keys].some((key) => WALKS_ON.has(key) && JSON.stringify(args[key]) !== JSON.stringify(call.args[key]));
-    if (same && further) return { args: call.args, paged: 'offset' in call.args && call.args.offset !== args.offset };
+    if (same && further) return call;
   }
   return undefined;
+};
+
+/** An answer that says it is complete and still has `next` ask the same call further (P376): the agent would ask it. */
+export const asksFurther = (tool, args, answer) => {
+  if (answer.complete !== true) return undefined;
+  const call = furtherIn(tool, args, answer);
+  return call === undefined ? undefined : `answered complete, yet next asks it further: ${tool}(${JSON.stringify(call.args)})`;
 };
 
 /**
@@ -123,7 +142,7 @@ export const wrongIn = (expect, { first, lists, measured }) => {
         continue;
       }
       for (const [field, value] of Object.entries(fields)) {
-        if (row[field] !== value) wrong.push(`${name} says ${field}: ${JSON.stringify(row[field])} on ${id}, where it is ${JSON.stringify(value)}`);
+        if (JSON.stringify(row[field]) !== JSON.stringify(value)) wrong.push(`${name} says ${field}: ${JSON.stringify(row[field])} on ${id}, where it is ${JSON.stringify(value)}`);
       }
     }
   }

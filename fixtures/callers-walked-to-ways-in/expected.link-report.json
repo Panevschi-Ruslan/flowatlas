@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T23:03:25.088Z",
+  "configHash": "604826b8a30d",
+  "services": [
+    {
+      "name": "stock-api",
+      "repo": "./stock-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 27,
+      "edges": 23,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1072,
+      "packages": {
+        "name": "stock-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/schedule"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "store-web",
+      "repo": "./store-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 19,
+      "edges": 14,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 864,
+      "packages": {
+        "name": "store-web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 3,
+    "resolved": 3,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 3,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 46,
+    "edges": 40,
+    "types": 0,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 0
+  }
+}

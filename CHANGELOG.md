@@ -8,6 +8,29 @@ only one of them moved.
 
 ### Added
 
+- **who_calls reaches the ways in in one call (P376).** Asked without
+  `depth`, `who_calls` draws the nearest callers (two hops; on a class or
+  several `symbols`, each one's direct callers) and lists every way in the
+  walk reaches once, nearest first, under `waysIn`, each with `reach`, `hops`
+  and `by`, read by impact's walk: past every way in to the callers beyond it,
+  never along a navigation, the ways in only past a channel counted under
+  `throughChannels`; a chain an unread call could reach is a `maybe` row, and
+  with no way in `waysInNone` says why. On a class each way in says which
+  methods it reaches (`reaches`, the methods by name, as `calls` now names
+  them on its callers), and asked several symbols the ways in are said once
+  for all of them, `reaches` naming the ones each reaches. With `depth` the
+  tree alone, as before, and a tree cut by depth names the same call without
+  `depth` in `next` (and its `truncated` says so) instead of a deeper depth.
+  The answer budget's `who_calls` questions now finish in one call:
+  multi-repo's service method 2,004 characters where it took three calls and
+  13,531, helpdesk's 1,027 (from 838, its one way in now also in `waysIn`),
+  and three new questions on a new fixture, `callers-walked-to-ways-in`: a
+  method five calls under its route in 2,828 (three calls and 11,993 at the
+  old depth), its class with four methods sharing callers in 2,926 (three
+  calls and 20,854), and two of its methods together in 1,554, complete
+  (1,758, incomplete). The budget also fails a complete answer whose `next`
+  asks the same call further, reads a list said once beside several answers,
+  and compares a list a row must say whole.
 - **What a pilot after P368-P373 got wrong (P374).** Each row of `impact`
   (and each `throughChannels` sample, now `{id, by?}`) says `by`, the code
   that handles its way in on the chain to the target: a screen's component, a

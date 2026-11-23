@@ -42,14 +42,23 @@
       "children": []
     }
   ],
-  "complete": false,
-  "left": [
-    "gaps: 1 chain top sits in a file with unread calls"
+  "waysIn": [
+    {
+      "id": "entry:catalog-web:screen:/reports",
+      "type": "entry",
+      "label": "/reports",
+      "loc": "src/app/app.routes.ts:10",
+      "service": "catalog-web",
+      "kind": "screen",
+      "reach": "outside",
+      "hops": 1,
+      "by": "catalog-web#src/app/reports-page.component.ts:ReportsPageComponent"
+    }
   ],
+  "complete": true,
   "next": [
-    "cant_follow({service: \"catalog-web\"})",
-    "search({query: \"src/app/app.component.ts\", kinds: [\"gaps\"]})",
     "get_flow({entry: \"entry:catalog-web:screen:/reports\"})",
-    "describe_for_prompt({id: \"entry:catalog-web:screen:/reports\"})"
+    "describe_for_prompt({id: \"entry:catalog-web:screen:/reports\"})",
+    "impact({symbol: \"entry:catalog-web:screen:/reports\"})"
   ]
 }

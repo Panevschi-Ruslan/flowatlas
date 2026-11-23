@@ -33,7 +33,19 @@ import {
 
 /** The deepest who_calls walks; past it the answer names the ids to ask from instead. */
 const MAX_CALLER_DEPTH = 16;
+/** The depth other tools' hints leave out when they name a deeper who_calls. */
 const DEFAULT_CALLER_DEPTH = 3;
+
+/**
+ * How many hops of callers who_calls draws as a tree when no `depth` is asked
+ * (P376): the ways in past them are listed once each, with how far they are.
+ * One hop on a class or several symbols: each asked symbol's direct callers.
+ */
+const NEAR_CALLER_DEPTH = 2;
+const NEAR_CALLER_DEPTH_SEVERAL = 1;
+
+/** The most nodes who_calls's walk to the ways in reads for all the symbols asked together; each on impact's bound. */
+const CALLERS_WALK_TOTAL = 20000;
 
 /** How many rows on the depth line an answer names, so the walk can be asked on from them. */
 const MAX_FRONTIER = 8;
@@ -209,14 +221,10 @@ const stoppedByOf = (cut: Callers['cut']): WalkLimit[] =>
   (['maxNodes', 'depth'] as const).filter((limit) => cut[limit] > 0).sort((a, b) => cut[b] - cut[a]);
 
 /** The sentence for the limit that left out more, with the advice that helps for it. */
-const callersCutSaid = (cut: Callers['cut'], limit: WalkLimit, depth: number, maxNodes: number): string => {
-  if (limit === 'depth' && depth >= MAX_CALLER_DEPTH) {
-    return `${cut.depth} more nodes past depth ${depth}, the deepest; ask who_calls on an id in frontier`;
-  }
-  return limit === 'depth'
-    ? truncationMessage(cut.depth, true, { limit: 'depth', at: depth })
+const callersCutSaid = (cut: Callers['cut'], limit: WalkLimit, depth: number, maxNodes: number): string =>
+  limit === 'depth'
+    ? `${cut.depth} more node${cut.depth === 1 ? '' : 's'} past depth ${depth}; ask without depth for every way in`
     : truncationMessage(cut.maxNodes, true, { limit: 'maxNodes', at: maxNodes, tool: 'who_calls' });
-};
 
 /**
  * The callers tree with only the branches that lead to the service asked for.
@@ -264,7 +272,8 @@ const topsWithGaps = (nodes: readonly FlowNode[]): number =>
 
 /** What who_calls was asked, less the symbol, which each answer of several takes in turn. */
 interface WhoCallsAsked {
-  depth: number;
+  /** Unset: the tree's first hops, then every way in past them (P376). */
+  depth?: number | undefined;
   service?: string | undefined;
   detail: number;
   maxNodes: number;
@@ -608,11 +617,186 @@ export const impactOf = (db: GraphDb, handle: Pick<DbHandle, 'config' | 'path'>,
   };
 };
 
+/** One symbol the ways in are walked to, and how a row of `waysIn` names it in `reaches`. */
+interface CallersGroup {
+  said: string;
+  start: GraphNode;
+  /** The symbol asked and the start: never a way in of its own walk. */
+  own: ReadonlySet<string>;
+}
+
+/**
+ * What who_calls walks to the ways in from (P376): each symbol asked, and for
+ * a class each of its methods something calls, so a way in names which of
+ * them it reaches. A class asked alone names its methods by their own names.
+ */
+const groupsOf = (db: GraphDb, target: GraphNode, alone: boolean): CallersGroup[] => {
+  const { starts, forClass } = startsOf(db, target);
+  if (!forClass) return [{ said: target.label, start: target, own: new Set([target.id]) }];
+  const prefix = `${target.label}.`;
+  return starts.map((start) => ({
+    said: alone && start.label.startsWith(prefix) ? start.label.slice(prefix.length) : start.label,
+    start,
+    own: new Set([target.id, start.id]),
+  }));
+};
+
+/** A row of who_calls's `waysIn`, `maybe` or `throughChannels`, and the symbols asked it reaches. */
+interface Reaching<T> {
+  item: T;
+  reaches: Set<string>;
+}
+
+interface CallersWaysIn {
+  ways: Array<Reaching<WayInFound>>;
+  maybes: Array<Reaching<WayInFound>>;
+  unreached: number;
+  /** The other ends of chains with no way in above them, nearest first: code nothing read calls, judged neither. */
+  ends: GraphNode[];
+  throughs: Array<Reaching<ThroughChannel>>;
+  /** A walk stopped at its bound: ways in past it are not listed. */
+  cut: boolean;
+  /** Symbols not walked from: the walks before them read `CALLERS_WALK_TOTAL` nodes. */
+  unwalked: string[];
+  groups: number;
+}
+
+/**
+ * Every way in that reaches the symbols asked, each once (P376), read by the
+ * walk impact reads them by (`waysIn`, P367 and P372): back past every way in
+ * to the callers beyond it, never along a navigation or across a channel a
+ * consumer on the way takes messages from, those channels counted apart. One
+ * walk per symbol, so each way in says which of them it reaches; a chain that
+ * ends before any way in, where an unread call could reach it, is a maybe.
+ */
+const callersWaysIn = (db: GraphDb, reader: ReachReader, groups: readonly CallersGroup[], keep: (node: GraphNode) => boolean): CallersWaysIn => {
+  const ways = new Map<string, Reaching<WayInFound>>();
+  const maybes = new Map<string, Reaching<WayInFound>>();
+  const unreached = new Set<string>();
+  const ends = new Map<string, GraphNode>();
+  const crossedBy = new Map<string, Set<string>>();
+  const found: WayInFound[] = [];
+  const crossings: Walked['crossings'] = [];
+  const unwalked: string[] = [];
+  let left = CALLERS_WALK_TOTAL;
+  let cut = false;
+  const add = (into: Map<string, Reaching<WayInFound>>, way: WayInFound, said: string): void => {
+    const known = into.get(way.node.id);
+    if (known === undefined) into.set(way.node.id, { item: way, reaches: new Set([said]) });
+    else {
+      known.reaches.add(said);
+      if (way.depth < known.item.depth) known.item = way;
+    }
+  };
+  for (const group of groups) {
+    if (left <= 0) {
+      unwalked.push(group.said);
+      continue;
+    }
+    const walked = reader.waysIn([group.start], Math.min(IMPACT_WALK_NODES, left));
+    left -= walked.read;
+    cut ||= walked.cut;
+    for (const way of walked.found) {
+      if (way.node.type !== 'entry' || group.own.has(way.node.id) || !keep(way.node)) continue;
+      add(ways, withHandler(db, walked, { ...way }), group.said);
+    }
+    for (const top of walked.tops) {
+      if (group.own.has(top.node.id) || !keep(top.node)) continue;
+      if (reader.maybeEnd(top.node)) add(maybes, top, group.said);
+      else if (reader.unreachedEnd(top.node)) unreached.add(top.node.id);
+      else if (!ends.has(top.node.id)) ends.set(top.node.id, top.node);
+    }
+    found.push(...walked.found);
+    for (const crossing of walked.crossings) {
+      crossings.push(crossing);
+      crossedBy.set(crossing.from.id, (crossedBy.get(crossing.from.id) ?? new Set()).add(group.said));
+    }
+  }
+  const owns = new Set(groups.flatMap((group) => [...group.own]));
+  // The channels every walk did not cross, each walked on from once.
+  const merged: Walked = { found, tops: [], met: [], parents: new Map(), crossings, read: 0, cut: false };
+  const throughs = throughChannelsOf(db, reader, merged, (way) => !owns.has(way.node.id) && !ways.has(way.node.id) && keep(way.node))
+    .filter((through) => through.ways.length > 0)
+    .map((through) => ({ item: through, reaches: crossedBy.get(through.from.id) ?? new Set<string>() }));
+  const byNear = (a: Reaching<WayInFound>, b: Reaching<WayInFound>): number => byDepthThenId(a.item, b.item);
+  return {
+    ways: [...ways.values()].sort(byNear),
+    maybes: [...maybes.values()].sort(byNear),
+    unreached: unreached.size,
+    ends: [...ends.values()],
+    throughs,
+    cut,
+    unwalked,
+    groups: groups.length,
+  };
+};
+
+/** The symbols asked a row reaches, said only where it reaches some of several. */
+const reachesSaid = (reaches: ReadonlySet<string>, groups: number): { reaches?: string[] } =>
+  groups > 1 && reaches.size < groups ? { reaches: [...reaches].sort() } : {};
+
+/** who_calls's ways in, maybe ends and channels as an answer says them, and what they leave out (P376). */
+const callersWaysInSaid = (
+  found: CallersWaysIn,
+  reader: ReachReader,
+  detail: 0 | 1 | 2 | 3,
+): { fields: Record<string, unknown>; left: string[]; first?: GraphNode; maybeTop?: GraphNode; channel?: string } => {
+  const maybes = found.maybes.length;
+  const beyond = found.throughs.reduce((sum, { item }) => sum + item.ways.length, 0);
+  // No way in, said rather than left as an empty list, as impact says it (P94).
+  const none =
+    found.ways.length > 0
+      ? undefined
+      : beyond > 0
+        ? beyondSaid(beyond)
+        : maybes > 0
+          ? 'no way in reaches this; the maybe rows stop at an unread call'
+          : found.ends.length > 0 || found.unreached > 0
+            ? 'nothing in the graph reaches this from a way in; the callers may be behind a gap'
+            : 'nothing reaches this';
+  const behindGap = none !== undefined && beyond === 0 && maybes === 0 && found.ends.length > 0;
+  const waysIn = found.ways.map(({ item, reaches }) => ({
+    ...reader.annotate(projectDetail(item.node, detail)),
+    hops: item.depth,
+    ...(detail < 1 || item.by === undefined ? {} : { by: item.by.id }),
+    ...reachesSaid(reaches, found.groups),
+  }));
+  const maybe = found.maybes.map(({ item, reaches }) => ({
+    ...reader.annotate(projectDetail(item.node, detail)),
+    hops: item.depth,
+    ...reachesSaid(reaches, found.groups),
+  }));
+  const throughs = found.throughs.map(({ item, reaches }) => ({ ...throughRow(item), ...reachesSaid(reaches, found.groups) }));
+  return {
+    fields: {
+      waysIn,
+      ...(none === undefined ? {} : { waysInNone: none }),
+      ...(maybes === 0 ? {} : { maybe }),
+      ...(found.unreached === 0 ? {} : { unreached: found.unreached }),
+      ...(throughs.length === 0 ? {} : { throughChannels: throughs }),
+    },
+    left: [
+      ...(found.cut ? [`walk: stopped at ${IMPACT_WALK_NODES} nodes; ways in past it not listed`] : []),
+      ...(found.unwalked.length === 0 ? [] : [`walk: not walked from ${found.unwalked.join(', ')}, past ${CALLERS_WALK_TOTAL} nodes read`]),
+      ...(maybes === 0 ? [] : [`gaps: ${maybes} chain${maybes === 1 ? ' stops' : 's stop'} at an unread call before any way in: the maybe row${maybes === 1 ? '' : 's'}`]),
+      ...(behindGap ? ['gaps: something reaches it but no way in does; its callers may be behind a gap'] : []),
+    ],
+    ...(found.ways[0] === undefined ? {} : { first: found.ways[0].item.node }),
+    ...(found.maybes[0] === undefined ? (found.ends[0] === undefined ? {} : { maybeTop: found.ends[0] }) : { maybeTop: found.maybes[0].item.node }),
+    ...(found.throughs[0] === undefined ? {} : { channel: found.throughs[0].item.channel }),
+  };
+};
+
 export const registerReach = (server: McpServer, ctx: ToolContext): void => {
-  /** One symbol's callers (who_calls), with each row's reach (P364). */
-  const whoCallsOne = (db: GraphDb, input: WhoCallsAsked, symbol: string, reader: ReachReader): object => {
+  /**
+   * One symbol's callers (who_calls), with each row's reach (P364). With
+   * `depth`, the tree to that depth; without, the tree's first hops and every
+   * way in past them (P376), unless `shared`: several symbols asked together
+   * say their ways in once, for all of them.
+   */
+  const whoCallsOne = (db: GraphDb, input: WhoCallsAsked, symbol: string, reader: ReachReader, shared = false): object => {
     const { detail, maxNodes, note } = bound(input);
-    const defaults = { ...COMMON_DEFAULTS, depth: DEFAULT_CALLER_DEPTH };
+    const defaults = { ...COMMON_DEFAULTS, depth: undefined };
     const found = resolveSymbol(db, symbol);
     if (!isResolved(found)) {
       return candidatesAnswer(found, { symbol }, detail, (id) =>
@@ -620,8 +804,10 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
       );
     }
     const target = found.node;
+    const toWays = input.depth === undefined;
+    const near = input.depth ?? (shared || startsOf(db, target).forClass ? NEAR_CALLER_DEPTH_SEVERAL : NEAR_CALLER_DEPTH);
 
-    const walked = callersOf(db, target, input.depth, maxNodes, detail);
+    const walked = callersOf(db, target, near, maxNodes, detail);
     const callers = keepService(db, walked.callers, input.service);
     const firstEntry = findFirst(callers, (item) => item.node.type === 'entry');
     const counts = loadObservedCounts(ctx.handle.path);
@@ -632,23 +818,28 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
     const { id: _target, ...targetReach } = reader.annotate({ id: target.id });
     annotateTree(callers, reader);
 
-    const stoppedBy = stoppedByOf(walked.cut);
+    // Walked to the ways in, the tree's depth line is where the rows stop being drawn, not a cut (P376).
+    const cut = toWays ? { ...walked.cut, depth: 0 } : walked.cut;
+    const groups = toWays ? groupsOf(db, target, !shared) : [];
+    const ways = toWays && !shared ? callersWaysInSaid(callersWaysIn(db, reader, groups, inService(input.service)), reader, detail) : undefined;
+    // A class's caller says the method it calls by the name `reaches` gives it, not its id again.
+    if (groups.length > 1) {
+      const said = new Map(groups.map((group) => [group.start.id, group.said]));
+      for (const item of callers) if (item.calls !== undefined) item.calls = said.get(item.calls) ?? item.calls;
+    }
+    const stoppedBy = stoppedByOf(cut);
     const first = stoppedBy[0];
-    const deeper = Math.min(MAX_CALLER_DEPTH, input.depth * 2);
-    // The walk on first, where it stopped; then where a chain that ends in
-    // nobody might be called from; then the ids the tree names.
-    const goOn =
-      first !== 'depth'
-        ? []
-        : input.depth < MAX_CALLER_DEPTH
-          ? [callOf('who_calls', { symbol: target.id, depth: deeper, service: input.service }, defaults)]
-          : walked.frontier.slice(0, 2).map((id) => callOf('who_calls', { symbol: id, depth: input.depth }, defaults));
-    // The first chain that ends in nobody, among the rows kept.
+    // A tree cut by depth names the call that walks on to every way in, never a deeper depth (P376).
+    const goOn = first === 'depth' ? [callOf('who_calls', { symbol: target.id, service: input.service }, defaults)] : [];
+    // The first chain that ends in nobody, among the rows kept; walked to the ways in, the first the walk says may be
+    // reached through an unread call (a navigation onto the target, which a tree draws, is no caller: P372).
     const targetIsTop = walked.targetTop !== undefined;
-    const topRow = targetIsTop ? undefined : findFirst(callers, (item) => item.topOfChain === true);
-    const top = targetIsTop ? target : topRow === undefined ? undefined : db.node(topRow.node.id);
-    const tops = topsWithGaps(callers);
+    const topRow = targetIsTop || toWays ? undefined : findFirst(callers, (item) => item.topOfChain === true);
+    const top = targetIsTop ? target : toWays ? ways?.maybeTop : topRow === undefined ? undefined : db.node(topRow.node.id);
+    // Walked to the ways in, a chain top is a maybe only where an unread call could reach it (`maybe`, as impact says it).
+    const tops = toWays ? 0 : topsWithGaps(callers);
     const shown: RowShown[] = [{ id: target.id, label: target.label, ...targetReach }, ...rowsOf(callers)];
+    const wayIn = ways === undefined ? firstEntry?.node : ways.first ?? firstEntry?.node;
     return withNext(
       {
         target: {
@@ -662,19 +853,21 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
         // Nothing calls the target itself: a lead, not a verdict (D3).
         ...(targetIsTop ? { topOfChain: true, gapsInFile: walked.targetTop } : {}),
         callers: slimForest(callers, target.repo === '' ? undefined : target.repo),
+        ...(ways?.fields ?? {}),
         ...(first === undefined
           ? {}
           : {
-              truncated: callersCutSaid(walked.cut, first, input.depth, maxNodes),
+              truncated: callersCutSaid(cut, first, near, maxNodes),
               stoppedBy,
-              ...(walked.cut.depth > 0 ? { frontier: walked.frontier } : {}),
+              ...(cut.depth > 0 ? { frontier: walked.frontier } : {}),
             }),
         ...completeOf([
-          walked.cut.depth > 0 && `depth: ${walked.cut.depth} callers past depth ${input.depth}, from the frontier rows`,
-          walked.cut.maxNodes > 0 && `maxNodes: ${walked.cut.maxNodes} callers cut`,
+          cut.depth > 0 && `depth: ${cut.depth} callers past depth ${near}, from the frontier rows`,
+          cut.maxNodes > 0 && `maxNodes: ${cut.maxNodes} callers cut`,
           targetIsTop && (walked.targetTop ?? 0) > 0 && `gaps: ${walked.targetTop} unread in its file, any may call it`,
           tops > 0 && `gaps: ${tops} chain top${tops === 1 ? '' : 's'} sit${tops === 1 ? 's' : ''} in a file with unread calls`,
-          ...reader.left(),
+          ...(ways?.left ?? []),
+          ...(shared ? [] : reader.left()),
         ]),
         ...(note === undefined ? {} : { note }),
       },
@@ -682,9 +875,11 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
         ...goOn,
         ...withoutShown(
           [
+            // The ways in past a channel, one call away (P372).
+            ...(ways?.channel === undefined ? [] : [callOf('impact', { symbol: target.id, channel: ways.channel })]),
             ...(top === undefined ? [] : gapLeads(top)),
             // Not the call just made, which `nextFor` offers for any symbol.
-            ...nextFor(firstEntry?.node, target).filter((hint) => hint !== callOf('who_calls', { symbol: target.id })),
+            ...nextFor(wayIn, target).filter((hint) => !hint.startsWith(`who_calls({symbol: ${JSON.stringify(target.id)}`)),
           ],
           shown,
         ),
@@ -692,17 +887,54 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
     );
   };
 
+  /**
+   * Several symbols walked to the ways in (P376): each symbol's direct
+   * callers, and every way in once, saying which of the symbols it reaches
+   * where it reaches only some.
+   */
+  const whoCallsSeveral = (db: GraphDb, input: WhoCallsAsked, asked: readonly string[], reader: ReachReader): object => {
+    const { detail } = bound(input);
+    const each = answerEach('symbol', asked, (symbol) => whoCallsOne(db, input, symbol, reader, true)) as {
+      answers: object[];
+      complete?: boolean;
+      left?: string[];
+      next?: string[];
+    };
+    const groups: CallersGroup[] = [];
+    for (const symbol of asked) {
+      const found = resolveSymbol(db, symbol);
+      if (isResolved(found)) groups.push(...groupsOf(db, found.node, false));
+    }
+    const ways = callersWaysInSaid(callersWaysIn(db, reader, groups, inService(input.service)), reader, detail);
+    const left = [...(each.left ?? []), ...ways.left, ...reader.left()];
+    const leads = [
+      ...(ways.channel === undefined || groups.length !== 1 ? [] : [callOf('impact', { symbol: groups[0]!.start.id, channel: ways.channel })]),
+      ...(ways.maybeTop === undefined ? [] : gapLeads(ways.maybeTop)),
+      ...nextFor(ways.first),
+    ];
+    const next = [...new Set([...leads, ...(each.next ?? [])])].slice(0, MAX_NEXT);
+    return {
+      // An answer's own `complete: true` is the whole call's; one cut says `left`, which the call's `left` points at.
+      answers: each.answers.map((answer) => {
+        const { complete, ...rest } = answer as { complete?: boolean };
+        return complete === true ? rest : answer;
+      }),
+      ...ways.fields,
+      ...completeOf(left),
+      ...(next.length === 0 ? {} : { next }),
+    };
+  };
 
   server.registerTool(
     'who_calls',
     {
       title: 'Who calls this',
       description:
-        'What reaches a symbol, walked back across repositories; on a class, its methods. A route said aloud (`GET /orders/123`) is the most specific route, the others under `alsoAnswers`.',
+        'What reaches a symbol, back across repositories to every way in (`waysIn`); on a class, its methods. A route said aloud (`GET /orders/123`) is the most specific route, the others under `alsoAnswers`.',
       inputSchema: {
         symbol: z.string().optional().describe('node id or name'),
         symbols: severalInput(),
-        depth: z.number().int().min(1).max(MAX_CALLER_DEPTH).default(DEFAULT_CALLER_DEPTH).describe('hops back'),
+        depth: z.number().int().min(1).max(MAX_CALLER_DEPTH).optional().describe('hops back'),
         service: serviceInput,
         ...commonInput,
       },
@@ -714,6 +946,7 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
         if (asked.length === 0) return { error: 'ask with symbol or symbols' };
         const reader = reachReader(db, ctx.handle, bound(input).detail);
         if (asked.length === 1) return whoCallsOne(db, input, asked[0]!, reader);
+        if (input.depth === undefined) return whoCallsSeveral(db, input, asked, reader);
         return answerEach('symbol', asked, (symbol) => whoCallsOne(db, input, symbol, reader));
       }),
   );

@@ -317,7 +317,7 @@
       ]
     }
   ],
-  "truncated": "5 more nodes past depth 6; raise depth",
+  "truncated": "5 more nodes past depth 6; ask without depth for every way in",
   "stoppedBy": [
     "depth"
   ],
@@ -332,7 +332,7 @@
     "depth: 5 callers past depth 6, from the frontier rows"
   ],
   "next": [
-    "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\", depth: 12})",
+    "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\"})",
     "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})",
     "describe_for_prompt({id: \"entry:orders:http:GET:/orders/:param\"})",
     "impact({symbol: \"entry:orders:http:GET:/orders/:param\"})"

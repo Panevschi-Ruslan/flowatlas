@@ -53,7 +53,7 @@
       "children": []
     }
   ],
-  "truncated": "2 more nodes past depth 1; raise depth",
+  "truncated": "2 more nodes past depth 1; ask without depth for every way in",
   "stoppedBy": [
     "depth"
   ],
@@ -66,7 +66,7 @@
     "depth: 2 callers past depth 1, from the frontier rows"
   ],
   "next": [
-    "who_calls({symbol: \"entry:gateway:http:GET:/orders/:param\", depth: 2})",
+    "who_calls({symbol: \"entry:gateway:http:GET:/orders/:param\"})",
     "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
     "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
     "impact({symbol: \"entry:gateway:http:GET:/orders/:param\"})"

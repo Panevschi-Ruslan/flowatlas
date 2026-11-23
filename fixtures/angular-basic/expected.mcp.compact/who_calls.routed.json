@@ -23,12 +23,17 @@
       "gapsInFile": 2
     }
   ],
-  "complete": false,
-  "left": [
-    "gaps: 1 chain top sits in a file with unread calls"
+  "waysIn": [
+    {
+      "id": "entry:angular-basic:screen:/reports",
+      "loc": "src/app/app.routes.ts:26",
+      "reach": "outside",
+      "hops": 1
+    }
   ],
+  "complete": true,
   "next": [
-    "cant_follow({service: \"angular-basic\"})",
-    "search({query: \"src/app/checkout.component.ts\", kinds: [\"gaps\"]})"
+    "get_flow({entry: \"entry:angular-basic:screen:/reports\"})",
+    "describe_for_prompt({id: \"entry:angular-basic:screen:/reports\"})"
   ]
 }
