@@ -27,11 +27,14 @@ inputs:
     description: '`changes`: only when the diff says something, updating one already there to say nothing changed; `always`.'
     default: changes
   fail-on:
-    description: 'Fail the check on new breaks: `contract-break`, `rule-break`, `broken-call` (a call between the services the branch leaves landing nowhere), `stale-docs` (doc blocks this branch makes stale), comma-separated; empty never fails.'
+    description: 'Fail the check on new breaks: `contract-break`, `rule-break`, `broken-call` (a call between the services the branch leaves landing nowhere), `api-break` (an API or message change a consumer in the project feels: it reads the field, omits one now required, or calls a route that is gone), `stale-docs` (doc blocks this branch makes stale), comma-separated; empty never fails.'
     default: contract-break,rule-break
   sarif:
     description: Also upload the new and fixed findings to code scanning (needs security-events write).
     default: 'false'
+  api:
+    description: 'Compare the API documents too and weigh each change by the consumers it meets, with the flows to them (`false` leaves the section out).'
+    default: 'true'
   docs-check:
     description: Also run `flowatlas docs --check` against the branch's graph, as annotations; it fails nothing by itself.
     default: 'true'
@@ -70,6 +73,9 @@ outputs:
   stale-docs:
     description: Doc blocks this branch makes stale.
     value: ${{ steps.run.outputs.stale-docs }}
+  api-breaks:
+    description: API or message changes a consumer in the project feels.
+    value: ${{ steps.run.outputs.api-breaks }}
   comment-url:
     description: The comment, when one was posted or updated.
     value: ${{ steps.run.outputs.comment-url }}
@@ -122,6 +128,7 @@ runs:
         INPUT_COMMENT_WHEN: ${{ inputs.comment-when }}
         INPUT_FAIL_ON: ${{ inputs.fail-on }}
         INPUT_SARIF: ${{ inputs.sarif }}
+        INPUT_API: ${{ inputs.api }}
         INPUT_DOCS_CHECK: ${{ inputs.docs-check }}
         INPUT_MAX_CHARS: ${{ inputs.max-chars }}
     - if: ${{ always() && inputs.sarif == 'true' && hashFiles(steps.prepare.outputs.sarif-file) != '' }}

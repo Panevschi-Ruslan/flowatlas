@@ -106,6 +106,11 @@ describe('the run step, with the inputs it defaults to (P231)', () => {
       const broken = runStep({ 'fail-on': 'broken-call' });
       assert.equal(broken.status, 1, broken.log);
       assert.match(broken.log, /^broken call: /m);
+      // The same route as an API change a caller in the project feels (P390).
+      const api = runStep({ 'fail-on': 'api-break' });
+      assert.equal(api.status, 1, api.log);
+      assert.match(api.log, /^api break: GET \/orders\/\{id\}: \d+ of \d+ callers?: requests it/m);
+      assert.match(api.outputs, /^api-breaks=[1-9]\d*$/m);
     } finally {
       writeFileSync(controller, was);
     }

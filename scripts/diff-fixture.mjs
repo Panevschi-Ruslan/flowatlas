@@ -43,12 +43,44 @@ const CONFIG = {
 const quiet = { out() {}, err() {}, tty: false };
 
 /**
- * Makes, builds and diffs the project under `fixtures/.scratch-diff-*`, and
- * says where its configuration and that directory are.
+ * `fixtures/api-change-verdicts` (P390): a catalog whose head revision changes
+ * its API and its messages, a storefront that calls it and a notifier that
+ * consumes what it publishes; only the catalog is edited.
  */
-export const diffFixtureProject = async (root) => {
+const VERDICTS = {
+  fixture: 'api-change-verdicts',
+  repos: ['catalog', 'storefront', 'notifier'],
+  edited: ['catalog'],
+  config: {
+    services: [
+      { name: 'catalog', repo: './catalog', type: 'nestjs', baseUrlEnv: ['CATALOG_URL'] },
+      { name: 'storefront', repo: './storefront', type: 'nestjs' },
+      { name: 'notifier', repo: './notifier', type: 'nestjs' },
+    ],
+    adapters: {
+      broker: {
+        custom: [
+          {
+            name: 'event-bus',
+            channelKind: 'channel',
+            producers: [{ receiverType: ['EventBus'], method: 'publish', channelArg: 0, payloadArg: 1, kind: 'event' }],
+          },
+        ],
+      },
+    },
+    output: '.flowatlas',
+  },
+};
+
+const MULTI_REPO_DIFF = { fixture: 'multi-repo-diff', repos: REPOS, edited: EDITED, config: CONFIG };
+
+/**
+ * Makes, builds and diffs a two-revision fixture under `fixtures/.scratch-diff-*`,
+ * and says where its configuration and that directory are.
+ */
+const makeDiffProject = async (root, spec) => {
   const fixtures = join(root, 'fixtures');
-  const fixture = join(fixtures, 'multi-repo-diff');
+  const fixture = join(fixtures, spec.fixture);
   const scratch = mkdtempSync(join(fixtures, '.scratch-diff-'));
   const project = join(scratch, 'project');
   const config = join(project, 'flowatlas.config.json');
@@ -66,18 +98,24 @@ export const diffFixtureProject = async (root) => {
     );
 
   cpSync(join(fixture, 'base'), project, { recursive: true });
-  writeFileSync(config, `${JSON.stringify(CONFIG, null, 2)}\n`);
-  for (const repo of REPOS) {
+  writeFileSync(config, `${JSON.stringify(spec.config, null, 2)}\n`);
+  for (const repo of spec.repos) {
     git(repo, 'init', '-q', '-b', 'main');
     git(repo, 'add', '-A');
     git(repo, 'commit', '-q', '-m', 'base');
   }
   cpSync(join(fixture, 'head'), project, { recursive: true });
-  for (const repo of EDITED) {
+  for (const repo of spec.edited) {
     git(repo, 'add', '-A');
     git(repo, 'commit', '-q', '-m', 'head');
   }
   await buildProject({ config });
-  await runDiff('HEAD~1', undefined, { config, generatedAt: FIXED }, quiet);
+  await runDiff('HEAD~1', undefined, { config, generatedAt: FIXED, ...(spec.fixture === 'multi-repo-diff' ? {} : { spec: true }) }, quiet);
   return { scratch, config };
 };
+
+/** `fixtures/multi-repo-diff`, made, built and diffed. */
+export const diffFixtureProject = (root) => makeDiffProject(root, MULTI_REPO_DIFF);
+
+/** `fixtures/api-change-verdicts`, made, built and diffed with its API documents (P390). */
+export const verdictsFixtureProject = (root) => makeDiffProject(root, VERDICTS);

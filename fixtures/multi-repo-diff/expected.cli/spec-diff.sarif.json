@@ -79,7 +79,15 @@
       },
       "invocations": [
         {
-          "executionSuccessful": true
+          "executionSuccessful": true,
+          "toolExecutionNotifications": [
+            {
+              "level": "note",
+              "message": {
+                "text": "2 consumers in 3 repositories; consumers outside them unknown"
+              }
+            }
+          ]
         }
       ],
       "results": [
@@ -88,7 +96,7 @@
           "ruleIndex": 2,
           "level": "error",
           "message": {
-            "text": "POST /orders: head has `body.channel` as `string` and requires it; base did not ([called from gateway (static)](1))"
+            "text": "POST /orders: head has `body.channel` as `string` and requires it; base did not. Use: 1 of 1 caller: sends customerId, note; no `channel`. Deploy callers first: send `channel`, then orders. ([gateway: sends customerId, note; no `channel`](1))"
           },
           "locations": [
             {
@@ -98,7 +106,7 @@
                   "uriBaseId": "%SRCROOT%"
                 },
                 "region": {
-                  "startLine": 19
+                  "startLine": 23
                 }
               }
             }
@@ -116,8 +124,120 @@
                 }
               },
               "message": {
-                "text": "called from gateway (static)"
+                "text": "gateway: sends customerId, note; no `channel`"
               }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "gateway/src/orders/gateway.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 11
+                          }
+                        },
+                        "message": {
+                          "text": "way in POST /orders (gateway)"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "gateway/src/orders/gateway.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 11
+                          }
+                        },
+                        "message": {
+                          "text": "handler GatewayController.create (gateway)"
+                        }
+                      },
+                      "executionOrder": 2
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "gateway/src/clients/orders.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 20
+                          }
+                        },
+                        "message": {
+                          "text": "code OrdersClient.create (gateway)"
+                        }
+                      },
+                      "executionOrder": 3
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "gateway/src/clients/orders.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 21
+                          }
+                        },
+                        "message": {
+                          "text": "request POST /orders (gateway)"
+                        }
+                      },
+                      "executionOrder": 4
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "orders/src/orders/orders.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 23
+                          }
+                        },
+                        "message": {
+                          "text": "route POST /orders (orders)"
+                        }
+                      },
+                      "executionOrder": 5
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "orders/src/orders/orders.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 23
+                          }
+                        },
+                        "message": {
+                          "text": "handler OrdersController.create (orders)"
+                        }
+                      },
+                      "executionOrder": 6
+                    }
+                  ]
+                }
+              ]
             }
           ],
           "partialFingerprints": {
@@ -131,7 +251,11 @@
             "operation": "POST /orders",
             "field": "body.channel",
             "confidence": "static",
-            "callers": 1
+            "callers": 1,
+            "direction": "breaking",
+            "verdict": "1 of 1 caller: sends customerId, note; no `channel`",
+            "deployFirst": "callers",
+            "anchor": "same"
           }
         },
         {
@@ -139,7 +263,7 @@
           "ruleIndex": 1,
           "level": "error",
           "message": {
-            "text": "GET /shipments/{id}: the route is gone ([called from gateway (static)](1))"
+            "text": "GET /shipments/{id}: the route is gone. Use: 1 of 1 caller: requests it. Deploy callers first: move them off it, then orders. It was at src/shipments/shipments.controller.ts:16 on the base side; this is the nearest line that is still there. ([gateway: requests it](1))"
           },
           "locations": [
             {
@@ -149,7 +273,7 @@
                   "uriBaseId": "%SRCROOT%"
                 },
                 "region": {
-                  "startLine": 16
+                  "startLine": 17
                 }
               }
             }
@@ -167,8 +291,120 @@
                 }
               },
               "message": {
-                "text": "called from gateway (static)"
+                "text": "gateway: requests it"
               }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "gateway/src/orders/gateway.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 17
+                          }
+                        },
+                        "message": {
+                          "text": "way in GET /orders/:param/shipment (gateway)"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "gateway/src/orders/gateway.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 17
+                          }
+                        },
+                        "message": {
+                          "text": "handler GatewayController.shipment (gateway)"
+                        }
+                      },
+                      "executionOrder": 2
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "gateway/src/clients/orders.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 25
+                          }
+                        },
+                        "message": {
+                          "text": "code OrdersClient.shipment (gateway)"
+                        }
+                      },
+                      "executionOrder": 3
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "gateway/src/clients/orders.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 26
+                          }
+                        },
+                        "message": {
+                          "text": "request GET /shipments/:param (gateway)"
+                        }
+                      },
+                      "executionOrder": 4
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "orders/src/shipments/shipments.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 16
+                          }
+                        },
+                        "message": {
+                          "text": "route GET /shipments/:param (orders)"
+                        }
+                      },
+                      "executionOrder": 5
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "orders/src/shipments/shipments.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 17
+                          }
+                        },
+                        "message": {
+                          "text": "handler ShipmentsController.track (orders)"
+                        }
+                      },
+                      "executionOrder": 6
+                    }
+                  ]
+                }
+              ]
             }
           ],
           "partialFingerprints": {
@@ -181,7 +417,11 @@
             "document": "orders",
             "operation": "GET /shipments/{id}",
             "confidence": "static",
-            "callers": 1
+            "callers": 1,
+            "direction": "breaking",
+            "verdict": "1 of 1 caller: requests it",
+            "deployFirst": "callers",
+            "anchor": "nearest"
           }
         },
         {
@@ -189,7 +429,7 @@
           "ruleIndex": 0,
           "level": "note",
           "message": {
-            "text": "receive order.gift-wrapped: added on the head side"
+            "text": "receive order.gift-wrapped: added on the head side. Use: no publisher on the base side."
           },
           "locations": [
             {
@@ -214,7 +454,9 @@
             "document": "billing",
             "operation": "receive order.gift-wrapped",
             "confidence": "static",
-            "callers": 0
+            "callers": 0,
+            "direction": "compatible",
+            "verdict": "no publisher on the base side"
           }
         },
         {
@@ -222,7 +464,7 @@
           "ruleIndex": 0,
           "level": "note",
           "message": {
-            "text": "send order.gift-wrapped: added on the head side"
+            "text": "send order.gift-wrapped: added on the head side. Use: no consumer on the base side."
           },
           "locations": [
             {
@@ -247,7 +489,9 @@
             "document": "orders",
             "operation": "send order.gift-wrapped",
             "confidence": "static",
-            "callers": 0
+            "callers": 0,
+            "direction": "compatible",
+            "verdict": "no consumer on the base side"
           }
         },
         {
@@ -255,7 +499,7 @@
           "ruleIndex": 0,
           "level": "note",
           "message": {
-            "text": "GET /shipments/{id}/status: added on the head side"
+            "text": "GET /shipments/{id}/status: added on the head side. Use: no caller on the base side."
           },
           "locations": [
             {
@@ -280,7 +524,9 @@
             "document": "orders",
             "operation": "GET /shipments/{id}/status",
             "confidence": "static",
-            "callers": 0
+            "callers": 0,
+            "direction": "compatible",
+            "verdict": "no caller on the base side"
           }
         }
       ]

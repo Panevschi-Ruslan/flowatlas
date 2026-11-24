@@ -12,7 +12,11 @@
  * for the architecture rules (P114): a violation this branch introduced.
  * `--fail-on-broken-call` (P384) for a call between the services the branch
  * breaks: a join the base side made that the head side loses, or a new request
- * to a route nothing serves, as `check` counts them.
+ * to a route nothing serves, as `check` counts them. `--fail-on-api-break`
+ * (P390) for an API or message change a consumer in the project feels: one
+ * that reads the removed or retyped field, sends one now invalid, omits one
+ * now required or calls a route that is gone (it compares the API documents,
+ * as `--spec` does).
  *
  * `--env <name>` puts what an environment runs in place of the base ref
  * (P193): each service at its pin, read the way `check --env` reads it, and
@@ -110,6 +114,8 @@ export interface DiffOptions extends PinFlags {
   failOnRuleBreak?: boolean;
   /** Exit 1 when this revision breaks a call between the services: a join lost, or a new request to no route (P384). */
   failOnBrokenCall?: boolean;
+  /** Exit 1 when an API or message change is an error from use: a consumer in the project feels it (P390). Implies `spec`. */
+  failOnApiBreak?: boolean;
   maxEntries?: string;
   /** Most changed nodes to walk backwards from. The rest are counted (I9). */
   maxNodes?: string;
@@ -150,7 +156,7 @@ export interface DiffRun {
   /** The head side's doc blocks the branch makes stale, and those stale already (P120). */
   docs: StaleDocs;
   /** What a failing run failed on: a new contract error, a new rule violation, a call it breaks. */
-  failedOn?: Array<'contract' | 'rule' | 'call'>;
+  failedOn?: Array<'contract' | 'rule' | 'call' | 'api'>;
   /** With `--env`: what the environment runs and what moved, as `check` says it. */
   environment?: EnvironmentSaid;
 }
@@ -314,9 +320,11 @@ export const compareBuilt = (input: CompareInput): DiffReport => {
   // question is what this revision does to the rules the project has now.
   const ruleSet = ruleSetOf(loaded.config);
   const acceptedBeside = join(loaded.outputDir, 'graph.db');
-  const { impact, flows, rules } = withGraphs({ head: builtHead, base: builtBase }, (dbs) => {
+  const { impact, flows, rules, spec } = withGraphs({ head: builtHead, base: builtBase }, (dbs) => {
     const rows = impactOf(dbs, diff, { maxEntries, maxNodes });
     return {
+      // Each API change with what it does to the code that uses it (P390), read off both sides' graphs.
+      spec: input.spec === true ? specBetween(loaded, builtBase.graph, builtHead.graph, { use: dbs }) : null,
       rules: classifyRules(ruleReportOf(dbs.base, ruleSet, acceptedBeside), ruleReportOf(dbs.head, ruleSet, acceptedBeside)),
       impact: rows,
       flows: flowChanges({ impact: rows.rows, nodes: diff.nodes, types: diff.types }, dbs, {
@@ -327,7 +335,6 @@ export const compareBuilt = (input: CompareInput): DiffReport => {
     };
   });
   const contracts = classifyContracts(checkContracts(builtBase.graph, check), checkContracts(builtHead.graph, check));
-  const spec = input.spec === true ? specBetween(loaded, builtBase.graph, builtHead.graph) : null;
   const diffMs = Date.now() - diffStarted;
 
   const warnings: DiffWarning[] = [...builtHead.warnings, ...builtBase.warnings, ...(input.warnings ?? [])];
@@ -577,7 +584,7 @@ export const runDiff = async (
       generatedAt: options.generatedAt ?? new Date().toISOString(),
       started,
       warnings: dirty,
-      ...(options.spec === true ? { spec: true } : {}),
+      ...(options.spec === true || options.failOnApiBreak === true ? { spec: true } : {}),
     });
     const { contracts, rules } = report;
     const ruleSet = ruleSetOf(loaded.config);
@@ -607,6 +614,7 @@ export const runDiff = async (
               command: 'diff',
               version: VERSION,
               findings: diffFindings(report, { head: lookupOf(builtHead.graph), base: lookupOf(builtBase.graph) }),
+              ...(report.spec?.coverage === undefined ? {} : { notes: [{ level: 'note' as const, text: report.spec.coverage.said }] }),
               paths: sarifPathsOf({ config: loaded.configPath }, options.sarifRoot),
               maxResults: sarifBound(undefined),
               ...(sarifLevel === undefined ? {} : { minLevel: sarifLevel }),
@@ -673,16 +681,21 @@ export const runDiff = async (
         : [];
     for (const reason of brokenCalls) io.err(`broken call: ${reason.message}\n`);
     const refusedCalls = options.failOnBrokenCall === true && (brokenCalls.length > 0 || unread.size > 0);
+    // The API changes a consumer in the project feels (P390): an error from use, never one by kind alone.
+    const apiBreaks = options.failOnApiBreak === true ? (report.spec?.changes ?? []).filter((change) => change.level === 'error') : [];
+    for (const change of apiBreaks) io.err(`api break: ${change.operation}${change.field === null ? '' : ` ${change.field}`}: ${change.use?.verdict ?? change.message}\n`);
+    const refusedApi = options.failOnApiBreak === true && (apiBreaks.length > 0 || unread.size > 0);
     const failedOn = [
       ...(refusedContracts && breaks.length > 0 ? ['contract' as const] : []),
       ...(refusedRules && ruleBroken.length > 0 ? ['rule' as const] : []),
       ...(refusedCalls && brokenCalls.length > 0 ? ['call' as const] : []),
+      ...(refusedApi && apiBreaks.length > 0 ? ['api' as const] : []),
     ];
     return {
       report,
       text,
       file,
-      exitCode: refusedContracts || refusedRules || refusedCalls ? EXIT.failed : EXIT.ok,
+      exitCode: refusedContracts || refusedRules || refusedCalls || refusedApi ? EXIT.failed : EXIT.ok,
       ...(unread.size === 0 ? {} : { unread: [...unread] }),
       docs,
       ...(failedOn.length === 0 ? {} : { failedOn }),
@@ -714,6 +727,7 @@ export const registerDiff = (program: Command): void => {
     .option('--fail-on-contract-break', 'exit 1 when this revision introduces a contract error')
     .option('--fail-on-rule-break', 'exit 1 when this revision introduces a violation of an architecture rule at error')
     .option('--fail-on-broken-call', 'exit 1 when this revision breaks a call between the services: a join lost, or a new request to a route nothing serves')
+    .option('--fail-on-api-break', 'exit 1 when an API or message change breaks a consumer in the project: it reads the field, omits one now required, or calls a route that is gone (compares the API documents, as --spec)')
     .option('--max-entries <n>', 'most ways in to list per changed node')
     .option('--max-nodes <n>', 'most changed nodes to walk backwards from')
     .option('--max-flows <n>', `most ways in to walk for their flows (default ${DEFAULT_MAX_FLOWS})`)
@@ -738,7 +752,12 @@ export const registerDiff = (program: Command): void => {
       const [baseRef, headRef] = options.env === undefined ? [first, second] : [undefined, first];
       const { exitCode, unread, failedOn } = await runDiff(baseRef, headRef, options);
       if (exitCode !== EXIT.ok) {
-        const said = { contract: 'a contract error', rule: 'a violation of an architecture rule', call: 'a call between the services that lands nowhere' } as const;
+        const said = {
+          contract: 'a contract error',
+          rule: 'a violation of an architecture rule',
+          call: 'a call between the services that lands nowhere',
+          api: 'an API change a consumer in the project feels',
+        } as const;
         throw new CliError(
           unread === undefined
             ? `this revision introduces ${(failedOn ?? ['contract']).map((what) => said[what]).join(' and ')}`

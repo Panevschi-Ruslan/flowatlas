@@ -543,11 +543,13 @@ describe('diff.json formats (P96, P116, P114, P118)', () => {
       confidence: 'static',
       key: 'request-property-added-required|orders|POST /orders|body.channel',
     };
-    const spec = { specDiffFormatVersion: 1, documents: { base: 1, head: 1 }, changes: [change], summary: { errors: 1, warnings: 0, infos: 0, breaking: 1, uncalled: 0 } };
+    const spec = { specDiffFormatVersion: 2, documents: { base: 1, head: 1 }, changes: [change], summary: { errors: 1, warnings: 0, infos: 0, breaking: 1, uncalled: 0 } };
     const doc = { ...formatFour, diffFormatVersion: 5, spec };
     expect(parseGraphDiff(doc).spec?.changes).toEqual([change]);
     expect(() => parseGraphDiff({ ...doc, spec: { ...spec, changes: [{ ...change, kind: 'route-gone' }] } })).toThrow();
-    expect(() => parseGraphDiff({ ...doc, spec: { ...spec, specDiffFormatVersion: 2 } })).toThrow();
+    expect(() => parseGraphDiff({ ...doc, spec: { ...spec, specDiffFormatVersion: 3 } })).toThrow();
+    // A diff.json written before P390 holds a format 1 spec, without `use`.
+    expect(parseGraphDiff({ ...doc, spec: { ...spec, specDiffFormatVersion: 1 } }).spec?.specDiffFormatVersion).toBe(1);
   });
 
   it('still reads format 3, with no rules and rules said to be missing (P114)', () => {

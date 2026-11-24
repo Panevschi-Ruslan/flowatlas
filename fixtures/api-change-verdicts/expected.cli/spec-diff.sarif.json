@@ -1,0 +1,1374 @@
+{
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "flowatlas",
+          "version": "0.6.0",
+          "semanticVersion": "0.6.0",
+          "informationUri": "https://panevschi-ruslan.github.io/flowatlas/",
+          "rules": [
+            {
+              "id": "spec/message-property-removed",
+              "name": "spec/message-property-removed",
+              "shortDescription": {
+                "text": "message field removed"
+              },
+              "help": {
+                "text": "Consumers that read it get nothing. Keep sending it, or change the consumers first.",
+                "markdown": "Consumers that read it get nothing. Keep sending it, or change the consumers first."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "spec/method-removed",
+              "name": "spec/method-removed",
+              "shortDescription": {
+                "text": "verb removed from a path"
+              },
+              "help": {
+                "text": "The path still answers other verbs, not this one. Keep the verb, or move its callers first.",
+                "markdown": "The path still answers other verbs, not this one. Keep the verb, or move its callers first."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "spec/request-property-added-required",
+              "name": "spec/request-property-added-required",
+              "shortDescription": {
+                "text": "required request field added"
+              },
+              "help": {
+                "text": "Callers written for the base side do not send it. Make it optional, or have every caller send it first.",
+                "markdown": "Callers written for the base side do not send it. Make it optional, or have every caller send it first."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "spec/request-property-became-required",
+              "name": "spec/request-property-became-required",
+              "shortDescription": {
+                "text": "request field now required"
+              },
+              "help": {
+                "text": "A caller that leaves it out is refused. Keep it optional, or have every caller send it first.",
+                "markdown": "A caller that leaves it out is refused. Keep it optional, or have every caller send it first."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              }
+            },
+            {
+              "id": "spec/response-property-removed",
+              "name": "spec/response-property-removed",
+              "shortDescription": {
+                "text": "response field removed"
+              },
+              "help": {
+                "text": "Callers that read it get nothing. Keep sending it, or change the callers first.",
+                "markdown": "Callers that read it get nothing. Keep sending it, or change the callers first."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            }
+          ]
+        }
+      },
+      "automationDetails": {
+        "id": "flowatlas/spec-diff/"
+      },
+      "originalUriBaseIds": {
+        "%SRCROOT%": {
+          "description": {
+            "text": "The directory flowatlas.config.json is in."
+          }
+        },
+        "catalog": {
+          "uri": "catalog/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "notifier": {
+          "uri": "notifier/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "storefront": {
+          "uri": "storefront/",
+          "uriBaseId": "%SRCROOT%"
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "toolExecutionNotifications": [
+            {
+              "level": "note",
+              "message": {
+                "text": "6 consumers in 3 repositories; consumers outside them unknown"
+              }
+            }
+          ]
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "spec/request-property-added-required",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "POST /items: head has `body.currency` as `string` and requires it; base did not. Use: 1 of 1 caller: sends name, price; no `currency`. Deploy callers first: send `currency`, then catalog. ([storefront: sends name, price; no `currency`](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "catalog/src/items/items.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "storefront/src/catalog.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 22
+                }
+              },
+              "message": {
+                "text": "storefront: sends name, price; no `currency`"
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/shop.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 13
+                          }
+                        },
+                        "message": {
+                          "text": "way in POST /shop/items (storefront)"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/shop.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 13
+                          }
+                        },
+                        "message": {
+                          "text": "handler ShopController.add (storefront)"
+                        }
+                      },
+                      "executionOrder": 2
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/catalog.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 21
+                          }
+                        },
+                        "message": {
+                          "text": "code CatalogClient.createItem (storefront)"
+                        }
+                      },
+                      "executionOrder": 3
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/catalog.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 22
+                          }
+                        },
+                        "message": {
+                          "text": "request POST /items (storefront)"
+                        }
+                      },
+                      "executionOrder": 4
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 9
+                          }
+                        },
+                        "message": {
+                          "text": "route POST /items (catalog)"
+                        }
+                      },
+                      "executionOrder": 5
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 9
+                          }
+                        },
+                        "message": {
+                          "text": "handler ItemsController.create (catalog)"
+                        }
+                      },
+                      "executionOrder": 6
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "936d8e9295a0e56511230d08fd7cdb72",
+            "primaryLocationLineHash": "936d8e9295a0e565:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "catalog",
+            "document": "catalog",
+            "operation": "POST /items",
+            "field": "body.currency",
+            "confidence": "static",
+            "callers": 1,
+            "direction": "breaking",
+            "verdict": "1 of 1 caller: sends name, price; no `currency`",
+            "deployFirst": "callers",
+            "anchor": "same"
+          }
+        },
+        {
+          "ruleId": "spec/method-removed",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "DELETE /items/{id}: the path no longer answers this verb. Use: 1 of 1 caller: requests it. Deploy callers first: move them off it, then catalog. It was at src/items/items.controller.ts:19 on the base side; this is the nearest line that is still there. ([storefront: requests it](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "catalog/src/items/items.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 19
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "storefront/src/catalog.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 31
+                }
+              },
+              "message": {
+                "text": "storefront: requests it"
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/shop.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 23
+                          }
+                        },
+                        "message": {
+                          "text": "way in DELETE /shop/items/:param (storefront)"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/shop.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 23
+                          }
+                        },
+                        "message": {
+                          "text": "handler ShopController.drop (storefront)"
+                        }
+                      },
+                      "executionOrder": 2
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/catalog.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 30
+                          }
+                        },
+                        "message": {
+                          "text": "code CatalogClient.removeItem (storefront)"
+                        }
+                      },
+                      "executionOrder": 3
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/catalog.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 31
+                          }
+                        },
+                        "message": {
+                          "text": "request DELETE /items/:param (storefront)"
+                        }
+                      },
+                      "executionOrder": 4
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 19
+                          }
+                        },
+                        "message": {
+                          "text": "route DELETE /items/:param (catalog)"
+                        }
+                      },
+                      "executionOrder": 5
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 19
+                          }
+                        },
+                        "message": {
+                          "text": "handler ItemsController.remove (catalog)"
+                        }
+                      },
+                      "executionOrder": 6
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "2f35d030f8df994201140053ef403368",
+            "primaryLocationLineHash": "2f35d030f8df9942:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "catalog",
+            "document": "catalog",
+            "operation": "DELETE /items/{id}",
+            "confidence": "static",
+            "callers": 1,
+            "direction": "breaking",
+            "verdict": "1 of 1 caller: requests it",
+            "deployFirst": "callers",
+            "anchor": "nearest"
+          }
+        },
+        {
+          "ruleId": "spec/message-property-removed",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "send item.changed: base had `payload.label` as `string`; head has no such field. Use: 1 of 1 consumer: reads `label`, line 16. Deploy consumers first: stop reading `label` (or cope without it), then catalog. ([notifier: reads `label`, line 16](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "catalog/src/items/items.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 12
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "notifier/src/notify.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 16
+                }
+              },
+              "message": {
+                "text": "notifier: reads `label`, line 16"
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/shop.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 13
+                          }
+                        },
+                        "message": {
+                          "text": "way in POST /shop/items (storefront)"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/shop.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 13
+                          }
+                        },
+                        "message": {
+                          "text": "handler ShopController.add (storefront)"
+                        }
+                      },
+                      "executionOrder": 2
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/catalog.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 21
+                          }
+                        },
+                        "message": {
+                          "text": "code CatalogClient.createItem (storefront)"
+                        }
+                      },
+                      "executionOrder": 3
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/catalog.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 22
+                          }
+                        },
+                        "message": {
+                          "text": "request POST /items (storefront)"
+                        }
+                      },
+                      "executionOrder": 4
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 9
+                          }
+                        },
+                        "message": {
+                          "text": "route POST /items (catalog)"
+                        }
+                      },
+                      "executionOrder": 5
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 9
+                          }
+                        },
+                        "message": {
+                          "text": "handler ItemsController.create (catalog)"
+                        }
+                      },
+                      "executionOrder": 6
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.service.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 9
+                          }
+                        },
+                        "message": {
+                          "text": "code ItemsService.create (catalog)"
+                        }
+                      },
+                      "executionOrder": 7
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.service.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 12
+                          }
+                        },
+                        "message": {
+                          "text": "publish event item.changed (catalog)"
+                        }
+                      },
+                      "executionOrder": 8
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.service.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 12
+                          }
+                        },
+                        "message": {
+                          "text": "channel item.changed (catalog)"
+                        }
+                      },
+                      "executionOrder": 9
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "notifier/src/notify.service.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 14
+                          }
+                        },
+                        "message": {
+                          "text": "consumer NotifyService.onItemChanged (notifier)"
+                        }
+                      },
+                      "executionOrder": 10
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "notifier/src/notify.service.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 14
+                          }
+                        },
+                        "message": {
+                          "text": "handler NotifyService.onItemChanged (notifier)"
+                        }
+                      },
+                      "executionOrder": 11
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "01e0f10e7f2613a55022b123278e3011",
+            "primaryLocationLineHash": "01e0f10e7f2613a5:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "catalog",
+            "document": "catalog",
+            "operation": "send item.changed",
+            "field": "payload.label",
+            "confidence": "static",
+            "callers": 1,
+            "direction": "breaking",
+            "verdict": "1 of 1 consumer: reads `label`, line 16",
+            "deployFirst": "consumers",
+            "anchor": "same"
+          }
+        },
+        {
+          "ruleId": "spec/response-property-removed",
+          "ruleIndex": 4,
+          "level": "warning",
+          "message": {
+            "text": "POST /items: base had `response.price` as `number`; head has no such field. Use: 1 of 1 caller: which fields of the answer it reads is not read yet, so whether it reads `price` is not known. Deploy callers first: stop relying on `price`, then catalog. ([storefront: which fields of the answer it reads is not read yet, so whether it reads `price` is not known](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "catalog/src/items/items.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "storefront/src/catalog.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 22
+                }
+              },
+              "message": {
+                "text": "storefront: which fields of the answer it reads is not read yet, so whether it reads `price` is not known"
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/shop.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 13
+                          }
+                        },
+                        "message": {
+                          "text": "way in POST /shop/items (storefront)"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/shop.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 13
+                          }
+                        },
+                        "message": {
+                          "text": "handler ShopController.add (storefront)"
+                        }
+                      },
+                      "executionOrder": 2
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/catalog.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 21
+                          }
+                        },
+                        "message": {
+                          "text": "code CatalogClient.createItem (storefront)"
+                        }
+                      },
+                      "executionOrder": 3
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/catalog.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 22
+                          }
+                        },
+                        "message": {
+                          "text": "request POST /items (storefront)"
+                        }
+                      },
+                      "executionOrder": 4
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 9
+                          }
+                        },
+                        "message": {
+                          "text": "route POST /items (catalog)"
+                        }
+                      },
+                      "executionOrder": 5
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 9
+                          }
+                        },
+                        "message": {
+                          "text": "handler ItemsController.create (catalog)"
+                        }
+                      },
+                      "executionOrder": 6
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "e3e37b85e591fe011a3aae5ecfd018a2",
+            "primaryLocationLineHash": "e3e37b85e591fe01:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "catalog",
+            "document": "catalog",
+            "operation": "POST /items",
+            "field": "response.price",
+            "confidence": "static",
+            "callers": 1,
+            "direction": "breaking",
+            "verdict": "1 of 1 caller: which fields of the answer it reads is not read yet, so whether it reads `price` is not known",
+            "deployFirst": "callers",
+            "anchor": "same"
+          }
+        },
+        {
+          "ruleId": "spec/response-property-removed",
+          "ruleIndex": 4,
+          "level": "warning",
+          "message": {
+            "text": "GET /items/{id}: base had `response.price` as `number`; head has no such field. Use: 1 of 1 caller: which fields of the answer it reads is not read yet, so whether it reads `price` is not known. Deploy callers first: stop relying on `price`, then catalog. ([storefront: which fields of the answer it reads is not read yet, so whether it reads `price` is not known](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "catalog/src/items/items.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "storefront/src/catalog.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 35
+                }
+              },
+              "message": {
+                "text": "storefront: which fields of the answer it reads is not read yet, so whether it reads `price` is not known"
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/shop.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 28
+                          }
+                        },
+                        "message": {
+                          "text": "way in GET /shop/items/:param (storefront)"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/shop.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 28
+                          }
+                        },
+                        "message": {
+                          "text": "handler ShopController.show (storefront)"
+                        }
+                      },
+                      "executionOrder": 2
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/catalog.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 34
+                          }
+                        },
+                        "message": {
+                          "text": "code CatalogClient.getItem (storefront)"
+                        }
+                      },
+                      "executionOrder": 3
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/catalog.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 35
+                          }
+                        },
+                        "message": {
+                          "text": "request GET /items/:param (storefront)"
+                        }
+                      },
+                      "executionOrder": 4
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 14
+                          }
+                        },
+                        "message": {
+                          "text": "route GET /items/:param (catalog)"
+                        }
+                      },
+                      "executionOrder": 5
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 14
+                          }
+                        },
+                        "message": {
+                          "text": "handler ItemsController.find (catalog)"
+                        }
+                      },
+                      "executionOrder": 6
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "128a2ec6df0eac9db61193263f29f986",
+            "primaryLocationLineHash": "128a2ec6df0eac9d:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "catalog",
+            "document": "catalog",
+            "operation": "GET /items/{id}",
+            "field": "response.price",
+            "confidence": "static",
+            "callers": 1,
+            "direction": "breaking",
+            "verdict": "1 of 1 caller: which fields of the answer it reads is not read yet, so whether it reads `price` is not known",
+            "deployFirst": "callers",
+            "anchor": "same"
+          }
+        },
+        {
+          "ruleId": "spec/message-property-removed",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "send stock.changed: base had `payload.warehouse` as `string`; head has no such field. Use: 1 of 1 consumer: takes the message whole (spread into another value, line 17), so whether it reads `warehouse` is not known. Deploy consumers first: stop reading `warehouse` (or cope without it), then catalog. ([notifier: takes the message whole (spread into another value, line 17), so whether it reads `warehouse` is not known](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "catalog/src/stock/stock.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 16
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "notifier/src/audit.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 17
+                }
+              },
+              "message": {
+                "text": "notifier: takes the message whole (spread into another value, line 17), so whether it reads `warehouse` is not known"
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/stock/stock.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 8
+                          }
+                        },
+                        "message": {
+                          "text": "way in POST /stock/:param/recount (catalog)"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/stock/stock.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 8
+                          }
+                        },
+                        "message": {
+                          "text": "handler StockController.recount (catalog)"
+                        }
+                      },
+                      "executionOrder": 2
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/stock/stock.service.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 14
+                          }
+                        },
+                        "message": {
+                          "text": "code StockService.recount (catalog)"
+                        }
+                      },
+                      "executionOrder": 3
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/stock/stock.service.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 17
+                          }
+                        },
+                        "message": {
+                          "text": "publish event stock.changed (catalog)"
+                        }
+                      },
+                      "executionOrder": 4
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/stock/stock.service.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 16
+                          }
+                        },
+                        "message": {
+                          "text": "channel stock.changed (catalog)"
+                        }
+                      },
+                      "executionOrder": 5
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "notifier/src/audit.service.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 15
+                          }
+                        },
+                        "message": {
+                          "text": "consumer AuditService.onStockChanged (notifier)"
+                        }
+                      },
+                      "executionOrder": 6
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "notifier/src/audit.service.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 15
+                          }
+                        },
+                        "message": {
+                          "text": "handler AuditService.onStockChanged (notifier)"
+                        }
+                      },
+                      "executionOrder": 7
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "8906d83a9ac2a8327808bfd18da1eef8",
+            "primaryLocationLineHash": "8906d83a9ac2a832:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "catalog",
+            "document": "catalog",
+            "operation": "send stock.changed",
+            "field": "payload.warehouse",
+            "confidence": "static",
+            "callers": 1,
+            "direction": "breaking",
+            "verdict": "1 of 1 consumer: takes the message whole (spread into another value, line 17), so whether it reads `warehouse` is not known",
+            "deployFirst": "consumers",
+            "anchor": "same"
+          }
+        },
+        {
+          "ruleId": "spec/request-property-became-required",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "POST /drafts: `body.title` could be left out in base and is required in head. Use: every caller sends `title`, among 1. ([storefront: sends `title`](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "catalog/src/items/drafts.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "storefront/src/catalog.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 27
+                }
+              },
+              "message": {
+                "text": "storefront: sends `title`"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "02b02d26ff32c5adcbf087e3b1b78c0e",
+            "primaryLocationLineHash": "02b02d26ff32c5ad:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "catalog",
+            "document": "catalog",
+            "operation": "POST /drafts",
+            "field": "body.title",
+            "confidence": "static",
+            "callers": 1,
+            "direction": "breaking",
+            "verdict": "every caller sends `title`, among 1",
+            "anchor": "same"
+          }
+        },
+        {
+          "ruleId": "spec/response-property-removed",
+          "ruleIndex": 4,
+          "level": "note",
+          "message": {
+            "text": "GET /items/{id}/archive: base had `response.reason` as `string`; head has no such field (no caller in this project). Use: nothing in the 3 repositories read calls it."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "catalog/src/items/items.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 19
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "c35536630d059a9166e9f15d3f6dfda7",
+            "primaryLocationLineHash": "c35536630d059a91:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "catalog",
+            "document": "catalog",
+            "operation": "GET /items/{id}/archive",
+            "field": "response.reason",
+            "confidence": "static",
+            "callers": 0,
+            "note": "no caller in this project",
+            "direction": "breaking",
+            "verdict": "nothing in the 3 repositories read calls it",
+            "anchor": "same"
+          }
+        },
+        {
+          "ruleId": "spec/message-property-removed",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "send item.changed: base had `payload.legacyCode` as `string`; head has no such field. Use: no consumer reads `legacyCode`, among 1. ([notifier: does not read `legacyCode`](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "catalog/src/items/items.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 12
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "notifier/src/notify.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              },
+              "message": {
+                "text": "notifier: does not read `legacyCode`"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "5136425928543d3ea712dcd3cb562be4",
+            "primaryLocationLineHash": "5136425928543d3e:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "catalog",
+            "document": "catalog",
+            "operation": "send item.changed",
+            "field": "payload.legacyCode",
+            "confidence": "static",
+            "callers": 1,
+            "direction": "breaking",
+            "verdict": "no consumer reads `legacyCode`, among 1",
+            "anchor": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

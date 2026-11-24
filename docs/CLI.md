@@ -4640,6 +4640,7 @@ are new. Markdown by default, because its destination is a pull request comment.
 | `--sarif-level <level>` | `note` | with `--format sarif`: leave out results below `error`, `warning` or `note` |
 | `--fail-on-contract-break` | off | exit 1 on a new contract error, or on a service neither ref could be read for |
 | `--fail-on-broken-call` | off | exit 1 on a call between the services the branch breaks: a join lost, or a new request to a route nothing serves (P384), each printed as a `broken call:` line |
+| `--fail-on-api-break` | off | exit 1 on an API or message change a consumer in the project feels, an `error` from use (P390): it reads the removed or retyped field, sends one now invalid, omits one now required, or calls a route that is gone; each printed as an `api break:` line. Compares the API documents, as `--spec` does |
 | `--max-entries <n>` | 150 | ways in listed per changed node |
 | `--max-nodes <n>` | 100 | changed nodes walked backwards from |
 | `--max-flows <n>` | 50 | ways in walked for **Changed flows**; the rest are counted in a `flows-truncated` warning |
@@ -4720,8 +4721,11 @@ are not guesses (with `rulesSettings.failOnHeuristic`, guesses too), and on a
 service neither ref could be read for, as `--fail-on-contract-break` does.
 
 With `--spec`, **API changes** follows the contracts: the table `flowatlas spec
-diff` prints, every change of the two sides' documents by kind with the callers
-it breaks.
+diff` prints, every change of the two sides' documents by kind, with what its
+consumers do with it and the order to deploy it in (P390), the coverage line
+above it and, below it, the changes with no line left on the head side. With
+`--format comment` the header says how many API changes a consumer in the
+project feels and how many are to check.
 
 **Docs this branch makes stale**, after the changed flows, lists each doc block
 (see `flowatlas docs`) on the head side that no longer says what the head
@@ -4905,17 +4909,60 @@ its parameters as `:param`, so renaming a parameter is no change. Fields are
 compared as they go over the wire (both documents are written through the wire
 rules) and to `--depth`; a side written as unread is not compared.
 
-**Callers decide the level.** A breaking change with no caller in the project,
-on a route nothing marks public, is a `warning` saying `no caller in this
-project`; one with callers, or on a public route, stays an `error` with its
-callers listed (service, `file:line`, confidence). Exit 1 when a change is at
-or above `--fail-on`, or when a service could not be read at either ref.
+**Use decides the level (P390).** The table above is each kind's level before
+anyone is counted. Both sides' graphs are read for what each consumer does
+with the change - the shape each request was read to send, the fields each
+consumer of a message reads (P368) - and the change gets:
 
-`spec-diff.json` (`specDiffFormatVersion: 1`) is `{ documents: { base, head },
-changes, summary: { errors, warnings, infos, breaking, uncalled } }`, each
-change `{ kind, level, document, format, service, operation, field, base,
-head, message, place, callers, public, note, confidence, key }`, `key`
-`<kind>|<document>|<operation>|<field>`.
+- a **direction**, oasdiff's model: narrowing what a route accepts (a field now
+  required, a type that refuses values, a route gone) or widening what it
+  answers or a message carries (a field gone or now optional, a literal value
+  added) is `breaking`; the reverse is `compatible`; a field the route stops
+  reading, which a validator may drop or refuse, is `unconfirmed`. A type
+  change between literal choices is read for which way it went;
+- a **level from use**: `error` when a joined consumer reads the removed or
+  retyped field, sends a field now invalid, omits one now required, or calls a
+  route that is gone; `info` when no consumer reads it (`no consumer reads it,
+  among N`), every caller already sends it, or nothing in the project calls
+  it; `warning` where the value reaches a consumer opaquely (spread, handed on
+  whole, a shape not read) or what it reads is not known. Which fields of an
+  answer a client reads is not read yet, so a response change with callers is
+  a `warning` saying so, never an error or an info guessed. A public route's
+  change is never under `warning`;
+- a **verdict** (`1 of 1 consumer: reads \`label\`, line 16`), each consumer
+  under `readers` with what it does and where, and a **deploy order** where
+  someone meets it (`consumers first: stop reading \`label\`, then catalog`;
+  callers first for a newly required request field; the server first for a
+  type that must accept both);
+- the **flows** that prove it: from a way in to each consumer it breaks or may
+  break, across repositories (way in, client call, route, handler, publish,
+  consumer), at most three;
+- an **anchor** on the head side, since a pull request is annotated only on
+  lines it holds: the operation's own line where it survives, the nearest line
+  of its file that survives where it went, or none (`summary`) where the file
+  went too.
+
+The report ends with a coverage line (`6 consumers in 3 repositories;
+consumers outside them unknown`). Exit 1 when a change is at or above
+`--fail-on`, or when a service could not be read at either ref.
+
+In SARIF a change is placed at its anchor, its message carries the verdict and
+the deploy order, its consumers are related locations with what each does, each
+flow is a `codeFlows` entry (a step in another checkout than `--sarif-root`
+named in words), its properties carry `direction`, `verdict`, `deployFirst` and
+`anchor`, and the coverage line is a notification of the run.
+
+`spec-diff.json` (`specDiffFormatVersion: 2`) is `{ documents: { base, head },
+changes, summary: { errors, warnings, infos, breaking, uncalled }, coverage }`,
+each change `{ kind, level, document, format, service, operation, field, base,
+head, message, place, callers, public, note, confidence, key, use }`, `key`
+`<kind>|<document>|<operation>|<field>`; `use` is `{ direction, why, level,
+verdict, among, readers, flows, deployOrder?, anchor? }`, each reader `{ id,
+service, file?, line?, how, said, level }` (`how` `reads`, `sends`, `omits`,
+`joined`, `opaque`, `unread`, `unknown` or `ignores`), each flow a list of `{
+id, step, label, service, file?, line? }`, `coverage` `{ consumers,
+repositories, said }`. Format 2 added `use` and `coverage`; a file of format 1
+is still read, without them, and one from a newer flowatlas is refused by name.
 
 ### `flowatlas export backstage|structurizr`
 

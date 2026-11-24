@@ -192,7 +192,14 @@ describe('what the action reads and decides', () => {
     assert.equal(saysSomething(facts), false);
     assert.equal(saysSomething({ ...facts, staleDocs: 1 }), true);
     assert.equal(markerOf(`${MARK}\nx`), MARK);
-    assert.equal(outputLines(facts, undefined), 'verdict=safe\nreaches=0\ncontract-breaks=0\nrule-breaks=0\nstale-docs=0\ncomment-url=');
+    assert.equal(outputLines(facts, undefined), 'verdict=safe\nreaches=0\ncontract-breaks=0\nrule-breaks=0\nstale-docs=0\napi-breaks=0\ncomment-url=');
+  });
+
+  it('says something about an API change a consumer feels or one to check, and hands the count on (P390)', () => {
+    const facts = { reaches: { entries: 0, services: 0 }, contractBreaks: 0, ruleBreaks: 0, staleDocs: 0, verdict: 'safe' };
+    assert.equal(saysSomething({ ...facts, api: { breaks: 0, toCheck: 0 } }), false);
+    assert.equal(saysSomething({ ...facts, api: { breaks: 0, toCheck: 1 } }), true);
+    assert.match(outputLines({ ...facts, api: { breaks: 2, toCheck: 1 } }, undefined), /\napi-breaks=2\n/);
   });
 });
 

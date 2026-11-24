@@ -37,6 +37,9 @@ const diffArgs = [
   ...(failOn.has('contract-break') ? ['--fail-on-contract-break'] : []),
   ...(failOn.has('rule-break') ? ['--fail-on-rule-break'] : []),
   ...(failOn.has('broken-call') ? ['--fail-on-broken-call'] : []),
+  ...(failOn.has('api-break') ? ['--fail-on-api-break'] : []),
+  // The API documents compared, each change weighed by the consumers it meets (P390).
+  ...(input('api') === 'false' ? [] : ['--spec']),
 ];
 // Never one an earlier run left behind, on a runner that keeps its workspace.
 rmSync(headDb, { force: true });
@@ -48,7 +51,7 @@ if (diffExit === 2 || !existsSync(commentFile)) {
 
 // SARIF for code scanning, when asked: the new and fixed findings, beside the comment.
 if (input('sarif') === 'true') {
-  flowatlas(['diff', base, '--config', configPath, '--format', 'sarif', '--output', join(outputDir, 'flowatlas.sarif')]);
+  flowatlas(['diff', base, '--config', configPath, '--format', 'sarif', '--output', join(outputDir, 'flowatlas.sarif'), ...(input('api') === 'false' ? [] : ['--spec'])]);
 }
 const docs = docsCheck({ wanted: input('docs-check') === 'true', configPath, headDb, run: flowatlas });
 if (docs.skipped !== undefined) console.log(`::warning::the docs check did not run: ${docs.skipped}`);

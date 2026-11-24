@@ -165,6 +165,8 @@ export interface SarifFinding {
   related?: SarifStep[];
   /** A chain, in order: a rule violation's path, a cycle's hops. */
   flow?: SarifStep[];
+  /** Several chains, each its own code flow: an API change's way in to each consumer it breaks (P390). */
+  flows?: SarifStep[][];
   /** The line-free key a baseline already keys on, with the kind it belongs to (D2). */
   key: { kind: string; value: string };
   baselineState?: BaselineState;

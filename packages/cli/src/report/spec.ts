@@ -84,6 +84,17 @@ const callersOf = (change: SpecChange, quote: (text: string) => string): string 
   return `${named.join(', ')}${change.callers.length > 3 ? `, +${change.callers.length - 3} more` : ''}`;
 };
 
+/** What the change does to its consumers, with which way it moves the contract (P390). */
+const useSaid = (change: SpecChange): string => (change.use === undefined ? '' : `${change.use.verdict} (${change.use.direction}: ${change.use.why})`);
+
+/** Where a change is placed on the head side, when not on its own line. */
+const anchorSaid = (change: SpecChange): string | undefined => {
+  const anchor = change.use?.anchor;
+  if (anchor === undefined || anchor.how === 'same' || anchor.from === undefined) return undefined;
+  const was = `${anchor.from.file}${anchor.from.line === undefined ? '' : `:${anchor.from.line}`}`;
+  return anchor.how === 'nearest' ? `placed at line ${anchor.line ?? 0}, the nearest that is left (was ${was})` : `no line left on the head side (was ${was}): said here only`;
+};
+
 /** The message without the operation it already starts with. */
 const said = (change: SpecChange): string =>
   change.message.startsWith(`${change.operation}: `) ? change.message.slice(change.operation.length + 2) : change.message;
@@ -102,14 +113,17 @@ export const summariseSpecDiff = (report: Pick<SpecDiffReport, 'summary'>): stri
 export const specDiffLines = (report: SpecDiffReport, options: { maxRows?: number; file?: string; heading?: string } = {}): string[] => {
   const max = options.maxRows ?? 50;
   const lines = [options.heading ?? '## API changes', '', summariseSpecDiff(report), ''];
+  // What the verdicts could see (P390): consumers outside the repositories read are unknown.
+  if (report.coverage !== undefined) lines.push(`Judged by use: ${report.coverage.said}.`, '');
   if (report.changes.length === 0) {
     lines.push(`No route or channel end changed between the two sides (${report.documents.base} document(s) before, ${report.documents.head} after).`, '');
     return lines;
   }
   const shown = report.changes.slice(0, max);
+  const used = report.changes.some((change) => change.use !== undefined);
   lines.push(
-    row(['level', 'change', 'operation', 'field', 'what', 'callers on the base side']),
-    row(['---', '---', '---', '---', '---', '---']),
+    row(['level', 'change', 'operation', 'field', 'what', ...(used ? ['what its consumers do', 'deploy'] : ['callers on the base side'])]),
+    row(['---', '---', '---', '---', '---', ...(used ? ['---', '---'] : ['---'])]),
     ...shown.map((change) =>
       row([
         change.level,
@@ -117,12 +131,17 @@ export const specDiffLines = (report: SpecDiffReport, options: { maxRows?: numbe
         `${code(change.document)} ${code(change.operation)}`,
         change.field === null ? '—' : code(change.field),
         escape(said(change)),
-        callersOf(change, code),
+        ...(used ? [escape(useSaid(change) || '—'), escape(change.use?.deployOrder?.said ?? '—')] : [callersOf(change, code)]),
       ]),
     ),
     '',
     ...more(report.changes.length - shown.length, 'changes', options.file),
   );
+  // A change with no line left on the head side is said here, never on a guessed line (P390).
+  const unplaced = report.changes.filter((change) => change.use?.anchor?.how === 'summary');
+  if (unplaced.length > 0) {
+    lines.push('Not on any line of this branch:', '', ...unplaced.map((change) => `- ${change.level} ${code(change.operation)}${change.field === null ? '' : ` ${code(change.field)}`}: ${escape(anchorSaid(change) ?? '')}`), '');
+  }
   const kinds = [...new Set(shown.filter((change) => change.level === 'error').map((change) => change.kind))];
   if (kinds.length > 0) lines.push(...kinds.map((kind) => `- ${code(kind)}: ${SPEC_CHANGE_KINDS[kind].help}`), '');
   return lines;
@@ -158,11 +177,18 @@ export const renderSpecDiffText = (
     lines.push(`${change.level.padEnd(7)} ${change.kind}  ${change.document}  ${change.operation}${change.field === null ? '' : `  ${change.field}`}`);
     lines.push(`        ${said(change)}`);
     // An addition breaks nobody, so whom it would break is not said.
-    if (change.level !== 'info') lines.push(`        callers: ${callersOf(change, (text) => text)} (${change.confidence})`);
+    if (change.level !== 'info' || (change.use !== undefined && change.use.among > 0)) lines.push(`        callers: ${callersOf(change, (text) => text)} (${change.confidence})`);
+    if (change.use !== undefined) {
+      lines.push(`        use: ${useSaid(change)}`);
+      if (change.use.deployOrder !== undefined) lines.push(`        deploy ${change.use.deployOrder.said}`);
+      const anchor = anchorSaid(change);
+      if (anchor !== undefined) lines.push(`        ${anchor}`);
+    }
   }
   if (report.changes.length > shown.length) lines.push(`... and ${report.changes.length - shown.length} more changes${options.file === undefined ? '' : `, in ${options.file}`}`);
   if (shown.length > 0) lines.push('');
   lines.push(summariseSpecDiff(report));
+  if (report.coverage !== undefined) lines.push(`judged by use: ${report.coverage.said}`);
   return `${lines.join('\n')}\n`;
 };
 

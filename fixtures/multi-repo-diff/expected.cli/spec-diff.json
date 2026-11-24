@@ -1,5 +1,5 @@
 {
-  "specDiffFormatVersion": 1,
+  "specDiffFormatVersion": 2,
   "documents": {
     "base": 4,
     "head": 4
@@ -34,7 +34,90 @@
       "public": null,
       "note": null,
       "confidence": "static",
-      "key": "endpoint-removed|orders|GET /shipments/{id}|"
+      "key": "endpoint-removed|orders|GET /shipments/{id}|",
+      "use": {
+        "direction": "breaking",
+        "why": "the route is gone: every request to it fails",
+        "level": "error",
+        "verdict": "1 of 1 caller: requests it",
+        "among": 1,
+        "readers": [
+          {
+            "id": "http_out:gateway#src/clients/orders.client.ts:26:12",
+            "service": "gateway",
+            "file": "src/clients/orders.client.ts",
+            "line": 26,
+            "how": "joined",
+            "said": "requests it",
+            "level": "error"
+          }
+        ],
+        "flows": [
+          [
+            {
+              "id": "entry:gateway:http:GET:/orders/:param/shipment",
+              "step": "way in",
+              "label": "GET /orders/:param/shipment",
+              "service": "gateway",
+              "file": "src/orders/gateway.controller.ts",
+              "line": 17
+            },
+            {
+              "id": "gateway#src/orders/gateway.controller.ts:GatewayController.shipment",
+              "step": "handler",
+              "label": "GatewayController.shipment",
+              "service": "gateway",
+              "file": "src/orders/gateway.controller.ts",
+              "line": 17
+            },
+            {
+              "id": "gateway#src/clients/orders.client.ts:OrdersClient.shipment",
+              "step": "code",
+              "label": "OrdersClient.shipment",
+              "service": "gateway",
+              "file": "src/clients/orders.client.ts",
+              "line": 25
+            },
+            {
+              "id": "http_out:gateway#src/clients/orders.client.ts:26:12",
+              "step": "request",
+              "label": "GET /shipments/:param",
+              "service": "gateway",
+              "file": "src/clients/orders.client.ts",
+              "line": 26
+            },
+            {
+              "id": "entry:orders:http:GET:/shipments/:param",
+              "step": "route",
+              "label": "GET /shipments/:param",
+              "service": "orders",
+              "file": "src/shipments/shipments.controller.ts",
+              "line": 16
+            },
+            {
+              "id": "orders#src/shipments/shipments.controller.ts:ShipmentsController.track",
+              "step": "handler",
+              "label": "ShipmentsController.track",
+              "service": "orders",
+              "file": "src/shipments/shipments.controller.ts",
+              "line": 17
+            }
+          ]
+        ],
+        "deployOrder": {
+          "first": "callers",
+          "said": "callers first: move them off it, then orders"
+        },
+        "anchor": {
+          "how": "nearest",
+          "file": "src/shipments/shipments.controller.ts",
+          "line": 17,
+          "from": {
+            "file": "src/shipments/shipments.controller.ts",
+            "line": 16
+          }
+        }
+      }
     },
     {
       "kind": "request-property-added-required",
@@ -65,7 +148,86 @@
       "public": null,
       "note": null,
       "confidence": "static",
-      "key": "request-property-added-required|orders|POST /orders|body.channel"
+      "key": "request-property-added-required|orders|POST /orders|body.channel",
+      "use": {
+        "direction": "breaking",
+        "why": "narrows the request: a caller must now send it",
+        "level": "error",
+        "verdict": "1 of 1 caller: sends customerId, note; no `channel`",
+        "among": 1,
+        "readers": [
+          {
+            "id": "http_out:gateway#src/clients/orders.client.ts:21:12",
+            "service": "gateway",
+            "file": "src/clients/orders.client.ts",
+            "line": 21,
+            "how": "omits",
+            "said": "sends customerId, note; no `channel`",
+            "level": "error"
+          }
+        ],
+        "flows": [
+          [
+            {
+              "id": "entry:gateway:http:POST:/orders",
+              "step": "way in",
+              "label": "POST /orders",
+              "service": "gateway",
+              "file": "src/orders/gateway.controller.ts",
+              "line": 11
+            },
+            {
+              "id": "gateway#src/orders/gateway.controller.ts:GatewayController.create",
+              "step": "handler",
+              "label": "GatewayController.create",
+              "service": "gateway",
+              "file": "src/orders/gateway.controller.ts",
+              "line": 11
+            },
+            {
+              "id": "gateway#src/clients/orders.client.ts:OrdersClient.create",
+              "step": "code",
+              "label": "OrdersClient.create",
+              "service": "gateway",
+              "file": "src/clients/orders.client.ts",
+              "line": 20
+            },
+            {
+              "id": "http_out:gateway#src/clients/orders.client.ts:21:12",
+              "step": "request",
+              "label": "POST /orders",
+              "service": "gateway",
+              "file": "src/clients/orders.client.ts",
+              "line": 21
+            },
+            {
+              "id": "entry:orders:http:POST:/orders",
+              "step": "route",
+              "label": "POST /orders",
+              "service": "orders",
+              "file": "src/orders/orders.controller.ts",
+              "line": 23
+            },
+            {
+              "id": "orders#src/orders/orders.controller.ts:OrdersController.create",
+              "step": "handler",
+              "label": "OrdersController.create",
+              "service": "orders",
+              "file": "src/orders/orders.controller.ts",
+              "line": 23
+            }
+          ]
+        ],
+        "deployOrder": {
+          "first": "callers",
+          "said": "callers first: send `channel`, then orders"
+        },
+        "anchor": {
+          "how": "same",
+          "file": "src/orders/orders.controller.ts",
+          "line": 23
+        }
+      }
     },
     {
       "kind": "endpoint-added",
@@ -87,7 +249,16 @@
       "public": null,
       "note": null,
       "confidence": "static",
-      "key": "endpoint-added|billing|receive order.gift-wrapped|"
+      "key": "endpoint-added|billing|receive order.gift-wrapped|",
+      "use": {
+        "direction": "compatible",
+        "why": "added: nothing that worked before can rely on it",
+        "level": "info",
+        "verdict": "no publisher on the base side",
+        "among": 0,
+        "readers": [],
+        "flows": []
+      }
     },
     {
       "kind": "endpoint-added",
@@ -109,7 +280,16 @@
       "public": null,
       "note": null,
       "confidence": "static",
-      "key": "endpoint-added|orders|GET /shipments/{id}/status|"
+      "key": "endpoint-added|orders|GET /shipments/{id}/status|",
+      "use": {
+        "direction": "compatible",
+        "why": "added: nothing that worked before can rely on it",
+        "level": "info",
+        "verdict": "no caller on the base side",
+        "among": 0,
+        "readers": [],
+        "flows": []
+      }
     },
     {
       "kind": "endpoint-added",
@@ -131,7 +311,16 @@
       "public": null,
       "note": null,
       "confidence": "static",
-      "key": "endpoint-added|orders|send order.gift-wrapped|"
+      "key": "endpoint-added|orders|send order.gift-wrapped|",
+      "use": {
+        "direction": "compatible",
+        "why": "added: nothing that worked before can rely on it",
+        "level": "info",
+        "verdict": "no consumer on the base side",
+        "among": 0,
+        "readers": [],
+        "flows": []
+      }
     }
   ],
   "summary": {
@@ -140,5 +329,10 @@
     "infos": 3,
     "breaking": 2,
     "uncalled": 0
+  },
+  "coverage": {
+    "consumers": 2,
+    "repositories": 3,
+    "said": "2 consumers in 3 repositories; consumers outside them unknown"
   }
 }

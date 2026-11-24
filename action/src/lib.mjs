@@ -245,7 +245,13 @@ export const canComment = (event, repository) => {
 
 /** Whether a diff said anything: a reach, a break, a stale doc. */
 export const saysSomething = (facts) =>
-  facts.reaches.entries > 0 || facts.contractBreaks > 0 || facts.ruleBreaks > 0 || facts.staleDocs > 0 || facts.verdict !== 'safe';
+  facts.reaches.entries > 0 ||
+  facts.contractBreaks > 0 ||
+  facts.ruleBreaks > 0 ||
+  facts.staleDocs > 0 ||
+  (facts.api?.breaks ?? 0) > 0 ||
+  (facts.api?.toCheck ?? 0) > 0 ||
+  facts.verdict !== 'safe';
 
 /** `name=value` lines for `$GITHUB_OUTPUT`. */
 export const outputLines = (facts, url) =>
@@ -255,5 +261,6 @@ export const outputLines = (facts, url) =>
     `contract-breaks=${facts.contractBreaks}`,
     `rule-breaks=${facts.ruleBreaks}`,
     `stale-docs=${facts.staleDocs}`,
+    `api-breaks=${facts.api?.breaks ?? 0}`,
     `comment-url=${url ?? ''}`,
   ].join('\n');

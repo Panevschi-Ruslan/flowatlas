@@ -78,6 +78,9 @@ export type { ContractStatus } from './tools/contract.js';
 // what a type refers to (L2) and where a declaration ends (L3).
 export { expandType } from './tools/types.js';
 export { endOfDeclaration } from './tools/source.js';
+// What each end of a crossing reads and sends (P368), for the usage verdicts `diff --spec` gives (P390).
+export { consumerReading, readingOf, readsField, shapeFields, topField } from './query/fields.js';
+export type { Reading } from './query/fields.js';
 // The chain an answer hands on (P63) and the same chain as Markdown (P67): pure,
 // so a page can render the words the describe_for_prompt tool answers with.
 export { hintsFor, nextFor, withNext, MAX_NEXT } from './query/next.js';

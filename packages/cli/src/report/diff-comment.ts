@@ -40,6 +40,12 @@ export interface CommentFacts {
   ruleBreaks: number;
   staleDocs: number;
   verdict: string;
+  /**
+   * With the API documents compared (`--spec`, P390): the changes a consumer
+   * in the project feels (an error from use), the ones to check (a warning),
+   * and what the verdicts could see.
+   */
+  api?: { breaks: number; toCheck: number; coverage?: string };
 }
 
 /** The figures the header says, and the action hands on as outputs. */
@@ -49,6 +55,15 @@ export const commentFacts = (report: DiffReport, docs: StaleDocs | undefined, fa
   ruleBreaks: ruleBreaks(report.rules, failOnHeuristic).length,
   staleDocs: docs?.madeStale.length ?? 0,
   verdict: verdictOf(report).verdict,
+  ...(report.spec === null
+    ? {}
+    : {
+        api: {
+          breaks: report.spec.changes.filter((change) => change.level === 'error').length,
+          toCheck: report.spec.changes.filter((change) => change.level === 'warning').length,
+          ...(report.spec.coverage === undefined ? {} : { coverage: report.spec.coverage.said }),
+        },
+      }),
 });
 
 /** The three lines a reviewer reads first. */
@@ -57,6 +72,11 @@ export const commentHeader = (facts: CommentFacts): string[] => [
     ? '**Reaches no way in.**'
     : `**Reaches ${plural(facts.reaches.entries, 'way', 'ways')} in, in ${plural(facts.reaches.services, 'service')}.**`,
   `${facts.contractBreaks === 0 ? 'No new contract break' : plural(facts.contractBreaks, 'new contract break')} · ${facts.ruleBreaks === 0 ? 'no new rule break' : plural(facts.ruleBreaks, 'new rule break')} · ${facts.staleDocs === 0 ? 'no doc made stale' : plural(facts.staleDocs, 'doc', 'docs') + ' made stale'}`,
+  ...(facts.api === undefined
+    ? []
+    : [
+        `${facts.api.breaks === 0 ? 'No API change a consumer here feels' : `**${plural(facts.api.breaks, 'API change')} a consumer here feels**`} · ${facts.api.toCheck === 0 ? 'none to check' : `${facts.api.toCheck} to check`}${facts.api.coverage === undefined ? '' : ` (${facts.api.coverage})`}`,
+      ]),
   `Verdict: **${facts.verdict}** (\`what_changed({verdict: true})\` says why).`,
 ];
 

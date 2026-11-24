@@ -253,7 +253,9 @@ export const toSarif = (input: SarifInput): SarifLog => {
     const occurrence = (occurrences.get(fingerprint) ?? 0) + 1;
     occurrences.set(fingerprint, occurrence);
     const related = (finding.related ?? []).map((step, index) => ({ id: index + 1, ...stepOf(step, paths) }));
-    const flow = (finding.flow ?? []).map((step, index) => ({ location: stepOf(step, paths), executionOrder: index + 1 }));
+    const flows = [...(finding.flow === undefined ? [] : [finding.flow]), ...(finding.flows ?? [])]
+      .filter((steps) => steps.length > 0)
+      .map((steps) => ({ threadFlows: [{ locations: steps.map((step, index) => ({ location: stepOf(step, paths), executionOrder: index + 1 })) }] }));
     const properties = {
       ...(finding.at?.service === undefined ? {} : { service: finding.at.service }),
       ...finding.properties,
@@ -265,7 +267,7 @@ export const toSarif = (input: SarifInput): SarifLog => {
       message: { text: messageOf(finding, related) },
       locations: primary === undefined ? [] : [primary],
       ...(related.length === 0 ? {} : { relatedLocations: related }),
-      ...(flow.length === 0 ? {} : { codeFlows: [{ threadFlows: [{ locations: flow }] }] }),
+      ...(flows.length === 0 ? {} : { codeFlows: flows }),
       partialFingerprints: partialFingerprints(fingerprint, occurrence),
       ...(finding.baselineState === undefined ? {} : { baselineState: finding.baselineState }),
       ...(finding.suppression === undefined ? {} : { suppressions: [finding.suppression] }),

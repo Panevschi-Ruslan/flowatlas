@@ -332,6 +332,52 @@ only one of them moved.
   through, and a redrive policy written as JSON text now gives its
   `maxReceiveCount`. New fixture `deployment-settings-terraform`.
 
+- **An API change weighed by the code that uses it (P390).** `flowatlas spec
+  diff` and `diff --spec` rated a change by its kind: on the new
+  `api-change-verdicts` fixture eight of nine changes were errors, the field a
+  caller already sends and the message field no consumer reads among them,
+  while the one change that breaks nothing in the project, a field of an
+  answer nobody requests, was the one warning. Both sides' graphs are now read
+  for what each consumer does with each change - the shape each request was
+  read to send, the fields each consumer of a message reads (P368) - and every
+  change carries `use`: a `direction` (oasdiff's model: narrowing what a route
+  accepts or widening what it answers or a message carries is `breaking`, the
+  reverse `compatible`, a field the route stops reading `unconfirmed`; a type
+  change between literal choices is read for which way it went), a `level`
+  from use (`error` when a joined consumer reads the removed or retyped field,
+  sends one now invalid, omits one now required or calls a route that is gone;
+  `info` when no consumer reads it, among the ones counted, or every caller
+  already sends it; `warning` where the value reaches a consumer whole, spread
+  or handed on, or what it reads is not known), the `verdict` (`1 of 1
+  consumer: reads \`label\`, line 16`), each consumer under `readers`, the
+  `flows` from a way in to each consumer it breaks across repositories (way in,
+  client call, route, handler, publish, consumer), a `deployOrder` (consumers
+  first for a message field they read, callers first for a newly required
+  request field) and an `anchor` on the head side: the operation's own line, or
+  for a route that went the nearest line of its file that is still there, or
+  the summary where the file went, since a pull request is annotated only on
+  lines it holds. Which fields of an answer a client reads is not read yet, so
+  a response change with callers is a warning saying so, never an error or an
+  info guessed. The report ends with a coverage line (`6 consumers in 3
+  repositories; consumers outside them unknown`). In SARIF each flow is a
+  `codeFlows` entry, the consumers are related locations with what each does,
+  the message carries the verdict and deploy order and the coverage line is a
+  notification of the run. `diff --fail-on-api-break` and the action's
+  `fail-on: api-break` fail only on an error from use; the action compares the
+  API documents by default (`api: false` leaves them out), its comment's header
+  says how many API changes a consumer feels and how many are to check, and it
+  hands `api-breaks` on. `spec-diff.json` is format 2 (`use`, `coverage`); a
+  format 1 file is still read. `flowatlas spec diff main --format sarif
+  --config x.json` printed text for the project found from the working
+  directory, the parent `spec` command taking both flags; it no longer does.
+  On the new fixture the same nine changes are 3
+  errors, 3 warnings and 3 infos (8, 1 and 0 before), each decoy an info:
+  `currency` omitted by the storefront's request, `label` read by the notifier
+  and `DELETE /items/:id` still called are the errors; `title`, already sent,
+  `legacyCode`, read by no consumer, and the archive's `reason`, requested by
+  nobody, the infos; `warehouse`, spread whole by its consumer, and the two
+  `price` fields of answers, the warnings. The `spec diff` and `diff --spec`
+  snapshots of `multi-repo-diff` gain the verdicts and the coverage line.
 - **who_calls answers stay small and finish, also on several symbols
   (P379).** `depth` is how far the tree of callers is drawn, never a cut:
   every way in past it is listed under `waysIn` whatever it is, one symbol or

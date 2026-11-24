@@ -50,7 +50,7 @@ import {
   runExport,
 } from '../packages/cli/dist/index.js';
 import { catalogProblems, dslProblems } from '../packages/linker/dist/index.js';
-import { diffFixtureProject } from './diff-fixture.mjs';
+import { diffFixtureProject, verdictsFixtureProject } from './diff-fixture.mjs';
 import { makeDeployedProject, SHIPPED } from './deployed-fixture.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -1088,6 +1088,34 @@ const DIFF_CASES = [
 ];
 
 /**
+ * What each API or message change of `fixtures/api-change-verdicts` does to
+ * the code that uses it (P390): `spec diff` in each format and the pull
+ * request's comment, the catalog compared (the other two repositories are not
+ * edited). The project is made once, with fixed dates.
+ */
+let verdictsProject;
+const verdictsOnce = async () => (verdictsProject ??= await verdictsFixtureProject(root));
+const verdictsSpecDiff = (options) => async (io) => {
+  const { scratch, config: verdictsConfig } = await verdictsOnce();
+  const placed = (text) => text.split(scratch).join('<scratch>');
+  const said = options.format === undefined ? (text) => io.err(placed(text)) : () => undefined;
+  await runSpecDiff('HEAD~1', undefined, { config: verdictsConfig, service: ['catalog'], ...options }, { out: (text) => io.out(placed(text)), err: said, tty: false });
+};
+const verdictsComment = async (io) => {
+  const { scratch, config: verdictsConfig } = await verdictsOnce();
+  const run = await runDiff('HEAD~1', undefined, { config: verdictsConfig, service: ['catalog'], generatedAt: FIXED, format: 'comment', spec: true, diagrams: false, section: ['api'] }, quiet);
+  io.out(run.text.split(scratch).join('<scratch>'));
+};
+
+const VERDICT_CASES = [
+  ['spec-diff.txt', verdictsSpecDiff({})],
+  ['spec-diff.md', verdictsSpecDiff({ format: 'markdown' })],
+  ['spec-diff.json', verdictsSpecDiff({ format: 'json' })],
+  ['spec-diff.sarif.json', verdictsSpecDiff({ format: 'sarif' })],
+  ['diff.comment.md', verdictsComment],
+];
+
+/**
  * `flowatlas check --env` over `fixtures/multi-repo-deployed` (P117): the
  * `drop-lookup` branch of orders against prod as a document and as the file
  * beside it, the gateway's branch against staging (a field billing's `main`
@@ -1315,6 +1343,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'multi-repo-dead-routes', 'expected.cli'), owned: true, cases: DEAD_ROUTE_CASES },
   { dir: join(root, 'fixtures', 'house-patterns', 'expected.cli'), owned: true, cases: HOUSE_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-diff', 'expected.cli'), owned: true, cases: DIFF_CASES },
+  { dir: join(root, 'fixtures', 'api-change-verdicts', 'expected.cli'), owned: true, cases: VERDICT_CASES },
   { dir: join(root, 'fixtures', 'missing-repo', 'expected.cli'), owned: true, cases: MISSING_REPO_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-rules', 'expected.cli'), owned: true, cases: RULES_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-deployed', 'expected.cli'), owned: true, cases: DEPLOYED_CASES },
@@ -1378,6 +1407,7 @@ for (const [file, ask] of CASES) {
 }
 
 if (diffProject !== undefined) rmSync(diffProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+if (verdictsProject !== undefined) rmSync(verdictsProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 if (deployedProject !== undefined) rmSync(deployedProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 
 for (const { dir, owned, cases } of SUITES) {

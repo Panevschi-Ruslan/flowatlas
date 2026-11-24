@@ -2604,8 +2604,16 @@
           "type": "object",
           "properties": {
             "specDiffFormatVersion": {
-              "type": "number",
-              "const": 1
+              "anyOf": [
+                {
+                  "type": "number",
+                  "const": 1
+                },
+                {
+                  "type": "number",
+                  "const": 2
+                }
+              ]
             },
             "documents": {
               "type": "object",
@@ -2809,6 +2817,223 @@
                   "key": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "use": {
+                    "type": "object",
+                    "properties": {
+                      "direction": {
+                        "type": "string",
+                        "enum": [
+                          "breaking",
+                          "compatible",
+                          "unconfirmed"
+                        ]
+                      },
+                      "why": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "level": {
+                        "type": "string",
+                        "enum": [
+                          "error",
+                          "warning",
+                          "info"
+                        ]
+                      },
+                      "verdict": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "among": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "readers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "service": {
+                              "type": "string"
+                            },
+                            "file": {
+                              "type": "string"
+                            },
+                            "line": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "how": {
+                              "type": "string",
+                              "enum": [
+                                "reads",
+                                "sends",
+                                "omits",
+                                "joined",
+                                "opaque",
+                                "unread",
+                                "unknown",
+                                "ignores"
+                              ]
+                            },
+                            "said": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "level": {
+                              "type": "string",
+                              "enum": [
+                                "error",
+                                "warning",
+                                "info"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "service",
+                            "how",
+                            "said",
+                            "level"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "flows": {
+                        "type": "array",
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "step": {
+                                "type": "string",
+                                "enum": [
+                                  "way in",
+                                  "code",
+                                  "request",
+                                  "route",
+                                  "handler",
+                                  "publish",
+                                  "channel",
+                                  "consumer"
+                                ]
+                              },
+                              "label": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "service": {
+                                "type": "string"
+                              },
+                              "file": {
+                                "type": "string"
+                              },
+                              "line": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "step",
+                              "label",
+                              "service"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "deployOrder": {
+                        "type": "object",
+                        "properties": {
+                          "first": {
+                            "type": "string",
+                            "enum": [
+                              "consumers",
+                              "producers",
+                              "callers",
+                              "server"
+                            ]
+                          },
+                          "said": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "required": [
+                          "first",
+                          "said"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "anchor": {
+                        "type": "object",
+                        "properties": {
+                          "how": {
+                            "type": "string",
+                            "enum": [
+                              "same",
+                              "nearest",
+                              "summary"
+                            ]
+                          },
+                          "file": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "line": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "from": {
+                            "type": "object",
+                            "properties": {
+                              "file": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "line": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "file"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "how"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "direction",
+                      "why",
+                      "level",
+                      "verdict",
+                      "among",
+                      "readers",
+                      "flows"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
@@ -2867,6 +3092,31 @@
                 "infos",
                 "breaking",
                 "uncalled"
+              ],
+              "additionalProperties": false
+            },
+            "coverage": {
+              "type": "object",
+              "properties": {
+                "consumers": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "repositories": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "said": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "consumers",
+                "repositories",
+                "said"
               ],
               "additionalProperties": false
             }

@@ -290,14 +290,15 @@ its token cannot comment.
 | `token` | `github.token` | reads those repositories and comments; the default reads this one only |
 | `comment` | `update` | `update` one comment, post a `new` one each time, or `off` |
 | `comment-when` | `changes` | or `always` |
-| `fail-on` | `contract-break,rule-break` | fail the check on new breaks of these kinds - `broken-call` too, a call between the services the branch leaves landing nowhere (P384) - or `stale-docs` for doc blocks this branch makes stale; empty never fails |
+| `fail-on` | `contract-break,rule-break` | fail the check on new breaks of these kinds - `broken-call` too, a call between the services the branch leaves landing nowhere (P384), and `api-break`, an API or message change a consumer in the project feels (P390) - or `stale-docs` for doc blocks this branch makes stale; empty never fails |
 | `sarif` | `false` | also upload the new and fixed findings to code scanning |
+| `api` | `true` | compare the API documents too (`diff --spec`) and weigh each change by the consumers it meets, with the flows to them (P390); `false` leaves the section out |
 | `docs-check` | `true` | also `flowatlas docs --check`, as annotations, against the branch's graph `diff` built (`--head-db`); it fails nothing by itself, and one that cannot run is said under the comment |
 | `install` | `none` | `ci` runs `npm ci --ignore-scripts` in each repository first, for types the checker can follow |
 | `version` | the action's | the flowatlas version to install |
 
 Outputs: `verdict`, `reaches`, `contract-breaks`, `rule-breaks`, `stale-docs`,
-`comment-url`.
+`api-breaks`, `comment-url`.
 
 The docs check never fails a pull request for a block that was stale before
 it: those are annotations, like the rest. `fail-on: stale-docs` fails it on
@@ -376,6 +377,10 @@ flowatlas diff origin/main --fail-on-contract-break --fail-on-rule-break
 branch breaks: a join the base side made that the head side loses (a route
 renamed under a caller), or a new request to a route nothing serves, counted as
 `check` counts them; each is printed as a `broken call:` line.
+`--fail-on-api-break` (P390) fails on an API or message change a consumer in
+the project feels - it reads the removed field, omits one now required, or
+calls a route that is gone - and never on one only its kind calls breaking;
+each is printed as an `api break:` line.
 
 The second flag does for the architecture rules what the first does for the
 contracts: the comment's **Rules** section sorts violations into new, fixed,
@@ -405,6 +410,19 @@ or under `doctor.publicRoutes`, and its breaking changes fail the job whoever
 calls it. `--format sarif` uploads each change at the route it is about, its
 callers as related locations. The same table can ride in the `diff` comment
 with `flowatlas diff origin/main --spec`.
+
+Each change is then weighed by what its consumers do with it (P390): an error
+only where a consumer in the project reads the removed field, sends one now
+invalid, omits one now required or calls a route that is gone; an info where
+no consumer reads it, among the ones counted; a warning where one takes the
+value whole or what it reads is not known (which fields of an answer a client
+reads is not read yet, and is said so). A message change says which side to
+deploy first. In SARIF, each flow from a way in to a consumer it breaks is a
+code flow across repositories, and a removal is placed on the nearest line of
+its file the branch keeps, or said in the summary where the file went, since
+code scanning annotates only lines in the diff. A coverage line says how many
+consumers in how many repositories were counted; consumers outside them are
+unknown.
 
 A repository that commits its own document can keep it honest. flowatlas never
 writes into a repository it reads, so write the document under the output
