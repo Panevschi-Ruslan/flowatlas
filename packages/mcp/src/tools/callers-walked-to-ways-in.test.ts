@@ -65,13 +65,15 @@ describe('who_calls walks to the ways in when no depth is asked', () => {
     expect(answer.next.some((hint: string) => hint.startsWith('who_calls('))).toBe(false);
   });
 
-  it('keeps the ways in in the compact answer, in one call where a depth of 3 took three', async () => {
+  it('keeps the ways in in the compact answer, and with a depth of 3 too, where that took three calls', async () => {
     const compact = await call('who_calls', { symbol: LEVEL }, false);
     expect(compact.waysIn.map((row: { id: string }) => row.id)).toEqual([NIGHTLY, CANCEL, PLACE, REPORT, CHECKOUT_SCREEN, REPORT_SCREEN]);
-    const cut = await call('who_calls', { symbol: LEVEL, depth: 3 }, false);
-    expect(cut.complete).toBe(false);
-    // A tree cut by depth names the call that walks to every way in, not a deeper depth.
-    expect(cut.next[0]).toBe(`who_calls({symbol: ${JSON.stringify(LEVEL)}})`);
+    // The depth is how far the tree is drawn, never a cut: the ways in past it are listed all the same (P379).
+    const drawn = await call('who_calls', { symbol: LEVEL, depth: 3 }, false);
+    expect(drawn.waysIn).toEqual(compact.waysIn);
+    expect(drawn.complete).toBe(true);
+    expect(drawn.left).toBeUndefined();
+    expect((drawn.next ?? []).some((hint: string) => hint.startsWith('who_calls('))).toBe(false);
   });
 
   it('on a class, draws each method its direct callers and says each way in once with the methods it reaches', async () => {
@@ -104,9 +106,77 @@ describe('who_calls walks to the ways in when no depth is asked', () => {
     expect(answer.complete).toBe(true);
   });
 
-  it('with depth, answers the tree to that depth as before', async () => {
+  it('with depth, draws the tree to that depth and still lists every way in (P379)', async () => {
     const answer = await call('who_calls', { symbol: LEVEL, depth: 6 });
-    expect(answer.waysIn).toBeUndefined();
     expect(treeIds(answer.callers)).toContain(REPORT);
+    expect(answer.waysIn.map((row: { id: string }) => row.id)).toEqual([NIGHTLY, CANCEL, PLACE, REPORT, CHECKOUT_SCREEN, REPORT_SCREEN]);
+    expect(answer.complete).toBe(true);
+    expect(answer.truncated).toBeUndefined();
+    expect(answer.frontier).toBeUndefined();
+  });
+});
+
+/**
+ * A controller's routes asked together (P379): five products routes, four
+ * requested by two screens' client, the create's body typed inline with
+ * 22 fields, the delete requested by nothing.
+ */
+describe("a controller's routes asked together stay small and finish (P379)", () => {
+  const ROUTES = [
+    'entry:stock-api:http:GET:/products',
+    'entry:stock-api:http:GET:/products/:param',
+    'entry:stock-api:http:POST:/products',
+    'entry:stock-api:http:PUT:/products/:param',
+    'entry:stock-api:http:DELETE:/products/:param',
+  ];
+  const CATALOG = 'entry:store-web:screen:/catalog';
+  const EDIT = 'entry:store-web:screen:/catalog/:param';
+
+  it('says the ways in once with what each reaches, complete, with a depth or without, never who_calls again', async () => {
+    for (const depth of [undefined, 1]) {
+      const answer = await call('who_calls', { symbols: ROUTES, ...(depth === undefined ? {} : { depth }) }, false);
+      expect(answer.waysIn.map((row: { id: string; reaches: string[] }) => [row.id, row.reaches])).toEqual([
+        [CATALOG, ['GET /products', 'POST /products']],
+        [EDIT, ['GET /products/:param', 'PUT /products/:param']],
+      ]);
+      expect(answer.complete).toBe(true);
+      expect(answer.left).toBeUndefined();
+      expect(answer.answers.every((one: { complete?: boolean; left?: unknown }) => one.complete === undefined && one.left === undefined)).toBe(true);
+      expect((answer.next ?? []).some((hint: string) => hint.startsWith('who_calls('))).toBe(false);
+      // A screen's row names its component, not its routing table's line.
+      expect(answer.waysIn[0]).toEqual({ id: CATALOG, reach: 'outside', hops: 5, by: 'store-web#src/app/catalog.component.ts:CatalogComponent', reaches: ['GET /products', 'POST /products'] });
+    }
+  });
+
+  it("says the create's body by its size on the request's edge, and the note names verbose for it whole", async () => {
+    const answer = await call('who_calls', { symbols: ROUTES }, false);
+    const create = answer.answers.find((one: { asked: string }) => one.asked === 'entry:stock-api:http:POST:/products');
+    expect(create.callers[0].edge).toEqual({ type: 'hits', params: ['{…22 fields}'], returns: 'string' });
+    expect(answer.note).toContain('verbose: true');
+    const whole = await call('who_calls', { symbols: ROUTES });
+    const verbose = whole.answers.find((one: { asked: string }) => one.asked === 'entry:stock-api:http:POST:/products');
+    expect(verbose.callers[0].edge.params[0]).toMatch(/^\{sku:string;name:string;.*maxOrder\?:number\}$/);
+  });
+
+  it("shortens the same types in get_flow's tree at detail 2: the signature's and the request's body", async () => {
+    const compact = await call('get_flow', { entry: 'CatalogComponent.add', detail: 2 }, false);
+    const text = JSON.stringify(compact);
+    expect(text).not.toContain('maxOrder');
+    expect(compact.root.children[0].meta.signature.params[0].type).toBe('{…22 fields}');
+    const verbose = await call('get_flow', { entry: 'CatalogComponent.add', detail: 2 });
+    expect(JSON.stringify(verbose)).toContain('maxOrder?:number');
+    expect(text.length).toBeLessThan(JSON.stringify(verbose).length / 2);
+  });
+
+  it('lists the routes a controller declares with who calls each, and names dead for the verdicts', async () => {
+    const answer = await call('list_entries', { in: 'ProductsController' }, false);
+    expect(answer.entries.map((row: { id: string; reach: string; callers?: number; caller?: string }) => [row.id, row.reach, row.callers, row.caller])).toEqual([
+      ['entry:stock-api:http:DELETE:/products/:param', 'dead', undefined, undefined],
+      ['entry:stock-api:http:GET:/products', 'alive', 1, 'ui_api_call:store-web#src/app/products.client.ts:16:12'],
+      ['entry:stock-api:http:GET:/products/:param', 'alive', 1, 'ui_api_call:store-web#src/app/products.client.ts:20:12'],
+      ['entry:stock-api:http:POST:/products', 'alive', 1, 'ui_api_call:store-web#src/app/products.client.ts:47:12'],
+      ['entry:stock-api:http:PUT:/products/:param', 'alive', 1, 'ui_api_call:store-web#src/app/products.client.ts:51:12'],
+    ]);
+    expect(answer.next[0]).toBe('dead({id: "stock-api#src/products/products.controller.ts:ProductsController"})');
   });
 });

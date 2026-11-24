@@ -9,7 +9,6 @@
   "entries": [
     {
       "id": "entry:angular-basic:screen:/profile",
-      "loc": "src/app/app.routes.ts:27",
       "reach": "outside"
     }
   ],

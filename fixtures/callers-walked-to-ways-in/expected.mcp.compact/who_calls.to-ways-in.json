@@ -149,14 +149,12 @@
     },
     {
       "id": "entry:store-web:screen:/checkout",
-      "loc": "src/app/app.routes.ts:7",
       "reach": "outside",
       "hops": 8,
       "by": "store-web#src/app/checkout.component.ts:CheckoutComponent"
     },
     {
       "id": "entry:store-web:screen:/reports",
-      "loc": "src/app/app.routes.ts:8",
       "reach": "outside",
       "hops": 11,
       "by": "store-web#src/app/report.component.ts:ReportComponent"

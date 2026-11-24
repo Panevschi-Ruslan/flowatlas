@@ -8,6 +8,34 @@ only one of them moved.
 
 ### Added
 
+- **who_calls answers stay small and finish, also on several symbols
+  (P379).** `depth` is how far the tree of callers is drawn, never a cut:
+  every way in past it is listed under `waysIn` whatever it is, one symbol or
+  several, so a depth is no longer said in `left`, `truncated` or `frontier`,
+  and `next` never names `who_calls` on an asked symbol again. Asked several
+  symbols with a depth, each answer was its tree alone, every one
+  `complete: false`, with no `waysIn` and `next` asking `who_calls` once per
+  symbol; it now draws each tree to the depth and says the ways in once, with
+  `reaches`, complete where the walk finished. In a compact answer a step of
+  a tree (`get_flow`, `who_calls`) says a long type written inline by its size,
+  `{…22 fields}` (an edge's `params` and `returns`, a signature's types, a
+  request's `bodyType`, past 48 characters), the `note` saying `verbose: true`
+  gives it whole; a screen's `loc`, a line of its routing table, goes beside
+  the `by` naming its component, in every compact `impact` and `who_calls`
+  answer. `list_entries` with `in` says on each row who calls it (`callers`
+  and the first `caller`, as `dead` on a class does) and names the `dead` call
+  judging each first in `next`. `callers-walked-to-ways-in` gains a products
+  controller of five routes, four requested by two screens' client, one body
+  typed inline with 22 fields, with snapshots and four answer-budget
+  questions with hand-written answers: `who_calls` on the five routes 2,381
+  characters (2,682 before), with `depth: 1` 2,381 and complete (2,834,
+  incomplete, no ways in), `get_flow` at detail 2 1,933 (3,808), and
+  `list_entries` with `in` naming who calls each 1,152 (835, then `who_calls`
+  on the routes: two calls, 3,517). The budget re-records the answers listing
+  a screen, 32 to 66 characters smaller each (`impact` 873 to 840 up to 2,387
+  to 2,321, `who_calls` 999 to 967 up to 2,926 to 2,862). Ten existing
+  `who_calls` snapshots asked with a depth now list the ways in; the two named
+  `depth-cut` are `depth-drawn`.
 - **What lies past a channel, said once per consumer (P378).**
   `throughChannels`, in `impact` and `who_calls` alike, is one row per
   consumer: `{consumer, channels, consumers?, ways, sample?, walkCut?}`,

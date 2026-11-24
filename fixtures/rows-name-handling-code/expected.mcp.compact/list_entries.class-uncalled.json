@@ -13,7 +13,7 @@
   "total": 2,
   "complete": true,
   "next": [
-    "get_flow({entry: \"entry:shop-api:http:DELETE:/api/reports/:param\"})",
-    "describe_for_prompt({id: \"entry:shop-api:http:DELETE:/api/reports/:param\"})"
+    "dead({id: \"shop-api#src/reports/reports.controller.ts:ReportsController\"})",
+    "get_flow({entry: \"entry:shop-api:http:DELETE:/api/reports/:param\"})"
   ]
 }

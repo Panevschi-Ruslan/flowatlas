@@ -28,7 +28,7 @@
         ],
         "returns": "void"
       },
-      "calls": "orders#src/orders/orders.service.ts:OrdersService.archive",
+      "calls": "archive",
       "children": []
     },
     {
@@ -48,7 +48,7 @@
         ],
         "returns": "type:@fx/contracts#OrderDto"
       },
-      "calls": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "calls": "create",
       "children": []
     },
     {
@@ -68,7 +68,7 @@
         ],
         "returns": "type:@fx/contracts#OrderDto"
       },
-      "calls": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+      "calls": "findOne",
       "children": []
     },
     {
@@ -85,27 +85,145 @@
         "confidence": "static",
         "returns": "type:@fx/contracts#OrderDto[]"
       },
-      "calls": "orders#src/orders/orders.service.ts:OrdersService.latest",
+      "calls": "latest",
       "children": []
     }
   ],
-  "truncated": "4 more nodes past depth 1; ask without depth for every way in",
-  "stoppedBy": [
-    "depth"
+  "waysIn": [
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "loc": "src/orders/orders.controller.ts:25",
+      "service": "orders",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 2,
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "reaches": [
+        "findOne"
+      ]
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/latest",
+      "type": "entry",
+      "label": "GET /orders/latest",
+      "loc": "src/orders/orders.controller.ts:19",
+      "service": "orders",
+      "kind": "http",
+      "reach": "maybe",
+      "behind": "no http_calls/hits from any repo (may be a public API); a request whose address was read in part could reach it",
+      "hops": 2,
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.latest",
+      "reaches": [
+        "latest"
+      ]
+    },
+    {
+      "id": "entry:orders:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "loc": "src/orders/orders.controller.ts:31",
+      "service": "orders",
+      "kind": "http",
+      "reach": "dead",
+      "hops": 2,
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.create",
+      "reaches": [
+        "create"
+      ]
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/:param/archive",
+      "type": "entry",
+      "label": "POST /orders/:param/archive",
+      "loc": "src/orders/orders.controller.ts:42",
+      "service": "orders",
+      "kind": "http",
+      "reach": "maybe",
+      "behind": "no http_calls/hits from any repo (may be a public API); a request that found no route is one segment off it",
+      "hops": 2,
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.archive",
+      "reaches": [
+        "archive"
+      ]
+    },
+    {
+      "id": "entry:billing:event:invoice.requested",
+      "type": "entry",
+      "label": "event invoice.requested",
+      "loc": "src/invoices/invoices.consumer.ts:28",
+      "service": "billing",
+      "kind": "event",
+      "reach": "dead",
+      "hops": 6,
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
+      "reaches": [
+        "findOne"
+      ]
+    },
+    {
+      "id": "entry:billing:event:order.created",
+      "type": "entry",
+      "label": "event order.created",
+      "loc": "src/invoices/invoices.consumer.ts:17",
+      "service": "billing",
+      "kind": "event",
+      "reach": "alive",
+      "hops": 6,
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "reaches": [
+        "findOne"
+      ]
+    },
+    {
+      "id": "entry:billing:http:POST:/invoices",
+      "type": "entry",
+      "label": "POST /invoices",
+      "loc": "src/invoices/invoices.controller.ts:15",
+      "service": "billing",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 6,
+      "by": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+      "reaches": [
+        "findOne"
+      ]
+    },
+    {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "loc": "src/orders/orders.controller.ts:30",
+      "service": "gateway",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 6,
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
+      "reaches": [
+        "findOne"
+      ]
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "type": "entry",
+      "label": "POST /orders/:param/invoice",
+      "loc": "src/orders/orders.controller.ts:40",
+      "service": "gateway",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 10,
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.invoice",
+      "reaches": [
+        "findOne"
+      ]
+    }
   ],
-  "frontier": [
-    "orders#src/orders/orders.controller.ts:OrdersController.archive",
-    "orders#src/orders/orders.controller.ts:OrdersController.create",
-    "orders#src/orders/orders.controller.ts:OrdersController.findOne",
-    "orders#src/orders/orders.controller.ts:OrdersController.latest"
-  ],
-  "complete": false,
-  "left": [
-    "depth: 4 callers past depth 1, from the frontier rows"
-  ],
+  "unreached": 5,
+  "complete": true,
   "next": [
-    "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService\"})",
-    "impact({symbol: \"orders#src/orders/orders.service.ts:OrdersService\"})",
-    "describe_for_prompt({id: \"orders#src/orders/orders.service.ts:OrdersService\", scope: \"class\"})"
+    "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})",
+    "describe_for_prompt({id: \"entry:orders:http:GET:/orders/:param\"})",
+    "impact({symbol: \"entry:orders:http:GET:/orders/:param\"})"
   ]
 }

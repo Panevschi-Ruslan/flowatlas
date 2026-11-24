@@ -367,6 +367,187 @@
       }
     },
     {
+      "id": "who_calls.routes-several",
+      "ask": "which routes of ProductsController does no code call, and who calls the others",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "who_calls",
+      "args": {
+        "symbols": [
+          "entry:stock-api:http:GET:/products",
+          "entry:stock-api:http:GET:/products/:param",
+          "entry:stock-api:http:POST:/products",
+          "entry:stock-api:http:PUT:/products/:param",
+          "entry:stock-api:http:DELETE:/products/:param"
+        ]
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "callers": [
+            "ui_api_call:store-web#src/app/products.client.ts:16:12",
+            "ui_api_call:store-web#src/app/products.client.ts:20:12",
+            "ui_api_call:store-web#src/app/products.client.ts:47:12",
+            "ui_api_call:store-web#src/app/products.client.ts:51:12"
+          ],
+          "waysIn": [
+            "entry:store-web:screen:/catalog",
+            "entry:store-web:screen:/catalog/:param"
+          ]
+        },
+        "exact": [
+          "callers",
+          "waysIn"
+        ],
+        "rowsSay": {
+          "waysIn": {
+            "entry:store-web:screen:/catalog": {
+              "reaches": [
+                "GET /products",
+                "POST /products"
+              ]
+            },
+            "entry:store-web:screen:/catalog/:param": {
+              "reaches": [
+                "GET /products/:param",
+                "PUT /products/:param"
+              ]
+            }
+          }
+        }
+      },
+      "note": "P379: five routes asked together, each one's direct callers and the two screens said once, complete; the delete route has none."
+    },
+    {
+      "id": "who_calls.routes-depth",
+      "ask": "who calls each route of ProductsController, one hop",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "who_calls",
+      "args": {
+        "symbols": [
+          "entry:stock-api:http:GET:/products",
+          "entry:stock-api:http:GET:/products/:param",
+          "entry:stock-api:http:POST:/products",
+          "entry:stock-api:http:PUT:/products/:param",
+          "entry:stock-api:http:DELETE:/products/:param"
+        ],
+        "depth": 1
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "callers": [
+            "ui_api_call:store-web#src/app/products.client.ts:16:12",
+            "ui_api_call:store-web#src/app/products.client.ts:20:12",
+            "ui_api_call:store-web#src/app/products.client.ts:47:12",
+            "ui_api_call:store-web#src/app/products.client.ts:51:12"
+          ],
+          "waysIn": [
+            "entry:store-web:screen:/catalog",
+            "entry:store-web:screen:/catalog/:param"
+          ]
+        },
+        "exact": [
+          "callers",
+          "waysIn"
+        ]
+      },
+      "note": "P379: with a depth, several symbols answered each its tree alone, every answer incomplete, no waysIn, next asking who_calls again on each."
+    },
+    {
+      "id": "get_flow.inline-type",
+      "ask": "what does CatalogComponent.add call, at detail 2",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "get_flow",
+      "args": {
+        "entry": "CatalogComponent.add",
+        "detail": 2
+      },
+      "lists": [
+        "root"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "root": [
+            "store-web#src/app/catalog.component.ts:CatalogComponent.add",
+            "store-web#src/app/products.client.ts:ProductsClient.create",
+            "ui_api_call:store-web#src/app/products.client.ts:47:12",
+            "entry:stock-api:http:POST:/products",
+            "stock-api#src/products/products.controller.ts:ProductsController.create",
+            "stock-api#src/products/products.service.ts:ProductsService.create"
+          ]
+        },
+        "rowsSay": {
+          "root": {
+            "store-web#src/app/products.client.ts:ProductsClient.create": {
+              "edge": {
+                "type": "calls",
+                "params": [
+                  "{…22 fields}"
+                ],
+                "returns": "string"
+              }
+            }
+          }
+        }
+      },
+      "note": "P379: the create's body, 22 fields written inline, was said whole on the edge, the signature and the request's bodyType."
+    },
+    {
+      "id": "list_entries.class-callers",
+      "ask": "which routes does ProductsController declare, and who calls each",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "list_entries",
+      "args": {
+        "in": "ProductsController"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "exact": [
+          "entries"
+        ],
+        "rowsSay": {
+          "entries": {
+            "entry:stock-api:http:GET:/products": {
+              "reach": "alive",
+              "callers": 1,
+              "caller": "ui_api_call:store-web#src/app/products.client.ts:16:12"
+            },
+            "entry:stock-api:http:GET:/products/:param": {
+              "reach": "alive",
+              "callers": 1,
+              "caller": "ui_api_call:store-web#src/app/products.client.ts:20:12"
+            },
+            "entry:stock-api:http:POST:/products": {
+              "reach": "alive",
+              "callers": 1,
+              "caller": "ui_api_call:store-web#src/app/products.client.ts:47:12"
+            },
+            "entry:stock-api:http:PUT:/products/:param": {
+              "reach": "alive",
+              "callers": 1,
+              "caller": "ui_api_call:store-web#src/app/products.client.ts:51:12"
+            },
+            "entry:stock-api:http:DELETE:/products/:param": {
+              "reach": "dead"
+            }
+          }
+        }
+      },
+      "note": "P379: each row says who calls it, as dead on a class does; the rows said reach alone, and the agent asked who_calls on every route."
+    },
+    {
       "id": "who_consumes.helpdesk-type",
       "ask": "which screens react to TICKET_ASSIGNED",
       "fixture": "helpdesk-screen-reach",
@@ -1323,29 +1504,29 @@
       "calls": 1
     },
     "impact.calling-side": {
-      "chars": 1244,
-      "tokens": 311,
+      "chars": 1216,
+      "tokens": 304,
       "rows": 4,
       "complete": false,
       "calls": 1
     },
     "impact.shared-client-items": {
-      "chars": 1189,
-      "tokens": 298,
+      "chars": 1124,
+      "tokens": 281,
       "rows": 4,
       "complete": true,
       "calls": 1
     },
     "impact.shared-client-desks": {
-      "chars": 873,
-      "tokens": 219,
+      "chars": 840,
+      "tokens": 210,
       "rows": 2,
       "complete": true,
       "calls": 1
     },
     "impact.rendered-reach": {
-      "chars": 1151,
-      "tokens": 288,
+      "chars": 1119,
+      "tokens": 280,
       "rows": 3,
       "complete": false,
       "calls": 1
@@ -1365,22 +1546,50 @@
       "calls": 1
     },
     "who_calls.long-chain": {
-      "chars": 2828,
-      "tokens": 707,
+      "chars": 2764,
+      "tokens": 691,
       "rows": 14,
       "complete": true,
       "calls": 1
     },
     "who_calls.class-shared-callers": {
-      "chars": 2926,
-      "tokens": 732,
+      "chars": 2862,
+      "tokens": 716,
       "rows": 13,
       "complete": true,
       "calls": 1
     },
     "who_calls.several-symbols": {
-      "chars": 1554,
-      "tokens": 389,
+      "chars": 1522,
+      "tokens": 381,
+      "rows": 5,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.routes-several": {
+      "chars": 2381,
+      "tokens": 596,
+      "rows": 6,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.routes-depth": {
+      "chars": 2381,
+      "tokens": 596,
+      "rows": 6,
+      "complete": true,
+      "calls": 1
+    },
+    "get_flow.inline-type": {
+      "chars": 1933,
+      "tokens": 484,
+      "rows": 6,
+      "complete": true,
+      "calls": 1
+    },
+    "list_entries.class-callers": {
+      "chars": 1152,
+      "tokens": 288,
       "rows": 5,
       "complete": true,
       "calls": 1
@@ -1491,8 +1700,8 @@
       "calls": 6
     },
     "impact.handling-code": {
-      "chars": 1019,
-      "tokens": 255,
+      "chars": 987,
+      "tokens": 247,
       "rows": 3,
       "complete": true,
       "calls": 1
@@ -1519,15 +1728,15 @@
       "calls": 1
     },
     "impact.detail-2-lean": {
-      "chars": 1580,
-      "tokens": 395,
+      "chars": 1548,
+      "tokens": 387,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "impact.reached-through-route": {
-      "chars": 1019,
-      "tokens": 255,
+      "chars": 987,
+      "tokens": 247,
       "rows": 3,
       "complete": true,
       "calls": 1
@@ -1540,29 +1749,29 @@
       "calls": 1
     },
     "list_entries.class-uncalled": {
-      "chars": 475,
+      "chars": 474,
       "tokens": 119,
       "rows": 2,
       "complete": true,
       "calls": 1
     },
     "impact.channels-once": {
-      "chars": 2387,
-      "tokens": 597,
+      "chars": 2321,
+      "tokens": 581,
       "rows": 8,
       "complete": true,
       "calls": 1
     },
     "who_calls.channels-counted": {
-      "chars": 1961,
-      "tokens": 491,
+      "chars": 1895,
+      "tokens": 474,
       "rows": 8,
       "complete": true,
       "calls": 1
     },
     "impact.across-consumer": {
-      "chars": 1440,
-      "tokens": 360,
+      "chars": 1407,
+      "tokens": 352,
       "rows": 5,
       "complete": true,
       "calls": 1
@@ -1575,8 +1784,8 @@
       "calls": 1
     },
     "who_calls.request-lands": {
-      "chars": 999,
-      "tokens": 250,
+      "chars": 967,
+      "tokens": 242,
       "rows": 2,
       "complete": true,
       "calls": 1

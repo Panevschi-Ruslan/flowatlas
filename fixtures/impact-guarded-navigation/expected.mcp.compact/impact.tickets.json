@@ -20,7 +20,6 @@
     },
     {
       "id": "entry:store-web:screen:/board",
-      "loc": "src/app/app.routes.ts:23",
       "reach": "outside",
       "via": "POST /api/tickets/:param/ack (store-api)",
       "by": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent"

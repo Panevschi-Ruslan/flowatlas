@@ -36,7 +36,6 @@
   "waysIn": [
     {
       "id": "entry:shop-admin:screen:/catalog",
-      "loc": "src/app/app.routes.ts:7",
       "reach": "outside",
       "hops": 3,
       "by": "shop-admin#src/app/catalog.component.ts:CatalogComponent"

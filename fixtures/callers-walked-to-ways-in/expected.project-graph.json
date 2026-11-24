@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T23:03:25.088Z",
+  "builtAt": "2026-11-24T13:17:28.391Z",
   "services": [
     {
       "name": "stock-api",
@@ -47,6 +47,54 @@
       }
     },
     {
+      "id": "entry:stock-api:http:DELETE:/products/:param",
+      "type": "entry",
+      "label": "DELETE /products/:param",
+      "repo": "stock-api",
+      "file": "src/products/products.controller.ts",
+      "line": 59,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/products/:param",
+        "rawPath": "/products/:sku",
+        "controller": "ProductsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stock-api:http:GET:/products",
+      "type": "entry",
+      "label": "GET /products",
+      "repo": "stock-api",
+      "file": "src/products/products.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products",
+        "rawPath": "/products",
+        "controller": "ProductsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stock-api:http:GET:/products/:param",
+      "type": "entry",
+      "label": "GET /products/:param",
+      "repo": "stock-api",
+      "file": "src/products/products.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products/:param",
+        "rawPath": "/products/:sku",
+        "controller": "ProductsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
       "id": "entry:stock-api:http:GET:/reports/daily",
       "type": "entry",
       "label": "GET /reports/daily",
@@ -79,12 +127,76 @@
       }
     },
     {
+      "id": "entry:stock-api:http:POST:/products",
+      "type": "entry",
+      "label": "POST /products",
+      "repo": "stock-api",
+      "file": "src/products/products.controller.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/products",
+        "rawPath": "/products",
+        "controller": "ProductsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stock-api:http:PUT:/products/:param",
+      "type": "entry",
+      "label": "PUT /products/:param",
+      "repo": "stock-api",
+      "file": "src/products/products.controller.ts",
+      "line": 54,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/products/:param",
+        "rawPath": "/products/:sku",
+        "controller": "ProductsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:store-web:screen:/catalog",
+      "type": "entry",
+      "label": "/catalog",
+      "repo": "store-web",
+      "file": "src/app/app.routes.ts",
+      "line": 11,
+      "kind": "screen",
+      "meta": {
+        "path": "/catalog",
+        "by": "angular-routes",
+        "screens": [
+          "CatalogComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:store-web:screen:/catalog/:param",
+      "type": "entry",
+      "label": "/catalog/:param",
+      "repo": "store-web",
+      "file": "src/app/app.routes.ts",
+      "line": 12,
+      "kind": "screen",
+      "meta": {
+        "path": "/catalog/:param",
+        "by": "angular-routes",
+        "screens": [
+          "ProductEditComponent"
+        ]
+      }
+    },
+    {
       "id": "entry:store-web:screen:/checkout",
       "type": "entry",
       "label": "/checkout",
       "repo": "store-web",
       "file": "src/app/app.routes.ts",
-      "line": 7,
+      "line": 9,
       "kind": "screen",
       "meta": {
         "path": "/checkout",
@@ -100,7 +212,7 @@
       "label": "/reports",
       "repo": "store-web",
       "file": "src/app/app.routes.ts",
-      "line": 8,
+      "line": 10,
       "kind": "screen",
       "meta": {
         "path": "/reports",
@@ -117,10 +229,10 @@
       "repo": "stock-api",
       "meta": {
         "stats": {
-          "files": 9,
-          "filesRead": 9,
+          "files": 11,
+          "filesRead": 11,
           "filesUnreadable": 0,
-          "classes": 8,
+          "classes": 10,
           "skippedExternalCalls": {}
         },
         "bootstrap": "src/main.ts",
@@ -146,14 +258,14 @@
       "repo": "store-web",
       "meta": {
         "stats": {
-          "files": 6,
-          "filesRead": 6,
+          "files": 9,
+          "filesRead": 9,
           "filesUnreadable": 0,
-          "classes": 3,
-          "templates": 2,
+          "classes": 6,
+          "templates": 4,
           "skippedExternalCalls": {
-            "rxjs": 3,
-            "@angular/common": 3
+            "rxjs": 7,
+            "@angular/common": 7
           }
         },
         "adapters": {
@@ -169,19 +281,21 @@
       "label": "AppModule",
       "repo": "stock-api",
       "file": "src/app.module.ts",
-      "line": 10,
+      "line": 12,
       "kind": "static",
       "meta": {
         "controllers": [
           "CheckoutController",
-          "ReportsController"
+          "ReportsController",
+          "ProductsController"
         ],
         "providers": [
           "StockService",
           "StockJobs",
           "CheckoutService",
           "ReportsService",
-          "ReportBuilder"
+          "ReportBuilder",
+          "ProductsService"
         ],
         "exports": []
       }
@@ -311,6 +425,241 @@
             }
           ],
           "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/products/products.controller.ts:ProductsController",
+      "type": "provider",
+      "label": "ProductsController",
+      "repo": "stock-api",
+      "file": "src/products/products.controller.ts",
+      "line": 9,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stock-api#src/products/products.controller.ts:ProductsController.create",
+      "type": "method",
+      "label": "ProductsController.create",
+      "repo": "stock-api",
+      "file": "src/products/products.controller.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{sku:string;name:string;description?:string;image?:string;price:number;currency?:string;weight?:number;width?:number;height?:number;depth?:number;color?:string;brand?:string;category?:string;tags?:string[];barcode?:string;supplier?:string;origin?:string;taxClass?:string;visible?:boolean;featured?:boolean;minOrder?:number;maxOrder?:number}"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 51
+          },
+          {
+            "field": "sku",
+            "line": 51
+          }
+        ]
+      }
+    },
+    {
+      "id": "stock-api#src/products/products.controller.ts:ProductsController.list",
+      "type": "method",
+      "label": "ProductsController.list",
+      "repo": "stock-api",
+      "file": "src/products/products.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stock-api#src/products/products.controller.ts:ProductsController.one",
+      "type": "method",
+      "label": "ProductsController.one",
+      "repo": "stock-api",
+      "file": "src/products/products.controller.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stock-api#src/products/products.controller.ts:ProductsController.remove",
+      "type": "method",
+      "label": "ProductsController.remove",
+      "repo": "stock-api",
+      "file": "src/products/products.controller.ts",
+      "line": 59,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stock-api#src/products/products.controller.ts:ProductsController.update",
+      "type": "method",
+      "label": "ProductsController.update",
+      "repo": "stock-api",
+      "file": "src/products/products.controller.ts",
+      "line": 54,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{name:string}"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 56
+          }
+        ]
+      }
+    },
+    {
+      "id": "stock-api#src/products/products.service.ts:ProductsService",
+      "type": "provider",
+      "label": "ProductsService",
+      "repo": "stock-api",
+      "file": "src/products/products.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stock-api#src/products/products.service.ts:ProductsService.create",
+      "type": "method",
+      "label": "ProductsService.create",
+      "repo": "stock-api",
+      "file": "src/products/products.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/products/products.service.ts:ProductsService.list",
+      "type": "method",
+      "label": "ProductsService.list",
+      "repo": "stock-api",
+      "file": "src/products/products.service.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/products/products.service.ts:ProductsService.one",
+      "type": "method",
+      "label": "ProductsService.one",
+      "repo": "stock-api",
+      "file": "src/products/products.service.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/products/products.service.ts:ProductsService.remove",
+      "type": "method",
+      "label": "ProductsService.remove",
+      "repo": "stock-api",
+      "file": "src/products/products.service.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/products/products.service.ts:ProductsService.rename",
+      "type": "method",
+      "label": "ProductsService.rename",
+      "repo": "stock-api",
+      "file": "src/products/products.service.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
         }
       }
     },
@@ -571,6 +920,52 @@
       }
     },
     {
+      "id": "store-web#src/app/catalog.component.ts:CatalogComponent",
+      "type": "ui_component",
+      "label": "CatalogComponent",
+      "repo": "store-web",
+      "file": "src/app/catalog.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-catalog",
+        "route": "/catalog"
+      }
+    },
+    {
+      "id": "store-web#src/app/catalog.component.ts:CatalogComponent.add",
+      "type": "method",
+      "label": "CatalogComponent.add",
+      "repo": "store-web",
+      "file": "src/app/catalog.component.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/catalog.component.ts:CatalogComponent.ngOnInit",
+      "type": "method",
+      "label": "CatalogComponent.ngOnInit",
+      "repo": "store-web",
+      "file": "src/app/catalog.component.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
       "id": "store-web#src/app/checkout.component.ts:CheckoutComponent",
       "type": "ui_component",
       "label": "CheckoutComponent",
@@ -613,6 +1008,139 @@
         "signature": {
           "params": [],
           "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/product-edit.component.ts:ProductEditComponent",
+      "type": "ui_component",
+      "label": "ProductEditComponent",
+      "repo": "store-web",
+      "file": "src/app/product-edit.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-product-edit",
+        "route": "/catalog/:param"
+      }
+    },
+    {
+      "id": "store-web#src/app/product-edit.component.ts:ProductEditComponent.ngOnInit",
+      "type": "method",
+      "label": "ProductEditComponent.ngOnInit",
+      "repo": "store-web",
+      "file": "src/app/product-edit.component.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/product-edit.component.ts:ProductEditComponent.save",
+      "type": "method",
+      "label": "ProductEditComponent.save",
+      "repo": "store-web",
+      "file": "src/app/product-edit.component.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/products.client.ts:ProductsClient",
+      "type": "provider",
+      "label": "ProductsClient",
+      "repo": "store-web",
+      "file": "src/app/products.client.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "store-web#src/app/products.client.ts:ProductsClient.create",
+      "type": "method",
+      "label": "ProductsClient.create",
+      "repo": "store-web",
+      "file": "src/app/products.client.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "product",
+              "type": "{sku:string;name:string;description?:string;image?:string;price:number;currency?:string;weight?:number;width?:number;height?:number;depth?:number;color?:string;brand?:string;category?:string;tags?:string[];barcode?:string;supplier?:string;origin?:string;taxClass?:string;visible?:boolean;featured?:boolean;minOrder?:number;maxOrder?:number}"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/products.client.ts:ProductsClient.list",
+      "type": "method",
+      "label": "ProductsClient.list",
+      "repo": "store-web",
+      "file": "src/app/products.client.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/products.client.ts:ProductsClient.one",
+      "type": "method",
+      "label": "ProductsClient.one",
+      "repo": "store-web",
+      "file": "src/app/products.client.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "store-web#src/app/products.client.ts:ProductsClient.update",
+      "type": "method",
+      "label": "ProductsClient.update",
+      "repo": "store-web",
+      "file": "src/app/products.client.ts",
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
         }
       }
     },
@@ -717,6 +1245,36 @@
       }
     },
     {
+      "id": "ui_action:store-web#src/app/catalog.component.ts:16:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "store-web",
+      "file": "src/app/catalog.component.ts",
+      "line": 16,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "store-web#src/app/catalog.component.ts:CatalogComponent",
+        "template": "src/app/catalog.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:store-web#src/app/catalog.component.ts:9:46",
+      "type": "ui_action",
+      "label": "click=\"add()\"",
+      "repo": "store-web",
+      "file": "src/app/catalog.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "add()",
+        "component": "store-web#src/app/catalog.component.ts:CatalogComponent",
+        "template": "src/app/catalog.component.ts"
+      }
+    },
+    {
       "id": "ui_action:store-web#src/app/checkout.component.ts:9:22",
       "type": "ui_action",
       "label": "click=\"place()\"",
@@ -747,6 +1305,36 @@
       }
     },
     {
+      "id": "ui_action:store-web#src/app/product-edit.component.ts:17:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "store-web",
+      "file": "src/app/product-edit.component.ts",
+      "line": 17,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "store-web#src/app/product-edit.component.ts:ProductEditComponent",
+        "template": "src/app/product-edit.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:store-web#src/app/product-edit.component.ts:9:46",
+      "type": "ui_action",
+      "label": "click=\"save()\"",
+      "repo": "store-web",
+      "file": "src/app/product-edit.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "save()",
+        "component": "store-web#src/app/product-edit.component.ts:ProductEditComponent",
+        "template": "src/app/product-edit.component.ts"
+      }
+    },
+    {
       "id": "ui_action:store-web#src/app/report.component.ts:16:3",
       "type": "ui_action",
       "label": "ngOnInit",
@@ -759,6 +1347,96 @@
         "handler": "ngOnInit",
         "component": "store-web#src/app/report.component.ts:ReportComponent",
         "template": "src/app/report.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:store-web#src/app/products.client.ts:16:12",
+      "type": "ui_api_call",
+      "label": "GET /products",
+      "repo": "store-web",
+      "file": "src/app/products.client.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/products",
+        "path": "/products",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "stock-api"
+      }
+    },
+    {
+      "id": "ui_api_call:store-web#src/app/products.client.ts:20:12",
+      "type": "ui_api_call",
+      "label": "GET /products/:param",
+      "repo": "store-web",
+      "file": "src/app/products.client.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/products/:param",
+        "path": "/products/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "stock-api"
+      }
+    },
+    {
+      "id": "ui_api_call:store-web#src/app/products.client.ts:47:12",
+      "type": "ui_api_call",
+      "label": "POST /products",
+      "repo": "store-web",
+      "file": "src/app/products.client.ts",
+      "line": 47,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/products",
+        "path": "/products",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string",
+        "bodyType": "{sku:string;name:string;description?:string;image?:string;price:number;currency?:string;weight?:number;width?:number;height?:number;depth?:number;color?:string;brand?:string;category?:string;tags?:string[];barcode?:string;supplier?:string;origin?:string;taxClass?:string;visible?:boolean;featured?:boolean;minOrder?:number;maxOrder?:number}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name",
+          "price",
+          "sku"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "stock-api"
+      }
+    },
+    {
+      "id": "ui_api_call:store-web#src/app/products.client.ts:51:12",
+      "type": "ui_api_call",
+      "label": "PUT /products/:param",
+      "repo": "store-web",
+      "file": "src/app/products.client.ts",
+      "line": 51,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "url": "${apiUrl}/products/:param",
+        "path": "/products/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string",
+        "bodyType": "{name:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "stock-api"
       }
     },
     {
@@ -856,6 +1534,46 @@
       }
     },
     {
+      "from": "entry:stock-api:http:DELETE:/products/:param",
+      "to": "stock-api#src/products/products.controller.ts:ProductsController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/products/products.controller.ts",
+      "line": 59,
+      "meta": {
+        "params": "{sku:string}"
+      }
+    },
+    {
+      "from": "entry:stock-api:http:GET:/products",
+      "to": "stock-api#src/products/products.controller.ts:ProductsController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/products/products.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:stock-api:http:GET:/products/:param",
+      "to": "stock-api#src/products/products.controller.ts:ProductsController.one",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/products/products.controller.ts",
+      "line": 18,
+      "meta": {
+        "params": "{sku:string}"
+      }
+    },
+    {
       "from": "entry:stock-api:http:GET:/reports/daily",
       "to": "stock-api#src/reports/reports.controller.ts:ReportsController.daily",
       "type": "handles",
@@ -881,12 +1599,66 @@
       }
     },
     {
+      "from": "entry:stock-api:http:POST:/products",
+      "to": "stock-api#src/products/products.controller.ts:ProductsController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{sku:string;name:string;description?:string;image?:string;price:number;currency?:string;weight?:number;width?:number;height?:number;depth?:number;color?:string;brand?:string;category?:string;tags?:string[];barcode?:string;supplier?:string;origin?:string;taxClass?:string;visible?:boolean;featured?:boolean;minOrder?:number;maxOrder?:number}"
+      ],
+      "returns": "string",
+      "file": "src/products/products.controller.ts",
+      "line": 23,
+      "meta": {
+        "body": "{sku:string;name:string;description?:string;image?:string;price:number;currency?:string;weight?:number;width?:number;height?:number;depth?:number;color?:string;brand?:string;category?:string;tags?:string[];barcode?:string;supplier?:string;origin?:string;taxClass?:string;visible?:boolean;featured?:boolean;minOrder?:number;maxOrder?:number}"
+      }
+    },
+    {
+      "from": "entry:stock-api:http:PUT:/products/:param",
+      "to": "stock-api#src/products/products.controller.ts:ProductsController.update",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{name:string}"
+      ],
+      "returns": "string",
+      "file": "src/products/products.controller.ts",
+      "line": 54,
+      "meta": {
+        "params": "{sku:string}",
+        "body": "{name:string}"
+      }
+    },
+    {
+      "from": "entry:store-web:screen:/catalog",
+      "to": "store-web#src/app/catalog.component.ts:CatalogComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 11,
+      "meta": {
+        "route": "/catalog"
+      }
+    },
+    {
+      "from": "entry:store-web:screen:/catalog/:param",
+      "to": "store-web#src/app/product-edit.component.ts:ProductEditComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 12,
+      "meta": {
+        "route": "/catalog/:param"
+      }
+    },
+    {
       "from": "entry:store-web:screen:/checkout",
       "to": "store-web#src/app/checkout.component.ts:CheckoutComponent",
       "type": "handles",
       "confidence": "static",
       "file": "src/app/app.routes.ts",
-      "line": 7,
+      "line": 9,
       "meta": {
         "route": "/checkout"
       }
@@ -897,7 +1669,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/app/app.routes.ts",
-      "line": 8,
+      "line": 10,
       "meta": {
         "route": "/reports"
       }
@@ -993,6 +1765,74 @@
       "returns": "void",
       "file": "src/checkout/checkout.service.ts",
       "line": 11
+    },
+    {
+      "from": "stock-api#src/products/products.controller.ts:ProductsController",
+      "to": "stock-api#src/products/products.service.ts:ProductsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/products/products.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "stock-api#src/products/products.controller.ts:ProductsController.create",
+      "to": "stock-api#src/products/products.service.ts:ProductsService.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/products/products.controller.ts",
+      "line": 51
+    },
+    {
+      "from": "stock-api#src/products/products.controller.ts:ProductsController.list",
+      "to": "stock-api#src/products/products.service.ts:ProductsService.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/products/products.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "stock-api#src/products/products.controller.ts:ProductsController.one",
+      "to": "stock-api#src/products/products.service.ts:ProductsService.one",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/products/products.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "stock-api#src/products/products.controller.ts:ProductsController.remove",
+      "to": "stock-api#src/products/products.service.ts:ProductsService.remove",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/products/products.controller.ts",
+      "line": 61
+    },
+    {
+      "from": "stock-api#src/products/products.controller.ts:ProductsController.update",
+      "to": "stock-api#src/products/products.service.ts:ProductsService.rename",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/products/products.controller.ts",
+      "line": 56
     },
     {
       "from": "stock-api#src/reports/report.builder.ts:ReportBuilder",
@@ -1115,6 +1955,36 @@
       "line": 12
     },
     {
+      "from": "store-web#src/app/catalog.component.ts:CatalogComponent",
+      "to": "store-web#src/app/products.client.ts:ProductsClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/catalog.component.ts",
+      "line": 14
+    },
+    {
+      "from": "store-web#src/app/catalog.component.ts:CatalogComponent.add",
+      "to": "store-web#src/app/products.client.ts:ProductsClient.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{sku:string;name:string;description?:string;image?:string;price:number;currency?:string;weight?:number;width?:number;height?:number;depth?:number;color?:string;brand?:string;category?:string;tags?:string[];barcode?:string;supplier?:string;origin?:string;taxClass?:string;visible?:boolean;featured?:boolean;minOrder?:number;maxOrder?:number}"
+      ],
+      "returns": "string",
+      "file": "src/app/catalog.component.ts",
+      "line": 21
+    },
+    {
+      "from": "store-web#src/app/catalog.component.ts:CatalogComponent.ngOnInit",
+      "to": "store-web#src/app/products.client.ts:ProductsClient.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/app/catalog.component.ts",
+      "line": 17
+    },
+    {
       "from": "store-web#src/app/checkout.component.ts:CheckoutComponent",
       "to": "store-web#src/app/store.client.ts:StoreClient",
       "type": "injects",
@@ -1146,6 +2016,79 @@
       "returns": "boolean",
       "file": "src/app/checkout.component.ts",
       "line": 17
+    },
+    {
+      "from": "store-web#src/app/product-edit.component.ts:ProductEditComponent",
+      "to": "store-web#src/app/products.client.ts:ProductsClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/product-edit.component.ts",
+      "line": 15
+    },
+    {
+      "from": "store-web#src/app/product-edit.component.ts:ProductEditComponent.ngOnInit",
+      "to": "store-web#src/app/products.client.ts:ProductsClient.one",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/app/product-edit.component.ts",
+      "line": 18
+    },
+    {
+      "from": "store-web#src/app/product-edit.component.ts:ProductEditComponent.save",
+      "to": "store-web#src/app/products.client.ts:ProductsClient.update",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/app/product-edit.component.ts",
+      "line": 22
+    },
+    {
+      "from": "store-web#src/app/products.client.ts:ProductsClient",
+      "to": "store-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/products.client.ts",
+      "line": 13
+    },
+    {
+      "from": "store-web#src/app/products.client.ts:ProductsClient.create",
+      "to": "ui_api_call:store-web#src/app/products.client.ts:47:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/products.client.ts",
+      "line": 47
+    },
+    {
+      "from": "store-web#src/app/products.client.ts:ProductsClient.list",
+      "to": "ui_api_call:store-web#src/app/products.client.ts:16:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/products.client.ts",
+      "line": 16
+    },
+    {
+      "from": "store-web#src/app/products.client.ts:ProductsClient.one",
+      "to": "ui_api_call:store-web#src/app/products.client.ts:20:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/products.client.ts",
+      "line": 20
+    },
+    {
+      "from": "store-web#src/app/products.client.ts:ProductsClient.update",
+      "to": "ui_api_call:store-web#src/app/products.client.ts:51:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/products.client.ts",
+      "line": 51
     },
     {
       "from": "store-web#src/app/report.component.ts:ReportComponent",
@@ -1198,6 +2141,22 @@
       "line": 13
     },
     {
+      "from": "ui_action:store-web#src/app/catalog.component.ts:16:3",
+      "to": "store-web#src/app/catalog.component.ts:CatalogComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/catalog.component.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_action:store-web#src/app/catalog.component.ts:9:46",
+      "to": "store-web#src/app/catalog.component.ts:CatalogComponent.add",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/catalog.component.ts",
+      "line": 9
+    },
+    {
       "from": "ui_action:store-web#src/app/checkout.component.ts:9:22",
       "to": "store-web#src/app/checkout.component.ts:CheckoutComponent.place",
       "type": "handles",
@@ -1214,12 +2173,86 @@
       "line": 9
     },
     {
+      "from": "ui_action:store-web#src/app/product-edit.component.ts:17:3",
+      "to": "store-web#src/app/product-edit.component.ts:ProductEditComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/product-edit.component.ts",
+      "line": 17
+    },
+    {
+      "from": "ui_action:store-web#src/app/product-edit.component.ts:9:46",
+      "to": "store-web#src/app/product-edit.component.ts:ProductEditComponent.save",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/product-edit.component.ts",
+      "line": 9
+    },
+    {
       "from": "ui_action:store-web#src/app/report.component.ts:16:3",
       "to": "store-web#src/app/report.component.ts:ReportComponent.ngOnInit",
       "type": "handles",
       "confidence": "static",
       "file": "src/app/report.component.ts",
       "line": 16
+    },
+    {
+      "from": "ui_api_call:store-web#src/app/products.client.ts:16:12",
+      "to": "entry:stock-api:http:GET:/products",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/products.client.ts",
+      "line": 16,
+      "returns": "string[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "stock-api"
+      }
+    },
+    {
+      "from": "ui_api_call:store-web#src/app/products.client.ts:20:12",
+      "to": "entry:stock-api:http:GET:/products/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/products.client.ts",
+      "line": 20,
+      "returns": "string",
+      "meta": {
+        "via": "api-target",
+        "targetService": "stock-api"
+      }
+    },
+    {
+      "from": "ui_api_call:store-web#src/app/products.client.ts:47:12",
+      "to": "entry:stock-api:http:POST:/products",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/products.client.ts",
+      "line": 47,
+      "params": [
+        "{sku:string;name:string;description?:string;image?:string;price:number;currency?:string;weight?:number;width?:number;height?:number;depth?:number;color?:string;brand?:string;category?:string;tags?:string[];barcode?:string;supplier?:string;origin?:string;taxClass?:string;visible?:boolean;featured?:boolean;minOrder?:number;maxOrder?:number}"
+      ],
+      "returns": "string",
+      "meta": {
+        "via": "api-target",
+        "targetService": "stock-api"
+      }
+    },
+    {
+      "from": "ui_api_call:store-web#src/app/products.client.ts:51:12",
+      "to": "entry:stock-api:http:PUT:/products/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/products.client.ts",
+      "line": 51,
+      "params": [
+        "{name:string}"
+      ],
+      "returns": "string",
+      "meta": {
+        "via": "api-target",
+        "targetService": "stock-api"
+      }
     },
     {
       "from": "ui_api_call:store-web#src/app/store.client.ts:13:12",

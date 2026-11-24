@@ -94,10 +94,11 @@ const CASES = [
   // The three subjects the page's "Copy as prompt" is checked against (P97).
   ['describe_for_prompt.invoice', 'describe_for_prompt', { id: 'entry:gateway:http:POST:/orders/:param/invoice' }],
   ['describe_for_prompt.gap', 'describe_for_prompt', { id: 'gap:web|src/app/orders-api.service.ts|api-path-dynamic' }],
-  // Answers that say where they stopped (P94): a caller walk cut by depth, a
+  // Answers that say where they stopped (P94): a caller tree drawn to a depth,
+  // every way in past it listed all the same (P379), a
   // route said with a real value, a literal segment beside a hole, every
   // crossing between two services, and a channel that does not exist.
-  ['who_calls.depth-cut', 'who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 2 }],
+  ['who_calls.depth-drawn', 'who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 2 }],
   ['who_calls.concrete-path', 'who_calls', { symbol: 'GET /orders/123' }],
   ['get_flow.literal-route', 'get_flow', { entry: 'GET /orders/latest', maxNodes: 8 }],
   ['check_contract.between-services', 'check_contract', { from: 'gateway', to: 'billing' }],
@@ -355,17 +356,33 @@ const HANDLING_COMPACT_CASES = [
 /**
  * who_calls walked to the ways in (P376): a method whose report route is five
  * calls down, the class whose four methods share callers, and two of its
- * methods asked together; and the same method with a depth, the tree alone.
+ * methods asked together; and the same method with a depth, the tree drawn to
+ * it and every way in past it all the same (P379). A controller's routes asked
+ * together (P379): each one's direct callers, front-end requests, one carrying
+ * a body typed inline with 22 fields, and the ways in said once; the
+ * routes listed by their controller, each with who calls it.
  */
 const CALLERS_STOCK = 'stock-api#src/stock/stock.service.ts:StockService';
+const CALLERS_ROUTES = [
+  'entry:stock-api:http:GET:/products',
+  'entry:stock-api:http:GET:/products/:param',
+  'entry:stock-api:http:POST:/products',
+  'entry:stock-api:http:PUT:/products/:param',
+  'entry:stock-api:http:DELETE:/products/:param',
+];
 const CALLERS_CASES = [
   ['who_calls.to-ways-in', 'who_calls', { symbol: `${CALLERS_STOCK}.level` }],
   ['who_calls.class', 'who_calls', { symbol: CALLERS_STOCK }],
   ['who_calls.several', 'who_calls', { symbols: [`${CALLERS_STOCK}.reserve`, `${CALLERS_STOCK}.restock`] }],
-  ['who_calls.depth-cut', 'who_calls', { symbol: `${CALLERS_STOCK}.level`, depth: 3 }],
+  ['who_calls.depth-drawn', 'who_calls', { symbol: `${CALLERS_STOCK}.level`, depth: 3 }],
+  ['who_calls.routes', 'who_calls', { symbols: CALLERS_ROUTES }],
+  ['who_calls.routes-depth', 'who_calls', { symbols: CALLERS_ROUTES, depth: 1 }],
+  ['get_flow.inline-type', 'get_flow', { entry: 'CatalogComponent.add', detail: 2 }],
+  ['list_entries.class-callers', 'list_entries', { in: 'ProductsController' }],
 ];
 /** The same, compact: what an agent is handed. */
-const CALLERS_COMPACT_CASES = CALLERS_CASES.slice(0, 3).map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
+const CALLERS_COMPACT = new Set(['who_calls.to-ways-in', 'who_calls.class', 'who_calls.several', 'who_calls.routes', 'get_flow.inline-type', 'list_entries.class-callers']);
+const CALLERS_COMPACT_CASES = CALLERS_CASES.filter(([name]) => CALLERS_COMPACT.has(name)).map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
 
 /**
  * "Where does this request land" in one call (P377): get_flow on a front-end
@@ -452,7 +469,7 @@ const SCREEN_REACH_CASES = [
   ['who_consumes.type-screens', 'who_consumes', { channel: 'desk:*:events', type: 'TICKET_ASSIGNED' }],
   ['who_consumes.type-unreached', 'who_consumes', { channel: 'desk:*:events', type: 'TICKET_REOPENED' }],
   ['who_emits.type-route', 'who_emits', { channel: 'desk:*:events', type: 'TICKET_ASSIGNED' }],
-  ['who_calls.depth-cut', 'who_calls', { symbol: 'desk-api#src/tickets/tickets.service.ts:TicketsService.assign', depth: 1 }],
+  ['who_calls.depth-drawn', 'who_calls', { symbol: 'desk-api#src/tickets/tickets.service.ts:TicketsService.assign', depth: 1 }],
   ['impact.reach', 'impact', { symbol: 'desk-api#src/tickets/tickets.service.ts:TicketsService.close' }],
   ['dead.several', 'dead', { ids: ['consumer:console#src/screens/QueueScreen.tsx:onQueueEvent', 'desk-api#src/tickets/tickets.service.ts:TicketsService.reopen'] }],
   ['find_symbol.several', 'find_symbol', { queries: ['onTicketEvent', 'reopen'] }],

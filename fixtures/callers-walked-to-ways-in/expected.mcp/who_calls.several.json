@@ -101,7 +101,7 @@
       "id": "entry:store-web:screen:/checkout",
       "type": "entry",
       "label": "/checkout",
-      "loc": "src/app/app.routes.ts:7",
+      "loc": "src/app/app.routes.ts:9",
       "service": "store-web",
       "kind": "screen",
       "reach": "outside",

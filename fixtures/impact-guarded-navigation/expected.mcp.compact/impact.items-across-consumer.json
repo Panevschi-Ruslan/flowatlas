@@ -36,7 +36,6 @@
     },
     {
       "id": "entry:store-web:screen:/orders",
-      "loc": "src/app/app.routes.ts:22",
       "reach": "outside",
       "via": "channel shop:*:closed",
       "by": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent"

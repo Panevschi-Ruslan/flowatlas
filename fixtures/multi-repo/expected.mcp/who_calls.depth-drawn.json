@@ -1,0 +1,137 @@
+{
+  "target": {
+    "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+    "type": "method",
+    "label": "OrdersService.findOne",
+    "loc": "src/orders/orders.service.ts:25",
+    "service": "orders",
+    "reach": "alive",
+    "from": "GET /orders/:param"
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+        "type": "method",
+        "label": "OrdersController.findOne",
+        "loc": "src/orders/orders.controller.ts:25",
+        "reach": "alive",
+        "from": "GET /orders/:param"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "string"
+        ],
+        "returns": "type:@fx/contracts#OrderDto"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "entry:orders:http:GET:/orders/:param",
+            "type": "entry",
+            "label": "GET /orders/:param",
+            "loc": "src/orders/orders.controller.ts:25",
+            "kind": "http",
+            "reach": "alive"
+          },
+          "edge": {
+            "type": "handles",
+            "confidence": "static",
+            "params": [
+              "string"
+            ],
+            "returns": "type:@fx/contracts#OrderDto"
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "loc": "src/orders/orders.controller.ts:25",
+      "service": "orders",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 2,
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+    },
+    {
+      "id": "entry:billing:event:invoice.requested",
+      "type": "entry",
+      "label": "event invoice.requested",
+      "loc": "src/invoices/invoices.consumer.ts:28",
+      "service": "billing",
+      "kind": "event",
+      "reach": "dead",
+      "hops": 6,
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested"
+    },
+    {
+      "id": "entry:billing:event:order.created",
+      "type": "entry",
+      "label": "event order.created",
+      "loc": "src/invoices/invoices.consumer.ts:17",
+      "service": "billing",
+      "kind": "event",
+      "reach": "alive",
+      "hops": 6,
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
+    },
+    {
+      "id": "entry:billing:http:POST:/invoices",
+      "type": "entry",
+      "label": "POST /invoices",
+      "loc": "src/invoices/invoices.controller.ts:15",
+      "service": "billing",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 6,
+      "by": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
+    },
+    {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "loc": "src/orders/orders.controller.ts:30",
+      "service": "gateway",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 6,
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.findOne"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "type": "entry",
+      "label": "POST /orders/:param/invoice",
+      "loc": "src/orders/orders.controller.ts:40",
+      "service": "gateway",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 10,
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.invoice"
+    }
+  ],
+  "unreached": 5,
+  "throughChannels": [
+    {
+      "consumer": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "channels": [
+        "order.created"
+      ],
+      "ways": 1
+    }
+  ],
+  "complete": true,
+  "next": [
+    "impact({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\", channel: \"order.created\"})",
+    "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})",
+    "describe_for_prompt({id: \"entry:orders:http:GET:/orders/:param\"})",
+    "impact({symbol: \"entry:orders:http:GET:/orders/:param\"})"
+  ]
+}

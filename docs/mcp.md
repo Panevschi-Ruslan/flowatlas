@@ -307,7 +307,7 @@ A row's ids are its `id` and, on a gap, its `gapId` (`gap:<service>|<file>|<reas
 |---|---|
 | `type` | when an id starts with it (`consumer:`, `entry:`, `channel:`, `gap:`), and `method` on a symbol whose id ends `Class.member`; a `function` or a `class` stays |
 | `service` | when an id names it (`orders#…`, `consumer:orders#…`, `entry:orders:…`, `gap:orders\|…`); a channel's stays |
-| the file of `loc` | when an id holds it: `loc` becomes `line` (`"line": 311`), or goes when the id holds the line too (a request's id); a `loc` whose file no id holds stays as it is |
+| the file of `loc` | when an id holds it: `loc` becomes `line` (`"line": 311`), or goes when the id holds the line too (a request's id); a `loc` whose file no id holds stays as it is. A screen's `loc`, a line of its routing table, goes beside the `by` naming the component it shows, whose file is the one to read (P379) |
 | `label` | when it is the id's tail, as written (`Notices.digest`, `order.created`) or said aloud (`GET /orders/:param` beside `entry:orders:http:GET:/orders/:param`); a request's `GET /orders` stays |
 | `kind` | when a way in's id says it (`entry:<service>:<kind>:…`) |
 | any other field | when it is a part of the row's id (its tail, or a whole part between `:`, `#` and `\|`: a gap's `reason`), the tail of an id the row's `meta` says in full (`selectedIn` beside `meta.selectedBy`), or the id of the row it is under (`meta.selects[].consumer` on that consumer) |
@@ -317,6 +317,7 @@ A row's ids are its `id` and, on a gap, its `gapId` (`gap:<service>|<file>|<reas
 | `truncated`, `stoppedBy`, `frontier` | where the answer (or one of the answers of a call asked several things) says `left`, which says each cut; `next` holds the call that walks on (P370) |
 | a tree's `node` wrapper | a row of a tree (`get_flow`, `who_calls`) is said as the node itself with `edge` and `children` beside its fields: `{"id": …, "line": 31, "edge": "calls", "children": […]}` (P370) |
 | an edge's `confidence: "static"` | the confidence an edge has unless it says otherwise; an edge with nothing left but its type is said as the type (`"edge": "handles"`), one with types or a weaker confidence as an object (P370) |
+| a long type written inline | on a step of a tree (`get_flow`, `who_calls`), an edge's `params` and `returns` and a type its `meta` holds (a signature's `type` and `returns`, a request's `bodyType`) longer than 48 characters say each object type written inline by its size: `{…22 fields}`, `Observable<{…22 fields}>`. Type names and short types stay; the answer says once, in `note`, that `verbose: true` gives them whole (P379) |
 | a list row's structured `meta` | on a row of a list (an element of a list below the answer's own fields, with an `id`, not a step of a tree), a `meta` value that is a record or a list of records: a route's `fails` and `access`, a method's `signature`, a consumer's `selects` and `subscriptions`. Strings, numbers, booleans and lists of them stay. The answer says once, in `note`, which keys went and that `get_flow({entry: id})` or `impact({symbol: id})` at detail 2 gives one node's and `verbose: true` every row's (P375) |
 
 `id`, `gapId`, `complete`, `left`, `reach` and `from` are never left out.
@@ -407,6 +408,19 @@ three channels: `impact` on the list method says the bot once under
 characters, from 3,032 with three rows repeating the routes and samples),
 `who_calls` on it counts them with no sample (1,961, from 2,983), and `impact`
 with `channel` the bot's consumer lists the five (1,440; it answered none).
+
+P379 added four on `callers-walked-to-ways-in`, whose products controller
+declares five routes, four requested by two screens' client: `who_calls` on the
+five routes answers each one's request and the two screens once, complete, in
+2,381 characters (2,682 before, a screen's routing-table line on each row and
+the create's body of 22 fields said whole), and asked with `depth: 1`
+the same 2,381 (2,834 before, five incomplete trees and no ways in); `get_flow`
+on the catalog screen's add method at detail 2 answers 1,933 (3,808, the body
+said whole on the edges, the signatures and the request's `bodyType`); and
+`list_entries` with `in` says who calls each route in 1,152 (835, after which
+the agent asked `who_calls` on every route: two calls, 3,517). The screens'
+routing-table lines went from every compact `impact` and `who_calls` answer
+listing a screen: 32 to 66 characters each.
 
 On P373's tree a turn carries about 3,960 characters of instructions, guide
 block and skill description (about 990 tokens), 9,340 with the core tools
@@ -754,7 +768,7 @@ accepted with `flowatlas accept` under `accepted`.
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix`, `in` (a class, method or file: the ways in it declares, each row with `reach`, the answer with `declaredBy`), `reach` (only the rows with that reach, `dead` for the ones no code calls), `offset` |
+| `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix`, `in` (a class, method or file: the ways in it declares, each row with `reach` and who calls it, `callers` and the first `caller` as `dead` on a class says them, the answer with `declaredBy` and `next` the `dead` call judging each), `reach` (only the rows with that reach, `dead` for the ones no code calls), `offset` |
 | `find_symbol` | fuzzy search over every node, by substring or camel-case initials | `query` (required), `types`, `service`, `offset` |
 | `search` | one query over routes and other ways in, channels, types of message, tables, types, gaps, what ways in can fail with, and classes, grouped by kind, with `counts` of each | `query` (required), `kinds`, `limit` (10 rows per kind), `service`, `offset` |
 
@@ -811,7 +825,7 @@ route matched too. A helper's choices count: `423` finds the routes whose
 | Tool | Answers | Takes |
 |---|---|---|
 | `get_flow` | one entry, or any symbol, followed through every repository it reaches, in call order, with the guard chain; with `to`, only the shortest ways to that node | `entry` (required: a route said aloud, an id, `Class.method` or a short name, as `who_calls` takes it), `to`, `depth` (8, one more per workflow step), `maxChars` |
-| `who_calls` | everything that reaches a symbol, backwards across repositories, up to every way in: the nearest callers as a tree, then each way in once under `waysIn` | `symbol` or `symbols` (required), `depth` (unset: walk to the ways in; 16 at most: the tree alone), `service` |
+| `who_calls` | everything that reaches a symbol, backwards across repositories, up to every way in: the nearest callers as a tree, then each way in once under `waysIn` | `symbol` or `symbols` (required), `depth` (how many hops the tree draws, 16 at most; unset, two, one on a class or several symbols; the ways in past it are listed whatever it is), `service` |
 | `impact` | every way in whose code calls a symbol, in any service: its own, those past each route on the calling side with `via`, and `maybe` rows where a chain stops at an unread call; the ways in only beyond a channel a consumer on the way takes messages from counted in `throughChannels`, one row per consumer | `symbol` (required), `channel` (list one of `throughChannels`: a channel, or a consumer for all of its), `service`, `offset` |
 
 Asked about a class, `who_calls` and `impact` answer for every method of it
@@ -972,7 +986,10 @@ On a class, `waysIn` says which methods each way in reaches in `reaches` (by
 the method's own name, as `calls` on its callers says it), and asked several
 `symbols`, each answer under `answers` holds its target and direct callers
 while `waysIn` is said once for all of them, `reaches` naming the symbols
-(by label) a way in reaches where it reaches only some. On the
+(by label) a way in reaches where it reaches only some. Each answer's direct
+callers are the shape asked for, not a cut: the call is complete where the
+walk finished, and `next` never names `who_calls` on one of the symbols again
+(P379). On the
 `callers-walked-to-ways-in` fixture, `who_calls` on a method whose report
 route is five calls down answers in one call of 2,828 characters where a depth
 of 3 took three calls and 11,993, and on its class in 2,926 where it took three
@@ -995,13 +1012,17 @@ candidates when several nodes share it, each as the call to make), and with
 nothing near says so and names `find_symbol`, never an empty list of
 suggestions.
 
-With `depth`, `who_calls` walks breadth first to that depth (16 at most) and
-draws the tree alone, as before, and counts what it left: a cut tree says
-`truncated: "n more nodes past depth 3; ask without depth for every way in"`,
-`stoppedBy` (`depth`, `maxNodes`, the one that left out more first), and
-`frontier`, the rows on the depth line with callers past it; `next` names the
-same call without `depth`, which walks to every way in. A caller the graph
-holds no node for is a `missing` row.
+With `depth`, `who_calls` draws the tree breadth first to that depth (16 at
+most) and still lists every way in past it under `waysIn` (P379): the depth is
+how far the tree is drawn, never a cut, so it is not said in `left`, `truncated`
+or `frontier`, and `next` never names the call again. Asked several `symbols`
+with a depth, each answer draws its tree to it and `waysIn` is said once for
+all, as without. Only `maxNodes` cuts the tree: `truncated`, `stoppedBy:
+["maxNodes"]` and a `left` line. Before, a depth answered the tree alone: a pilot
+asking ten routes of one controller with `depth` was handed ten trees, each
+`complete: false` with a depth line in `left`, no `waysIn`, and `next` asking
+`who_calls` again on each; it went on to grep. A caller the graph holds no node
+for is a `missing` row.
 A row that is no way in and that nothing calls carries `topOfChain: true` and
 `gapsInFile`, the gaps in its file that may be hiding its caller (the target
 itself says so at the top of the answer); `next` then names `cant_follow` for

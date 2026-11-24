@@ -7,7 +7,6 @@
   "entries": [
     {
       "id": "entry:backoffice-web:screen:/board",
-      "loc": "src/app.routes.ts:5",
       "reach": "outside",
       "via": "PATCH /orders/status (shop-api)",
       "by": "backoffice-web#src/status-board.component.ts:StatusBoardComponent"

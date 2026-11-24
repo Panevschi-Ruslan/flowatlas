@@ -22,7 +22,6 @@
   "entries": [
     {
       "id": "entry:backoffice-web:screen:/board",
-      "loc": "src/app.routes.ts:5",
       "meta": {
         "by": "angular-routes",
         "screens": [

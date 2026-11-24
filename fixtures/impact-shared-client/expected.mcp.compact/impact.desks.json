@@ -14,7 +14,6 @@
     },
     {
       "id": "entry:market-web:screen:/staff",
-      "loc": "src/app/app.routes.ts:16",
       "reach": "outside",
       "via": "POST /api/staff/desks/:param/ack-call (market-api)",
       "by": "market-web#src/app/staff-board.component.ts:StaffBoardComponent"

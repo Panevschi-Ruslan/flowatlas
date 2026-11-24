@@ -1,0 +1,145 @@
+{
+  "root": {
+    "id": "store-web#src/app/catalog.component.ts:CatalogComponent.add",
+    "line": 20,
+    "meta": {
+      "signature": {
+        "returns": "void"
+      }
+    },
+    "children": [
+      {
+        "id": "store-web#src/app/products.client.ts:ProductsClient.create",
+        "line": 23,
+        "meta": {
+          "signature": {
+            "params": [
+              {
+                "name": "product",
+                "type": "{…22 fields}"
+              }
+            ],
+            "returns": "string"
+          }
+        },
+        "edge": {
+          "type": "calls",
+          "params": [
+            "{…22 fields}"
+          ],
+          "returns": "string"
+        },
+        "children": [
+          {
+            "id": "ui_api_call:store-web#src/app/products.client.ts:47:12",
+            "label": "POST /products",
+            "kind": "http",
+            "meta": {
+              "url": "${apiUrl}/products",
+              "baseUrlEnv": "apiUrl",
+              "responseType": "string",
+              "bodyType": "{…22 fields}",
+              "bodyFrom": "literal",
+              "bodyKeys": [
+                "name",
+                "price",
+                "sku"
+              ],
+              "package": "@angular/common/http",
+              "via": "template-env",
+              "targetService": "stock-api"
+            },
+            "edge": "calls",
+            "children": [
+              {
+                "id": "entry:stock-api:http:POST:/products",
+                "loc": "src/products/products.controller.ts:23",
+                "meta": {
+                  "controller": "ProductsController",
+                  "adapter": "nestjs-http"
+                },
+                "edge": {
+                  "type": "hits",
+                  "params": [
+                    "{…22 fields}"
+                  ],
+                  "returns": "string"
+                },
+                "children": [
+                  {
+                    "id": "stock-api#src/products/products.controller.ts:ProductsController.create",
+                    "line": 23,
+                    "meta": {
+                      "signature": {
+                        "params": [
+                          {
+                            "name": "body",
+                            "type": "{…22 fields}"
+                          }
+                        ],
+                        "returns": "string"
+                      },
+                      "fieldsRead": [
+                        {
+                          "field": "name",
+                          "line": 51
+                        },
+                        {
+                          "field": "sku",
+                          "line": 51
+                        }
+                      ]
+                    },
+                    "edge": {
+                      "type": "handles",
+                      "params": [
+                        "{…22 fields}"
+                      ],
+                      "returns": "string"
+                    },
+                    "children": [
+                      {
+                        "id": "stock-api#src/products/products.service.ts:ProductsService.create",
+                        "line": 16,
+                        "meta": {
+                          "signature": {
+                            "params": [
+                              {
+                                "name": "sku",
+                                "type": "string"
+                              },
+                              {
+                                "name": "name",
+                                "type": "string"
+                              }
+                            ],
+                            "returns": "string"
+                          }
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "params": [
+                            "string",
+                            "string"
+                          ],
+                          "returns": "string"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 0,
+  "complete": true,
+  "next": [
+    "describe_for_prompt({id: \"store-web#src/app/catalog.component.ts:CatalogComponent.add\"})",
+    "impact({symbol: \"store-web#src/app/catalog.component.ts:CatalogComponent.add\"})"
+  ],
+  "note": "a long type written inline is said by its field count: verbose: true gives it whole"
+}

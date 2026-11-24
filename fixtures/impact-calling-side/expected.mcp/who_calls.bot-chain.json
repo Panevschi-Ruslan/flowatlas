@@ -292,13 +292,61 @@
       ]
     }
   ],
+  "waysIn": [
+    {
+      "id": "entry:shop-api:http:PATCH:/orders/status",
+      "type": "entry",
+      "label": "PATCH /orders/status",
+      "loc": "src/orders.controller.ts:9",
+      "service": "shop-api",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 2,
+      "by": "shop-api#src/orders.controller.ts:OrdersController.setStatus"
+    },
+    {
+      "id": "entry:shop-api:http:POST:/hooks/chat",
+      "type": "entry",
+      "label": "POST /hooks/chat",
+      "loc": "src/chat-hook.controller.ts:9",
+      "service": "shop-api",
+      "kind": "http",
+      "reach": "outside",
+      "hops": 3,
+      "by": "shop-api#src/chat-hook.controller.ts:ChatHookController.receive"
+    },
+    {
+      "id": "entry:backoffice-web:screen:/board",
+      "type": "entry",
+      "label": "/board",
+      "loc": "src/app.routes.ts:5",
+      "service": "backoffice-web",
+      "kind": "screen",
+      "reach": "outside",
+      "hops": 7,
+      "by": "backoffice-web#src/status-board.component.ts:StatusBoardComponent"
+    }
+  ],
+  "maybe": [
+    {
+      "id": "ops-bot#src/ops-bot.ts:OpsBot.handleStatus",
+      "type": "method",
+      "label": "OpsBot.handleStatus",
+      "loc": "src/ops-bot.ts:29",
+      "service": "ops-bot",
+      "reach": "maybe",
+      "from": "behind",
+      "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver",
+      "hops": 5
+    }
+  ],
   "complete": false,
   "left": [
-    "gaps: 1 chain top sits in a file with unread calls"
+    "gaps: 1 chain stops at an unread call before any way in: the maybe row"
   ],
   "next": [
-    "cant_follow({service: \"shop-api\"})",
-    "search({query: \"src/legacy-export.ts\", kinds: [\"gaps\"]})",
+    "cant_follow({service: \"ops-bot\"})",
+    "search({query: \"src/ops-bot.ts\", kinds: [\"gaps\"]})",
     "get_flow({entry: \"entry:shop-api:http:PATCH:/orders/status\"})",
     "describe_for_prompt({id: \"entry:shop-api:http:PATCH:/orders/status\"})"
   ]

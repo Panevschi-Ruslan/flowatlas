@@ -53,22 +53,17 @@
       "children": []
     }
   ],
-  "truncated": "2 more nodes past depth 1; ask without depth for every way in",
-  "stoppedBy": [
-    "depth"
-  ],
-  "frontier": [
-    "ui_api_call:web#src/app/orders-api.service.ts:21:12",
-    "ui_api_call:web#src/app/orders-api.service.ts:73:12"
-  ],
+  "waysIn": [],
+  "waysInNone": "nothing in the graph reaches this from a way in; the callers may be behind a gap",
+  "unreached": 1,
   "complete": false,
   "left": [
-    "depth: 2 callers past depth 1, from the frontier rows"
+    "gaps: something reaches it but no way in does; its callers may be behind a gap"
   ],
   "next": [
-    "who_calls({symbol: \"entry:gateway:http:GET:/orders/:param\"})",
+    "cant_follow({service: \"web\"})",
+    "search({query: \"src/app/orders-api.service.ts\", kinds: [\"gaps\"]})",
     "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
-    "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
-    "impact({symbol: \"entry:gateway:http:GET:/orders/:param\"})"
+    "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})"
   ]
 }

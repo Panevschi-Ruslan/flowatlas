@@ -135,11 +135,12 @@ describe('several inputs in one call', () => {
 });
 
 describe('whether a list is the whole answer', () => {
-  it('names the cut where a walk stopped, and keeps the call that walks on', async () => {
+  it('takes the depth for how far the tree is drawn, never a cut: the ways in past it are listed (P379)', async () => {
     const answer = await call('who_calls', { symbol: ASSIGN, depth: 1 });
-    expect(answer.complete).toBe(false);
-    expect(answer.left).toEqual(['depth: 1 callers past depth 1, from the frontier rows']);
-    expect(answer.next[0]).toBe(`who_calls({symbol: ${JSON.stringify(ASSIGN)}})`);
+    expect(answer.complete).toBe(true);
+    expect(answer.left).toBeUndefined();
+    expect(answer.waysIn.length).toBeGreaterThan(0);
+    expect((answer.next ?? []).some((hint: string) => hint.startsWith('who_calls('))).toBe(false);
   });
 
   it('names a page left', async () => {
@@ -148,10 +149,18 @@ describe('whether a list is the whole answer', () => {
     expect(answer.left[0]).toMatch(/^page: \d+ more rows from offset 1$/);
   });
 
-  it('says the several answers are incomplete where one is', async () => {
+  it('asked several symbols with a depth, says the ways in once for all, complete (P379)', async () => {
     const answer = await call('who_calls', { symbols: [ASSIGN, REOPEN], depth: 1 });
+    expect(answer.complete).toBe(true);
+    expect(answer.left).toBeUndefined();
+    expect(answer.waysIn.length).toBeGreaterThan(0);
+    expect(answer.answers.every((one: { complete?: boolean; waysIn?: unknown }) => one.complete === undefined && one.waysIn === undefined)).toBe(true);
+  });
+
+  it('says the several answers are incomplete where one is', async () => {
+    const answer = await call('who_calls', { symbols: [ASSIGN, REOPEN], maxNodes: 1, depth: 3 });
     expect(answer.complete).toBe(false);
-    expect(answer.left).toEqual([`symbol ${ASSIGN}: see its left`]);
+    expect(answer.left).toContain(`symbol ${ASSIGN}: see its left`);
   });
 
   it('is true or false with left, never left alone', () => {

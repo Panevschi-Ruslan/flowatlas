@@ -46,7 +46,6 @@
     },
     {
       "id": "entry:shop-web:screen:/orders/:param",
-      "loc": "src/app/app.routes.ts:8",
       "meta": {
         "by": "angular-routes",
         "screens": [

@@ -31,20 +31,23 @@
       "children": []
     }
   ],
-  "truncated": "1 more node past depth 1; ask without depth for every way in",
-  "stoppedBy": [
-    "depth"
+  "waysIn": [
+    {
+      "id": "entry:desk-api:http:POST:/desks/:param/tickets/:param/assign",
+      "type": "entry",
+      "label": "POST /desks/:param/tickets/:param/assign",
+      "loc": "src/tickets/tickets.controller.ts:8",
+      "service": "desk-api",
+      "kind": "http",
+      "reach": "dead",
+      "hops": 2,
+      "by": "desk-api#src/tickets/tickets.controller.ts:TicketsController.assign"
+    }
   ],
-  "frontier": [
-    "desk-api#src/tickets/tickets.controller.ts:TicketsController.assign"
-  ],
-  "complete": false,
-  "left": [
-    "depth: 1 callers past depth 1, from the frontier rows"
-  ],
+  "complete": true,
   "next": [
-    "who_calls({symbol: \"desk-api#src/tickets/tickets.service.ts:TicketsService.assign\"})",
-    "impact({symbol: \"desk-api#src/tickets/tickets.service.ts:TicketsService.assign\"})",
-    "get_source({symbol: \"desk-api#src/tickets/tickets.service.ts:TicketsService.assign\"})"
+    "get_flow({entry: \"entry:desk-api:http:POST:/desks/:param/tickets/:param/assign\"})",
+    "describe_for_prompt({id: \"entry:desk-api:http:POST:/desks/:param/tickets/:param/assign\"})",
+    "impact({symbol: \"entry:desk-api:http:POST:/desks/:param/tickets/:param/assign\"})"
   ]
 }

@@ -20,7 +20,6 @@
     },
     {
       "id": "entry:shop-web:screen:/orders/:param",
-      "loc": "src/app/app.routes.ts:8",
       "reach": "outside",
       "via": "PATCH /api/orders/:param/cancel (shop-api)",
       "by": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent"

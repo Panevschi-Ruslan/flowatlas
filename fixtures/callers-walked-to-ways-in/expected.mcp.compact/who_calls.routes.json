@@ -1,0 +1,130 @@
+{
+  "answers": [
+    {
+      "asked": "entry:stock-api:http:GET:/products",
+      "target": {
+        "id": "entry:stock-api:http:GET:/products",
+        "loc": "src/products/products.controller.ts:13",
+        "reach": "alive"
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:store-web#src/app/products.client.ts:16:12",
+          "label": "GET /products",
+          "kind": "http",
+          "reach": "alive",
+          "from": "screen /catalog",
+          "edge": {
+            "type": "hits",
+            "returns": "string[]"
+          }
+        }
+      ]
+    },
+    {
+      "asked": "entry:stock-api:http:GET:/products/:param",
+      "target": {
+        "id": "entry:stock-api:http:GET:/products/:param",
+        "loc": "src/products/products.controller.ts:18",
+        "reach": "alive"
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:store-web#src/app/products.client.ts:20:12",
+          "label": "GET /products/:param",
+          "kind": "http",
+          "reach": "alive",
+          "from": "screen /catalog/:param",
+          "edge": {
+            "type": "hits",
+            "returns": "string"
+          }
+        }
+      ]
+    },
+    {
+      "asked": "entry:stock-api:http:POST:/products",
+      "target": {
+        "id": "entry:stock-api:http:POST:/products",
+        "loc": "src/products/products.controller.ts:23",
+        "reach": "alive"
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:store-web#src/app/products.client.ts:47:12",
+          "label": "POST /products",
+          "kind": "http",
+          "reach": "alive",
+          "from": "screen /catalog",
+          "edge": {
+            "type": "hits",
+            "params": [
+              "{…22 fields}"
+            ],
+            "returns": "string"
+          }
+        }
+      ]
+    },
+    {
+      "asked": "entry:stock-api:http:PUT:/products/:param",
+      "target": {
+        "id": "entry:stock-api:http:PUT:/products/:param",
+        "loc": "src/products/products.controller.ts:54",
+        "reach": "alive"
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:store-web#src/app/products.client.ts:51:12",
+          "label": "PUT /products/:param",
+          "kind": "http",
+          "reach": "alive",
+          "from": "screen /catalog/:param",
+          "edge": {
+            "type": "hits",
+            "params": [
+              "{name:string}"
+            ],
+            "returns": "string"
+          }
+        }
+      ]
+    },
+    {
+      "asked": "entry:stock-api:http:DELETE:/products/:param",
+      "target": {
+        "id": "entry:stock-api:http:DELETE:/products/:param",
+        "loc": "src/products/products.controller.ts:59",
+        "reach": "dead"
+      }
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:store-web:screen:/catalog",
+      "reach": "outside",
+      "hops": 5,
+      "by": "store-web#src/app/catalog.component.ts:CatalogComponent",
+      "reaches": [
+        "GET /products",
+        "POST /products"
+      ]
+    },
+    {
+      "id": "entry:store-web:screen:/catalog/:param",
+      "reach": "outside",
+      "hops": 5,
+      "by": "store-web#src/app/product-edit.component.ts:ProductEditComponent",
+      "reaches": [
+        "GET /products/:param",
+        "PUT /products/:param"
+      ]
+    }
+  ],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:store-web:screen:/catalog\"})",
+    "describe_for_prompt({id: \"entry:store-web:screen:/catalog\"})"
+  ],
+  "note": "a long type written inline is said by its field count: verbose: true gives it whole"
+}

@@ -16,7 +16,9 @@
  * - `service` when the id names it;
  * - the file of `loc` when the id holds it: `loc` becomes `line` (a number),
  *   or goes when the id holds the line too; a way in's `loc` becomes `line`
- *   too where its `by`, the code handling it, is written in that file (P374);
+ *   too where its `by`, the code handling it, is written in that file (P374),
+ *   and a screen's `loc`, a line of its routing table, goes beside the `by`
+ *   naming the component it shows, whose file is the one to read (P379);
  * - `label` when it is the id's tail, as written or said aloud (`GET /orders`
  *   beside `entry:shop:http:GET:/orders`);
  * - `kind` when the way in's id says it (`entry:<service>:<kind>:…`);
@@ -36,7 +38,10 @@
  * A row of a tree (`{node, edge, children}`, as get_flow, who_calls and a
  * walk write it) is said as the node itself with `edge` and `children` beside
  * its fields, and an edge's `confidence` goes where it is `static`, which an
- * edge is unless it says otherwise; an edge with nothing left but its type is
+ * edge is unless it says otherwise; an edge's `params` and `returns` longer
+ * than `EDGE_TYPE_LIMIT` say each object type written inline by its size
+ * (`{…22 fields}`), the answer saying so once in `note` (P379); an edge with
+ * nothing left but its type is
  * said as the type (`"edge": "calls"`). The tree's shape is how a page draws
  * it, not something an agent reads (P370).
  *
@@ -91,10 +96,65 @@ const ID_SEPARATORS = '#:/.|@ ';
 
 type Plain = Record<string, unknown>;
 
-/** What one compaction left out of a list's rows, said once at the top (P375). */
+/** What one compaction left out of a list's rows, said once at the top (P375), and whether it shortened a type (P379). */
 interface Pass {
   leftOut: Set<string>;
+  typesCut: boolean;
 }
+
+/**
+ * The longest type an edge says as written in a compact answer (P379): past
+ * it, each object type written inline is said by its size, `{…22 fields}`.
+ * Type names and short types stay; a body's every field, on every caller's
+ * row, was hundreds of characters an agent re-read on every turn.
+ */
+export const EDGE_TYPE_LIMIT = 48;
+
+/** The fields of an object type's body, `a: string; b?: number`, at its own depth. */
+const fieldsIn = (body: string): number => {
+  let depth = 0;
+  let fields = 0;
+  let open = false;
+  let before = '';
+  for (const char of body) {
+    if ('{([<'.includes(char)) depth += 1;
+    // The `>` of a function type's `=>` closes nothing.
+    else if ('})]'.includes(char) || (char === '>' && before !== '=')) depth -= 1;
+    before = char;
+    if (depth === 0 && (char === ';' || char === ',')) {
+      if (open) fields += 1;
+      open = false;
+    } else if (char.trim() !== '') open = true;
+  }
+  return fields + (open ? 1 : 0);
+};
+
+/**
+ * A type as a compact edge says it (P379): as written up to
+ * `EDGE_TYPE_LIMIT`, past it each outermost object type written inline said
+ * by its size (`Observable<{…22 fields}>`); a long type with none stays.
+ */
+export const typeSaid = (type: string): string => {
+  if (type.length <= EDGE_TYPE_LIMIT) return type;
+  let out = '';
+  let depth = 0;
+  let start = -1;
+  for (let at = 0; at < type.length; at += 1) {
+    const char = type.charAt(at);
+    if (char === '{') {
+      if (depth === 0) start = at;
+      depth += 1;
+    } else if (char === '}' && depth > 0) {
+      depth -= 1;
+      if (depth === 0) {
+        const fields = fieldsIn(type.slice(start + 1, at));
+        out += `{\u2026${fields} field${fields === 1 ? '' : 's'}}`;
+      }
+    } else if (depth === 0) out += char;
+  }
+  // An unbalanced type is said as written, rather than cut wrong.
+  return depth === 0 ? out : type;
+};
 
 /** The most `meta` keys the note names. */
 const NOTE_KEYS = 5;
@@ -111,6 +171,9 @@ export const listNote = (keys: readonly string[]): string => {
   const shown = named.slice(0, NOTE_KEYS).join(', ') + (named.length > NOTE_KEYS ? ', ...' : '');
   return `rows of a list leave out their structured facts (${shown}): get_flow({entry: id}) or impact({symbol: id}) at detail 2 gives one node's, verbose: true every row's`;
 };
+
+/** What the answer says when an edge's long inline type was said by its size (P379). */
+export const TYPES_NOTE = 'a long type written inline is said by its field count: verbose: true gives it whole';
 
 /** A list row's `meta` with only its plain facts, the keys left out noted in `pass`. */
 const plainMeta = (meta: Plain, pass: Pass): Plain => {
@@ -267,10 +330,40 @@ const saidByIds = (key: string, value: string, ids: readonly string[]): boolean 
   }
 };
 
-/** An edge as a compact tree says it: without `confidence: static`, and as its type alone when that is all it says. */
-const edgeSaid = (edge: unknown): unknown => {
+/** A type an edge says, shortened as `typeSaid` says it, `pass` told when it was. */
+const typeOf = (type: unknown, pass: Pass): unknown => {
+  if (typeof type !== 'string') return type;
+  const said = typeSaid(type);
+  if (said !== type) pass.typesCut = true;
+  return said;
+};
+
+/** The keys of a tree row's `meta` that hold a type: a signature's `type` and `returns`, a request's `bodyType`. */
+const TYPE_KEY = /^(type|returns)$|Type$/;
+
+/**
+ * A tree row's `meta` with each type it holds, at any depth, said as an
+ * edge's is (P379): a method's signature, a request's body, written inline.
+ */
+const typesIn = (value: unknown, pass: Pass): unknown => {
+  if (Array.isArray(value)) return value.map((item) => typesIn(item, pass));
+  if (!isPlain(value)) return value;
+  const out: Plain = {};
+  for (const [key, item] of Object.entries(value)) out[key] = TYPE_KEY.test(key) && typeof item === 'string' ? typeOf(item, pass) : typesIn(item, pass);
+  return out;
+};
+
+/**
+ * An edge as a compact tree says it: without `confidence: static`, its long
+ * inline types said by their size (P379), and as its type alone when that is
+ * all it says.
+ */
+const edgeSaid = (edge: unknown, pass: Pass): unknown => {
   if (!isPlain(edge)) return edge;
-  const { confidence, ...rest } = edge;
+  const { confidence, ...given } = edge;
+  const rest: Plain = { ...given };
+  if (Array.isArray(rest.params)) rest.params = rest.params.map((param) => typeOf(param, pass));
+  if (rest.returns !== undefined) rest.returns = typeOf(rest.returns, pass);
   const kept = confidence === DEFAULT_CONFIDENCE || confidence === undefined ? rest : { ...rest, confidence };
   const keys = Object.keys(kept);
   return keys.length === 1 && typeof kept.type === 'string' ? kept.type : kept;
@@ -281,12 +374,12 @@ const edgeSaid = (edge: unknown): unknown => {
  * beside its fields (P370); any other object as it is, and a row whose
  * fields would meet the node's as it is too.
  */
-const flattened = (row: Plain): Plain => {
+const flattened = (row: Plain, pass: Pass): Plain => {
   const node = row.node;
   if (!isPlain(node) || typeof node.id !== 'string' || !('children' in row || 'edge' in row)) return row;
   const { node: _node, edge, children, ...rest } = row;
   if (Object.keys(rest).some((key) => key in node)) return row;
-  return { ...node, ...(edge === undefined ? {} : { edge: edgeSaid(edge) }), ...rest, ...(children === undefined ? {} : { children }) };
+  return { ...node, ...(edge === undefined ? {} : { edge: edgeSaid(edge, pass) }), ...rest, ...(children === undefined ? {} : { children }) };
 };
 
 /**
@@ -300,9 +393,11 @@ const compactValue = (value: unknown, depth: number, under: readonly string[], p
 };
 
 const compactObject = (given: Plain, depth: number, under: readonly string[], pass: Pass, inList: boolean): Plain => {
-  const row = flattened(given);
+  const row = flattened(given, pass);
   // A row of a list to choose among, not a step of a tree (P375).
   const listRow = inList && depth > 0 && !isPlain(given.node) && !('children' in given) && typeof row.id === 'string';
+  // A step of a tree (get_flow, who_calls), whose types are said as its edge's are (P379).
+  const treeRow = isPlain(given.node) && ('children' in given || 'edge' in given);
   const leftSays = Array.isArray(row.left) && row.left.length > 0;
   const ids = ID_KEYS.map((key) => row[key]).filter((value): value is string => typeof value === 'string');
   const fullIds = [...ids, ...metaIds(row.meta)];
@@ -329,6 +424,8 @@ const compactObject = (given: Plain, depth: number, under: readonly string[], pa
     if (key === 'file' && typeof value === 'string' && holders.some((id) => holdsFile(id, value))) continue;
     if (ids.length > 0 && typeof value === 'string' && IDENTITY.has(key)) {
       if (key === 'loc') {
+        // A screen's `loc` is a line of its routing table; `by` names the component it shows, the file to read (P379).
+        if (typeof row.by === 'string' && ids.some((id) => kindOfId(id) === 'screen')) continue;
         // A way in's file is said by the code handling it, where that is written in the same file (P374).
         const left = locBesideAll(typeof row.by === 'string' ? [...ids, row.by] : ids, value);
         if (left !== undefined) Object.assign(out, left);
@@ -341,6 +438,7 @@ const compactObject = (given: Plain, depth: number, under: readonly string[], pa
     if (key === 'meta' && isPlain(value)) {
       said = metaBeside(value, row, ids);
       if (listRow) said = plainMeta(said as Plain, pass);
+      if (treeRow) said = typesIn(said, pass);
       if (isBlank(said)) continue;
     } else if (key === 'next' && Array.isArray(value) && value.every((call) => typeof call === 'string')) {
       said = compactNext(value as string[], row.nextOffset);
@@ -358,10 +456,15 @@ const targetIdOf = (answer: unknown): string[] =>
 
 /** The answer with every fact its ids already say left out (see above); anything else as it was. */
 export const compactAnswer = <T>(answer: T): T => {
-  const pass: Pass = { leftOut: new Set() };
+  const pass: Pass = { leftOut: new Set(), typesCut: false };
   const out = compactValue(answer, 0, targetIdOf(answer), pass);
-  if (pass.leftOut.size === 0 || !isPlain(out)) return out as T;
-  const said = listNote([...pass.leftOut]);
+  if (!isPlain(out)) return out as T;
+  const notes = [
+    ...(pass.leftOut.size === 0 ? [] : [listNote([...pass.leftOut])]),
+    ...(pass.typesCut ? [TYPES_NOTE] : []),
+  ];
+  if (notes.length === 0) return out as T;
+  const said = notes.join('; ');
   return { ...out, note: typeof out.note === 'string' ? `${out.note}; ${said}` : said } as T;
 };
 

@@ -72,14 +72,12 @@
     },
     {
       "id": "entry:store-web:screen:/dashboard",
-      "loc": "src/app/app.routes.ts:17",
       "reach": "outside",
       "hops": 7,
       "by": "store-web#src/app/dashboard.component.ts:DashboardComponent"
     },
     {
       "id": "entry:store-web:screen:/history",
-      "loc": "src/app/app.routes.ts:18",
       "reach": "outside",
       "hops": 7,
       "by": "store-web#src/app/order-history.component.ts:OrderHistoryComponent"

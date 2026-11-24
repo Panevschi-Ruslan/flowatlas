@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { projectDetail, truncate } from '../query/detail.js';
 import { sampledIn } from '../query/observed.js';
 import { rankMatches } from '../query/names.js';
-import { nextFor, withNext, withoutShown, withTraceFor } from '../query/next.js';
+import { MAX_NEXT, nextFor, withNext, withoutShown, withTraceFor } from '../query/next.js';
 import { declaredBy, isDeclared } from '../query/declared.js';
 import { requestsOf } from '../query/requests.js';
 import { deadOptionsOf, reachOfVerdict, reachReader, REACHES, type Reach, type ReachReader } from '../query/ways-in.js';
@@ -64,7 +64,8 @@ export { nearNames, rankMatches, type Ranked } from '../query/names.js';
 
 /** What list_entries answers: one page of entries, and how many there are. */
 export const listEntriesOutput = {
-  entries: z.array(reachedNodeOutput),
+  // Asked with `in`, each row also says who calls it (P379): how many callers, and the first.
+  entries: z.array(reachedNodeOutput.extend({ callers: z.number().optional(), caller: z.string().optional() })),
   declaredBy: z.string().optional(),
   ...pageOutput,
   ...completeOutput,
@@ -155,9 +156,23 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
               );
         }
         const judge = input.reach === undefined && declared === undefined ? undefined : deadJudge(db, db.report(), deadOptionsOf(ctx.handle));
+        const judged = new Map<string, ReturnType<NonNullable<typeof judge>>>();
+        const verdictOf = (entry: GraphNode): ReturnType<NonNullable<typeof judge>> => {
+          if (!judged.has(entry.id)) judged.set(entry.id, judge?.(entry.id));
+          return judged.get(entry.id);
+        };
         const reachOf = (entry: GraphNode): Reach | undefined => {
-          const answer = judge?.(entry.id);
+          const answer = verdictOf(entry);
           return answer === undefined ? undefined : reachOfVerdict(entry, answer);
+        };
+        // Who calls it, as dead on a class says it (P375): how many callers, and the first (P379).
+        const callersOf = (entry: GraphNode): object => {
+          const evidence = verdictOf(entry)?.evidence ?? {};
+          const { callers, caller } = evidence as { callers?: unknown; caller?: unknown };
+          return {
+            ...(typeof callers === 'number' && callers > 0 ? { callers } : {}),
+            ...(typeof caller === 'string' && caller !== '' ? { caller } : {}),
+          };
         };
         const inDeclared = declared === undefined ? undefined : new Set(declared.entries.map((entry) => entry.id));
         const all = db
@@ -183,13 +198,17 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
           detail: input.detail,
           maxNodes,
         };
-        // Asked about one class's ways in, each row says whether it runs; asked for one reach, the call said it.
+        // Asked about one class's ways in, each row says whether it runs and who calls it (P379); asked for one reach,
+        // the call said whether.
         const withReach = (entry: GraphNode): object => {
           const row = projectDetail(entry, detail);
-          const reach = declared === undefined || input.reach !== undefined || detail < 1 ? undefined : reachOf(entry);
-          return reach === undefined ? row : { ...row, reach };
+          if (declared === undefined || detail < 1) return row;
+          const reach = input.reach === undefined ? reachOf(entry) : undefined;
+          return { ...row, ...(reach === undefined ? {} : { reach }), ...callersOf(entry) };
         };
         const owner = declared === undefined ? undefined : (declared.node?.id ?? declared.file);
+        // Every way in a class or file declares, judged with why, one call away (P375): what a row's reach rests on.
+        const verdicts = owner === undefined || items.length === 0 ? [] : [callOf('dead', { id: owner })];
         return withNext(
           {
             ...(owner === undefined ? {} : { declaredBy: owner }),
@@ -199,7 +218,10 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
             ...completeOf([pageLeft(total, items.length, input.offset, nextOffset)]),
             ...(note === undefined ? {} : { note }),
           },
-          pagedNext({ tool: 'list_entries', args, nextOffset }, withTraceFor(nextFor(items[0]), items[0], sampledIn(ctx.handle.path))),
+          pagedNext(
+            { tool: 'list_entries', args, nextOffset },
+            [...new Set([...verdicts, ...withTraceFor(nextFor(items[0]), items[0], sampledIn(ctx.handle.path))])].slice(0, MAX_NEXT),
+          ),
         );
       }),
   );

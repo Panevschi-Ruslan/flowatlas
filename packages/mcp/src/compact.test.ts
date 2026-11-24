@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compactAnswer, compactNext, compactOutputSchema, isIdTail, listNote, locBeside, serviceOfId } from './compact.js';
+import { compactAnswer, compactNext, compactOutputSchema, EDGE_TYPE_LIMIT, isIdTail, listNote, locBeside, serviceOfId, typeSaid, TYPES_NOTE } from './compact.js';
 
 describe('compact answers (P365)', () => {
   it('reads the service an id names by the id grammar, and none from a channel', () => {
@@ -286,5 +286,72 @@ describe('a list row keeps its plain facts (P375)', () => {
     const kept = compactAnswer(tree) as { root: { meta?: unknown; children: Array<{ meta?: unknown }> }; note?: string };
     expect(kept.root.children[0]!.meta).toEqual({ fails: heavy.fails });
     expect(kept.note).toBeUndefined();
+  });
+});
+
+describe('a long type written inline is said by its size, and a screen by its component (P379)', () => {
+  const body = `{${Array.from({ length: 22 }, (_, at) => `field${at}?:string`).join(';')}}`;
+
+  it('says each outermost object type by its fields past the limit, and a short or named type as written', () => {
+    expect(typeSaid('string')).toBe('string');
+    expect(typeSaid('{name:string}')).toBe('{name:string}');
+    expect(typeSaid(body)).toBe('{…22 fields}');
+    expect(typeSaid(`Observable<${body}>`)).toBe('Observable<{…22 fields}>');
+    expect(typeSaid(`${body}[]`)).toBe('{…22 fields}[]');
+    // Nested objects and generics count as one field of the type they are in.
+    expect(typeSaid(`{a:{b:string;c:Map<string,number>};${'d'.repeat(EDGE_TYPE_LIMIT)}:string}`)).toBe('{…2 fields}');
+    expect(typeSaid(`{onSave:(a:string,b:number)=>void;${'d'.repeat(EDGE_TYPE_LIMIT)}:string}`)).toBe('{…2 fields}');
+    // A long type with no object written inline, or one that does not balance, stays.
+    const union = Array.from({ length: 12 }, (_, at) => `'state${at}'`).join('|');
+    expect(typeSaid(union)).toBe(union);
+    expect(typeSaid(`{${'a'.repeat(EDGE_TYPE_LIMIT)}`)).toBe(`{${'a'.repeat(EDGE_TYPE_LIMIT)}`);
+  });
+
+  it("shortens a tree row's edge and meta types, says so once in note, and leaves a list row's and verbose types alone", () => {
+    const tree = {
+      callers: [
+        {
+          node: {
+            id: 'web#src/client.ts:Client.create',
+            type: 'method',
+            meta: { signature: { params: [{ name: 'body', type: body }], returns: 'string' }, bodyType: body, bodyKeys: ['field0'] },
+          },
+          edge: { type: 'calls', confidence: 'static', params: [body], returns: 'string' },
+          children: [],
+        },
+      ],
+      matches: [{ id: 'web#src/client.ts:Client.update', meta: { returns: body } }],
+      complete: true,
+    };
+    expect(compactAnswer(tree)).toEqual({
+      callers: [
+        {
+          id: 'web#src/client.ts:Client.create',
+          meta: { signature: { params: [{ name: 'body', type: '{…22 fields}' }], returns: 'string' }, bodyType: '{…22 fields}', bodyKeys: ['field0'] },
+          edge: { type: 'calls', params: ['{…22 fields}'], returns: 'string' },
+        },
+      ],
+      matches: [{ id: 'web#src/client.ts:Client.update', meta: { returns: body } }],
+      complete: true,
+      note: TYPES_NOTE,
+    });
+    expect(compactAnswer({ root: { node: { id: 'web#src/a.ts:A.b' }, edge: { type: 'calls', params: ['string'] }, children: [] } })).not.toHaveProperty('note');
+  });
+
+  it("leaves out a screen's loc, a line of its routing table, beside the by naming its component", () => {
+    const answer = {
+      waysIn: [
+        { id: 'entry:web:screen:/catalog', loc: 'src/app/app.routes.ts:11', reach: 'outside', by: 'web#src/app/catalog.component.ts:CatalogComponent' },
+        { id: 'entry:web:screen:/about', loc: 'src/app/app.routes.ts:12', reach: 'outside' },
+        { id: 'entry:api:http:GET:/products', loc: 'src/products.controller.ts:13', by: 'api#src/products.controller.ts:ProductsController.list' },
+      ],
+    };
+    expect(compactAnswer(answer)).toEqual({
+      waysIn: [
+        { id: 'entry:web:screen:/catalog', reach: 'outside', by: 'web#src/app/catalog.component.ts:CatalogComponent' },
+        { id: 'entry:web:screen:/about', loc: 'src/app/app.routes.ts:12', reach: 'outside' },
+        { id: 'entry:api:http:GET:/products', line: 13, by: 'api#src/products.controller.ts:ProductsController.list' },
+      ],
+    });
   });
 });

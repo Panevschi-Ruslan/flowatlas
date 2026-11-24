@@ -708,13 +708,14 @@ describe('working backwards', () => {
     expect(impact.next.every((hint: string) => hint.startsWith('impact('))).toBe(true);
   });
 
-  it('counts the callers it left past its depth, and names the call that walks to every way in (P94, P376)', async () => {
+  it('draws the tree to its depth and lists the ways in past it, never a cut to ask on from (P94, P376, P379)', async () => {
     const answer = await call('who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 2 });
-    // The route's two callers past the cut: the gateway's call and billing's (P209).
-    expect(answer.truncated).toBe('2 more nodes past depth 2; ask without depth for every way in');
-    expect(answer.stoppedBy).toEqual(['depth']);
-    expect(answer.frontier).toEqual(['entry:orders:http:GET:/orders/:param']);
-    expect(answer.next[0]).toBe('who_calls({symbol: "orders#src/orders/orders.service.ts:OrdersService.findOne"})');
+    // The route's two callers past the tree, the gateway's call and billing's (P209), are reached by the walk.
+    expect(answer.truncated).toBeUndefined();
+    expect(answer.frontier).toBeUndefined();
+    expect(answer.waysIn.map((row: { id: string }) => row.id)).toContain('entry:gateway:http:GET:/orders/:param');
+    expect(answer.complete).toBe(true);
+    expect(answer.next.some((hint: string) => hint.startsWith('who_calls('))).toBe(false);
   });
 
   it('says nothing was cut when the walk ran out of callers', async () => {
@@ -1169,7 +1170,8 @@ describe('dead, findings, type_usage and scoped prompts', () => {
     const holder = 'orders#src/orders/orders.service.ts:OrdersService';
     const callers = await call('who_calls', { symbol: holder, depth: 1 });
     expect(callers.callers.length).toBeGreaterThan(0);
-    expect(callers.callers.every((row: { calls?: string }) => row.calls?.startsWith(`${holder}.`))).toBe(true);
+    // Each caller names the method it calls by its own name, as `reaches` on the ways in does (P376).
+    expect(callers.callers.every((row: { calls?: string }) => typeof row.calls === 'string' && !row.calls.includes('.'))).toBe(true);
     const impact = await call('impact', { symbol: holder });
     expect(impact.forMethods).toBe(4);
     expect(impact.entries.map((entry: { id: string }) => entry.id)).toContain('entry:gateway:http:GET:/orders/:param');

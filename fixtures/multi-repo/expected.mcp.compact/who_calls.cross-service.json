@@ -217,12 +217,63 @@
       ]
     }
   ],
-  "complete": false,
-  "left": [
-    "depth: 5 callers past depth 6, from the frontier rows"
+  "waysIn": [
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "line": 25,
+      "reach": "alive",
+      "hops": 2,
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+    },
+    {
+      "id": "entry:billing:event:invoice.requested",
+      "line": 28,
+      "reach": "dead",
+      "hops": 6,
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested"
+    },
+    {
+      "id": "entry:billing:event:order.created",
+      "line": 17,
+      "reach": "alive",
+      "hops": 6,
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
+    },
+    {
+      "id": "entry:billing:http:POST:/invoices",
+      "line": 15,
+      "reach": "alive",
+      "hops": 6,
+      "by": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
+    },
+    {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "line": 30,
+      "reach": "alive",
+      "hops": 6,
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.findOne"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "line": 40,
+      "reach": "alive",
+      "hops": 10,
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.invoice"
+    }
   ],
+  "unreached": 5,
+  "throughChannels": [
+    {
+      "consumer": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "channels": [
+        "order.created"
+      ],
+      "ways": 1
+    }
+  ],
+  "complete": true,
   "next": [
-    "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\"})",
+    "impact({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\", channel: \"order.created\"})",
     "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})"
   ]
 }

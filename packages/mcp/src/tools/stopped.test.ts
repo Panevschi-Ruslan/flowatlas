@@ -117,12 +117,12 @@ describe('who_calls at the end of a chain', () => {
     expect(answer.next).not.toContain(`who_calls({symbol: ${JSON.stringify(ORPHAN)}})`);
   });
 
-  it('at the deepest depth, names the rows past it and the call that walks the whole chain (P376)', async () => {
+  it('at the deepest depth, draws the tree that far and walks the rest of the chain to its end (P376, P379)', async () => {
     const answer = await call('who_calls', { symbol: CHAIN[0], depth: 16 });
-    expect(answer.stoppedBy).toEqual(['depth']);
-    expect(answer.truncated).toBe('1 more node past depth 16; ask without depth for every way in');
-    expect(answer.frontier).toEqual([CHAIN[16]]);
-    expect(answer.next[0]).toBe(`who_calls({symbol: ${JSON.stringify(CHAIN[0])}})`);
+    expect(answer.stoppedBy).toBeUndefined();
+    expect(answer.frontier).toBeUndefined();
+    expect(answer.maybe.map((row: { id: string; hops: number }) => [row.id, row.hops])).toEqual([[CHAIN[19], 19]]);
+    expect(answer.next.some((hint: string) => hint.startsWith('who_calls('))).toBe(false);
   });
 
   it('without depth, walks a chain longer than any depth to its end, and says no way in is above it (P376)', async () => {
@@ -136,9 +136,9 @@ describe('who_calls at the end of a chain', () => {
     expect(answer.next.some((hint: string) => hint.startsWith('who_calls('))).toBe(false);
   });
 
-  it('says which limit left out more when both cut', async () => {
+  it('says maxNodes cut the tree, the depth being where it stops being drawn (P379)', async () => {
     const answer = await call('who_calls', { symbol: SERVICE, maxNodes: 1, depth: 1 });
-    expect(answer.stoppedBy).toEqual(['maxNodes', 'depth']);
+    expect(answer.stoppedBy).toEqual(['maxNodes']);
     expect(answer.truncated).toBe('2 more nodes past maxNodes 1; raise maxNodes or ask who_calls on a child id');
   });
 });

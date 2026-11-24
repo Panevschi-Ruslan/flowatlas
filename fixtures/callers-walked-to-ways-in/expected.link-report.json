@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T23:03:25.088Z",
+  "builtAt": "2026-11-24T13:17:28.391Z",
   "configHash": "604826b8a30d",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./stock-api",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 27,
-      "edges": 23,
+      "nodes": 44,
+      "edges": 34,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1072,
+      "durationMs": 1062,
       "packages": {
         "name": "stock-api",
         "runtime": [
@@ -28,11 +28,11 @@
       "repo": "./store-web",
       "type": "angular",
       "extractor": "@flowatlas/extractor-angular",
-      "nodes": 19,
-      "edges": 14,
+      "nodes": 40,
+      "edges": 31,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 864,
+      "durationMs": 850,
       "packages": {
         "name": "store-web",
         "runtime": [
@@ -56,8 +56,8 @@
     "dynamic": 0
   },
   "ui": {
-    "total": 3,
-    "resolved": 3,
+    "total": 7,
+    "resolved": 7,
     "unresolved": 0,
     "byReason": {}
   },
@@ -68,9 +68,11 @@
     "noProducers": []
   },
   "routes": {
-    "total": 3,
-    "called": 3,
-    "uncalled": [],
+    "total": 8,
+    "called": 7,
+    "uncalled": [
+      "entry:stock-api:http:DELETE:/products/:param"
+    ],
     "duplicated": []
   },
   "types": {
@@ -79,8 +81,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 46,
-    "edges": 40,
+    "nodes": 84,
+    "edges": 72,
     "types": 0,
     "missed": 0,
     "sites": 0,
