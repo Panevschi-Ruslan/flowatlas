@@ -1,0 +1,50 @@
+{
+  "target": {
+    "id": "catalog-api#src/item-extras.routes.ts:listNewest",
+    "type": "function",
+    "line": 5,
+    "reach": "alive",
+    "from": "GET /items/new"
+  },
+  "callers": [
+    {
+      "id": "entry:catalog-api:http:GET:/items/new",
+      "loc": "src/item-extras.routes.ts:9",
+      "reach": "alive",
+      "edge": "handles",
+      "children": [
+        {
+          "id": "ui_api_call:shop-web#src/app/catalog-api.service.ts:19:12",
+          "label": "GET /items/new",
+          "kind": "http",
+          "reach": "alive",
+          "from": "screen /dashboard",
+          "edge": {
+            "type": "hits",
+            "returns": "unknown[]",
+            "confidence": "heuristic"
+          }
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:catalog-api:http:GET:/items/new",
+      "line": 9,
+      "reach": "alive",
+      "hops": 1
+    },
+    {
+      "id": "entry:shop-web:screen:/dashboard",
+      "reach": "outside",
+      "hops": 6,
+      "by": "shop-web#src/app/dashboard.component.ts:DashboardComponent"
+    }
+  ],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:catalog-api:http:GET:/items/new\"})",
+    "describe_for_prompt({id: \"entry:catalog-api:http:GET:/items/new\"})"
+  ]
+}

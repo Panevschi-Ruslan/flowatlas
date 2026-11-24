@@ -1,6 +1,6 @@
-import type { CallExpression, ClassDeclaration, Project } from 'ts-morph';
+import type { CallExpression, ClassDeclaration, Node as TsNode, Project } from 'ts-morph';
 import { Node } from 'ts-morph';
-import { normalizeFilePath, type ApplicationMap, type Unresolved, startLineOf } from '@flowatlas/core';
+import { evaluateExpression, normalizeFilePath, type ApplicationMap, type RouteOrder, type Unresolved, startLineOf } from '@flowatlas/core';
 import { repoSourcesOf } from './bootstrap.js';
 import type { ModuleIndex } from './modules-index.js';
 import type { NestClassIndex } from './index-classes.js';
@@ -54,6 +54,13 @@ export interface ApplicationRoot {
   /** Repo-relative POSIX path of the call that created it. */
   file: string;
   line: number;
+  /**
+   * How its router orders routes, where that is not the framework's default
+   * (P385): `specificity` on Fastify or with `routeResolutionStrategy:
+   * 'specificity'`, `unread` where the adapter or the options could not be
+   * read. Absent is the default: the Express adapter, in declaration order.
+   */
+  routeOrder?: Exclude<RouteOrder, 'declaration'>;
 }
 
 /** A call that creates an application whose root module could not be read. */
@@ -87,8 +94,74 @@ const isFactoryCall = (call: CallExpression): boolean => {
  * because a name that stood for both would put the two address spaces back
  * together again.
  */
+/** `NestFactory.create`, which makes an application serving HTTP. */
+const isHttpFactory = (call: CallExpression): boolean => {
+  const callee = call.getExpression();
+  return Node.isPropertyAccessExpression(callee) && callee.getName() === 'create';
+};
+
+/** How a value names an HTTP adapter: by its class, `new FastifyAdapter()`, or by its type. */
+const adapterNamed = (node: TsNode, depth = 0): string | undefined => {
+  const unwrapped = Node.isParenthesizedExpression(node) || Node.isAsExpression(node) ? node.getExpression() : node;
+  if (Node.isNewExpression(unwrapped)) return /(\w+)\s*$/.exec(unwrapped.getExpression().getText())?.[1];
+  if (Node.isIdentifier(unwrapped) && depth < 2) {
+    for (const declaration of unwrapped.getSymbol()?.getDeclarations() ?? []) {
+      if (!Node.isVariableDeclaration(declaration)) continue;
+      const initializer = declaration.getInitializer();
+      if (initializer !== undefined) return adapterNamed(initializer, depth + 1);
+    }
+  }
+  const typed = unwrapped.getType().getSymbol()?.getName();
+  return typed === undefined || typed === '__type' || typed === '__object' ? undefined : typed;
+};
+
+/** What the options handed to the factory say of the order, or `unread`. */
+const orderInOptions = (node: TsNode): RouteOrder => {
+  if (Node.isObjectLiteralExpression(node)) {
+    if (node.getProperties().some((property) => Node.isSpreadAssignment(property))) return 'unread';
+    const said = node.getProperty('routeResolutionStrategy');
+    if (said === undefined) return 'declaration';
+    if (!Node.isPropertyAssignment(said)) return 'unread';
+    const initializer = said.getInitializer();
+    const value = initializer === undefined ? undefined : evaluateExpression(initializer);
+    if (value?.resolved !== true) return 'unread';
+    return value.value === 'specificity' ? 'specificity' : value.value === 'declaration' ? 'declaration' : 'unread';
+  }
+  const value = evaluateExpression(node);
+  if (!value.resolved || typeof value.value !== 'object' || value.value === null) return 'unread';
+  const said = (value.value as Record<string, unknown>)['routeResolutionStrategy'];
+  return said === undefined || said === 'declaration' ? 'declaration' : said === 'specificity' ? 'specificity' : 'unread';
+};
+
+/**
+ * How the router of the application one factory call creates orders routes
+ * (P385).
+ *
+ * NestJS registers routes in declaration order on its default adapter, which
+ * is Express, and the first registered answers; Fastify's router ranks them by
+ * specificity whatever the order, and from v12 `routeResolutionStrategy:
+ * 'specificity'` in the options sorts them the same way on Express. The
+ * adapter is the second argument when one is given, then the options; a type
+ * argument naming a Fastify application says the same. A value neither an
+ * adapter nor options this can read leaves the order unread.
+ */
+const routeOrderOfCall = (call: CallExpression): RouteOrder => {
+  if (call.getTypeArguments().some((type) => /Fastify/.test(type.getText()))) return 'specificity';
+  const [, second, third] = call.getArguments();
+  if (second === undefined) return 'declaration';
+  if (Node.isObjectLiteralExpression(second)) return orderInOptions(second);
+  const adapter = adapterNamed(second);
+  if (adapter !== undefined && /FastifyAdapter$/.test(adapter)) return 'specificity';
+  if (adapter !== undefined && /ExpressAdapter$/.test(adapter)) return third === undefined ? 'declaration' : orderInOptions(third);
+  if (third === undefined) {
+    const options = orderInOptions(second);
+    if (options !== 'unread') return options;
+  }
+  return 'unread';
+};
+
 const named = (
-  found: ReadonlyArray<{ module: ClassDeclaration; file: string; line: number; moduleFile: string }>,
+  found: ReadonlyArray<{ module: ClassDeclaration; file: string; line: number; moduleFile: string; routeOrder: RouteOrder }>,
 ): ApplicationRoot[] => {
   const counted = new Map<string, number>();
   for (const root of found) {
@@ -102,6 +175,7 @@ const named = (
       module: root.module,
       file: root.file,
       line: root.line,
+      ...(root.routeOrder === 'declaration' ? {} : { routeOrder: root.routeOrder }),
     };
   });
 };
@@ -129,6 +203,7 @@ export const readApplicationRoots = (options: {
     file: string;
     line: number;
     moduleFile: string;
+    routeOrder: RouteOrder;
   }> = [];
   const seen = new Set<ClassDeclaration>();
   const unread: UnreadApplication[] = [];
@@ -152,6 +227,8 @@ export const readApplicationRoots = (options: {
         file,
         line,
         moduleFile: normalizeFilePath(ref.declaration.getSourceFile().getFilePath(), rootDir),
+        // A microservice serves no HTTP route, so its order says nothing.
+        routeOrder: isHttpFactory(node) ? routeOrderOfCall(node) : 'declaration',
       });
     });
   }
@@ -216,6 +293,67 @@ export const applicationMembership = (
     of: Object.fromEntries([...of].map(([id, mounted]) => [id, [...mounted].sort()])),
   };
 };
+
+/**
+ * The order an application's router registers routes in, as the entry adapter
+ * reads it from `meta` (P385): per root, how its router orders routes and its
+ * controllers by symbol id in the order they are registered.
+ */
+export interface RouteRegistration {
+  roots: Array<{ name: string; routeOrder?: Exclude<RouteOrder, 'declaration'>; controllers: string[] }>;
+}
+
+/**
+ * The controllers one module tree registers, in the order NestJS registers
+ * their routes (P385).
+ *
+ * The scanner inserts a module, then walks its `imports` in the order written,
+ * depth first, skipping a module it has met; the router then takes the modules
+ * in the order they were inserted and each module's `controllers` in the order
+ * written, and a controller's handlers in the order its methods are declared.
+ * So the root's own controllers come first, then those of its first import and
+ * everything that import brings in, then the next.
+ *
+ * An import of the repository's own that could not be read may bring in
+ * modules ahead of the ones after it, so nothing after it is placed: those
+ * controllers are left out, and a route of theirs is ordered against no other
+ * controller's.
+ */
+const controllersInOrder = (root: ClassDeclaration, modules: ModuleIndex): ClassDeclaration[] => {
+  const out: ClassDeclaration[] = [];
+  const visited = new Set<ClassDeclaration>();
+  let lost = false;
+  const visit = (declaration: ClassDeclaration): void => {
+    if (lost || visited.has(declaration)) return;
+    visited.add(declaration);
+    const info = modules.get(declaration);
+    if (info === undefined) return;
+    out.push(...info.controllers);
+    for (const imported of info.imports) {
+      if (imported.declaration !== undefined) visit(imported.declaration);
+      else if (imported.kind !== 'external') lost = true;
+      if (lost) return;
+    }
+  };
+  visit(root);
+  return out;
+};
+
+/** How each application registers its routes, for the entry adapter (P385). */
+export const routeRegistrationOf = (
+  roots: readonly ApplicationRoot[],
+  modules: ModuleIndex,
+  classes: NestClassIndex,
+): RouteRegistration => ({
+  roots: roots.map((root) => ({
+    name: root.name,
+    ...(root.routeOrder === undefined ? {} : { routeOrder: root.routeOrder }),
+    controllers: controllersInOrder(root.module, modules).flatMap((member) => {
+      const id = classes.get(member)?.id;
+      return id === undefined ? [] : [id];
+    }),
+  })),
+});
 
 /**
  * What is said about a factory call whose root module could not be read.

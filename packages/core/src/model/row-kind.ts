@@ -155,6 +155,8 @@ const NOTES: readonly string[] = [
   'failure-declared-unseen',
   // A handler whose parameter's type says one type of message and whose caller's branch says another; the branch is drawn (P369)
   'message-type-differs',
+  // Two routes of a router that tries routes in order, whose order was not read; the join is a guess (P385)
+  'route-order-unread',
 ];
 
 // Something about the code, true whatever the reader managed.
@@ -170,6 +172,8 @@ const FINDINGS: readonly string[] = [
   'marker-reason-missing',
   // Two declarations where the framework takes one, or one it never serves
   'route-claimed-twice',
+  // A route a parameter route registered before it in the same router always answers first (P385)
+  'route-shadowed-by-earlier',
   'graphql-field-resolved-twice',
   // A gRPC contract's method a server does not implement, and a member it implements the contract does not declare (P287)
   'grpc-method-unimplemented',
@@ -574,6 +578,7 @@ const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
     'wiring',
     [
       'route-claimed-twice',
+      'route-shadowed-by-earlier',
       'graphql-field-resolved-twice',
       'grpc-method-unimplemented',
       'grpc-method-undeclared',

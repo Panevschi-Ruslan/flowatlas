@@ -2187,10 +2187,13 @@ a short name that is the only best match.
 
 A name matching two services comes back as a choice rather than a guess. A name
 matching nothing comes back with the nearest few. Where a route that spells a
-segment out and one with a hole there both answer, the spelled-out one is meant,
-as the router and the linker read it: `flow "GET /orders/latest"` is the route
-registered as `/orders/latest`, not `/orders/:param`. The graph server's tools
-resolve a name the same way.
+segment out and one with a hole there both answer, the one the router answers
+with is meant, as the linker reads it: in a router that ranks its routes, and
+in one that tries them in order where `/orders/latest` is registered first,
+`flow "GET /orders/latest"` is the route registered as `/orders/latest`, not
+`/orders/:param`; where `/orders/:param` is registered first in the same router,
+it answers (see "Route order" below). The graph server's tools resolve a name
+the same way.
 
 Each node is written out once. Met again - a helper every method calls, a
 logger - it is a `↺` line (`(again)` with `--ascii`) under the new caller, and
@@ -4326,7 +4329,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Types | `type-unresolved`, `type-generic-uninstantiated`, `type-depth-exceeded`, `di-type-unresolved`, `decorator-arg-dynamic` |
 | Injection and calls | `di-token-unknown`, `di-token-ambiguous`, `inject-token-unresolved`, `call-dynamic-receiver`, `call-module-ref`, `call-through-token`, `global-wrapper-dynamic` |
 | NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-providers-unread`, `module-import-dynamic`, `module-import-not-installed`, `middleware-route-dynamic`, `fails-filter-unread`, `fails-interceptor-unread` |
-| Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread`, `mcp-name-dynamic` (P270) |
+| Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread`, `mcp-name-dynamic` (P270), `route-shadowed-by-earlier` (finding: a route a parameter route registered before it in the same router always answers first), `route-order-unread` (info: two routes of a router trying routes in order whose order was not read, P385) |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch`, `procedure-link-dynamic`, `procedure-link-socket` (info), `procedure-link-unserved`, `procedure-prefix-unread`, `procedure-contract-unread`, `procedure-unmounted` (info, P270) |
 | gRPC services and calls (P274) | `grpc-service-unread` (a service registered, or a client made, that cannot be named), `grpc-contract-unread` (info: a service no `.proto` file of the repository declares, its methods named as written), `grpc-method-unserved` (a method a contract declares that nothing configured implements), `grpc-package-service` (info: a service a package implements whose contract is not known, its methods not drawn), `grpc-method-unimplemented` (info finding: a method the contract declares that the server registering the service does not implement), `grpc-method-undeclared` (info finding: a member a server implements for a service that its contract does not declare), `grpc-field-undeclared` (info finding: a field a handler reads off its request that the message does not declare under the loader's names, P297) |
@@ -5782,8 +5785,36 @@ the data is read; the exception may come from a helper, see below),
 `route-public-declared` and `marker-reason-missing` (a route marked
 `@flowatlas-public`, with and without its reason, both at `info`), `route-shadowed` (a
 route a worker answers before the
-application, whose guards then never run) and `route-wildcard-only` (a request
-only a catch-all route answers). Accept them into the baseline once reviewed;
+application, whose guards then never run), `route-shadowed-by-earlier` (a route
+a parameter route registered before it in the same router always answers
+first, P385) and `route-wildcard-only` (a request
+only a catch-all route answers).
+
+**Route order (P385).** Express, Koa's router, Hono and NestJS on its default
+Express adapter try routes in the order they are registered, and the first
+that matches answers. Fastify's router, the file routers and the front-end
+routers rank routes by how much of the address each spells out, and so does
+NestJS on `FastifyAdapter` or with `routeResolutionStrategy: 'specificity'`
+(NestJS 12), which the reader takes from the `NestFactory.create` call. Where
+two routes of one router answer a request, the order decides first where it is
+read: in one NestJS controller or on one Express, Koa or Hono router in one
+file, by the order of the lines; across NestJS controllers, by the place each
+is registered at - the root module's controllers first, then each import's,
+depth first in the order written, each module once, as the framework scans
+them. So `GET /orders/:id` registered above `GET /orders/latest` takes the
+request for `/orders/latest`: the edge goes to `:id`'s handler, its `note`
+says which route it answers before and `shadows` names it, and
+`route-shadowed-by-earlier` names both lines and the callers that asked for
+the spelled-out route (`fixtures/route-order`). Two routers whose order is not
+read - two files or two receivers mounted under one prefix, two controllers
+whose module is reached through an import that was not read, an application
+whose adapter or options could not be read - keep the spelled-out route, with
+`orderUnread` on the edge, the join a guess (`heuristic`), and a
+`route-order-unread` note at `info`. A route for every verb or under a
+wildcard is never put first by its order, since that is how a check is
+installed in front of other routes; nor is a parameter written with a
+pattern, as optional, or with text around it. Koa's router built with
+`exclusive` is read as the default. Accept them into the baseline once reviewed;
 `--strict` then fails only on new ones.
 
 **Public on purpose, read rather than configured.** A NestJS decorator that

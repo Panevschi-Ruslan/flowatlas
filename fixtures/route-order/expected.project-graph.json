@@ -1,0 +1,1693 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T19:08:04.344Z",
+  "services": [
+    {
+      "name": "shop-api",
+      "repo": "./shop-backend",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "billing-api",
+      "repo": "./billing-backend",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-backend",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop-web",
+      "repo": "./shop-frontend",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "billing-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "billing-api",
+      "file": "src/app.module.ts",
+      "line": 4,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "InvoicesController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "billing-api#src/invoices/invoices.controller.ts:InvoicesController",
+      "type": "provider",
+      "label": "InvoicesController",
+      "repo": "billing-api",
+      "file": "src/invoices/invoices.controller.ts",
+      "line": 8,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "billing-api#src/invoices/invoices.controller.ts:InvoicesController.findOne",
+      "type": "method",
+      "label": "InvoicesController.findOne",
+      "repo": "billing-api",
+      "file": "src/invoices/invoices.controller.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "invoiceId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:billing-api#Invoice"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "billing-api#src/invoices/invoices.controller.ts:InvoicesController.overdue",
+      "type": "method",
+      "label": "InvoicesController.overdue",
+      "repo": "billing-api",
+      "file": "src/invoices/invoices.controller.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:billing-api#Invoice[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog-api#src/item-extras.routes.ts:listNewest",
+      "type": "function",
+      "label": "listNewest",
+      "repo": "catalog-api",
+      "file": "src/item-extras.routes.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog-api#src/items.routes.ts:listFeatured",
+      "type": "function",
+      "label": "listFeatured",
+      "repo": "catalog-api",
+      "file": "src/items.routes.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog-api#src/items.routes.ts:showItem",
+      "type": "function",
+      "label": "showItem",
+      "repo": "catalog-api",
+      "file": "src/items.routes.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "entry:billing-api:http:GET:/invoices/:param",
+      "type": "entry",
+      "label": "GET /invoices/:param",
+      "repo": "billing-api",
+      "file": "src/invoices/invoices.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/invoices/:param",
+        "rawPath": "/invoices/:invoiceId",
+        "controller": "InvoicesController",
+        "routeOrder": "specificity",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:billing-api:http:GET:/invoices/overdue",
+      "type": "entry",
+      "label": "GET /invoices/overdue",
+      "repo": "billing-api",
+      "file": "src/invoices/invoices.controller.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/invoices/overdue",
+        "rawPath": "/invoices/overdue",
+        "controller": "InvoicesController",
+        "routeOrder": "specificity",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/items/:param",
+      "type": "entry",
+      "label": "GET /items/:param",
+      "repo": "catalog-api",
+      "file": "src/items.routes.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items/:param",
+        "rawPath": "/items/:itemId",
+        "adapter": "express-routes",
+        "registration": "itemsRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/items/featured",
+      "type": "entry",
+      "label": "GET /items/featured",
+      "repo": "catalog-api",
+      "file": "src/items.routes.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items/featured",
+        "rawPath": "/items/featured",
+        "adapter": "express-routes",
+        "registration": "itemsRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "shadowedBy": "entry:catalog-api:http:GET:/items/:param"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/items/new",
+      "type": "entry",
+      "label": "GET /items/new",
+      "repo": "catalog-api",
+      "file": "src/item-extras.routes.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items/new",
+        "rawPath": "/items/new",
+        "adapter": "express-routes",
+        "registration": "itemExtrasRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:orderId",
+        "controller": "OrdersController",
+        "controllerOrder": 0,
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:GET:/orders/export",
+      "type": "entry",
+      "label": "GET /orders/export",
+      "repo": "shop-api",
+      "file": "src/orders/order-exports.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/export",
+        "rawPath": "/orders/export",
+        "controller": "OrderExportsController",
+        "controllerOrder": 1,
+        "adapter": "nestjs-http",
+        "shadowedBy": "entry:shop-api:http:GET:/orders/:param"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:GET:/orders/latest",
+      "type": "entry",
+      "label": "GET /orders/latest",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/latest",
+        "rawPath": "/orders/latest",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "shadowedBy": "entry:shop-api:http:GET:/orders/:param"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:GET:/orders/summary",
+      "type": "entry",
+      "label": "GET /orders/summary",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/summary",
+        "rawPath": "/orders/summary",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-web:screen:/dashboard",
+      "type": "entry",
+      "label": "/dashboard",
+      "repo": "shop-web",
+      "file": "src/app/app.routes.ts",
+      "line": 5,
+      "kind": "screen",
+      "meta": {
+        "path": "/dashboard",
+        "by": "angular-routes",
+        "screens": [
+          "DashboardComponent"
+        ]
+      }
+    },
+    {
+      "id": "repo:billing-api",
+      "type": "repo",
+      "label": "billing-api",
+      "repo": "billing-api",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/main.ts",
+            "line": 8
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:catalog-api",
+      "type": "repo",
+      "label": "catalog-api",
+      "repo": "catalog-api",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 3
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3002,
+            "file": "src/app.ts",
+            "line": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop-api",
+      "type": "repo",
+      "label": "shop-api",
+      "repo": "shop-api",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop-web",
+      "type": "repo",
+      "label": "shop-web",
+      "repo": "shop-web",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "templates": 1,
+          "skippedExternalCalls": {
+            "@angular/common": 8,
+            "rxjs": 6
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "shop-api",
+      "file": "src/app.module.ts",
+      "line": 4,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "shop-api#src/orders/order-exports.controller.ts:OrderExportsController",
+      "type": "provider",
+      "label": "OrderExportsController",
+      "repo": "shop-api",
+      "file": "src/orders/order-exports.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "shop-api#src/orders/order-exports.controller.ts:OrderExportsController.exportAll",
+      "type": "method",
+      "label": "OrderExportsController.exportAll",
+      "repo": "shop-api",
+      "file": "src/orders/order-exports.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "method",
+      "label": "OrdersController.findOne",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-api#Order"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.latest",
+      "type": "method",
+      "label": "OrdersController.latest",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop-api#Order"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.summary",
+      "type": "method",
+      "label": "OrdersController.summary",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop-api#OrdersSummary"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.module.ts:OrdersModule",
+      "type": "module",
+      "label": "OrdersModule",
+      "repo": "shop-api",
+      "file": "src/orders/orders.module.ts",
+      "line": 10,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "OrderExportsController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.byId",
+      "type": "method",
+      "label": "OrdersService.byId",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-api#Order"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.exportCsv",
+      "type": "method",
+      "label": "OrdersService.exportCsv",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.latest",
+      "type": "method",
+      "label": "OrdersService.latest",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop-api#Order"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.summary",
+      "type": "method",
+      "label": "OrdersService.summary",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop-api#OrdersSummary"
+        }
+      }
+    },
+    {
+      "id": "shop-web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "shop-web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "shop-web#src/app/billing-api.service.ts:BillingApi",
+      "type": "provider",
+      "label": "BillingApi",
+      "repo": "shop-web",
+      "file": "src/app/billing-api.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "shop-web#src/app/billing-api.service.ts:BillingApi.overdue",
+      "type": "method",
+      "label": "BillingApi.overdue",
+      "repo": "shop-web",
+      "file": "src/app/billing-api.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/catalog-api.service.ts:CatalogApi",
+      "type": "provider",
+      "label": "CatalogApi",
+      "repo": "shop-web",
+      "file": "src/app/catalog-api.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "shop-web#src/app/catalog-api.service.ts:CatalogApi.featured",
+      "type": "method",
+      "label": "CatalogApi.featured",
+      "repo": "shop-web",
+      "file": "src/app/catalog-api.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/catalog-api.service.ts:CatalogApi.item",
+      "type": "method",
+      "label": "CatalogApi.item",
+      "repo": "shop-web",
+      "file": "src/app/catalog-api.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "shop-web#src/app/catalog-api.service.ts:CatalogApi.newest",
+      "type": "method",
+      "label": "CatalogApi.newest",
+      "repo": "shop-web",
+      "file": "src/app/catalog-api.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/dashboard.component.ts:DashboardComponent",
+      "type": "ui_component",
+      "label": "DashboardComponent",
+      "repo": "shop-web",
+      "file": "src/app/dashboard.component.ts",
+      "line": 7,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-dashboard",
+        "route": "/dashboard"
+      }
+    },
+    {
+      "id": "shop-web#src/app/dashboard.component.ts:DashboardComponent.download",
+      "type": "method",
+      "label": "DashboardComponent.download",
+      "repo": "shop-web",
+      "file": "src/app/dashboard.component.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/dashboard.component.ts:DashboardComponent.load",
+      "type": "method",
+      "label": "DashboardComponent.load",
+      "repo": "shop-web",
+      "file": "src/app/dashboard.component.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders-api.service.ts:OrdersApi",
+      "type": "provider",
+      "label": "OrdersApi",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders-api.service.ts:OrdersApi.exportAll",
+      "type": "method",
+      "label": "OrdersApi.exportAll",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders-api.service.ts:OrdersApi.latest",
+      "type": "method",
+      "label": "OrdersApi.latest",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop-web#Order"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders-api.service.ts:OrdersApi.order",
+      "type": "method",
+      "label": "OrdersApi.order",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-web#Order"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders-api.service.ts:OrdersApi.summary",
+      "type": "method",
+      "label": "OrdersApi.summary",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "ui_action:shop-web#src/app/dashboard.component.ts:10:22",
+      "type": "ui_action",
+      "label": "click=\"load()\"",
+      "repo": "shop-web",
+      "file": "src/app/dashboard.component.ts",
+      "line": 10,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "load()",
+        "component": "shop-web#src/app/dashboard.component.ts:DashboardComponent",
+        "template": "src/app/dashboard.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:shop-web#src/app/dashboard.component.ts:10:60",
+      "type": "ui_action",
+      "label": "click=\"download()\"",
+      "repo": "shop-web",
+      "file": "src/app/dashboard.component.ts",
+      "line": 10,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "download()",
+        "component": "shop-web#src/app/dashboard.component.ts:DashboardComponent",
+        "template": "src/app/dashboard.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/billing-api.service.ts:14:12",
+      "type": "ui_api_call",
+      "label": "GET /invoices/overdue",
+      "repo": "shop-web",
+      "file": "src/app/billing-api.service.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${billingUrl}/invoices/overdue",
+        "path": "/invoices/overdue",
+        "baseUrlEnv": "billingUrl",
+        "responseType": "unknown[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "billing-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/catalog-api.service.ts:14:12",
+      "type": "ui_api_call",
+      "label": "GET /items/featured",
+      "repo": "shop-web",
+      "file": "src/app/catalog-api.service.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${catalogUrl}/items/featured",
+        "path": "/items/featured",
+        "baseUrlEnv": "catalogUrl",
+        "responseType": "unknown[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/catalog-api.service.ts:19:12",
+      "type": "ui_api_call",
+      "label": "GET /items/new",
+      "repo": "shop-web",
+      "file": "src/app/catalog-api.service.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${catalogUrl}/items/new",
+        "path": "/items/new",
+        "baseUrlEnv": "catalogUrl",
+        "responseType": "unknown[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/catalog-api.service.ts:23:12",
+      "type": "ui_api_call",
+      "label": "GET /items/:param",
+      "repo": "shop-web",
+      "file": "src/app/catalog-api.service.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${catalogUrl}/items/:param",
+        "path": "/items/:param",
+        "baseUrlEnv": "catalogUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/orders-api.service.ts:19:12",
+      "type": "ui_api_call",
+      "label": "GET /orders/summary",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/orders/summary",
+        "path": "/orders/summary",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/orders-api.service.ts:24:12",
+      "type": "ui_api_call",
+      "label": "GET /orders/latest",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/orders/latest",
+        "path": "/orders/latest",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:shop-web#Order",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/orders-api.service.ts:28:12",
+      "type": "ui_api_call",
+      "label": "GET /orders/:param",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/orders/:param",
+        "path": "/orders/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:shop-web#Order",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/orders-api.service.ts:33:12",
+      "type": "ui_api_call",
+      "label": "GET /orders/export",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/orders/export",
+        "path": "/orders/export",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:billing-api:http:GET:/invoices/:param",
+      "to": "billing-api#src/invoices/invoices.controller.ts:InvoicesController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:billing-api#Invoice",
+      "file": "src/invoices/invoices.controller.ts",
+      "line": 10,
+      "meta": {
+        "params": "{invoiceId:string}"
+      }
+    },
+    {
+      "from": "entry:billing-api:http:GET:/invoices/overdue",
+      "to": "billing-api#src/invoices/invoices.controller.ts:InvoicesController.overdue",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:billing-api#Invoice[]",
+      "file": "src/invoices/invoices.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/items/:param",
+      "to": "catalog-api#src/items.routes.ts:showItem",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string}",
+      "file": "src/items.routes.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "params": "{itemId:string}"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/items/featured",
+      "to": "catalog-api#src/items.routes.ts:listFeatured",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/items.routes.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/items/new",
+      "to": "catalog-api#src/item-extras.routes.ts:listNewest",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/item-extras.routes.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop-api:http:GET:/orders/:param",
+      "to": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop-api#Order",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "meta": {
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:shop-api:http:GET:/orders/export",
+      "to": "shop-api#src/orders/order-exports.controller.ts:OrderExportsController.exportAll",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/orders/order-exports.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:shop-api:http:GET:/orders/latest",
+      "to": "shop-api#src/orders/orders.controller.ts:OrdersController.latest",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:shop-api#Order",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "entry:shop-api:http:GET:/orders/summary",
+      "to": "shop-api#src/orders/orders.controller.ts:OrdersController.summary",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:shop-api#OrdersSummary",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:shop-web:screen:/dashboard",
+      "to": "shop-web#src/app/dashboard.component.ts:DashboardComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 5,
+      "meta": {
+        "route": "/dashboard"
+      }
+    },
+    {
+      "from": "shop-api#src/app.module.ts:AppModule",
+      "to": "shop-api#src/orders/orders.module.ts:OrdersModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 4
+    },
+    {
+      "from": "shop-api#src/orders/order-exports.controller.ts:OrderExportsController",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/order-exports.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "shop-api#src/orders/order-exports.controller.ts:OrderExportsController.exportAll",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService.exportCsv",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/orders/order-exports.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "shop-api#src/orders/orders.controller.ts:OrdersController",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService.byId",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop-api#Order",
+      "file": "src/orders/orders.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "shop-api#src/orders/orders.controller.ts:OrdersController.latest",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService.latest",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:shop-api#Order",
+      "file": "src/orders/orders.controller.ts",
+      "line": 22
+    },
+    {
+      "from": "shop-api#src/orders/orders.controller.ts:OrdersController.summary",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService.summary",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:shop-api#OrdersSummary",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "shop-web#src/app/billing-api.service.ts:BillingApi",
+      "to": "shop-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/billing-api.service.ts",
+      "line": 10
+    },
+    {
+      "from": "shop-web#src/app/billing-api.service.ts:BillingApi.overdue",
+      "to": "ui_api_call:shop-web#src/app/billing-api.service.ts:14:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/billing-api.service.ts",
+      "line": 14
+    },
+    {
+      "from": "shop-web#src/app/catalog-api.service.ts:CatalogApi",
+      "to": "shop-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/catalog-api.service.ts",
+      "line": 10
+    },
+    {
+      "from": "shop-web#src/app/catalog-api.service.ts:CatalogApi.featured",
+      "to": "ui_api_call:shop-web#src/app/catalog-api.service.ts:14:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog-api.service.ts",
+      "line": 14
+    },
+    {
+      "from": "shop-web#src/app/catalog-api.service.ts:CatalogApi.item",
+      "to": "ui_api_call:shop-web#src/app/catalog-api.service.ts:23:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog-api.service.ts",
+      "line": 23
+    },
+    {
+      "from": "shop-web#src/app/catalog-api.service.ts:CatalogApi.newest",
+      "to": "ui_api_call:shop-web#src/app/catalog-api.service.ts:19:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog-api.service.ts",
+      "line": 19
+    },
+    {
+      "from": "shop-web#src/app/dashboard.component.ts:DashboardComponent",
+      "to": "shop-web#src/app/billing-api.service.ts:BillingApi",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/dashboard.component.ts",
+      "line": 16
+    },
+    {
+      "from": "shop-web#src/app/dashboard.component.ts:DashboardComponent",
+      "to": "shop-web#src/app/catalog-api.service.ts:CatalogApi",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/dashboard.component.ts",
+      "line": 15
+    },
+    {
+      "from": "shop-web#src/app/dashboard.component.ts:DashboardComponent",
+      "to": "shop-web#src/app/orders-api.service.ts:OrdersApi",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/dashboard.component.ts",
+      "line": 14
+    },
+    {
+      "from": "shop-web#src/app/dashboard.component.ts:DashboardComponent.download",
+      "to": "shop-web#src/app/orders-api.service.ts:OrdersApi.exportAll",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/app/dashboard.component.ts",
+      "line": 28
+    },
+    {
+      "from": "shop-web#src/app/dashboard.component.ts:DashboardComponent.load",
+      "to": "shop-web#src/app/billing-api.service.ts:BillingApi.overdue",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown[]",
+      "file": "src/app/dashboard.component.ts",
+      "line": 24
+    },
+    {
+      "from": "shop-web#src/app/dashboard.component.ts:DashboardComponent.load",
+      "to": "shop-web#src/app/catalog-api.service.ts:CatalogApi.featured",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown[]",
+      "file": "src/app/dashboard.component.ts",
+      "line": 22
+    },
+    {
+      "from": "shop-web#src/app/dashboard.component.ts:DashboardComponent.load",
+      "to": "shop-web#src/app/catalog-api.service.ts:CatalogApi.newest",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown[]",
+      "file": "src/app/dashboard.component.ts",
+      "line": 23
+    },
+    {
+      "from": "shop-web#src/app/dashboard.component.ts:DashboardComponent.load",
+      "to": "shop-web#src/app/orders-api.service.ts:OrdersApi.latest",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:shop-web#Order",
+      "file": "src/app/dashboard.component.ts",
+      "line": 21
+    },
+    {
+      "from": "shop-web#src/app/dashboard.component.ts:DashboardComponent.load",
+      "to": "shop-web#src/app/orders-api.service.ts:OrdersApi.summary",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/app/dashboard.component.ts",
+      "line": 20
+    },
+    {
+      "from": "shop-web#src/app/orders-api.service.ts:OrdersApi",
+      "to": "shop-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 15
+    },
+    {
+      "from": "shop-web#src/app/orders-api.service.ts:OrdersApi.exportAll",
+      "to": "ui_api_call:shop-web#src/app/orders-api.service.ts:33:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 33
+    },
+    {
+      "from": "shop-web#src/app/orders-api.service.ts:OrdersApi.latest",
+      "to": "ui_api_call:shop-web#src/app/orders-api.service.ts:24:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 24
+    },
+    {
+      "from": "shop-web#src/app/orders-api.service.ts:OrdersApi.order",
+      "to": "ui_api_call:shop-web#src/app/orders-api.service.ts:28:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 28
+    },
+    {
+      "from": "shop-web#src/app/orders-api.service.ts:OrdersApi.summary",
+      "to": "ui_api_call:shop-web#src/app/orders-api.service.ts:19:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 19
+    },
+    {
+      "from": "ui_action:shop-web#src/app/dashboard.component.ts:10:22",
+      "to": "shop-web#src/app/dashboard.component.ts:DashboardComponent.load",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/dashboard.component.ts",
+      "line": 10
+    },
+    {
+      "from": "ui_action:shop-web#src/app/dashboard.component.ts:10:60",
+      "to": "shop-web#src/app/dashboard.component.ts:DashboardComponent.download",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/dashboard.component.ts",
+      "line": 10
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/billing-api.service.ts:14:12",
+      "to": "entry:billing-api:http:GET:/invoices/overdue",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/billing-api.service.ts",
+      "line": 14,
+      "returns": "unknown[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "billing-api",
+        "note": "chosen over entry:billing-api:http:GET:/invoices/:param for being more specific, as the router ranks routes"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/catalog-api.service.ts:14:12",
+      "to": "entry:catalog-api:http:GET:/items/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/catalog-api.service.ts",
+      "line": 14,
+      "returns": "unknown[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog-api",
+        "note": "answers before entry:catalog-api:http:GET:/items/featured, registered after it on itemsRouter: the router tries routes in the order they are registered, so that route is never reached by this request",
+        "shadows": [
+          "entry:catalog-api:http:GET:/items/featured"
+        ]
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/catalog-api.service.ts:19:12",
+      "to": "entry:catalog-api:http:GET:/items/new",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/app/catalog-api.service.ts",
+      "line": 19,
+      "returns": "unknown[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog-api",
+        "note": "chosen over entry:catalog-api:http:GET:/items/:param for being more specific; the router tries routes in the order they are registered and which comes first is not read, so the request may land there",
+        "orderUnread": [
+          "entry:catalog-api:http:GET:/items/:param"
+        ]
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/catalog-api.service.ts:23:12",
+      "to": "entry:catalog-api:http:GET:/items/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/catalog-api.service.ts",
+      "line": 23,
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/orders-api.service.ts:19:12",
+      "to": "entry:shop-api:http:GET:/orders/summary",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 19,
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api",
+        "note": "chosen over entry:shop-api:http:GET:/orders/:param, registered after it on OrdersController"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/orders-api.service.ts:24:12",
+      "to": "entry:shop-api:http:GET:/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 24,
+      "returns": "type:shop-web#Order",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api",
+        "note": "answers before entry:shop-api:http:GET:/orders/latest, registered after it on OrdersController: the router tries routes in the order they are registered, so that route is never reached by this request",
+        "shadows": [
+          "entry:shop-api:http:GET:/orders/latest"
+        ]
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/orders-api.service.ts:28:12",
+      "to": "entry:shop-api:http:GET:/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 28,
+      "returns": "type:shop-web#Order",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/orders-api.service.ts:33:12",
+      "to": "entry:shop-api:http:GET:/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 33,
+      "returns": "string",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api",
+        "note": "answers before entry:shop-api:http:GET:/orders/export, registered after it (OrdersController is registered before OrderExportsController): the router tries routes in the order they are registered, so that route is never reached by this request",
+        "shadows": [
+          "entry:shop-api:http:GET:/orders/export"
+        ]
+      }
+    }
+  ],
+  "types": {
+    "type:billing-api#Invoice": {
+      "name": "Invoice",
+      "kind": "object",
+      "declaredIn": "billing-api#src/invoices/invoices.controller.ts",
+      "structuralHash": "6676945ad2fa5fe5",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "due",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:express#Request<object,unknown,unknown>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:shop-api#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "shop-api#src/orders/orders.service.ts",
+      "structuralHash": "e752b571a9fb0fb7",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-api#OrdersSummary": {
+      "name": "OrdersSummary",
+      "kind": "object",
+      "declaredIn": "shop-api#src/orders/orders.service.ts",
+      "structuralHash": "a6b4edcd02fcff9c",
+      "fields": [
+        {
+          "name": "count",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "revenue",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-web#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "shop-web#src/app/orders-api.service.ts",
+      "structuralHash": "e752b571a9fb0fb7",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "catalog-api",
+      "file": "src/item-extras.routes.ts",
+      "line": 9,
+      "reason": "route-order-unread",
+      "level": "info",
+      "message": "GET /items/new (src/item-extras.routes.ts:9, on itemExtrasRouter) is answered by GET /items/:param (src/items.routes.ts:13, on itemsRouter) instead wherever that is registered first; the router tries routes in the order they are registered, and the order between these was not read, so requests for it are joined to it as a guess.",
+      "hint": "Check which is registered first. Registering the spelled-out route first, in the same router, settles it.",
+      "symbol": "GET /items/new"
+    },
+    {
+      "service": "catalog-api",
+      "file": "src/items.routes.ts",
+      "line": 16,
+      "reason": "route-shadowed-by-earlier",
+      "message": "GET /items/featured (src/items.routes.ts:16) is never reached: GET /items/:param (src/items.routes.ts:13), registered before it on itemsRouter, answers every request for it, and the router tries routes in the order they are registered. 1 caller asking for it lands on GET /items/:param: CatalogApi.featured.",
+      "hint": "Register the spelled-out route before the one with the parameter (move it above it), or make the router rank routes by specificity where it can (NestJS 12: routeResolutionStrategy: \"specificity\").",
+      "symbol": "GET /items/featured"
+    },
+    {
+      "service": "shop-api",
+      "file": "src/orders/order-exports.controller.ts",
+      "line": 9,
+      "reason": "route-shadowed-by-earlier",
+      "message": "GET /orders/export (src/orders/order-exports.controller.ts:9) is never reached: GET /orders/:param (src/orders/orders.controller.ts:14), registered before it (OrdersController is registered before OrderExportsController), answers every request for it, and the router tries routes in the order they are registered. 1 caller asking for it lands on GET /orders/:param: OrdersApi.exportAll.",
+      "hint": "Register the spelled-out route before the one with the parameter (move it above it), or make the router rank routes by specificity where it can (NestJS 12: routeResolutionStrategy: \"specificity\").",
+      "symbol": "GET /orders/export"
+    },
+    {
+      "service": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "reason": "route-shadowed-by-earlier",
+      "message": "GET /orders/latest (src/orders/orders.controller.ts:20) is never reached: GET /orders/:param (src/orders/orders.controller.ts:14), registered before it on OrdersController, answers every request for it, and the router tries routes in the order they are registered. 1 caller asking for it lands on GET /orders/:param: OrdersApi.latest.",
+      "hint": "Register the spelled-out route before the one with the parameter (move it above it), or make the router rank routes by specificity where it can (NestJS 12: routeResolutionStrategy: \"specificity\").",
+      "symbol": "GET /orders/latest"
+    }
+  ]
+}

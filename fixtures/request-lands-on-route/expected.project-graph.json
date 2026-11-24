@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T08:36:04.507Z",
+  "builtAt": "2026-11-24T19:07:52.922Z",
   "services": [
     {
       "name": "shop-api",
@@ -1052,7 +1052,7 @@
       "meta": {
         "via": "api-target",
         "targetService": "shop-api",
-        "note": "chosen over entry:shop-api:http:GET:/api/admin/:param/catalog/:param for being more specific; the framework decides by registration order"
+        "note": "chosen over entry:shop-api:http:GET:/api/admin/:param/catalog/:param, registered after it on AdminCatalogController"
       }
     },
     {

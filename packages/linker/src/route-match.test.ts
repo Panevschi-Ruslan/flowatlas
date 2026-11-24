@@ -552,3 +552,85 @@ describe('catchAllBehind', () => {
     expect(catchAllBehind('DELETE', `/api/plugins/x${HOLE}`, [route('GET', '/api/plugins/*')])).toBeUndefined();
   });
 });
+
+describe('routers that try routes in the order they are registered (P385)', () => {
+  /** A route as a reader writes it: its adapter, file and line, and the controller or receiver it is declared on. */
+  const declared = (method: string, path: string, line: number, meta: Record<string, unknown>, file = 'src/orders.controller.ts'): GraphNode => ({
+    ...route(method, path),
+    file,
+    line,
+    meta: { method, path, ...meta },
+  });
+  const nest = (method: string, path: string, line: number, extra: Record<string, unknown> = {}, file?: string) =>
+    declared(method, path, line, { adapter: 'nestjs-http', controller: 'OrdersController', ...extra }, file);
+
+  it('joins a request to a parameter route registered first in the same controller', () => {
+    const param = nest('GET', '/orders/:param', 10);
+    const latest = nest('GET', '/orders/latest', 20);
+    const found = matchRoute('GET', '/orders/latest', [latest, param]);
+    expect(isMatch(found) && found.entry.id).toBe(param.id);
+    expect(isMatch(found) && found.choice?.shadows).toEqual([latest.id]);
+  });
+
+  it('keeps the spelled-out route where it is registered first, and says so', () => {
+    const latest = nest('GET', '/orders/latest', 10);
+    const param = nest('GET', '/orders/:param', 20);
+    const found = matchRoute('GET', '/orders/latest', [param, latest]);
+    expect(isMatch(found) && found.entry.id).toBe(latest.id);
+    expect(isMatch(found) && found.choice?.note).toBe(`chosen over ${param.id}, registered after it on OrdersController`);
+  });
+
+  it('decides across controllers by the place each is registered at', () => {
+    const param = nest('GET', '/orders/:param', 30, { controllerOrder: 0 });
+    const exported = nest('GET', '/orders/export', 5, { controller: 'ExportsController', controllerOrder: 1 }, 'src/exports.controller.ts');
+    const found = matchRoute('GET', '/orders/export', [exported, param]);
+    expect(isMatch(found) && found.entry.id).toBe(param.id);
+  });
+
+  it('says the order was not read where two controllers carry no place, and keeps the spelled-out route', () => {
+    const param = nest('GET', '/orders/:param', 30);
+    const exported = nest('GET', '/orders/export', 5, { controller: 'ExportsController' }, 'src/exports.controller.ts');
+    const found = matchRoute('GET', '/orders/export', [exported, param]);
+    expect(isMatch(found) && found.entry.id).toBe(exported.id);
+    expect(isMatch(found) && found.choice?.orderUnread).toEqual([param.id]);
+  });
+
+  it('decides by line on one receiver of one file, and leaves two files unread', () => {
+    const express = (path: string, line: number, registration: string, file: string) =>
+      declared('GET', path, line, { adapter: 'express-routes', registration }, file);
+    const param = express('/items/:param', 13, 'itemsRouter.get', 'src/items.ts');
+    const featured = express('/items/featured', 16, 'itemsRouter.get', 'src/items.ts');
+    const newest = express('/items/new', 9, 'extrasRouter.get', 'src/extras.ts');
+    const first = matchRoute('GET', '/items/featured', [featured, param, newest]);
+    expect(isMatch(first) && first.entry.id).toBe(param.id);
+    const second = matchRoute('GET', '/items/new', [featured, param, newest]);
+    expect(isMatch(second) && second.entry.id).toBe(newest.id);
+    expect(isMatch(second) && second.choice?.orderUnread).toEqual([param.id]);
+  });
+
+  it('ranks by specificity on Fastify, in a NestJS service set to, and in readers that rank', () => {
+    const param = nest('GET', '/invoices/:param', 10, { routeOrder: 'specificity' });
+    const overdue = nest('GET', '/invoices/overdue', 20, { routeOrder: 'specificity' });
+    const found = matchRoute('GET', '/invoices/overdue', [param, overdue]);
+    expect(isMatch(found) && found.entry.id).toBe(overdue.id);
+    expect(isMatch(found) && found.choice?.note).toBe(`chosen over ${param.id} for being more specific, as the router ranks routes`);
+    const fastify = (path: string, line: number) => declared('GET', path, line, { adapter: 'fastify-routes', registration: 'app.get' });
+    const ranked = matchRoute('GET', '/invoices/overdue', [fastify('/invoices/:param', 1), fastify('/invoices/overdue', 2)]);
+    expect(isMatch(ranked) && ranked.entry.id).toBe('entry:orders:http:GET:/invoices/overdue');
+  });
+
+  it('never lets a route for every verb or a wildcard answer first by order', () => {
+    const all = declared('ALL', '/orders/:param', 1, { adapter: 'express-routes', registration: 'router.all' }, 'src/r.ts');
+    const wildcard = declared('GET', '/orders/*', 2, { adapter: 'express-routes', registration: 'router.get' }, 'src/r.ts');
+    const latest = declared('GET', '/orders/latest', 3, { adapter: 'express-routes', registration: 'router.get' }, 'src/r.ts');
+    const found = matchRoute('GET', '/orders/latest', [all, wildcard, latest]);
+    expect(isMatch(found) && found.entry.id).toBe(latest.id);
+  });
+
+  it('settles a tie of equal specificity by registration within one router', () => {
+    const first = nest('GET', '/a/:param/c', 1);
+    const second = nest('GET', '/a/b/:param', 2);
+    const found = matchRoute('GET', '/a/b/c', [second, first]);
+    expect(isMatch(found) && found.entry.id).toBe(first.id);
+  });
+});

@@ -191,6 +191,43 @@ only one of them moved.
   schema's new fields. The contracts reports of six fixtures move a receiver's
   optional field from `warning` to `info`; the `findings` snapshots gain
   `precision` and, on `multi-repo`, the calls to missing routes.
+- **A request joins the route that actually answers it, in routers that try
+  routes in order (P385).** Express, Koa's router, Hono and NestJS on its
+  default Express adapter answer with the first route registered that matches,
+  so `GET /orders/:id` registered above `GET /orders/latest` takes every
+  request for `/orders/latest`; the linker joined such a request to the
+  literal route by specificity, and said on the edge that "the framework
+  decides by registration order". It now decides by that order where it is
+  read: by line within one NestJS controller or one Express, Koa or Hono
+  router in one file, and across NestJS controllers by the place each is
+  registered at, read from the module tree as the framework scans it (the root
+  module's controllers, then each import's, depth first in the order written).
+  NestJS on `FastifyAdapter`, or with `routeResolutionStrategy: 'specificity'`
+  (NestJS 12), read from the `NestFactory.create` call, ranks by specificity as
+  Fastify and the file and front-end routers do. The edge's `note` says how
+  its route was chosen and `shadows` names the routes it answers before; a new
+  finding, `route-shadowed-by-earlier`, names the route that never runs, the
+  one registered before it, both lines and the callers that asked for it, and
+  `dead` says the route and its handler are dead. Two routers whose order is
+  not read (two files or receivers mounted under one prefix, an application
+  whose adapter could not be read) keep the spelled-out route as a
+  `heuristic` join with `orderUnread` and an info `route-order-unread` note. A
+  route for every verb, under a wildcard, or with a parameter written with a
+  pattern is never put first by its order. New fixture `route-order` (a NestJS
+  service on Express with a shadowed route in one controller and one in a
+  later controller, a NestJS service on Fastify, an Express service with a
+  shadowed route and two routers in two files, and an Angular client), with
+  verbose and compact snapshots and five answer-budget questions with
+  hand-written answers, each one call: `who_calls` on the shadowed handler 567
+  characters, its reach `dead` (925, `alive`, the client's request as its
+  caller), `who_calls` on the `:id` handler listing the requests for `latest`
+  and `export` 1,352 (816, neither), `dead` on the two routes and the handler
+  1,148, all `dead` (996, all `alive`), `find_symbol` on the export client
+  naming the `:id` route and handler 476 (491, the export route), and
+  `findings` listing the three shadowed routes 2,607 (22, none). Three
+  snapshots' edge notes move from the old sentence to the new one
+  (`angular-interceptor-host`, `framework-routes-in-place-writes`,
+  `request-lands-on-route`).
 - **who_calls answers stay small and finish, also on several symbols
   (P379).** `depth` is how far the tree of callers is drawn, never a cut:
   every way in past it is listed under `waysIn` whatever it is, one symbol or

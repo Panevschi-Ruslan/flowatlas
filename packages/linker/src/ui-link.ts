@@ -14,6 +14,7 @@ import {
   isMatch,
   matchRoute,
   verbsAnswering,
+  type RouteChoice,
   type RouteResult,
 } from './route-match.js';
 
@@ -77,6 +78,8 @@ interface Details {
     entry: GraphNode;
     targetService: string;
     runnersUp: readonly string[];
+    /** How the route was chosen among others answering too (P385). */
+    choice?: RouteChoice;
     /** The settings whose part of the route's address was taken as empty (R144). */
     mountAssumed?: readonly string[];
     /** The value the base address was taken from, where a setting's value decided it (P77). */
@@ -795,6 +798,7 @@ const within = (ask: Ask, targetService: string, via: UiVia, among?: readonly Gr
       entry: found.entry,
       targetService,
       runnersUp: found.runnersUp ?? [],
+      ...(found.choice === undefined ? {} : { choice: found.choice }),
       ...(found.mountAssumed === undefined ? {} : { mountAssumed: found.mountAssumed }),
     };
   }

@@ -2134,6 +2134,148 @@
         ]
       },
       "note": "P384: each defect gated on its evidence; the call to the legacy service, whose items controller was not read, and the type a publish of unread type may send are held back."
+    },
+    {
+      "id": "who_calls.shadowed-handler",
+      "ask": "who calls OrdersController.latest, declared below a parameter route of its controller",
+      "fixture": "route-order",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "OrdersController.latest"
+      },
+      "lists": [
+        "target",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "waysIn": [
+            "entry:shop-api:http:GET:/orders/latest"
+          ]
+        },
+        "rowsSay": {
+          "target": {
+            "shop-api#src/orders/orders.controller.ts:OrdersController.latest": {
+              "reach": "dead"
+            }
+          },
+          "waysIn": {
+            "entry:shop-api:http:GET:/orders/latest": {
+              "reach": "dead"
+            }
+          }
+        },
+        "exact": [
+          "waysIn"
+        ]
+      },
+      "note": "P385: GET /orders/:orderId is declared above GET /orders/latest and answers it first; the client's request was joined to latest, which never runs."
+    },
+    {
+      "id": "who_calls.shadowing-handler",
+      "ask": "which requests land on OrdersController.findOne",
+      "fixture": "route-order",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "OrdersController.findOne"
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "callers": [
+            "entry:shop-api:http:GET:/orders/:param",
+            "ui_api_call:shop-web#src/app/orders-api.service.ts:24:12",
+            "ui_api_call:shop-web#src/app/orders-api.service.ts:28:12",
+            "ui_api_call:shop-web#src/app/orders-api.service.ts:33:12"
+          ]
+        }
+      },
+      "note": "P385: the requests for /orders/latest and /orders/export land on :orderId, registered first; they were joined to the routes that never run."
+    },
+    {
+      "id": "dead.shadowed",
+      "ask": "are the latest and export routes and the latest handler dead",
+      "fixture": "route-order",
+      "tool": "dead",
+      "args": {
+        "ids": [
+          "entry:shop-api:http:GET:/orders/latest",
+          "entry:shop-api:http:GET:/orders/export",
+          "shop-api#src/orders/orders.controller.ts:OrdersController.latest"
+        ]
+      },
+      "lists": [
+        "answers"
+      ],
+      "expect": {
+        "rowsSay": {
+          "answers": {
+            "entry:shop-api:http:GET:/orders/latest": {
+              "verdict": "dead"
+            },
+            "entry:shop-api:http:GET:/orders/export": {
+              "verdict": "dead"
+            },
+            "shop-api#src/orders/orders.controller.ts:OrdersController.latest": {
+              "verdict": "dead"
+            }
+          }
+        }
+      },
+      "note": "P385: each was alive, called by a request a route registered before it answers."
+    },
+    {
+      "id": "find_symbol.request-lands-shadowed",
+      "ask": "where does OrdersApi.exportAll's request land",
+      "fixture": "route-order",
+      "tool": "find_symbol",
+      "args": {
+        "query": "OrdersApi.exportAll"
+      },
+      "lists": [
+        "matches"
+      ],
+      "expect": {
+        "complete": true,
+        "rowsSay": {
+          "matches": {
+            "shop-web#src/app/orders-api.service.ts:OrdersApi.exportAll": {
+              "requests": [
+                {
+                  "route": "entry:shop-api:http:GET:/orders/:param",
+                  "by": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "note": "P385: OrdersController is registered before OrderExportsController in OrdersModule, so :orderId answers /orders/export."
+    },
+    {
+      "id": "findings.route-order",
+      "ask": "what looks broken between the services",
+      "fixture": "route-order",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "lists": {
+          "route-shadowed-by-earlier": [
+            "GET /items/featured",
+            "GET /orders/export",
+            "GET /orders/latest"
+          ]
+        }
+      },
+      "note": "P385: three routes a parameter route registered first answers; none was a finding."
     }
   ],
   "fixed": {
@@ -2458,6 +2600,41 @@
       "tokens": 103,
       "rows": 1,
       "complete": true,
+      "calls": 1
+    },
+    "who_calls.shadowed-handler": {
+      "chars": 567,
+      "tokens": 142,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.shadowing-handler": {
+      "chars": 1352,
+      "tokens": 338,
+      "rows": 6,
+      "complete": true,
+      "calls": 1
+    },
+    "dead.shadowed": {
+      "chars": 1148,
+      "tokens": 287,
+      "rows": 3,
+      "complete": null,
+      "calls": 1
+    },
+    "find_symbol.request-lands-shadowed": {
+      "chars": 476,
+      "tokens": 119,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "findings.route-order": {
+      "chars": 2607,
+      "tokens": 652,
+      "rows": 5,
+      "complete": null,
       "calls": 1
     },
     "findings.multi-repo": {

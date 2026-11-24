@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:35:15.254Z",
+  "builtAt": "2026-11-24T19:07:40.475Z",
   "services": [
     {
       "name": "cms",
@@ -1180,7 +1180,7 @@
         "via": "host",
         "targetService": "cms",
         "listensAt": "config/env/production/server.ts:2 (PORT)",
-        "note": "chosen over entry:cms:http:GET:/api/products/:param for being more specific; the framework decides by registration order"
+        "note": "chosen over entry:cms:http:GET:/api/products/:param for being more specific, as the router ranks routes"
       }
     },
     {

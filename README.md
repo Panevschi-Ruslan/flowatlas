@@ -722,7 +722,8 @@ recorded with a reason and a location rather than guessed at or dropped:
 |---|---|
 | `target-route-not-found` | the service is known, the route is not: real drift |
 | `unknown-base-url-env` | a settings key no service claims |
-| `ambiguous-route` | two routes answer equally; registration order decides |
+| `ambiguous-route` | two routes answer equally and no order the reader could read decides |
+| `route-shadowed-by-earlier` | a parameter route registered first in the same router answers every request for this one, so it never runs |
 | `ambiguous-route-application` | two applications in one service serve it; deployment decides |
 | `ambiguous-route-target` | the request could go to more than one service, and more than one serves it |
 | `dynamic-http-url` | the address is built at run time and cannot be read |

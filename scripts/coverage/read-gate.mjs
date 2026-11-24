@@ -141,6 +141,9 @@ const GATED = {
       'route-file-not-served',
       'route-module-not-found',
       'route-claimed-twice',
+      // A route an earlier parameter route answers first, and two whose order was not read (P385).
+      'route-shadowed-by-earlier',
+      'route-order-unread',
       'route-unguarded',
       'route-guard-skipped',
       'route-checked-in-body',

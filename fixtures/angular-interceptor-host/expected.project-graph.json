@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:32:09.306Z",
+  "builtAt": "2026-11-24T19:07:26.434Z",
   "services": [
     {
       "name": "api",
@@ -844,7 +844,7 @@
       "meta": {
         "via": "unique-route",
         "targetService": "api",
-        "note": "chosen over entry:api:http:GET:/api/products/:param for being more specific; the framework decides by registration order"
+        "note": "chosen over entry:api:http:GET:/api/products/:param, registered after it on catalogRouter"
       }
     },
     {

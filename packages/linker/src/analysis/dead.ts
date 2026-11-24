@@ -602,6 +602,25 @@ const routeVerdict = (
 /** One route nothing calls, as a row: its class, why, and its verdict with the evidence. */
 const routeRow = (context: RouteContext, node: GraphNode): DeadEntry => {
   const { db, options } = context;
+  // Never reached whoever asks for it, inside the project or out (P385): a
+  // route registered before it in the same router answers every request for
+  // it, so no public caller or near miss makes it less dead.
+  const shadowedBy = node.meta?.['shadowedBy'];
+  if (typeof shadowedBy === 'string') {
+    const first = splitKey(keyOf(shadowedBy));
+    return {
+      id: node.id,
+      service: node.repo,
+      kind: node.kind ?? 'http',
+      key: keyOf(node.id),
+      ...located(node),
+      reason: `never reached: ${first.method} ${first.path}, registered before it in the same router, answers every request for it`,
+      class: 'actionable',
+      why: `registered after ${shadowedBy}`,
+      confidence: 'dead',
+      verdict: 'dead',
+    };
+  }
   const handler = db.edgesFrom(node.id, ['handles']).map((edge) => db.node(edge.to)?.label).find((label) => label !== undefined);
   const found = classifyRoute(routeFactsOf(node, handler), options);
   const couldHit = context.nearMissesOf(node.id);
@@ -996,6 +1015,17 @@ export const deadProviders = (db: GraphDb, options: DeadOptions = {}): DeadProvi
  */
 const methodAnswer = (db: GraphDb, context: ProviderContext, method: GraphNode): Answered => {
   const reaching = db.edgesTo(method.id, METHOD_CALLERS);
+  // Handed work only by routes a route registered before each answers in
+  // their place (P385): it never runs.
+  const shadowed = reaching.filter((edge) => typeof db.node(edge.from)?.meta?.['shadowedBy'] === 'string');
+  if (reaching.length > 0 && shadowed.length === reaching.length) {
+    const routes = shadowed.map((edge) => db.node(edge.from)?.label ?? edge.from).sort(byId);
+    return {
+      verdict: 'dead',
+      reason: `handles only ${routes.join(', ')}, which a route registered before ${routes.length === 1 ? 'it' : 'each'} in the same router answers in ${routes.length === 1 ? 'its' : 'their'} place`,
+      evidence: aliveBy(reaching),
+    };
+  }
   if (reaching.length > 0) return { verdict: 'alive', reason: 'called', evidence: aliveBy(reaching) };
   const owner = ownerOf(method.id);
   const holder = owner === undefined ? undefined : db.node(owner);

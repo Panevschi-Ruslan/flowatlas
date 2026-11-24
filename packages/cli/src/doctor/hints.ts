@@ -416,6 +416,10 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The document is not valid GraphQL, so nothing it asks for is joined; the server would refuse it too.',
   'graphql-fragment-not-read': () =>
     'The operation spreads a fragment that could not be read. Its root fields are joined; the fragment\'s fields are not compared with the schema.',
+  'route-shadowed-by-earlier': () =>
+    'A route with a parameter is registered before this one in the same router and answers every request for it, and the router (Express, Koa\'s router, Hono, NestJS on its default adapter) tries routes in the order they are registered, so this handler never runs and the requests asking for it land on the other. Register the spelled-out route first, or make the router rank routes by specificity where it can (NestJS 12: routeResolutionStrategy: "specificity").',
+  'route-order-unread': () =>
+    'Two routes of a router that tries routes in the order they are registered both answer this address, and they are in two files, on two routers or in two controllers whose order was not read, so which one answers is not known and requests are joined to the spelled-out one as a guess. Informational; registering the spelled-out route first, in the same router, settles it.',
   'route-claimed-twice': () =>
     'Two route files resolve to one verb and address, so only the first is drawn. The framework refuses that or serves one of them; remove one, or move it to the address it was meant for.',
   'route-file-not-served': () =>
@@ -957,6 +961,7 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'marker-reason-missing': ['public marker with no reason', 'public markers with no reason'],
   'route-shadowed': ['route a worker answers first', 'routes a worker answers first'],
   'route-claimed-twice': ['route claimed twice', 'routes claimed twice'],
+  'route-shadowed-by-earlier': ['route an earlier route always answers first', 'routes an earlier route always answers first'],
   'graphql-field-resolved-twice': ['GraphQL field resolved twice', 'GraphQL fields resolved twice'],
   'grpc-method-unimplemented': ['gRPC method its server does not implement', 'gRPC methods their servers do not implement'],
   'grpc-method-undeclared': ['gRPC member its contract does not declare', 'gRPC members their contracts do not declare'],

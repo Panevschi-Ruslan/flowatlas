@@ -60,7 +60,7 @@ import { matchTakenPublishes } from './takes-link.js';
 import { joinReferences } from './reference-link.js';
 import { joinStreamRelays } from './stream-relay-link.js';
 import { auditRoutes } from './route-audit.js';
-import { answeredOnlyByWildcard, couldReach } from './route-match.js';
+import { answeredOnlyByWildcard, couldReach, type RouteChoice } from './route-match.js';
 import { cmp, edgeKey } from './order.js';
 import { joinGraphqlFields } from './graphql-link.js';
 import { routeGateways, type RouteAnswer } from './graphql-federation.js';
@@ -483,6 +483,24 @@ const boundedByMount = (confidence: Confidence, mountAssumed: readonly string[] 
     ? confidence
     : 'heuristic';
 
+/**
+ * A join to a route chosen over another whose order against it nobody read
+ * is a guess (P385): the router tries routes in the order they are
+ * registered, and the other may come first.
+ */
+const boundedByOrder = (confidence: Confidence, choice: RouteChoice | undefined): Confidence =>
+  choice?.orderUnread === undefined || CONFIDENCE_RANK[confidence] <= CONFIDENCE_RANK.heuristic ? confidence : 'heuristic';
+
+/** What an edge says of how its route was chosen among others answering too (P385). */
+const choiceMeta = (choice: RouteChoice | undefined): Record<string, unknown> =>
+  choice === undefined
+    ? {}
+    : {
+        note: choice.note,
+        ...(choice.shadows === undefined ? {} : { shadows: choice.shadows }),
+        ...(choice.orderUnread === undefined ? {} : { orderUnread: choice.orderUnread }),
+      };
+
 /** What an edge joined through a server's proxy carries: the rule, and the path it was forwarded as (P257). */
 const proxyMeta = (outcome: { readonly proxied?: Parameters<typeof proxiedMeta>[0] }, call: GraphNode): Record<string, unknown> =>
   proxiedMeta(outcome.proxied, String(call.meta?.['path'] ?? ''));
@@ -555,7 +573,7 @@ const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked
     from: call.id,
     to: outcome.entry.id,
     type: 'http_calls',
-    confidence: boundedByMount(boundedByRoute(joinedAs, outcome.entry), outcome.mountAssumed),
+    confidence: boundedByOrder(boundedByMount(boundedByRoute(joinedAs, outcome.entry), outcome.mountAssumed), outcome.choice),
     ...(call.file === undefined ? {} : { file: call.file }),
     ...(call.line === undefined ? {} : { line: call.line }),
     ...(typeof params === 'string' ? { params: [params] } : {}),
@@ -569,11 +587,7 @@ const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked
       ...(outcome.branches === undefined ? {} : { chosenAmong: outcome.branches }),
       ...(baseUrl === undefined ? {} : takenMeta(baseUrl)),
       ...mountMeta(outcome.mountAssumed),
-      ...(outcome.runnersUp.length === 0
-        ? {}
-        : {
-            note: `chosen over ${outcome.runnersUp.join(', ')} for being more specific; the framework decides by registration order`,
-          }),
+      ...choiceMeta(outcome.choice),
     },
   };
 };
@@ -612,7 +626,7 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
     confidence:
       outcome.twin !== undefined
         ? outcome.twin.confidence
-        : boundedByMount(boundedByRoute(asserted ? 'marker' : guessed ? 'heuristic' : 'static', outcome.entry), outcome.mountAssumed),
+        : boundedByOrder(boundedByMount(boundedByRoute(asserted ? 'marker' : guessed ? 'heuristic' : 'static', outcome.entry), outcome.mountAssumed), outcome.choice),
     ...(call.file === undefined ? {} : { file: call.file }),
     ...(call.line === undefined ? {} : { line: call.line }),
     ...(typeof params === 'string' ? { params: [params] } : {}),
@@ -625,11 +639,7 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
       ...listensMeta(outcome.listening),
       ...proxyMeta(outcome, call),
       ...mountMeta(outcome.mountAssumed),
-      ...(outcome.runnersUp.length === 0
-        ? {}
-        : {
-            note: `chosen over ${outcome.runnersUp.join(', ')} for being more specific; the framework decides by registration order`,
-          }),
+      ...choiceMeta(outcome.choice),
     },
   };
 };

@@ -359,3 +359,46 @@ describe('a check thrown through a helper, and a route public by marker only (P9
     expect(auditRoutes(nodes, edges, OPTIONS).map((row) => [row.reason, row.level])).toEqual([['route-unguarded', undefined]]);
   });
 });
+
+describe('a route a router trying routes in order never reaches (P385)', () => {
+  const route = (path: string, line: number, extra: Record<string, unknown> = {}, file = 'src/orders.controller.ts'): GraphNode =>
+    node(`entry:api:http:GET:${path}`, 'entry', {
+      kind: 'http',
+      file,
+      line,
+      meta: { method: 'GET', path, adapter: 'nestjs-http', controller: 'OrdersController', ...extra },
+    });
+
+  const audit = (routes: GraphNode[], edges: GraphEdge[] = [], extra: GraphNode[] = []) =>
+    auditRoutes(new Map([...routes, ...extra].map((item) => [item.id, item])), edges, OPTIONS);
+
+  it('finds a spelled-out route registered after a parameter route, naming both lines and the callers it lost', () => {
+    const param = route('/orders/:param', 14);
+    const latest = route('/orders/latest', 20);
+    const caller = node('web#OrdersApi.latest', 'method', { label: 'OrdersApi.latest', repo: 'web' });
+    const request = node('ui_api_call:web#src/orders-api.ts:24:12', 'ui_api_call', { repo: 'web' });
+    const rows = audit(
+      [param, latest],
+      [edge(caller.id, 'calls', request.id), edge(request.id, 'hits', param.id, { meta: { shadows: [latest.id] } })],
+      [caller, request],
+    );
+    expect(rows.map((row) => row.reason)).toEqual(['route-shadowed-by-earlier']);
+    expect(rows[0]?.line).toBe(20);
+    expect(rows[0]?.message).toContain('GET /orders/:param (src/orders.controller.ts:14), registered before it on OrdersController');
+    expect(rows[0]?.message).toContain('1 caller asking for it lands on GET /orders/:param: OrdersApi.latest.');
+    expect(latest.meta?.['shadowedBy']).toBe(param.id);
+  });
+
+  it('says nothing where the spelled-out route comes first, or the router ranks by specificity', () => {
+    expect(audit([route('/orders/latest', 10), route('/orders/:param', 20)])).toEqual([]);
+    expect(audit([route('/orders/:param', 10, { routeOrder: 'specificity' }), route('/orders/latest', 20, { routeOrder: 'specificity' })])).toEqual([]);
+  });
+
+  it('notes two routers whose order was not read, at info', () => {
+    const rows = audit([
+      route('/orders/:param', 10),
+      route('/orders/export', 5, { controller: 'ExportsController' }, 'src/exports.controller.ts'),
+    ]);
+    expect(rows.map((row) => [row.reason, row.level])).toEqual([['route-order-unread', 'info']]);
+  });
+});

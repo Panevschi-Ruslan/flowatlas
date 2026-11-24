@@ -1,0 +1,77 @@
+{
+  "target": {
+    "id": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne",
+    "line": 14,
+    "reach": "alive",
+    "from": "GET /orders/:param"
+  },
+  "callers": [
+    {
+      "id": "entry:shop-api:http:GET:/orders/:param",
+      "loc": "src/orders/orders.controller.ts:14",
+      "reach": "alive",
+      "edge": {
+        "type": "handles",
+        "params": [
+          "string"
+        ],
+        "returns": "type:shop-api#Order"
+      },
+      "children": [
+        {
+          "id": "ui_api_call:shop-web#src/app/orders-api.service.ts:24:12",
+          "label": "GET /orders/latest",
+          "kind": "http",
+          "reach": "alive",
+          "from": "screen /dashboard",
+          "edge": {
+            "type": "hits",
+            "returns": "type:shop-web#Order"
+          }
+        },
+        {
+          "id": "ui_api_call:shop-web#src/app/orders-api.service.ts:28:12",
+          "label": "GET /orders/:param",
+          "kind": "http",
+          "reach": "unreached",
+          "from": "none",
+          "edge": {
+            "type": "hits",
+            "returns": "type:shop-web#Order"
+          }
+        },
+        {
+          "id": "ui_api_call:shop-web#src/app/orders-api.service.ts:33:12",
+          "label": "GET /orders/export",
+          "kind": "http",
+          "reach": "alive",
+          "from": "screen /dashboard",
+          "edge": {
+            "type": "hits",
+            "returns": "string"
+          }
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:shop-api:http:GET:/orders/:param",
+      "line": 14,
+      "reach": "alive",
+      "hops": 1
+    },
+    {
+      "id": "entry:shop-web:screen:/dashboard",
+      "reach": "outside",
+      "hops": 6,
+      "by": "shop-web#src/app/dashboard.component.ts:DashboardComponent"
+    }
+  ],
+  "unreached": 1,
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:shop-api:http:GET:/orders/:param\"})",
+    "describe_for_prompt({id: \"entry:shop-api:http:GET:/orders/:param\"})"
+  ]
+}

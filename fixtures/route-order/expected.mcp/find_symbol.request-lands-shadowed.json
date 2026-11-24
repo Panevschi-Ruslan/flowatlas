@@ -1,0 +1,25 @@
+{
+  "matches": [
+    {
+      "id": "shop-web#src/app/orders-api.service.ts:OrdersApi.exportAll",
+      "type": "method",
+      "label": "OrdersApi.exportAll",
+      "loc": "src/app/orders-api.service.ts:32",
+      "service": "shop-web",
+      "reach": "alive",
+      "from": "screen /dashboard",
+      "requests": [
+        {
+          "route": "entry:shop-api:http:GET:/orders/:param",
+          "by": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne"
+        }
+      ]
+    }
+  ],
+  "total": 1,
+  "complete": true,
+  "next": [
+    "impact({symbol: \"shop-web#src/app/orders-api.service.ts:OrdersApi.exportAll\"})",
+    "get_source({symbol: \"shop-web#src/app/orders-api.service.ts:OrdersApi.exportAll\"})"
+  ]
+}

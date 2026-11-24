@@ -4,6 +4,10 @@ import {
   failsWithAny,
   failuresOf,
   matchesRoutePattern,
+  registeredFirst,
+  routeOrderOf,
+  routerOf,
+  shadowsByPath,
   type Failure,
   type GraphEdge,
   type GraphNode,
@@ -94,10 +98,18 @@ export const auditRoutes = (
   options: RouteAuditOptions,
 ): Unresolved[] => {
   const out = new Map<string, GraphEdge[]>();
+  /** The requests joined into each route, and the code making each request, by the id of what they reach (P385). */
+  const into = new Map<string, GraphEdge[]>();
+  const madeBy = new Map<string, string>();
   for (const edge of edges) {
     const list = out.get(edge.from);
     if (list === undefined) out.set(edge.from, [edge]);
     else list.push(edge);
+    if (edge.type === 'calls' && !madeBy.has(edge.to)) madeBy.set(edge.to, edge.from);
+    if (edge.type !== 'http_calls' && edge.type !== 'hits') continue;
+    const joined = into.get(edge.to);
+    if (joined === undefined) into.set(edge.to, [edge]);
+    else joined.push(edge);
   }
   const from = (id: string, type: GraphEdge['type']): GraphEdge[] =>
     (out.get(id) ?? []).filter((edge) => edge.type === type);
@@ -373,6 +385,111 @@ export const auditRoutes = (
         : 'Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path "<METHOD> /prefix/*" --note "<why>".',
       symbol: `${method} ${path}`,
     });
+  }
+  return [...rows, ...auditRouteOrder(entries, nodes, into, madeBy)];
+};
+
+/**
+ * How the first of two routes comes first: before it in one router, or in a
+ * router registered before the other's.
+ */
+const registeredSaid = (first: GraphNode, later: GraphNode): string => {
+  const ours = routerOf(first);
+  const theirs = routerOf(later);
+  return ours === theirs ? `registered before it on ${ours}` : `registered before it (${ours} is registered before ${theirs})`;
+};
+
+/** `src/orders/orders.controller.ts:18`. */
+const placeOf = (node: GraphNode): string => `${node.file ?? '?'}${node.line === undefined ? '' : `:${node.line}`}`;
+
+/** `GET /orders/:param`. */
+const routeSaid = (node: GraphNode): string => `${text(node.meta?.['method'])} ${text(node.meta?.['path'])}`;
+
+/**
+ * Routes a router trying routes in the order they are registered never
+ * reaches (P385), and routes it may not reach.
+ *
+ * Express, Koa's router, Hono and NestJS on its default adapter answer with
+ * the first route registered that matches, so `GET /orders/:id` registered
+ * above `GET /orders/latest` in one router answers every request for
+ * `/orders/latest` and the second handler is dead code that still compiles
+ * and still has callers. That is a finding, with both lines and the requests
+ * asking for the spelled-out route, which the joins already land on the
+ * parameter route. Where the two are in routers whose order against each
+ * other was not read - two files, two receivers, two controllers whose place
+ * in the module tree was not read - which of them answers is not known, and a
+ * note says so: a guess is not a finding.
+ *
+ * Read strictly (`shadowsByPath`): one verb, not `ALL`, no wildcard, and the
+ * first route takes, with a plain parameter, every value the second spells
+ * out. A router that ranks routes by specificity is never asked.
+ */
+const auditRouteOrder = (
+  entries: readonly GraphNode[],
+  nodes: ReadonlyMap<string, GraphNode>,
+  into: ReadonlyMap<string, GraphEdge[]>,
+  madeBy: ReadonlyMap<string, string>,
+): Unresolved[] => {
+  /** The code making a request, by its name, or the request where nothing is read making it. */
+  const callerOf = (request: string): string => {
+    const maker = madeBy.get(request);
+    return nodes.get(maker ?? request)?.label ?? request;
+  };
+  const groups = new Map<string, GraphNode[]>();
+  for (const entry of entries) {
+    if (routeOrderOf(entry) === 'specificity') continue;
+    const segments = text(entry.meta?.['path']).split('/').length;
+    const key = `${entry.repo} ${text(entry.meta?.['application'])} ${text(entry.meta?.['method']).toUpperCase()} ${segments}`;
+    const group = groups.get(key);
+    if (group === undefined) groups.set(key, [entry]);
+    else group.push(entry);
+  }
+  const rows: Unresolved[] = [];
+  for (const group of groups.values()) {
+    if (group.length < 2) continue;
+    for (const later of group) {
+      const shadowing = group.filter((earlier) => earlier !== later && shadowsByPath(earlier, later));
+      const first = shadowing
+        .filter((earlier) => registeredFirst(earlier, later) === 'a')
+        .sort((a, b) => (a.line ?? 0) - (b.line ?? 0) || cmp(a.id, b.id))[0];
+      if (first !== undefined) {
+        const asking = (into.get(first.id) ?? []).filter((edge) => Array.isArray(edge.meta?.['shadows']) && (edge.meta['shadows'] as unknown[]).includes(later.id));
+        const callers = [...new Set(asking.map((edge) => callerOf(edge.from)))].sort(cmp);
+        const named = callers.slice(0, 3).join(', ');
+        const more = callers.length > 3 ? ` and ${callers.length - 3} more` : '';
+        later.meta = { ...later.meta, shadowedBy: first.id };
+        rows.push({
+          service: later.repo,
+          file: later.file ?? '',
+          line: later.line ?? 0,
+          reason: 'route-shadowed-by-earlier',
+          message:
+            `${routeSaid(later)} (${placeOf(later)}) is never reached: ${routeSaid(first)} (${placeOf(first)}), ${registeredSaid(first, later)}, ` +
+            `answers every request for it, and the router tries routes in the order they are registered.` +
+            (callers.length === 0
+              ? ''
+              : ` ${callers.length} caller${callers.length === 1 ? ' asking' : 's asking'} for it land${callers.length === 1 ? 's' : ''} on ${routeSaid(first)}: ${named}${more}.`),
+          hint: 'Register the spelled-out route before the one with the parameter (move it above it), or make the router rank routes by specificity where it can (NestJS 12: routeResolutionStrategy: "specificity").',
+          symbol: routeSaid(later),
+        });
+        continue;
+      }
+      const unread = shadowing.filter((earlier) => registeredFirst(earlier, later) === 'unread').sort((a, b) => cmp(a.id, b.id));
+      if (unread.length === 0) continue;
+      rows.push({
+        service: later.repo,
+        file: later.file ?? '',
+        line: later.line ?? 0,
+        reason: 'route-order-unread',
+        level: 'info' as const,
+        message:
+          `${routeSaid(later)} (${placeOf(later)}, on ${routerOf(later)}) is answered by ` +
+          `${unread.map((earlier) => `${routeSaid(earlier)} (${placeOf(earlier)}, on ${routerOf(earlier)})`).join(' or ')} instead wherever that is registered first; ` +
+          'the router tries routes in the order they are registered, and the order between these was not read, so requests for it are joined to it as a guess.',
+        hint: 'Check which is registered first. Registering the spelled-out route first, in the same router, settles it.',
+        symbol: routeSaid(later),
+      });
+    }
   }
   return rows;
 };

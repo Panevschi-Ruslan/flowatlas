@@ -1,0 +1,15 @@
+{
+  "services": [
+    { "name": "shop-api", "repo": "./shop-backend", "type": "nestjs" },
+    { "name": "billing-api", "repo": "./billing-backend", "type": "nestjs" },
+    { "name": "catalog-api", "repo": "./catalog-backend", "type": "express" },
+    {
+      "name": "shop-web",
+      "repo": "./shop-frontend",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl", "billingUrl", "catalogUrl"],
+      "apiTarget": { "apiUrl": "shop-api", "billingUrl": "billing-api", "catalogUrl": "catalog-api" }
+    }
+  ],
+  "output": ".flowatlas"
+}

@@ -480,6 +480,8 @@ export const PAGE_WORDS = Object.freeze({
     'route-base-path-unread': 'API base path not read',
     'route-checked-in-body': 'route checks access in its body',
     'route-claimed-twice': 'two files claim one route',
+    'route-shadowed-by-earlier': 'route an earlier route answers first',
+    'route-order-unread': 'route order not read',
     'graphql-field-resolved-twice': 'two resolvers for one field',
     'graphql-federation-not-read': 'federated graph not read',
     'graphql-subgraph-not-joined': 'subgraph address reaches no service',

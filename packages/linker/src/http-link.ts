@@ -6,6 +6,7 @@ import {
   isMatch,
   matchRoute,
   verbsAnswering,
+  type RouteChoice,
   type RouteResult,
 } from './route-match.js';
 import { chooseByApiName } from './api-choice.js';
@@ -105,6 +106,8 @@ interface Details {
     via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue' | 'serviceBinding' | 'host' | 'proxy' | 'ingress' | 'ownOrigin' | 'inProcess' | 'graphqlPath' | 'externalValuePath' | 'servedAt';
     entry: GraphNode;
     runnersUp: readonly string[];
+    /** How the route was chosen among others answering too (P385). */
+    choice?: RouteChoice;
     /** The settings whose part of the route's address was taken as empty (R144). */
     mountAssumed?: readonly string[];
     /** The host was found only in the services' own setting files, not in the configuration (P244, as P239). */
@@ -694,7 +697,7 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
 
   const single = index.markerOf(call.id);
   const markers = index.markersOf?.(call.id) ?? (single === undefined ? [] : [single]);
-  const reached: Array<{ entry: GraphNode; runnersUp: readonly string[]; mountAssumed?: readonly string[]; guessed?: true }> = [];
+  const reached: Array<{ entry: GraphNode; runnersUp: readonly string[]; choice?: RouteChoice; mountAssumed?: readonly string[]; guessed?: true }> = [];
   /** A match, with the row a join across a mount taken as empty carries. */
   const joined = (asked: string, askedPath: string, found: Extract<RouteResult, { entry: GraphNode }>) => {
     if (found.mountAssumed !== undefined) {
@@ -703,6 +706,7 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     return {
       entry: found.entry,
       runnersUp: found.runnersUp ?? [],
+      ...(found.choice === undefined ? {} : { choice: found.choice }),
       ...(found.mountAssumed === undefined ? {} : { mountAssumed: found.mountAssumed }),
     };
   };
@@ -746,7 +750,7 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     const { guessed, ...linked } = first;
     return {
       outcome: { kind: 'linked', via: guessed === true ? 'apiName' : 'marker', ...linked },
-      ...(rest.length === 0 ? {} : { alsoLinked: rest.map(({ runnersUp: _, guessed: __, ...item }) => item) }),
+      ...(rest.length === 0 ? {} : { alsoLinked: rest.map(({ runnersUp: _, guessed: __, choice: ___, ...item }) => item) }),
       notes,
     };
   }

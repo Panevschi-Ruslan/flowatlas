@@ -469,6 +469,23 @@ const SENTENCE_CASES = [
 ];
 /** The same, compact: what an agent is handed. */
 const SENTENCE_COMPACT_CASES = SENTENCE_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
+ * Route order (P385): a spelled-out route registered after a parameter route
+ * of the same controller, one of a controller registered later, one on an
+ * Express router, the two routers whose order is not read, and a service on
+ * Fastify, where the spelled-out route answers.
+ */
+const ROUTE_ORDER_CASES = [
+  ['who_calls.shadowed-handler', 'who_calls', { symbol: 'OrdersController.latest' }],
+  ['who_calls.shadowing-handler', 'who_calls', { symbol: 'OrdersController.findOne' }],
+  ['dead.shadowed-route', 'dead', { id: 'entry:shop-api:http:GET:/orders/latest' }],
+  ['dead.shadowed-handler', 'dead', { id: 'OrdersController.latest' }],
+  ['find_symbol.request-lands-shadowed', 'find_symbol', { query: 'OrdersApi.exportAll' }],
+  ['who_calls.order-unread', 'who_calls', { symbol: 'listNewest' }],
+  ['who_calls.fastify', 'who_calls', { symbol: 'InvoicesController.overdue' }],
+  ['findings', 'findings', {}],
+];
+/** The same, compact: what an agent is handed. */
+const ROUTE_ORDER_COMPACT_CASES = ROUTE_ORDER_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
 
 /** The same impact and a flow through the rendered child, compact (P370). */
 const RENDERED_REACH_COMPACT_CASES = [
@@ -1031,6 +1048,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'search-takes-a-sentence'),
     outDir: join(root, 'fixtures', 'search-takes-a-sentence', 'expected.mcp.compact'),
     cases: SENTENCE_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'route-order'),
+    outDir: join(root, 'fixtures', 'route-order', 'expected.mcp'),
+    cases: ROUTE_ORDER_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'route-order'),
+    outDir: join(root, 'fixtures', 'route-order', 'expected.mcp.compact'),
+    cases: ROUTE_ORDER_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

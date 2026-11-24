@@ -83,6 +83,15 @@ export {
 } from './ids.js';
 export type { DeployedEntryKind, HttpMethod, ReachedAs, SiteLeafType } from './ids.js';
 export { whenFree } from './when-free.js';
+export {
+  CONTROLLER_ORDER_META,
+  registeredFirst,
+  ROUTE_ORDER_META,
+  routeOrderOf,
+  routerOf,
+  shadowsByPath,
+} from './route-order.js';
+export type { OrderedRoute, RouteOrder } from './route-order.js';
 
 export { ENTRY_KINDS, NODE_TYPES, isEntryKind } from './model/nodes.js';
 export { IMPLEMENTED_BY_META, SENDS_META, wayInBodyRead } from './model/way-in.js';
