@@ -488,18 +488,23 @@
         "rowsSay": {
           "root": {
             "store-web#src/app/products.client.ts:ProductsClient.create": {
-              "edge": {
-                "type": "calls",
-                "params": [
-                  "{\u202622 fields}"
-                ],
-                "returns": "string"
+              "edge": "calls",
+              "meta": {
+                "signature": {
+                  "params": [
+                    {
+                      "name": "product",
+                      "type": "{…22 fields}"
+                    }
+                  ],
+                  "returns": "string"
+                }
               }
             }
           }
         }
       },
-      "note": "P379: the create's body, 22 fields written inline, was said whole on the edge, the signature and the request's bodyType."
+      "note": "P379: the create's body, 22 fields written inline, was said whole on the edge, the signature and the request's bodyType. P382: the edge no longer repeats the types the step's signature says, so the 22 fields are said once, on the signature."
     },
     {
       "id": "list_entries.class-callers",
@@ -1859,9 +1864,9 @@
       ],
       "expect": {
         "says": [
-          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { \u2026 }",
-          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { \u2026 }",
-          "48    listNotes(@Param('orderId') orderId: string): string[] { \u2026 }",
+          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { … }",
+          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { … }",
+          "48    listNotes(@Param('orderId') orderId: string): string[] { … }",
           "whole: true"
         ],
         "saysNot": [
@@ -2494,12 +2499,14 @@
     }
   ],
   "fixed": {
-    "instructions": 2384,
-    "guideBlock": 1055,
+    "instructions": 2390,
+    "instructionsDb": 2450,
+    "guideBlock": 1054,
+    "guideBlockClaude": 366,
     "skillDescription": 268,
-    "listingCore": 5679,
-    "listingDefault": 10412,
-    "listingAll": 12995
+    "listingCore": 5683,
+    "listingDefault": 10496,
+    "listingAll": 13626
   },
   "recorded": {
     "impact.multi-repo": {
@@ -2587,8 +2594,8 @@
       "calls": 1
     },
     "get_flow.inline-type": {
-      "chars": 1933,
-      "tokens": 484,
+      "chars": 1668,
+      "tokens": 417,
       "rows": 6,
       "complete": true,
       "calls": 1
@@ -2678,8 +2685,8 @@
       "calls": 1
     },
     "get_flow.route-detail-2": {
-      "chars": 2766,
-      "tokens": 692,
+      "chars": 2143,
+      "tokens": 536,
       "rows": 10,
       "complete": true,
       "calls": 1
@@ -2817,209 +2824,6 @@
       "complete": true,
       "calls": 1
     },
-    "answer.field-breaks": {
-      "chars": 728,
-      "tokens": 182,
-      "rows": 2,
-      "complete": true,
-      "calls": 1
-    },
-    "answer.not-answered": {
-      "chars": 702,
-      "tokens": 176,
-      "rows": 4,
-      "complete": true,
-      "calls": 1
-    },
-    "answer.unused": {
-      "chars": 1516,
-      "tokens": 379,
-      "rows": 9,
-      "complete": true,
-      "calls": 1
-    },
-    "check_change.edited": {
-      "chars": 1849,
-      "tokens": 463,
-      "rows": 2,
-      "complete": true,
-      "calls": 1
-    },
-    "check_change.one-service": {
-      "chars": 707,
-      "tokens": 177,
-      "rows": 0,
-      "complete": true,
-      "calls": 1
-    },
-    "card.route-aloud": {
-      "chars": 1050,
-      "tokens": 263,
-      "rows": 1,
-      "complete": null,
-      "calls": 0
-    },
-    "card.client-method": {
-      "chars": 803,
-      "tokens": 201,
-      "rows": 1,
-      "complete": null,
-      "calls": 0
-    },
-    "card.message-type": {
-      "chars": 1352,
-      "tokens": 338,
-      "rows": 1,
-      "complete": null,
-      "calls": 0
-    },
-    "card.handler-in-service": {
-      "chars": 978,
-      "tokens": 245,
-      "rows": 1,
-      "complete": null,
-      "calls": 0
-    },
-    "card.service-unused": {
-      "chars": 640,
-      "tokens": 160,
-      "rows": 1,
-      "complete": null,
-      "calls": 0
-    },
-    "card.names-nothing": {
-      "chars": 0,
-      "tokens": 0,
-      "rows": 0,
-      "complete": null,
-      "calls": 0
-    },
-    "who_calls.shadowed-handler": {
-      "chars": 567,
-      "tokens": 142,
-      "rows": 2,
-      "complete": true,
-      "calls": 1
-    },
-    "who_calls.shadowing-handler": {
-      "chars": 1352,
-      "tokens": 338,
-      "rows": 6,
-      "complete": true,
-      "calls": 1
-    },
-    "dead.shadowed": {
-      "chars": 1148,
-      "tokens": 287,
-      "rows": 3,
-      "complete": null,
-      "calls": 1
-    },
-    "find_symbol.request-lands-shadowed": {
-      "chars": 476,
-      "tokens": 119,
-      "rows": 1,
-      "complete": true,
-      "calls": 1
-    },
-    "findings.route-order": {
-      "chars": 2607,
-      "tokens": 652,
-      "rows": 5,
-      "complete": null,
-      "calls": 1
-    },
-    "findings.multi-repo": {
-      "chars": 3172,
-      "tokens": 793,
-      "rows": 7,
-      "complete": null,
-      "calls": 1
-    },
-    "findings.fields-renamed": {
-      "chars": 573,
-      "tokens": 144,
-      "rows": 1,
-      "complete": null,
-      "calls": 1
-    },
-    "findings.between-services": {
-      "chars": 5019,
-      "tokens": 1255,
-      "rows": 8,
-      "complete": null,
-      "calls": 1
-    },
-    "find_symbol.two-words": {
-      "chars": 919,
-      "tokens": 230,
-      "rows": 3,
-      "complete": false,
-      "calls": 1
-    },
-    "search.sentence": {
-      "chars": 896,
-      "tokens": 224,
-      "rows": 3,
-      "complete": false,
-      "calls": 1
-    },
-    "search.sentence-payments": {
-      "chars": 1515,
-      "tokens": 379,
-      "rows": 8,
-      "complete": false,
-      "calls": 1
-    },
-    "find_symbol.camel-words": {
-      "chars": 1173,
-      "tokens": 294,
-      "rows": 5,
-      "complete": false,
-      "calls": 1
-    },
-    "search.or": {
-      "chars": 1774,
-      "tokens": 444,
-      "rows": 10,
-      "complete": false,
-      "calls": 1
-    },
-    "check_contract.route-alias": {
-      "chars": 394,
-      "tokens": 99,
-      "rows": 1,
-      "complete": true,
-      "calls": 1
-    },
-    "check_contract.type-on-two-channels": {
-      "chars": 1300,
-      "tokens": 325,
-      "rows": 3,
-      "complete": true,
-      "calls": 1
-    },
-    "check_contract.type-as-channel": {
-      "chars": 664,
-      "tokens": 166,
-      "rows": 2,
-      "complete": true,
-      "calls": 1
-    },
-    "get_source.class-skeleton": {
-      "chars": 1322,
-      "tokens": 331,
-      "rows": 0,
-      "complete": null,
-      "calls": 1
-    },
-    "get_flow.detail-2-once": {
-      "chars": 5186,
-      "tokens": 1297,
-      "rows": 17,
-      "complete": true,
-      "calls": 1
-    },
     "who_calls.service-picks": {
       "chars": 1718,
       "tokens": 430,
@@ -3088,6 +2892,209 @@
       "tokens": 192,
       "rows": 1,
       "complete": false,
+      "calls": 1
+    },
+    "check_contract.route-alias": {
+      "chars": 394,
+      "tokens": 99,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "check_contract.type-on-two-channels": {
+      "chars": 1354,
+      "tokens": 339,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "check_contract.type-as-channel": {
+      "chars": 700,
+      "tokens": 175,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "get_source.class-skeleton": {
+      "chars": 1322,
+      "tokens": 331,
+      "rows": 0,
+      "complete": null,
+      "calls": 1
+    },
+    "get_flow.detail-2-once": {
+      "chars": 5186,
+      "tokens": 1297,
+      "rows": 17,
+      "complete": true,
+      "calls": 1
+    },
+    "find_symbol.two-words": {
+      "chars": 919,
+      "tokens": 230,
+      "rows": 3,
+      "complete": false,
+      "calls": 1
+    },
+    "search.sentence": {
+      "chars": 896,
+      "tokens": 224,
+      "rows": 3,
+      "complete": false,
+      "calls": 1
+    },
+    "search.sentence-payments": {
+      "chars": 1533,
+      "tokens": 384,
+      "rows": 8,
+      "complete": false,
+      "calls": 1
+    },
+    "find_symbol.camel-words": {
+      "chars": 1173,
+      "tokens": 294,
+      "rows": 5,
+      "complete": false,
+      "calls": 1
+    },
+    "search.or": {
+      "chars": 1828,
+      "tokens": 457,
+      "rows": 10,
+      "complete": false,
+      "calls": 1
+    },
+    "findings.multi-repo": {
+      "chars": 3172,
+      "tokens": 793,
+      "rows": 7,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.fields-renamed": {
+      "chars": 573,
+      "tokens": 144,
+      "rows": 1,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.between-services": {
+      "chars": 5019,
+      "tokens": 1255,
+      "rows": 8,
+      "complete": null,
+      "calls": 1
+    },
+    "who_calls.shadowed-handler": {
+      "chars": 567,
+      "tokens": 142,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.shadowing-handler": {
+      "chars": 1352,
+      "tokens": 338,
+      "rows": 6,
+      "complete": true,
+      "calls": 1
+    },
+    "dead.shadowed": {
+      "chars": 1172,
+      "tokens": 293,
+      "rows": 3,
+      "complete": null,
+      "calls": 1
+    },
+    "find_symbol.request-lands-shadowed": {
+      "chars": 476,
+      "tokens": 119,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "findings.route-order": {
+      "chars": 2708,
+      "tokens": 677,
+      "rows": 5,
+      "complete": null,
+      "calls": 1
+    },
+    "card.route-aloud": {
+      "chars": 1050,
+      "tokens": 263,
+      "rows": 1,
+      "complete": null,
+      "calls": 0
+    },
+    "card.client-method": {
+      "chars": 803,
+      "tokens": 201,
+      "rows": 1,
+      "complete": null,
+      "calls": 0
+    },
+    "card.message-type": {
+      "chars": 1352,
+      "tokens": 338,
+      "rows": 1,
+      "complete": null,
+      "calls": 0
+    },
+    "card.handler-in-service": {
+      "chars": 1113,
+      "tokens": 279,
+      "rows": 1,
+      "complete": null,
+      "calls": 0
+    },
+    "card.service-unused": {
+      "chars": 640,
+      "tokens": 160,
+      "rows": 1,
+      "complete": null,
+      "calls": 0
+    },
+    "card.names-nothing": {
+      "chars": 0,
+      "tokens": 0,
+      "rows": 0,
+      "complete": null,
+      "calls": 0
+    },
+    "check_change.edited": {
+      "chars": 1849,
+      "tokens": 463,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "check_change.one-service": {
+      "chars": 706,
+      "tokens": 177,
+      "rows": 0,
+      "complete": true,
+      "calls": 1
+    },
+    "answer.field-breaks": {
+      "chars": 728,
+      "tokens": 182,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "answer.not-answered": {
+      "chars": 702,
+      "tokens": 176,
+      "rows": 4,
+      "complete": true,
+      "calls": 1
+    },
+    "answer.unused": {
+      "chars": 1516,
+      "tokens": 379,
+      "rows": 9,
+      "complete": true,
       "calls": 1
     }
   }

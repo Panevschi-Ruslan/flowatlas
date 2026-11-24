@@ -430,6 +430,7 @@ const PICKED_CASES = [
 ];
 /** The same, compact: what an agent is handed. */
 const PICKED_COMPACT_CASES = PICKED_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
+/**
  * One call per question (P382): check_contract on a route said with `route`
  * and another parameter name, on a type of message given as the channel (one
  * channel carries one type, two carry the other), and on inputs that name
@@ -456,6 +457,7 @@ const ONE_CALL_COMPACT_CASES = [
   ['get_source.method', '#callText', { name: 'get_source', arguments: { symbol: 'OrdersController.addNote' } }],
   ['describe_for_prompt.route', '#callText', { name: 'describe_for_prompt', arguments: { id: 'PATCH /api/orders/:orderId/cancel' } }],
 ];
+/**
  * Search and find_symbol taking a sentence (P383): each name's words indexed
  * once, a query's words ranked, every row with the words it holds, and the
  * answer never complete. A sentence, a word no name holds beside one that
@@ -470,6 +472,7 @@ const SENTENCE_CASES = [
 ];
 /** The same, compact: what an agent is handed. */
 const SENTENCE_COMPACT_CASES = SENTENCE_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
+/**
  * Route order (P385): a spelled-out route registered after a parameter route
  * of the same controller, one of a controller registered later, one on an
  * Express router, the two routers whose order is not read, and a service on
@@ -487,6 +490,7 @@ const ROUTE_ORDER_CASES = [
 ];
 /** The same, compact: what an agent is handed. */
 const ROUTE_ORDER_COMPACT_CASES = ROUTE_ORDER_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
+/**
  * Which fields of an answer each client reads (P391): a route's answer read
  * by an Angular screen through the async pipe and a child it binds each row
  * to, and by a React list through a query's data and a row's props; one

@@ -1038,6 +1038,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:shop-web#OrderView",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "shop-api"
@@ -1062,6 +1063,7 @@
         "bodyKeys": [
           "reason"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "shop-api"
@@ -1082,6 +1084,7 @@
         "baseUrlEnv": "stockUrl",
         "responseType": "number",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "stock-api"

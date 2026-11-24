@@ -14,18 +14,6 @@
       ]
     },
     {
-      "id": "shop-api#src/payments/payments.service.ts:PaymentsService.refund",
-      "type": "method",
-      "label": "PaymentsService.refund",
-      "loc": "src/payments/payments.service.ts:9",
-      "service": "shop-api",
-      "reach": "alive",
-      "from": "POST /orders/:param/refund",
-      "matched": [
-        "payments"
-      ]
-    },
-    {
       "id": "shop-api#src/payments/payments.service.ts:PaymentsService.capture",
       "type": "method",
       "label": "PaymentsService.capture",
@@ -57,6 +45,19 @@
       "service": "shop-web",
       "reach": "alive",
       "from": "screen /orders",
+      "matched": [
+        "payments"
+      ]
+    },
+    {
+      "id": "shop-api#src/payments/payments.service.ts:PaymentsService.refund",
+      "type": "method",
+      "label": "PaymentsService.refund",
+      "loc": "src/payments/payments.service.ts:9",
+      "service": "shop-api",
+      "reach": "dead",
+      "from": "POST /orders/:param/refund",
+      "throughDead": true,
       "matched": [
         "payments"
       ]

@@ -57,6 +57,7 @@
                   "price",
                   "sku"
                 ],
+                "answerRead": [],
                 "via": "template-env",
                 "targetService": "stock-api"
               }

@@ -13,6 +13,7 @@
         "loc": "src/app/catalog-api.service.ts:14",
         "message": "sender catalog-api sends `{id:string}` where receiver shop-web expects `unknown[]`",
         "severity": "error",
+        "precision": "high",
         "rank": 1,
         "reach": {
           "callers": 0
@@ -27,6 +28,7 @@
         "loc": "src/app/orders-api.service.ts:33",
         "message": "sender shop-api sends `type:shop-api#Order` where receiver shop-web expects `string`",
         "severity": "error",
+        "precision": "high",
         "rank": 2,
         "reach": {
           "callers": 0
@@ -41,6 +43,7 @@
         "service": "catalog-api",
         "loc": "src/items.routes.ts:16",
         "message": "GET /items/featured (src/items.routes.ts:16) is never reached: GET /items/:param (src/items.routes.ts:13), registered before it on itemsRouter, answers every request for it, and the router tries routes in the order they are registered. 1 caller asking for it lands on GET /items/:param: CatalogApi.featured.",
+        "precision": "medium",
         "rank": 1,
         "next": "get_source({symbol: \"GET /items/featured\"})"
       },
@@ -50,6 +53,7 @@
         "service": "shop-api",
         "loc": "src/orders/order-exports.controller.ts:9",
         "message": "GET /orders/export (src/orders/order-exports.controller.ts:9) is never reached: GET /orders/:param (src/orders/orders.controller.ts:14), registered before it (OrdersController is registered before OrderExportsController), answers every request for it, and the router tries routes in the order they are registered. 1 caller asking for it lands on GET /orders/:param: OrdersApi.exportAll.",
+        "precision": "medium",
         "rank": 2,
         "next": "get_source({symbol: \"GET /orders/export\"})"
       },
@@ -59,6 +63,7 @@
         "service": "shop-api",
         "loc": "src/orders/orders.controller.ts:20",
         "message": "GET /orders/latest (src/orders/orders.controller.ts:20) is never reached: GET /orders/:param (src/orders/orders.controller.ts:14), registered before it on OrdersController, answers every request for it, and the router tries routes in the order they are registered. 1 caller asking for it lands on GET /orders/:param: OrdersApi.latest.",
+        "precision": "medium",
         "rank": 3,
         "next": "get_source({symbol: \"GET /orders/latest\"})"
       }

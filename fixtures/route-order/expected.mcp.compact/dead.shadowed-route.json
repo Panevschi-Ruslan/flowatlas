@@ -3,6 +3,7 @@
   "loc": "src/orders/orders.controller.ts:20",
   "verdict": "dead",
   "reason": "never reached: GET /orders/:param, registered before it in the same router, answers every request for it",
+  "callers": 0,
   "class": "actionable",
   "evidence": {},
   "next": [

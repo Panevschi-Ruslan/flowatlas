@@ -661,6 +661,7 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "shop-api"
@@ -681,6 +682,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "string[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "shop-api"
@@ -706,6 +708,7 @@
           "amount",
           "orderId"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "shop-api"

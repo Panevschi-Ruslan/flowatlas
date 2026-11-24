@@ -903,6 +903,7 @@
         "baseUrlEnv": "billingUrl",
         "responseType": "unknown[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "billing-api"
@@ -923,6 +924,7 @@
         "baseUrlEnv": "catalogUrl",
         "responseType": "unknown[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "catalog-api"
@@ -943,6 +945,7 @@
         "baseUrlEnv": "catalogUrl",
         "responseType": "unknown[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "catalog-api"
@@ -963,6 +966,7 @@
         "baseUrlEnv": "catalogUrl",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "catalog-api"
@@ -983,6 +987,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "shop-api"
@@ -1003,6 +1008,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:shop-web#Order",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "shop-api"
@@ -1023,6 +1029,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:shop-web#Order",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "shop-api"
@@ -1043,6 +1050,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "string",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "shop-api"

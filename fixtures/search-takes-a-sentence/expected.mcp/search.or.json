@@ -26,42 +26,6 @@
       ]
     },
     {
-      "id": "shop-api#src/orders/orders.service.ts:OrdersService.refund",
-      "type": "method",
-      "label": "OrdersService.refund",
-      "loc": "src/orders/orders.service.ts:20",
-      "service": "shop-api",
-      "reach": "alive",
-      "from": "POST /orders/:param/refund",
-      "matched": [
-        "refund"
-      ]
-    },
-    {
-      "id": "shop-api#src/payments/payments.service.ts:PaymentsService.refund",
-      "type": "method",
-      "label": "PaymentsService.refund",
-      "loc": "src/payments/payments.service.ts:9",
-      "service": "shop-api",
-      "reach": "alive",
-      "from": "POST /orders/:param/refund",
-      "matched": [
-        "refund"
-      ]
-    },
-    {
-      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.refund",
-      "type": "method",
-      "label": "OrdersController.refund",
-      "loc": "src/orders/orders.controller.ts:19",
-      "service": "shop-api",
-      "reach": "alive",
-      "from": "POST /orders/:param/refund",
-      "matched": [
-        "refund"
-      ]
-    },
-    {
       "id": "shop-api#src/common/cancellation-tokens.ts:CancellationTokens.issue",
       "type": "method",
       "label": "CancellationTokens.issue",
@@ -119,6 +83,45 @@
       "from": "screen /orders",
       "matched": [
         "cancel"
+      ]
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.refund",
+      "type": "method",
+      "label": "OrdersService.refund",
+      "loc": "src/orders/orders.service.ts:20",
+      "service": "shop-api",
+      "reach": "dead",
+      "from": "POST /orders/:param/refund",
+      "throughDead": true,
+      "matched": [
+        "refund"
+      ]
+    },
+    {
+      "id": "shop-api#src/payments/payments.service.ts:PaymentsService.refund",
+      "type": "method",
+      "label": "PaymentsService.refund",
+      "loc": "src/payments/payments.service.ts:9",
+      "service": "shop-api",
+      "reach": "dead",
+      "from": "POST /orders/:param/refund",
+      "throughDead": true,
+      "matched": [
+        "refund"
+      ]
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.refund",
+      "type": "method",
+      "label": "OrdersController.refund",
+      "loc": "src/orders/orders.controller.ts:19",
+      "service": "shop-api",
+      "reach": "dead",
+      "from": "POST /orders/:param/refund",
+      "throughDead": true,
+      "matched": [
+        "refund"
       ]
     }
   ],

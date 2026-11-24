@@ -10,15 +10,6 @@
       ]
     },
     {
-      "id": "shop-api#src/payments/payments.service.ts:PaymentsService.refund",
-      "line": 9,
-      "reach": "alive",
-      "from": "POST /orders/:param/refund",
-      "matched": [
-        "payments"
-      ]
-    },
-    {
       "id": "shop-api#src/payments/payments.service.ts:PaymentsService.capture",
       "line": 5,
       "reach": "alive",
@@ -41,6 +32,16 @@
       "line": 10,
       "reach": "alive",
       "from": "screen /orders",
+      "matched": [
+        "payments"
+      ]
+    },
+    {
+      "id": "shop-api#src/payments/payments.service.ts:PaymentsService.refund",
+      "line": 9,
+      "reach": "dead",
+      "from": "POST /orders/:param/refund",
+      "throughDead": true,
       "matched": [
         "payments"
       ]
