@@ -710,7 +710,8 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
-        "through": "AdminApiService.post"
+        "through": "AdminApiService.post",
+        "sendsJson": true
       }
     },
     {
@@ -736,6 +737,7 @@
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "AdminApiService.post",
+        "sendsJson": true,
         "targetService": "shop-api"
       }
     }

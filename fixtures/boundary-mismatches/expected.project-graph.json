@@ -1393,6 +1393,7 @@
         "baseUrlEnv": "accountsUrl",
         "responseType": "{name:string}",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "credentials": {
@@ -1480,6 +1481,7 @@
         "baseUrlEnv": "ordersUrl",
         "responseType": "string[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "credentials": {
@@ -1510,6 +1512,7 @@
           "item",
           "quantity"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "sendsJson": true,
@@ -1537,6 +1540,7 @@
           "authorization",
           "x-request-id"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "statusChecks": [
@@ -1576,6 +1580,7 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "statusChecks": [
@@ -1606,6 +1611,7 @@
         "bodyKeys": [
           "title"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "sendsJson": true,
@@ -1627,6 +1633,7 @@
         "baseUrlEnv": "ordersUrl",
         "responseType": "void",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "orders-api"

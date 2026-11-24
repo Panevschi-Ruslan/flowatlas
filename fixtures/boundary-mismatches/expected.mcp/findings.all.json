@@ -1,6 +1,5 @@
 {
   "counts": {
-    "contract-break": 1,
     "sse-event-unhandled": 1,
     "bot-button-unhandled": 1,
     "bot-button-data-too-long": 1,
@@ -9,28 +8,12 @@
     "cors-credentials": 1,
     "cors-header-not-allowed": 1,
     "cors-method-not-allowed": 1,
+    "contract-break": 1,
     "config-not-set": 1,
     "bot-handler-untriggered": 1,
     "config-never-read": 1
   },
   "top": {
-    "contract-break": [
-      {
-        "kind": "contract-break",
-        "id": "ui_api_call:web#src/app/orders-api.service.ts:18:12",
-        "to": "entry:orders-api:http:POST:/orders",
-        "service": "web",
-        "loc": "src/app/orders-api.service.ts:18",
-        "message": "sender web sends `giftNote: string`; receiver orders-api declares no such field; the receiver does not declare it, and its validation pipe forbids what it does not whitelist, so a request sending it is refused with 400",
-        "severity": "error",
-        "precision": "high",
-        "rank": 1,
-        "reach": {
-          "callers": 0
-        },
-        "next": "check_contract({from: \"ui_api_call:web#src/app/orders-api.service.ts:18:12\", to: \"entry:orders-api:http:POST:/orders\"})"
-      }
-    ],
     "sse-event-unhandled": [
       {
         "kind": "sse-event-unhandled",
@@ -163,6 +146,23 @@
         "fix": "add DELETE to methods",
         "rank": 1,
         "next": "get_source({symbol: \"ui_api_call:web#src/app/orders-api.service.ts:45:12\"})"
+      }
+    ],
+    "contract-break": [
+      {
+        "kind": "contract-break",
+        "id": "ui_api_call:web#src/app/orders-api.service.ts:18:12",
+        "to": "entry:orders-api:http:POST:/orders",
+        "service": "web",
+        "loc": "src/app/orders-api.service.ts:18",
+        "message": "sender web sends `giftNote: string`; receiver orders-api declares no such field; the receiver does not declare it, and its validation pipe forbids what it does not whitelist, so a request sending it is refused with 400",
+        "severity": "error",
+        "precision": "high",
+        "rank": 1,
+        "reach": {
+          "callers": 0
+        },
+        "next": "check_contract({from: \"ui_api_call:web#src/app/orders-api.service.ts:18:12\", to: \"entry:orders-api:http:POST:/orders\"})"
       }
     ],
     "config-not-set": [

@@ -514,6 +514,7 @@
         "via": "literal",
         "baseFrom": "interceptor",
         "host": "catalog.example.test",
+        "sendsJson": true,
         "targetService": "api"
       }
     },
