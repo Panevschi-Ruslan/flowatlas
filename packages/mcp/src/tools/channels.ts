@@ -10,6 +10,9 @@ import { reachReader, type ReachReader } from '../query/ways-in.js';
 import { consumerReading, fieldNames, producerSends, readsField, topField } from '../query/fields.js';
 import type { CompactNode } from '../query/types.js';
 import {
+  answerEach,
+  answersOutput,
+  askedOf,
   bound,
   callOf,
   commonInput,
@@ -25,6 +28,7 @@ import {
   reachedNodeOutput,
   READ_ONLY,
   serviceInput,
+  severalInput,
   withDb,
   type ToolContext,
 } from './common.js';
@@ -48,9 +52,12 @@ const producerOutput = reachedNodeOutput.extend({ sends: z.array(z.string()).opt
 
 /** What who_emits and who_consumes answer: the channel, and one page of one end of it. */
 const endsOutput = (key: 'producers' | 'consumers') => ({
-  channel: nodeOutput,
-  [key]: z.array(key === 'consumers' ? selectorOutput : producerOutput),
+  channel: nodeOutput.optional(),
+  [key]: z.array(key === 'consumers' ? selectorOutput : producerOutput).optional(),
   ...pageOutput,
+  total: pageOutput.total.optional(),
+  /** Several channels asked together (P381): one answer each. */
+  answers: answersOutput,
   ...completeOutput,
   /** The channel id answered for, when the name asked was written another way (`tenant:<id>:events`, P360). */
   channelUsed: z.string().optional(),
@@ -105,6 +112,25 @@ const selectorRow = (
     ...(found?.unreached === undefined ? {} : { unreached: found.unreached }),
   });
 };
+
+/** How many ends `service` leaves out: those in other services (P381). */
+const outsideService = (nodes: readonly GraphNode[], service: string | undefined): number =>
+  service === undefined ? 0 : nodes.filter((node) => !inService(service)(node)).length;
+
+/** What the service filter left out, said in `left` (P381): a filtered answer is never the whole one. */
+const filterLeft = (count: number, key: 'producers' | 'consumers', service: string | undefined): string | undefined =>
+  count === 0 ? undefined : `filter: ${count} ${key === 'producers' ? 'publish' : 'handler'}${count === 1 ? '' : key === 'producers' ? 'es' : 's'} in other services left out (service: ${service ?? ''})`;
+
+/** What who_emits and who_consumes are asked of one channel. */
+interface EndsAsked {
+  channel: string;
+  type?: string | undefined;
+  field?: string | undefined;
+  service?: string | undefined;
+  detail: number;
+  maxNodes: number;
+  offset: number;
+}
 
 /** Publishes whose type was not read, said in `left`: any of them may send the type asked about. */
 const unreadSaid = (count: number, channel: string, type: string): string | undefined =>
@@ -171,13 +197,187 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
     description: string,
     key: 'producers' | 'consumers',
   ): void => {
+    /** One channel's ends: the answer for each channel of several, too (P381). */
+    const endsOf = (db: GraphDb, input: EndsAsked): object => {
+      const { detail, maxNodes, note } = bound(input);
+      const found = resolveChannelRef(db, input.channel);
+      if (found === undefined || 'candidates' in found) {
+        // Written with placeholders and fitting several: each, as the call that takes it.
+        const fitting = found?.candidates.slice(0, MAX_FITTING);
+        // Otherwise the nearest names, each a call that takes it (P94): a
+        // typo is one step from its channel, not a dead end.
+        const near = fitting ?? nearNames(db.nodesByType('channel').filter((node) => !isMessageTypeNode(node)), input.channel.trim().replace(/^channel:/, ''), 5);
+        return withNext(
+          {
+            error:
+              found === undefined
+                ? `no channel named ${JSON.stringify(channelId(input.channel))}`
+                : `${JSON.stringify(input.channel.trim())} fits ${found.candidates.length} channels; ask for one of them`,
+            suggestions: near.map((node) => projectDetail(node, 0)),
+          },
+          near.slice(0, MAX_NEXT).map((node) => `${name}({channel: ${JSON.stringify(node.id)}})`),
+        );
+      }
+      const channel = found.node;
+      const id = channel.id;
+      // Whether each row runs and where it is reached from (P364).
+      const reader = reachReader(db, ctx.handle, detail);
+      const other = key === 'producers' ? 'who_consumes' : 'who_emits';
+      const used = found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed };
+
+      // A type of message asked about (P358): by `type`, or by its own id.
+      const parent = isMessageTypeNode(channel) ? db.node(String(channel.meta?.['channel'] ?? '')) ?? channel : channel;
+      const wanted = input.type?.trim() ?? (isMessageTypeNode(channel) ? String(channel.meta?.['messageType'] ?? '') : undefined);
+      if (wanted !== undefined && wanted !== '') {
+        const type = db.node(makeMessageTypeId(parent.id, wanted));
+        const values = typeValues(db, parent.id);
+        if (type === undefined) {
+          const unread = db
+            .edgesTo(parent.id, ['emits'])
+            .flatMap((edge) => db.node(edge.from) ?? [])
+            .filter((producer) => typeof producer.meta?.['messageTypeUnread'] === 'string');
+          const near = nearNames(values.map((value): GraphNode => ({ id: value, label: value, type: 'channel', repo: '' })), wanted, 3);
+          return withNext(
+            {
+              channel: projectDetail(parent, detail),
+              [key]: [],
+              total: 0,
+              ...used,
+              type: wanted,
+              ...(values.length === 0 ? {} : { types: values }),
+              ...(key === 'consumers' ? { unselected: `no code selects ${wanted} on ${parent.label}, and nothing read publishes it`, sureness: unread.length === 0 ? 'sure' : 'unsure' } : {}),
+              note:
+                `no type ${JSON.stringify(wanted)} is read on ${parent.label}` +
+                (unread.length === 0 ? '' : `; ${unread.length} publish${unread.length === 1 ? '' : 'es'} on it send${unread.length === 1 ? 's' : ''} a type not read, which may be it`),
+              ...(unread.length === 0 ? {} : { maybe: unread.slice(0, 3).map((producer) => projectDetail(producer, detail)) }),
+              ...completeOf([unreadSaid(unread.length, parent.label, wanted)]),
+            },
+            [
+              ...near.map((value) => callOf(name, { channel: parent.id, type: value.id })),
+              callOf(name, { channel: parent.id }),
+            ].slice(0, MAX_NEXT),
+          );
+        }
+        const facts = messageTypeFacts(db, type);
+        const field = input.field?.trim() || undefined;
+        const selected = key === 'producers' ? [...facts.producers] : facts.selectors.map((selector) => selector.consumer);
+        // Asked for a field of a type nothing selects: the handlers that take every type read it, if any do.
+        const candidates =
+          field !== undefined && key === 'consumers' && selected.length === 0
+            ? facts.receivers.filter((receiver) => receiver.takes === 'generic').map((receiver) => receiver.consumer)
+            : selected;
+        const elsewhere = outsideService(candidates, input.service);
+        const ends = fieldsOfEnds(db, key, candidates.filter(inService(input.service)).sort(byId), parent.id, wanted, field, detail);
+        const nodes = ends.kept;
+        const { items, total, truncated, nextOffset } = truncate(nodes, maxNodes, input.offset);
+        const said = key === 'consumers' ? unselectedSaid(facts) : undefined;
+        const maybe = key === 'producers' && facts.producers.length === 0 ? facts.unreadProducers : [];
+        const args = { channel: parent.id, type: wanted, field, service: input.service, detail: input.detail, maxNodes };
+        const rows = items.map((node) => ({
+          ...(key === 'consumers' ? selectorRow(db, facts, node, detail, reader) : reader.annotate(projectDetail(node, detail))),
+          ...ends.extra.get(node.id),
+        }));
+        return withNext(
+          {
+            channel: projectDetail(parent, detail),
+            [key]: rows,
+            total,
+            ...(nextOffset === undefined ? {} : { truncated, nextOffset }),
+            ...used,
+            type: wanted,
+            ...(field === undefined ? {} : { field }),
+            ...(said === undefined ? {} : { unselected: said.said, sureness: said.sureness }),
+            ...(key === 'producers' && facts.producers.length === 0
+              ? {
+                  note:
+                    `nothing read publishes ${wanted} on ${parent.label}` +
+                    (maybe.length === 0 ? '' : `; ${maybe.length} publish${maybe.length === 1 ? '' : 'es'} on it send${maybe.length === 1 ? 's' : ''} a type not read, which may be it`),
+                }
+              : note === undefined
+                ? {}
+                : { note }),
+            ...(maybe.length === 0 ? {} : { maybe: maybe.slice(0, 3).map((producer) => projectDetail(producer, detail)) }),
+            ...completeOf([
+              pageLeft(total, items.length, input.offset, nextOffset),
+              key === 'producers' && unreadSaid(facts.unreadProducers.length, parent.label, wanted),
+              said?.sureness === 'unsure' && `unsure: ${said.said}`,
+              filterLeft(elsewhere, key, input.service),
+              ...ends.left,
+              ...reader.left(),
+            ]),
+          },
+          pagedNext(
+            { tool: name, args, nextOffset },
+            withoutShown(
+              [
+                ...(field === undefined ? [] : [callOf('check_contract', { channel: parent.id, type: wanted, field })]),
+                callOf(other, { channel: parent.id, type: wanted, field }),
+                ...(said === undefined ? [] : [callOf('who_consumes', { channel: parent.id })]),
+                ...nextFor(items[0]),
+              ],
+              rows,
+            ).slice(0, 4),
+          ),
+        );
+      }
+
+      // A publisher points at the channel; the channel points at a handler.
+      const edges =
+        key === 'producers' ? db.edgesTo(id, ['emits']) : db.edgesFrom(id, ['consumes']);
+      const field = input.field?.trim() || undefined;
+      const all = edges.map((edge) => db.node(key === 'producers' ? edge.from : edge.to)).filter((node) => node !== undefined);
+      const elsewhere = outsideService(all, input.service);
+      const ends = fieldsOfEnds(
+        db,
+        key,
+        all.filter(inService(input.service)).sort(byId),
+        id,
+        undefined,
+        field,
+        detail,
+      );
+      const nodes = ends.kept;
+
+      const { items, total, truncated, nextOffset } = truncate(nodes, maxNodes, input.offset);
+      const rows = items.map((node) => ({ ...reader.annotate(projectDetail(node, detail)), ...ends.extra.get(node.id) }));
+      const args = { channel: id, field, service: input.service, detail: input.detail, maxNodes };
+      // The types it carries, each a question of its own (P358).
+      const values = typeValues(db, id);
+      return withNext(
+        {
+          channel: projectDetail(channel, detail),
+          [key]: rows,
+          total,
+          ...(nextOffset === undefined ? {} : { truncated, nextOffset }),
+          ...used,
+          ...(field === undefined ? {} : { field }),
+          ...(values.length === 0 ? {} : { types: values }),
+          ...completeOf([pageLeft(total, items.length, input.offset, nextOffset), filterLeft(elsewhere, key, input.service), ...ends.left, ...reader.left()]),
+          ...(note === undefined ? {} : { note }),
+        },
+        pagedNext(
+          { tool: name, args, nextOffset },
+          withoutShown(
+            [
+              ...(field === undefined ? [] : [callOf('check_contract', { channel: id, field })]),
+              ...(values[0] === undefined ? [] : [callOf(name, { channel: id, type: values[0], field })]),
+              callOf(other, { channel: id, field }),
+              ...nextFor(items[0]),
+            ],
+            rows,
+          ).slice(0, 4),
+        ),
+      );
+    };
+
     server.registerTool(
       name,
       {
         title,
         description,
         inputSchema: {
-          channel: z.string().describe('name or channel id'),
+          channel: z.string().optional().describe('name or channel id'),
+          channels: severalInput(),
           type: z.string().optional().describe('a message type on it'),
           field: z.string().optional(),
           service: serviceInput,
@@ -187,177 +387,13 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
         outputSchema: key === 'producers' ? whoEmitsOutput : whoConsumesOutput,
         annotations: READ_ONLY,
       },
-      (input) =>
+      (asked) =>
         withDb(ctx.handle, (db) => {
-          const { detail, maxNodes, note } = bound(input);
-          const found = resolveChannelRef(db, input.channel);
-          if (found === undefined || 'candidates' in found) {
-            // Written with placeholders and fitting several: each, as the call that takes it.
-            const fitting = found?.candidates.slice(0, MAX_FITTING);
-            // Otherwise the nearest names, each a call that takes it (P94): a
-            // typo is one step from its channel, not a dead end.
-            const near = fitting ?? nearNames(db.nodesByType('channel').filter((node) => !isMessageTypeNode(node)), input.channel.trim().replace(/^channel:/, ''), 5);
-            return withNext(
-              {
-                error:
-                  found === undefined
-                    ? `no channel named ${JSON.stringify(channelId(input.channel))}`
-                    : `${JSON.stringify(input.channel.trim())} fits ${found.candidates.length} channels; ask for one of them`,
-                suggestions: near.map((node) => projectDetail(node, 0)),
-              },
-              near.slice(0, MAX_NEXT).map((node) => `${name}({channel: ${JSON.stringify(node.id)}})`),
-            );
-          }
-          const channel = found.node;
-          const id = channel.id;
-          // Whether each row runs and where it is reached from (P364).
-          const reader = reachReader(db, ctx.handle, detail);
-          const other = key === 'producers' ? 'who_consumes' : 'who_emits';
-          const used = found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed };
-
-          // A type of message asked about (P358): by `type`, or by its own id.
-          const parent = isMessageTypeNode(channel) ? db.node(String(channel.meta?.['channel'] ?? '')) ?? channel : channel;
-          const wanted = input.type?.trim() ?? (isMessageTypeNode(channel) ? String(channel.meta?.['messageType'] ?? '') : undefined);
-          if (wanted !== undefined && wanted !== '') {
-            const type = db.node(makeMessageTypeId(parent.id, wanted));
-            const values = typeValues(db, parent.id);
-            if (type === undefined) {
-              const unread = db
-                .edgesTo(parent.id, ['emits'])
-                .flatMap((edge) => db.node(edge.from) ?? [])
-                .filter((producer) => typeof producer.meta?.['messageTypeUnread'] === 'string');
-              const near = nearNames(values.map((value): GraphNode => ({ id: value, label: value, type: 'channel', repo: '' })), wanted, 3);
-              return withNext(
-                {
-                  channel: projectDetail(parent, detail),
-                  [key]: [],
-                  total: 0,
-                  ...used,
-                  type: wanted,
-                  ...(values.length === 0 ? {} : { types: values }),
-                  ...(key === 'consumers' ? { unselected: `no code selects ${wanted} on ${parent.label}, and nothing read publishes it`, sureness: unread.length === 0 ? 'sure' : 'unsure' } : {}),
-                  note:
-                    `no type ${JSON.stringify(wanted)} is read on ${parent.label}` +
-                    (unread.length === 0 ? '' : `; ${unread.length} publish${unread.length === 1 ? '' : 'es'} on it send${unread.length === 1 ? 's' : ''} a type not read, which may be it`),
-                  ...(unread.length === 0 ? {} : { maybe: unread.slice(0, 3).map((producer) => projectDetail(producer, detail)) }),
-                  ...completeOf([unreadSaid(unread.length, parent.label, wanted)]),
-                },
-                [
-                  ...near.map((value) => callOf(name, { channel: parent.id, type: value.id })),
-                  callOf(name, { channel: parent.id }),
-                ].slice(0, MAX_NEXT),
-              );
-            }
-            const facts = messageTypeFacts(db, type);
-            const field = input.field?.trim() || undefined;
-            const selected = key === 'producers' ? [...facts.producers] : facts.selectors.map((selector) => selector.consumer);
-            // Asked for a field of a type nothing selects: the handlers that take every type read it, if any do.
-            const candidates =
-              field !== undefined && key === 'consumers' && selected.length === 0
-                ? facts.receivers.filter((receiver) => receiver.takes === 'generic').map((receiver) => receiver.consumer)
-                : selected;
-            const ends = fieldsOfEnds(db, key, candidates.filter(inService(input.service)).sort(byId), parent.id, wanted, field, detail);
-            const nodes = ends.kept;
-            const { items, total, truncated, nextOffset } = truncate(nodes, maxNodes, input.offset);
-            const said = key === 'consumers' ? unselectedSaid(facts) : undefined;
-            const maybe = key === 'producers' && facts.producers.length === 0 ? facts.unreadProducers : [];
-            const args = { channel: parent.id, type: wanted, field, service: input.service, detail: input.detail, maxNodes };
-            const rows = items.map((node) => ({
-              ...(key === 'consumers' ? selectorRow(db, facts, node, detail, reader) : reader.annotate(projectDetail(node, detail))),
-              ...ends.extra.get(node.id),
-            }));
-            return withNext(
-              {
-                channel: projectDetail(parent, detail),
-                [key]: rows,
-                total,
-                ...(nextOffset === undefined ? {} : { truncated, nextOffset }),
-                ...used,
-                type: wanted,
-                ...(field === undefined ? {} : { field }),
-                ...(said === undefined ? {} : { unselected: said.said, sureness: said.sureness }),
-                ...(key === 'producers' && facts.producers.length === 0
-                  ? {
-                      note:
-                        `nothing read publishes ${wanted} on ${parent.label}` +
-                        (maybe.length === 0 ? '' : `; ${maybe.length} publish${maybe.length === 1 ? '' : 'es'} on it send${maybe.length === 1 ? 's' : ''} a type not read, which may be it`),
-                    }
-                  : note === undefined
-                    ? {}
-                    : { note }),
-                ...(maybe.length === 0 ? {} : { maybe: maybe.slice(0, 3).map((producer) => projectDetail(producer, detail)) }),
-                ...completeOf([
-                  pageLeft(total, items.length, input.offset, nextOffset),
-                  key === 'producers' && unreadSaid(facts.unreadProducers.length, parent.label, wanted),
-                  said?.sureness === 'unsure' && `unsure: ${said.said}`,
-                  ...ends.left,
-                  ...reader.left(),
-                ]),
-              },
-              pagedNext(
-                { tool: name, args, nextOffset },
-                withoutShown(
-                  [
-                    ...(field === undefined ? [] : [callOf('check_contract', { channel: parent.id, type: wanted, field })]),
-                    callOf(other, { channel: parent.id, type: wanted, field }),
-                    ...(said === undefined ? [] : [callOf('who_consumes', { channel: parent.id })]),
-                    ...nextFor(items[0]),
-                  ],
-                  rows,
-                ).slice(0, 4),
-              ),
-            );
-          }
-
-          // A publisher points at the channel; the channel points at a handler.
-          const edges =
-            key === 'producers' ? db.edgesTo(id, ['emits']) : db.edgesFrom(id, ['consumes']);
-          const field = input.field?.trim() || undefined;
-          const ends = fieldsOfEnds(
-            db,
-            key,
-            edges
-              .map((edge) => db.node(key === 'producers' ? edge.from : edge.to))
-              .filter((node) => node !== undefined)
-              .filter(inService(input.service))
-              .sort(byId),
-            id,
-            undefined,
-            field,
-            detail,
-          );
-          const nodes = ends.kept;
-
-          const { items, total, truncated, nextOffset } = truncate(nodes, maxNodes, input.offset);
-          const rows = items.map((node) => ({ ...reader.annotate(projectDetail(node, detail)), ...ends.extra.get(node.id) }));
-          const args = { channel: id, field, service: input.service, detail: input.detail, maxNodes };
-          // The types it carries, each a question of its own (P358).
-          const values = typeValues(db, id);
-          return withNext(
-            {
-              channel: projectDetail(channel, detail),
-              [key]: rows,
-              total,
-              ...(nextOffset === undefined ? {} : { truncated, nextOffset }),
-              ...used,
-              ...(field === undefined ? {} : { field }),
-              ...(values.length === 0 ? {} : { types: values }),
-              ...completeOf([pageLeft(total, items.length, input.offset, nextOffset), ...ends.left, ...reader.left()]),
-              ...(note === undefined ? {} : { note }),
-            },
-            pagedNext(
-              { tool: name, args, nextOffset },
-              withoutShown(
-                [
-                  ...(field === undefined ? [] : [callOf('check_contract', { channel: id, field })]),
-                  ...(values[0] === undefined ? [] : [callOf(name, { channel: id, type: values[0], field })]),
-                  callOf(other, { channel: id, field }),
-                  ...nextFor(items[0]),
-                ],
-                rows,
-              ).slice(0, 4),
-            ),
-          );
+          // Several channels in one call (P381), each answered as one is.
+          const channels = askedOf(asked.channel, asked.channels);
+          if (channels.length === 0) return { error: 'ask with channel or channels' };
+          if (channels.length === 1) return endsOf(db, { ...asked, channel: channels[0]! });
+          return answerEach('channel', channels, (channel) => endsOf(db, { ...asked, channel }));
         }),
     );
   };
@@ -371,7 +407,7 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
   ends(
     'who_consumes',
     'Who handles a channel',
-    'What handles a channel (none: nothing does); a name written as code answers for its channel (`channelUsed`). `type` keeps the handlers of one message type (else `unselected`, with `sureness`), `field` those reading it (`readIn`).',
+    'What handles a channel (or `channels`); a name written as code answers for its channel (`channelUsed`). `type` keeps one message type\'s handlers (else `unselected`, `sureness`), `field` those reading it (`readIn`).',
     'consumers',
   );
 };

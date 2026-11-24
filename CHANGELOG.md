@@ -8,6 +8,60 @@ only one of them moved.
 
 ### Added
 
+- **Answers never say they are complete when they are not (P381).** `service`
+  picks the symbol on `who_calls` and `impact` (a route said aloud is matched
+  among that service's routes alone) and cuts no caller of one it holds:
+  `who_calls({symbol: "GET /api/items", service: "market-api"})` answered
+  "nothing reaches this", complete, where three ways in in other services
+  request it, and `impact` on a route with its own service answered no entry,
+  complete, where five exist. `callersIn` keeps one service's ways in (also
+  `flowatlas impact --callers-in`); a service the symbol lies outside still
+  cuts them; whatever a filter leaves out is said in `left` (`filter: 2 ways
+  in in other services left out (callersIn: reader-web)`), `complete: false`,
+  the call without it in `next`, on `who_consumes` and `who_emits` too. A name
+  that means two or three nodes is answered for each under `answers`, the
+  liveliest first, with `ambiguous` saying so (both services' `GET
+  /orders/:param` in one call, where the candidates took a second); a name
+  nothing holds answers the nearest names with `fuzzy: true`, never complete.
+  `impact` takes `symbols`, one change (`targets`, every way in once,
+  `unresolved` for a name that resolved to none), and sums the ways in by
+  kind with the file handling each (`byKind: {screens: {web: [...]}, bots:
+  ...}`), the routes the code runs behind apart (`changing`).
+  `who_consumes` and `who_emits` take `channels`. Wherever a call passes,
+  `ids` is the tool's own list, a list in the single input is the list and one
+  string in the list the single input, so `who_calls({ids})`, which answered
+  "ask with symbol or symbols", works; an answer of several that answers one
+  with an error or candidates is not complete. Facts before verdicts: `dead`
+  says `callers: 0` beside the verdict, a class's or file's `waysIn` say
+  `callers` always and `uncalled` counts every way in no caller joins that
+  nothing outside is said to call, the one a segment off too; code called only
+  through ways in judged dead has `reach: "dead"` with `throughDead: true`
+  wherever reach is said, and on `dead`'s answer beside its `alive` verdict;
+  `list_entries({called: false})` lists the ways in no caller joins, and
+  `reach: "dead"`, which listed two of the four uncalled routes and said
+  complete, says the two judged a maybe in `left` with that call first in
+  `next`. A new fixture, `service-picks-the-symbol`, a lending back end, a
+  gateway serving one of its routes under the same path, a reader front end
+  and a desk bot, with verbose and compact snapshots, and ten answer-budget
+  questions with hand-written answers: `who_calls` with the service 1,718
+  characters, the three ways in, complete (375, none, complete); `impact` with
+  the route's own service 1,909, five ways in (832, none); `who_calls` on a
+  route two services serve 3,208 in one call (333 of candidates, then a call
+  each); `who_calls` with `ids` 2,381 (an error); `list_entries` with `called:
+  false` the four uncalled routes in 534; with `reach: "dead"` 446, not
+  complete (347, complete); `dead` on code behind a dead route says so in
+  878; impact by kind 1,389, on two symbols 1,675, with `callersIn` 766, not
+  complete. The budget re-records answers grown by `byKind` and `changing`
+  (impact 131 to 253 characters each, 1,904 to 2,136 on multi-repo), by
+  `throughDead` (18 to 54) and by `callers` (12 to 36), and the listing (core
+  5,633 to 5,679, under its 5,700 ceiling with the core descriptions trimmed;
+  default 10,321 to 10,412, all 12,904 to 12,995) for the new inputs; the
+  tool listing ceilings move to 13,000 read, 37,250 in all and 33,600
+  offered. Snapshots of code reached only through routes nothing in the
+  fixture calls now say `reach: "dead"` and `throughDead`, of impact answers
+  gain `byKind` and `changing`, of `who_calls` on `GET /orders/123` answer both
+  routes, and `who_calls` on another service's symbol with `service` says what
+  it left out.
 - **who_calls answers stay small and finish, also on several symbols
   (P379).** `depth` is how far the tree of callers is drawn, never a cut:
   every way in past it is listed under `waysIn` whatever it is, one symbol or

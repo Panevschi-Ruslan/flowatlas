@@ -14,8 +14,9 @@
       "loc": "src/orders/orders.service.ts:49",
       "service": "orders",
       "kind": "event",
-      "reach": "alive",
-      "from": "POST /orders"
+      "reach": "dead",
+      "from": "POST /orders",
+      "throughDead": true
     }
   ],
   "total": 1,

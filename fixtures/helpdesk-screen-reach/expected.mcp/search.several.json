@@ -43,8 +43,9 @@
               "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent"
             ],
             "sites": 2,
-            "reach": "alive",
-            "from": "POST /desks/:param/tickets/:param/close"
+            "reach": "dead",
+            "from": "POST /desks/:param/tickets/:param/close",
+            "throughDead": true
           }
         ]
       },

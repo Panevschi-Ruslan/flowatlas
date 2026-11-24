@@ -21,7 +21,7 @@ import { declaredBy, isDeclared } from '../query/declared.js';
 import { isResolved, resolveSymbol, type EntryRef } from '../query/entry-ref.js';
 import { nearNames } from '../query/names.js';
 import { MAX_NEXT, withNext, withoutShown } from '../query/next.js';
-import { deadOptionsOf, reachReader, type ReachReader } from '../query/ways-in.js';
+import { deadOptionsOf, reachOfVerdict, reachReader, type ReachReader } from '../query/ways-in.js';
 import {
   answerEach,
   answersOutput,
@@ -162,6 +162,9 @@ export const deadOutput = {
   role: z.string().optional(),
   evidence: evidenceOutput.optional(),
   uncalled: z.number().optional(),
+  callers: z.number().optional(),
+  reach: reachOutput.reach,
+  throughDead: reachOutput.throughDead,
   from: reachOutput.from,
   ways: reachOutput.ways,
   walkCut: reachOutput.walkCut,
@@ -184,19 +187,31 @@ export const deadOutput = {
 };
 
 /** The ways in a class, a method or a file declares, each with its verdict (P375): an alive one with who calls it first, any other with why. */
-const waysInJudged = (db: GraphDb, ctx: ToolContext, entries: readonly GraphNode[]): Array<Record<string, unknown>> => {
+interface WayInJudged {
+  row: Record<string, unknown>;
+  /** No caller in the project joins it, and nothing outside is said to call it (P381): dead, or a maybe. */
+  uncalled: boolean;
+}
+
+const waysInJudged = (db: GraphDb, ctx: ToolContext, entries: readonly GraphNode[]): WayInJudged[] => {
   const judge = deadJudge(db, db.report(), deadOptionsOf(ctx.handle));
   return entries.flatMap((entry) => {
     const answer = judge(entry.id);
     if (answer === undefined) return [];
     const { callers, caller } = answer.evidence;
+    const joined = typeof callers === 'number' ? callers : 0;
+    const reach = reachOfVerdict(entry, answer);
     return [
       {
-        id: entry.id,
-        verdict: answer.verdict,
-        ...(answer.verdict === 'alive' ? {} : { reason: answer.reason }),
-        ...(typeof callers === 'number' && callers > 0 ? { callers } : {}),
-        ...(typeof caller === 'string' && caller !== '' ? { caller } : {}),
+        row: {
+          id: entry.id,
+          verdict: answer.verdict,
+          ...(answer.verdict === 'alive' ? {} : { reason: answer.reason }),
+          // The fact beside the verdict (P381): how many callers the project joins to it, none said as 0.
+          callers: joined,
+          ...(typeof caller === 'string' && caller !== '' ? { caller } : {}),
+        },
+        uncalled: joined === 0 && (reach === 'dead' || reach === 'maybe'),
       },
     ];
   });
@@ -208,14 +223,18 @@ const waysInJudged = (db: GraphDb, ctx: ToolContext, entries: readonly GraphNode
  */
 const DECLARING_TYPES: ReadonlySet<string> = new Set(['provider']);
 
-/** Whether a way in judged is one no code calls: `dead`, or `likely-dead` (a call read in part could reach it). */
-const isUncalled = (row: Record<string, unknown>): boolean => row['verdict'] === 'dead' || row['verdict'] === 'likely-dead';
+/** The code a caller joins to (a route, a method, a function), whose answer says how many callers it has (P381). */
+const CALLED_TYPES: ReadonlySet<string> = new Set(['entry', 'method', 'function']);
 
-/** The ways in judged, how many no code calls, and the code of the first to read before removing it. */
-const waysInSaid = (waysIn: ReadonlyArray<Record<string, unknown>>): { said: object; next: string[] } => {
-  const uncalled = waysIn.filter(isUncalled);
+/**
+ * The ways in judged, how many no code calls, and the code of the first to read before removing it. Uncalled is the
+ * fact (P381): no caller joins it and nothing outside the project is said to call it - judged `dead`, or a maybe
+ * (`likely-dead`, or `unknown` with a request one segment off) - not the `dead` verdicts alone.
+ */
+const waysInSaid = (judged: readonly WayInJudged[]): { said: object; next: string[] } => {
+  const uncalled = judged.filter((item) => item.uncalled).map((item) => item.row);
   return {
-    said: { waysIn, uncalled: uncalled.length, complete: true },
+    said: { waysIn: judged.map((item) => item.row), uncalled: uncalled.length, complete: true },
     next: uncalled.slice(0, 1).map((row) => callOf('get_source', { symbol: String(row['id']) })),
   };
 };
@@ -258,7 +277,9 @@ const answerOne = (db: GraphDb, ctx: ToolContext, reader: ReachReader, ref: stri
   if (answer === undefined) return { error: `no node ${JSON.stringify(found.node.id)}` };
   const loc = locOf(answer);
   // Where it is reached from (P364), so an alive answer needs no who_calls after it.
-  const { from, ways, walkCut, gap, behind } = reader.of(answer.id);
+  const { from, ways, walkCut, gap, behind, throughDead } = reader.of(answer.id);
+  // The fact before the verdict (P381): no caller in the project joins it, said as a count beside the judgment.
+  const uncalled = CALLED_TYPES.has(answer.type) && typeof answer.evidence.callers !== 'number' ? { callers: 0 } : {};
   // A class answers for the ways in it declares too, each judged (P375): which routes of a controller no code calls is
   // this one answer.
   const declared = DECLARING_TYPES.has(found.node.type) ? declaredBy(db, found.node.id) : undefined;
@@ -273,6 +294,9 @@ const answerOne = (db: GraphDb, ctx: ToolContext, reader: ReachReader, ref: stri
       ...(loc === undefined ? {} : { loc }),
       verdict: answer.verdict,
       reason: answer.reason,
+      ...uncalled,
+      // Called, but only through ways in judged dead (P381): it runs only when one of them does, so not a bare alive.
+      ...(throughDead === true ? { reach: 'dead', throughDead } : {}),
       ...(answer.class === undefined ? {} : { class: answer.class }),
       ...(answer.role === undefined ? {} : { role: answer.role }),
       evidence: wireEvidence(answer.evidence),

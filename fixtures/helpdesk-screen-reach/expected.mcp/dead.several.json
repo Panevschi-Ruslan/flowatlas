@@ -22,6 +22,7 @@
       "loc": "src/tickets/tickets.service.ts:22",
       "verdict": "likely-dead",
       "reason": "nothing calls it, though its class is used: a call through a receiver the reading could not type may",
+      "callers": 0,
       "evidence": {
         "classReached": true
       },

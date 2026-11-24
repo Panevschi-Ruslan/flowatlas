@@ -2279,7 +2279,9 @@ what the answer left, each a `Left:` line. The walk never goes back along a
 navigation, nor from a guard to the screens it guards unless the guard's own
 code calls the symbol. `--channel <name>` lists the ways in beyond that channel
 instead, with the chains to them through it; given a consumer a line names, the
-ways in beyond every channel of its line.
+ways in beyond every channel of its line. The json answer sums the ways in by
+kind, each with the file handling it (`byKind`), and names the routes the
+symbol runs behind apart (`changing`, P381).
 
 `--format json` prints the tool's answer, compact on one line as an agent is
 handed it; with `--verbose` the whole answer, pretty-printed. `--max-nodes` is
@@ -2298,6 +2300,7 @@ flowatlas impact "ItemsService.findOne" --format json --verbose
 | `--offset <n>` | the row to start the list at |
 | `--verbose` | with `--format json`, the whole answer, pretty-printed |
 | `--channel <name>` | list the ways in beyond a channel the answer counts under `throughChannels`, or beyond every channel of a consumer it names |
+| `--callers-in <service>` | keep only the ways in of one service; `--service` picks the symbol among same-named ones and cuts no caller of one it holds (P381) |
 
 ### `flowatlas path <from> <to>`
 

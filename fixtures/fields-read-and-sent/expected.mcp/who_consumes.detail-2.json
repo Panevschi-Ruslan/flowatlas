@@ -43,8 +43,9 @@
           }
         ]
       },
-      "reach": "alive",
+      "reach": "dead",
       "from": "POST /events/orders",
+      "throughDead": true,
       "reads": [
         "label",
         "orderId",

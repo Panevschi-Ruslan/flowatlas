@@ -147,7 +147,10 @@
       "by": "gateway#src/orders/orders.controller.ts:OrdersController.invoice"
     }
   ],
-  "complete": true,
+  "complete": false,
+  "left": [
+    "filter: 4 ways in in other services left out (service: gateway)"
+  ],
   "next": [
     "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
     "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",

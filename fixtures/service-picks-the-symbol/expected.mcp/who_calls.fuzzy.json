@@ -1,0 +1,108 @@
+{
+  "fuzzy": true,
+  "target": {
+    "id": "lending-api#src/books.service.ts:BooksService.findOne",
+    "type": "method",
+    "label": "BooksService.findOne",
+    "loc": "src/books.service.ts:12",
+    "service": "lending-api",
+    "reach": "alive",
+    "from": "GET /books/:param"
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "lending-api#src/books.controller.ts:BooksController.findOne",
+        "type": "method",
+        "label": "BooksController.findOne",
+        "loc": "src/books.controller.ts:23",
+        "reach": "alive",
+        "from": "GET /books/:param"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "string"
+        ],
+        "returns": "string"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "entry:lending-api:http:GET:/books/:param",
+            "type": "entry",
+            "label": "GET /books/:param",
+            "loc": "src/books.controller.ts:23",
+            "kind": "http",
+            "reach": "alive"
+          },
+          "edge": {
+            "type": "handles",
+            "confidence": "static",
+            "params": [
+              "string"
+            ],
+            "returns": "string"
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:lending-api:http:GET:/books/:param",
+      "type": "entry",
+      "label": "GET /books/:param",
+      "loc": "src/books.controller.ts:23",
+      "service": "lending-api",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 2,
+      "by": "lending-api#src/books.controller.ts:BooksController.findOne"
+    },
+    {
+      "id": "entry:lending-gateway:http:GET:/books/:param",
+      "type": "entry",
+      "label": "GET /books/:param",
+      "loc": "src/books.controller.ts:9",
+      "service": "lending-gateway",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 6,
+      "by": "lending-gateway#src/books.controller.ts:BooksController.findOne"
+    },
+    {
+      "id": "entry:reader-web:screen:/book/:param",
+      "type": "entry",
+      "label": "/book/:param",
+      "loc": "src/app/app.routes.ts:7",
+      "service": "reader-web",
+      "kind": "screen",
+      "reach": "outside",
+      "hops": 7,
+      "by": "reader-web#src/app/book-page.component.ts:BookPageComponent"
+    },
+    {
+      "id": "entry:desk-bot:bot_command:book",
+      "type": "entry",
+      "label": "bot_command book",
+      "loc": "src/desk-bot.ts:14",
+      "service": "desk-bot",
+      "kind": "bot_command",
+      "reach": "outside",
+      "hops": 9,
+      "by": "desk-bot#src/desk-bot.ts:DeskBot.showBook"
+    }
+  ],
+  "complete": false,
+  "left": [
+    "fuzzy: no name holds \"BoksService.findOne\"; the nearest is answered"
+  ],
+  "next": [
+    "get_flow({entry: \"entry:lending-api:http:GET:/books/:param\"})",
+    "describe_for_prompt({id: \"entry:lending-api:http:GET:/books/:param\"})",
+    "impact({symbol: \"entry:lending-api:http:GET:/books/:param\"})"
+  ]
+}

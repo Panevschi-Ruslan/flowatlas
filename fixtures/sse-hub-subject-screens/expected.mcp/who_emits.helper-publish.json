@@ -14,8 +14,9 @@
       "loc": "src/boards/orders.service.ts:29",
       "service": "boards-api",
       "kind": "event",
-      "reach": "alive",
-      "from": "POST /boards/:param/orders/:param/alert"
+      "reach": "dead",
+      "from": "POST /boards/:param/orders/:param/alert",
+      "throughDead": true
     }
   ],
   "total": 1,

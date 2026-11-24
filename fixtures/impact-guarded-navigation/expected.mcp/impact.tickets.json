@@ -42,6 +42,17 @@
     }
   ],
   "total": 3,
+  "byKind": {
+    "screens": {
+      "store-web": [
+        "src/app/ticket-board.component.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:store-api:http:POST:/api/hooks/chat",
+    "entry:store-api:http:POST:/api/tickets/:param/ack"
+  ],
   "reached": 11,
   "entriesByService": {
     "store-api": 2,

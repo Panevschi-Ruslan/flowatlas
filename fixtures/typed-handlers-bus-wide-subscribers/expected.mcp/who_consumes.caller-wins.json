@@ -15,8 +15,9 @@
       "service": "bot",
       "kind": "event",
       "via": "switch",
-      "reach": "alive",
-      "from": "POST /events/relay"
+      "reach": "dead",
+      "from": "POST /events/relay",
+      "throughDead": true
     }
   ],
   "total": 1,

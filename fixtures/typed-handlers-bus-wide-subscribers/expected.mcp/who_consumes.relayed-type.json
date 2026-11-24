@@ -15,8 +15,9 @@
       "service": "bot",
       "kind": "event",
       "via": "switch",
-      "reach": "alive",
-      "from": "POST /events/relay"
+      "reach": "dead",
+      "from": "POST /events/relay",
+      "throughDead": true
     },
     {
       "id": "consumer:shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
@@ -27,9 +28,10 @@
       "kind": "event",
       "selectedIn": "NotifyService.onModuleInit",
       "via": "switch",
-      "reach": "alive",
+      "reach": "dead",
       "from": "POST /orders/:param/ready",
-      "ways": 7
+      "ways": 7,
+      "throughDead": true
     },
     {
       "id": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
@@ -39,9 +41,10 @@
       "service": "web",
       "kind": "sse",
       "via": "if",
-      "reach": "alive",
+      "reach": "dead",
       "from": "POST /orders/:param/cancel (shop)",
-      "ways": 2
+      "ways": 2,
+      "throughDead": true
     }
   ],
   "total": 3,

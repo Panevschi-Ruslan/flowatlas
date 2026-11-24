@@ -1,0 +1,51 @@
+{
+  "id": "lending-api#src/books.controller.ts:BooksController",
+  "type": "provider",
+  "kind": "controller",
+  "service": "lending-api",
+  "loc": "src/books.controller.ts:11",
+  "verdict": "alive",
+  "reason": "5 routes hand it work; the liveliest is alive",
+  "evidence": {
+    "via": "entry:lending-api:http:GET:/books",
+    "callers": 1,
+    "caller": "ui_api_call:reader-web#src/app/books.client.ts:17:12"
+  },
+  "waysIn": [
+    {
+      "id": "entry:lending-api:http:DELETE:/books/:param/hold",
+      "verdict": "dead",
+      "reason": "no http_calls/hits from any repo (may be a public API)",
+      "callers": 0
+    },
+    {
+      "id": "entry:lending-api:http:GET:/books",
+      "verdict": "alive",
+      "callers": 1,
+      "caller": "ui_api_call:reader-web#src/app/books.client.ts:17:12"
+    },
+    {
+      "id": "entry:lending-api:http:GET:/books/:param",
+      "verdict": "alive",
+      "callers": 2,
+      "caller": "http_out:lending-gateway#src/books.client.ts:15:43"
+    },
+    {
+      "id": "entry:lending-api:http:POST:/books/:param/extend",
+      "verdict": "unknown",
+      "reason": "no http_calls/hits from any repo (may be a public API); a request that found no route is one segment off it",
+      "callers": 0
+    },
+    {
+      "id": "entry:lending-api:http:POST:/books/:param/hold",
+      "verdict": "alive",
+      "callers": 1,
+      "caller": "ui_api_call:reader-web#src/app/books.client.ts:25:12"
+    }
+  ],
+  "uncalled": 2,
+  "complete": true,
+  "next": [
+    "get_source({symbol: \"entry:lending-api:http:DELETE:/books/:param/hold\"})"
+  ]
+}

@@ -281,11 +281,63 @@ export const askedOf = (one: string | undefined, several: readonly string[] | un
   [...new Set([...(one === undefined ? [] : [one]), ...(several ?? [])])];
 
 /**
+ * Each tool's single input and the list it takes several in (P364, P381),
+ * for `pluralAsked`.
+ */
+export const PLURAL_INPUTS: Readonly<Record<string, { one: string; several: string }>> = {
+  who_calls: { one: 'symbol', several: 'symbols' },
+  impact: { one: 'symbol', several: 'symbols' },
+  dead: { one: 'id', several: 'ids' },
+  find_symbol: { one: 'query', several: 'queries' },
+  search: { one: 'query', several: 'queries' },
+  get_type: { one: 'type', several: 'types' },
+  who_consumes: { one: 'channel', several: 'channels' },
+  who_emits: { one: 'channel', several: 'channels' },
+};
+
+/** The strings a value holds: itself, or each string of a list. */
+const stringsOf = (value: unknown): string[] =>
+  typeof value === 'string' ? [value] : Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+
+/**
+ * A call's arguments with several inputs said the way the tool takes them
+ * (P381): `ids` beside a tool whose list is named otherwise (`symbols`,
+ * `queries`, `channels`, `types`), a list in the single input
+ * (`symbol: ["a", "b"]`), and one string in the list (`symbols: "a"`) are
+ * each the tool's list; a list of one is the single input. The habit a guide
+ * teaches (`ids: [...]`) then works on every tool, and costs the listing
+ * nothing: read where every call passes, before the tool's own schema checks
+ * it, which would drop an unknown key and answer as if nothing was asked.
+ */
+export const pluralAsked = (tool: string, args: Record<string, unknown>): Record<string, unknown> => {
+  const keys = PLURAL_INPUTS[tool];
+  if (keys === undefined) return args;
+  const { one, several } = keys;
+  const aliased = several !== 'ids' && 'ids' in args;
+  const listed = Array.isArray(args[one]) || (several in args && !Array.isArray(args[several]));
+  if (!aliased && !listed) return args;
+  const asked = [...new Set([...stringsOf(args[one]), ...stringsOf(args[several]), ...(aliased ? stringsOf(args['ids']) : [])])];
+  const { [one]: _one, [several]: _several, ...rest } = args;
+  if (aliased) delete rest['ids'];
+  if (asked.length === 0) return rest;
+  return asked.length === 1 ? { ...rest, [one]: asked[0] } : { ...rest, [several]: asked };
+};
+
+/** Whether an answer of several answers nothing about what it was asked: an error, or the nodes a name could mean. */
+const unanswered = (answer: Record<string, unknown>): string | undefined =>
+  typeof answer['error'] === 'string'
+    ? 'not found'
+    : Array.isArray(answer['candidates'])
+      ? `names ${answer['candidates'].length} nodes, see its candidates`
+      : undefined;
+
+/**
  * Several inputs answered in one answer (P364): each by the tool's own code
  * in turn, bounded as a single one is, under `answers` with the input it
  * answers as `asked` (a key no answer uses: get_type's has a `type`); the
  * hints of all, the first of each first, in one `next`; and `complete`
- * false where any answer is cut or left something unread.
+ * false where any answer is cut or left something unread, or answers nothing
+ * about what it was asked (an error, candidates: P381).
  */
 export const answerEach = (key: string, asked: readonly string[], run: (value: string) => object): object => {
   const answers: Array<Record<string, unknown>> = [];
@@ -302,13 +354,17 @@ export const answerEach = (key: string, asked: readonly string[], run: (value: s
       if (hint !== undefined && !next.includes(hint) && next.length < MAX_NEXT) next.push(hint);
     }
   }
-  const incomplete = answers.filter((answer) => answer['complete'] === false).map((answer) => String(answer['asked']));
+  const left = answers.flatMap((answer) => {
+    const missed = unanswered(answer);
+    if (missed !== undefined) return [`${key} ${String(answer['asked'])}: ${missed}`];
+    return answer['complete'] === false ? [`${key} ${String(answer['asked'])}: see its left`] : [];
+  });
   // Said only where the answers say it: a verdict is not a list to be whole.
   const lists = answers.some((answer) => 'complete' in answer);
   return {
     answers,
-    ...(lists ? { complete: incomplete.length === 0 } : {}),
-    ...(incomplete.length === 0 ? {} : { left: incomplete.map((value) => `${key} ${value}: see its left`) }),
+    ...(lists ? { complete: left.length === 0 } : {}),
+    ...(lists && left.length > 0 ? { left } : {}),
     ...(next.length === 0 ? {} : { next }),
   };
 };
@@ -330,6 +386,8 @@ export const reachOutput = {
   walkCut: z.literal(true).optional(),
   gap: z.string().optional(),
   behind: z.string().optional(),
+  /** Every way in that reaches it is judged dead (P381): `reach` is `dead`, though code calls it. */
+  throughDead: z.literal(true).optional(),
 };
 
 /** Where the requests a method sends land (P377), as `requestsOf` says it. */

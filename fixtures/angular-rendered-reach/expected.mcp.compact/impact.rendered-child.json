@@ -28,6 +28,16 @@
     }
   ],
   "total": 3,
+  "byKind": {
+    "screens": {
+      "catalog-web": [
+        "src/app/catalog-page.component.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:catalog-api:http:GET:/items/:param"
+  ],
   "reached": 13,
   "entriesByService": {
     "catalog-api": 1,

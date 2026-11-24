@@ -524,7 +524,9 @@ question is answered in the call that asked it.
       decorated member, a framework's `ng…` hook, nor anything in a
       repository whose manifest publishes an entry (`main`, `module`,
       `exports`, `types`).
-    - `dead`: as `dead` answers.
+    - `dead`: as `dead` answers; or code is called, but every way in that
+      reaches it is judged dead and every chain back from it ends at one
+      (`throughDead: true`, P381).
     - `outside`: something outside the project calls it - a webhook, a bot
       update or command, a cron, a screen opened at its address, a public
       route, a class from a library. A way in is never doubtful just because
@@ -584,6 +586,61 @@ question is answered in the call that asked it.
   shows `reach`, no `who_calls` or `search` for a row that shows `from`; the
   call that pages or walks on from a cut stays first. `dead` on a node with
   several ways in suggests `impact`, which lists them all.
+
+#### Answers never falsely complete (P381)
+
+An answer that says `complete: true` is the whole answer to what was asked;
+a filter, a near name or a verdict never makes a half answer look whole.
+
+- **`service` picks the symbol.** On `who_calls` and `impact` it picks among
+  same-named symbols (a route said aloud is matched among that service's
+  routes alone) and cuts no caller of one it holds: `who_calls({symbol: "GET
+  /api/items", service: "market-api"})` lists the screens and the bot in other
+  services that request it, where it answered "nothing reaches this",
+  complete. `callersIn` keeps the ways in of one service; a service the
+  symbol lies outside (asked by id) still does. Whatever a filter leaves out
+  is said - `filter: 2 ways in in other services left out (callersIn:
+  reader-web)` in `left`, `complete: false`, the call without it in `next` -
+  and `who_consumes` and `who_emits` say the ends their `service` left out the
+  same way.
+- **A name that means two or three is answered for each.** `who_calls` and
+  `impact` answer every node such a name means under `answers`, the liveliest
+  first (by `reach`, then by how many ways in or callers each has), with
+  `ambiguous` saying so: both services' `GET /orders/:param` in one call,
+  where the candidates took a second. More are still listed as candidates.
+  A name nothing holds answers the nearest names (initials, inside an id, a
+  few edits away) with `fuzzy: true`, `complete: false` and `left` saying no
+  name holds it; nothing near at all is an error naming `find_symbol`.
+- **Several in one call, said any way.** `impact` takes `symbols`, one change:
+  one walk from all of them, every way in once, `targets` for the symbols
+  and `unresolved` for any that names no one node. `who_consumes` and
+  `who_emits` take `channels`, each answered under `answers`. Wherever a call
+  passes, `ids` is the tool's own list (`symbols`, `queries`, `types`,
+  `channels`), a list in the single input (`symbol: ["a", "b"]`) is the list,
+  and one string in the list is the single input, so the habit a guide
+  teaches works on every tool without costing the listing a word. An answer
+  of several that answers one of them with an error or candidates is not
+  complete.
+- **Impact by kind.** `byKind` sums every way in that breaks, on any page, by
+  kind (`screens`, `routes`, `bots`, `consumers`, `jobs`, `functions`) and
+  service, each the file of the code that handles it:
+  `{"screens": {"reader-web": ["src/app/book-page.component.ts"]}, "bots":
+  {"desk-bot": ["src/desk-bot.ts"]}}`. `changing` names the routes the
+  changed code runs behind - a route of its own service whose handler calls
+  it, reached through no other way in - which change rather than break.
+- **Facts before verdicts.** `dead` on a route or a method says `callers: 0`
+  beside the verdict where no caller in the project joins it; `waysIn` rows
+  of a class or file say `callers` always, and `uncalled` counts every way in
+  no caller joins that nothing outside is said to call - judged `dead`, or a
+  maybe (a request read in part, one a segment off) - not the `dead` verdicts
+  alone. Code that is called, but whose every way in is judged dead and every
+  chain back from it ends at one, has `reach: "dead"` with `throughDead: true`
+  on every row that says reach, and on `dead`'s answer beside its `alive`
+  verdict: it runs only when a dead way in runs. `list_entries({called:
+  false})` lists the ways in no caller joins (a request, a link), the fact;
+  `list_entries({reach: "dead"})` says in `left` how many more no caller joins
+  are judged a maybe, `complete: false`, with the `called: false` call first
+  in `next`.
 
 ### Ids, `next`, and where to begin
 

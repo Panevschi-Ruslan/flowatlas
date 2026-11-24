@@ -1,24 +1,250 @@
 {
-  "candidates": [
+  "ambiguous": "\"GET /orders/123\" names 2 symbols; each is answered, the liveliest first",
+  "answers": [
     {
-      "id": "entry:gateway:http:GET:/orders/:param",
-      "type": "entry",
-      "label": "GET /orders/:param",
-      "loc": "src/orders/orders.controller.ts:30",
-      "service": "gateway",
-      "kind": "http"
+      "asked": "entry:gateway:http:GET:/orders/:param",
+      "target": {
+        "id": "entry:gateway:http:GET:/orders/:param",
+        "type": "entry",
+        "label": "GET /orders/:param",
+        "loc": "src/orders/orders.controller.ts:30",
+        "service": "gateway",
+        "kind": "http",
+        "reach": "alive"
+      },
+      "callers": [
+        {
+          "node": {
+            "id": "ui_api_call:web#src/app/orders-api.service.ts:21:12",
+            "type": "ui_api_call",
+            "label": "GET /orders/:param",
+            "loc": "src/app/orders-api.service.ts:21",
+            "service": "web",
+            "kind": "http",
+            "reach": "unreached",
+            "from": "none"
+          },
+          "edge": {
+            "type": "hits",
+            "confidence": "static",
+            "returns": "type:web#OrderDto"
+          },
+          "children": [
+            {
+              "node": {
+                "id": "web#src/app/orders-api.service.ts:OrdersApiService.order",
+                "type": "method",
+                "label": "OrdersApiService.order",
+                "loc": "src/app/orders-api.service.ts:20",
+                "reach": "unreached",
+                "from": "none"
+              },
+              "edge": {
+                "type": "calls",
+                "confidence": "static"
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "node": {
+            "id": "ui_api_call:web#src/app/orders-api.service.ts:73:12",
+            "type": "ui_api_call",
+            "label": "GET /orders/:param",
+            "loc": "src/app/orders-api.service.ts:73",
+            "service": "web",
+            "kind": "http",
+            "reach": "unreached",
+            "from": "none"
+          },
+          "edge": {
+            "type": "hits",
+            "confidence": "heuristic",
+            "returns": "type:web#OrderDto"
+          },
+          "children": [
+            {
+              "node": {
+                "id": "web#src/app/orders-api.service.ts:OrdersApiService.one",
+                "type": "method",
+                "label": "OrdersApiService.one",
+                "loc": "src/app/orders-api.service.ts:72",
+                "reach": "unreached",
+                "from": "none"
+              },
+              "edge": {
+                "type": "calls",
+                "confidence": "static"
+              },
+              "topOfChain": true,
+              "gapsInFile": 7,
+              "children": []
+            }
+          ]
+        }
+      ],
+      "waysIn": [],
+      "waysInNone": "nothing in the graph reaches this from a way in; the callers may be behind a gap",
+      "unreached": 2,
+      "complete": true
     },
     {
-      "id": "entry:orders:http:GET:/orders/:param",
-      "type": "entry",
-      "label": "GET /orders/:param",
-      "loc": "src/orders/orders.controller.ts:25",
-      "service": "orders",
-      "kind": "http"
+      "asked": "entry:orders:http:GET:/orders/:param",
+      "target": {
+        "id": "entry:orders:http:GET:/orders/:param",
+        "type": "entry",
+        "label": "GET /orders/:param",
+        "loc": "src/orders/orders.controller.ts:25",
+        "service": "orders",
+        "kind": "http",
+        "reach": "alive"
+      },
+      "callers": [
+        {
+          "node": {
+            "id": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+            "type": "http_out",
+            "label": "GET /orders/:param",
+            "loc": "src/invoices/invoices.service.ts:33",
+            "service": "billing",
+            "reach": "alive",
+            "from": "consumer invoice.requested",
+            "ways": 4
+          },
+          "edge": {
+            "type": "http_calls",
+            "confidence": "static",
+            "returns": "type:billing#OrderView"
+          },
+          "children": [
+            {
+              "node": {
+                "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+                "type": "method",
+                "label": "InvoicesService.create",
+                "loc": "src/invoices/invoices.service.ts:30",
+                "reach": "alive",
+                "from": "consumer invoice.requested",
+                "ways": 4
+              },
+              "edge": {
+                "type": "calls",
+                "confidence": "static"
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "node": {
+            "id": "http_out:gateway#src/clients/orders.client.ts:33:12",
+            "type": "http_out",
+            "label": "GET /orders/:param",
+            "loc": "src/clients/orders.client.ts:33",
+            "service": "gateway",
+            "reach": "alive",
+            "from": "GET /orders/:param"
+          },
+          "edge": {
+            "type": "http_calls",
+            "confidence": "static",
+            "returns": "type:@fx/contracts#OrderDto"
+          },
+          "children": [
+            {
+              "node": {
+                "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
+                "type": "method",
+                "label": "OrdersClient.fetchOne",
+                "loc": "src/clients/orders.client.ts:32",
+                "reach": "alive",
+                "from": "GET /orders/:param"
+              },
+              "edge": {
+                "type": "calls",
+                "confidence": "static"
+              },
+              "children": []
+            }
+          ]
+        }
+      ],
+      "waysIn": [
+        {
+          "id": "entry:billing:event:invoice.requested",
+          "type": "entry",
+          "label": "event invoice.requested",
+          "loc": "src/invoices/invoices.consumer.ts:28",
+          "service": "billing",
+          "kind": "event",
+          "reach": "dead",
+          "hops": 4,
+          "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested"
+        },
+        {
+          "id": "entry:billing:event:order.created",
+          "type": "entry",
+          "label": "event order.created",
+          "loc": "src/invoices/invoices.consumer.ts:17",
+          "service": "billing",
+          "kind": "event",
+          "reach": "alive",
+          "hops": 4,
+          "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
+        },
+        {
+          "id": "entry:billing:http:POST:/invoices",
+          "type": "entry",
+          "label": "POST /invoices",
+          "loc": "src/invoices/invoices.controller.ts:15",
+          "service": "billing",
+          "kind": "http",
+          "reach": "alive",
+          "hops": 4,
+          "by": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
+        },
+        {
+          "id": "entry:gateway:http:GET:/orders/:param",
+          "type": "entry",
+          "label": "GET /orders/:param",
+          "loc": "src/orders/orders.controller.ts:30",
+          "service": "gateway",
+          "kind": "http",
+          "reach": "alive",
+          "hops": 4,
+          "by": "gateway#src/orders/orders.controller.ts:OrdersController.findOne"
+        },
+        {
+          "id": "entry:gateway:http:POST:/orders/:param/invoice",
+          "type": "entry",
+          "label": "POST /orders/:param/invoice",
+          "loc": "src/orders/orders.controller.ts:40",
+          "service": "gateway",
+          "kind": "http",
+          "reach": "alive",
+          "hops": 8,
+          "by": "gateway#src/orders/orders.controller.ts:OrdersController.invoice"
+        }
+      ],
+      "unreached": 5,
+      "throughChannels": [
+        {
+          "consumer": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+          "channels": [
+            "order.created"
+          ],
+          "ways": 1
+        }
+      ],
+      "complete": true
     }
   ],
+  "complete": true,
   "next": [
-    "who_calls({symbol: \"entry:gateway:http:GET:/orders/:param\"})",
-    "who_calls({symbol: \"entry:orders:http:GET:/orders/:param\"})"
+    "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
+    "impact({symbol: \"entry:orders:http:GET:/orders/:param\", channel: \"order.created\"})",
+    "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
+    "get_flow({entry: \"entry:billing:event:invoice.requested\"})"
   ]
 }

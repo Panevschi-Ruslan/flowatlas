@@ -12,8 +12,16 @@ import { rankMatches } from './names.js';
  * `channelUsed` is set on a channel written another way than the graph
  * spells it (`tenant:<id>:events`, P360): the channel id answered for.
  */
-export type Resolved = { id: string; node: GraphNode; alsoAnswers?: string[]; channelUsed?: string };
-export type EntryRef = Resolved | { candidates: GraphNode[] };
+export type Resolved = { id: string; node: GraphNode; alsoAnswers?: string[]; channelUsed?: string; fuzzy?: true };
+/**
+ * `fuzzy` (P381): no name holds what was asked; the nodes are only near it
+ * (by initials, inside an id), so an answer about them is never the whole
+ * answer to what was asked.
+ */
+export type EntryRef = Resolved | { candidates: GraphNode[]; fuzzy?: true };
+
+/** The score from which a name match is near rather than holding the name asked (`rankMatches`: initials, then inside the id). */
+const NEAR_SCORE = 3;
 
 export const isResolved = (ref: EntryRef): ref is Resolved => 'id' in ref;
 
@@ -51,13 +59,15 @@ const byId = (nodes: readonly GraphNode[]): GraphNode[] =>
  * grammar. Two services serving the same route is not resolved by picking one:
  * the candidates come back and the asker says which.
  */
-export const resolveEntryRef = (db: GraphDb, ref: string): EntryRef => {
+export const resolveEntryRef = (db: GraphDb, ref: string, service?: string): EntryRef => {
   const trimmed = ref.trim();
 
   const exact = db.node(trimmed);
   if (exact !== undefined) return { id: exact.id, node: exact };
 
-  const entries = db.nodesByType('entry');
+  // With a service, a route said aloud is matched among that service's routes alone (P381): the router of the
+  // service asked about decides, and a more specific route another service serves is not this one.
+  const entries = db.nodesByType('entry').filter((entry) => service === undefined || entry.repo === service);
 
   const route = asRoute(trimmed);
   if (route !== undefined) {
@@ -149,15 +159,19 @@ const MAX_CANDIDATES = 8;
  * `service` narrows a name to one service, as the command line's `--service`
  * does (P229): an entry said aloud or a near name found in another service is
  * looked for again inside this one. A full id is never narrowed: it already
- * says which node it means.
+ * says which node it means. A channel belongs to no service and is found
+ * whatever the service.
+ *
+ * A match only near what was asked (initials, inside an id) says `fuzzy`
+ * (P381), so no tool calls an answer about it complete.
  */
 export const resolveSymbol = (db: GraphDb, ref: string, service?: string): EntryRef => {
   const trimmed = ref.trim();
   const exact = db.node(trimmed);
   if (exact !== undefined) return { id: exact.id, node: exact };
 
-  const inService = (node: GraphNode): boolean => service === undefined || node.repo === service;
-  const entry = resolveEntryRef(db, trimmed);
+  const inService = (node: GraphNode): boolean => service === undefined || node.repo === service || node.repo === '';
+  const entry = resolveEntryRef(db, trimmed, service);
   if (isResolved(entry)) {
     if (inService(entry.node)) return entry;
   } else if (entry.candidates.length > 0) {
@@ -170,7 +184,8 @@ export const resolveSymbol = (db: GraphDb, ref: string, service?: string): Entry
   const best = ranked[0];
   if (best === undefined) return { candidates: [] };
   const tied = ranked.filter((match) => match.score === best.score);
+  const fuzzy = best.score >= NEAR_SCORE ? { fuzzy: true as const } : {};
   return tied.length === 1
-    ? { id: best.node.id, node: best.node }
-    : { candidates: tied.slice(0, MAX_CANDIDATES).map((match) => match.node) };
+    ? { id: best.node.id, node: best.node, ...fuzzy }
+    : { candidates: tied.slice(0, MAX_CANDIDATES).map((match) => match.node), ...fuzzy };
 };

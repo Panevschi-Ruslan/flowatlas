@@ -118,7 +118,8 @@ export const asksFurther = (tool, args, answer) => {
  * What the hand-written right answer (`expect`) says an answer gets wrong:
  * an error, an id a list must hold and misses, one it must not hold and
  * does, a row past an exact list or said twice in one, a field a row must say otherwise,
- * `complete: false` where the right answer is complete, and more than one
+ * `complete: false` where the right answer is complete, `complete: true`
+ * where it is not (a filtered or fuzzy answer, P381), and more than one
  * call for an answer that said it was complete.
  */
 export const wrongIn = (expect, { first, lists, measured }) => {
@@ -158,6 +159,8 @@ export const wrongIn = (expect, { first, lists, measured }) => {
     }
   }
   if (expect.complete === true && !measured.complete) wrong.push('says complete: false where the right answer is complete');
+  // A filtered, fuzzy or half answer that calls itself whole is the worst answer there is (P381).
+  if (expect.complete === false && first.complete === true) wrong.push('says complete: true where the right answer is not complete');
   // An answer that says it is complete is the whole answer: the question took the one call.
   if (first.complete === true && measured.calls !== 1) wrong.push(`answered complete, yet took ${measured.calls} calls`);
   return wrong;

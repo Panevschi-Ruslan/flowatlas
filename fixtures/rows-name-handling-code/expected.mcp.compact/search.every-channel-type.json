@@ -17,8 +17,9 @@
           "consumer:shop-web#src/app/desk-board.component.ts:DeskBoardComponent.reload"
         ],
         "sites": 4,
-        "reach": "alive",
-        "from": "POST /api/desks/:param/help"
+        "reach": "dead",
+        "from": "POST /api/desks/:param/help",
+        "throughDead": true
       }
     ]
   },

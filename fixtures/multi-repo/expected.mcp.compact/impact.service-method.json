@@ -49,6 +49,24 @@
     }
   ],
   "total": 6,
+  "byKind": {
+    "consumers": {
+      "billing": [
+        "src/invoices/invoices.consumer.ts"
+      ]
+    },
+    "routes": {
+      "billing": [
+        "src/invoices/invoices.controller.ts"
+      ],
+      "gateway": [
+        "src/orders/orders.controller.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:orders:http:GET:/orders/:param"
+  ],
   "reached": 38,
   "entriesByService": {
     "orders": 1,

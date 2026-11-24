@@ -8,7 +8,8 @@
       "loc": "src/products/products.controller.ts:59",
       "service": "stock-api",
       "kind": "http",
-      "reach": "dead"
+      "reach": "dead",
+      "callers": 0
     },
     {
       "id": "entry:stock-api:http:GET:/products",

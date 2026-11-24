@@ -7,7 +7,8 @@
       "label": "DELETE /api/reports/:param",
       "loc": "src/reports/reports.controller.ts:31",
       "service": "shop-api",
-      "kind": "http"
+      "kind": "http",
+      "callers": 0
     },
     {
       "id": "entry:shop-api:http:GET:/api/reports/weekly",
@@ -15,7 +16,8 @@
       "label": "GET /api/reports/weekly",
       "loc": "src/reports/reports.controller.ts:21",
       "service": "shop-api",
-      "kind": "http"
+      "kind": "http",
+      "callers": 0
     }
   ],
   "total": 2,

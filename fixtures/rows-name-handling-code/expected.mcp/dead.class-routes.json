@@ -15,7 +15,8 @@
     {
       "id": "entry:shop-api:http:DELETE:/api/reports/:param",
       "verdict": "dead",
-      "reason": "no http_calls/hits from any repo (may be a public API)"
+      "reason": "no http_calls/hits from any repo (may be a public API)",
+      "callers": 0
     },
     {
       "id": "entry:shop-api:http:GET:/api/reports/daily",
@@ -26,7 +27,8 @@
     {
       "id": "entry:shop-api:http:GET:/api/reports/weekly",
       "verdict": "dead",
-      "reason": "no http_calls/hits from any repo (may be a public API)"
+      "reason": "no http_calls/hits from any repo (may be a public API)",
+      "callers": 0
     },
     {
       "id": "entry:shop-api:http:POST:/api/reports/export",

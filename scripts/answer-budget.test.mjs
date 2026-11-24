@@ -83,6 +83,15 @@ test('an answer that says it is complete takes one call', () => {
   assert.deepEqual(wrongIn({}, { first: answer, lists: rowsByList([answer], ['entries']), measured: { complete: true, calls: 2 } }), ['answered complete, yet took 2 calls']);
 });
 
+test('a filtered or fuzzy answer that says it is complete is wrong (P381)', () => {
+  const answer = { entries: [{ id: 'a' }], complete: true };
+  assert.deepEqual(wrongIn({ complete: false }, { first: answer, lists: rowsByList([answer], ['entries']), measured: { complete: true, calls: 1 } }), [
+    'says complete: true where the right answer is not complete',
+  ]);
+  const honest = { entries: [{ id: 'a' }], complete: false, left: ['filter: 1 way in in other services left out (callersIn: x)'] };
+  assert.deepEqual(wrongIn({ complete: false }, { first: honest, lists: rowsByList([honest], ['entries']), measured: { complete: false, calls: 1 } }), []);
+});
+
 test('follows the page an answer names, or the same question asked further, and nothing else', () => {
   assert.deepEqual(parseCall('who_calls({symbol: "a#b.ts:C.d", depth: 6})'), { tool: 'who_calls', args: { symbol: 'a#b.ts:C.d', depth: 6 } });
   assert.deepEqual(parseCall('search({query: "x", kinds: ["gaps"]})'), { tool: 'search', args: { query: 'x', kinds: ['gaps'] } });

@@ -13,7 +13,7 @@ import { loadObservedCounts } from './query/observed.js';
 import { serviceNamed, type ServiceNamed } from './query/service-name.js';
 import { canAnswer, isToolName, NEEDS, TOOL_NAMES, TOOL_NEEDS, type Need, type ToolFacts, type ToolName } from './tool-needs.js';
 import { changeDocumentsBeside } from './tools/changes.js';
-import { respond, verboseInput } from './tools/common.js';
+import { pluralAsked, respond, verboseInput } from './tools/common.js';
 import { isCoreTool, withAlwaysLoad } from './upfront.js';
 
 /**
@@ -401,16 +401,21 @@ export class ToolListing {
         const refused = this.refusal(request.params.name);
         if (refused !== undefined) return respond(refused);
         // `verbose` is the boundary's, not the tool's (P365): the tool answers as it always has, and is never told.
-        const { verbose, ...asked } = request.params.arguments ?? {};
+        // Several inputs said any way a guide teaches (`ids`, a list in the single input) are the tool's list (P381).
+        const { verbose, ...asked } = pluralAsked(request.params.name, request.params.arguments ?? {});
         const compact = verbose !== true && !FULL_ANSWER_TOOLS.has(request.params.name);
         // A service said by its repository's folder is the service (P377); one named nowhere answers the services there are.
         const said = typeof asked['service'] === 'string' ? this.#serviceNamed(asked['service']) : undefined;
         // A diff's services are its two sides', not the graph's: one gone from the graph is still asked of it.
         const named = said !== undefined && 'error' in said && SERVICES_OF_THEIR_OWN.has(request.params.name) ? undefined : said;
         if (named !== undefined && 'service' in named) asked['service'] = named.service;
+        // The service whose callers are kept (P381) is named the same way.
+        const callersIn = typeof asked['callersIn'] === 'string' ? this.#serviceNamed(asked['callersIn']) : undefined;
+        if (callersIn !== undefined && 'service' in callersIn) asked['callersIn'] = callersIn.service;
+        const notNamed = named !== undefined && 'error' in named ? named : callersIn !== undefined && 'error' in callersIn ? callersIn : undefined;
         const toTool = request.params.arguments === undefined ? request : { ...request, params: { ...request.params, arguments: asked } };
         const answered = () =>
-          named !== undefined && 'error' in named ? respond(named) : this.#offered(handler(toTool as never, extra), compact);
+          notNamed !== undefined ? respond(notNamed) : this.#offered(handler(toTool as never, extra), compact);
         if (!this.#log.enabled) return answered();
         // Logged here, once for every tool, so a tool added later is logged too (P235).
         const handle = this.#handle;

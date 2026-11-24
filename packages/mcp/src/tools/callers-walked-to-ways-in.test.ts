@@ -171,7 +171,7 @@ describe("a controller's routes asked together stay small and finish (P379)", ()
   it('lists the routes a controller declares with who calls each, and names dead for the verdicts', async () => {
     const answer = await call('list_entries', { in: 'ProductsController' }, false);
     expect(answer.entries.map((row: { id: string; reach: string; callers?: number; caller?: string }) => [row.id, row.reach, row.callers, row.caller])).toEqual([
-      ['entry:stock-api:http:DELETE:/products/:param', 'dead', undefined, undefined],
+      ['entry:stock-api:http:DELETE:/products/:param', 'dead', 0, undefined],
       ['entry:stock-api:http:GET:/products', 'alive', 1, 'ui_api_call:store-web#src/app/products.client.ts:16:12'],
       ['entry:stock-api:http:GET:/products/:param', 'alive', 1, 'ui_api_call:store-web#src/app/products.client.ts:20:12'],
       ['entry:stock-api:http:POST:/products', 'alive', 1, 'ui_api_call:store-web#src/app/products.client.ts:47:12'],

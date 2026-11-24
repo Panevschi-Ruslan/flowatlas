@@ -27,6 +27,8 @@ export interface ImpactOptions extends QueryOptions {
   verbose?: boolean;
   /** A channel the answer says ways in lie beyond: list those instead, as the tool's `channel` (P372). */
   channel?: string;
+  /** Keep only the ways in of this service, as the tool's `callersIn` (P381); `--service` picks the symbol. */
+  callersIn?: string;
 }
 
 /** A row of impact's answer as the footer reads it: the fields the tool says beside each way in. */
@@ -211,6 +213,7 @@ const answerImpact = (symbol: string, options: ImpactOptions, io: QueryIo): void
       maxNodes: settings.maxNodes,
       ...(offset === undefined ? {} : { offset }),
       ...(options.channel === undefined ? {} : { channel: options.channel }),
+      ...(options.callersIn === undefined ? {} : { callersIn: options.callersIn }),
     });
 
     if (settings.format === 'json') {
@@ -256,6 +259,7 @@ export const registerImpact = (program: Command): void => {
     .option('--offset <n>', 'the row to start the list at, as the answer\'s nextOffset says')
     .option('--verbose', 'with --format json, the whole answer, pretty-printed, instead of the compact one')
     .option('--channel <name>', 'list the ways in beyond a channel the answer counts under throughChannels, or beyond every channel of a consumer it names')
+    .option('--callers-in <service>', 'keep only the ways in of this service (--service picks the symbol)')
     .action((symbol: string, options: ImpactOptions) => {
       runImpact(symbol, options);
     });

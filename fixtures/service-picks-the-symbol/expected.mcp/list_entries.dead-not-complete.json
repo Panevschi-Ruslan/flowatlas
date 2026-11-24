@@ -1,0 +1,23 @@
+{
+  "entries": [
+    {
+      "id": "entry:lending-api:http:DELETE:/books/:param/hold",
+      "type": "entry",
+      "label": "DELETE /books/:param/hold",
+      "loc": "src/books.controller.ts:33",
+      "service": "lending-api",
+      "kind": "http"
+    }
+  ],
+  "total": 1,
+  "complete": false,
+  "left": [
+    "uncalled: 1 more way in no caller joins is judged maybe, not dead: called: false lists every one"
+  ],
+  "next": [
+    "list_entries({service: \"lending-api\", called: false})",
+    "get_flow({entry: \"entry:lending-api:http:DELETE:/books/:param/hold\"})",
+    "describe_for_prompt({id: \"entry:lending-api:http:DELETE:/books/:param/hold\"})",
+    "impact({symbol: \"entry:lending-api:http:DELETE:/books/:param/hold\"})"
+  ]
+}

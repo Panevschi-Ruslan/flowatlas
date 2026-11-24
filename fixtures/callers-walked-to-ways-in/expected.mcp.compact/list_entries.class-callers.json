@@ -4,7 +4,8 @@
     {
       "id": "entry:stock-api:http:DELETE:/products/:param",
       "loc": "src/products/products.controller.ts:59",
-      "reach": "dead"
+      "reach": "dead",
+      "callers": 0
     },
     {
       "id": "entry:stock-api:http:GET:/products",

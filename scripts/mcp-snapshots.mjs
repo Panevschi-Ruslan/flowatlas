@@ -404,6 +404,31 @@ const REQUEST_CASES = [
 /** The same, compact: what an agent is handed. */
 const REQUEST_COMPACT_CASES = REQUEST_CASES.filter(([name]) => !name.startsWith('get_source')).map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
 
+/**
+ * Answers never falsely complete (P381): a route two services serve said
+ * aloud, with and without the service that picks it; `callersIn`; a name
+ * nothing holds; impact by kind and on several symbols; code called only
+ * through a dead route; a controller's uncalled routes; and the uncalled ways
+ * in a `reach: "dead"` list leaves out.
+ */
+const PICKED_API_ROUTE = 'entry:lending-api:http:GET:/books/:param';
+const PICKED_CASES = [
+  ['who_calls.service-picks', 'who_calls', { symbol: 'GET /books/42', service: 'lending-api' }],
+  ['who_calls.two-candidates', 'who_calls', { symbol: 'GET /books/42' }],
+  ['who_calls.callers-in', 'who_calls', { symbol: PICKED_API_ROUTE, callersIn: 'desk-bot' }],
+  ['who_calls.fuzzy', 'who_calls', { symbol: 'BoksService.findOne' }],
+  ['who_calls.ids', 'who_calls', { ids: [PICKED_API_ROUTE, 'entry:lending-gateway:http:GET:/books/:param'] }],
+  ['impact.service-picks', 'impact', { symbol: PICKED_API_ROUTE, service: 'lending-api' }],
+  ['impact.by-kind', 'impact', { symbol: 'BooksService.findOne' }],
+  ['impact.symbols', 'impact', { symbols: ['BooksService.findOne', 'HoldsService.place'] }],
+  ['dead.through-dead', 'dead', { id: 'HoldsService.release' }],
+  ['dead.controller-uncalled', 'dead', { id: 'lending-api#src/books.controller.ts:BooksController' }],
+  ['list_entries.dead-not-complete', 'list_entries', { service: 'lending-api', reach: 'dead' }],
+  ['list_entries.uncalled', 'list_entries', { service: 'lending-api', called: false }],
+];
+/** The same, compact: what an agent is handed. */
+const PICKED_COMPACT_CASES = PICKED_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
+
 /** The same impact and a flow through the rendered child, compact (P370). */
 const RENDERED_REACH_COMPACT_CASES = [
   ['impact.rendered-child', 'impact', { symbol: RENDERED_REACH_TARGET, verbose: false }],
@@ -904,6 +929,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'request-lands-on-route'),
     outDir: join(root, 'fixtures', 'request-lands-on-route', 'expected.mcp.compact'),
     cases: REQUEST_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'service-picks-the-symbol'),
+    outDir: join(root, 'fixtures', 'service-picks-the-symbol', 'expected.mcp'),
+    cases: PICKED_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'service-picks-the-symbol'),
+    outDir: join(root, 'fixtures', 'service-picks-the-symbol', 'expected.mcp.compact'),
+    cases: PICKED_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

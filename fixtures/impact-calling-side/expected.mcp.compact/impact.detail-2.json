@@ -63,6 +63,17 @@
     }
   ],
   "total": 4,
+  "byKind": {
+    "screens": {
+      "backoffice-web": [
+        "src/status-board.component.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:shop-api:http:PATCH:/orders/status",
+    "entry:shop-api:http:POST:/hooks/chat"
+  ],
   "reached": 16,
   "entriesByService": {
     "shop-api": 2,

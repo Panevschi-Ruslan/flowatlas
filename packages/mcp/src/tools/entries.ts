@@ -52,6 +52,9 @@ const ENTRY_KINDS = [
 
 const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
+/** The reach of a way in no caller joins that is not judged dead, though it may be (P381): a call read in part, one a segment off. */
+const UNCALLED_MAYBE: ReadonlySet<Reach> = new Set(['maybe', 'unreached']);
+
 /** Service, then kind, then the key it is registered under. */
 const inReadingOrder = (a: GraphNode, b: GraphNode): number =>
   cmp(a.repo, b.repo) || cmp(a.kind ?? '', b.kind ?? '') || cmp(a.label, b.label);
@@ -135,6 +138,7 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
         pathPrefix: z.string().optional().describe('routes under this path'),
         in: z.string().optional(),
         reach: z.enum(REACHES as [Reach, ...Reach[]]).optional(),
+        called: z.boolean().optional(),
         ...commonInput,
         ...pageInput,
       },
@@ -155,7 +159,8 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
                 declared.candidates.slice(0, 2).map((node) => callOf('list_entries', { in: node.id })),
               );
         }
-        const judge = input.reach === undefined && declared === undefined ? undefined : deadJudge(db, db.report(), deadOptionsOf(ctx.handle));
+        const unjudged = input.reach === undefined && input.called === undefined && declared === undefined;
+        const judge = unjudged ? undefined : deadJudge(db, db.report(), deadOptionsOf(ctx.handle));
         const judged = new Map<string, ReturnType<NonNullable<typeof judge>>>();
         const verdictOf = (entry: GraphNode): ReturnType<NonNullable<typeof judge>> => {
           if (!judged.has(entry.id)) judged.set(entry.id, judge?.(entry.id));
@@ -165,17 +170,22 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
           const answer = verdictOf(entry);
           return answer === undefined ? undefined : reachOfVerdict(entry, answer);
         };
-        // Who calls it, as dead on a class says it (P375): how many callers, and the first (P379).
+        // Who calls it, as dead on a class says it (P375): how many callers, none said as 0 (P381), and the first (P379).
         const callersOf = (entry: GraphNode): object => {
           const evidence = verdictOf(entry)?.evidence ?? {};
           const { callers, caller } = evidence as { callers?: unknown; caller?: unknown };
           return {
-            ...(typeof callers === 'number' && callers > 0 ? { callers } : {}),
+            callers: typeof callers === 'number' ? callers : 0,
             ...(typeof caller === 'string' && caller !== '' ? { caller } : {}),
           };
         };
+        // The fact a verdict rests on (P381): a caller in the project joins it - a request, a link - or none does.
+        const isCalled = (entry: GraphNode): boolean => {
+          const { callers, links } = (verdictOf(entry)?.evidence ?? {}) as { callers?: unknown; links?: unknown };
+          return (typeof callers === 'number' && callers > 0) || (typeof links === 'number' && links > 0);
+        };
         const inDeclared = declared === undefined ? undefined : new Set(declared.entries.map((entry) => entry.id));
-        const all = db
+        const filtered = db
           .nodesByType('entry', input.kind)
           .filter(inService(input.service))
           .filter((entry) => inDeclared === undefined || inDeclared.has(entry.id))
@@ -185,8 +195,14 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
             return path === prefix || path.startsWith(prefix === '/' ? '/' : `${prefix}/`);
           })
           // Judged last, so only the rows the other filters kept are judged.
-          .filter((entry) => input.reach === undefined || reachOf(entry) === input.reach)
-          .sort(inReadingOrder);
+          .filter((entry) => input.called === undefined || isCalled(entry) === input.called);
+        const all = filtered.filter((entry) => input.reach === undefined || reachOf(entry) === input.reach).sort(inReadingOrder);
+        // Asked for the dead, the ways in no caller joins either that are judged a maybe (a request read in part could
+        // reach it, one a segment off) are no less uncalled (P381): counted, and `called: false` lists every one.
+        const uncalledElse =
+          input.reach !== 'dead' || input.called !== undefined
+            ? 0
+            : filtered.filter((entry) => !isCalled(entry) && UNCALLED_MAYBE.has(reachOf(entry) ?? 'alive')).length;
 
         const { items, total, truncated, nextOffset } = truncate(all, maxNodes, input.offset);
         const args = {
@@ -195,9 +211,11 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
           pathPrefix: input.pathPrefix,
           in: input.in,
           reach: input.reach,
+          called: input.called,
           detail: input.detail,
           maxNodes,
         };
+        const everyUncalled = callOf('list_entries', { ...args, reach: undefined, called: false, maxNodes: undefined, detail: undefined });
         // Asked about one class's ways in, each row says whether it runs and who calls it (P379); asked for one reach,
         // the call said whether.
         const withReach = (entry: GraphNode): object => {
@@ -215,12 +233,19 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
             entries: items.map(withReach),
             total,
             ...(nextOffset === undefined ? {} : { truncated, nextOffset }),
-            ...completeOf([pageLeft(total, items.length, input.offset, nextOffset)]),
+            ...completeOf([
+              pageLeft(total, items.length, input.offset, nextOffset),
+              uncalledElse > 0 &&
+                `uncalled: ${uncalledElse} more way${uncalledElse === 1 ? ' in no caller joins is' : 's in no caller joins are'} judged maybe, not dead: called: false lists every one`,
+            ]),
             ...(note === undefined ? {} : { note }),
           },
           pagedNext(
             { tool: 'list_entries', args, nextOffset },
-            [...new Set([...verdicts, ...withTraceFor(nextFor(items[0]), items[0], sampledIn(ctx.handle.path))])].slice(0, MAX_NEXT),
+            [...new Set([...(uncalledElse > 0 ? [everyUncalled] : []), ...verdicts, ...withTraceFor(nextFor(items[0]), items[0], sampledIn(ctx.handle.path))])].slice(
+              0,
+              MAX_NEXT,
+            ),
           ),
         );
       }),

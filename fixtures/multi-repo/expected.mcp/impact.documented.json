@@ -5,7 +5,8 @@
     "label": "OrdersService.create",
     "loc": "src/orders/orders.service.ts:40",
     "service": "orders",
-    "reach": "alive"
+    "reach": "dead",
+    "throughDead": true
   },
   "entries": [
     {
@@ -20,6 +21,9 @@
     }
   ],
   "total": 1,
+  "changing": [
+    "entry:orders:http:POST:/orders"
+  ],
   "reached": 2,
   "entriesByService": {
     "orders": 1

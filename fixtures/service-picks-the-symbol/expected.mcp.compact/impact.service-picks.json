@@ -1,0 +1,65 @@
+{
+  "target": {
+    "id": "entry:lending-api:http:GET:/books/:param",
+    "loc": "src/books.controller.ts:23",
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:desk-bot:bot_command:book",
+      "line": 14,
+      "reach": "outside",
+      "via": "GET /books/:param (lending-api)",
+      "by": "desk-bot#src/desk-bot.ts:DeskBot.showBook"
+    },
+    {
+      "id": "entry:lending-gateway:http:GET:/books/:param",
+      "line": 9,
+      "reach": "alive",
+      "via": "GET /books/:param (lending-api)",
+      "by": "lending-gateway#src/books.controller.ts:BooksController.findOne"
+    },
+    {
+      "id": "entry:reader-web:screen:/book/:param",
+      "reach": "outside",
+      "via": "GET /books/:param (lending-api)",
+      "by": "reader-web#src/app/book-page.component.ts:BookPageComponent"
+    }
+  ],
+  "total": 3,
+  "byKind": {
+    "bots": {
+      "desk-bot": [
+        "src/desk-bot.ts"
+      ]
+    },
+    "routes": {
+      "lending-gateway": [
+        "src/books.controller.ts"
+      ]
+    },
+    "screens": {
+      "reader-web": [
+        "src/app/book-page.component.ts"
+      ]
+    }
+  },
+  "reached": 13,
+  "entriesByService": {
+    "lending-gateway": 1,
+    "reader-web": 1,
+    "desk-bot": 1
+  },
+  "reachedByService": {
+    "reader-web": 6,
+    "lending-gateway": 4,
+    "desk-bot": 3
+  },
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:desk-bot:bot_command:book\"})",
+    "describe_for_prompt({id: \"entry:desk-bot:bot_command:book\"})"
+  ]
+}

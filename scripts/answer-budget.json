@@ -1485,48 +1485,326 @@
         ]
       },
       "note": "P377: the repository folder names the service shop-api; it answered \"nothing matches\"."
+    },
+    {
+      "id": "who_calls.service-picks",
+      "ask": "who calls GET /api/items of the market-api service",
+      "fixture": "impact-shared-client",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "GET /api/items",
+        "service": "market-api"
+      },
+      "lists": [
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "waysIn": [
+            "entry:kiosk-web:screen:/browse",
+            "entry:market-bot:bot_command:items",
+            "entry:market-web:screen:/history"
+          ]
+        },
+        "exact": [
+          "waysIn"
+        ]
+      },
+      "note": "P381: the service picks the route and cuts none of its callers; it answered 375 characters, no caller, \"nothing reaches this\", complete."
+    },
+    {
+      "id": "impact.own-service",
+      "ask": "what breaks if GET /orders/:id of the orders service changes",
+      "fixture": "multi-repo",
+      "tool": "impact",
+      "args": {
+        "symbol": "entry:orders:http:GET:/orders/:param",
+        "service": "orders"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:billing:event:invoice.requested",
+            "entry:billing:event:order.created",
+            "entry:billing:http:POST:/invoices",
+            "entry:gateway:http:GET:/orders/:param",
+            "entry:gateway:http:POST:/orders/:param/invoice"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P381: the five ways in in other services; it answered 832 characters with no entry, complete."
+    },
+    {
+      "id": "who_calls.two-services",
+      "ask": "who calls GET /orders/:id",
+      "fixture": "multi-repo",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "GET /orders/:id"
+      },
+      "lists": [
+        "target"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "target": [
+            "entry:gateway:http:GET:/orders/:param",
+            "entry:orders:http:GET:/orders/:param"
+          ]
+        },
+        "exact": [
+          "target"
+        ]
+      },
+      "note": "P381: both services' routes answered in one call; it answered their candidates (333 characters), then one call each."
+    },
+    {
+      "id": "who_calls.ids",
+      "ask": "who calls ProductsController's five routes, asked with ids",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "who_calls",
+      "args": {
+        "ids": [
+          "entry:stock-api:http:GET:/products",
+          "entry:stock-api:http:GET:/products/:param",
+          "entry:stock-api:http:POST:/products",
+          "entry:stock-api:http:PUT:/products/:param",
+          "entry:stock-api:http:DELETE:/products/:param"
+        ]
+      },
+      "lists": [
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "waysIn": [
+            "entry:store-web:screen:/catalog",
+            "entry:store-web:screen:/catalog/:param"
+          ]
+        },
+        "exact": [
+          "waysIn"
+        ]
+      },
+      "note": "P381: ids is the tool's symbols; it answered {\"error\":\"ask with symbol or symbols\"}."
+    },
+    {
+      "id": "dead.through-dead",
+      "ask": "is TicketsService.assign dead, and TicketsService.reopen",
+      "fixture": "helpdesk-screen-reach",
+      "tool": "dead",
+      "args": {
+        "ids": [
+          "desk-api#src/tickets/tickets.service.ts:TicketsService.assign",
+          "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen"
+        ]
+      },
+      "lists": [
+        "answers"
+      ],
+      "expect": {
+        "rowsSay": {
+          "answers": {
+            "desk-api#src/tickets/tickets.service.ts:TicketsService.assign": {
+              "reach": "dead",
+              "throughDead": true
+            },
+            "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen": {
+              "verdict": "likely-dead"
+            }
+          }
+        }
+      },
+      "note": "P381: assign is called only through a route nothing calls; it answered a bare alive."
+    },
+    {
+      "id": "list_entries.uncalled",
+      "ask": "which routes of the orders service does no caller in the project join",
+      "fixture": "multi-repo",
+      "tool": "list_entries",
+      "args": {
+        "service": "orders",
+        "called": false
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:orders:http:GET:/a/:param",
+            "entry:orders:http:GET:/orders/latest",
+            "entry:orders:http:POST:/orders",
+            "entry:orders:http:POST:/orders/:param/archive"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P381: the four the fixture plants; reach: \"dead\" answered two of them, complete (347 characters)."
+    },
+    {
+      "id": "list_entries.dead-not-whole",
+      "ask": "which routes of the orders service are dead",
+      "fixture": "multi-repo",
+      "tool": "list_entries",
+      "args": {
+        "service": "orders",
+        "reach": "dead"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "entries": [
+            "entry:orders:http:GET:/a/:param",
+            "entry:orders:http:POST:/orders"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P381: the two judged dead, not complete: two more no caller joins are judged maybe, and next lists every one with called: false."
+    },
+    {
+      "id": "impact.by-kind",
+      "ask": "which screens and bots break if BooksService.findOne changes, by file",
+      "fixture": "service-picks-the-symbol",
+      "tool": "impact",
+      "args": {
+        "symbol": "BooksService.findOne"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:desk-bot:bot_command:book",
+            "entry:lending-api:http:GET:/books/:param",
+            "entry:lending-gateway:http:GET:/books/:param",
+            "entry:reader-web:screen:/book/:param"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P381: byKind names the screen, the bot and the gateway by the files handling them, and changing the back end's own route."
+    },
+    {
+      "id": "impact.symbols",
+      "ask": "what breaks if BooksService.findOne and HoldsService.place change together",
+      "fixture": "service-picks-the-symbol",
+      "tool": "impact",
+      "args": {
+        "symbols": [
+          "BooksService.findOne",
+          "HoldsService.place"
+        ]
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:desk-bot:bot_command:book",
+            "entry:lending-api:http:GET:/books/:param",
+            "entry:lending-api:http:POST:/books/:param/hold",
+            "entry:lending-gateway:http:GET:/books/:param",
+            "entry:reader-web:screen:/book/:param"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P381: one change, every way in once; impact took one symbol, two calls repeating the screen and the bot."
+    },
+    {
+      "id": "impact.callers-in",
+      "ask": "which ways in of reader-web reach GET /books/:id of the back end",
+      "fixture": "service-picks-the-symbol",
+      "tool": "impact",
+      "args": {
+        "symbol": "entry:lending-api:http:GET:/books/:param",
+        "callersIn": "reader-web"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "entries": [
+            "entry:reader-web:screen:/book/:param"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P381: the filter says the two ways in it left out and the call without it, never complete."
     }
   ],
   "fixed": {
     "instructions": 2384,
     "guideBlock": 1055,
     "skillDescription": 268,
-    "listingCore": 5633,
-    "listingDefault": 10321,
-    "listingAll": 12904
+    "listingCore": 5679,
+    "listingDefault": 10412,
+    "listingAll": 12995
   },
   "recorded": {
     "impact.multi-repo": {
-      "chars": 1904,
-      "tokens": 476,
+      "chars": 2136,
+      "tokens": 534,
       "rows": 6,
       "complete": true,
       "calls": 1
     },
     "impact.calling-side": {
-      "chars": 1216,
-      "tokens": 304,
+      "chars": 1385,
+      "tokens": 347,
       "rows": 4,
       "complete": false,
       "calls": 1
     },
     "impact.shared-client-items": {
-      "chars": 1124,
-      "tokens": 281,
+      "chars": 1343,
+      "tokens": 336,
       "rows": 4,
       "complete": true,
       "calls": 1
     },
     "impact.shared-client-desks": {
-      "chars": 840,
-      "tokens": 210,
+      "chars": 988,
+      "tokens": 247,
       "rows": 2,
       "complete": true,
       "calls": 1
     },
     "impact.rendered-reach": {
-      "chars": 1119,
-      "tokens": 280,
+      "chars": 1250,
+      "tokens": 313,
       "rows": 3,
       "complete": false,
       "calls": 1
@@ -1539,8 +1817,8 @@
       "calls": 1
     },
     "who_calls.helpdesk": {
-      "chars": 1027,
-      "tokens": 257,
+      "chars": 1063,
+      "tokens": 266,
       "rows": 3,
       "complete": true,
       "calls": 1
@@ -1588,8 +1866,8 @@
       "calls": 1
     },
     "list_entries.class-callers": {
-      "chars": 1152,
-      "tokens": 288,
+      "chars": 1164,
+      "tokens": 291,
       "rows": 5,
       "complete": true,
       "calls": 1
@@ -1602,36 +1880,36 @@
       "calls": 1
     },
     "who_consumes.relayed-type": {
-      "chars": 842,
-      "tokens": 211,
+      "chars": 896,
+      "tokens": 224,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "who_consumes.every-channel": {
-      "chars": 555,
-      "tokens": 139,
+      "chars": 573,
+      "tokens": 144,
       "rows": 1,
       "complete": true,
       "calls": 1
     },
     "search.type-name": {
-      "chars": 535,
-      "tokens": 134,
+      "chars": 553,
+      "tokens": 139,
       "rows": 1,
       "complete": true,
       "calls": 1
     },
     "search.type-name-screens": {
-      "chars": 656,
-      "tokens": 164,
+      "chars": 674,
+      "tokens": 169,
       "rows": 1,
       "complete": true,
       "calls": 1
     },
     "fields.handler-reads": {
-      "chars": 667,
-      "tokens": 167,
+      "chars": 685,
+      "tokens": 172,
       "rows": 1,
       "complete": true,
       "calls": 1
@@ -1644,8 +1922,8 @@
       "calls": 1
     },
     "fields.missing-unused": {
-      "chars": 781,
-      "tokens": 196,
+      "chars": 817,
+      "tokens": 205,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -1658,8 +1936,8 @@
       "calls": 1
     },
     "dead.handler-and-method": {
-      "chars": 806,
-      "tokens": 202,
+      "chars": 818,
+      "tokens": 205,
       "rows": 2,
       "complete": null,
       "calls": 1
@@ -1700,8 +1978,8 @@
       "calls": 6
     },
     "impact.handling-code": {
-      "chars": 987,
-      "tokens": 247,
+      "chars": 1172,
+      "tokens": 293,
       "rows": 3,
       "complete": true,
       "calls": 1
@@ -1721,43 +1999,43 @@
       "calls": 1
     },
     "search.every-channel-type": {
-      "chars": 631,
-      "tokens": 158,
+      "chars": 649,
+      "tokens": 163,
       "rows": 1,
       "complete": true,
       "calls": 1
     },
     "impact.detail-2-lean": {
-      "chars": 1548,
-      "tokens": 387,
+      "chars": 1733,
+      "tokens": 434,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "impact.reached-through-route": {
-      "chars": 987,
-      "tokens": 247,
+      "chars": 1172,
+      "tokens": 293,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "dead.class-routes": {
-      "chars": 1025,
-      "tokens": 257,
+      "chars": 1049,
+      "tokens": 263,
       "rows": 4,
       "complete": true,
       "calls": 1
     },
     "list_entries.class-uncalled": {
-      "chars": 474,
-      "tokens": 119,
+      "chars": 498,
+      "tokens": 125,
       "rows": 2,
       "complete": true,
       "calls": 1
     },
     "impact.channels-once": {
-      "chars": 2321,
-      "tokens": 581,
+      "chars": 2574,
+      "tokens": 644,
       "rows": 8,
       "complete": true,
       "calls": 1
@@ -1809,6 +2087,76 @@
       "tokens": 103,
       "rows": 1,
       "complete": true,
+      "calls": 1
+    },
+    "who_calls.service-picks": {
+      "chars": 1718,
+      "tokens": 430,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.own-service": {
+      "chars": 1909,
+      "tokens": 478,
+      "rows": 5,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.two-services": {
+      "chars": 3208,
+      "tokens": 802,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.ids": {
+      "chars": 2381,
+      "tokens": 596,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "dead.through-dead": {
+      "chars": 878,
+      "tokens": 220,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "list_entries.uncalled": {
+      "chars": 534,
+      "tokens": 134,
+      "rows": 4,
+      "complete": true,
+      "calls": 1
+    },
+    "list_entries.dead-not-whole": {
+      "chars": 446,
+      "tokens": 112,
+      "rows": 2,
+      "complete": false,
+      "calls": 1
+    },
+    "impact.by-kind": {
+      "chars": 1389,
+      "tokens": 348,
+      "rows": 4,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.symbols": {
+      "chars": 1675,
+      "tokens": 419,
+      "rows": 5,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.callers-in": {
+      "chars": 766,
+      "tokens": 192,
+      "rows": 1,
+      "complete": false,
       "calls": 1
     }
   }

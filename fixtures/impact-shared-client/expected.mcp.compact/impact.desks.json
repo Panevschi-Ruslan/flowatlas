@@ -20,6 +20,16 @@
     }
   ],
   "total": 2,
+  "byKind": {
+    "screens": {
+      "market-web": [
+        "src/app/staff-board.component.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:market-api:http:POST:/api/staff/desks/:param/ack-call"
+  ],
   "reached": 13,
   "entriesByService": {
     "market-api": 1,

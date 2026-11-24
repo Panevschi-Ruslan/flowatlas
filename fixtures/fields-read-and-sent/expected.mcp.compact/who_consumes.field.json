@@ -11,8 +11,9 @@
       "kind": "event",
       "selectedIn": "EventsController.receive",
       "via": "switch",
-      "reach": "alive",
+      "reach": "dead",
       "from": "POST /events/orders",
+      "throughDead": true,
       "readIn": [
         {
           "id": "ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady",

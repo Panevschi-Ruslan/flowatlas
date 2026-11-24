@@ -1,0 +1,25 @@
+{
+  "target": {
+    "id": "entry:lending-api:http:GET:/books/:param",
+    "loc": "src/books.controller.ts:23",
+    "reach": "alive"
+  },
+  "callers": [],
+  "waysIn": [
+    {
+      "id": "entry:desk-bot:bot_command:book",
+      "line": 14,
+      "reach": "outside",
+      "hops": 7,
+      "by": "desk-bot#src/desk-bot.ts:DeskBot.showBook"
+    }
+  ],
+  "complete": false,
+  "left": [
+    "filter: 2 ways in in other services left out (callersIn: desk-bot)"
+  ],
+  "next": [
+    "who_calls({symbol: \"entry:lending-api:http:GET:/books/:param\"})",
+    "get_flow({entry: \"entry:desk-bot:bot_command:book\"})"
+  ]
+}

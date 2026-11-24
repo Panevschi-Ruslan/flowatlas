@@ -87,6 +87,27 @@
     }
   ],
   "total": 7,
+  "byKind": {
+    "bots": {
+      "store-bot": [
+        "src/store-bot.ts"
+      ]
+    },
+    "consumers": {
+      "store-bot": [
+        "src/store-bot.ts"
+      ]
+    },
+    "screens": {
+      "store-web": [
+        "src/app/dashboard.component.ts",
+        "src/app/order-history.component.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:store-api:http:GET:/api/shops/items"
+  ],
   "reached": 54,
   "entriesByService": {
     "store-api": 1,

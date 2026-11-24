@@ -16,8 +16,9 @@
       "kind": "event",
       "selectedIn": "OrderEventsController.receive",
       "via": "switch",
-      "reach": "alive",
-      "from": "POST /events/orders"
+      "reach": "dead",
+      "from": "POST /events/orders",
+      "throughDead": true
     }
   ],
   "total": 1,

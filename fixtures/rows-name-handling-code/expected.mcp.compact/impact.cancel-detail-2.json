@@ -58,6 +58,17 @@
     }
   ],
   "total": 3,
+  "byKind": {
+    "screens": {
+      "shop-web": [
+        "src/app/order-detail.component.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+    "entry:shop-api:http:POST:/bot/staff/webhook"
+  ],
   "reached": 11,
   "entriesByService": {
     "shop-api": 2,

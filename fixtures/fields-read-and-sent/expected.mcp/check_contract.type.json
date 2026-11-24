@@ -9,8 +9,9 @@
       "loc": "src/desk/desk.service.ts:10",
       "service": "shop-api",
       "kind": "event",
-      "reach": "alive",
+      "reach": "dead",
       "from": "POST /api/desks/:param/help",
+      "throughDead": true,
       "sends": [
         "type",
         "deskNumber",
@@ -26,8 +27,9 @@
       "loc": "src/notify/notify.service.ts:20",
       "service": "ops-bot",
       "kind": "event",
-      "reach": "alive",
+      "reach": "dead",
       "from": "POST /api/desks/:param/help (shop-api)",
+      "throughDead": true,
       "reads": [
         "deskId",
         "note",

@@ -5,8 +5,9 @@
     "label": "TicketsService.assign",
     "loc": "src/tickets/tickets.service.ts:14",
     "service": "desk-api",
-    "reach": "alive",
-    "from": "POST /desks/:param/tickets/:param/assign"
+    "reach": "dead",
+    "from": "POST /desks/:param/tickets/:param/assign",
+    "throughDead": true
   },
   "callers": [
     {
@@ -15,8 +16,9 @@
         "type": "method",
         "label": "TicketsController.assign",
         "loc": "src/tickets/tickets.controller.ts:8",
-        "reach": "alive",
-        "from": "POST /desks/:param/tickets/:param/assign"
+        "reach": "dead",
+        "from": "POST /desks/:param/tickets/:param/assign",
+        "throughDead": true
       },
       "edge": {
         "type": "calls",

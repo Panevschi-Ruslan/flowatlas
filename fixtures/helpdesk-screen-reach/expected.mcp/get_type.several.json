@@ -33,7 +33,10 @@
       "error": "no type named \"NoSuchType\""
     }
   ],
-  "complete": true,
+  "complete": false,
+  "left": [
+    "type NoSuchType: not found"
+  ],
   "next": [
     "type_usage({type: \"type:console#DeskEvent\"})",
     "find_symbol({query: \"DeskEvent\"})"

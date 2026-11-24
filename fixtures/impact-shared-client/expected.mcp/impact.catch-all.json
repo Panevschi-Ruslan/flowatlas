@@ -33,6 +33,16 @@
     }
   ],
   "total": 2,
+  "byKind": {
+    "screens": {
+      "kiosk-web": [
+        "src/app/order-page.component.ts"
+      ],
+      "market-web": [
+        "src/app/reports-page.component.ts"
+      ]
+    }
+  },
   "reached": 12,
   "entriesByService": {
     "kiosk-web": 1,

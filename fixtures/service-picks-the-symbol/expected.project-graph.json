@@ -1,0 +1,1681 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T15:51:29.259Z",
+  "services": [
+    {
+      "name": "lending-api",
+      "repo": "./lending-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "lending-gateway",
+      "repo": "./lending-gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "reader-web",
+      "repo": "./reader-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    },
+    {
+      "name": "desk-bot",
+      "repo": "./desk-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "config_key:desk-bot#LENDING_GATEWAY_URL",
+      "type": "config_key",
+      "label": "LENDING_GATEWAY_URL",
+      "repo": "desk-bot",
+      "file": "src/gateway.client.ts",
+      "line": 15,
+      "meta": {
+        "key": "LENDING_GATEWAY_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:lending-gateway#LENDING_API_URL",
+      "type": "config_key",
+      "label": "LENDING_API_URL",
+      "repo": "lending-gateway",
+      "file": "src/books.client.ts",
+      "line": 15,
+      "meta": {
+        "key": "LENDING_API_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "desk-bot#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "desk-bot",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "desk-bot#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "desk-bot",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "desk-bot#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "desk-bot",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "DeskBot",
+          "GatewayClient"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "desk-bot#src/desk-bot.ts:DeskBot",
+      "type": "provider",
+      "label": "DeskBot",
+      "repo": "desk-bot",
+      "file": "src/desk-bot.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "desk-bot#src/desk-bot.ts:DeskBot.onModuleInit",
+      "type": "method",
+      "label": "DeskBot.onModuleInit",
+      "repo": "desk-bot",
+      "file": "src/desk-bot.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "desk-bot#src/desk-bot.ts:DeskBot.showBook",
+      "type": "method",
+      "label": "DeskBot.showBook",
+      "repo": "desk-bot",
+      "file": "src/desk-bot.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "desk-bot#src/gateway.client.ts:GatewayClient",
+      "type": "provider",
+      "label": "GatewayClient",
+      "repo": "desk-bot",
+      "file": "src/gateway.client.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "desk-bot#src/gateway.client.ts:GatewayClient.book",
+      "type": "method",
+      "label": "GatewayClient.book",
+      "repo": "desk-bot",
+      "file": "src/gateway.client.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "entry:desk-bot:bot_command:book",
+      "type": "entry",
+      "label": "bot_command book",
+      "repo": "desk-bot",
+      "file": "src/desk-bot.ts",
+      "line": 14,
+      "kind": "bot_command",
+      "meta": {
+        "key": "book",
+        "adapter": "telegraf-calls",
+        "registration": "command",
+        "trigger": "'book'",
+        "updateClass": "DeskBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:lending-api:http:DELETE:/books/:param/hold",
+      "type": "entry",
+      "label": "DELETE /books/:param/hold",
+      "repo": "lending-api",
+      "file": "src/books.controller.ts",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/books/:param/hold",
+        "rawPath": "/books/:bookId/hold",
+        "controller": "BooksController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:lending-api:http:GET:/books",
+      "type": "entry",
+      "label": "GET /books",
+      "repo": "lending-api",
+      "file": "src/books.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/books",
+        "rawPath": "/books",
+        "controller": "BooksController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:lending-api:http:GET:/books/:param",
+      "type": "entry",
+      "label": "GET /books/:param",
+      "repo": "lending-api",
+      "file": "src/books.controller.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/books/:param",
+        "rawPath": "/books/:bookId",
+        "controller": "BooksController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:lending-api:http:POST:/books/:param/extend",
+      "type": "entry",
+      "label": "POST /books/:param/extend",
+      "repo": "lending-api",
+      "file": "src/books.controller.ts",
+      "line": 38,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/books/:param/extend",
+        "rawPath": "/books/:bookId/extend",
+        "controller": "BooksController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:lending-api:http:POST:/books/:param/hold",
+      "type": "entry",
+      "label": "POST /books/:param/hold",
+      "repo": "lending-api",
+      "file": "src/books.controller.ts",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/books/:param/hold",
+        "rawPath": "/books/:bookId/hold",
+        "controller": "BooksController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:lending-gateway:http:GET:/books/:param",
+      "type": "entry",
+      "label": "GET /books/:param",
+      "repo": "lending-gateway",
+      "file": "src/books.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/books/:param",
+        "rawPath": "/books/:bookId",
+        "controller": "BooksController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:reader-web:screen:/book/:param",
+      "type": "entry",
+      "label": "/book/:param",
+      "repo": "reader-web",
+      "file": "src/app/app.routes.ts",
+      "line": 7,
+      "kind": "screen",
+      "meta": {
+        "path": "/book/:param",
+        "by": "angular-routes",
+        "screens": [
+          "BookPageComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:reader-web:screen:/shelf",
+      "type": "entry",
+      "label": "/shelf",
+      "repo": "reader-web",
+      "file": "src/app/app.routes.ts",
+      "line": 8,
+      "kind": "screen",
+      "meta": {
+        "path": "/shelf",
+        "by": "angular-routes",
+        "screens": [
+          "ShelfPageComponent"
+        ]
+      }
+    },
+    {
+      "id": "http_out:desk-bot#src/desk-bot.ts:19:21",
+      "type": "http_out",
+      "label": "GET /books/first",
+      "repo": "desk-bot",
+      "file": "src/desk-bot.ts",
+      "line": 19,
+      "meta": {
+        "method": "GET",
+        "url": "${LENDING_GATEWAY_URL}/books/first",
+        "path": "/books/first",
+        "baseUrlEnv": "LENDING_GATEWAY_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "lending-gateway"
+      }
+    },
+    {
+      "id": "http_out:lending-gateway#src/books.client.ts:15:43",
+      "type": "http_out",
+      "label": "GET /books/:param",
+      "repo": "lending-gateway",
+      "file": "src/books.client.ts",
+      "line": 15,
+      "meta": {
+        "method": "GET",
+        "url": "${LENDING_API_URL}/books/${…}",
+        "path": "/books/:param",
+        "baseUrlEnv": "LENDING_API_URL",
+        "responseType": "string",
+        "bodyType": null,
+        "targetService": "lending-api"
+      }
+    },
+    {
+      "id": "lending-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "lending-api",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "BooksController"
+        ],
+        "providers": [
+          "BooksService",
+          "HoldsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "lending-api#src/books.controller.ts:BooksController",
+      "type": "provider",
+      "label": "BooksController",
+      "repo": "lending-api",
+      "file": "src/books.controller.ts",
+      "line": 11,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "lending-api#src/books.controller.ts:BooksController.extend",
+      "type": "method",
+      "label": "BooksController.extend",
+      "repo": "lending-api",
+      "file": "src/books.controller.ts",
+      "line": 38,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "lending-api#src/books.controller.ts:BooksController.findOne",
+      "type": "method",
+      "label": "BooksController.findOne",
+      "repo": "lending-api",
+      "file": "src/books.controller.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "lending-api#src/books.controller.ts:BooksController.hold",
+      "type": "method",
+      "label": "BooksController.hold",
+      "repo": "lending-api",
+      "file": "src/books.controller.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "lending-api#src/books.controller.ts:BooksController.list",
+      "type": "method",
+      "label": "BooksController.list",
+      "repo": "lending-api",
+      "file": "src/books.controller.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "lending-api#src/books.controller.ts:BooksController.release",
+      "type": "method",
+      "label": "BooksController.release",
+      "repo": "lending-api",
+      "file": "src/books.controller.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "lending-api#src/books.service.ts:BooksService",
+      "type": "provider",
+      "label": "BooksService",
+      "repo": "lending-api",
+      "file": "src/books.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "lending-api#src/books.service.ts:BooksService.findOne",
+      "type": "method",
+      "label": "BooksService.findOne",
+      "repo": "lending-api",
+      "file": "src/books.service.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "lending-api#src/books.service.ts:BooksService.list",
+      "type": "method",
+      "label": "BooksService.list",
+      "repo": "lending-api",
+      "file": "src/books.service.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "lending-api#src/holds.service.ts:HoldsService",
+      "type": "provider",
+      "label": "HoldsService",
+      "repo": "lending-api",
+      "file": "src/holds.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "lending-api#src/holds.service.ts:HoldsService.extend",
+      "type": "method",
+      "label": "HoldsService.extend",
+      "repo": "lending-api",
+      "file": "src/holds.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "lending-api#src/holds.service.ts:HoldsService.place",
+      "type": "method",
+      "label": "HoldsService.place",
+      "repo": "lending-api",
+      "file": "src/holds.service.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "lending-api#src/holds.service.ts:HoldsService.release",
+      "type": "method",
+      "label": "HoldsService.release",
+      "repo": "lending-api",
+      "file": "src/holds.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "lending-gateway#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "lending-gateway",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "lending-gateway#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "lending-gateway",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "lending-gateway#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "lending-gateway",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "BooksController"
+        ],
+        "providers": [
+          "BooksClient"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "lending-gateway#src/books.client.ts:BooksClient",
+      "type": "provider",
+      "label": "BooksClient",
+      "repo": "lending-gateway",
+      "file": "src/books.client.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "lending-gateway#src/books.client.ts:BooksClient.fetch",
+      "type": "method",
+      "label": "BooksClient.fetch",
+      "repo": "lending-gateway",
+      "file": "src/books.client.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "lending-gateway#src/books.controller.ts:BooksController",
+      "type": "provider",
+      "label": "BooksController",
+      "repo": "lending-gateway",
+      "file": "src/books.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "lending-gateway#src/books.controller.ts:BooksController.findOne",
+      "type": "method",
+      "label": "BooksController.findOne",
+      "repo": "lending-gateway",
+      "file": "src/books.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "reader-web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "reader-web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "reader-web#src/app/book-page.component.ts:BookPageComponent",
+      "type": "ui_component",
+      "label": "BookPageComponent",
+      "repo": "reader-web",
+      "file": "src/app/book-page.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-book-page",
+        "route": "/book/:param"
+      }
+    },
+    {
+      "id": "reader-web#src/app/book-page.component.ts:BookPageComponent.hold",
+      "type": "method",
+      "label": "BookPageComponent.hold",
+      "repo": "reader-web",
+      "file": "src/app/book-page.component.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "reader-web#src/app/book-page.component.ts:BookPageComponent.ngOnInit",
+      "type": "method",
+      "label": "BookPageComponent.ngOnInit",
+      "repo": "reader-web",
+      "file": "src/app/book-page.component.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "reader-web#src/app/books.client.ts:BooksClient",
+      "type": "provider",
+      "label": "BooksClient",
+      "repo": "reader-web",
+      "file": "src/app/books.client.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "reader-web#src/app/books.client.ts:BooksClient.get",
+      "type": "method",
+      "label": "BooksClient.get",
+      "repo": "reader-web",
+      "file": "src/app/books.client.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "reader-web#src/app/books.client.ts:BooksClient.hold",
+      "type": "method",
+      "label": "BooksClient.hold",
+      "repo": "reader-web",
+      "file": "src/app/books.client.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "reader-web#src/app/books.client.ts:BooksClient.list",
+      "type": "method",
+      "label": "BooksClient.list",
+      "repo": "reader-web",
+      "file": "src/app/books.client.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "reader-web#src/app/books.client.ts:BooksClient.renew",
+      "type": "method",
+      "label": "BooksClient.renew",
+      "repo": "reader-web",
+      "file": "src/app/books.client.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "reader-web#src/app/shelf-page.component.ts:ShelfPageComponent",
+      "type": "ui_component",
+      "label": "ShelfPageComponent",
+      "repo": "reader-web",
+      "file": "src/app/shelf-page.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-shelf-page",
+        "route": "/shelf"
+      }
+    },
+    {
+      "id": "reader-web#src/app/shelf-page.component.ts:ShelfPageComponent.ngOnInit",
+      "type": "method",
+      "label": "ShelfPageComponent.ngOnInit",
+      "repo": "reader-web",
+      "file": "src/app/shelf-page.component.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "reader-web#src/app/shelf-page.component.ts:ShelfPageComponent.renew",
+      "type": "method",
+      "label": "ShelfPageComponent.renew",
+      "repo": "reader-web",
+      "file": "src/app/shelf-page.component.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:desk-bot",
+      "type": "repo",
+      "label": "desk-bot",
+      "repo": "desk-bot",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "telegraf": 2,
+            "@nestjs/axios": 1,
+            "@nestjs/config": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "telegraf-calls",
+            "entry-registries"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:lending-api",
+      "type": "repo",
+      "label": "lending-api",
+      "repo": "lending-api",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:lending-gateway",
+      "type": "repo",
+      "label": "lending-gateway",
+      "repo": "lending-gateway",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "@nestjs/axios": 1,
+            "@nestjs/config": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:reader-web",
+      "type": "repo",
+      "label": "reader-web",
+      "repo": "reader-web",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "templates": 2,
+          "skippedExternalCalls": {
+            "rxjs": 4,
+            "@angular/common": 4
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_action:reader-web#src/app/book-page.component.ts:17:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "reader-web",
+      "file": "src/app/book-page.component.ts",
+      "line": 17,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "reader-web#src/app/book-page.component.ts:BookPageComponent",
+        "template": "src/app/book-page.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:reader-web#src/app/book-page.component.ts:9:42",
+      "type": "ui_action",
+      "label": "click=\"hold()\"",
+      "repo": "reader-web",
+      "file": "src/app/book-page.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "hold()",
+        "component": "reader-web#src/app/book-page.component.ts:BookPageComponent",
+        "template": "src/app/book-page.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:reader-web#src/app/shelf-page.component.ts:16:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "reader-web",
+      "file": "src/app/shelf-page.component.ts",
+      "line": 16,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "reader-web#src/app/shelf-page.component.ts:ShelfPageComponent",
+        "template": "src/app/shelf-page.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:reader-web#src/app/shelf-page.component.ts:9:89",
+      "type": "ui_action",
+      "label": "click=\"renew('first')\"",
+      "repo": "reader-web",
+      "file": "src/app/shelf-page.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "renew('first')",
+        "component": "reader-web#src/app/shelf-page.component.ts:ShelfPageComponent",
+        "template": "src/app/shelf-page.component.ts",
+        "args": [
+          "'first'"
+        ]
+      }
+    },
+    {
+      "id": "ui_api_call:reader-web#src/app/books.client.ts:17:12",
+      "type": "ui_api_call",
+      "label": "GET /books",
+      "repo": "reader-web",
+      "file": "src/app/books.client.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/books",
+        "path": "/books",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "lending-api"
+      }
+    },
+    {
+      "id": "ui_api_call:reader-web#src/app/books.client.ts:21:12",
+      "type": "ui_api_call",
+      "label": "GET /books/:param",
+      "repo": "reader-web",
+      "file": "src/app/books.client.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/books/:param",
+        "path": "/books/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "lending-api"
+      }
+    },
+    {
+      "id": "ui_api_call:reader-web#src/app/books.client.ts:25:12",
+      "type": "ui_api_call",
+      "label": "POST /books/:param/hold",
+      "repo": "reader-web",
+      "file": "src/app/books.client.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/books/:param/hold",
+        "path": "/books/:param/hold",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "lending-api"
+      }
+    },
+    {
+      "id": "ui_api_call:reader-web#src/app/books.client.ts:29:12",
+      "type": "ui_api_call",
+      "label": "POST /books/:param/renew",
+      "repo": "reader-web",
+      "file": "src/app/books.client.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/books/:param/renew",
+        "path": "/books/:param/renew",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "package": "@angular/common/http",
+        "via": "template-env"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "desk-bot#src/desk-bot.ts:DeskBot",
+      "to": "desk-bot#src/gateway.client.ts:GatewayClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/desk-bot.ts",
+      "line": 11
+    },
+    {
+      "from": "desk-bot#src/desk-bot.ts:DeskBot.onModuleInit",
+      "to": "desk-bot#src/desk-bot.ts:DeskBot.showBook",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/desk-bot.ts",
+      "line": 14
+    },
+    {
+      "from": "desk-bot#src/desk-bot.ts:DeskBot.showBook",
+      "to": "desk-bot#src/gateway.client.ts:GatewayClient.book",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/desk-bot.ts",
+      "line": 19
+    },
+    {
+      "from": "desk-bot#src/desk-bot.ts:DeskBot.showBook",
+      "to": "http_out:desk-bot#src/desk-bot.ts:19:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/desk-bot.ts",
+      "line": 19
+    },
+    {
+      "from": "desk-bot#src/gateway.client.ts:GatewayClient",
+      "to": "desk-bot#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/gateway.client.ts",
+      "line": 10
+    },
+    {
+      "from": "desk-bot#src/gateway.client.ts:GatewayClient",
+      "to": "desk-bot#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/gateway.client.ts",
+      "line": 11
+    },
+    {
+      "from": "desk-bot#src/gateway.client.ts:GatewayClient.book",
+      "to": "config_key:desk-bot#LENDING_GATEWAY_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/gateway.client.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:desk-bot:bot_command:book",
+      "to": "desk-bot#src/desk-bot.ts:DeskBot.showBook",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/desk-bot.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:lending-api:http:DELETE:/books/:param/hold",
+      "to": "lending-api#src/books.controller.ts:BooksController.release",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/books.controller.ts",
+      "line": 33,
+      "meta": {
+        "params": "{bookId:string}"
+      }
+    },
+    {
+      "from": "entry:lending-api:http:GET:/books",
+      "to": "lending-api#src/books.controller.ts:BooksController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/books.controller.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:lending-api:http:GET:/books/:param",
+      "to": "lending-api#src/books.controller.ts:BooksController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/books.controller.ts",
+      "line": 23,
+      "meta": {
+        "params": "{bookId:string}"
+      }
+    },
+    {
+      "from": "entry:lending-api:http:POST:/books/:param/extend",
+      "to": "lending-api#src/books.controller.ts:BooksController.extend",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/books.controller.ts",
+      "line": 38,
+      "meta": {
+        "params": "{bookId:string}"
+      }
+    },
+    {
+      "from": "entry:lending-api:http:POST:/books/:param/hold",
+      "to": "lending-api#src/books.controller.ts:BooksController.hold",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/books.controller.ts",
+      "line": 28,
+      "meta": {
+        "params": "{bookId:string}"
+      }
+    },
+    {
+      "from": "entry:lending-gateway:http:GET:/books/:param",
+      "to": "lending-gateway#src/books.controller.ts:BooksController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/books.controller.ts",
+      "line": 9,
+      "meta": {
+        "params": "{bookId:string}"
+      }
+    },
+    {
+      "from": "entry:reader-web:screen:/book/:param",
+      "to": "reader-web#src/app/book-page.component.ts:BookPageComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 7,
+      "meta": {
+        "route": "/book/:param"
+      }
+    },
+    {
+      "from": "entry:reader-web:screen:/shelf",
+      "to": "reader-web#src/app/shelf-page.component.ts:ShelfPageComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 8,
+      "meta": {
+        "route": "/shelf"
+      }
+    },
+    {
+      "from": "http_out:desk-bot#src/desk-bot.ts:19:21",
+      "to": "entry:lending-gateway:http:GET:/books/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/desk-bot.ts",
+      "line": 19,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "lending-gateway"
+      }
+    },
+    {
+      "from": "http_out:lending-gateway#src/books.client.ts:15:43",
+      "to": "entry:lending-api:http:GET:/books/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/books.client.ts",
+      "line": 15,
+      "returns": "string",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "lending-api"
+      }
+    },
+    {
+      "from": "lending-api#src/books.controller.ts:BooksController",
+      "to": "lending-api#src/books.service.ts:BooksService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/books.controller.ts",
+      "line": 14
+    },
+    {
+      "from": "lending-api#src/books.controller.ts:BooksController",
+      "to": "lending-api#src/holds.service.ts:HoldsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/books.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "lending-api#src/books.controller.ts:BooksController.extend",
+      "to": "lending-api#src/holds.service.ts:HoldsService.extend",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/books.controller.ts",
+      "line": 40
+    },
+    {
+      "from": "lending-api#src/books.controller.ts:BooksController.findOne",
+      "to": "lending-api#src/books.service.ts:BooksService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/books.controller.ts",
+      "line": 25
+    },
+    {
+      "from": "lending-api#src/books.controller.ts:BooksController.hold",
+      "to": "lending-api#src/holds.service.ts:HoldsService.place",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/books.controller.ts",
+      "line": 30
+    },
+    {
+      "from": "lending-api#src/books.controller.ts:BooksController.list",
+      "to": "lending-api#src/books.service.ts:BooksService.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/books.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "lending-api#src/books.controller.ts:BooksController.release",
+      "to": "lending-api#src/holds.service.ts:HoldsService.release",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/books.controller.ts",
+      "line": 35
+    },
+    {
+      "from": "lending-gateway#src/books.client.ts:BooksClient",
+      "to": "lending-gateway#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/books.client.ts",
+      "line": 10
+    },
+    {
+      "from": "lending-gateway#src/books.client.ts:BooksClient",
+      "to": "lending-gateway#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/books.client.ts",
+      "line": 11
+    },
+    {
+      "from": "lending-gateway#src/books.client.ts:BooksClient.fetch",
+      "to": "config_key:lending-gateway#LENDING_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/books.client.ts",
+      "line": 15
+    },
+    {
+      "from": "lending-gateway#src/books.client.ts:BooksClient.fetch",
+      "to": "http_out:lending-gateway#src/books.client.ts:15:43",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/books.client.ts",
+      "line": 15
+    },
+    {
+      "from": "lending-gateway#src/books.controller.ts:BooksController",
+      "to": "lending-gateway#src/books.client.ts:BooksClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/books.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "lending-gateway#src/books.controller.ts:BooksController.findOne",
+      "to": "lending-gateway#src/books.client.ts:BooksClient.fetch",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/books.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "reader-web#src/app/book-page.component.ts:BookPageComponent",
+      "to": "reader-web#src/app/books.client.ts:BooksClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/book-page.component.ts",
+      "line": 15
+    },
+    {
+      "from": "reader-web#src/app/book-page.component.ts:BookPageComponent.hold",
+      "to": "reader-web#src/app/books.client.ts:BooksClient.hold",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/book-page.component.ts",
+      "line": 22
+    },
+    {
+      "from": "reader-web#src/app/book-page.component.ts:BookPageComponent.ngOnInit",
+      "to": "reader-web#src/app/books.client.ts:BooksClient.get",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/app/book-page.component.ts",
+      "line": 18
+    },
+    {
+      "from": "reader-web#src/app/books.client.ts:BooksClient",
+      "to": "reader-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/books.client.ts",
+      "line": 14
+    },
+    {
+      "from": "reader-web#src/app/books.client.ts:BooksClient.get",
+      "to": "ui_api_call:reader-web#src/app/books.client.ts:21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/books.client.ts",
+      "line": 21
+    },
+    {
+      "from": "reader-web#src/app/books.client.ts:BooksClient.hold",
+      "to": "ui_api_call:reader-web#src/app/books.client.ts:25:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/books.client.ts",
+      "line": 25
+    },
+    {
+      "from": "reader-web#src/app/books.client.ts:BooksClient.list",
+      "to": "ui_api_call:reader-web#src/app/books.client.ts:17:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/books.client.ts",
+      "line": 17
+    },
+    {
+      "from": "reader-web#src/app/books.client.ts:BooksClient.renew",
+      "to": "ui_api_call:reader-web#src/app/books.client.ts:29:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/books.client.ts",
+      "line": 29
+    },
+    {
+      "from": "reader-web#src/app/shelf-page.component.ts:ShelfPageComponent",
+      "to": "reader-web#src/app/books.client.ts:BooksClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/shelf-page.component.ts",
+      "line": 14
+    },
+    {
+      "from": "reader-web#src/app/shelf-page.component.ts:ShelfPageComponent.ngOnInit",
+      "to": "reader-web#src/app/books.client.ts:BooksClient.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/app/shelf-page.component.ts",
+      "line": 17
+    },
+    {
+      "from": "reader-web#src/app/shelf-page.component.ts:ShelfPageComponent.renew",
+      "to": "reader-web#src/app/books.client.ts:BooksClient.renew",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/shelf-page.component.ts",
+      "line": 21
+    },
+    {
+      "from": "ui_action:reader-web#src/app/book-page.component.ts:17:3",
+      "to": "reader-web#src/app/book-page.component.ts:BookPageComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/book-page.component.ts",
+      "line": 17
+    },
+    {
+      "from": "ui_action:reader-web#src/app/book-page.component.ts:9:42",
+      "to": "reader-web#src/app/book-page.component.ts:BookPageComponent.hold",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/book-page.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_action:reader-web#src/app/shelf-page.component.ts:16:3",
+      "to": "reader-web#src/app/shelf-page.component.ts:ShelfPageComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/shelf-page.component.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_action:reader-web#src/app/shelf-page.component.ts:9:89",
+      "to": "reader-web#src/app/shelf-page.component.ts:ShelfPageComponent.renew",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/shelf-page.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_api_call:reader-web#src/app/books.client.ts:17:12",
+      "to": "entry:lending-api:http:GET:/books",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/books.client.ts",
+      "line": 17,
+      "returns": "string[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "lending-api"
+      }
+    },
+    {
+      "from": "ui_api_call:reader-web#src/app/books.client.ts:21:12",
+      "to": "entry:lending-api:http:GET:/books/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/books.client.ts",
+      "line": 21,
+      "returns": "string",
+      "meta": {
+        "via": "api-target",
+        "targetService": "lending-api"
+      }
+    },
+    {
+      "from": "ui_api_call:reader-web#src/app/books.client.ts:25:12",
+      "to": "entry:lending-api:http:POST:/books/:param/hold",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/books.client.ts",
+      "line": 25,
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "lending-api"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/desk-bot.ts",
+      "line": 19,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "DeskBot.showBook -> ctx.reply",
+      "meta": {
+        "cause": "interface-type"
+      },
+      "service": "desk-bot"
+    },
+    {
+      "service": "reader-web",
+      "file": "src/app/books.client.ts",
+      "line": 29,
+      "reason": "target-route-not-found",
+      "message": "target service lending-api has no route POST /books/:param/renew",
+      "hint": "Route renamed? Check lending-api's controllers, or annotate the method with /** @flowatlas-calls POST /books/:param/renew */.",
+      "symbol": "ui_api_call:reader-web#src/app/books.client.ts:29:12"
+    }
+  ]
+}

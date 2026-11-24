@@ -19,8 +19,9 @@
           "consumer:web#src/screens/BoardScreen.tsx:BoardScreen"
         ],
         "sites": 4,
-        "reach": "alive",
-        "from": "POST /boards/:param/cards/:param/move"
+        "reach": "dead",
+        "from": "POST /boards/:param/cards/:param/move",
+        "throughDead": true
       }
     ]
   },

@@ -30,6 +30,14 @@
     }
   ],
   "total": 2,
+  "byKind": {
+    "screens": {
+      "market-web": [
+        "src/app/history-page.component.ts",
+        "src/app/staff-board.component.ts"
+      ]
+    }
+  },
   "reached": 11,
   "entriesByService": {
     "market-web": 2

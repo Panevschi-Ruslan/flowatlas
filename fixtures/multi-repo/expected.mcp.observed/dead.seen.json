@@ -6,6 +6,7 @@
   "loc": "src/invoices/invoices.controller.ts:26",
   "verdict": "alive",
   "reason": "no http_calls/hits from any repo (may be a public API); seen 3 times in 2h at run time, so something static reach does not see calls it (a blind spot)",
+  "callers": 0,
   "class": "actionable",
   "evidence": {
     "seen": {

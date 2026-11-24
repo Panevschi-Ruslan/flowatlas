@@ -33,6 +33,13 @@
     }
   ],
   "total": 2,
+  "byKind": {
+    "screens": {
+      "backoffice-web": [
+        "src/status-board.component.ts"
+      ]
+    }
+  },
   "reached": 9,
   "entriesByService": {
     "backoffice-web": 1

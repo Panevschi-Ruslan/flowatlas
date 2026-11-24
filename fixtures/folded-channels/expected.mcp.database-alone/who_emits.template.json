@@ -14,8 +14,9 @@
       "loc": "src/orders/orders.service.ts:26",
       "service": "api",
       "kind": "event",
-      "reach": "alive",
-      "from": "POST /orders/:param/state"
+      "reach": "dead",
+      "from": "POST /orders/:param/state",
+      "throughDead": true
     }
   ],
   "total": 1,

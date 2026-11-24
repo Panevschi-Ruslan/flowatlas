@@ -5,7 +5,8 @@
     "label": "TicketsService.close",
     "loc": "src/tickets/tickets.service.ts:18",
     "service": "desk-api",
-    "reach": "alive"
+    "reach": "dead",
+    "throughDead": true
   },
   "entries": [
     {
@@ -20,6 +21,9 @@
     }
   ],
   "total": 1,
+  "changing": [
+    "entry:desk-api:http:POST:/desks/:param/tickets/:param/close"
+  ],
   "reached": 2,
   "entriesByService": {
     "desk-api": 1

@@ -8,8 +8,9 @@
       "loc": "src/orders/orders.service.ts:11",
       "service": "shop-api",
       "kind": "event",
-      "reach": "alive",
+      "reach": "dead",
       "from": "POST /api/orders/:param/ready",
+      "throughDead": true,
       "sends": [
         "type",
         "orderId",
@@ -40,8 +41,9 @@
       "loc": "src/events/events.controller.ts:10",
       "service": "ops-bot",
       "kind": "event",
-      "reach": "alive",
+      "reach": "dead",
       "from": "POST /events/orders",
+      "throughDead": true,
       "reads": [
         "label",
         "orderId",

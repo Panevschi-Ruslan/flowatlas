@@ -6,6 +6,7 @@
   "loc": "src/orders/orders.controller.ts:19",
   "verdict": "likely-dead",
   "reason": "no http_calls/hits from any repo (may be a public API); a request whose address was read in part could reach it",
+  "callers": 0,
   "class": "actionable",
   "evidence": {
     "couldHit": [

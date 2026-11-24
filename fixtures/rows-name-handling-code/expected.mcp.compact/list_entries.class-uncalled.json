@@ -3,11 +3,13 @@
   "entries": [
     {
       "id": "entry:shop-api:http:DELETE:/api/reports/:param",
-      "loc": "src/reports/reports.controller.ts:31"
+      "loc": "src/reports/reports.controller.ts:31",
+      "callers": 0
     },
     {
       "id": "entry:shop-api:http:GET:/api/reports/weekly",
-      "loc": "src/reports/reports.controller.ts:21"
+      "loc": "src/reports/reports.controller.ts:21",
+      "callers": 0
     }
   ],
   "total": 2,

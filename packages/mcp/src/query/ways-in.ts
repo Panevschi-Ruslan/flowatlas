@@ -41,7 +41,9 @@ import { loadObserved } from './observed.js';
  *   reaches it, or `dead` says `likely-dead` of code whose name its
  *   repository writes nowhere else (`unreferenced`, P370) in a file with no
  *   unread call - an unread call writes the name it calls.
- * - `dead`: as `dead` answers.
+ * - `dead`: as `dead` answers; or code calls it, but every way in that
+ *   reaches it is judged dead and every chain back from it ends at one
+ *   (`throughDead`, P381).
  * - `outside`: something outside the project calls it - a webhook, a bot
  *   update or command, a cron, a screen opened at its address, a public
  *   route. A way in is never doubtful just because its caller is outside.
@@ -72,6 +74,8 @@ export interface RowReach {
   gap?: string;
   /** On a `maybe` row: the code its chain stops at, or why the row itself may still be called. */
   behind?: string;
+  /** Code calls it, but every way in that reaches it is judged dead (P381): its `reach` is `dead`. */
+  throughDead?: true;
 }
 
 /** What `from` says on a `maybe` row when no way in beyond the unread call is known. */
@@ -676,6 +680,15 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
         const ways = new Set(walked.found.map((way) => way.node.id)).size;
         const nowhere = nearest === undefined && !walked.cut;
         let reach = judgedReach.reach;
+        // Called, but every way in that reaches it is judged dead and every chain ends at one (P381): code that runs
+        // only when a dead way in runs is dead with it, said so, not a bare alive.
+        const throughDead =
+          reach === 'alive' &&
+          nearest !== undefined &&
+          !walked.cut &&
+          walked.tops.length === 0 &&
+          walked.found.every((way) => way.node.type === 'entry' && reachOf(way.node)?.reach === 'dead');
+        if (throughDead) reach = 'dead';
         // Nothing read reaches it: a chain that ends where an unread call could reach is a maybe, not a no.
         const maybe = nowhere && (reach === 'alive' || reach === 'maybe') ? firstMaybe(walked.tops, node, reach) : undefined;
         if (nowhere && reach === 'alive') reach = maybe === undefined ? 'unreached' : 'maybe';
@@ -688,6 +701,7 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
               ? {}
               : { from: reach === 'maybe' ? beyondGap(maybe?.gaps, node) : 'none' }),
           ...(ways > 1 ? { ways } : {}),
+          ...(throughDead ? { throughDead: true as const } : {}),
           ...(walked.cut ? { walkCut: true as const } : {}),
           ...(reach !== 'maybe' || maybe?.gaps === undefined ? {} : { gap: maybe.gaps.gap }),
           ...(reach !== 'maybe' || behind === undefined ? {} : { behind }),

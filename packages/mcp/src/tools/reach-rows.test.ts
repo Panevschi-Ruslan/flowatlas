@@ -65,9 +65,9 @@ describe('reach and the nearest way in on each row', () => {
     expect(answer.consumers[0]).toMatchObject({ id: ARCHIVE, reach: 'maybe', from: 'behind', behind: 'desk-api#src/tickets/tickets.service.ts:TicketsService.reopen' });
   });
 
-  it('places a publish at the route that runs it', async () => {
+  it('places a publish at the route that runs it, dead with it where nothing calls that route (P381)', async () => {
     const answer = await call('who_emits', { channel: CHANNEL, type: 'TICKET_ASSIGNED' });
-    expect(answer.producers[0]).toMatchObject({ reach: 'alive', from: 'POST /desks/:param/tickets/:param/assign' });
+    expect(answer.producers[0]).toMatchObject({ reach: 'dead', throughDead: true, from: 'POST /desks/:param/tickets/:param/assign' });
     expect(answer.complete).toBe(true);
   });
 
@@ -79,8 +79,9 @@ describe('reach and the nearest way in on each row', () => {
 
   it('says reach on the rows of who_calls, find_symbol and search, and not at detail 0', async () => {
     const callers = await call('who_calls', { symbol: ASSIGN });
-    expect(callers.target).toMatchObject({ reach: 'alive', from: 'POST /desks/:param/tickets/:param/assign' });
-    expect(callers.callers[0].node).toMatchObject({ reach: 'alive' });
+    // Called, but its only way in is a route nothing calls: dead through it, not a bare alive (P381).
+    expect(callers.target).toMatchObject({ reach: 'dead', throughDead: true, from: 'POST /desks/:param/tickets/:param/assign' });
+    expect(callers.callers[0].node).toMatchObject({ reach: 'dead', throughDead: true });
     const found = await call('find_symbol', { query: 'reopen' });
     // Nothing calls it, though its class is used: a call the reading could not type may (P367).
     expect(found.matches.find((row: { id: string }) => row.id === REOPEN)).toMatchObject({ reach: 'maybe', from: 'behind' });
@@ -92,7 +93,7 @@ describe('reach and the nearest way in on each row', () => {
 
   it('gives impact the reach of its target and of each way in, and dead the way in', async () => {
     const impact = await call('impact', { symbol: ASSIGN });
-    expect(impact.target.reach).toBe('alive');
+    expect(impact.target.reach).toBe('dead');
     expect(impact.entries[0].reach).toBeDefined();
     expect(impact.entries[0].from).toBeUndefined();
     const dead = await call('dead', { id: QUEUE });

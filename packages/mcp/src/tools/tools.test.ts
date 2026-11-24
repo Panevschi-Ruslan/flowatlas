@@ -305,11 +305,18 @@ describe('the tools a session is offered', () => {
     for (const said of ['start_here when you do not know where to begin', 'loads by ToolSearch', '- entry: ', '- channel: ', '- symbol: ', '- shape: ', 'Only the tools this project can answer', '`detail` 0']) expect(INSTRUCTIONS).toContain(said);
   });
 
+  /**
+   * P381 grew them by the inputs that say several or filter (impact's
+   * `symbols`, who_calls' and impact's `callersIn`, who_consumes' and
+   * who_emits' `channels`, list_entries' `called`) and by the output schemas
+   * that answer several channels and say `callers` and `throughDead`, the core
+   * descriptions trimmed so the upfront listing stays under its ceiling.
+   */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(12950);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(36500);
+    expect(read.length).toBeLessThan(13000);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(37250);
   });
 
   /**
@@ -347,7 +354,7 @@ describe('the tools a session is offered', () => {
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
       expect(read.length).toBeLessThan(99999);
-      expect(JSON.stringify({ tools }).length).toBeLessThan(32900);
+      expect(JSON.stringify({ tools }).length).toBeLessThan(33600);
     } finally {
       await plain.close();
     }
@@ -733,12 +740,16 @@ describe('working backwards', () => {
     expect(answer.stoppedBy).toBeUndefined();
   });
 
-  it('takes a route said with a real value, and gives the two services that serve it as candidates (P94)', async () => {
+  it('takes a route said with a real value, and answers each of the two services that serve it (P94, P381)', async () => {
     const answer = await call('who_calls', { symbol: 'GET /orders/123' });
-    expect(answer.candidates.map((candidate: { id: string }) => candidate.id)).toEqual([
+    expect(answer.ambiguous).toContain('names 2 symbols');
+    expect(answer.answers.map((one: { asked: string }) => one.asked).sort()).toEqual([
       'entry:gateway:http:GET:/orders/:param',
       'entry:orders:http:GET:/orders/:param',
     ]);
+    // The service picks one (P381).
+    const picked = await call('who_calls', { symbol: 'GET /orders/123', service: 'orders' });
+    expect(picked.target.id).toBe('entry:orders:http:GET:/orders/:param');
   });
 
   it('takes a literal route, and names the routes that answer it less specifically (P94)', async () => {
@@ -988,10 +999,13 @@ describe('answers that hand on the id the next question needs', () => {
     };
     walk(callers.callers, callers.target.service);
     expect([...services]).toEqual(['gateway']);
-    const impact = await call('impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', service: 'orders' });
+    // `service` picks the symbol (P381): one in the service asked keeps every caller; `callersIn` cuts them.
+    const impact = await call('impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', callersIn: 'orders' });
     // `POST /orders` reaches it only through billing, which takes `order.created` and reads the order back (P209):
     // counted beyond the channel, in the service asked for (P372).
     expect(impact.entries.map((entry: { id: string }) => entry.id)).toEqual(['entry:orders:http:GET:/orders/:param']);
+    expect(impact.complete).toBe(false);
+    expect(impact.left[0]).toMatch(/^filter: \d+ ways in in other services left out \(callersIn: orders\)$/);
     expect(impact.throughChannels.map((row: { sample: Array<{ id: string }> }) => row.sample.map((way) => way.id))).toEqual([['entry:orders:http:POST:/orders']]);
     expect((await call('who_emits', { channel: 'order.created', service: 'billing' })).producers).toEqual([]);
   });

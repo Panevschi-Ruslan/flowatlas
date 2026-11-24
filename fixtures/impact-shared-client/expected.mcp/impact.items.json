@@ -54,6 +54,24 @@
     }
   ],
   "total": 4,
+  "byKind": {
+    "bots": {
+      "market-bot": [
+        "src/market-bot.ts"
+      ]
+    },
+    "screens": {
+      "kiosk-web": [
+        "src/app/browse-page.component.ts"
+      ],
+      "market-web": [
+        "src/app/history-page.component.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:market-api:http:GET:/api/items"
+  ],
   "reached": 21,
   "entriesByService": {
     "market-api": 1,

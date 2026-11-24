@@ -40,6 +40,15 @@
     }
   ],
   "total": 3,
+  "byKind": {
+    "screens": {
+      "store-web": [
+        "src/app/analytics.component.ts",
+        "src/app/matrix.component.ts",
+        "src/app/orders-admin.component.ts"
+      ]
+    }
+  },
   "reached": 7,
   "entriesByService": {
     "store-web": 3

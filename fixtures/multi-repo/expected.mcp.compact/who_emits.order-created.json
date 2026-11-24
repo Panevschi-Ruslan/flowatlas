@@ -9,8 +9,9 @@
       "id": "producer:orders#src/orders/orders.service.ts:49:5",
       "label": "event order.created",
       "kind": "event",
-      "reach": "alive",
-      "from": "POST /orders"
+      "reach": "dead",
+      "from": "POST /orders",
+      "throughDead": true
     }
   ],
   "total": 1,

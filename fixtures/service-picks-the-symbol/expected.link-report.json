@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T15:51:29.259Z",
+  "configHash": "67d07315beb4",
+  "services": [
+    {
+      "name": "desk-bot",
+      "repo": "./desk-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 12,
+      "edges": 8,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 6160,
+      "packages": {
+        "name": "desk-bot",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "rxjs",
+          "telegraf"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "lending-api",
+      "repo": "./lending-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 20,
+      "edges": 12,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 5907,
+      "packages": {
+        "name": "lending-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "lending-gateway",
+      "repo": "./lending-gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 6278,
+      "packages": {
+        "name": "lending-gateway",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "reader-web",
+      "repo": "./reader-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 23,
+      "edges": 17,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 4878,
+      "packages": {
+        "name": "reader-web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 2,
+    "linked": 2,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 4,
+    "resolved": 3,
+    "unresolved": 1,
+    "byReason": {
+      "target-route-not-found": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 6,
+    "called": 4,
+    "uncalled": [
+      "entry:lending-api:http:DELETE:/books/:param/hold",
+      "entry:lending-api:http:POST:/books/:param/extend"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "reader-web",
+      "file": "src/app/books.client.ts",
+      "line": 29,
+      "reason": "target-route-not-found",
+      "message": "target service lending-api has no route POST /books/:param/renew",
+      "hint": "Route renamed? Check lending-api's controllers, or annotate the method with /** @flowatlas-calls POST /books/:param/renew */.",
+      "symbol": "ui_api_call:reader-web#src/app/books.client.ts:29:12"
+    }
+  ],
+  "totals": {
+    "nodes": 66,
+    "edges": 49,
+    "types": 0,
+    "missed": 2,
+    "sites": 2,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 2
+  }
+}

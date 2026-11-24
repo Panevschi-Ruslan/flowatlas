@@ -1,0 +1,17 @@
+{
+  "entries": [
+    {
+      "id": "entry:lending-api:http:DELETE:/books/:param/hold",
+      "loc": "src/books.controller.ts:33"
+    }
+  ],
+  "total": 1,
+  "complete": false,
+  "left": [
+    "uncalled: 1 more way in no caller joins is judged maybe, not dead: called: false lists every one"
+  ],
+  "next": [
+    "list_entries({service: \"lending-api\", called: false})",
+    "get_flow({entry: \"entry:lending-api:http:DELETE:/books/:param/hold\"})"
+  ]
+}

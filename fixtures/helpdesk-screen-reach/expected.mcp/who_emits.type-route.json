@@ -14,8 +14,9 @@
       "loc": "src/tickets/tickets.service.ts:15",
       "service": "desk-api",
       "kind": "message",
-      "reach": "alive",
-      "from": "POST /desks/:param/tickets/:param/assign"
+      "reach": "dead",
+      "from": "POST /desks/:param/tickets/:param/assign",
+      "throughDead": true
     }
   ],
   "total": 1,

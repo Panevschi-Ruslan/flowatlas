@@ -5,6 +5,7 @@
   "loc": "src/jobs/reminder.job.ts:10",
   "verdict": "likely-dead",
   "reason": "nothing calls it and its class is not reached (nothing injects it and nothing reaches its methods; storefront has 1 unresolved injects — verify)",
+  "callers": 0,
   "evidence": {
     "unresolvedInjects": 1
   },

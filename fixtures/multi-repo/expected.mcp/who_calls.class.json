@@ -37,8 +37,9 @@
         "type": "method",
         "label": "OrdersController.create",
         "loc": "src/orders/orders.controller.ts:31",
-        "reach": "alive",
-        "from": "POST /orders"
+        "reach": "dead",
+        "from": "POST /orders",
+        "throughDead": true
       },
       "edge": {
         "type": "calls",

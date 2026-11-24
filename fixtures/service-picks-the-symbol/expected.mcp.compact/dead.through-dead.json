@@ -1,0 +1,13 @@
+{
+  "id": "lending-api#src/holds.service.ts:HoldsService.release",
+  "line": 15,
+  "verdict": "alive",
+  "reason": "called",
+  "reach": "dead",
+  "throughDead": true,
+  "evidence": {
+    "callers": 1,
+    "caller": "lending-api#src/books.controller.ts:BooksController.release"
+  },
+  "from": "DELETE /books/:param/hold"
+}
