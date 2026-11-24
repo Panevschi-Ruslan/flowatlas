@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:48:22.290Z",
+  "builtAt": "2026-11-24T20:23:51.189Z",
   "services": [
     {
       "name": "web",
@@ -79,7 +79,8 @@
       "line": 14,
       "meta": {
         "key": "CATALOG_URL",
-        "source": "process.env"
+        "source": "process.env",
+        "fallback": true
       }
     },
     {
@@ -91,7 +92,8 @@
       "line": 8,
       "meta": {
         "key": "NEXT_PUBLIC_CATALOG_URL",
-        "source": "process.env"
+        "source": "process.env",
+        "fallback": true
       }
     },
     {

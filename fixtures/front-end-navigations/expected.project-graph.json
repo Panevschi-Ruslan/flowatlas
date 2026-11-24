@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:52:50.434Z",
+  "builtAt": "2026-11-24T20:14:12.042Z",
   "services": [
     {
       "name": "storefront",
@@ -1608,7 +1608,12 @@
         "headersUnread": true,
         "package": "axios",
         "client": "axios",
-        "via": "literal"
+        "via": "literal",
+        "headers": [
+          "authorization",
+          "x-locale",
+          "x-storefront"
+        ]
       }
     }
   ],

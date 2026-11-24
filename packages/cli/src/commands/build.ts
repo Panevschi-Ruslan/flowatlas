@@ -78,7 +78,7 @@ import {
 } from '../build/extractor.js';
 import { noReaderNote } from '../stacks.js';
 import { deploymentFiles } from '../build/deployment-files.js';
-import { settingsOfProject } from '../build/settings/index.js';
+import { settingNamesOfProject, settingsOfProject } from '../build/settings/index.js';
 import {
   hashGraphFile,
   planRebuild,
@@ -1286,7 +1286,7 @@ const buildHoldingLock = async (options: BuildOptions): Promise<BuildResult> => 
   if (!keeping) {
     await writeJson(graphPath, result.project);
     await writeJson(reportPath, result.report);
-    writeGraphDb(result.project, result.report, dbPath, { flowatlasVersion: VERSION });
+    writeGraphDb(result.project, result.report, dbPath, { flowatlasVersion: VERSION, ...settingNamesOfProject(loaded) });
   }
 
   // Written even when it was ignored: `--no-cache` means read everything now,

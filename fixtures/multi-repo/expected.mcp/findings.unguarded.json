@@ -40,6 +40,10 @@
     "call-to-missing-route": {
       "count": 1,
       "why": "the service it is sent to is not named"
+    },
+    "config-not-set": {
+      "count": 3,
+      "why": "no deployment file of billing was read: its settings may be set where the reading does not look"
     }
   },
   "next": [

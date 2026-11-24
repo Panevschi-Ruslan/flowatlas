@@ -7,6 +7,7 @@ import {
   type GraphNode,
   type ProjectGraph,
   type RepoGraph,
+  type SettingNames,
   type TypeEntry,
   type Unresolved,
   whenFree,
@@ -22,6 +23,8 @@ const serviceOf = (node: GraphNode): string | null =>
 export interface WriteOptions {
   /** Version string recorded alongside the graph. */
   flowatlasVersion?: string;
+  /** The names each service's deployment files set (P388), kept beside the graph. */
+  settingNames?: Readonly<Record<string, SettingNames>>;
 }
 
 /** The four statements every writer needs, prepared once per connection. */
@@ -168,6 +171,8 @@ export const writeGraphDb = (
       meta.run('flowatlas_version', options.flowatlasVersion ?? '0.0.0');
       meta.run('services', JSON.stringify(project.services));
       meta.run('link_report', JSON.stringify(report));
+      // The names each service's deployment files set (P388), beside the graph rather than in it.
+      if (options.settingNames !== undefined) meta.run('setting_names', JSON.stringify(options.settingNames));
 
       for (const item of project.nodes) insertNode(statements, item);
       for (const item of project.edges) insertEdge(statements, item);

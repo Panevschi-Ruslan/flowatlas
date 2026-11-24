@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:46:59.656Z",
+  "builtAt": "2026-11-24T20:22:48.167Z",
   "services": [
     {
       "name": "api",
@@ -1691,6 +1691,9 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "headers": [
+          "x-tenant"
+        ],
         "targetService": "catalog"
       }
     },
@@ -1720,6 +1723,9 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "headers": [
+          "x-tenant"
+        ],
         "targetService": "catalog"
       }
     },
@@ -1749,6 +1755,10 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "headers": [
+          "x-region",
+          "x-tenant"
+        ],
         "targetService": "catalog"
       }
     },
@@ -1775,6 +1785,10 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "headers": [
+          "x-tenant"
+        ],
+        "sendsJson": true,
         "targetService": "catalog"
       }
     },
@@ -1797,6 +1811,9 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "headers": [
+          "x-tenant"
+        ],
         "targetService": "catalog"
       }
     },
@@ -1824,6 +1841,9 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "headers": [
+          "x-tenant"
+        ],
         "targetService": "catalog"
       }
     },
@@ -1846,6 +1866,9 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "headers": [
+          "x-tenant"
+        ],
         "targetService": "catalog"
       }
     },
@@ -1873,6 +1896,10 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "headers": [
+          "x-tenant"
+        ],
+        "sendsJson": true,
         "targetService": "catalog"
       }
     },
@@ -1895,6 +1922,9 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "headers": [
+          "x-tenant"
+        ],
         "targetService": "catalog"
       }
     },
@@ -1974,6 +2004,9 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "headers": [
+          "x-tenant"
+        ],
         "targetService": "catalog"
       }
     },
@@ -2003,6 +2036,9 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "headers": [
+          "x-tenant"
+        ],
         "targetService": "catalog"
       }
     },
@@ -2030,6 +2066,9 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "headers": [
+          "x-tenant"
+        ],
         "targetService": "catalog"
       }
     },
@@ -2058,6 +2097,9 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "headers": [
+          "x-tenant"
+        ],
         "targetService": "catalog"
       }
     },
@@ -2087,6 +2129,9 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "headers": [
+          "x-tenant"
+        ],
         "targetService": "catalog"
       }
     },
@@ -2116,6 +2161,9 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "headers": [
+          "x-tenant"
+        ],
         "targetService": "catalog"
       }
     },

@@ -494,7 +494,7 @@
                   "params": [
                     {
                       "name": "product",
-                      "type": "{…22 fields}"
+                      "type": "{\u202622 fields}"
                     }
                   ],
                   "returns": "string"
@@ -1864,9 +1864,9 @@
       ],
       "expect": {
         "says": [
-          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { … }",
-          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { … }",
-          "48    listNotes(@Param('orderId') orderId: string): string[] { … }",
+          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { \u2026 }",
+          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { \u2026 }",
+          "48    listNotes(@Param('orderId') orderId: string): string[] { \u2026 }",
           "whole: true"
         ],
         "saysNot": [
@@ -2567,6 +2567,162 @@
         }
       },
       "note": "P389: the planted contradictions, each beside a right twin (the Powertools packer, a redrive policy of 5, a machine timeout, a .sync task with a timeout, a retried function task); the notices mapping, whose visibility timeout and handler answer are not read, is a note and no finding. Before P389 the answer held none of these."
+    },
+    {
+      "id": "findings.boundary-mismatches",
+      "ask": "what looks broken between the shop, its services and its bot",
+      "fixture": "boundary-mismatches",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "lists": {
+          "contract-break": [
+            "ui_api_call:web#src/app/orders-api.service.ts:18:12"
+          ],
+          "sse-event-unhandled": [
+            "consumer:web#src/app/live.service.ts:LiveService.onReady"
+          ],
+          "bot-button-unhandled": [
+            "shop-bot#src/shop-bot.ts:ShopBot.showOrder"
+          ],
+          "bot-button-data-too-long": [
+            "shop-bot#src/shop-bot.ts:ShopBot.showOrder"
+          ],
+          "config-name-mismatch": [
+            "config_key:orders-api#PAYMENT_API_KEY"
+          ],
+          "status-never-answered": [
+            "ui_api_call:web#src/app/orders-api.service.ts:23:12"
+          ],
+          "cors-credentials": [
+            "ui_api_call:web#src/app/orders-api.service.ts:13:12"
+          ],
+          "cors-header-not-allowed": [
+            "ui_api_call:web#src/app/orders-api.service.ts:23:12"
+          ],
+          "cors-method-not-allowed": [
+            "ui_api_call:web#src/app/orders-api.service.ts:45:12"
+          ],
+          "config-not-set": [
+            "config_key:orders-api#REDIS_URL"
+          ],
+          "bot-handler-untriggered": [
+            "entry:shop-bot:bot_callback:order:tracking"
+          ],
+          "config-never-read": [
+            "config_key:orders-api#LEGACY_EXPORT_DIR"
+          ]
+        },
+        "notListed": {
+          "sse-event-unhandled": [
+            "consumer:web#src/app/live.service.ts:LiveService.onFeed",
+            "consumer:web#src/app/live.service.ts:LiveService.onNotice"
+          ],
+          "cors-credentials": [
+            "ui_api_call:web#src/app/accounts-api.service.ts:12:12"
+          ],
+          "cors-method-not-allowed": [
+            "ui_api_call:web#src/app/orders-api.service.ts:40:12"
+          ],
+          "config-not-set": [
+            "config_key:orders-api#LOG_LEVEL",
+            "config_key:orders-api#ORDER_MODE",
+            "config_key:orders-api#SMTP_HOST",
+            "config_key:accounts-api#SESSION_SECRET"
+          ],
+          "status-never-answered": [
+            "ui_api_call:web#src/app/orders-api.service.ts:30:12"
+          ]
+        },
+        "rowsSay": {
+          "config-name-mismatch": {
+            "config_key:orders-api#PAYMENT_API_KEY": {
+              "precision": "high",
+              "fix": "one name spelled two ways: read PAYMENTS_API_KEY, or set PAYMENT_API_KEY"
+            }
+          }
+        },
+        "exact": [
+          "contract-break",
+          "sse-event-unhandled",
+          "bot-button-unhandled",
+          "bot-button-data-too-long",
+          "config-name-mismatch",
+          "status-never-answered",
+          "cors-credentials",
+          "cors-header-not-allowed",
+          "cors-method-not-allowed",
+          "config-not-set",
+          "bot-handler-untriggered",
+          "config-never-read"
+        ]
+      },
+      "note": "P388: none of these was a finding; the answer listed nothing but the routes nothing guards and the stream routes' one-ended channels, and the forbidden field was a strip warning."
+    },
+    {
+      "id": "findings.stream-never-heard",
+      "ask": "why does the shop's ready screen never update",
+      "fixture": "boundary-mismatches",
+      "tool": "findings",
+      "args": {
+        "kind": "sse-event-unhandled"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "consumer:web#src/app/live.service.ts:LiveService.onReady"
+          ]
+        },
+        "rowsSay": {
+          "rows": {
+            "consumer:web#src/app/live.service.ts:LiveService.onReady": {
+              "precision": "high",
+              "fix": "listen with addEventListener(\"order-ready\", \u2026), or send the frames with no event name"
+            }
+          }
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P388: no such kind; the stream and its listener were joined with nothing saying the frames are named, so the agent read both files."
+    },
+    {
+      "id": "findings.dead-status-branch",
+      "ask": "which status branches of the shop can never run",
+      "fixture": "boundary-mismatches",
+      "tool": "findings",
+      "args": {
+        "kind": "status-never-answered"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "ui_api_call:web#src/app/orders-api.service.ts:23:12"
+          ]
+        },
+        "rowsSay": {
+          "rows": {
+            "ui_api_call:web#src/app/orders-api.service.ts:23:12": {
+              "precision": "high",
+              "loc": "src/app/order-panel.component.ts:43"
+            }
+          }
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P388: no such kind; get_flow said the route's fails, and the client's branches were in no answer."
     }
   ],
   "fixed": {
@@ -3053,6 +3209,27 @@
       "chars": 5019,
       "tokens": 1255,
       "rows": 8,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.boundary-mismatches": {
+      "chars": 8288,
+      "tokens": 2072,
+      "rows": 12,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.stream-never-heard": {
+      "chars": 1114,
+      "tokens": 279,
+      "rows": 1,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.dead-status-branch": {
+      "chars": 1119,
+      "tokens": 280,
+      "rows": 1,
       "complete": null,
       "calls": 1
     },

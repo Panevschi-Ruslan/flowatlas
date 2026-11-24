@@ -340,7 +340,7 @@ export {
   NO_SETTINGS,
   portOf,
 } from './setting-files.js';
-export type { ContainerRun, HostAlias, ImageUnread, IngressRoute, PortValue, PublishedPort, RepoSettings, RoutedName, RoutedPort, SecretSource, ServiceBinding, SettingValue } from './setting-files.js';
+export type { ContainerRun, HostAlias, ImageUnread, IngressRoute, PortValue, PublishedPort, RepoSettings, RoutedName, RoutedPort, SecretSource, ServiceBinding, SettingNames, SettingValue } from './setting-files.js';
 export { GUESSED_META, isTaken, RECORDED_META, strongestTaken, TAKEN_BY_META, TAKES_META } from './takes.js';
 export type { Takes, Taken, TakenInstead } from './takes.js';
 export { OPERATION_VERBS, operationsOf } from './declared-operations.js';
@@ -1241,6 +1241,8 @@ export {
   isEventSourceConstruction,
   isWrittenFunction,
   recordStreamConsumer,
+  STREAM_EVENTS_META,
+  STREAM_EVENTS_UNREAD_META,
   STREAM_KIND,
   streamConsumerId,
   streamHandlerUnreadRow,
@@ -1281,3 +1283,16 @@ export {
   type WorkerConfig,
 } from './worker-config.js';
 export { markUnreferenced, namesWritten, noteMarkup, publishesEntry, UNREFERENCED_META } from './unreferenced.js';
+export {
+  CREDENTIALS_META,
+  HEADERS_META,
+  readRequestFacts,
+  requestFactsPass,
+  SENDS_JSON_META,
+  STATUS_CHECKS_META,
+  statusChecksOf,
+  statusComparisonsIn,
+  type CredentialsSaid,
+  type RequestFactsHost,
+  type StatusCheck,
+} from './request-facts.js';

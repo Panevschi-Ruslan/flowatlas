@@ -131,6 +131,8 @@ export interface BootstrapInfo {
   leadingHoles: Partial<Record<AddressingCall, LeadingHole>>;
   /** The leading part of every address, when it is read from settings (R144). */
   mount?: Mount;
+  /** What a browser on another origin is allowed, where the application enables CORS (P388). */
+  cors?: CorsSettings;
 }
 
 const GLOBAL_METHODS: Record<string, WrappingLayer> = {
@@ -393,6 +395,104 @@ const readGlobalFilters: CallReader = (call, info) => {
 };
 
 /**
+ * What a service's CORS settings allow a browser on another origin (P388),
+ * as the `cors` middleware Nest's `enableCors` hands them to reads them: no
+ * options are its defaults (any origin as `*`, no credentials, every header
+ * the browser asks for, the six common verbs).
+ */
+export interface CorsSettings {
+  /** `file:line` of the call that enables it. */
+  at: string;
+  /** `*` any origin by the wildcard; `reflect` the asking origin echoed (`origin: true`); `list` the origins written; `unread`. */
+  origin: '*' | 'reflect' | 'list' | 'unread';
+  /** Whether `Access-Control-Allow-Credentials: true` is sent; `unread` where not read. */
+  credentials: boolean | 'unread';
+  /** The headers allowed, lower case, where they are written; absent where every header asked for is allowed. */
+  allowedHeaders?: string[] | 'unread';
+  /** The verbs allowed, upper case, where they are written; absent for the defaults. */
+  methods?: string[] | 'unread';
+}
+
+/** The `cors` middleware's own verbs where none are written. */
+export const CORS_DEFAULT_METHODS: readonly string[] = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'];
+
+/** A list option, written as an array or a comma-separated string, mapped one way; `unread` where it is not written out. */
+const corsList = (node: Node, spell: (each: string) => string): string[] | 'unread' => {
+  const value = evaluateExpression(node);
+  if (!value.resolved) return 'unread';
+  const raw = value.value;
+  const items = typeof raw === 'string' ? raw.split(',') : Array.isArray(raw) ? raw : undefined;
+  if (items === undefined || !items.every((item): item is string => typeof item === 'string')) return 'unread';
+  return [...new Set(items.map((item) => spell(item.trim())).filter((item) => item !== ''))].sort();
+};
+
+/** CORS settings as an options value says them: `true` or nothing the defaults, an object read key by key. */
+export const corsSettingsOf = (options: Node | undefined, at: string): CorsSettings => {
+  const defaults: CorsSettings = { at, origin: '*', credentials: false };
+  if (options === undefined || Node.isTrueLiteral(options)) return defaults;
+  if (!Node.isObjectLiteralExpression(options)) return { at, origin: 'unread', credentials: 'unread', allowedHeaders: 'unread', methods: 'unread' };
+  const settings: CorsSettings = { ...defaults };
+  for (const property of options.getProperties()) {
+    if (!Node.isPropertyAssignment(property)) {
+      // A spread or a method: anything could be in it.
+      return { at, origin: 'unread', credentials: 'unread', allowedHeaders: 'unread', methods: 'unread' };
+    }
+    const name = property.getName();
+    const value = property.getInitializer();
+    if (value === undefined) continue;
+    if (name === 'origin') {
+      const read = evaluateExpression(value);
+      settings.origin = !read.resolved
+        ? Node.isArrayLiteralExpression(value)
+          ? 'list'
+          : 'unread'
+        : read.value === '*'
+          ? '*'
+          : read.value === true
+            ? 'reflect'
+            : read.value === false
+              ? 'list'
+              : 'list';
+    } else if (name === 'credentials') {
+      const read = evaluateExpression(value);
+      settings.credentials = read.resolved && typeof read.value === 'boolean' ? read.value : 'unread';
+    } else if (name === 'allowedHeaders' || name === 'headers') {
+      settings.allowedHeaders = corsList(value, (each) => each.toLowerCase());
+    } else if (name === 'methods') {
+      settings.methods = corsList(value, (each) => each.toUpperCase());
+    }
+  }
+  return settings;
+};
+
+/** `app.enableCors(options)`. */
+const readEnableCors: CallReader = (call, info, file) => {
+  info.cors = corsSettingsOf(call.getArguments()[0], `${file}:${startLineOf(call)}`);
+};
+
+/** `NestFactory.create(AppModule, { cors: options })`. */
+const readCreateCors: CallReader = (call, info, file) => {
+  const callee = call.getExpression();
+  if (!Node.isPropertyAccessExpression(callee) || !/NestFactory$/.test(callee.getExpression().getText())) return;
+  const options = call.getArguments()[1];
+  if (options === undefined || !Node.isObjectLiteralExpression(options)) return;
+  const cors = options.getProperty('cors');
+  if (cors === undefined || !Node.isPropertyAssignment(cors)) return;
+  const value = cors.getInitializer();
+  if (value === undefined || Node.isFalseLiteral(value)) return;
+  info.cors = corsSettingsOf(value, `${file}:${startLineOf(call)}`);
+};
+
+/** `app.use(cors(options))`, the middleware itself. */
+const readUseCors: CallReader = (call, info, file) => {
+  const [argument] = call.getArguments();
+  if (argument === undefined || !Node.isCallExpression(argument)) return;
+  const callee = argument.getExpression();
+  if (!Node.isIdentifier(callee) || callee.getText() !== 'cors') return;
+  info.cors = corsSettingsOf(argument.getArguments()[0], `${file}:${startLineOf(call)}`);
+};
+
+/**
  * The two calls that decide where every route of the service answers.
  *
  * Separated from the wrapping registrations because these two are looked for in
@@ -415,6 +515,10 @@ const ENTRY_READERS: ReadonlyMap<string, CallReader> = new Map([
   ...ADDRESS_READERS,
   ...Object.entries(GLOBAL_METHODS).map(([name, layer]) => [name, readGlobals(layer)] as const),
   ['useGlobalFilters', readGlobalFilters],
+  // What a browser on another origin is allowed (P388).
+  ['enableCors', readEnableCors],
+  ['create', readCreateCors],
+  ['use', readUseCors],
 ]);
 
 /** Walks one file, handing each call it knows to the reader for it. */

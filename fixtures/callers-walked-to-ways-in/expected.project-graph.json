@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T13:17:28.391Z",
+  "builtAt": "2026-11-24T20:12:14.289Z",
   "services": [
     {
       "name": "stock-api",
@@ -1422,6 +1422,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "stock-api"
       }
     },
@@ -1447,6 +1448,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "stock-api"
       }
     },
@@ -1473,6 +1475,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "stock-api"
       }
     },

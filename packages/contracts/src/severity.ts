@@ -48,7 +48,11 @@ const SOFTENED_BY: ReadonlyMap<string, Severity> = new Map([
  * the route, and it removes the field before the handler runs. A field sent and
  * silently thrown away is not waste, it is data the sender believes arrived.
  */
-const HARDENED_BY: ReadonlyMap<string, Severity> = new Map([['whitelist-strip', 'warning']]);
+const HARDENED_BY: ReadonlyMap<string, Severity> = new Map([
+  ['whitelist-strip', 'warning'],
+  // The same pipe told to refuse rather than strip (P388): the request fails with 400.
+  ['whitelist-reject', 'error'],
+]);
 
 /**
  * A strip, by what it can cost.
@@ -101,7 +105,8 @@ export const severityOf = (
   // asked. The two rule tables are keyed by a plain string, which is the shape
   // that answers for `constructor`, so they are `Map`s (R130).
   const hardest = rule === null ? undefined : HARDENED_BY.get(rule);
-  if (hardest !== undefined && impact !== undefined) {
+  // Only a strip is measured by what it can lose (P388): a field refused fails the request whatever the handler writes.
+  if (hardest !== undefined && impact !== undefined && rule === 'whitelist-strip') {
     // The impact refines the hardening, and like the hardening it may only
     // reach the level that rule is allowed to reach. Returning it outright
     // would let a measurement quietly soften a verdict the kind had made

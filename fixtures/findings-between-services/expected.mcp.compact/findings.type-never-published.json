@@ -32,6 +32,10 @@
     "type-never-published": {
       "count": 1,
       "why": "1 publish(es) on stock_events send a type not read"
+    },
+    "config-not-set": {
+      "count": 2,
+      "why": "no deployment file of storefront was read: its settings may be set where the reading does not look"
     }
   },
   "next": [

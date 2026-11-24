@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:35:37.829Z",
+  "builtAt": "2026-11-24T20:14:27.445Z",
   "services": [
     {
       "name": "api",
@@ -282,7 +282,8 @@
       "line": 7,
       "meta": {
         "key": "PORT",
-        "source": "process.env"
+        "source": "process.env",
+        "fallback": true
       }
     },
     {

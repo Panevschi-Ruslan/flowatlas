@@ -271,3 +271,4 @@ export {
   workspaceTargets,
 } from './workspace-targets.js';
 export type { WorkspaceTarget } from './workspace-targets.js';
+export { botButtonsPass, CALLBACK_BUTTONS_META, extractBotButtons, type CallbackButton } from './bot-buttons.js';

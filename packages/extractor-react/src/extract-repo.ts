@@ -40,6 +40,7 @@ import {
   toPosixPath,
   type EmbeddedFile,
   type EmbeddedFormat,
+  requestFactsPass,
 } from '@flowatlas/core';
 import { createReactContext } from './context.js';
 import { declaresReact, forcedFor } from './framework.js';
@@ -162,6 +163,8 @@ export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   // After every reader that draws a consumer: the types of message each
   // chooses on (P358), the same reading a server's consumers get.
   messageTypesPass,
+  // After every reader that draws a request: the statuses it branches on, its credentials and headers (P388).
+  requestFactsPass,
   signaturesPass,
 ];
 

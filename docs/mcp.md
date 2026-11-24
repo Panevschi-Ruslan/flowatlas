@@ -938,7 +938,7 @@ pages, cursors, retries, literal lists, batch calls, migrations) are not rows;
 | Tool | Answers | Takes |
 |---|---|---|
 | `dead` | whether one node is dead, with what could make that wrong; on a class or a file, each way in it declares, judged (`waysIn`); or, without `id`, every row `flowatlas dead` lists, verdict first | `id` (or `ids`), or `service` and `kind` (`entries`, `channels`, `providers`, `methods`), `maxNodes`, `offset` |
-| `findings` | what looks broken between the services first, then every other finding, counted by kind with the top three of each, each with its precision; with `kind`, one kind ranked by reach | `kind` (`call-to-missing-route`, `field-never-sent`, `type-never-published`, `contract-break`, `unguarded-among-guarded`, `annotation-to-missing-route`, `env-not-set`, `n-plus-one`, `unguarded`, `one-ended-channel`, `rule`, or a finding's reason), `service`, `maxNodes`, `offset` |
+| `findings` | what looks broken between the services first, then every other finding, counted by kind with the top three of each, each with its precision; with `kind`, one kind ranked by reach | `kind` (`call-to-missing-route`, `field-never-sent`, `type-never-published`, `contract-break`, `unguarded-among-guarded`, `annotation-to-missing-route`, `env-not-set`, the protocol, settings, status and CORS kinds of P388 below, `n-plus-one`, `unguarded`, `one-ended-channel`, `rule`, or a finding's reason), `service`, `maxNodes`, `offset` |
 | `check_rules` | the architecture rules of the configuration (P114), checked over the graph: each rule's status (`held`, `broken`, `unchecked`), each violation with its two ends, where it crosses (`loc`), the edge kind, the weakest confidence, `heuristic` for a guess, the rule's note and `next` (`get_flow` on the way in it starts behind, `get_source` on the crossing), the rules that could not be checked (`rule-matches-nothing`) and how many an accept excused | `rule`, `service`, `maxNodes`, `offset` |
 
 `check_rules` calls the function `flowatlas rules` calls (the linker's
@@ -1039,6 +1039,31 @@ no finding; the sender leaving out a field the receiver requires stays a
 warning. `flowatlas findings` prints the same list, `--format sarif` writes it
 under `finding/<kind>` rules carrying each kind's precision, and
 `--fail-on high` stops a pipeline on the defects that are nearly always right.
+
+**Protocol, validation, settings, status and CORS mismatches (P388).** Where
+flowatlas reads both sides of something the two must agree on, one side saying
+what the other never does is listed the same way, gated on its evidence, each
+beside a decoy in the `boundary-mismatches` fixture:
+
+| Kind | What | Evidence | Precision |
+|---|---|---|---|
+| `sse-event-unhandled` | a route streams frames under an event name no listener of the browser's stream listens for: a named frame never reaches `onmessage` (MDN), only `addEventListener(name)` | every frame the route writes was read with its name (`event:` written out, Hono's `writeSSE({ event })`, the `type` of a Nest `MessageEvent`, which Nest sends as the frame's `event:`), and every listener with the name it listens for | high |
+| `sse-event-never-sent` | a listener for a name the route never sends | every frame of the route was read with its name | medium |
+| `bot-button-unhandled` | a button whose callback data no handler matches (a string, or a pattern tried on the data with its unread parts filled) | every handler of callback data in the project was read, and none takes every callback (`on('callback_query')`) | high |
+| `bot-button-data-too-long` | callback data over the 64 bytes the bot platform's API takes (UTF-8 bytes; for a template, what is written out alone) | the platform's limit | high |
+| `bot-handler-untriggered` | a handler of callback data no button the project builds sends | every button was read with its data, none built outside a function the reading draws (`bot-button-unplaced`) | medium |
+| `config-name-mismatch` | a setting read with no default and set nowhere, while a name a letter or two apart is set and read nowhere | the two names | high |
+| `config-not-set` | a setting read with no default (no default argument, no `??` or `\|\|`, not only tested) that none of the service's deployment files sets: environment files (examples too), compose `environment` and `env_file`, a Dockerfile's `ENV`, `serverless.yml`, a worker's `vars`, a cluster's manifests, a deployed function's environment | every deployment file of the service was read, no configuration module validates the settings with a schema that may give a default, no `envFrom` takes a config map not read; a value given outside the files (a secret store, a console) is what makes it wrong | medium |
+| `config-never-read` | a name the deployment files set that no code of the service reads | every read of a setting names its key; a library reading it by itself is what makes it wrong | low |
+| `status-never-answered` | a client branching on a status (`err.status === 410`, in the code that sends the request or the one caller waiting on it) the route it is joined to never answers | every failure of the route was read with its status (Nest's), nothing in the code behind it left a gap; 400, 401, 403, 405, 407, 408, 413, 415, 429 and 5xx, which a proxy or the framework may answer, are not judged | high (`404` medium) |
+| `cors-credentials` | a browser request sending credentials (`withCredentials: true`, `credentials: 'include'`, or an interceptor or client default giving them to every request) to a server whose CORS answers `*` or sends no `Access-Control-Allow-Credentials: true` | the server enables CORS (Nest's `enableCors`, `NestFactory.create`'s `cors`, the `cors` middleware), read as the middleware's defaults where options are left out | high |
+| `cors-header-not-allowed` | a header the request sets, or the `Content-Type` of its JSON body, that the server's `allowedHeaders` leaves out | the same; with no `allowedHeaders`, every header the browser asks for is allowed | high |
+| `cors-method-not-allowed` | a verb other than GET, HEAD and POST the server's `methods` leave out | the same | high |
+
+A client sending a field the body's class does not declare, under a validation
+pipe with `forbidNonWhitelisted: true` beside `whitelist: true`, is refused
+with 400: the contracts report says it as `whitelist-reject` at `error`
+(`contract-break`, high), where `whitelist` alone stays `whitelist-strip`.
 
 ### Finding your way in
 

@@ -4,6 +4,7 @@ import type { LinkReport } from '../report.js';
 import type { RuleViolation } from '../rules/types.js';
 import { promoteGap, typesNeverPublished, type BoundaryFinding, type HeldBack } from './boundary.js';
 import { deadChannels } from './dead.js';
+import { boundaryMismatches } from './mismatches.js';
 import { byId } from './graph.js';
 
 /**
@@ -34,8 +35,21 @@ export const FINDING_KINDS = [
   'unguarded-among-guarded',
   'annotation-to-missing-route',
   'env-not-set',
+  // Protocol, validation, settings, status and CORS mismatches (P388), surest first.
+  'sse-event-unhandled',
+  'bot-button-unhandled',
+  'bot-button-data-too-long',
+  'config-name-mismatch',
+  'status-never-answered',
+  'cors-credentials',
+  'cors-header-not-allowed',
+  'cors-method-not-allowed',
+  'config-not-set',
+  'sse-event-never-sent',
+  'bot-handler-untriggered',
   'n-plus-one',
   'unguarded',
+  'config-never-read',
   'one-ended-channel',
   'rule',
 ] as const;
@@ -197,6 +211,19 @@ const PRECISION: Readonly<Record<string, Precision>> = {
   'queue-receives-few': 'low',
   'workflow-lambda-unretried': 'low',
   'workflow-callback-no-heartbeat': 'low',
+  // P388: each is said with its own precision too; these are the kinds' own.
+  'sse-event-unhandled': 'high',
+  'sse-event-never-sent': 'medium',
+  'bot-button-unhandled': 'high',
+  'bot-button-data-too-long': 'high',
+  'bot-handler-untriggered': 'medium',
+  'config-name-mismatch': 'high',
+  'config-not-set': 'medium',
+  'config-never-read': 'low',
+  'status-never-answered': 'high',
+  'cors-credentials': 'high',
+  'cors-header-not-allowed': 'high',
+  'cors-method-not-allowed': 'high',
 };
 
 /** How sure a finding of a kind is, at a severity where the kind has several. */
@@ -336,7 +363,7 @@ export const collectFindings = (db: GraphDb, sources: FindingSources): Collected
   // Read off the graph rather than the rows, as the one-ended channels are:
   // only where the report is handed in, so counting a slice of rows does not
   // count them again.
-  for (const promoted of sources.report === undefined ? [] : typesNeverPublished(db)) {
+  for (const promoted of sources.report === undefined ? [] : [...typesNeverPublished(db), ...boundaryMismatches(db, all)]) {
     if ('held' in promoted) holdBack(heldBack, promoted.held);
     else findings.push(boundaryRow(promoted.finding));
   }

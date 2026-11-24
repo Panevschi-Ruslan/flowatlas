@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T23:01:51.197Z",
+  "builtAt": "2026-11-24T20:22:34.863Z",
   "services": [
     {
       "name": "shop-api",
@@ -344,6 +344,9 @@
         "adapter": "nestjs-http",
         "stream": "sse",
         "streamFrom": "decorator",
+        "streamEvents": [
+          "message"
+        ],
         "relays": [
           "channel:desk_alerts"
         ]
@@ -1884,6 +1887,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "shop-api"
       }
     },
@@ -1928,6 +1932,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "shop-api"
       }
     }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:50:24.811Z",
+  "builtAt": "2026-11-24T20:25:07.757Z",
   "services": [
     {
       "name": "api",
@@ -408,6 +408,7 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "api"
       }
     },

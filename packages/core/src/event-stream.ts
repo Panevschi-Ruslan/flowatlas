@@ -395,3 +395,8 @@ export const recordSubjectSubscribers = (builder: GraphBuilder, relay: SubjectRe
   }
   return handsOn;
 };
+
+/** On a route answering with a stream: the names of the events its frames are written under, `message` for a frame named none (P388). */
+export const STREAM_EVENTS_META = 'streamEvents';
+/** On such a route: some frame's name was not read, so `streamEvents` may not be all of them (P388). */
+export const STREAM_EVENTS_UNREAD_META = 'streamEventsUnread';

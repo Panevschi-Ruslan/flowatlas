@@ -40,6 +40,7 @@
                 "sku"
               ],
               "via": "template-env",
+              "sendsJson": true,
               "targetService": "stock-api"
             },
             "edge": "calls",

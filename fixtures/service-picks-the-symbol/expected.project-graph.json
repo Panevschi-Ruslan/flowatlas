@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T15:51:29.259Z",
+  "builtAt": "2026-11-24T20:23:49.354Z",
   "services": [
     {
       "name": "lending-api",
@@ -1120,6 +1120,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "lending-api"
       }
     },
@@ -1142,7 +1143,8 @@
         "bodyKeys": [],
         "answerRead": [],
         "package": "@angular/common/http",
-        "via": "template-env"
+        "via": "template-env",
+        "sendsJson": true
       }
     }
   ],

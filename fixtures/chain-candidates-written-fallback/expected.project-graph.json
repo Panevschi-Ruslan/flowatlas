@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:33:28.051Z",
+  "builtAt": "2026-11-24T20:12:29.985Z",
   "services": [
     {
       "name": "jobs",
@@ -187,7 +187,8 @@
       "line": 15,
       "meta": {
         "key": "orders.url",
-        "source": "config.get"
+        "source": "config.get",
+        "fallback": true
       }
     },
     {

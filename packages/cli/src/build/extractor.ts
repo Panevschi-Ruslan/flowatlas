@@ -5,11 +5,12 @@ import {
   type FlowatlasConfig,
   type PackageJson,
   type ServiceConfig,
+  requestFactsPass,
   type SourceRootOptions,
 } from '@flowatlas/core';
 import { brokersPass, helperPublishesPass, messageTypesPass, registerBrokerAdapters, streamRelaysPass } from '@flowatlas/adapters-broker';
 import { graphqlCallsPass, grpcCallsPass, leavesPass, procedureCallsPass, registerDbAdapters } from '@flowatlas/adapters-db';
-import { deployedSourceDirectories, registerEntryAdapters } from '@flowatlas/adapters-entry';
+import { botButtonsPass, deployedSourceDirectories, registerEntryAdapters } from '@flowatlas/adapters-entry';
 import {
   ANGULAR_SOURCE_ROOTS,
   registerFrontendAdapters as registerAngularFrontend,
@@ -62,9 +63,11 @@ export const isFrontend = (type: string): boolean => halfOf(type) === 'browser';
  * through an oRPC or tRPC client (P242), and `grpcCallsPass` the gRPC methods
  * it calls on another service (P274). `messageTypesPass` reads the types of
  * message each consumer the channel reader drew chooses on (P358), so it runs
- * after it.
+ * after it. `requestFactsPass` reads what each request says beside its address
+ * (P388: the statuses it branches on), `botButtonsPass` the callback data of
+ * every button a bot builds.
  */
-export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, graphqlCallsPass, procedureCallsPass, grpcCallsPass, brokersPass, streamRelaysPass, helperPublishesPass, messageTypesPass, workflowsPass];
+export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, graphqlCallsPass, procedureCallsPass, grpcCallsPass, brokersPass, streamRelaysPass, helperPublishesPass, messageTypesPass, requestFactsPass, botButtonsPass, workflowsPass];
 
 /** Every adapter the command line knows how to offer an extractor. */
 export const createRegistry = (): AdapterRegistry => {

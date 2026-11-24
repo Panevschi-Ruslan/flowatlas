@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:39:16.171Z",
+  "builtAt": "2026-11-24T20:16:55.850Z",
   "services": [
     {
       "name": "storefront",
@@ -104,7 +104,8 @@
       "line": 9,
       "meta": {
         "key": "CATALOG_URL",
-        "source": "process.env"
+        "source": "process.env",
+        "fallback": true
       }
     },
     {
@@ -128,7 +129,8 @@
       "line": 33,
       "meta": {
         "key": "LEDGER_URL",
-        "source": "process.env"
+        "source": "process.env",
+        "fallback": true
       }
     },
     {

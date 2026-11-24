@@ -1190,7 +1190,11 @@ describe('dead, findings, type_usage and scoped prompts', () => {
       precision: 'high',
       fix: 'the nearest route: POST /orders/:param/archive (one segment off: cancel for archive)',
     });
-    expect(answer.heldBack).toEqual({ 'call-to-missing-route': { count: 1, why: 'the service it is sent to is not named' } });
+    expect(answer.heldBack).toEqual({
+      'call-to-missing-route': { count: 1, why: 'the service it is sent to is not named' },
+      // P388: the fixture has no deployment file, so a setting read with no default is not said to be set nowhere.
+      'config-not-set': { count: 3, why: 'no deployment file of billing was read: its settings may be set where the reading does not look' },
+    });
     const [first] = answer.top.unguarded;
     expect(first).toMatchObject({ id: 'entry:orders:http:POST:/orders', rank: 1, reach: { writes: 1 } });
     expect(first.next).toBe('get_flow({entry: "entry:orders:http:POST:/orders"})');

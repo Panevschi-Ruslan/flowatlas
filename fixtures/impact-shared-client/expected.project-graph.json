@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T17:26:18.015Z",
+  "builtAt": "2026-11-24T20:15:22.180Z",
   "services": [
     {
       "name": "market-api",
@@ -427,6 +427,9 @@
         "adapter": "nestjs-http",
         "stream": "sse",
         "streamFrom": "decorator",
+        "streamEvents": [
+          "message"
+        ],
         "relays": [
           "channel:shop:*:events"
         ]
@@ -2416,6 +2419,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "market-api"
       }
     },
@@ -2488,6 +2492,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "market-api"
       }
     },
@@ -2553,6 +2558,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "market-api"
       }
     },
@@ -2576,6 +2582,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "market-api"
       }
     },
@@ -2631,6 +2638,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "market-api"
       }
     }

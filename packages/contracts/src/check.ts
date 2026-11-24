@@ -140,6 +140,22 @@ export const stripsUndecorated = (lookup: GraphLookup, entryId: string): boolean
   });
 
 /**
+ * Whether that pipe refuses a request carrying what it does not whitelist
+ * (P388): `forbidNonWhitelisted: true` beside `whitelist: true`. Nest's
+ * validation then answers 400 where it would have stripped.
+ */
+export const rejectsUndecorated = (lookup: GraphLookup, entryId: string): boolean =>
+  lookup.edgesFrom(entryId, ['guarded_by']).some((edge) => {
+    if (edge.meta?.['layer'] !== 'pipe') return false;
+    const pipe = lookup.node(edge.to);
+    if (pipe === undefined || !pipe.label.startsWith('ValidationPipe')) return false;
+    const [options] = Array.isArray(pipe.meta?.['factoryArgs']) ? (pipe.meta['factoryArgs'] as unknown[]) : [];
+    if (typeof options !== 'object' || options === null) return false;
+    const said = options as { whitelist?: unknown; forbidNonWhitelisted?: unknown };
+    return said.whitelist === true && said.forbidNonWhitelisted === true;
+  });
+
+/**
  * How well the two ends of one exchange agree.
  *
  * The order is the plan's: whether the two are the same declaration at all,
@@ -239,6 +255,7 @@ const judge = (lookup: GraphLookup, exchange: Exchange, options: CheckOptions): 
       depth: options.depth ?? DEFAULT_DEPTH,
       ...(options.disableRules === undefined ? {} : { disableRules: options.disableRules }),
       ...(whitelist ? { whitelist } : {}),
+      ...(whitelist && rejectsUndecorated(lookup, exchange.edge.to) ? { forbid: true } : {}),
       ...(exchange.sendsNothing === true ? { emptyIsWritten: true } : {}),
       ...(exchange.writtenEmptyAt === undefined ? {} : { emptyWrittenAt: exchange.writtenEmptyAt }),
       ...(exchange.missingRules === undefined ? {} : { missingRules: exchange.missingRules }),

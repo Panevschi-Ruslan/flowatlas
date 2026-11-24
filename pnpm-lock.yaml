@@ -121,6 +121,9 @@ importers:
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core
+      '@flowatlas/extract-scopes':
+        specifier: workspace:*
+        version: link:../extract-scopes
       '@flowatlas/graphql':
         specifier: workspace:*
         version: link:../graphql

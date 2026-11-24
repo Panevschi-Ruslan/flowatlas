@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:17.616Z",
+  "builtAt": "2026-11-24T20:23:17.077Z",
   "services": [
     {
       "name": "web",
@@ -526,6 +526,7 @@
         "client": "axios",
         "via": "literal",
         "host": "localhost:4700",
+        "sendsJson": true,
         "targetService": "shop"
       }
     },

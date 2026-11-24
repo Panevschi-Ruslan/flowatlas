@@ -910,6 +910,8 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         key: read.key,
         source: read.source,
         ...(read.defaultValue === undefined ? {} : { defaultValue: read.defaultValue }),
+        // A read that goes on without it (P388): said only where no default is written out.
+        ...(read.defaultValue === undefined && read.fallback === true ? { fallback: true } : {}),
       },
     });
     if (seenConfig.has(marker)) return;

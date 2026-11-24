@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:33:32.207Z",
+  "builtAt": "2026-11-24T20:12:32.878Z",
   "services": [
     {
       "name": "jobs",
@@ -127,7 +127,8 @@
       "line": 5,
       "meta": {
         "key": "PRIMARY_URL",
-        "source": "process.env"
+        "source": "process.env",
+        "fallback": true
       }
     },
     {

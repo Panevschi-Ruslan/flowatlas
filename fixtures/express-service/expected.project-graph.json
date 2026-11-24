@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:34:56.416Z",
+  "builtAt": "2026-11-24T20:13:44.535Z",
   "services": [
     {
       "name": "api",
@@ -518,6 +518,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "api"
       }
     },

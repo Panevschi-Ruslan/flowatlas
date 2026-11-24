@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T16:45:41.473Z",
+  "builtAt": "2026-11-24T20:24:52.631Z",
   "services": [
     {
       "name": "shop",
@@ -879,6 +879,9 @@
         "adapter": "nestjs-http",
         "stream": "sse",
         "streamFrom": "decorator",
+        "streamEvents": [
+          "message"
+        ],
         "relays": [
           "channel:order_updates"
         ]

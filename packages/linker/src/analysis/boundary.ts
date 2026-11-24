@@ -307,7 +307,7 @@ export const likelyRenamed = (name: string, others: readonly string[]): string |
 };
 
 /** Two spellings at most two edits apart, neither of them short. */
-const closeSpelling = (a: string, b: string): boolean => {
+export const closeSpelling = (a: string, b: string): boolean => {
   if (Math.min(a.length, b.length) < 5 || Math.abs(a.length - b.length) > 2) return false;
   let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
   for (let i = 1; i <= a.length; i += 1) {

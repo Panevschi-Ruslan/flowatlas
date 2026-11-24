@@ -7,6 +7,7 @@ import {
   type Risk,
   type RowKind,
   type ServiceSummary,
+  type SettingNames,
   type TypeEntry,
   type UnresolvedLevel,
 } from '@flowatlas/core';
@@ -245,6 +246,16 @@ export class GraphDb {
       | { value: string }
       | undefined;
     return row === undefined ? [] : (JSON.parse(row.value) as ServiceSummary[]);
+  }
+
+  /**
+   * The names each service's deployment files set (P388), where the build
+   * recorded them; undefined for a database written before, or where the
+   * configuration turns reading those files off.
+   */
+  settingNames(): Record<string, SettingNames> | undefined {
+    const row = this.#db.prepare('SELECT value FROM meta WHERE key = ?').get('setting_names') as { value: string } | undefined;
+    return row === undefined ? undefined : (JSON.parse(row.value) as Record<string, SettingNames>);
   }
 
   node(id: string): GraphNode | undefined {

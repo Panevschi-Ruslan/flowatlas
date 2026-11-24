@@ -2602,6 +2602,22 @@ and the nearest fix (P384). It is the graph server's `findings` answer, from
 the same function, so the two rank alike; a candidate whose evidence did not
 hold is said under `held back`, with why.
 
+Beside them, where both sides are read (P388): a stream's frames sent under an
+event name no browser listener listens for, a bot button whose callback data
+no handler matches, a handler no button sends, callback data over 64 bytes, a
+setting read with no default that no deployment file sets (or set under a name
+a letter or two apart), a setting set and read nowhere, a client branching on
+a status its route never answers, and a browser request its server's CORS
+settings refuse (credentials against `*` or without `credentials: true`, a
+header or a verb not allowed). The kinds, their evidence and precision are
+listed in [the graph server's guide](mcp.md).
+
+```
+status-never-answered (1)
+  1. [high] OrderPanelComponent.cancel branches on 410 from POST /orders/:param/cancel, which never answers 410: it answers 404, 409 (web src/app/order-panel.component.ts:43)
+     branch on what the route answers (404, 409), or make it answer 410
+```
+
 | Flag | Default | Does |
 |---|---|---|
 | `--kind <kind>` | every kind | only one kind (`call-to-missing-route`, `field-never-sent`, …, or a finding's reason) |
@@ -4349,7 +4365,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Types of message on a channel | `message-type-unselected` (P358): a type published on a channel whose consumers choose by type, none choosing it |
 | Starting a workflow or a function by its deployed name | `start-from-environment`, `start-name-unread`, `starter-undescribed` |
 | Settings | `dynamic-config-key` |
-| Bots and handler tables | `bot-handlers-not-found`, `dynamic-bot-trigger`, `entry-registry-unconfigured`, `registry-key-dynamic`, `registry-handler-anonymous`, `orphan-scene-decorator`, `orphan-update-decorator`, `wizard-step-conflict` |
+| Bots and handler tables | `bot-handlers-not-found`, `bot-button-unplaced` (info, P388: a button built outside any function the reading draws, its callback data not held against the handlers), `dynamic-bot-trigger`, `entry-registry-unconfigured`, `registry-key-dynamic`, `registry-handler-anonymous`, `orphan-scene-decorator`, `orphan-update-decorator`, `wizard-step-conflict` |
 | Annotations | `marker-route-not-found`, `marker-service-unknown`, `marker-unknown-arg`, `marker-arg-not-a-name`, `marker-names-nothing` |
 | Declared services | `document-age` |
 | Functions and routes declared in Terraform | `function-name-unread`, `function-name-disputed`, `function-repeated-unread`, `function-handler-unread`, `function-handler-not-found`, `function-handler-ambiguous`, `function-source-unread`, `function-runtime-unread` (info), `function-image-unread` (info), `route-path-unread`, `route-target-unread`, `route-base-path-unread`, `api-body-unread`, `deployment-unread` (info) |

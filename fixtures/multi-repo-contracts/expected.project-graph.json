@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:39:29.289Z",
+  "builtAt": "2026-11-24T20:16:58.430Z",
   "services": [
     {
       "name": "gateway",
@@ -2149,6 +2149,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "orders"
       }
     },

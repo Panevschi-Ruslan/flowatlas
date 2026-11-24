@@ -276,6 +276,24 @@ export interface ServiceBinding {
   readonly environment?: string;
 }
 
+/**
+ * The names of the settings one service's deployment files set, or name for
+ * a deployment to set (P388), never their values: what the code's reads of
+ * settings are held against. Kept beside the graph, not in it.
+ */
+export interface SettingNames {
+  /** Each name, with the files that set or name it. */
+  readonly names: Readonly<Record<string, readonly string[]>>;
+  /** Every deployment file read for them; none means nothing can be said of a key set nowhere. */
+  readonly files: readonly string[];
+  /** Files that look like deployment files and could not be parsed. */
+  readonly unread?: readonly string[];
+  /** Config maps or secrets a manifest takes every setting of (`envFrom`) that no file read writes: their names are not known. */
+  readonly from?: readonly string[];
+  /** A source file whose configuration module validates the settings with a schema, which may give a key a default. */
+  readonly schema?: string;
+}
+
 export const NO_SETTINGS: RepoSettings = { values: {}, namedOnly: {}, hosts: [] };
 
 /**

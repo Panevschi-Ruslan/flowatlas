@@ -1,0 +1,27 @@
+{
+  "services": [
+    {
+      "name": "orders-api",
+      "repo": "./orders-api",
+      "type": "nestjs"
+    },
+    {
+      "name": "accounts-api",
+      "repo": "./accounts-api",
+      "type": "nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "apiBaseEnv": ["ordersUrl", "accountsUrl"],
+      "apiTarget": { "ordersUrl": "orders-api", "accountsUrl": "accounts-api" }
+    },
+    {
+      "name": "shop-bot",
+      "repo": "./shop-bot",
+      "type": "nestjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

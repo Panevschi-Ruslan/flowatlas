@@ -553,6 +553,7 @@ export const PAGE_WORDS = Object.freeze({
     'deployment-setting-unread': 'deployment setting check not made',
     'stream-filter-not-matched': 'stream filter not evaluated',
     'stream-handler-unread': 'screen handler of a stream not found',
+    'bot-button-unplaced': 'bot button outside any function',
     'stream-no-writer': 'nothing writes the stream',
     'stream-relay-unread': 'channel relayed onto a stream not read',
     'subscription-forward-unread': 'forwarded events not named',

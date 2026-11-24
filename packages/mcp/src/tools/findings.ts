@@ -59,6 +59,10 @@ const SHOWN_BY: Readonly<Record<string, (row: FindingRow) => string>> = {
     callOf(row.message.startsWith('no producer') ? 'who_consumes' : 'who_emits', { channel: row.id }),
   // The rule's name is the message's first word (P114).
   rule: (row) => callOf('check_rules', { rule: row.message.slice(0, row.message.indexOf(':')) }),
+  // P388: the route's flow says every status it answers; a setting set and read nowhere is searched for by name.
+  'status-never-answered': (row) => (row.to === undefined ? callOf('get_source', { symbol: row.id }) : callOf('get_flow', { entry: row.to })),
+  'config-never-read': (row) => callOf('search', { query: row.id.slice(row.id.lastIndexOf('#') + 1) }),
+  'bot-handler-untriggered': (row) => callOf('get_flow', { entry: row.id }),
 };
 
 const lineOf = (loc: string | undefined): number | undefined => {

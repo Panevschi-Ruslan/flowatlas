@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:58:53.994Z",
+  "builtAt": "2026-11-24T20:19:36.897Z",
   "services": [
     {
       "name": "shop",
@@ -631,6 +631,7 @@
         "package": null,
         "client": "ofetch",
         "via": "literal",
+        "sendsJson": true,
         "targetService": "shop"
       }
     },

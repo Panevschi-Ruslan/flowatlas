@@ -579,6 +579,25 @@ const BETWEEN_COMPACT_CASES = [
 ];
 
 /**
+ * Protocol, validation, settings, status and CORS mismatches (P388): each
+ * defect gated on its evidence beside a decoy, with its precision and fix.
+ */
+const MISMATCH_CASES = [
+  ['findings.all', 'findings', {}],
+  ['findings.sse-event-unhandled', 'findings', { kind: 'sse-event-unhandled' }],
+  ['findings.status-never-answered', 'findings', { kind: 'status-never-answered' }],
+  ['findings.cors-credentials', 'findings', { kind: 'cors-credentials' }],
+  ['findings.config-name-mismatch', 'findings', { kind: 'config-name-mismatch' }],
+  ['findings.bot-button-unhandled', 'findings', { kind: 'bot-button-unhandled' }],
+];
+/** The same, compact: what an agent is handed. */
+const MISMATCH_COMPACT_CASES = [
+  ['findings.all', 'findings', { verbose: false }],
+  ['findings.bot-button-data-too-long', 'findings', { kind: 'bot-button-data-too-long', verbose: false }],
+  ['findings.cors-header-not-allowed', 'findings', { kind: 'cors-header-not-allowed', verbose: false }],
+];
+
+/**
  * Answers that finish in one call (P364): each row of code with whether it
  * runs and the nearest way in (a screen for a handler the router shows, none
  * for one no way in reaches), each list saying whether it is complete and what
@@ -1057,6 +1076,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'findings-between-services'),
     outDir: join(root, 'fixtures', 'findings-between-services', 'expected.mcp.compact'),
     cases: BETWEEN_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'boundary-mismatches'),
+    outDir: join(root, 'fixtures', 'boundary-mismatches', 'expected.mcp'),
+    cases: MISMATCH_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'boundary-mismatches'),
+    outDir: join(root, 'fixtures', 'boundary-mismatches', 'expected.mcp.compact'),
+    cases: MISMATCH_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'impact-guarded-navigation'),

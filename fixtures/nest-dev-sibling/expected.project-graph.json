@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:41:46.024Z",
+  "builtAt": "2026-11-24T20:18:00.549Z",
   "services": [
     {
       "name": "api",
@@ -117,7 +117,8 @@
       "line": 6,
       "meta": {
         "key": "E2E_API_URL",
-        "source": "process.env"
+        "source": "process.env",
+        "fallback": true
       }
     },
     {

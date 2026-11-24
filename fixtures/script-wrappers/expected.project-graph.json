@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:29.131Z",
+  "builtAt": "2026-11-24T20:23:32.097Z",
   "services": [
     {
       "name": "web",
@@ -495,6 +495,10 @@
         "client": "fetch",
         "via": "const",
         "host": "localhost:4710",
+        "headers": [
+          "content-type"
+        ],
+        "sendsJson": true,
         "targetService": "shop"
       }
     },

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:32:04.181Z",
+  "builtAt": "2026-11-24T20:11:36.048Z",
   "services": [
     {
       "name": "angular-basic",
@@ -960,7 +960,8 @@
         "bodyFrom": "type",
         "answerRead": [],
         "package": "@angular/common/http",
-        "via": "template-env"
+        "via": "template-env",
+        "sendsJson": true
       }
     },
     {

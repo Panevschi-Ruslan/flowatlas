@@ -339,6 +339,8 @@ const GAPS: readonly string[] = [
   // the screen, is not read (P359)
   'stream-relay-unread',
   'stream-handler-unread',
+  // A bot's button built outside any function the reading draws, its callback data not held against the handlers (P388)
+  'bot-button-unplaced',
   // The type of a message, at a publish or where a consumer chooses by it, not read (P358)
   'message-type-unread',
   'start-from-environment',

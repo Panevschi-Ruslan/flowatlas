@@ -1,0 +1,32 @@
+{
+  "kind": "sse-event-unhandled",
+  "rows": [
+    {
+      "kind": "sse-event-unhandled",
+      "id": "consumer:web#src/app/live.service.ts:LiveService.onReady",
+      "to": "entry:orders-api:http:GET:/orders/events",
+      "service": "web",
+      "loc": "src/app/live.service.ts:12",
+      "message": "GET /orders/events sends frames as the event \"order-ready\", which LiveService.onReady never listens for: it listens for \"message\", and onmessage hears only frames named no event",
+      "precision": "high",
+      "evidence": "every frame the route writes was read with its name, and every listener of the stream with the name it listens for",
+      "fix": "listen with addEventListener(\"order-ready\", …), or send the frames with no event name",
+      "rank": 1,
+      "next": "get_source({symbol: \"consumer:web#src/app/live.service.ts:LiveService.onReady\"})"
+    }
+  ],
+  "total": 1,
+  "heldBack": {
+    "config-not-set": {
+      "count": 1,
+      "why": "the configuration module in src/app.module.ts validates the settings with a schema, which may give it a default"
+    },
+    "status-never-answered": {
+      "count": 1,
+      "why": "POST /orders/:param/refund throws HttpException, whose status is not read"
+    }
+  },
+  "next": [
+    "get_source({symbol: \"consumer:web#src/app/live.service.ts:LiveService.onReady\"})"
+  ]
+}

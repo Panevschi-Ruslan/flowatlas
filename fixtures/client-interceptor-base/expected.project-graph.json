@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:33:50.470Z",
+  "builtAt": "2026-11-24T20:12:43.930Z",
   "services": [
     {
       "name": "orders",
@@ -621,6 +621,7 @@
         "client": "axios",
         "baseFrom": "interceptor",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "orders"
       }
     },
@@ -672,6 +673,7 @@
         "baseFrom": "interceptor",
         "via": "literal",
         "host": "billing.example.test",
+        "sendsJson": true,
         "targetService": "billing"
       }
     },

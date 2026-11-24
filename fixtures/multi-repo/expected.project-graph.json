@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:38:37.395Z",
+  "builtAt": "2026-11-24T20:16:44.735Z",
   "services": [
     {
       "name": "gateway",
@@ -1880,6 +1880,7 @@
           "/orders/:param/hold",
           "/orders/:param/resume"
         ],
+        "sendsJson": true,
         "targetService": "gateway"
       }
     },
@@ -2086,6 +2087,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "gateway"
       }
     },
@@ -2135,6 +2137,7 @@
           "/orders/:param/refund",
           "/orders/:param/ship"
         ],
+        "sendsJson": true,
         "targetService": "gateway"
       }
     },

@@ -36,6 +36,7 @@ import {
   type SourceRootOptions,
   type ServiceConfig,
   projectText,
+  requestFactsPass,
 } from '@flowatlas/core';
 import { createAngularContext } from './context.js';
 import { declaresAngular } from './framework.js';
@@ -165,6 +166,8 @@ export const BUILT_IN_PASSES: readonly AngularExtractorPass[] = [
   markersPass,
   // After every reader that draws a consumer: the types of message each chooses on (P358).
   messageTypesPass,
+  // After every reader that draws a request: the statuses it branches on, its credentials and headers (P388).
+  requestFactsPass,
   signaturesPass,
 ];
 

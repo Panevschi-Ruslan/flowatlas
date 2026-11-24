@@ -12,6 +12,8 @@ import {
   normalizePath,
   readWorkerConfig,
   resolveTypeOrigin,
+  STREAM_EVENTS_META,
+  STREAM_EVENTS_UNREAD_META,
   STREAM_KIND,
   type Confidence,
   type ExtractorPass,
@@ -254,6 +256,106 @@ const shapeIn = (body: TsNode, leaveOut?: ReadonlySet<TsNode>): StreamShape | un
     if (found !== undefined) traversal.stop();
   });
   return found;
+};
+
+/** The event a browser dispatches a frame under when the frame names none. */
+const UNNAMED_EVENT = 'message';
+
+/** A frame's name line written out, in the source's own text: `event: order-ready` up to its `\n`. */
+const EVENT_LINE = /(?:^[`'"]|\\n)event:[ \t]*([A-Za-z0-9_.:-]+)[ \t]*\\n/;
+/** A frame's name line whose name is not written out. */
+const EVENT_LINE_UNREAD = /(?:^[`'"]|\\n)event:[ \t]*\$\{/;
+/** A frame's data line. */
+const DATA_LINE = /(?:^[`'"]|\\n)data:/;
+
+/** The keys of the object Nest writes as one frame of a stream, its `MessageEvent`. */
+const MESSAGE_EVENT_KEYS: ReadonlySet<string> = new Set(['data', 'id', 'type', 'retry', 'comment']);
+
+/** A property of an object literal, by name, and its value where it is a string written out. */
+const literalProperty = (object: TsNode, name: string): { found: boolean; value?: string } => {
+  if (!Node.isObjectLiteralExpression(object)) return { found: false };
+  for (const property of object.getProperties()) {
+    if (Node.isShorthandPropertyAssignment(property) && property.getName() === name) return { found: true };
+    if (!Node.isPropertyAssignment(property)) continue;
+    const key = property.getNameNode();
+    const said = Node.isIdentifier(key) ? key.getText() : Node.isStringLiteral(key) ? key.getLiteralText() : undefined;
+    if (said !== name) continue;
+    const initializer = property.getInitializer();
+    if (initializer !== undefined && (Node.isStringLiteral(initializer) || Node.isNoSubstitutionTemplateLiteral(initializer))) {
+      return { found: true, value: initializer.getLiteralText() };
+    }
+    return { found: true };
+  }
+  return { found: false };
+};
+
+/**
+ * The names of the events the frames written in some bodies go under (P388):
+ * the `event:` line of a frame written out (`message` where a frame has a
+ * `data:` line and no name), the `event` of Hono's `writeSSE({ event, data })`,
+ * the `type` of the object a Nest stream maps each value to (its
+ * `MessageEvent`: `{ data, type? }`, whose `type` Nest sends as the frame's
+ * `event:`). A name built at run time, or a stream whose frames are written
+ * nowhere these read, is `unread`.
+ */
+export const streamEventsIn = (bodies: readonly TsNode[], declared: boolean): { events: string[]; unread: boolean } => {
+  const events = new Set<string>();
+  let unread = false;
+  let framesSeen = false;
+  let unnamedData = false;
+  let namedApart = false;
+  const text = (node: TsNode): void => {
+    const raw = node.getText();
+    if (EVENT_LINE_UNREAD.test(raw)) {
+      unread = true;
+      framesSeen = true;
+      if (!DATA_LINE.test(raw)) namedApart = true;
+      return;
+    }
+    const named = EVENT_LINE.exec(raw);
+    if (named !== null) {
+      events.add(named[1]!);
+      framesSeen = true;
+      if (!DATA_LINE.test(raw)) namedApart = true;
+      return;
+    }
+    if (FRAME.test(raw)) {
+      framesSeen = true;
+      unnamedData = true;
+    }
+  };
+  for (const body of bodies) {
+    body.forEachDescendant((node) => {
+      if (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node) || Node.isTemplateExpression(node)) {
+        text(node);
+        return;
+      }
+      if (Node.isCallExpression(node)) {
+        const callee = node.getExpression();
+        if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== FRAME_WRITER) return;
+        framesSeen = true;
+        const [frame] = node.getArguments();
+        const event = frame === undefined ? { found: false } : literalProperty(frame, 'event');
+        if (frame === undefined || !Node.isObjectLiteralExpression(frame) || (event.found && event.value === undefined)) unread = true;
+        else events.add(event.value ?? UNNAMED_EVENT);
+        return;
+      }
+      if (!declared || !Node.isObjectLiteralExpression(node)) return;
+      const keys = node
+        .getProperties()
+        .map((property) => (Node.isPropertyAssignment(property) || Node.isShorthandPropertyAssignment(property) ? property.getName() : '…'));
+      if (!keys.includes('data') || keys.some((key) => !MESSAGE_EVENT_KEYS.has(key))) return;
+      framesSeen = true;
+      const type = literalProperty(node, 'type');
+      if (type.found && type.value === undefined) unread = true;
+      else events.add(type.value ?? UNNAMED_EVENT);
+    });
+  }
+  // A data line written apart from a name line written apart is one frame, named or not: not read.
+  if (unnamedData && !namedApart) events.add(UNNAMED_EVENT);
+  if (unnamedData && namedApart) unread = true;
+  if (!framesSeen) unread = true;
+  return { events: [...events].sort(), unread };
 };
 
 /** Whether a way in is declared with Nest's decorator for a stream. */
@@ -755,10 +857,17 @@ export const extractStreamRelays = (ctx: PassContext): void => {
     }
 
     const entered = hops.filter((each) => each.entered && each.stub.target.kind === 'class');
+    // The names its frames go under (P388), read in every body behind it.
+    const frames = streamEventsIn(
+      bodies.map((each) => each.scope.body),
+      shape === 'decorator',
+    );
     route.meta = {
       ...route.meta,
       stream: STREAM_KIND,
       streamFrom: shape,
+      [STREAM_EVENTS_META]: frames.events,
+      ...(frames.unread ? { [STREAM_EVENTS_UNREAD_META]: true } : {}),
       ...(entered.length === 0
         ? {}
         : {

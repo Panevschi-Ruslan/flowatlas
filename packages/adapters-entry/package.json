@@ -50,6 +50,7 @@
   "dependencies": {
     "@flowatlas/aws": "workspace:*",
     "@flowatlas/core": "workspace:*",
+    "@flowatlas/extract-scopes": "workspace:*",
     "@flowatlas/graphql": "workspace:*",
     "@flowatlas/stepfunctions": "workspace:*",
     "@flowatlas/terraform": "workspace:*",

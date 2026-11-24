@@ -524,6 +524,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     "The route streams server-sent events and no channel it relays onto the stream was read, so the screens holding it open are joined to no channel. Where the route hands its request to a per-scope object (a Durable Object), the row says why its class was not followed: bind it under durable_objects in the worker's wrangler file, or type the namespace as DurableObjectNamespace<Class>. Otherwise subscribe in the code behind the route with a client a broker description reads, or annotate the handler with @Consumes('<channel>').",
   'stream-handler-unread': () =>
     'A screen opens a stream of server-sent events and the function its frames arrive at was not found. Register a named function, or one written in place that calls one, with onmessage or addEventListener where the stream is held.',
+  'bot-button-unplaced': () =>
+    'A bot button is built at a module\'s top level, outside any function the reading draws, so the callback data it sends is not held against the handlers: a handler only it triggers is not said to be triggered by none. Build the keyboard in a function or a method.',
 
   // Starting a workflow or a function by its deployed name (adapters-broker, P24)
   'start-from-environment': () =>

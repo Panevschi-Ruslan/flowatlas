@@ -8,6 +8,35 @@ only one of them moved.
 
 ### Added
 
+- **Findings say where the two sides of a protocol, a setting, a status or
+  CORS disagree (P388).** Where flowatlas reads both sides, `findings` lists
+  twelve more kinds, each gated on the fact that makes it a defect, with
+  `precision`, `evidence` and the nearest `fix`, and a candidate whose fact
+  does not hold counted under `heldBack` with why: a stream's frames sent
+  under an event name no browser listener listens for (`sse-event-unhandled`:
+  `onmessage` hears only frames named no event; and `sse-event-never-sent`), a
+  bot button whose callback data no handler matches, data over the 64 bytes
+  the bot platform takes, a handler no button sends (`bot-button-unhandled`,
+  `bot-button-data-too-long`, `bot-handler-untriggered`), a setting read with
+  no default that none of its service's deployment files sets, or set under a
+  name a letter or two apart, or set and read by no code (`config-not-set`,
+  `config-name-mismatch`, `config-never-read`), a client branching on a status
+  the route it is joined to never answers (`status-never-answered`), and a
+  browser request its server's CORS refuses: credentials against `*` or
+  without `credentials: true`, a header (the JSON `Content-Type` too) or a verb
+  not allowed (`cors-credentials`, `cors-header-not-allowed`,
+  `cors-method-not-allowed`). A field a client sends that the body's class
+  does not declare, under `forbidNonWhitelisted: true`, is `whitelist-reject`
+  at `error` (a 400), where `whitelist` alone stays `whitelist-strip`. The
+  readers write what this needs beside what they drew: a stream route's
+  `streamEvents`, the `callbackButtons` of the code building a keyboard
+  (`bot-button-unplaced` where no drawn function holds one), a request's
+  `statusChecks`, and a browser request's `credentials`, `headers` and
+  `sendsJson`, a Nest service's `cors`, a setting read's `fallback`; the names
+  each service's deployment files set (never their values) are kept beside the
+  graph in the database. A new fixture, `boundary-mismatches`, plants each
+  beside a decoy.
+
 - **Answers never say they are complete when they are not (P381).** `service`
   picks the symbol on `who_calls` and `impact` (a route said aloud is matched
   among that service's routes alone) and cuts no caller of one it holds:

@@ -118,7 +118,8 @@ export {
   readBootstrap,
   WRAPPING_LAYERS,
 } from './bootstrap.js';
-export type { BootstrapGlobal, BootstrapInfo, WrapperRef, WrappingLayer } from './bootstrap.js';
+export type { BootstrapGlobal, BootstrapInfo, CorsSettings, WrapperRef, WrappingLayer } from './bootstrap.js';
+export { corsSettingsOf, CORS_DEFAULT_METHODS } from './bootstrap.js';
 
 export {
   applicationFindings,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T16:44:49.366Z",
+  "builtAt": "2026-11-24T20:24:14.736Z",
   "services": [
     {
       "name": "boards-api",
@@ -2568,6 +2568,8 @@
         "handlerVia": "function",
         "stream": "sse",
         "streamFrom": "content-type",
+        "streamEvents": [],
+        "streamEventsUnread": true,
         "servedBy": [
           {
             "class": "BoardHub",
@@ -2601,6 +2603,8 @@
         "handlerVia": "function",
         "stream": "sse",
         "streamFrom": "content-type",
+        "streamEvents": [],
+        "streamEventsUnread": true,
         "servedBy": [
           {
             "class": "BoardHub",
@@ -2634,6 +2638,8 @@
         "handlerVia": "function",
         "stream": "sse",
         "streamFrom": "content-type",
+        "streamEvents": [],
+        "streamEventsUnread": true,
         "servedBy": [
           {
             "class": "BoardHub",

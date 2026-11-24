@@ -1,7 +1,7 @@
 {
   "schemaVersion": 8,
   "repo": "angular-client-wrapper",
-  "generatedAt": "2026-11-23T14:32:06.472Z",
+  "generatedAt": "2026-11-24T20:11:38.082Z",
   "nodes": [
     {
       "id": "angular-client-wrapper#node_modules/@angular/common:HttpClient",
@@ -806,7 +806,8 @@
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
-        "choice": "categories"
+        "choice": "categories",
+        "sendsJson": true
       }
     },
     {
@@ -833,7 +834,8 @@
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
-        "choice": "parcels"
+        "choice": "parcels",
+        "sendsJson": true
       }
     },
     {
@@ -860,7 +862,8 @@
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
-        "choice": "stickers"
+        "choice": "stickers",
+        "sendsJson": true
       }
     },
     {
@@ -946,7 +949,8 @@
         ],
         "package": "@angular/common/http",
         "via": "template-env",
-        "through": "BaseService.post"
+        "through": "BaseService.post",
+        "sendsJson": true
       }
     },
     {
@@ -1006,7 +1010,8 @@
         ],
         "package": "@angular/common/http",
         "via": "template-env",
-        "through": "BaseService.post"
+        "through": "BaseService.post",
+        "sendsJson": true
       }
     },
     {
@@ -1040,7 +1045,8 @@
         "via": "template-env",
         "guessed": true,
         "through": "BaseService.post",
-        "choice": "categories,asc"
+        "choice": "categories,asc",
+        "sendsJson": true
       }
     },
     {
@@ -1074,7 +1080,8 @@
         "via": "template-env",
         "guessed": true,
         "through": "BaseService.post",
-        "choice": "parcels,asc"
+        "choice": "parcels,asc",
+        "sendsJson": true
       }
     },
     {
@@ -1108,7 +1115,8 @@
         "via": "template-env",
         "guessed": true,
         "through": "BaseService.post",
-        "choice": "stickers,asc"
+        "choice": "stickers,asc",
+        "sendsJson": true
       }
     },
     {
@@ -1260,7 +1268,8 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
-        "through": "ApiClient.post"
+        "through": "ApiClient.post",
+        "sendsJson": true
       }
     },
     {

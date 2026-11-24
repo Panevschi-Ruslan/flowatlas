@@ -1,7 +1,7 @@
 {
   "schemaVersion": 8,
   "repo": "angular-basic",
-  "generatedAt": "2026-11-23T14:32:04.132Z",
+  "generatedAt": "2026-11-24T20:11:35.986Z",
   "nodes": [
     {
       "id": "angular-basic#node_modules/@angular/common:HttpClient",
@@ -951,7 +951,8 @@
         "bodyFrom": "type",
         "answerRead": [],
         "package": "@angular/common/http",
-        "via": "template-env"
+        "via": "template-env",
+        "sendsJson": true
       }
     },
     {

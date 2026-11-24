@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:32:22.100Z",
+  "builtAt": "2026-11-24T20:11:50.676Z",
   "services": [
     {
       "name": "storefront",
@@ -25,7 +25,8 @@
       "line": 32,
       "meta": {
         "key": "APP_URL",
-        "source": "process.env"
+        "source": "process.env",
+        "fallback": true
       }
     },
     {

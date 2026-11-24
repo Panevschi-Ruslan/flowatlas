@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T16:36:52.173Z",
+  "builtAt": "2026-11-24T20:15:08.643Z",
   "services": [
     {
       "name": "desk-api",
@@ -691,6 +691,9 @@
         "adapter": "nestjs-http",
         "stream": "sse",
         "streamFrom": "decorator",
+        "streamEvents": [
+          "message"
+        ],
         "relays": [
           "channel:desk:*:events"
         ]

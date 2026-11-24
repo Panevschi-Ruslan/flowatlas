@@ -444,3 +444,4 @@ export { atLevel, GRAPH_FORMATS, GRAPH_LEVELS, graphFiles, toCsv, toCypher, toDo
 export type { GraphFormat, GraphLevel, SelectedGraph, WalkLeft } from './export/graph-formats.js';
 export { PUBLISHED_SCHEMAS } from './json-schemas.js';
 export type { PublishedSchema } from './json-schemas.js';
+export { boundaryMismatches, botButtonMismatches, CALLBACK_DATA_MAX_BYTES, configMismatches, corsMismatches, MISMATCH_KINDS, statusMismatches, streamEventMismatches } from './analysis/mismatches.js';

@@ -67,6 +67,10 @@
     "call-to-missing-route": {
       "count": 1,
       "why": "the service it is sent to is not named"
+    },
+    "config-not-set": {
+      "count": 2,
+      "why": "no deployment file of gateway was read: its settings may be set where the reading does not look"
     }
   },
   "next": [

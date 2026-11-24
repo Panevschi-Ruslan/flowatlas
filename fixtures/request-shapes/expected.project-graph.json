@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:46:46.505Z",
+  "builtAt": "2026-11-24T20:22:28.538Z",
   "services": [
     {
       "name": "orders-api",
@@ -1211,6 +1211,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "orders-api"
       }
     },
@@ -1236,6 +1237,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "orders-api"
       }
     },

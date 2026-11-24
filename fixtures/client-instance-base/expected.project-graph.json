@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:57:50.828Z",
+  "builtAt": "2026-11-24T20:12:41.423Z",
   "services": [
     {
       "name": "orders",
@@ -697,6 +697,7 @@
         "package": "@angular/common/http",
         "via": "template-env",
         "baseFrom": "interceptor",
+        "sendsJson": true,
         "targetService": "orders"
       }
     },
@@ -722,6 +723,7 @@
         "package": null,
         "client": "ofetch",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "billing"
       }
     },
@@ -789,6 +791,7 @@
         "package": "axios",
         "client": "axios",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "orders"
       }
     },

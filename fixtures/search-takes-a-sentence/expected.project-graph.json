@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T15:44:58.326Z",
+  "builtAt": "2026-11-24T20:23:36.058Z",
   "services": [
     {
       "name": "shop-api",
@@ -664,6 +664,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "shop-api"
       }
     },
@@ -711,6 +712,7 @@
         "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "shop-api"
       }
     }

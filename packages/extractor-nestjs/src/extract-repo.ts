@@ -386,6 +386,8 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
       stats: ctx.stats,
       ...(bootstrap.file === undefined ? {} : { bootstrap: bootstrap.file }),
       ...(bootstrap.globalPrefix === undefined ? {} : { globalPrefix: bootstrap.globalPrefix }),
+      // What a browser on another origin is allowed (P388).
+      ...(bootstrap.cors === undefined ? {} : { cors: bootstrap.cors }),
       adapters: {
         entry: adapters.entry.map((adapter) => adapter.name),
       },

@@ -32,6 +32,12 @@ export interface CompareOptions {
    */
   whitelist?: boolean;
   /**
+   * Whether that pipe also refuses the request where it would strip
+   * (`forbidNonWhitelisted: true`, P388): a field it does not declare is then
+   * a 400, not a field lost.
+   */
+  forbid?: boolean;
+  /**
    * Whether a sender's `{}` at the top is an object written with no keys -
    * a request that sends nothing at all (P256) - rather than a type that says
    * nothing about its shape. What the receiver requires is then missing.
@@ -71,6 +77,8 @@ interface Walk {
   disable: readonly string[];
   /** The receiver strips what its validated class does not decorate. */
   whitelist: boolean;
+  /** It refuses the request with a 400 instead of stripping (P388). */
+  forbid: boolean;
   /** The sender's `{}` at the top was written with no keys (P256). */
   emptyIsWritten: boolean;
   /** Fields where the sender's `{}` was written with no keys (P262). */
@@ -818,8 +826,10 @@ const compareFields = (
         path: here,
         expected: formatTypeRef(want.type),
         actual: formatTypeRef(have.type),
-        rule: 'whitelist-strip',
-        note: 'the receiver declares it without a validation decorator, so its whitelisting validation pipe removes it before the handler reads it',
+        rule: walk.forbid ? 'whitelist-reject' : 'whitelist-strip',
+        note: walk.forbid
+          ? 'the receiver declares it without a validation decorator, and its validation pipe forbids what it does not whitelist, so a request sending it is refused with 400'
+          : 'the receiver declares it without a validation decorator, so its whitelisting validation pipe removes it before the handler reads it',
       });
       continue;
     }
@@ -879,12 +889,14 @@ const compareFields = (
       path: joinPath(path, name),
       expected: null,
       actual: formatTypeRef(view.type),
-      rule: excluded ? 'class-transformer' : stripping ? 'whitelist-strip' : null,
+      rule: excluded ? 'class-transformer' : stripping ? (walk.forbid ? 'whitelist-reject' : 'whitelist-strip') : null,
       ...(excluded
         ? { note: 'the receiver excludes it, so what arrives is thrown away' }
         : stripping
           ? {
-              note: 'the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it',
+              note: walk.forbid
+                ? 'the receiver does not declare it, and its validation pipe forbids what it does not whitelist, so a request sending it is refused with 400'
+                : 'the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it',
             }
           : {}),
     });
@@ -1058,6 +1070,7 @@ export const diffTypes = (
     resolve,
     disable: options.disableRules ?? [],
     whitelist: options.whitelist === true,
+    forbid: options.whitelist === true && options.forbid === true,
     emptyIsWritten: options.emptyIsWritten === true,
     emptyWrittenAt: options.emptyWrittenAt ?? [],
     missingRules: options.missingRules ?? [],
@@ -1087,6 +1100,7 @@ export const diffRefs = (
     resolve,
     disable: options.disableRules ?? [],
     whitelist: options.whitelist === true,
+    forbid: options.whitelist === true && options.forbid === true,
     emptyIsWritten: options.emptyIsWritten === true,
     emptyWrittenAt: options.emptyWrittenAt ?? [],
     missingRules: options.missingRules ?? [],
