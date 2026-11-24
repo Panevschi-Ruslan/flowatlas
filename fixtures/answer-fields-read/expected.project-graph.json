@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T19:22:45.660Z",
+  "builtAt": "2026-11-24T21:18:27.782Z",
   "services": [
     {
       "name": "shop-api",
@@ -74,12 +74,29 @@
       }
     },
     {
+      "id": "entry:shop-api:http:GET:/api/settings",
+      "type": "entry",
+      "label": "GET /api/settings",
+      "repo": "shop-api",
+      "file": "src/settings/settings.controller.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/settings",
+        "rawPath": "/api/settings",
+        "globalPrefix": "api",
+        "controller": "SettingsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
       "id": "entry:shop-app:screen:/orders",
       "type": "entry",
       "label": "/orders",
       "repo": "shop-app",
       "file": "src/App.tsx",
-      "line": 10,
+      "line": 11,
       "kind": "screen",
       "meta": {
         "path": "/orders",
@@ -95,13 +112,29 @@
       "label": "/profile",
       "repo": "shop-app",
       "file": "src/App.tsx",
-      "line": 11,
+      "line": 12,
       "kind": "screen",
       "meta": {
         "path": "/profile",
         "by": "route-table",
         "screens": [
           "ProfileCard"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop-app:screen:/theme",
+      "type": "entry",
+      "label": "/theme",
+      "repo": "shop-app",
+      "file": "src/App.tsx",
+      "line": 13,
+      "kind": "screen",
+      "meta": {
+        "path": "/theme",
+        "by": "route-table",
+        "screens": [
+          "ThemeBadge"
         ]
       }
     },
@@ -144,10 +177,10 @@
       "repo": "shop-api",
       "meta": {
         "stats": {
-          "files": 4,
-          "filesRead": 4,
+          "files": 5,
+          "filesRead": 5,
           "filesUnreadable": 0,
-          "classes": 3,
+          "classes": 4,
           "skippedExternalCalls": {}
         },
         "bootstrap": "src/main.ts",
@@ -173,16 +206,16 @@
       "repo": "shop-app",
       "meta": {
         "stats": {
-          "files": 4,
-          "filesRead": 4,
+          "files": 5,
+          "filesRead": 5,
           "filesUnreadable": 0,
-          "functions": 7,
-          "components": 4,
+          "functions": 9,
+          "components": 5,
           "hooks": 0,
           "skippedExternalCalls": {
             "axios": 1,
             "@tanstack/react-query": 1,
-            "react": 3
+            "react": 5
           }
         },
         "adapters": {
@@ -223,12 +256,13 @@
       "label": "AppModule",
       "repo": "shop-api",
       "file": "src/app.module.ts",
-      "line": 5,
+      "line": 6,
       "kind": "static",
       "meta": {
         "controllers": [
           "OrdersController",
-          "ProfileController"
+          "ProfileController",
+          "SettingsController"
         ],
         "providers": [],
         "exports": []
@@ -309,12 +343,39 @@
       }
     },
     {
+      "id": "shop-api#src/settings/settings.controller.ts:SettingsController",
+      "type": "provider",
+      "label": "SettingsController",
+      "repo": "shop-api",
+      "file": "src/settings/settings.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/settings/settings.controller.ts:SettingsController.read",
+      "type": "method",
+      "label": "SettingsController.read",
+      "repo": "shop-api",
+      "file": "src/settings/settings.controller.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
       "id": "shop-app#src/App.tsx:App",
       "type": "ui_component",
       "label": "App",
       "repo": "shop-app",
       "file": "src/App.tsx",
-      "line": 6,
+      "line": 7,
       "kind": "function",
       "meta": {
         "signature": {
@@ -376,6 +437,22 @@
       }
     },
     {
+      "id": "shop-app#src/ThemeBadge.tsx:ThemeBadge",
+      "type": "ui_component",
+      "label": "ThemeBadge",
+      "repo": "shop-app",
+      "file": "src/ThemeBadge.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/theme"
+      }
+    },
+    {
       "id": "shop-app#src/api.ts:fetchOrder",
       "type": "function",
       "label": "fetchOrder",
@@ -405,6 +482,20 @@
         "signature": {
           "params": [],
           "returns": "type:shop-app#Profile"
+        }
+      }
+    },
+    {
+      "id": "shop-app#src/api.ts:fetchSettings",
+      "type": "function",
+      "label": "fetchSettings",
+      "repo": "shop-app",
+      "file": "src/api.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop-app#Settings"
         }
       }
     },
@@ -705,6 +796,34 @@
       }
     },
     {
+      "id": "ui_api_call:shop-app#src/api.ts:37:26",
+      "type": "ui_api_call",
+      "label": "GET /api/settings",
+      "repo": "shop-app",
+      "file": "src/api.ts",
+      "line": 37,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_SHOP_URL}/api/settings",
+        "path": "/api/settings",
+        "baseUrlEnv": "VITE_SHOP_URL",
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [
+          {
+            "field": "theme",
+            "in": "shop-app#src/ThemeBadge.tsx:ThemeBadge",
+            "line": 10
+          }
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
       "id": "ui_api_call:shop-web#src/app/orders.service.ts:25:12",
       "type": "ui_api_call",
       "label": "GET /api/orders",
@@ -850,12 +969,22 @@
       "line": 11
     },
     {
+      "from": "entry:shop-api:http:GET:/api/settings",
+      "to": "shop-api#src/settings/settings.controller.ts:SettingsController.read",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "src/settings/settings.controller.ts",
+      "line": 6
+    },
+    {
       "from": "entry:shop-app:screen:/orders",
       "to": "shop-app#src/OrdersList.tsx:OrdersList",
       "type": "handles",
       "confidence": "static",
       "file": "src/App.tsx",
-      "line": 10,
+      "line": 11,
       "meta": {
         "route": "/orders"
       }
@@ -866,9 +995,20 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/App.tsx",
-      "line": 11,
+      "line": 12,
       "meta": {
         "route": "/profile"
+      }
+    },
+    {
+      "from": "entry:shop-app:screen:/theme",
+      "to": "shop-app#src/ThemeBadge.tsx:ThemeBadge",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 13,
+      "meta": {
+        "route": "/theme"
       }
     },
     {
@@ -931,6 +1071,16 @@
       "line": 9
     },
     {
+      "from": "shop-app#src/ThemeBadge.tsx:ThemeBadge",
+      "to": "shop-app#src/api.ts:fetchSettings",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:shop-app#Settings",
+      "file": "src/ThemeBadge.tsx",
+      "line": 8
+    },
+    {
       "from": "shop-app#src/api.ts:fetchOrder",
       "to": "ui_api_call:shop-app#src/api.ts:28:26",
       "type": "calls",
@@ -945,6 +1095,14 @@
       "confidence": "static",
       "file": "src/api.ts",
       "line": 23
+    },
+    {
+      "from": "shop-app#src/api.ts:fetchSettings",
+      "to": "ui_api_call:shop-app#src/api.ts:37:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 37
     },
     {
       "from": "shop-app#src/api.ts:listOrders",
@@ -1076,6 +1234,18 @@
       "confidence": "static",
       "file": "src/api.ts",
       "line": 28,
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-app#src/api.ts:37:26",
+      "to": "entry:shop-api:http:GET:/api/settings",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 37,
       "meta": {
         "via": "api-target",
         "targetService": "shop-api"
@@ -1272,6 +1442,23 @@
           "meta": {
             "optionalBy": "question"
           }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-app#Settings": {
+      "name": "Settings",
+      "kind": "object",
+      "declaredIn": "shop-app#src/api.ts",
+      "structuralHash": "e16c6ced5f61d0f6",
+      "fields": [
+        {
+          "name": "theme",
+          "type": "string",
+          "optional": false
         }
       ],
       "meta": {

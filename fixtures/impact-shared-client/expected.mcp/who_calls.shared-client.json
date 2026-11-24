@@ -21,6 +21,7 @@
         "type": "method",
         "label": "HistoryPageComponent.refresh",
         "loc": "src/app/history-page.component.ts:27",
+        "endLine": 29,
         "reach": "alive",
         "from": "screen /history"
       },
@@ -39,6 +40,7 @@
             "type": "method",
             "label": "HistoryPageComponent.ngOnInit",
             "loc": "src/app/history-page.component.ts:21",
+            "endLine": 25,
             "reach": "alive",
             "from": "screen /history"
           },
@@ -56,6 +58,7 @@
             "label": "HistoryPageComponent.refresh",
             "loc": "src/app/history-page.component.ts:27",
             "kind": "sse",
+            "endLine": 29,
             "reach": "alive",
             "from": "screen /history"
           },

@@ -15,6 +15,7 @@
         "type": "method",
         "label": "OrdersController.findOne",
         "loc": "src/orders/orders.controller.ts:25",
+        "endLine": 28,
         "reach": "alive",
         "from": "GET /orders/:param"
       },
@@ -67,6 +68,7 @@
                     "type": "method",
                     "label": "OrdersClient.fetchOne",
                     "loc": "src/clients/orders.client.ts:32",
+                    "endLine": 34,
                     "reach": "alive",
                     "from": "GET /orders/:param"
                   },
@@ -81,6 +83,7 @@
                         "type": "method",
                         "label": "OrdersController.findOne",
                         "loc": "src/orders/orders.controller.ts:30",
+                        "endLine": 33,
                         "reach": "alive",
                         "from": "GET /orders/:param"
                       },

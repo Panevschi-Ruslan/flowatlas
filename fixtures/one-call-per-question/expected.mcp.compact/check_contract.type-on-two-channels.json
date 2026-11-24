@@ -26,7 +26,7 @@
       "consumers": [
         {
           "id": "consumer:ops-bot#src/notify/notify.service.ts:NotifyService.page",
-          "line": 20,
+          "line": "20-22",
           "kind": "event",
           "reach": "dead",
           "from": "POST /api/desks/:param/help (shop-api)",
@@ -76,7 +76,7 @@
       "consumers": [
         {
           "id": "consumer:ops-bot#src/floor/floor.watcher.ts:FloorWatcher.onFloorEvent",
-          "line": 13,
+          "line": "13-17",
           "kind": "event",
           "reach": "alive",
           "from": "POST /api/floor/:param/help (shop-api)",

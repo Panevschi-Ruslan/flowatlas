@@ -28,3 +28,12 @@ export async function fetchOrder(id: string): Promise<unknown> {
   const response = await fetch(`${base}/api/orders/${id}`);
   return response.json();
 }
+
+export interface Settings {
+  theme: string;
+}
+
+export async function fetchSettings(): Promise<Settings> {
+  const response = await fetch(`${base}/api/settings`);
+  return response.json();
+}

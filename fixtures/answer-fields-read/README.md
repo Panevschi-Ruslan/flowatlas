@@ -18,6 +18,8 @@ Type-checked, never executed:
 - `GET /api/orders/:id` answers `OrderDetail`: `id`, `total`, `lines`,
   `customer`.
 - `GET /api/profile` answers `Profile`: `name`, `avatarUrl`.
+- `GET /api/settings` answers what `JSON.parse` gives: no declared shape
+  (P393).
 
 ## The web - `shop-web` (Angular)
 
@@ -44,6 +46,8 @@ Type-checked, never executed:
   (never answered) where it renders the state.
 - `fetchOrder('last')` is handed whole to `JSON.stringify`: what it reads is
   not known, and said.
+- `fetchSettings` hands back `response.json()`; `/theme` (`ThemeBadge`) reads
+  its `theme`.
 
 ## What it proves
 
@@ -57,3 +61,6 @@ Type-checked, never executed:
 - `check_contract({edge: 'GET /api/orders/:id'})` reads through a member and
   a method the template hands it to, and is not complete: the app hands the
   order to `JSON.stringify`, so no field is said unused.
+- `findings({kind: 'answer-field-never-returned'})` (P393) lists `nickname`
+  (the card) and `discount` (the web's list), each `high`, and holds back the
+  badge's `theme`: what `GET /api/settings` answers is not a shape read.

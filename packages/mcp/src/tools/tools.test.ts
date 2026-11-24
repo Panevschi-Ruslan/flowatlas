@@ -372,7 +372,9 @@ describe('the tools a session is offered', () => {
     expect(read.length).toBeLessThan(13650);
     const output = JSON.stringify(tools.map(({ name, outputSchema }) => ({ name, outputSchema })));
     // P384 findings, P387 check_change and P391 answer fields: 20,225 of output schemas, which the model never reads.
-    expect(output.length).toBeLessThan(20250);
+    // P393 says where a row's code ends (`endLine`), how to confirm a maybe (`confirm`, in every reached row) and one
+    // `requests` list: 21,457, which the model never reads either.
+    expect(output.length).toBeLessThan(21500);
   });
 
   /**

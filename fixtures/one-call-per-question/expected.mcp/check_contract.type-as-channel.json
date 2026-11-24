@@ -27,6 +27,7 @@
       "loc": "src/bot/bot.service.ts:16",
       "service": "ops-bot",
       "kind": "event",
+      "endLine": 19,
       "reach": "dead",
       "from": "POST /events/orders",
       "throughDead": true,

@@ -14,6 +14,7 @@
       "loc": "src/invoices/invoices.consumer.ts:17",
       "service": "billing",
       "kind": "event",
+      "endLine": 20,
       "reach": "alive",
       "from": "event order.created"
     }

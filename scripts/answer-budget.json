@@ -2726,6 +2726,105 @@
         ]
       },
       "note": "P388: no such kind; get_flow said the route's fails, and the client's branches were in no answer."
+    },
+    {
+      "id": "findings.answer-never-returned",
+      "ask": "which fields do the shop screens read that the API never returns",
+      "fixture": "answer-fields-read",
+      "tool": "findings",
+      "args": {
+        "kind": "answer-field-never-returned"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "shop-app#src/ProfileCard.tsx:ProfileCard",
+            "shop-web#src/app/orders.component.ts:OrdersComponent"
+          ]
+        },
+        "rowsSay": {
+          "rows": {
+            "shop-app#src/ProfileCard.tsx:ProfileCard": {
+              "precision": "high",
+              "fix": "return `nickname` from GET /api/profile, or stop reading it"
+            },
+            "shop-web#src/app/orders.component.ts:OrdersComponent": {
+              "precision": "high"
+            }
+          }
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P393: no such kind; check_contract on each route said its missing fields, one call per route, and findings named none."
+    },
+    {
+      "id": "who_consumes.type-as-channel",
+      "ask": "which code handles ORDER_READY",
+      "fixture": "typed-handlers-bus-wide-subscribers",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "ORDER_READY"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "consumers": [
+            "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+            "consumer:shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
+            "consumer:web#src/screens/PickupBoard.tsx:PickupBoard"
+          ]
+        },
+        "exact": [
+          "consumers"
+        ]
+      },
+      "note": "P393: a message type given as the channel answered \"no channel named channel:ORDER_READY\" with near channel names; the agent asked again with the channel and the type."
+    },
+    {
+      "id": "impact.maybe-confirm",
+      "ask": "which ways in could break if ItemsService.findOne changes, and how to settle the one that may",
+      "fixture": "angular-rendered-reach",
+      "tool": "impact",
+      "args": {
+        "symbol": "catalog-api#src/items.service.ts:ItemsService.findOne"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "entries": [
+            "entry:catalog-api:http:GET:/items/:param",
+            "entry:catalog-web:screen:/catalog",
+            "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey"
+          ]
+        },
+        "rowsSay": {
+          "entries": {
+            "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey": {
+              "reach": "maybe",
+              "line": "21-23",
+              "confirm": {
+                "grep": "byKey",
+                "repo": "catalog-web"
+              }
+            }
+          }
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P393: the maybe row said the gap and nothing to settle it with; the agent opened the file to find the method and grepped for its name."
     }
   ],
   "fixed": {
@@ -2734,9 +2833,9 @@
     "guideBlock": 1054,
     "guideBlockClaude": 366,
     "skillDescription": 268,
-    "listingCore": 5683,
-    "listingDefault": 10496,
-    "listingAll": 13626
+    "listingCore": 5685,
+    "listingDefault": 10495,
+    "listingAll": 13625
   },
   "recorded": {
     "impact.multi-repo": {
@@ -2747,8 +2846,8 @@
       "calls": 1
     },
     "impact.calling-side": {
-      "chars": 1385,
-      "tokens": 347,
+      "chars": 1441,
+      "tokens": 361,
       "rows": 4,
       "complete": false,
       "calls": 1
@@ -2768,43 +2867,43 @@
       "calls": 1
     },
     "impact.rendered-reach": {
-      "chars": 1250,
-      "tokens": 313,
+      "chars": 1303,
+      "tokens": 326,
       "rows": 3,
       "complete": false,
       "calls": 1
     },
     "who_calls.multi-repo": {
-      "chars": 1886,
-      "tokens": 472,
+      "chars": 1891,
+      "tokens": 473,
       "rows": 8,
       "complete": true,
       "calls": 1
     },
     "who_calls.helpdesk": {
-      "chars": 1063,
-      "tokens": 266,
+      "chars": 1068,
+      "tokens": 267,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "who_calls.long-chain": {
-      "chars": 2764,
-      "tokens": 691,
+      "chars": 2799,
+      "tokens": 700,
       "rows": 14,
       "complete": true,
       "calls": 1
     },
     "who_calls.class-shared-callers": {
-      "chars": 2862,
-      "tokens": 716,
+      "chars": 2897,
+      "tokens": 725,
       "rows": 13,
       "complete": true,
       "calls": 1
     },
     "who_calls.several-symbols": {
-      "chars": 1522,
-      "tokens": 381,
+      "chars": 1532,
+      "tokens": 383,
       "rows": 5,
       "complete": true,
       "calls": 1
@@ -2824,8 +2923,8 @@
       "calls": 1
     },
     "get_flow.inline-type": {
-      "chars": 1668,
-      "tokens": 417,
+      "chars": 1705,
+      "tokens": 427,
       "rows": 6,
       "complete": true,
       "calls": 1
@@ -2845,15 +2944,15 @@
       "calls": 1
     },
     "who_consumes.relayed-type": {
-      "chars": 896,
-      "tokens": 224,
+      "chars": 911,
+      "tokens": 228,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "who_consumes.every-channel": {
-      "chars": 573,
-      "tokens": 144,
+      "chars": 578,
+      "tokens": 145,
       "rows": 1,
       "complete": true,
       "calls": 1
@@ -2873,8 +2972,8 @@
       "calls": 1
     },
     "fields.handler-reads": {
-      "chars": 685,
-      "tokens": 172,
+      "chars": 690,
+      "tokens": 173,
       "rows": 1,
       "complete": true,
       "calls": 1
@@ -2887,8 +2986,8 @@
       "calls": 1
     },
     "fields.missing-unused": {
-      "chars": 817,
-      "tokens": 205,
+      "chars": 822,
+      "tokens": 206,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -2908,29 +3007,29 @@
       "calls": 1
     },
     "get_flow.route": {
-      "chars": 1816,
-      "tokens": 454,
+      "chars": 1836,
+      "tokens": 459,
       "rows": 10,
       "complete": true,
       "calls": 1
     },
     "get_flow.route-detail-2": {
-      "chars": 2143,
-      "tokens": 536,
+      "chars": 2163,
+      "tokens": 541,
       "rows": 10,
       "complete": true,
       "calls": 1
     },
     "find_symbol.several": {
-      "chars": 1380,
-      "tokens": 345,
+      "chars": 1400,
+      "tokens": 350,
       "rows": 4,
       "complete": true,
       "calls": 1
     },
     "find_symbol.unreferenced": {
-      "chars": 922,
-      "tokens": 231,
+      "chars": 980,
+      "tokens": 245,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -2957,8 +3056,8 @@
       "calls": 1
     },
     "who_consumes.never-subscribed": {
-      "chars": 1074,
-      "tokens": 269,
+      "chars": 1089,
+      "tokens": 273,
       "rows": 3,
       "complete": true,
       "calls": 1
@@ -3006,8 +3105,8 @@
       "calls": 1
     },
     "who_calls.channels-counted": {
-      "chars": 1895,
-      "tokens": 474,
+      "chars": 1900,
+      "tokens": 475,
       "rows": 8,
       "complete": true,
       "calls": 1
@@ -3020,22 +3119,22 @@
       "calls": 1
     },
     "get_flow.short-name": {
-      "chars": 1485,
-      "tokens": 372,
+      "chars": 1515,
+      "tokens": 379,
       "rows": 8,
       "complete": true,
       "calls": 1
     },
     "who_calls.request-lands": {
-      "chars": 967,
-      "tokens": 242,
+      "chars": 972,
+      "tokens": 243,
       "rows": 2,
       "complete": true,
       "calls": 1
     },
     "find_symbol.request-lands": {
-      "chars": 536,
-      "tokens": 134,
+      "chars": 541,
+      "tokens": 136,
       "rows": 1,
       "complete": true,
       "calls": 1
@@ -3055,8 +3154,8 @@
       "calls": 1
     },
     "who_calls.service-picks": {
-      "chars": 1718,
-      "tokens": 430,
+      "chars": 1733,
+      "tokens": 434,
       "rows": 3,
       "complete": true,
       "calls": 1
@@ -3069,8 +3168,8 @@
       "calls": 1
     },
     "who_calls.two-services": {
-      "chars": 3208,
-      "tokens": 802,
+      "chars": 3228,
+      "tokens": 807,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -3132,15 +3231,15 @@
       "calls": 1
     },
     "check_contract.type-on-two-channels": {
-      "chars": 1354,
-      "tokens": 339,
+      "chars": 1364,
+      "tokens": 341,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "check_contract.type-as-channel": {
-      "chars": 700,
-      "tokens": 175,
+      "chars": 705,
+      "tokens": 177,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -3153,86 +3252,65 @@
       "calls": 1
     },
     "get_flow.detail-2-once": {
-      "chars": 5186,
-      "tokens": 1297,
+      "chars": 5231,
+      "tokens": 1308,
       "rows": 17,
       "complete": true,
       "calls": 1
     },
     "find_symbol.two-words": {
-      "chars": 919,
-      "tokens": 230,
+      "chars": 934,
+      "tokens": 234,
       "rows": 3,
       "complete": false,
       "calls": 1
     },
     "search.sentence": {
-      "chars": 896,
-      "tokens": 224,
+      "chars": 906,
+      "tokens": 227,
       "rows": 3,
       "complete": false,
       "calls": 1
     },
     "search.sentence-payments": {
-      "chars": 1533,
-      "tokens": 384,
+      "chars": 1567,
+      "tokens": 392,
       "rows": 8,
       "complete": false,
       "calls": 1
     },
     "find_symbol.camel-words": {
-      "chars": 1173,
-      "tokens": 294,
+      "chars": 1193,
+      "tokens": 299,
       "rows": 5,
       "complete": false,
       "calls": 1
     },
     "search.or": {
-      "chars": 1828,
-      "tokens": 457,
+      "chars": 1868,
+      "tokens": 467,
       "rows": 10,
       "complete": false,
       "calls": 1
     },
     "findings.multi-repo": {
-      "chars": 3172,
-      "tokens": 793,
+      "chars": 3305,
+      "tokens": 827,
       "rows": 7,
       "complete": null,
       "calls": 1
     },
     "findings.fields-renamed": {
-      "chars": 573,
-      "tokens": 144,
+      "chars": 719,
+      "tokens": 180,
       "rows": 1,
       "complete": null,
       "calls": 1
     },
     "findings.between-services": {
-      "chars": 5019,
-      "tokens": 1255,
+      "chars": 5155,
+      "tokens": 1289,
       "rows": 8,
-      "complete": null,
-      "calls": 1
-    },
-    "findings.boundary-mismatches": {
-      "chars": 8288,
-      "tokens": 2072,
-      "rows": 12,
-      "complete": null,
-      "calls": 1
-    },
-    "findings.stream-never-heard": {
-      "chars": 1114,
-      "tokens": 279,
-      "rows": 1,
-      "complete": null,
-      "calls": 1
-    },
-    "findings.dead-status-branch": {
-      "chars": 1119,
-      "tokens": 280,
-      "rows": 1,
       "complete": null,
       "calls": 1
     },
@@ -3258,8 +3336,8 @@
       "calls": 1
     },
     "find_symbol.request-lands-shadowed": {
-      "chars": 476,
-      "tokens": 119,
+      "chars": 481,
+      "tokens": 121,
       "rows": 1,
       "complete": true,
       "calls": 1
@@ -3314,14 +3392,14 @@
       "calls": 0
     },
     "check_change.edited": {
-      "chars": 1849,
-      "tokens": 463,
+      "chars": 1848,
+      "tokens": 462,
       "rows": 2,
       "complete": true,
       "calls": 1
     },
     "check_change.one-service": {
-      "chars": 706,
+      "chars": 707,
       "tokens": 177,
       "rows": 0,
       "complete": true,
@@ -3353,6 +3431,48 @@
       "tokens": 1377,
       "rows": 12,
       "complete": null,
+      "calls": 1
+    },
+    "findings.boundary-mismatches": {
+      "chars": 8288,
+      "tokens": 2072,
+      "rows": 12,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.stream-never-heard": {
+      "chars": 1114,
+      "tokens": 279,
+      "rows": 1,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.dead-status-branch": {
+      "chars": 1119,
+      "tokens": 280,
+      "rows": 1,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.answer-never-returned": {
+      "chars": 1868,
+      "tokens": 467,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "who_consumes.type-as-channel": {
+      "chars": 949,
+      "tokens": 238,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.maybe-confirm": {
+      "chars": 1303,
+      "tokens": 326,
+      "rows": 3,
+      "complete": false,
       "calls": 1
     }
   }

@@ -14,7 +14,7 @@
   "callers": [
     {
       "id": "shop-admin#src/app/catalog.component.ts:CatalogComponent.load",
-      "line": 13,
+      "line": "13-15",
       "reach": "alive",
       "from": "screen /catalog",
       "edge": {

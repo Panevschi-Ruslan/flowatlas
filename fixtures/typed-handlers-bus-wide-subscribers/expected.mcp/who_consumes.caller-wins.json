@@ -15,6 +15,7 @@
       "service": "bot",
       "kind": "event",
       "via": "switch",
+      "endLine": 35,
       "reach": "dead",
       "from": "POST /events/relay",
       "throughDead": true

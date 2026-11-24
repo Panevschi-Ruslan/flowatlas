@@ -61,7 +61,8 @@ export const endOfDeclaration = (lines: readonly string[], startIndex: number, l
         continue;
       }
     }
-    if (seen && depth <= 0) return index;
+    // Braces closed inside an open parameter list (an inline type, `create(@Body() body: { … },`) do not end it (P393).
+    if (seen && depth <= 0 && parens <= 0) return index;
     if (!seen && index > startIndex + 40) return index;
     // A brace that never closes — one inside a string literal is enough — used
     // to fall through to the end of the file. The tool that says it is the only

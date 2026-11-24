@@ -14,7 +14,8 @@
           "id": "orders#src/orders/orders.controller.ts:OrdersController.create",
           "type": "method",
           "label": "OrdersController.create",
-          "loc": "src/orders/orders.controller.ts:22"
+          "loc": "src/orders/orders.controller.ts:22",
+          "endLine": 26
         },
         "edge": {
           "type": "handles",
@@ -30,7 +31,8 @@
               "id": "orders#src/common/app-logger.ts:AppLogger.log",
               "type": "method",
               "label": "AppLogger.log",
-              "loc": "src/common/app-logger.ts:12"
+              "loc": "src/common/app-logger.ts:12",
+              "endLine": 14
             },
             "edge": {
               "type": "calls",
@@ -48,7 +50,8 @@
               "id": "orders#src/orders/orders.service.ts:OrdersService.create",
               "type": "method",
               "label": "OrdersService.create",
-              "loc": "src/orders/orders.service.ts:28"
+              "loc": "src/orders/orders.service.ts:28",
+              "endLine": 35
             },
             "edge": {
               "type": "calls",
@@ -81,7 +84,8 @@
                   "id": "orders#src/common/metrics.ts:Metrics.count",
                   "type": "method",
                   "label": "Metrics.count",
-                  "loc": "src/common/metrics.ts:12"
+                  "loc": "src/common/metrics.ts:12",
+                  "endLine": 14
                 },
                 "edge": {
                   "type": "calls",
@@ -98,7 +102,8 @@
                   "id": "orders#src/orders/order.repository.ts:OrderRepository.save",
                   "type": "method",
                   "label": "OrderRepository.save",
-                  "loc": "src/orders/order.repository.ts:28"
+                  "loc": "src/orders/order.repository.ts:28",
+                  "endLine": 32
                 },
                 "edge": {
                   "type": "calls",
@@ -115,7 +120,8 @@
                   "id": "orders#src/orders/order.mapper.ts:OrderMapper.toDto",
                   "type": "method",
                   "label": "OrderMapper.toDto",
-                  "loc": "src/orders/order.mapper.ts:9"
+                  "loc": "src/orders/order.mapper.ts:9",
+                  "endLine": 11
                 },
                 "edge": {
                   "type": "calls",
@@ -132,7 +138,8 @@
                   "id": "orders#src/orders/order.repository.ts:OrderRepository.findOne",
                   "type": "method",
                   "label": "OrderRepository.findOne",
-                  "loc": "src/orders/order.repository.ts:22"
+                  "loc": "src/orders/order.repository.ts:22",
+                  "endLine": 26
                 },
                 "edge": {
                   "type": "calls",
@@ -149,7 +156,8 @@
                   "id": "orders#src/orders/order.events.ts:OrderEvents.created",
                   "type": "method",
                   "label": "OrderEvents.created",
-                  "loc": "src/orders/order.events.ts:22"
+                  "loc": "src/orders/order.events.ts:22",
+                  "endLine": 26
                 },
                 "edge": {
                   "type": "calls",

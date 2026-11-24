@@ -17,6 +17,7 @@
       "selectedIn": "RenameWatcher.watch",
       "via": "if",
       "unreached": "nothing injects or makes LegacyBoardFeed: no constructor is handed it, no inject() asks for it and no new builds it",
+      "endLine": 15,
       "reach": "dead",
       "from": "none"
     }

@@ -22,7 +22,7 @@
           "children": [
             {
               "id": "reader-web#src/app/books.client.ts:BooksClient.get",
-              "line": 20,
+              "line": "20-22",
               "reach": "alive",
               "from": "screen /book/:param",
               "edge": "calls"
@@ -41,7 +41,7 @@
           "children": [
             {
               "id": "lending-gateway#src/books.client.ts:BooksClient.fetch",
-              "line": 14,
+              "line": "14-17",
               "reach": "alive",
               "from": "GET /books/:param",
               "edge": "calls"
@@ -90,7 +90,7 @@
           "children": [
             {
               "id": "desk-bot#src/desk-bot.ts:DeskBot.showBook",
-              "line": 18,
+              "line": "18-20",
               "reach": "alive",
               "from": "bot_command book",
               "edge": "calls"

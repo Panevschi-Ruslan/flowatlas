@@ -16,6 +16,7 @@
         "type": "method",
         "label": "ArchiveHelper.copyStatus",
         "loc": "src/archive-helper.ts:9",
+        "endLine": 11,
         "reach": "unreached",
         "from": "none"
       },
@@ -35,6 +36,7 @@
             "type": "method",
             "label": "LegacyExport.run",
             "loc": "src/legacy-export.ts:9",
+            "endLine": 11,
             "reach": "dead",
             "from": "none"
           },
@@ -58,6 +60,7 @@
         "type": "method",
         "label": "ChatUpdatesService.handleUpdate",
         "loc": "src/chat-updates.service.ts:9",
+        "endLine": 11,
         "reach": "alive",
         "from": "POST /hooks/chat"
       },
@@ -77,6 +80,7 @@
             "type": "method",
             "label": "ChatHookController.receive",
             "loc": "src/chat-hook.controller.ts:9",
+            "endLine": 12,
             "reach": "alive",
             "from": "POST /hooks/chat"
           },
@@ -118,6 +122,7 @@
         "type": "method",
         "label": "OrdersController.setStatus",
         "loc": "src/orders.controller.ts:9",
+        "endLine": 12,
         "reach": "alive",
         "from": "PATCH /orders/status"
       },
@@ -175,6 +180,7 @@
                     "type": "method",
                     "label": "OrdersApiService.setStatus",
                     "loc": "src/orders-api.service.ts:12",
+                    "endLine": 14,
                     "reach": "alive",
                     "from": "screen /board"
                   },
@@ -189,6 +195,7 @@
                         "type": "method",
                         "label": "StatusBoardComponent.markReady",
                         "loc": "src/status-board.component.ts:14",
+                        "endLine": 16,
                         "reach": "alive",
                         "from": "screen /board"
                       },
@@ -234,7 +241,11 @@
                 "reach": "maybe",
                 "from": "behind",
                 "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver",
-                "behind": "ops-bot#src/ops-bot.ts:OpsBot.handleStatus"
+                "behind": "ops-bot#src/ops-bot.ts:OpsBot.handleStatus",
+                "confirm": {
+                  "grep": "handleStatus",
+                  "repo": "ops-bot"
+                }
               },
               "edge": {
                 "type": "http_calls",
@@ -250,10 +261,15 @@
                     "type": "method",
                     "label": "ShopClient.updateStatus",
                     "loc": "src/shop.client.ts:14",
+                    "endLine": 16,
                     "reach": "maybe",
                     "from": "behind",
                     "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver",
-                    "behind": "ops-bot#src/ops-bot.ts:OpsBot.handleStatus"
+                    "behind": "ops-bot#src/ops-bot.ts:OpsBot.handleStatus",
+                    "confirm": {
+                      "grep": "handleStatus",
+                      "repo": "ops-bot"
+                    }
                   },
                   "edge": {
                     "type": "calls",
@@ -266,9 +282,14 @@
                         "type": "method",
                         "label": "OpsBot.handleStatus",
                         "loc": "src/ops-bot.ts:29",
+                        "endLine": 31,
                         "reach": "maybe",
                         "from": "behind",
-                        "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver"
+                        "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver",
+                        "confirm": {
+                          "grep": "handleStatus",
+                          "repo": "ops-bot"
+                        }
                       },
                       "edge": {
                         "type": "calls",
@@ -334,9 +355,14 @@
       "label": "OpsBot.handleStatus",
       "loc": "src/ops-bot.ts:29",
       "service": "ops-bot",
+      "endLine": 31,
       "reach": "maybe",
       "from": "behind",
       "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver",
+      "confirm": {
+        "grep": "handleStatus",
+        "repo": "ops-bot"
+      },
       "hops": 5
     }
   ],

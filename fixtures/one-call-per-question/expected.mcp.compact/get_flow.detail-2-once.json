@@ -34,7 +34,7 @@
     "children": [
       {
         "id": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
-        "line": 27,
+        "line": "27-31",
         "meta": {
           "signature": {
             "params": [
@@ -54,7 +54,7 @@
         "children": [
           {
             "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
-            "line": 14,
+            "line": "14-17",
             "meta": {
               "signature": {
                 "params": [
@@ -106,7 +106,7 @@
                     "children": [
                       {
                         "id": "consumer:ops-bot#src/events/events.controller.ts:EventsController.receive",
-                        "line": 10,
+                        "line": "10-21",
                         "kind": "event",
                         "meta": {
                           "decorator": "Consumes",
@@ -133,7 +133,7 @@
                         "children": [
                           {
                             "id": "ops-bot#src/events/events.controller.ts:EventsController.receive",
-                            "line": 10,
+                            "line": "10-21",
                             "meta": {
                               "signature": {
                                 "params": [
@@ -190,7 +190,7 @@
                             "children": [
                               {
                                 "id": "ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady",
-                                "line": 16,
+                                "line": "16-19",
                                 "meta": {
                                   "signature": {
                                     "params": [
@@ -242,7 +242,7 @@
                     "children": [
                       {
                         "id": "consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderCancelled",
-                        "line": 22,
+                        "line": "22-26",
                         "kind": "event",
                         "meta": {
                           "selectedBy": "consumer:ops-bot#src/events/events.controller.ts:EventsController.receive",
@@ -257,7 +257,7 @@
                         "children": [
                           {
                             "id": "ops-bot#src/bot/bot.service.ts:BotService.handleOrderCancelled",
-                            "line": 22,
+                            "line": "22-26",
                             "meta": {
                               "signature": {
                                 "params": [
@@ -297,7 +297,7 @@
                               },
                               {
                                 "id": "ops-bot#src/shop.client.ts:ShopClient.cancelOrder",
-                                "line": 14,
+                                "line": "14-16",
                                 "meta": {
                                   "signature": {
                                     "params": [
@@ -332,7 +332,7 @@
               },
               {
                 "id": "shop-api#src/bus/event-bus.ts:EventBus.publish",
-                "line": 8,
+                "line": "8-10",
                 "meta": {
                   "signature": {
                     "params": [

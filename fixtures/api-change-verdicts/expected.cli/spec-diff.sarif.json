@@ -77,7 +77,7 @@
                 "markdown": "Callers that read it get nothing. Keep sending it, or change the callers first."
               },
               "defaultConfiguration": {
-                "level": "warning"
+                "level": "error"
               }
             }
           ]
@@ -96,6 +96,10 @@
           "uri": "catalog/",
           "uriBaseId": "%SRCROOT%"
         },
+        "dashboard": {
+          "uri": "dashboard/",
+          "uriBaseId": "%SRCROOT%"
+        },
         "notifier": {
           "uri": "notifier/",
           "uriBaseId": "%SRCROOT%"
@@ -112,7 +116,7 @@
             {
               "level": "note",
               "message": {
-                "text": "6 consumers in 3 repositories; consumers outside them unknown"
+                "text": "8 consumers in 4 repositories; consumers outside them unknown"
               }
             }
           ]
@@ -282,6 +286,298 @@
             "callers": 1,
             "direction": "breaking",
             "verdict": "1 of 1 caller: sends name, price; no `currency`",
+            "deployFirst": "callers",
+            "anchor": "same"
+          }
+        },
+        {
+          "ruleId": "spec/response-property-removed",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "GET /items/{id}: base had `response.price` as `number`; head has no such field. Use: 1 of 2 callers: reads `price` in ItemPage, line 13. Deploy callers first: stop relying on `price`, then catalog. ([dashboard: reads `price` in ItemPage, line 13](1); [storefront: which fields of the answer its client reads was not read, so whether it reads `price` is not known](2))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "catalog/src/items/items.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dashboard/src/ItemPage.tsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              },
+              "message": {
+                "text": "dashboard: reads `price` in ItemPage, line 13"
+              }
+            },
+            {
+              "id": 2,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "storefront/src/catalog.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 35
+                }
+              },
+              "message": {
+                "text": "storefront: which fields of the answer its client reads was not read, so whether it reads `price` is not known"
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "dashboard/src/App.tsx",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 11
+                          }
+                        },
+                        "message": {
+                          "text": "way in /items/current (dashboard)"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "dashboard/src/ItemPage.tsx",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 5
+                          }
+                        },
+                        "message": {
+                          "text": "handler ItemPage (dashboard)"
+                        }
+                      },
+                      "executionOrder": 2
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "dashboard/src/api.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 17
+                          }
+                        },
+                        "message": {
+                          "text": "code fetchItem (dashboard)"
+                        }
+                      },
+                      "executionOrder": 3
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "dashboard/src/api.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 18
+                          }
+                        },
+                        "message": {
+                          "text": "code GET /items/:param (dashboard)"
+                        }
+                      },
+                      "executionOrder": 4
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 14
+                          }
+                        },
+                        "message": {
+                          "text": "route GET /items/:param (catalog)"
+                        }
+                      },
+                      "executionOrder": 5
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 14
+                          }
+                        },
+                        "message": {
+                          "text": "handler ItemsController.find (catalog)"
+                        }
+                      },
+                      "executionOrder": 6
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/shop.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 28
+                          }
+                        },
+                        "message": {
+                          "text": "way in GET /shop/items/:param (storefront)"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/shop.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 28
+                          }
+                        },
+                        "message": {
+                          "text": "handler ShopController.show (storefront)"
+                        }
+                      },
+                      "executionOrder": 2
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/catalog.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 34
+                          }
+                        },
+                        "message": {
+                          "text": "code CatalogClient.getItem (storefront)"
+                        }
+                      },
+                      "executionOrder": 3
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "storefront/src/catalog.client.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 35
+                          }
+                        },
+                        "message": {
+                          "text": "request GET /items/:param (storefront)"
+                        }
+                      },
+                      "executionOrder": 4
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 14
+                          }
+                        },
+                        "message": {
+                          "text": "route GET /items/:param (catalog)"
+                        }
+                      },
+                      "executionOrder": 5
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 14
+                          }
+                        },
+                        "message": {
+                          "text": "handler ItemsController.find (catalog)"
+                        }
+                      },
+                      "executionOrder": 6
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "128a2ec6df0eac9db61193263f29f986",
+            "primaryLocationLineHash": "128a2ec6df0eac9d:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "catalog",
+            "document": "catalog",
+            "operation": "GET /items/{id}",
+            "field": "response.price",
+            "confidence": "static",
+            "callers": 2,
+            "direction": "breaking",
+            "verdict": "1 of 2 callers: reads `price` in ItemPage, line 13",
             "deployFirst": "callers",
             "anchor": "same"
           }
@@ -709,7 +1005,7 @@
           "ruleIndex": 4,
           "level": "warning",
           "message": {
-            "text": "POST /items: base had `response.price` as `number`; head has no such field. Use: 1 of 1 caller: which fields of the answer it reads is not read yet, so whether it reads `price` is not known. Deploy callers first: stop relying on `price`, then catalog. ([storefront: which fields of the answer it reads is not read yet, so whether it reads `price` is not known](1))"
+            "text": "POST /items: base had `response.price` as `number`; head has no such field. Use: 1 of 1 caller: which fields of the answer its client reads was not read, so whether it reads `price` is not known. Deploy callers first: stop relying on `price`, then catalog. ([storefront: which fields of the answer its client reads was not read, so whether it reads `price` is not known](1))"
           },
           "locations": [
             {
@@ -737,7 +1033,7 @@
                 }
               },
               "message": {
-                "text": "storefront: which fields of the answer it reads is not read yet, so whether it reads `price` is not known"
+                "text": "storefront: which fields of the answer its client reads was not read, so whether it reads `price` is not known"
               }
             }
           ],
@@ -866,174 +1162,7 @@
             "confidence": "static",
             "callers": 1,
             "direction": "breaking",
-            "verdict": "1 of 1 caller: which fields of the answer it reads is not read yet, so whether it reads `price` is not known",
-            "deployFirst": "callers",
-            "anchor": "same"
-          }
-        },
-        {
-          "ruleId": "spec/response-property-removed",
-          "ruleIndex": 4,
-          "level": "warning",
-          "message": {
-            "text": "GET /items/{id}: base had `response.price` as `number`; head has no such field. Use: 1 of 1 caller: which fields of the answer it reads is not read yet, so whether it reads `price` is not known. Deploy callers first: stop relying on `price`, then catalog. ([storefront: which fields of the answer it reads is not read yet, so whether it reads `price` is not known](1))"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "catalog/src/items/items.controller.ts",
-                  "uriBaseId": "%SRCROOT%"
-                },
-                "region": {
-                  "startLine": 14
-                }
-              }
-            }
-          ],
-          "relatedLocations": [
-            {
-              "id": 1,
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "storefront/src/catalog.client.ts",
-                  "uriBaseId": "%SRCROOT%"
-                },
-                "region": {
-                  "startLine": 35
-                }
-              },
-              "message": {
-                "text": "storefront: which fields of the answer it reads is not read yet, so whether it reads `price` is not known"
-              }
-            }
-          ],
-          "codeFlows": [
-            {
-              "threadFlows": [
-                {
-                  "locations": [
-                    {
-                      "location": {
-                        "physicalLocation": {
-                          "artifactLocation": {
-                            "uri": "storefront/src/shop.controller.ts",
-                            "uriBaseId": "%SRCROOT%"
-                          },
-                          "region": {
-                            "startLine": 28
-                          }
-                        },
-                        "message": {
-                          "text": "way in GET /shop/items/:param (storefront)"
-                        }
-                      },
-                      "executionOrder": 1
-                    },
-                    {
-                      "location": {
-                        "physicalLocation": {
-                          "artifactLocation": {
-                            "uri": "storefront/src/shop.controller.ts",
-                            "uriBaseId": "%SRCROOT%"
-                          },
-                          "region": {
-                            "startLine": 28
-                          }
-                        },
-                        "message": {
-                          "text": "handler ShopController.show (storefront)"
-                        }
-                      },
-                      "executionOrder": 2
-                    },
-                    {
-                      "location": {
-                        "physicalLocation": {
-                          "artifactLocation": {
-                            "uri": "storefront/src/catalog.client.ts",
-                            "uriBaseId": "%SRCROOT%"
-                          },
-                          "region": {
-                            "startLine": 34
-                          }
-                        },
-                        "message": {
-                          "text": "code CatalogClient.getItem (storefront)"
-                        }
-                      },
-                      "executionOrder": 3
-                    },
-                    {
-                      "location": {
-                        "physicalLocation": {
-                          "artifactLocation": {
-                            "uri": "storefront/src/catalog.client.ts",
-                            "uriBaseId": "%SRCROOT%"
-                          },
-                          "region": {
-                            "startLine": 35
-                          }
-                        },
-                        "message": {
-                          "text": "request GET /items/:param (storefront)"
-                        }
-                      },
-                      "executionOrder": 4
-                    },
-                    {
-                      "location": {
-                        "physicalLocation": {
-                          "artifactLocation": {
-                            "uri": "catalog/src/items/items.controller.ts",
-                            "uriBaseId": "%SRCROOT%"
-                          },
-                          "region": {
-                            "startLine": 14
-                          }
-                        },
-                        "message": {
-                          "text": "route GET /items/:param (catalog)"
-                        }
-                      },
-                      "executionOrder": 5
-                    },
-                    {
-                      "location": {
-                        "physicalLocation": {
-                          "artifactLocation": {
-                            "uri": "catalog/src/items/items.controller.ts",
-                            "uriBaseId": "%SRCROOT%"
-                          },
-                          "region": {
-                            "startLine": 14
-                          }
-                        },
-                        "message": {
-                          "text": "handler ItemsController.find (catalog)"
-                        }
-                      },
-                      "executionOrder": 6
-                    }
-                  ]
-                }
-              ]
-            }
-          ],
-          "partialFingerprints": {
-            "flowatlas/v1": "128a2ec6df0eac9db61193263f29f986",
-            "primaryLocationLineHash": "128a2ec6df0eac9d:1"
-          },
-          "baselineState": "updated",
-          "properties": {
-            "service": "catalog",
-            "document": "catalog",
-            "operation": "GET /items/{id}",
-            "field": "response.price",
-            "confidence": "static",
-            "callers": 1,
-            "direction": "breaking",
-            "verdict": "1 of 1 caller: which fields of the answer it reads is not read yet, so whether it reads `price` is not known",
+            "verdict": "1 of 1 caller: which fields of the answer its client reads was not read, so whether it reads `price` is not known",
             "deployFirst": "callers",
             "anchor": "same"
           }
@@ -1281,7 +1410,7 @@
           "ruleIndex": 4,
           "level": "note",
           "message": {
-            "text": "GET /items/{id}/archive: base had `response.reason` as `string`; head has no such field (no caller in this project). Use: nothing in the 3 repositories read calls it."
+            "text": "GET /items/{id}/archive: base had `response.reason` as `string`; head has no such field (no caller in this project). Use: nothing in the 4 repositories read calls it."
           },
           "locations": [
             {
@@ -1310,7 +1439,61 @@
             "callers": 0,
             "note": "no caller in this project",
             "direction": "breaking",
-            "verdict": "nothing in the 3 repositories read calls it",
+            "verdict": "nothing in the 4 repositories read calls it",
+            "anchor": "same"
+          }
+        },
+        {
+          "ruleId": "spec/response-property-removed",
+          "ruleIndex": 4,
+          "level": "note",
+          "message": {
+            "text": "GET /items: base had `response\\[\\].thumbnail` as `string`; head has no such field. Use: no caller reads `thumbnail`, among 1. ([dashboard: does not read `thumbnail`](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "catalog/src/items/items.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 24
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dashboard/src/api.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 23
+                }
+              },
+              "message": {
+                "text": "dashboard: does not read `thumbnail`"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "d8c0b1f7f7b26cd3c0a1c9650d740203",
+            "primaryLocationLineHash": "d8c0b1f7f7b26cd3:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "catalog",
+            "document": "catalog",
+            "operation": "GET /items",
+            "field": "response[].thumbnail",
+            "confidence": "static",
+            "callers": 1,
+            "direction": "breaking",
+            "verdict": "no caller reads `thumbnail`, among 1",
             "anchor": "same"
           }
         },

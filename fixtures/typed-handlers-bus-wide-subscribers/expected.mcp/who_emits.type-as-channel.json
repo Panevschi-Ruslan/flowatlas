@@ -1,0 +1,33 @@
+{
+  "channel": {
+    "id": "channel:order_updates",
+    "type": "channel",
+    "label": "order_updates",
+    "loc": "src/orders/orders.service.ts:10",
+    "service": "shop"
+  },
+  "producers": [
+    {
+      "id": "producer:shop#src/orders/orders.service.ts:10:5",
+      "type": "producer",
+      "label": "event order_updates",
+      "loc": "src/orders/orders.service.ts:10",
+      "service": "shop",
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /orders/:param/ready",
+      "throughDead": true
+    }
+  ],
+  "total": 1,
+  "type": "ORDER_READY",
+  "complete": true,
+  "carriedBy": [
+    "channel:order_updates"
+  ],
+  "next": [
+    "who_consumes({channel: \"channel:order_updates\", type: \"ORDER_READY\"})",
+    "impact({symbol: \"producer:shop#src/orders/orders.service.ts:10:5\"})",
+    "get_source({symbol: \"producer:shop#src/orders/orders.service.ts:10:5\"})"
+  ]
+}

@@ -16,7 +16,7 @@
   "consumers": [
     {
       "id": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
-      "line": 29,
+      "line": "29-31",
       "kind": "sse",
       "meta": {
         "selectedBy": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
@@ -32,7 +32,7 @@
     },
     {
       "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
-      "line": 32,
+      "line": "32-34",
       "kind": "sse",
       "meta": {
         "selectedBy": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
@@ -47,7 +47,7 @@
     },
     {
       "id": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
-      "line": 13,
+      "line": "13-15",
       "kind": "sse",
       "meta": {
         "client": "EventSource",

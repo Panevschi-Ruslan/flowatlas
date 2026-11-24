@@ -15,6 +15,7 @@
             "loc": "src/screens/QueueScreen.tsx:12",
             "service": "console",
             "kind": "function",
+            "endLine": 16,
             "reach": "alive",
             "from": "screen /queue"
           }

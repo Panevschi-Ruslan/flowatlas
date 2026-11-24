@@ -34,6 +34,7 @@
           "loc": "src/notify/notify.service.ts:20",
           "service": "ops-bot",
           "kind": "event",
+          "endLine": 22,
           "reach": "dead",
           "from": "POST /api/desks/:param/help (shop-api)",
           "throughDead": true,
@@ -90,6 +91,7 @@
           "loc": "src/floor/floor.watcher.ts:13",
           "service": "ops-bot",
           "kind": "event",
+          "endLine": 17,
           "reach": "alive",
           "from": "POST /api/floor/:param/help (shop-api)",
           "reads": [

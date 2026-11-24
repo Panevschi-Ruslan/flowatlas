@@ -8,6 +8,7 @@ import { nearNames } from '../query/names.js';
 import { MAX_NEXT, nextFor, withNext, withoutShown } from '../query/next.js';
 import { reachReader, type ReachReader } from '../query/ways-in.js';
 import { consumerReading, fieldNames, producerSends, readsField, topField } from '../query/fields.js';
+import { channelsCarrying } from './fields-contract.js';
 import type { CompactNode } from '../query/types.js';
 import {
   answerEach,
@@ -61,6 +62,8 @@ const endsOutput = (key: 'producers' | 'consumers') => ({
   ...completeOutput,
   /** The channel id answered for, when the name asked was written another way (`tenant:<id>:events`, P360). */
   channelUsed: z.string().optional(),
+  /** The channels carrying the message type given as the channel (P393). */
+  carriedBy: z.array(z.string()).optional(),
   /** The type of message asked about, where one was (P358). */
   type: z.string().optional(),
   /** The field asked about, where one was (P368): only the code that reads or sends it is listed. */
@@ -87,6 +90,9 @@ const channelId = (ref: string): string => {
 
 /** How many channels a name written with placeholders lists when it fits several. */
 const MAX_FITTING = 8;
+
+/** The most channels one answer about a type of message given as the channel covers. */
+const MAX_CARRIERS = 3;
 
 const byId = (a: { id: string }, b: { id: string }): number => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
@@ -201,6 +207,29 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
     const endsOf = (db: GraphDb, input: EndsAsked): object => {
       const { detail, maxNodes, note } = bound(input);
       const found = resolveChannelRef(db, input.channel);
+      // A type of message given as the channel (P393, as check_contract takes it, P382): answered on the channel or
+      // channels carrying it, `carriedBy` saying which.
+      const carried = found === undefined && (input.type === undefined || input.type.trim() === '') ? channelsCarrying(db, input.channel) : [];
+      if (carried.length === 1) {
+        const { next, ...answer } = endsOf(db, { ...input, channel: carried[0]!.channel, type: carried[0]!.type }) as Record<string, unknown>;
+        return { ...answer, carriedBy: [carried[0]!.channel], ...(next === undefined ? {} : { next }) };
+      }
+      if (carried.length > 1) {
+        const shown = carried.slice(0, MAX_CARRIERS);
+        const answers = shown.map((one) => endsOf(db, { ...input, channel: one.channel, type: one.type }) as { complete?: boolean; next?: string[] });
+        return withNext(
+          {
+            type: carried[0]!.type,
+            carriedBy: carried.map((one) => one.channel),
+            answers: answers.map(({ next: _next, ...answer }, index) => ({ asked: shown[index]!.channel, ...answer })),
+            ...completeOf([
+              ...answers.flatMap((answer, index) => (answer.complete === false ? [`unsure: the answer on ${shown[index]!.channel} is not complete`] : [])),
+              carried.length > shown.length && `page: ${carried.length - shown.length} more channels carry it`,
+            ]),
+          },
+          [],
+        );
+      }
       if (found === undefined || 'candidates' in found) {
         // Written with placeholders and fitting several: each, as the call that takes it.
         const fitting = found?.candidates.slice(0, MAX_FITTING);
@@ -401,13 +430,13 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
   ends(
     'who_emits',
     'Who publishes to a channel',
-    'What publishes on a channel, in every repository. A name written as code (`tenant:<id>:events`, `{id}`, `:id`) answers for the channel it denotes (`channelUsed`); `type` keeps the publishes of one message type, `field` those sending it.',
+    'What publishes on a channel or a message type. A name written as code (`tenant:<id>:events`, `{id}`, `:id`) answers for the channel it denotes (`channelUsed`); `type` keeps the publishes of one message type, `field` those sending it.',
     'producers',
   );
   ends(
     'who_consumes',
     'Who handles a channel',
-    'What handles a channel (or `channels`); a name written as code answers for its channel (`channelUsed`). `type` keeps one message type\'s handlers (else `unselected`, `sureness`), `field` those reading it (`readIn`).',
+    'What handles a channel or a message type; a name written as code answers for its channel (`channelUsed`). `type` keeps one message type\'s handlers (else `unselected`, `sureness`), `field` those reading it (`readIn`).',
     'consumers',
   );
 };

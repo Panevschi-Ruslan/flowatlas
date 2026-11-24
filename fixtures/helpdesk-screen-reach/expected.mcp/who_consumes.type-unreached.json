@@ -17,7 +17,11 @@
       "via": "if",
       "reach": "maybe",
       "from": "behind",
-      "behind": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen"
+      "behind": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen",
+      "confirm": {
+        "grep": "reopen",
+        "repo": "desk-api"
+      }
     }
   ],
   "total": 1,

@@ -19,7 +19,7 @@
   "consumers": [
     {
       "id": "consumer:ops-bot#src/notify/notify.service.ts:NotifyService.page",
-      "line": 20,
+      "line": "20-22",
       "kind": "event",
       "reach": "dead",
       "from": "POST /api/desks/:param/help (shop-api)",

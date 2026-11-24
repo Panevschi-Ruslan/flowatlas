@@ -120,6 +120,183 @@
       }
     },
     {
+      "kind": "response-property-removed",
+      "level": "error",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "GET /items/{id}",
+      "field": "response.price",
+      "base": "number",
+      "head": null,
+      "message": "GET /items/{id}: base had `response.price` as `number`; head has no such field",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 14
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:dashboard#src/api.ts:18:26",
+          "service": "dashboard",
+          "file": "src/api.ts",
+          "line": 18,
+          "confidence": "static",
+          "via": "hits"
+        },
+        {
+          "id": "http_out:storefront#src/catalog.client.ts:35:41",
+          "service": "storefront",
+          "file": "src/catalog.client.ts",
+          "line": 35,
+          "confidence": "static",
+          "via": "http_calls"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "response-property-removed|catalog|GET /items/{id}|response.price",
+      "use": {
+        "direction": "breaking",
+        "why": "the answer no longer holds it",
+        "level": "error",
+        "verdict": "1 of 2 callers: reads `price` in ItemPage, line 13",
+        "among": 2,
+        "readers": [
+          {
+            "id": "ui_api_call:dashboard#src/api.ts:18:26",
+            "service": "dashboard",
+            "file": "src/ItemPage.tsx",
+            "line": 13,
+            "how": "reads",
+            "said": "reads `price` in ItemPage, line 13",
+            "level": "error"
+          },
+          {
+            "id": "http_out:storefront#src/catalog.client.ts:35:41",
+            "service": "storefront",
+            "file": "src/catalog.client.ts",
+            "line": 35,
+            "how": "unknown",
+            "said": "which fields of the answer its client reads was not read, so whether it reads `price` is not known",
+            "level": "warning"
+          }
+        ],
+        "flows": [
+          [
+            {
+              "id": "entry:dashboard:screen:/items/current",
+              "step": "way in",
+              "label": "/items/current",
+              "service": "dashboard",
+              "file": "src/App.tsx",
+              "line": 11
+            },
+            {
+              "id": "dashboard#src/ItemPage.tsx:ItemPage",
+              "step": "handler",
+              "label": "ItemPage",
+              "service": "dashboard",
+              "file": "src/ItemPage.tsx",
+              "line": 5
+            },
+            {
+              "id": "dashboard#src/api.ts:fetchItem",
+              "step": "code",
+              "label": "fetchItem",
+              "service": "dashboard",
+              "file": "src/api.ts",
+              "line": 17
+            },
+            {
+              "id": "ui_api_call:dashboard#src/api.ts:18:26",
+              "step": "code",
+              "label": "GET /items/:param",
+              "service": "dashboard",
+              "file": "src/api.ts",
+              "line": 18
+            },
+            {
+              "id": "entry:catalog:http:GET:/items/:param",
+              "step": "route",
+              "label": "GET /items/:param",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 14
+            },
+            {
+              "id": "catalog#src/items/items.controller.ts:ItemsController.find",
+              "step": "handler",
+              "label": "ItemsController.find",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 14
+            }
+          ],
+          [
+            {
+              "id": "entry:storefront:http:GET:/shop/items/:param",
+              "step": "way in",
+              "label": "GET /shop/items/:param",
+              "service": "storefront",
+              "file": "src/shop.controller.ts",
+              "line": 28
+            },
+            {
+              "id": "storefront#src/shop.controller.ts:ShopController.show",
+              "step": "handler",
+              "label": "ShopController.show",
+              "service": "storefront",
+              "file": "src/shop.controller.ts",
+              "line": 28
+            },
+            {
+              "id": "storefront#src/catalog.client.ts:CatalogClient.getItem",
+              "step": "code",
+              "label": "CatalogClient.getItem",
+              "service": "storefront",
+              "file": "src/catalog.client.ts",
+              "line": 34
+            },
+            {
+              "id": "http_out:storefront#src/catalog.client.ts:35:41",
+              "step": "request",
+              "label": "GET /items/:param",
+              "service": "storefront",
+              "file": "src/catalog.client.ts",
+              "line": 35
+            },
+            {
+              "id": "entry:catalog:http:GET:/items/:param",
+              "step": "route",
+              "label": "GET /items/:param",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 14
+            },
+            {
+              "id": "catalog#src/items/items.controller.ts:ItemsController.find",
+              "step": "handler",
+              "label": "ItemsController.find",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 14
+            }
+          ]
+        ],
+        "deployOrder": {
+          "first": "callers",
+          "said": "callers first: stop relying on `price`, then catalog"
+        },
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.controller.ts",
+          "line": 14
+        }
+      }
+    },
+    {
       "kind": "request-property-added-required",
       "level": "error",
       "document": "catalog",
@@ -385,116 +562,6 @@
       "document": "catalog",
       "format": "openapi",
       "service": "catalog",
-      "operation": "GET /items/{id}",
-      "field": "response.price",
-      "base": "number",
-      "head": null,
-      "message": "GET /items/{id}: base had `response.price` as `number`; head has no such field",
-      "place": {
-        "side": "base",
-        "file": "src/items/items.controller.ts",
-        "line": 14
-      },
-      "callers": [
-        {
-          "id": "http_out:storefront#src/catalog.client.ts:35:41",
-          "service": "storefront",
-          "file": "src/catalog.client.ts",
-          "line": 35,
-          "confidence": "static",
-          "via": "http_calls"
-        }
-      ],
-      "public": null,
-      "note": null,
-      "confidence": "static",
-      "key": "response-property-removed|catalog|GET /items/{id}|response.price",
-      "use": {
-        "direction": "breaking",
-        "why": "the answer no longer holds it",
-        "level": "warning",
-        "verdict": "1 of 1 caller: which fields of the answer it reads is not read yet, so whether it reads `price` is not known",
-        "among": 1,
-        "readers": [
-          {
-            "id": "http_out:storefront#src/catalog.client.ts:35:41",
-            "service": "storefront",
-            "file": "src/catalog.client.ts",
-            "line": 35,
-            "how": "unknown",
-            "said": "which fields of the answer it reads is not read yet, so whether it reads `price` is not known",
-            "level": "warning"
-          }
-        ],
-        "flows": [
-          [
-            {
-              "id": "entry:storefront:http:GET:/shop/items/:param",
-              "step": "way in",
-              "label": "GET /shop/items/:param",
-              "service": "storefront",
-              "file": "src/shop.controller.ts",
-              "line": 28
-            },
-            {
-              "id": "storefront#src/shop.controller.ts:ShopController.show",
-              "step": "handler",
-              "label": "ShopController.show",
-              "service": "storefront",
-              "file": "src/shop.controller.ts",
-              "line": 28
-            },
-            {
-              "id": "storefront#src/catalog.client.ts:CatalogClient.getItem",
-              "step": "code",
-              "label": "CatalogClient.getItem",
-              "service": "storefront",
-              "file": "src/catalog.client.ts",
-              "line": 34
-            },
-            {
-              "id": "http_out:storefront#src/catalog.client.ts:35:41",
-              "step": "request",
-              "label": "GET /items/:param",
-              "service": "storefront",
-              "file": "src/catalog.client.ts",
-              "line": 35
-            },
-            {
-              "id": "entry:catalog:http:GET:/items/:param",
-              "step": "route",
-              "label": "GET /items/:param",
-              "service": "catalog",
-              "file": "src/items/items.controller.ts",
-              "line": 14
-            },
-            {
-              "id": "catalog#src/items/items.controller.ts:ItemsController.find",
-              "step": "handler",
-              "label": "ItemsController.find",
-              "service": "catalog",
-              "file": "src/items/items.controller.ts",
-              "line": 14
-            }
-          ]
-        ],
-        "deployOrder": {
-          "first": "callers",
-          "said": "callers first: stop relying on `price`, then catalog"
-        },
-        "anchor": {
-          "how": "same",
-          "file": "src/items/items.controller.ts",
-          "line": 14
-        }
-      }
-    },
-    {
-      "kind": "response-property-removed",
-      "level": "warning",
-      "document": "catalog",
-      "format": "openapi",
-      "service": "catalog",
       "operation": "POST /items",
       "field": "response.price",
       "base": "number",
@@ -523,7 +590,7 @@
         "direction": "breaking",
         "why": "the answer no longer holds it",
         "level": "warning",
-        "verdict": "1 of 1 caller: which fields of the answer it reads is not read yet, so whether it reads `price` is not known",
+        "verdict": "1 of 1 caller: which fields of the answer its client reads was not read, so whether it reads `price` is not known",
         "among": 1,
         "readers": [
           {
@@ -532,7 +599,7 @@
             "file": "src/catalog.client.ts",
             "line": 22,
             "how": "unknown",
-            "said": "which fields of the answer it reads is not read yet, so whether it reads `price` is not known",
+            "said": "which fields of the answer its client reads was not read, so whether it reads `price` is not known",
             "level": "warning"
           }
         ],
@@ -723,6 +790,61 @@
       "document": "catalog",
       "format": "openapi",
       "service": "catalog",
+      "operation": "GET /items",
+      "field": "response[].thumbnail",
+      "base": "string",
+      "head": null,
+      "message": "GET /items: base had `response[].thumbnail` as `string`; head has no such field",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 29
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:dashboard#src/api.ts:23:26",
+          "service": "dashboard",
+          "file": "src/api.ts",
+          "line": 23,
+          "confidence": "static",
+          "via": "hits"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "response-property-removed|catalog|GET /items|response[].thumbnail",
+      "use": {
+        "direction": "breaking",
+        "why": "the answer no longer holds it",
+        "level": "info",
+        "verdict": "no caller reads `thumbnail`, among 1",
+        "among": 1,
+        "readers": [
+          {
+            "id": "ui_api_call:dashboard#src/api.ts:23:26",
+            "service": "dashboard",
+            "file": "src/api.ts",
+            "line": 23,
+            "how": "ignores",
+            "said": "does not read `thumbnail`",
+            "level": "info"
+          }
+        ],
+        "flows": [],
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.controller.ts",
+          "line": 24
+        }
+      }
+    },
+    {
+      "kind": "response-property-removed",
+      "level": "info",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
       "operation": "GET /items/{id}/archive",
       "field": "response.reason",
       "base": "string",
@@ -742,7 +864,7 @@
         "direction": "breaking",
         "why": "the answer no longer holds it",
         "level": "info",
-        "verdict": "nothing in the 3 repositories read calls it",
+        "verdict": "nothing in the 4 repositories read calls it",
         "among": 0,
         "readers": [],
         "flows": [],
@@ -865,15 +987,15 @@
     }
   ],
   "summary": {
-    "errors": 3,
-    "warnings": 3,
-    "infos": 3,
-    "breaking": 9,
+    "errors": 4,
+    "warnings": 2,
+    "infos": 4,
+    "breaking": 10,
     "uncalled": 1
   },
   "coverage": {
-    "consumers": 6,
-    "repositories": 3,
-    "said": "6 consumers in 3 repositories; consumers outside them unknown"
+    "consumers": 8,
+    "repositories": 4,
+    "said": "8 consumers in 4 repositories; consumers outside them unknown"
   }
 }

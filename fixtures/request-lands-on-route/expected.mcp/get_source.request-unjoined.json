@@ -4,8 +4,10 @@
   "line": 22,
   "endLine": 24,
   "code": "  exportSheet(): Observable<string> {\n    return this.post<string>('export', {});\n  }",
-  "requestsUnjoined": [
-    "POST ${apiUrl}/admin/:param/catalog/export"
+  "requests": [
+    {
+      "unjoined": "POST ${apiUrl}/admin/:param/catalog/export"
+    }
   ],
   "next": [
     "who_calls({symbol: \"shop-admin#src/app/catalog.service.ts:CatalogService.exportSheet\"})",

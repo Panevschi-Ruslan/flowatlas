@@ -18,6 +18,7 @@
             "type": "method",
             "label": "CheckoutService.place",
             "loc": "src/checkout/checkout.service.ts:9",
+            "endLine": 13,
             "reach": "alive",
             "from": "POST /checkout"
           },
@@ -52,6 +53,7 @@
             "type": "method",
             "label": "StockJobs.nightly",
             "loc": "src/stock/stock.jobs.ts:10",
+            "endLine": 13,
             "reach": "alive",
             "from": "cron StockJobs.nightly"
           },

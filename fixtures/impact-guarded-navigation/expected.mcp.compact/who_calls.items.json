@@ -8,7 +8,7 @@
   "callers": [
     {
       "id": "store-api#src/items.controller.ts:ItemsController.list",
-      "line": 8,
+      "line": "8-11",
       "reach": "alive",
       "from": "GET /api/shops/items",
       "edge": {

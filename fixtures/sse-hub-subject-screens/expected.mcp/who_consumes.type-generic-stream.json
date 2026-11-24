@@ -16,6 +16,7 @@
       "kind": "sse",
       "selectedIn": "CrewPanelComponent.ngOnInit",
       "via": "if",
+      "endLine": 29,
       "reach": "alive",
       "from": "POST /boards/:param/crews/:param (boards-api)",
       "ways": 8

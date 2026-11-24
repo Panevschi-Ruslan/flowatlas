@@ -16,6 +16,7 @@
       "kind": "event",
       "selectedIn": "NotifyService.onModuleInit",
       "via": "switch",
+      "endLine": 49,
       "reach": "dead",
       "from": "POST /desks/:param/help",
       "ways": 7,

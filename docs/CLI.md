@@ -4955,10 +4955,15 @@ consumer of a message reads (P368) - and the change gets:
   route that is gone; `info` when no consumer reads it (`no consumer reads it,
   among N`), every caller already sends it, or nothing in the project calls
   it; `warning` where the value reaches a consumer opaquely (spread, handed on
-  whole, a shape not read) or what it reads is not known. Which fields of an
-  answer a client reads is not read yet, so a response change with callers is
-  a `warning` saying so, never an error or an info guessed. A public route's
-  change is never under `warning`;
+  whole, a shape not read) or what it reads is not known. A response field is
+  weighed by what each request's client reads of the answer (P391, P393):
+  `error` where a client reads it, placed on the reading code (`reads
+  \`price\` in ItemPage, line 13`), `info` where every caller's client was read
+  and none reads it, `warning` where a client hands the answer on where it was
+  not followed or a request's client was not read at all (a server's request,
+  a client whose answer no reader follows), said so, never an error or an info
+  guessed. A list's element's field (`response[].sku`) is matched to the reads
+  of each element. A public route's change is never under `warning`;
 - a **verdict** (`1 of 1 consumer: reads \`label\`, line 16`), each consumer
   under `readers` with what it does and where, and a **deploy order** where
   someone meets it (`consumers first: stop reading \`label\`, then catalog`;

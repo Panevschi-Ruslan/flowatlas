@@ -149,7 +149,7 @@
       {
         "id": "gateway#src/clients/orders.client.ts:OrdersClient",
         "type": "provider",
-        "line": 14,
+        "line": "14-61",
         "kind": "injectable",
         "reach": "alive",
         "from": "GET /orders/:param",
@@ -158,7 +158,7 @@
       {
         "id": "orders#src/orders/orders.service.ts:OrdersService",
         "type": "provider",
-        "line": 11,
+        "line": "11-63",
         "kind": "injectable",
         "reach": "alive",
         "from": "GET /orders/:param",
@@ -167,7 +167,7 @@
       {
         "id": "gateway#src/orders/orders.controller.ts:OrdersController",
         "type": "provider",
-        "line": 22,
+        "line": "22-75",
         "kind": "controller",
         "reach": "alive",
         "from": "GET /orders/:param",
@@ -176,7 +176,7 @@
       {
         "id": "orders#src/orders/orders.controller.ts:OrdersController",
         "type": "provider",
-        "line": 8,
+        "line": "8-46",
         "kind": "controller",
         "reach": "alive",
         "from": "GET /orders/:param",
@@ -185,7 +185,7 @@
       {
         "id": "web#src/app/orders-api.service.ts:OrdersApiService",
         "type": "provider",
-        "line": 15,
+        "line": "15-147",
         "kind": "injectable",
         "reach": "unreached",
         "from": "none"
@@ -193,7 +193,7 @@
       {
         "id": "orders#src/app.module.ts:AppModule",
         "type": "module",
-        "line": 18,
+        "line": "18-31",
         "kind": "static"
       },
       {
@@ -218,7 +218,7 @@
       {
         "id": "orders#src/aliases/legacy-aliases.controller.ts:LegacyAliasesController",
         "type": "provider",
-        "line": 16,
+        "line": "16-22",
         "kind": "controller",
         "reach": "dead",
         "from": "GET /a/:param"

@@ -9,6 +9,7 @@
           "label": "ItemsApiService.oneLegacy",
           "loc": "src/app/items-api.service.ts:21",
           "service": "catalog-web",
+          "endLine": 23,
           "reach": "unreached",
           "from": "none",
           "requests": [
@@ -31,9 +32,14 @@
           "label": "ItemsLookupService.byKey",
           "loc": "src/app/items-lookup.service.ts:21",
           "service": "catalog-web",
+          "endLine": 23,
           "reach": "maybe",
           "from": "behind",
           "gap": "gap:catalog-web|src/app/items-lookup.service.ts|navigation-unresolved",
+          "confirm": {
+            "grep": "byKey",
+            "repo": "catalog-web"
+          },
           "requests": [
             {
               "route": "entry:catalog-api:http:GET:/items/:param",

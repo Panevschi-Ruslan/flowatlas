@@ -11,6 +11,7 @@ import {
   type FindingRow,
   type GraphDb,
   type RuleViolation,
+  waysInReaching,
 } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -19,6 +20,8 @@ import { rulesReportOf } from './rules.js';
 import { truncate } from '../query/detail.js';
 import { reachReader } from '../query/ways-in.js';
 import { channelContract, requestFields } from './fields-contract.js';
+import { answerFieldsOf, answerOf } from '../query/answer-fields.js';
+import { topField } from '../query/fields.js';
 import { nearWords } from '../query/names.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import {
@@ -50,6 +53,8 @@ const SHOWN_BY: Readonly<Record<string, (row: FindingRow) => string>> = {
     row.from === undefined ? callOf('check_contract', { channel: row.to }) : callOf('check_contract', { from: row.from, to: row.to }),
   // What the channel's publishes do send, where the renamed type is.
   'type-never-published': (row) => callOf('who_emits', { channel: row.to }),
+  // The request's edge: what its client reads of the answer against what the route answers (P391).
+  'answer-field-never-returned': (row) => callOf('check_contract', { from: row.from, to: row.to }),
   'unguarded-among-guarded': (row) => callOf('get_flow', { entry: row.id }),
   unguarded: (row) => callOf('get_flow', { entry: row.id }),
   // At the loop's own line: the code a reader is sent to is the loop, not the top of its method.
@@ -196,6 +201,66 @@ export const fieldFindingsOf = (
   return { rows, heldBack: held };
 };
 
+/** A declared answer as a person writes it: `type:shop#Profile[]` is `Profile[]`. */
+const typeSaid = (type: string | undefined): string => (type === undefined ? 'a shape' : type.replace(/type:[^#\s]+#/g, ''));
+
+/** The evidence a field of an answer read and never returned needs: the route's answer was read whole. */
+const ANSWER_EVIDENCE = 'the route answers a shape read whole, and the field is not in it';
+
+/**
+ * Fields of a route's answer a client reads that the route never returns
+ * (P393, after P391's `missing`): for every browser request joined to a
+ * route, what its client reads of the answer against the fields the
+ * handler's declared return holds. A defect only where that return is a
+ * shape read whole (a type, an inline object, a list's or a promise's
+ * element); where it is not, the route's reads were not compared and are
+ * held back, one count per request, with why.
+ */
+export const answerFindingsOf = (db: GraphDb): { rows: FindingRow[]; heldBack: { count: number; why: string } | undefined } => {
+  const rows: FindingRow[] = [];
+  let held: { count: number; why: string } | undefined;
+  const routes = db.nodesByType('entry', 'http').sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  for (const route of routes) {
+    const callers = [...new Set(db.edgesTo(route.id, ['http_calls', 'hits']).map((edge) => edge.from))].sort();
+    const fields = answerFieldsOf(db, route.id);
+    for (const call of callers) {
+      const said = answerOf(db, route.id, undefined, call);
+      if (said === undefined) continue;
+      if (fields === undefined) {
+        // Only a request whose client reads a field by name is a candidate: one that hands the answer on reads none here.
+        if (said.answer.reads.length === 0) continue;
+        const why = `what ${route.label} answers is not a shape read, so the fields its clients read were not compared`;
+        held = held === undefined ? { count: 1, why } : { ...held, count: held.count + 1 };
+        continue;
+      }
+      const readTops = new Set(said.answer.reads.map((read) => topField(read.field)));
+      const notRead = fields.filter((field) => !readTops.has(field));
+      for (const row of said.answer.missing) {
+        const reading = db.node(row.id);
+        const file = row.file ?? reading?.file;
+        const renamed = likelyRenamed(row.field, notRead);
+        const ways = waysInReaching(db, call);
+        rows.push({
+          kind: 'answer-field-never-returned',
+          id: row.id,
+          from: call,
+          to: route.id,
+          service: reading?.repo ?? db.node(call)?.repo ?? '',
+          ...(file === undefined ? {} : { loc: `${file}:${row.line}` }),
+          message: `\`${row.field}\` of the answer to ${route.label} is read by ${reading?.label ?? row.id} and never returned: ${route.label} answers ${typeSaid(said.answer.type)} (${fields.join(', ')})`,
+          precision: precisionOf('answer-field-never-returned'),
+          evidence: ANSWER_EVIDENCE,
+          fix: renamed === undefined ? `return \`${row.field}\` from ${route.label}, or stop reading it` : `likely renamed: ${renamed} is returned, ${row.field} is read`,
+          ...(ways.seenBy.length === 0 ? {} : { seenBy: ways.seenBy }),
+          reach: ways.waysIn === 0 ? {} : { waysIn: ways.waysIn },
+          rank: 0,
+        });
+      }
+    }
+  }
+  return { rows, heldBack: held };
+};
+
 /**
  * Every finding of the project ranked by reach (P95), from the rows nobody
  * accepted (`fresh`), the channels with one end and the contract breaks
@@ -244,8 +309,13 @@ export const findingsOf = (
   const inService = <T extends { service: string | null }>(rows: readonly T[]): T[] =>
     service === undefined ? [...rows] : rows.filter((row) => row.service === service);
   const fields = fieldFindingsOf(db, ctx);
-  const collected = collectedOf(db, split.fresh, loadContractBreaks(ctx.handle.path), rules, fields.rows);
-  const heldBack = { ...collected.heldBack, ...(fields.heldBack === undefined ? {} : { 'field-never-sent': fields.heldBack }) };
+  const answers = answerFindingsOf(db);
+  const collected = collectedOf(db, split.fresh, loadContractBreaks(ctx.handle.path), rules, [...fields.rows, ...answers.rows]);
+  const heldBack = {
+    ...collected.heldBack,
+    ...(fields.heldBack === undefined ? {} : { 'field-never-sent': fields.heldBack }),
+    ...(answers.heldBack === undefined ? {} : { 'answer-field-never-returned': answers.heldBack }),
+  };
   return {
     ranked: inService(rankFindings(db, collected.findings)),
     notes: collectFindings(db, { rows: inService(split.fresh) }).notes,

@@ -44,6 +44,27 @@ only one of them moved.
   started in (P392):** from a configuration, a database alone or one that
   turns code off, with or without the pattern tester and the change checker,
   every tool or the project's, each under `INSTRUCTIONS_MAX`.
+- **What P381 to P391 left to each other (P393).** `spec diff` and `diff
+  --spec` weigh a response field by what each browser client reads of the
+  answer (P391): an `error` placed on the reading code where a client reads
+  it, an `info` where every caller's client was read and none reads it, a
+  `warning` where a request's client was not read (a server's request) or
+  hands the answer on; a list's element's field is matched to the reads of
+  each element. A field a client reads that the route never returns is a
+  finding, `answer-field-never-returned` (high, where the route's declared
+  answer is a shape read whole; held back with why where it is not).
+  `who_consumes` and `who_emits` take a message type as the channel, answered
+  on the channel carrying it (`carriedBy`), as `check_contract` does. A
+  `maybe` row says how to confirm it, `confirm: {grep, repo}`: the name to
+  look for as a whole word and the repository to look in. A row naming a
+  method, a function, a class, a component or a handler says where it ends,
+  `endLine` beside `loc` (compact: `line: "12-40"`), read from the checkout by
+  the brace count `get_source` uses, which no longer stops at an inline type
+  closed inside a parameter list. A method's requests are one list,
+  `requests: [{route, by} | {unjoined} | {more}]`, where `requestsUnjoined`
+  and `requestsMore` were two more keys. The `api-change-verdicts` fixture
+  gains a React dashboard and a `GET /items` route; `answer-fields-read` a
+  route whose answer is no shape read.
 
 - **Findings say where the two sides of a protocol, a setting, a status or
   CORS disagree (P388).** Where flowatlas reads both sides, `findings` lists

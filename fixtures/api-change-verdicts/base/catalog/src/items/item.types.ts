@@ -31,3 +31,10 @@ export interface ItemChanged {
   label: string;
   legacyCode: string;
 }
+
+/** One row of `GET /items`; the dashboard shows the name only. */
+export interface ItemRow {
+  id: string;
+  name: string;
+  thumbnail: string;
+}

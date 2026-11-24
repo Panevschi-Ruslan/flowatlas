@@ -26,7 +26,8 @@
           "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
           "type": "method",
           "label": "OrdersController.findOne",
-          "loc": "src/orders/orders.controller.ts:30"
+          "loc": "src/orders/orders.controller.ts:30",
+          "endLine": 33
         },
         "edge": {
           "type": "handles",
@@ -45,7 +46,8 @@
               "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
               "type": "method",
               "label": "OrdersClient.fetchOne",
-              "loc": "src/clients/orders.client.ts:32"
+              "loc": "src/clients/orders.client.ts:32",
+              "endLine": 34
             },
             "edge": {
               "type": "calls",
@@ -108,7 +110,8 @@
                           "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
                           "type": "method",
                           "label": "OrdersController.findOne",
-                          "loc": "src/orders/orders.controller.ts:25"
+                          "loc": "src/orders/orders.controller.ts:25",
+                          "endLine": 28
                         },
                         "edge": {
                           "type": "handles",
@@ -127,7 +130,8 @@
                               "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
                               "type": "method",
                               "label": "OrdersService.findOne",
-                              "loc": "src/orders/orders.service.ts:25"
+                              "loc": "src/orders/orders.service.ts:25",
+                              "endLine": 28
                             },
                             "edge": {
                               "type": "calls",

@@ -17,6 +17,7 @@
         "type": "method",
         "label": "OrdersController.archive",
         "loc": "src/orders/orders.controller.ts:42",
+        "endLine": 45,
         "reach": "alive",
         "from": "POST /orders/:param/archive"
       },
@@ -37,6 +38,7 @@
         "type": "method",
         "label": "OrdersController.create",
         "loc": "src/orders/orders.controller.ts:31",
+        "endLine": 34,
         "reach": "dead",
         "from": "POST /orders",
         "throughDead": true
@@ -58,6 +60,7 @@
         "type": "method",
         "label": "OrdersController.findOne",
         "loc": "src/orders/orders.controller.ts:25",
+        "endLine": 28,
         "reach": "alive",
         "from": "GET /orders/:param"
       },
@@ -78,6 +81,7 @@
         "type": "method",
         "label": "OrdersController.latest",
         "loc": "src/orders/orders.controller.ts:19",
+        "endLine": 22,
         "reach": "alive",
         "from": "GET /orders/latest"
       },

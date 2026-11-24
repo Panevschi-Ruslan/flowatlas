@@ -21,12 +21,24 @@ export interface RequestLanding {
   by?: string;
 }
 
+/** A request joined to no route, as written: the verb and the address read. */
+export interface RequestUnjoined {
+  unjoined: string;
+}
+
+/** How many requests past the ones listed, where there were more than `MOST_REQUESTS`: the list's last row. */
+export interface RequestsMore {
+  more: number;
+}
+
+/**
+ * One list, so no two keys a model could confuse (P393, after P-18: it was
+ * `requests`, `requestsUnjoined` and `requestsMore`): each row a route
+ * joined, `{route, by}`, or a request joined to none, `{unjoined}`, and
+ * past eight a last row `{more}` counting the rest.
+ */
 export interface RequestsSaid {
-  requests?: RequestLanding[];
-  /** Requests joined to no route, as written: the verb and the address read. */
-  requestsUnjoined?: string[];
-  /** How many past the ones listed, where there were more than `MOST_REQUESTS`. */
-  requestsMore?: number;
+  requests?: Array<RequestLanding | RequestUnjoined | RequestsMore>;
 }
 
 /** The nodes a request is drawn as. */
@@ -112,9 +124,10 @@ export const requestsOf = (db: GraphDb, node: GraphNode | undefined): RequestsSa
   const listed = landed.slice(0, MOST_REQUESTS);
   const unjoinedListed = unjoined.slice(0, Math.max(0, MOST_REQUESTS - listed.length));
   const more = landed.length + unjoined.length - listed.length - unjoinedListed.length;
-  return {
-    ...(listed.length === 0 ? {} : { requests: listed }),
-    ...(unjoinedListed.length === 0 ? {} : { requestsUnjoined: unjoinedListed }),
-    ...(more > 0 ? { requestsMore: more } : {}),
-  };
+  const rows: Array<RequestLanding | RequestUnjoined | RequestsMore> = [
+    ...listed,
+    ...unjoinedListed.map((said) => ({ unjoined: said })),
+    ...(more > 0 ? [{ more }] : []),
+  ];
+  return rows.length === 0 ? {} : { requests: rows };
 };

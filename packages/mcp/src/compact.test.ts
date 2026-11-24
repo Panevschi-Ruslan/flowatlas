@@ -169,7 +169,7 @@ describe('compact answers (P365)', () => {
       $defs: {
         Node: {
           type: 'object',
-          properties: { id: { type: 'string' }, loc: { type: 'string' }, line: { type: 'integer' } },
+          properties: { id: { type: 'string' }, loc: { type: 'string' }, line: { type: ['integer', 'string'] } },
           additionalProperties: false,
         },
       },

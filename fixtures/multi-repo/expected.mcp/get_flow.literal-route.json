@@ -14,7 +14,8 @@
           "id": "orders#src/orders/orders.controller.ts:OrdersController.latest",
           "type": "method",
           "label": "OrdersController.latest",
-          "loc": "src/orders/orders.controller.ts:19"
+          "loc": "src/orders/orders.controller.ts:19",
+          "endLine": 22
         },
         "edge": {
           "type": "handles",
@@ -27,7 +28,8 @@
               "id": "orders#src/orders/orders.service.ts:OrdersService.latest",
               "type": "method",
               "label": "OrdersService.latest",
-              "loc": "src/orders/orders.service.ts:30"
+              "loc": "src/orders/orders.service.ts:30",
+              "endLine": 33
             },
             "edge": {
               "type": "calls",

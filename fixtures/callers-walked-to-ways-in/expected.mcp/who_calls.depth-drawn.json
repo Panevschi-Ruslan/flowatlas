@@ -16,6 +16,7 @@
         "type": "method",
         "label": "CheckoutService.cancel",
         "loc": "src/checkout/checkout.service.ts:15",
+        "endLine": 18,
         "reach": "alive",
         "from": "DELETE /checkout/:param"
       },
@@ -34,6 +35,7 @@
             "type": "method",
             "label": "CheckoutController.cancel",
             "loc": "src/checkout/checkout.controller.ts:13",
+            "endLine": 16,
             "reach": "alive",
             "from": "DELETE /checkout/:param"
           },
@@ -77,6 +79,7 @@
         "type": "method",
         "label": "CheckoutService.place",
         "loc": "src/checkout/checkout.service.ts:9",
+        "endLine": 13,
         "reach": "alive",
         "from": "POST /checkout"
       },
@@ -95,6 +98,7 @@
             "type": "method",
             "label": "CheckoutController.place",
             "loc": "src/checkout/checkout.controller.ts:8",
+            "endLine": 11,
             "reach": "alive",
             "from": "POST /checkout"
           },
@@ -137,6 +141,7 @@
         "type": "method",
         "label": "ReportBuilder.row",
         "loc": "src/reports/report.builder.ts:17",
+        "endLine": 19,
         "reach": "alive",
         "from": "GET /reports/daily"
       },
@@ -155,6 +160,7 @@
             "type": "method",
             "label": "ReportBuilder.section",
             "loc": "src/reports/report.builder.ts:13",
+            "endLine": 15,
             "reach": "alive",
             "from": "GET /reports/daily"
           },
@@ -173,6 +179,7 @@
                 "type": "method",
                 "label": "ReportBuilder.build",
                 "loc": "src/reports/report.builder.ts:9",
+                "endLine": 11,
                 "reach": "alive",
                 "from": "GET /reports/daily"
               },
@@ -196,6 +203,7 @@
         "type": "method",
         "label": "StockJobs.nightly",
         "loc": "src/stock/stock.jobs.ts:10",
+        "endLine": 13,
         "reach": "alive",
         "from": "cron StockJobs.nightly"
       },

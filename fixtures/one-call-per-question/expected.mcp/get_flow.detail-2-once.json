@@ -49,6 +49,7 @@
           "type": "method",
           "label": "OrdersController.cancel",
           "loc": "src/orders/orders.controller.ts:27",
+          "endLine": 31,
           "meta": {
             "signature": {
               "params": [
@@ -77,6 +78,7 @@
               "type": "method",
               "label": "OrdersService.cancel",
               "loc": "src/orders/orders.service.ts:14",
+              "endLine": 17,
               "meta": {
                 "signature": {
                   "params": [
@@ -151,6 +153,7 @@
                           "loc": "src/events/events.controller.ts:10",
                           "service": "ops-bot",
                           "kind": "event",
+                          "endLine": 21,
                           "meta": {
                             "kind": "event",
                             "decorator": "Consumes",
@@ -183,6 +186,7 @@
                               "type": "method",
                               "label": "EventsController.receive",
                               "loc": "src/events/events.controller.ts:10",
+                              "endLine": 21,
                               "meta": {
                                 "signature": {
                                   "params": [
@@ -244,6 +248,7 @@
                                   "type": "method",
                                   "label": "BotService.handleOrderReady",
                                   "loc": "src/bot/bot.service.ts:16",
+                                  "endLine": 19,
                                   "meta": {
                                     "signature": {
                                       "params": [
@@ -316,6 +321,7 @@
                           "loc": "src/bot/bot.service.ts:22",
                           "service": "ops-bot",
                           "kind": "event",
+                          "endLine": 26,
                           "meta": {
                             "kind": "event",
                             "selectedBy": "consumer:ops-bot#src/events/events.controller.ts:EventsController.receive",
@@ -335,6 +341,7 @@
                               "type": "method",
                               "label": "BotService.handleOrderCancelled",
                               "loc": "src/bot/bot.service.ts:22",
+                              "endLine": 26,
                               "meta": {
                                 "signature": {
                                   "params": [
@@ -396,6 +403,7 @@
                                   "type": "method",
                                   "label": "ShopClient.cancelOrder",
                                   "loc": "src/shop.client.ts:14",
+                                  "endLine": 16,
                                   "meta": {
                                     "signature": {
                                       "params": [
@@ -449,6 +457,7 @@
                   "type": "method",
                   "label": "EventBus.publish",
                   "loc": "src/bus/event-bus.ts:8",
+                  "endLine": 10,
                   "meta": {
                     "signature": {
                       "params": [

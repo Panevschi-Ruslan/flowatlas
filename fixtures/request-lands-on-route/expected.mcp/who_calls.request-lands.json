@@ -21,6 +21,7 @@
         "type": "method",
         "label": "CatalogComponent.load",
         "loc": "src/app/catalog.component.ts:13",
+        "endLine": 15,
         "reach": "alive",
         "from": "screen /catalog"
       },

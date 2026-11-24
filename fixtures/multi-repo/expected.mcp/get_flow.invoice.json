@@ -14,7 +14,8 @@
           "id": "gateway#src/orders/orders.controller.ts:OrdersController.invoice",
           "type": "method",
           "label": "OrdersController.invoice",
-          "loc": "src/orders/orders.controller.ts:40"
+          "loc": "src/orders/orders.controller.ts:40",
+          "endLine": 43
         },
         "edge": {
           "type": "handles",
@@ -30,7 +31,8 @@
               "id": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice",
               "type": "method",
               "label": "BillingClient.requestInvoice",
-              "loc": "src/clients/billing.client.ts:31"
+              "loc": "src/clients/billing.client.ts:31",
+              "endLine": 37
             },
             "edge": {
               "type": "calls",
@@ -46,7 +48,8 @@
                   "id": "gateway#src/clients/service-registry.ts:ServiceRegistry.invoicesUrl",
                   "type": "method",
                   "label": "ServiceRegistry.invoicesUrl",
-                  "loc": "src/clients/service-registry.ts:19"
+                  "loc": "src/clients/service-registry.ts:19",
+                  "endLine": 21
                 },
                 "edge": {
                   "type": "calls",
@@ -59,7 +62,8 @@
                       "id": "gateway#src/clients/service-registry.ts:ServiceRegistry.baseUrlOf",
                       "type": "method",
                       "label": "ServiceRegistry.baseUrlOf",
-                      "loc": "src/clients/service-registry.ts:23"
+                      "loc": "src/clients/service-registry.ts:23",
+                      "endLine": 25
                     },
                     "edge": {
                       "type": "calls",
@@ -120,7 +124,8 @@
                           "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
                           "type": "method",
                           "label": "InvoicesController.create",
-                          "loc": "src/invoices/invoices.controller.ts:15"
+                          "loc": "src/invoices/invoices.controller.ts:15",
+                          "endLine": 18
                         },
                         "edge": {
                           "type": "handles",
@@ -136,7 +141,8 @@
                               "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
                               "type": "method",
                               "label": "InvoicesService.create",
-                              "loc": "src/invoices/invoices.service.ts:30"
+                              "loc": "src/invoices/invoices.service.ts:30",
+                              "endLine": 43
                             },
                             "edge": {
                               "type": "calls",

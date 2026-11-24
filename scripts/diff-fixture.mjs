@@ -49,13 +49,15 @@ const quiet = { out() {}, err() {}, tty: false };
  */
 const VERDICTS = {
   fixture: 'api-change-verdicts',
-  repos: ['catalog', 'storefront', 'notifier'],
+  repos: ['catalog', 'storefront', 'notifier', 'dashboard'],
   edited: ['catalog'],
   config: {
     services: [
       { name: 'catalog', repo: './catalog', type: 'nestjs', baseUrlEnv: ['CATALOG_URL'] },
       { name: 'storefront', repo: './storefront', type: 'nestjs' },
       { name: 'notifier', repo: './notifier', type: 'nestjs' },
+      // P393: a browser client whose reads of the answers the verdicts weigh.
+      { name: 'dashboard', repo: './dashboard', type: 'react', apiBaseEnv: ['VITE_CATALOG_URL'], apiTarget: { VITE_CATALOG_URL: 'catalog' } },
     ],
     adapters: {
       broker: {

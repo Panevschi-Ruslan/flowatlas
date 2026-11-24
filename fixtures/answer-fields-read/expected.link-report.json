@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T19:22:45.660Z",
+  "builtAt": "2026-11-24T21:18:27.782Z",
   "configHash": "f405e38e97b1",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./shop-api",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 10,
-      "edges": 3,
+      "nodes": 13,
+      "edges": 4,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 9195,
+      "durationMs": 957,
       "packages": {
         "name": "answer-fields-read-shop-api",
         "runtime": [
@@ -27,11 +27,11 @@
       "repo": "./shop-app",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 13,
-      "edges": 8,
-      "types": 2,
+      "nodes": 17,
+      "edges": 11,
+      "types": 3,
       "unresolved": 0,
-      "durationMs": 7852,
+      "durationMs": 804,
       "packages": {
         "name": "answer-fields-read-shop-app",
         "runtime": [
@@ -52,7 +52,7 @@
       "edges": 12,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 7685,
+      "durationMs": 815,
       "packages": {
         "name": "answer-fields-read-shop-web",
         "runtime": [
@@ -76,8 +76,8 @@
     "dynamic": 0
   },
   "ui": {
-    "total": 5,
-    "resolved": 5,
+    "total": 6,
+    "resolved": 6,
     "unresolved": 0,
     "byReason": {}
   },
@@ -88,20 +88,20 @@
     "noProducers": []
   },
   "routes": {
-    "total": 3,
-    "called": 3,
+    "total": 4,
+    "called": 4,
     "uncalled": [],
     "duplicated": []
   },
   "types": {
-    "total": 8,
+    "total": 9,
     "sharedPackage": 0
   },
   "unresolved": [],
   "totals": {
-    "nodes": 39,
-    "edges": 28,
-    "types": 8,
+    "nodes": 46,
+    "edges": 33,
+    "types": 9,
     "missed": 0,
     "sites": 0,
     "notes": 0,

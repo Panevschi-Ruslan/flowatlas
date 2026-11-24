@@ -7,7 +7,7 @@
   "consumers": [
     {
       "id": "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.pageStaff",
-      "line": 27,
+      "line": "27-30",
       "kind": "event",
       "selectedIn": "AlertRelay.onModuleInit",
       "via": "if",
@@ -17,7 +17,7 @@
     },
     {
       "id": "consumer:shop-web#src/app/desk-board.component.ts:DeskBoardComponent.reload",
-      "line": 26,
+      "line": "26-29",
       "kind": "sse",
       "selectedIn": "DeskBoardComponent.ngOnInit",
       "via": "filter",
@@ -26,7 +26,7 @@
     },
     {
       "id": "consumer:shop-web#src/app/order-notices.service.ts:OrderNotices.handle",
-      "line": 25,
+      "line": "25-30",
       "kind": "sse",
       "selectedIn": "OrderNotices.initialize",
       "via": "if",

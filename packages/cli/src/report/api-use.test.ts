@@ -55,6 +55,7 @@ beforeAll(async () => {
         { name: 'catalog', repo: './catalog', type: 'nestjs', baseUrlEnv: ['CATALOG_URL'] },
         { name: 'storefront', repo: './storefront', type: 'nestjs' },
         { name: 'notifier', repo: './notifier', type: 'nestjs' },
+        { name: 'dashboard', repo: './dashboard', type: 'react', apiBaseEnv: ['VITE_CATALOG_URL'], apiTarget: { VITE_CATALOG_URL: 'catalog' } },
       ],
       adapters: {
         broker: {
@@ -70,7 +71,7 @@ beforeAll(async () => {
       output: '.flowatlas',
     }),
   );
-  for (const repo of ['catalog', 'storefront', 'notifier']) {
+  for (const repo of ['catalog', 'storefront', 'notifier', 'dashboard']) {
     git(repo, 'init', '-q', '-b', 'main');
     git(repo, 'add', '-A');
     git(repo, 'commit', '-q', '-m', 'base');
@@ -98,15 +99,26 @@ describe('what an API change does to the code that uses it (P390)', () => {
     expect(change('GET /items/{id}/archive', 'response.reason')).toMatchObject({ level: 'info', use: { among: 0 } });
   });
 
+  it('weighs a response field by what each client reads of the answer (P393)', () => {
+    // The dashboard's page reads the price: an error placed on the reading code; the storefront's request is not followed.
+    const price = change('GET /items/{id}', 'response.price');
+    expect(price).toMatchObject({ level: 'error', use: { verdict: '1 of 2 callers: reads `price` in ItemPage, line 13' } });
+    expect(price.use?.readers[0]).toMatchObject({ how: 'reads', service: 'dashboard', file: 'src/ItemPage.tsx', line: 13, level: 'error' });
+    expect(price.use?.readers[1]).toMatchObject({ how: 'unknown', service: 'storefront', level: 'warning' });
+    // Every caller of the list is read and none reads the thumbnail of a row: info.
+    expect(change('GET /items', 'response[].thumbnail')).toMatchObject({ level: 'info', use: { verdict: 'no caller reads `thumbnail`, among 1' } });
+  });
+
   it('is a warning where the value reaches a consumer whole, or what it reads of an answer is not read: said, never guessed', () => {
     const warehouse = change('send stock.changed', 'payload.warehouse');
     expect(warehouse).toMatchObject({ level: 'warning', use: { readers: [{ how: 'opaque', said: expect.stringContaining('spread into another value') }] } });
-    const price = change('GET /items/{id}', 'response.price');
-    expect(price).toMatchObject({ level: 'warning', use: { readers: [{ how: 'unknown', said: expect.stringContaining('not read yet') }] } });
+    // Only a server's request calls POST /items: no front-end reader followed its answer.
+    const price = change('POST /items', 'response.price');
+    expect(price).toMatchObject({ level: 'warning', use: { readers: [{ how: 'unknown', said: expect.stringContaining('its client reads was not read') }] } });
   });
 
   it('says how much it could see, and in which order to deploy a message change', () => {
-    expect(report.coverage).toEqual({ consumers: 6, repositories: 3, said: '6 consumers in 3 repositories; consumers outside them unknown' });
+    expect(report.coverage).toEqual({ consumers: 8, repositories: 4, said: '8 consumers in 4 repositories; consumers outside them unknown' });
     expect(change('send item.changed', 'payload.label').use?.deployOrder).toEqual({ first: 'consumers', said: 'consumers first: stop reading `label` (or cope without it), then catalog' });
     expect(change('POST /items', 'body.currency').use?.deployOrder?.first).toBe('callers');
     // Nobody meets an info change, so its order does not matter.
@@ -142,7 +154,7 @@ describe('what an API change does to the code that uses it (P390)', () => {
     const run = await runDiff('HEAD~1', undefined, { config, service: ['catalog'], generatedAt: FIXED, failOnApiBreak: true }, { out() {}, err: (text) => said.push(text), tty: false });
     expect(run.exitCode).toBe(EXIT.failed);
     expect(run.failedOn).toContain('api');
-    expect(said.filter((line) => line.startsWith('api break: '))).toHaveLength(3);
+    expect(said.filter((line) => line.startsWith('api break: '))).toHaveLength(4);
   });
 
   it('writes each flow as a code flow across repositories and the consumers as related locations in SARIF', async () => {
@@ -155,6 +167,6 @@ describe('what an API change does to the code that uses it (P390)', () => {
     expect(label.codeFlows[0].threadFlows[0].locations.map((step: { location: { physicalLocation: { artifactLocation: { uri: string } } } }) => step.location.physicalLocation.artifactLocation.uri.split('/')[0])).toEqual([
       'storefront', 'storefront', 'storefront', 'storefront', 'catalog', 'catalog', 'catalog', 'catalog', 'catalog', 'notifier', 'notifier',
     ]);
-    expect(run.invocations[0].toolExecutionNotifications[0].message.text).toBe('6 consumers in 3 repositories; consumers outside them unknown');
+    expect(run.invocations[0].toolExecutionNotifications[0].message.text).toBe('8 consumers in 4 repositories; consumers outside them unknown');
   });
 });

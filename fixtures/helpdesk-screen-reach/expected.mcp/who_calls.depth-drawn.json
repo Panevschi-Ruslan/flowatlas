@@ -16,6 +16,7 @@
         "type": "method",
         "label": "TicketsController.assign",
         "loc": "src/tickets/tickets.controller.ts:8",
+        "endLine": 11,
         "reach": "dead",
         "from": "POST /desks/:param/tickets/:param/assign",
         "throughDead": true

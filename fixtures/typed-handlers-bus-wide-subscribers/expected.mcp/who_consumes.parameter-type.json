@@ -15,6 +15,7 @@
       "service": "bot",
       "kind": "event",
       "via": "parameter",
+      "endLine": 29,
       "reach": "alive",
       "from": "POST /orders (shop)"
     },

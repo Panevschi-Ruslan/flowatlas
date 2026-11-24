@@ -20,6 +20,22 @@ describe('where a declaration ends', () => {
     expect(endOf(source)).toBe(4);
   });
 
+  it('reads past an inline type closed inside the parameter list (P393)', () => {
+    const source = [
+      '  @Post()',
+      '  create(',
+      '    @Body()',
+      '    body: {',
+      '      sku: string;',
+      '    },',
+      '  ): string {',
+      '    return body.sku;',
+      '  }',
+      '  other() {}',
+    ].join('\n');
+    expect(endOf(source)).toBe(8);
+  });
+
   it('reads a class past a decorator written over several lines', () => {
     const source = [
       '@View({',

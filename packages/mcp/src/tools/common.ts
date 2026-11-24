@@ -389,15 +389,18 @@ export const reachOutput = {
   walkCut: z.literal(true).optional(),
   gap: z.string().optional(),
   behind: z.string().optional(),
+  /** On a maybe row: the name to search for (grep -rnw) and the repository to search, to confirm it (P393). */
+  confirm: z.object({ grep: z.string(), repo: z.string() }).optional(),
   /** Every way in that reaches it is judged dead (P381): `reach` is `dead`, though code calls it. */
   throughDead: z.literal(true).optional(),
 };
 
 /** Where the requests a method sends land (P377), as `requestsOf` says it. */
 export const requestsOutput = {
-  requests: z.array(z.object({ route: z.string(), by: z.string().optional() })).optional(),
-  requestsUnjoined: z.array(z.string()).optional(),
-  requestsMore: z.number().optional(),
+  // One list (P393): a route joined, a request joined to none as written, or how many more.
+  requests: z
+    .array(z.union([z.object({ route: z.string(), by: z.string().optional() }), z.object({ unjoined: z.string() }), z.object({ more: z.number() })]))
+    .optional(),
 };
 
 /** Whether a list is the whole answer, and what was left if not (P364). */
@@ -416,6 +419,8 @@ export const nodeOutput = z
     type: z.string(),
     label: z.string(),
     loc: z.string().optional(),
+    /** Where its declaration ends, read from the checkout (P393). */
+    endLine: z.number().optional(),
     service: z.string().optional(),
     kind: z.string().optional(),
     meta: z.record(z.string(), z.unknown()).optional(),

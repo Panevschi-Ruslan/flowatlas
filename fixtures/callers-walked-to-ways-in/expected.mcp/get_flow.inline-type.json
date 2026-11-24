@@ -6,6 +6,7 @@
       "label": "CatalogComponent.add",
       "loc": "src/app/catalog.component.ts:20",
       "service": "store-web",
+      "endLine": 22,
       "meta": {
         "signature": {
           "params": [],
@@ -20,6 +21,7 @@
           "type": "method",
           "label": "ProductsClient.create",
           "loc": "src/app/products.client.ts:23",
+          "endLine": 48,
           "meta": {
             "signature": {
               "params": [
@@ -96,6 +98,7 @@
                       "type": "method",
                       "label": "ProductsController.create",
                       "loc": "src/products/products.controller.ts:23",
+                      "endLine": 52,
                       "meta": {
                         "signature": {
                           "params": [
@@ -129,6 +132,7 @@
                           "type": "method",
                           "label": "ProductsService.create",
                           "loc": "src/products/products.service.ts:16",
+                          "endLine": 19,
                           "meta": {
                             "signature": {
                               "params": [

@@ -30,6 +30,7 @@ import { byId } from './graph.js';
 export const FINDING_KINDS = [
   'call-to-missing-route',
   'field-never-sent',
+  'answer-field-never-returned',
   'type-never-published',
   'contract-break',
   'unguarded-among-guarded',
@@ -190,6 +191,8 @@ const routeOfRow = (db: GraphDb, row: AnchoredUnresolvedRow): GraphNode | undefi
 const PRECISION: Readonly<Record<string, Precision>> = {
   'call-to-missing-route': 'high',
   'field-never-sent': 'high',
+  // A field of an answer a client reads and the route's answer, read whole, never holds (P393).
+  'answer-field-never-returned': 'high',
   'type-never-published': 'high',
   'annotation-to-missing-route': 'high',
   // A literal route an earlier parameter route answers never runs (P385).

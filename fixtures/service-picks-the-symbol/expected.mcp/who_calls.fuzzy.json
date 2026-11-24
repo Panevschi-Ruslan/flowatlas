@@ -16,6 +16,7 @@
         "type": "method",
         "label": "BooksController.findOne",
         "loc": "src/books.controller.ts:23",
+        "endLine": 26,
         "reach": "alive",
         "from": "GET /books/:param"
       },

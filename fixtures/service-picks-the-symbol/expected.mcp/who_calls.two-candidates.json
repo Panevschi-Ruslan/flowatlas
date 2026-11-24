@@ -36,6 +36,7 @@
                 "type": "method",
                 "label": "BooksClient.get",
                 "loc": "src/app/books.client.ts:20",
+                "endLine": 22,
                 "reach": "alive",
                 "from": "screen /book/:param"
               },
@@ -69,6 +70,7 @@
                 "type": "method",
                 "label": "BooksClient.fetch",
                 "loc": "src/books.client.ts:14",
+                "endLine": 17,
                 "reach": "alive",
                 "from": "GET /books/:param"
               },
@@ -151,6 +153,7 @@
                 "type": "method",
                 "label": "DeskBot.showBook",
                 "loc": "src/desk-bot.ts:18",
+                "endLine": 20,
                 "reach": "alive",
                 "from": "bot_command book"
               },

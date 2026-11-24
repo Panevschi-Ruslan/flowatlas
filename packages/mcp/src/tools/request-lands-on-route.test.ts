@@ -79,14 +79,14 @@ describe('an answer about a method says where its requests land', () => {
   it('get_source: the address as written where it is joined to no route', async () => {
     // The document, asked verbose: compact, get_source answers the code as plain text (P382).
     const answer = await call('get_source', { symbol: EXPORT }, true);
-    expect(answer.requests).toBeUndefined();
-    expect(answer.requestsUnjoined).toEqual(['POST ${apiUrl}/admin/:param/catalog/export']);
+    // One list (P393): a request joined to no route is a row of it, as written.
+    expect(answer.requests).toEqual([{ unjoined: 'POST ${apiUrl}/admin/:param/catalog/export' }]);
+    expect(answer.requestsUnjoined).toBeUndefined();
   });
 
   it('says nothing on code that sends nothing', async () => {
     const answer = await call('who_calls', { symbol: MODIFY_BY });
     expect(answer.target.requests).toBeUndefined();
-    expect(answer.target.requestsUnjoined).toBeUndefined();
   });
 });
 

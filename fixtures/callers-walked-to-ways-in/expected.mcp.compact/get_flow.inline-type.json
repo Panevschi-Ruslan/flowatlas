@@ -1,7 +1,7 @@
 {
   "root": {
     "id": "store-web#src/app/catalog.component.ts:CatalogComponent.add",
-    "line": 20,
+    "line": "20-22",
     "meta": {
       "signature": {
         "returns": "void"
@@ -10,7 +10,7 @@
     "children": [
       {
         "id": "store-web#src/app/products.client.ts:ProductsClient.create",
-        "line": 23,
+        "line": "23-48",
         "meta": {
           "signature": {
             "params": [
@@ -58,7 +58,7 @@
                 "children": [
                   {
                     "id": "stock-api#src/products/products.controller.ts:ProductsController.create",
-                    "line": 23,
+                    "line": "23-52",
                     "meta": {
                       "signature": {
                         "params": [
@@ -84,7 +84,7 @@
                     "children": [
                       {
                         "id": "stock-api#src/products/products.service.ts:ProductsService.create",
-                        "line": 16,
+                        "line": "16-19",
                         "meta": {
                           "signature": {
                             "params": [

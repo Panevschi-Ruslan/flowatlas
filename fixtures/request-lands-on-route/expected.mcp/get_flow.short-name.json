@@ -5,7 +5,8 @@
       "type": "method",
       "label": "CatalogService.getGrouped",
       "loc": "src/app/catalog.service.ts:17",
-      "service": "shop-admin"
+      "service": "shop-admin",
+      "endLine": 19
     },
     "children": [
       {
@@ -13,7 +14,8 @@
           "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.get",
           "type": "method",
           "label": "AdminApiService.get",
-          "loc": "src/app/admin-api.service.ts:23"
+          "loc": "src/app/admin-api.service.ts:23",
+          "endLine": 25
         },
         "edge": {
           "type": "calls",
@@ -29,7 +31,8 @@
               "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.url",
               "type": "method",
               "label": "AdminApiService.url",
-              "loc": "src/app/admin-api.service.ts:18"
+              "loc": "src/app/admin-api.service.ts:18",
+              "endLine": 21
             },
             "edge": {
               "type": "calls",
@@ -45,7 +48,8 @@
                   "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.resource",
                   "type": "method",
                   "label": "AdminApiService.resource",
-                  "loc": "src/app/admin-api.service.ts:16"
+                  "loc": "src/app/admin-api.service.ts:16",
+                  "endLine": 21
                 },
                 "edge": {
                   "type": "calls",
@@ -91,7 +95,8 @@
                   "id": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.grouped",
                   "type": "method",
                   "label": "AdminCatalogController.grouped",
-                  "loc": "src/catalog/admin-catalog.controller.ts:8"
+                  "loc": "src/catalog/admin-catalog.controller.ts:8",
+                  "endLine": 11
                 },
                 "edge": {
                   "type": "handles",
@@ -107,7 +112,8 @@
                       "id": "shop-api#src/catalog/catalog.service.ts:CatalogService.grouped",
                       "type": "method",
                       "label": "CatalogService.grouped",
-                      "loc": "src/catalog/catalog.service.ts:11"
+                      "loc": "src/catalog/catalog.service.ts:11",
+                      "endLine": 13
                     },
                     "edge": {
                       "type": "calls",

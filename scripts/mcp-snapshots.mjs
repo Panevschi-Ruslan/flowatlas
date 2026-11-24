@@ -504,6 +504,8 @@ const ANSWER_CASES = [
   ['check_contract.answer-missing', 'check_contract', { edge: 'GET /api/profile' }],
   ['check_contract.answer-unfollowed', 'check_contract', { edge: 'GET /api/orders/:id' }],
   ['check_contract.answer-edge', 'check_contract', { from: 'ui_api_call:shop-app#src/api.ts:23:26', to: 'entry:shop-api:http:GET:/api/profile' }],
+  // A field a client reads that the route never returns, as a finding (P393).
+  ['findings.answer-field-never-returned', 'findings', { kind: 'answer-field-never-returned' }],
 ];
 /** The same, compact: what an agent is handed. */
 const ANSWER_COMPACT_CASES = ANSWER_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
@@ -525,6 +527,9 @@ const RENDERED_REACH_COMPACT_CASES = [
  */
 const TYPED_HANDLER_CASES = [
   ['who_consumes.relayed-type', 'who_consumes', { channel: 'order_updates', type: 'ORDER_READY' }],
+  // A message type given as the channel: answered on the channel carrying it (P393).
+  ['who_consumes.type-as-channel', 'who_consumes', { channel: 'ORDER_READY' }],
+  ['who_emits.type-as-channel', 'who_emits', { channel: 'ORDER_READY' }],
   ['who_consumes.parameter-type', 'who_consumes', { channel: 'order_updates', type: 'ORDER_PLACED' }],
   ['who_consumes.caller-wins', 'who_consumes', { channel: 'order_updates', type: 'ORDER_REFUNDED' }],
   ['who_consumes.every-channel', 'who_consumes', { channel: 'desk_alerts', type: 'HELP_REQUESTED' }],

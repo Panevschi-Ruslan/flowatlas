@@ -19,6 +19,7 @@
       "label": "OrdersService.cancel",
       "loc": "src/orders/orders.service.ts:16",
       "service": "shop-api",
+      "endLine": 18,
       "reach": "alive",
       "from": "POST /orders/:param/cancel",
       "matched": [
@@ -32,6 +33,7 @@
       "label": "OrdersController.cancel",
       "loc": "src/orders/orders.controller.ts:14",
       "service": "shop-api",
+      "endLine": 17,
       "reach": "alive",
       "from": "POST /orders/:param/cancel",
       "matched": [
@@ -45,6 +47,7 @@
       "label": "OrdersClient.cancel",
       "loc": "src/app/orders.client.ts:14",
       "service": "shop-web",
+      "endLine": 16,
       "reach": "alive",
       "from": "screen /orders",
       "matched": [
@@ -64,6 +67,7 @@
       "label": "OrdersComponent.cancelOne",
       "loc": "src/app/orders.component.ts:21",
       "service": "shop-web",
+      "endLine": 23,
       "reach": "alive",
       "from": "screen /orders",
       "matched": [

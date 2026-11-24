@@ -541,6 +541,7 @@ export const searchOutput = {
         type: z.string(),
         label: z.string().optional(),
         loc: z.string().optional(),
+        endLine: z.number().optional(),
         service: z.string().optional(),
         kind: z.string().optional(),
         meta: z.record(z.string(), z.unknown()).optional(),

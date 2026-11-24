@@ -415,8 +415,9 @@ Each change is then weighed by what its consumers do with it (P390): an error
 only where a consumer in the project reads the removed field, sends one now
 invalid, omits one now required or calls a route that is gone; an info where
 no consumer reads it, among the ones counted; a warning where one takes the
-value whole or what it reads is not known (which fields of an answer a client
-reads is not read yet, and is said so). A message change says which side to
+value whole or what it reads is not known (a response field is weighed by the
+fields each browser client reads of the answer; a request whose client is not
+read, a server's among them, is a warning and said so). A message change says which side to
 deploy first. In SARIF, each flow from a way in to a consumer it breaks is a
 code flow across repositories, and a removal is placed on the nearest line of
 its file the branch keeps, or said in the summary where the file went, since

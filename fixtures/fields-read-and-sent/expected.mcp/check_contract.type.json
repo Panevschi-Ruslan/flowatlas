@@ -27,6 +27,7 @@
       "loc": "src/notify/notify.service.ts:20",
       "service": "ops-bot",
       "kind": "event",
+      "endLine": 22,
       "reach": "dead",
       "from": "POST /api/desks/:param/help (shop-api)",
       "throughDead": true,

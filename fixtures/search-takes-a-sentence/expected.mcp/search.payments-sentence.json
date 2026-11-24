@@ -19,6 +19,7 @@
       "label": "PaymentsService.capture",
       "loc": "src/payments/payments.service.ts:5",
       "service": "shop-api",
+      "endLine": 7,
       "reach": "alive",
       "from": "POST /payments",
       "matched": [
@@ -31,6 +32,7 @@
       "label": "PaymentsController.capture",
       "loc": "src/payments/payments.controller.ts:9",
       "service": "shop-api",
+      "endLine": 12,
       "reach": "alive",
       "from": "POST /payments",
       "matched": [
@@ -43,6 +45,7 @@
       "label": "PaymentsClient.pay",
       "loc": "src/app/payments.client.ts:10",
       "service": "shop-web",
+      "endLine": 12,
       "reach": "alive",
       "from": "screen /orders",
       "matched": [
@@ -55,6 +58,7 @@
       "label": "PaymentsService.refund",
       "loc": "src/payments/payments.service.ts:9",
       "service": "shop-api",
+      "endLine": 11,
       "reach": "dead",
       "from": "POST /orders/:param/refund",
       "throughDead": true,
@@ -69,6 +73,7 @@
       "loc": "src/payments/payments.service.ts:3",
       "service": "shop-api",
       "kind": "injectable",
+      "endLine": 12,
       "reach": "alive",
       "from": "POST /payments",
       "ways": 2,
@@ -83,6 +88,7 @@
       "loc": "src/payments/payments.controller.ts:4",
       "service": "shop-api",
       "kind": "controller",
+      "endLine": 13,
       "reach": "alive",
       "from": "POST /payments",
       "matched": [
@@ -96,6 +102,7 @@
       "loc": "src/app/payments.client.ts:6",
       "service": "shop-web",
       "kind": "injectable",
+      "endLine": 13,
       "reach": "alive",
       "from": "screen /orders",
       "matched": [

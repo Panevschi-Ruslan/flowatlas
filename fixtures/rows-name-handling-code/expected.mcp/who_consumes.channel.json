@@ -14,6 +14,7 @@
       "loc": "src/notify/alert-relay.service.ts:21",
       "service": "shop-api",
       "kind": "event",
+      "endLine": 24,
       "reach": "alive",
       "from": "PATCH /api/orders/:param/cancel",
       "ways": 4
@@ -36,6 +37,7 @@
       "loc": "src/app/desk-board.component.ts:23",
       "service": "shop-web",
       "kind": "sse",
+      "endLine": 26,
       "reach": "alive",
       "from": "screen /desks"
     },
@@ -46,6 +48,7 @@
       "loc": "src/app/live-events.service.ts:24",
       "service": "shop-web",
       "kind": "sse",
+      "endLine": 27,
       "reach": "alive",
       "from": "screen /desks"
     },
@@ -56,6 +59,7 @@
       "loc": "src/app/order-notices.service.ts:20",
       "service": "shop-web",
       "kind": "sse",
+      "endLine": 22,
       "reach": "dead",
       "from": "none"
     }

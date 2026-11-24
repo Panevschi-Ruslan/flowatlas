@@ -14,6 +14,7 @@
       "loc": "src/desk/desk-watcher.service.ts:23",
       "service": "shop",
       "kind": "event",
+      "endLine": 29,
       "reach": "alive",
       "from": "event desk_alerts"
     },
@@ -24,6 +25,7 @@
       "loc": "src/notify/audit-feed.service.ts:23",
       "service": "shop",
       "kind": "event",
+      "endLine": 27,
       "reach": "alive",
       "from": "POST /desks/:param/close",
       "ways": 7
@@ -45,6 +47,7 @@
       "loc": "src/notify/notify.service.ts:24",
       "service": "shop",
       "kind": "event",
+      "endLine": 29,
       "reach": "alive",
       "from": "POST /desks/:param/close",
       "ways": 7

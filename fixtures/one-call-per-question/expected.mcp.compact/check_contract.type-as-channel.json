@@ -19,7 +19,7 @@
   "consumers": [
     {
       "id": "consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady",
-      "line": 16,
+      "line": "16-19",
       "kind": "event",
       "reach": "dead",
       "from": "POST /events/orders",

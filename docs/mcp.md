@@ -723,6 +723,23 @@ question is answered in the call that asked it.
     (`ways` is then a floor, and no `from` means none was met within it); rows
     past the answer's bound say nothing, and `left` says how many.
   `dead({id})` carries `from`, `ways`, `gap` and `behind` the same way.
+  - `confirm` on a `maybe` row (P393): how to settle it in one search,
+    `{ grep, repo }` - the name of the code an unread call could reach (the
+    row's own, or the code its chain stops at: a method's or a function's
+    name, a class's), to look for as a whole word (`grep -rnw`) in the
+    repository (the service) it is in. A hit other than its declaration is
+    the call the reading did not follow; none means nothing calls it by name.
+- **Where a row's code ends (P393).** A row naming a method, a function, a
+  class, a component or a handler, at `detail` 1 and up in every answer that
+  says reach and in `get_flow`'s tree, carries `endLine` beside `loc`, so a
+  Read goes straight to `line`-`endLine`. The graph records where a
+  declaration begins; its end is read from the checkout at answer time by the
+  brace count `get_source` cuts a symbol with (a brace closed inside the
+  parameter list, an inline type, does not end it), where the repository is
+  checked out here, the count met a brace and ended past the first line;
+  otherwise it is left out, never guessed. Compact, it goes into the line:
+  `line: "12-40"` (or `loc: "src/a.ts:12-40"` where the id does not hold the
+  file).
 - **Several inputs in one call.** `dead` takes `ids`, `find_symbol` and
   `search` take `queries`, `get_type` takes `types` and `who_calls` takes
   `symbols`, beside the single form, at most 20, the single one first and
@@ -952,7 +969,7 @@ pages, cursors, retries, literal lists, batch calls, migrations) are not rows;
 | Tool | Answers | Takes |
 |---|---|---|
 | `dead` | whether one node is dead, with what could make that wrong; on a class or a file, each way in it declares, judged (`waysIn`); or, without `id`, every row `flowatlas dead` lists, verdict first | `id` (or `ids`), or `service` and `kind` (`entries`, `channels`, `providers`, `methods`), `maxNodes`, `offset` |
-| `findings` | what looks broken between the services first, then every other finding, counted by kind with the top three of each, each with its precision; with `kind`, one kind ranked by reach | `kind` (`call-to-missing-route`, `field-never-sent`, `type-never-published`, `contract-break`, `unguarded-among-guarded`, `annotation-to-missing-route`, `env-not-set`, the protocol, settings, status and CORS kinds of P388 below, `n-plus-one`, `unguarded`, `one-ended-channel`, `rule`, or a finding's reason), `service`, `maxNodes`, `offset` |
+| `findings` | what looks broken between the services first, then every other finding, counted by kind with the top three of each, each with its precision; with `kind`, one kind ranked by reach | `kind` (`call-to-missing-route`, `field-never-sent`, `answer-field-never-returned`, `type-never-published`, `contract-break`, `unguarded-among-guarded`, `annotation-to-missing-route`, `env-not-set`, the protocol, settings, status and CORS kinds of P388 below, `n-plus-one`, `unguarded`, `one-ended-channel`, `rule`, or a finding's reason), `service`, `maxNodes`, `offset` |
 | `check_rules` | the architecture rules of the configuration (P114), checked over the graph: each rule's status (`held`, `broken`, `unchecked`), each violation with its two ends, where it crosses (`loc`), the edge kind, the weakest confidence, `heuristic` for a guess, the rule's note and `next` (`get_flow` on the way in it starts behind, `get_source` on the crossing), the rules that could not be checked (`rule-matches-nothing`) and how many an accept excused | `rule`, `service`, `maxNodes`, `offset` |
 
 `check_rules` calls the function `flowatlas rules` calls (the linker's
@@ -1033,6 +1050,7 @@ words), `fix` (the nearest fix) and `seenBy` (the ways in that meet it):
 |---|---|---|---|
 | `call-to-missing-route` | a request to a route the service it is sent to does not serve (a `target-route-not-found` row) | every route of that service was read: no row says a route, a mount or a prefix of it went unread, and no catch-all of it could answer | high |
 | `field-never-sent` | a field the receiving code reads that no sender sends, on a channel (type by type) or a request's body, with the field sent and never read it was likely renamed from (`likely renamed: deskNumber is sent, deskId is read`) | every sender's shape and every reader on the crossing was read (`check_contract` answers `complete`) | high |
+| `answer-field-never-returned` | a field of a route's answer a browser client reads (P391's `answerRead`) that the answer never holds, per request, placed where it is read, with the field returned and never read it was likely renamed from, else "return it, or stop reading it" (P393) | the route's handler declares an answer that is a shape read whole (a type, an inline object, a list's or a promise's element); where it is not (`any`, a value parsed from text), the request's reads are held back, one count per request | high |
 | `type-never-published` | a consumer choosing a type of message no publish on its channel sends, with the published type it was likely respelled from | every publish on the channel says the type it sends | high |
 | `contract-break` | the contracts report's errors and warnings | the two declarations | high at error, medium at warning |
 | `unguarded-among-guarded` | a route nothing guards while the routes beside it in its controller are guarded | `guardedSiblings`, the guarded routes beside it | medium |
@@ -1312,11 +1330,13 @@ and 20,854.
 
 **Where a method's requests land (P377).** An answer about one method says
 where the requests it sends land: `who_calls`' `target`, each `find_symbol`
-match, and `get_source`'s answer beside the code. `requests` lists each route
-a request is joined to, `{route, by}`, `by` the code handling the route (the
-controller method); `requestsUnjoined` the requests joined to no route, as
-written (`"POST ${apiUrl}/admin/:param/catalog/export"`); past eight,
-`requestsMore` counts the rest. The requests are the ones the method sends
+match, and `get_source`'s answer beside the code, in one list, `requests`
+(P393: it was three keys a model could confuse, `requests`,
+`requestsUnjoined` and `requestsMore`): each route a request is joined to,
+`{route, by}`, `by` the code handling the route (the controller method); each
+request joined to no route, as written, `{unjoined: "POST
+${apiUrl}/admin/:param/catalog/export"}`; past eight, a last row `{more: 3}`
+counting the rest. The requests are the ones the method sends
 itself and the ones the code it calls in its own service sends for it (a
 helper of its class, a base class's verb helper, a client wrapper function,
 two calls deep at most); a call into a class its class injects is that
@@ -1469,8 +1489,8 @@ window longer than the file holds says `short: true` and every row is `weak`.
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `who_emits` | everything that publishes on a channel, across every repository; with `type`, what publishes that type of message on it; with `field`, only the publishes that send that field | `channel` (required), `type`, `field`, `service`, `offset` |
-| `who_consumes` | everything that handles messages from it; empty means nothing does; with `type`, the code that selects that type of message, or why nothing does; with `field`, only the handlers that read that field, each with where | `channel` (required), `type`, `field`, `service`, `offset` |
+| `who_emits` | everything that publishes on a channel, across every repository; with `type`, what publishes that type of message on it; with `field`, only the publishes that send that field. A message type given as the channel (`ORDER_READY`) is answered on the channel carrying it, as with `type`, `carriedBy` naming it; on several, one answer each under `answers` (at most three) (P393) | `channel` (required), `type`, `field`, `service`, `offset` |
+| `who_consumes` | everything that handles messages from it; empty means nothing does; with `type`, the code that selects that type of message, or why nothing does; with `field`, only the handlers that read that field, each with where; a message type given as the channel, as `who_emits` takes it (P393) | `channel` (required), `type`, `field`, `service`, `offset` |
 | `get_type` | the structure of a type, with what it refers to expanded to a depth | `type` (required), `depth` |
 | `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it | `type` (required), `service`, `offset` |
 | `check_contract` | what one side of a crossing sends against what the other expects; on an entry, the fields of the body each piece of code on its path reads, the fields of its answer each client reads (`answer`), and what traffic carried into it against its code; on a channel or one type of message, the fields read and not sent and sent and never read | `edge` (a crossing, an entry id or a route said aloud), or `from` and `to`, or `channel` and `type`; `field` |

@@ -9,6 +9,7 @@
           "label": "ItemsClient.getHistory",
           "loc": "src/app/items.client.ts:16",
           "service": "market-web",
+          "endLine": 18,
           "reach": "alive",
           "from": "screen /history",
           "requests": [
@@ -31,6 +32,7 @@
           "label": "StaffBoardService.ackCall",
           "loc": "src/app/staff-board.service.ts:12",
           "service": "market-web",
+          "endLine": 14,
           "reach": "alive",
           "from": "screen /staff",
           "requests": [
@@ -54,6 +56,7 @@
           "loc": "src/app/shop-events.service.ts:22",
           "service": "market-web",
           "kind": "sse",
+          "endLine": 25,
           "reach": "alive",
           "from": "screen /history",
           "ways": 2
@@ -64,6 +67,7 @@
           "label": "ShopEventsService.connect",
           "loc": "src/app/shop-events.service.ts:19",
           "service": "market-web",
+          "endLine": 23,
           "reach": "alive",
           "from": "screen /history",
           "ways": 2,

@@ -6,6 +6,7 @@
       "label": "DeskOrderService.amendOrder",
       "loc": "src/app/desk-order.service.ts:11",
       "service": "shop-admin",
+      "endLine": 13,
       "reach": "alive",
       "from": "screen /desk",
       "requests": [

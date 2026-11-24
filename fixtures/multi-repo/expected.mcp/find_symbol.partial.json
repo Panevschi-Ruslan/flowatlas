@@ -6,6 +6,7 @@
       "label": "OrdersClient.fetchOne",
       "loc": "src/clients/orders.client.ts:32",
       "service": "gateway",
+      "endLine": 34,
       "reach": "alive",
       "from": "GET /orders/:param",
       "requests": [

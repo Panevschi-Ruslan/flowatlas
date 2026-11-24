@@ -1,11 +1,11 @@
 {
   "root": {
     "id": "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped",
-    "line": 17,
+    "line": "17-19",
     "children": [
       {
         "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.get",
-        "line": 23,
+        "line": "23-25",
         "edge": {
           "type": "calls",
           "params": [
@@ -16,7 +16,7 @@
         "children": [
           {
             "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.url",
-            "line": 18,
+            "line": "18-21",
             "edge": {
               "type": "calls",
               "params": [
@@ -27,7 +27,7 @@
             "children": [
               {
                 "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.resource",
-                "line": 16,
+                "line": "16-21",
                 "edge": {
                   "type": "calls",
                   "returns": "string"
@@ -53,7 +53,7 @@
             "children": [
               {
                 "id": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.grouped",
-                "line": 8,
+                "line": "8-11",
                 "edge": {
                   "type": "handles",
                   "params": [
@@ -64,7 +64,7 @@
                 "children": [
                   {
                     "id": "shop-api#src/catalog/catalog.service.ts:CatalogService.grouped",
-                    "line": 11,
+                    "line": "11-13",
                     "edge": {
                       "type": "calls",
                       "params": [

@@ -15,9 +15,9 @@
  *   retyped field, sends a field now invalid or omits one now required (or
  *   calls a route that is gone); `info` when none reads it, among the ones
  *   counted; `warning` where the value reaches one opaquely (spread,
- *   forwarded) or what it reads is not known - which is every response
- *   field today, since which fields a client reads of an answer is not read
- *   yet: said, never guessed;
+ *   forwarded) or what it reads is not known - a response field is judged
+ *   by what each request's client reads of the answer (P391, P393), and a
+ *   request no front-end reader followed is a warning: said, never guessed;
  * - the flows that prove it, way in -> client call -> route -> handler ->
  *   publish -> consumer, across repositories, for SARIF's codeFlows;
  * - a deploy order, and where on the head side it is placed, since a pull
@@ -41,7 +41,7 @@ import {
   type SpecUseContext,
   type SpecUseReader,
 } from '@flowatlas/linker';
-import { consumerReading, FORWARD_EDGES, readsField, shapeFields, topField, type Reading } from '@flowatlas/mcp';
+import { answerReadingOf, consumerReading, FORWARD_EDGES, readsField, shapeFields, topField, type Reading } from '@flowatlas/mcp';
 
 /** Both sides' graphs, open while the documents are compared. */
 export interface UseGraphs {
@@ -121,7 +121,13 @@ const partOf = (change: SpecChange): Part => {
 };
 
 /** The field under its part's prefix: `body.currency` is `currency`, `payload.label` is `label`. */
-const inner = (field: string | null, prefix: string): string => (field === null ? '' : field === prefix ? '' : field.startsWith(`${prefix}.`) ? field.slice(prefix.length + 1) : field);
+const inner = (field: string | null, prefix: string): string => {
+  if (field === null || field === prefix || field === `${prefix}[]`) return '';
+  if (field.startsWith(`${prefix}.`)) return field.slice(prefix.length + 1);
+  // A list's element (`response[].sku`): its fields, as the code reading each element names them (P393).
+  if (field.startsWith(`${prefix}[].`)) return field.slice(prefix.length + 3);
+  return field;
+};
 
 /** The node of an id on the side that ships, else the side it was joined on. */
 const either = (graphs: UseGraphs, id: string): { node: GraphNode; db: GraphDb } | undefined => {
@@ -150,11 +156,21 @@ const typeSent = (graphs: UseGraphs, producer: string): string | undefined => {
 };
 
 /**
- * What the client code reads of an answer, which is not read yet (P391 reads
- * it): every response change is then a warning where a caller exists, saying
- * so, and never an error or an info guessed.
+ * What the client code behind a request reads of its answer (P391: the
+ * front-end readers write it on each browser request), on the side the
+ * request is drawn on; undefined where no reader followed it (a server's
+ * request, or one whose client is not read): that caller is then a warning,
+ * said so, never an error or an info guessed.
  */
-const responseReading = (_graphs: UseGraphs, _caller: string): Reading | undefined => undefined;
+const responseReading = (graphs: UseGraphs, caller: string): (Reading & { files: Map<string, string>; db: GraphDb }) | undefined => {
+  const found = either(graphs, caller);
+  if (found === undefined) return undefined;
+  const reading = answerReadingOf(found.db, caller);
+  return reading.known ? { ...reading, db: found.db } : undefined;
+};
+
+/** A response field as a client's reads name it: a list's element is read at the list's path (`[].sku` is `sku`, `items[].sku` is `items.sku`). */
+const answerField = (field: string): string => field.replace(/\[\]/g, '').replace(/^\./, '');
 
 /** One consumer's verdict on a message change, from what it reads (P368). */
 const messageReader = (
@@ -207,19 +223,37 @@ const requestReader = (graphs: UseGraphs, change: SpecChange, caller: SpecChange
     : { ...at, how: 'sends', said: `sends ${code(field)}`, level: 'info' };
 };
 
-/** What the callers of a route do with a change to its answer: unknown until a client's reads of an answer are read. */
+/**
+ * What the callers of a route do with a change to its answer, from what each
+ * request's client was read to read of it (P391): a read of the field is an
+ * error placed on the reading code, a client that reads other fields only is
+ * info, one that hands the answer where it was not followed, or a request no
+ * reader followed, a warning.
+ */
 const responseReader = (graphs: UseGraphs, change: SpecChange, caller: SpecChange['callers'][number], widened: string[] | undefined): SpecUseReader => {
   const at = { id: caller.id, service: caller.service, ...placeOf(either(graphs, caller.id)?.node) };
-  const field = inner(change.field, 'response');
+  const field = answerField(inner(change.field, 'response'));
   const reading = responseReading(graphs, caller.id);
   if (reading === undefined) {
-    return { ...at, how: 'unknown', said: `which fields of the answer it reads is not read yet, so whether it reads ${code(field || 'the answer')} is not known`, level: 'warning' };
+    return { ...at, how: 'unknown', said: `which fields of the answer its client reads was not read, so whether it reads ${code(field || 'the answer')} is not known`, level: 'warning' };
   }
-  const read = reading.reads.find((row) => readsField(row.field, field));
-  if (read !== undefined) return { ...at, line: read.line, how: 'reads', said: `reads ${code(field)}, line ${read.line}`, level: widened === undefined ? 'error' : 'warning' };
-  return reading.unread.length > 0
-    ? { ...at, how: 'opaque', said: `hands the answer on whole (${reading.unread[0]?.why ?? 'not followed'})`, level: 'warning' }
-    : { ...at, how: 'ignores', said: `does not read ${code(field)}`, level: 'info' };
+  // A change to the whole answer (its type) is read by any read of it.
+  const read = reading.reads.find((row) => field === '' || readsField(row.field, field));
+  if (read !== undefined) {
+    const where = { ...at, ...placeOf(reading.db.node(read.id)), line: read.line };
+    const file = reading.files.get(`${read.field}|${read.id}|${read.line}`);
+    const place = { ...where, ...(file === undefined ? {} : { file }) };
+    const label = reading.db.node(read.id)?.label;
+    const said = `reads ${code(read.field)}${label === undefined ? '' : ` in ${label}`}, line ${read.line}${file === undefined ? '' : ` of ${file}`}`;
+    return widened === undefined
+      ? { ...place, how: 'reads', said, level: 'error' }
+      : { ...place, how: 'reads', said: `${said}; whether it handles ${widened.join(', ')} is not read`, level: 'warning' };
+  }
+  const opaque = reading.unread[0];
+  if (opaque !== undefined) {
+    return { ...at, line: opaque.line, how: 'opaque', said: `hands the answer on whole (${opaque.why}, line ${opaque.line}), so whether it reads ${code(field)} is not known`, level: 'warning' };
+  }
+  return { ...at, how: 'ignores', said: `does not read ${code(field)}`, level: 'info' };
 };
 
 /** Every consumer of a change and what it does with it, the loudest first. */

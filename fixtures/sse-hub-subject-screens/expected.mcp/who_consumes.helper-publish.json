@@ -16,6 +16,7 @@
       "kind": "event",
       "selectedIn": "OrderEventsController.receive",
       "via": "switch",
+      "endLine": 30,
       "reach": "dead",
       "from": "POST /events/orders",
       "throughDead": true

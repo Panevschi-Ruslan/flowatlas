@@ -19,6 +19,7 @@
  *   too where its `by`, the code handling it, is written in that file (P374),
  *   and a screen's `loc`, a line of its routing table, goes beside the `by`
  *   naming the component it shows, whose file is the one to read (P379);
+ *   `endLine` goes into what is left of it, `line: "12-40"` (P393);
  * - `label` when it is the id's tail, as written or said aloud (`GET /orders`
  *   beside `entry:shop:http:GET:/orders`);
  * - `kind` when the way in's id says it (`entry:<service>:<kind>:…`);
@@ -406,7 +407,10 @@ const compactObject = (given: Plain, depth: number, under: readonly string[], pa
   const holders = [...fullIds, ...metaIds(row), ...under];
   const inside = ids.length === 0 ? under : [...under, ...ids];
   const out: Plain = {};
+  // Whether `endLine` was said in `line` or `loc` already (P393).
+  let endSaid = false;
   for (const [key, value] of Object.entries(row)) {
+    if (key === 'endLine' && endSaid) continue;
     if (KEPT.has(key)) {
       out[key] = compactValue(value, depth + 1, inside, pass);
       continue;
@@ -429,7 +433,14 @@ const compactObject = (given: Plain, depth: number, under: readonly string[], pa
         if (typeof row.by === 'string' && ids.some((id) => kindOfId(id) === 'screen')) continue;
         // A way in's file is said by the code handling it, where that is written in the same file (P374).
         const left = locBesideAll(typeof row.by === 'string' ? [...ids, row.by] : ids, value);
-        if (left !== undefined) Object.assign(out, left);
+        // Where the declaration ends goes into the same field (P393): `line: "12-40"`, `loc: "src/a.ts:12-40"`.
+        const end = typeof row.endLine === 'number' ? row.endLine : undefined;
+        if (left !== undefined && end !== undefined) {
+          if ('line' in left) out.line = `${left.line}-${end}`;
+          else if (/:\d+$/.test(left.loc)) out.loc = `${left.loc}-${end}`;
+          else Object.assign(out, left);
+          if ('line' in left || /:\d+$/.test(left.loc)) endSaid = true;
+        } else if (left !== undefined) Object.assign(out, left);
         continue;
       }
       if (saidByIds(key, value, ids)) continue;
@@ -490,7 +501,8 @@ export const compactOutputSchema = <T>(schema: T): T => {
     const out: Plain = {};
     for (const [name, value] of Object.entries(properties)) {
       out[name] = relax(value);
-      if (name === 'loc' && !('line' in properties)) out.line = { type: 'integer' };
+      // A line, or a line range where the declaration's end was read (`"12-40"`, P393).
+      if (name === 'loc' && !('line' in properties)) out.line = { type: ['integer', 'string'] };
     }
     return out;
   };

@@ -41,6 +41,7 @@
       "loc": "src/events/events.controller.ts:10",
       "service": "ops-bot",
       "kind": "event",
+      "endLine": 21,
       "reach": "dead",
       "from": "POST /events/orders",
       "throughDead": true,

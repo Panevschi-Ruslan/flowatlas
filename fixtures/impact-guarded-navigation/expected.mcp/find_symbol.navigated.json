@@ -9,6 +9,7 @@
           "label": "DashboardComponent.loadData",
           "loc": "src/app/dashboard.component.ts:20",
           "service": "store-web",
+          "endLine": 22,
           "reach": "alive",
           "from": "screen /dashboard"
         }
@@ -25,6 +26,7 @@
           "label": "TicketBoardComponent.routeAction",
           "loc": "src/app/ticket-board.component.ts:20",
           "service": "store-web",
+          "endLine": 22,
           "reach": "alive",
           "from": "screen /board"
         }
@@ -42,6 +44,7 @@
           "loc": "src/store-bot.ts:22",
           "service": "store-bot",
           "kind": "message",
+          "endLine": 28,
           "reach": "alive",
           "from": "event shop:*:closed",
           "ways": 3
@@ -52,6 +55,7 @@
           "label": "StoreBot.onStatusEvent",
           "loc": "src/store-bot.ts:32",
           "service": "store-bot",
+          "endLine": 35,
           "reach": "alive",
           "from": "event shop:*:closed",
           "ways": 3

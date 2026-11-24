@@ -68,6 +68,24 @@ describe('which fields of an answer each client reads', () => {
     expect(answer.answer.unused).toEqual([]);
   });
 
+  it('lists a field a client reads and the route never returns as a finding, and holds back a route whose answer is no shape read (P393)', async () => {
+    const answer = await call('findings', { kind: 'answer-field-never-returned' });
+    expect(answer.rows.map((row: { id: string; message: string }) => [row.id, row.message.split('`')[1]])).toEqual([
+      ['shop-app#src/ProfileCard.tsx:ProfileCard', 'nickname'],
+      ['shop-web#src/app/orders.component.ts:OrdersComponent', 'discount'],
+    ]);
+    expect(answer.rows[0]).toMatchObject({
+      precision: 'high',
+      from: 'ui_api_call:shop-app#src/api.ts:23:26',
+      to: 'entry:shop-api:http:GET:/api/profile',
+      loc: 'src/ProfileCard.tsx:17',
+      next: 'check_contract({from: "ui_api_call:shop-app#src/api.ts:23:26", to: "entry:shop-api:http:GET:/api/profile"})',
+    });
+    expect(answer.rows[0].message).toContain('answers Profile (name, avatarUrl)');
+    // GET /api/settings answers what JSON.parse gives: the theme its badge reads is not compared, and said so.
+    expect(answer.heldBack['answer-field-never-returned']).toEqual({ count: 1, why: expect.stringContaining('what GET /api/settings answers is not a shape read') });
+  });
+
   it('answers one request into the route with its own reads', async () => {
     const answer = await call('check_contract', { from: 'ui_api_call:shop-app#src/api.ts:23:26', to: 'entry:shop-api:http:GET:/api/profile' });
     expect(answer.answer.missing.map((row: { field: string }) => row.field)).toEqual(['nickname']);

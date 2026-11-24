@@ -19,7 +19,11 @@
         "sites": 2,
         "unselected": "no code that runs selects QUOTA_WARNING on space:*:events: only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types (ActivityFeed.onMessage, AuditTrail.record and 3 more); StreamRelay.forward passes every type on without choosing, and what takes them past it is not read",
         "reach": "maybe",
-        "from": "POST /spaces/:param/quota"
+        "from": "POST /spaces/:param/quota",
+        "confirm": {
+          "grep": "QUOTA_WARNING",
+          "repo": "docs-api"
+        }
       }
     ],
     "gaps": [

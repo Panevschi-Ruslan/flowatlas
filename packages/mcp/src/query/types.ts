@@ -13,6 +13,8 @@ export interface CompactNode {
   label: string;
   /** `file:line`, from L1. */
   loc?: string;
+  /** Where its declaration ends, read from the checkout, where it holds a body (P393). */
+  endLine?: number;
   service?: string;
   kind?: string;
   /** From L2. */
@@ -32,6 +34,8 @@ export interface CompactNode {
   /** On a `maybe` row: the unread call that could reach it, and the code its chain stops at (P367). */
   gap?: string;
   behind?: string;
+  /** On a `maybe` row: the name to search for and the repository to search, to confirm it (P393). */
+  confirm?: { grep: string; repo: string };
 }
 
 /** How one node was reached. */

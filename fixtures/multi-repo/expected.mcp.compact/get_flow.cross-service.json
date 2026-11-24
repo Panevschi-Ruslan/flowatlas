@@ -5,7 +5,7 @@
     "children": [
       {
         "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
-        "line": 30,
+        "line": "30-33",
         "edge": {
           "type": "handles",
           "params": [
@@ -16,7 +16,7 @@
         "children": [
           {
             "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
-            "line": 32,
+            "line": "32-34",
             "edge": {
               "type": "calls",
               "params": [
@@ -45,7 +45,7 @@
                     "children": [
                       {
                         "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
-                        "line": 25,
+                        "line": "25-28",
                         "edge": {
                           "type": "handles",
                           "params": [
@@ -56,7 +56,7 @@
                         "children": [
                           {
                             "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
-                            "line": 25,
+                            "line": "25-28",
                             "edge": {
                               "type": "calls",
                               "params": [

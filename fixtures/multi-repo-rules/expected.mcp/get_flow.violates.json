@@ -6,7 +6,8 @@
       "label": "InvoicesConsumer.onOrderCreated",
       "loc": "src/invoices/invoices.consumer.ts:17",
       "service": "billing",
-      "kind": "event"
+      "kind": "event",
+      "endLine": 21
     },
     "children": [
       {
@@ -14,7 +15,8 @@
           "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
           "type": "method",
           "label": "InvoicesConsumer.onOrderCreated",
-          "loc": "src/invoices/invoices.consumer.ts:17"
+          "loc": "src/invoices/invoices.consumer.ts:17",
+          "endLine": 21
         },
         "edge": {
           "type": "handles",
@@ -30,7 +32,8 @@
               "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
               "type": "method",
               "label": "InvoicesService.create",
-              "loc": "src/invoices/invoices.service.ts:17"
+              "loc": "src/invoices/invoices.service.ts:17",
+              "endLine": 26
             },
             "edge": {
               "type": "calls",
@@ -47,7 +50,8 @@
               "id": "billing#src/invoices/invoices.service.ts:InvoicesService.markInvoiced",
               "type": "method",
               "label": "InvoicesService.markInvoiced",
-              "loc": "src/invoices/invoices.service.ts:32"
+              "loc": "src/invoices/invoices.service.ts:32",
+              "endLine": 34
             },
             "edge": {
               "type": "calls",

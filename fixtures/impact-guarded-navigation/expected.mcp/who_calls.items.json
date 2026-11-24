@@ -15,6 +15,7 @@
         "type": "method",
         "label": "ItemsController.list",
         "loc": "src/items.controller.ts:8",
+        "endLine": 11,
         "reach": "alive",
         "from": "GET /api/shops/items"
       },

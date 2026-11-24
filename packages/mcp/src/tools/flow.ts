@@ -6,6 +6,7 @@ import { isResolved, resolveSymbol } from '../query/entry-ref.js';
 import { findPath, type PathResult } from '../query/path.js';
 import { withDocs } from '../query/docs.js';
 import { buildFlowTree, type FlowResult } from '../query/flow.js';
+import { endLineReader, markEndLines } from '../query/end-lines.js';
 import { failuresSeenRef, markFailsSeen } from '../query/fails.js';
 import { failuresSeen, figuresOf, loadObservedCounts, markObserved, nodeAmbiguous, nodeRow, sampledIn } from '../query/observed.js';
 import type { FlowNode } from '../query/types.js';
@@ -240,6 +241,8 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
           detail,
         });
         markViolations(flow.root, violatedHops(rulesReportOf(db, ctx)));
+        // Where each step's code ends, so a Read goes straight to it (P393).
+        markEndLines(flow.root, (id) => db.node(id), endLineReader(ctx.handle));
         const counts = loadObservedCounts(ctx.handle.path);
         if (counts !== undefined) {
           const seen = nodeRow(counts, ref.id);

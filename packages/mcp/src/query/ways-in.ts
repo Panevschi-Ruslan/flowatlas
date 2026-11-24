@@ -21,6 +21,7 @@ import {
 import type { DbHandle } from './db.js';
 import { REVERSE_EDGES } from './flow.js';
 import { loadObserved } from './observed.js';
+import { endLineReader, withEndLine, type EndLineSource } from './end-lines.js';
 
 /**
  * Whether a row's code runs, and where it is reached from (P364), said on the
@@ -74,9 +75,23 @@ export interface RowReach {
   gap?: string;
   /** On a `maybe` row: the code its chain stops at, or why the row itself may still be called. */
   behind?: string;
+  /**
+   * On a `maybe` row (P393): how to confirm it, a whole-word search (`grep -rnw`) for the name of the code an
+   * unread call could reach, in the repository (service) it is in; a hit other than its declaration is a call.
+   */
+  confirm?: { grep: string; repo: string };
   /** Code calls it, but every way in that reaches it is judged dead (P381): its `reach` is `dead`. */
   throughDead?: true;
 }
+
+/**
+ * The search that settles a `maybe` row (P393): the name the code is called by (a method's or a function's own
+ * name, a class's), in the repository it is in. None for a name that is not a plain identifier.
+ */
+export const confirmOf = (node: Pick<GraphNode, 'label' | 'repo'>): { grep: string; repo: string } | undefined => {
+  const name = node.label.replace(/\(.*$/, '').split(/[.#]/).pop()?.trim() ?? '';
+  return /^[A-Za-z_$][\w$]*$/.test(name) && node.repo !== '' ? { grep: name, repo: node.repo } : undefined;
+};
 
 /** What `from` says on a `maybe` row when no way in beyond the unread call is known. */
 export const FROM_BEHIND = 'behind';
@@ -357,7 +372,9 @@ export interface ReachReader {
  * of the whole graph, each row is computed once, and the bounds above hold
  * however many rows the answer has.
  */
-export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { path?: string }, detail: number): ReachReader => {
+export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { path?: string } & EndLineSource, detail: number): ReachReader => {
+  // Where each row's code ends, read from the checkout (P393).
+  const endOf = endLineReader(handle);
   const judge = deadJudge(db, db.report(), deadOptionsOf(handle));
   const graph = readOnce(db);
   const verdicts = new Map<string, DeadAnswer | undefined>();
@@ -706,20 +723,26 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
           ...(reach !== 'maybe' || maybe?.gaps === undefined ? {} : { gap: maybe.gaps.gap }),
           ...(reach !== 'maybe' || behind === undefined ? {} : { behind }),
         };
+        // How to settle it (P393): the name of the code an unread call could reach, to look for in its repository.
+        const confirm = row.reach === 'maybe' ? confirmOf(maybe?.top ?? node) : undefined;
+        if (confirm !== undefined) row = { ...row, confirm };
       }
     }
     // Code nothing names is reached from nowhere, though what holds it is shown somewhere (P370).
     if (row.reach === 'unreached' && judgedReach?.answer.evidence.unreferenced === true) row = { reach: 'unreached', from: 'none' };
     // A maybe nothing was walked back from (a way in, a walk cut short) says why `dead` says it may be called; a walked
     // one says it with `from`, and with `gap` and `behind` where an unread call or another chain end was met.
-    if (row.reach === 'maybe' && row.from === undefined && judgedReach !== undefined) row = { ...row, behind: judgedReach.answer.reason };
+    if (row.reach === 'maybe' && row.from === undefined && judgedReach !== undefined) {
+      const confirm = row.confirm ?? (node.type === 'entry' ? undefined : confirmOf(node));
+      row = { ...row, behind: judgedReach.answer.reason, ...(confirm === undefined ? {} : { confirm }) };
+    }
     done.set(id, row);
     return row;
   };
 
   return {
     of,
-    annotate: (row) => (detail < 1 || row.id === undefined ? (row as typeof row & RowReach) : { ...row, ...of(row.id) }),
+    annotate: (row) => (detail < 1 || row.id === undefined ? (row as typeof row & RowReach) : { ...withEndLine(row, graph.node(row.id), endOf), ...of(row.id) }),
     waysIn: (starts, limit) => walk(starts, limit, true, true, true),
     across: (from, limit) => walk([from], limit, true),
     maybeEnd: (node) => {
@@ -738,11 +761,13 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
 };
 
 /** Rows of a tree, nearest first: each row's node, then its children's, breadth first. */
-export const annotateTree = <T extends { node: { id: string; ref?: true }; children: T[] }>(roots: readonly T[], reader: ReachReader): void => {
+export const annotateTree = <T extends { node: { id: string; ref?: true; loc?: string }; children: T[] }>(roots: readonly T[], reader: ReachReader): void => {
   const queue = [...roots];
   while (queue.length > 0) {
     const item = queue.shift()!;
-    if (item.node.ref !== true) Object.assign(item.node, reader.annotate({ id: item.node.id }));
+    // The row's `loc` goes with it, so its end line is said beside it (P393).
+    const { id, loc } = item.node;
+    if (item.node.ref !== true) Object.assign(item.node, reader.annotate(loc === undefined ? { id } : { id, loc }));
     queue.push(...item.children);
   }
 };

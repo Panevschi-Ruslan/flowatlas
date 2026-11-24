@@ -26,10 +26,14 @@
     },
     {
       "id": "ops-bot#src/ops-bot.ts:OpsBot.handleStatus",
-      "line": 29,
+      "line": "29-31",
       "reach": "maybe",
       "from": "behind",
       "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver",
+      "confirm": {
+        "grep": "handleStatus",
+        "repo": "ops-bot"
+      },
       "via": "PATCH /orders/status (shop-api)"
     }
   ],

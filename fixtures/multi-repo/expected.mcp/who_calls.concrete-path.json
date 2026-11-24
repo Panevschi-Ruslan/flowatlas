@@ -36,6 +36,7 @@
                 "type": "method",
                 "label": "OrdersApiService.order",
                 "loc": "src/app/orders-api.service.ts:20",
+                "endLine": 22,
                 "reach": "unreached",
                 "from": "none"
               },
@@ -70,6 +71,7 @@
                 "type": "method",
                 "label": "OrdersApiService.one",
                 "loc": "src/app/orders-api.service.ts:72",
+                "endLine": 74,
                 "reach": "unreached",
                 "from": "none"
               },
@@ -124,6 +126,7 @@
                 "type": "method",
                 "label": "InvoicesService.create",
                 "loc": "src/invoices/invoices.service.ts:30",
+                "endLine": 43,
                 "reach": "alive",
                 "from": "consumer invoice.requested",
                 "ways": 4
@@ -158,6 +161,7 @@
                 "type": "method",
                 "label": "OrdersClient.fetchOne",
                 "loc": "src/clients/orders.client.ts:32",
+                "endLine": 34,
                 "reach": "alive",
                 "from": "GET /orders/:param"
               },

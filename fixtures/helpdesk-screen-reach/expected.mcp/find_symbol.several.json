@@ -9,6 +9,7 @@
           "label": "onTicketEvent",
           "loc": "src/screens/TicketScreen.tsx:7",
           "service": "console",
+          "endLine": 10,
           "reach": "alive",
           "from": "screen /tickets/:param"
         },
@@ -35,8 +36,13 @@
           "label": "TicketsService.reopen",
           "loc": "src/tickets/tickets.service.ts:22",
           "service": "desk-api",
+          "endLine": 24,
           "reach": "maybe",
-          "from": "behind"
+          "from": "behind",
+          "confirm": {
+            "grep": "reopen",
+            "repo": "desk-api"
+          }
         },
         {
           "id": "channel:desk:*:events#TICKET_REOPENED",
@@ -47,7 +53,11 @@
           "kind": "message_type",
           "reach": "maybe",
           "from": "behind",
-          "behind": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen"
+          "behind": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen",
+          "confirm": {
+            "grep": "reopen",
+            "repo": "desk-api"
+          }
         }
       ],
       "total": 2,

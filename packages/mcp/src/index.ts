@@ -81,6 +81,8 @@ export { endOfDeclaration } from './tools/source.js';
 // What each end of a crossing reads and sends (P368), for the usage verdicts `diff --spec` gives (P390).
 export { consumerReading, readingOf, readsField, shapeFields, topField } from './query/fields.js';
 export type { Reading } from './query/fields.js';
+// What each client reads of a route's answer (P391), for the same verdicts on a response field (P393).
+export { answerReadingOf } from './query/answer-fields.js';
 // The chain an answer hands on (P63) and the same chain as Markdown (P67): pure,
 // so a page can render the words the describe_for_prompt tool answers with.
 export { hintsFor, nextFor, withNext, MAX_NEXT } from './query/next.js';

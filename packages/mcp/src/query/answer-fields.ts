@@ -30,8 +30,12 @@ export interface AnswerRead {
   call?: string;
 }
 
-/** What one request's client reads of its answer, or that it was not read. */
-const readingOf = (db: GraphDb, call: string): Reading & { files: Map<string, string> } => {
+/**
+ * What one request's client reads of its answer, or that it was not read
+ * (`known: false`, a request no front-end reader followed); `files` keys a
+ * read written in a template (`field|id|line`) to that template.
+ */
+export const answerReadingOf = (db: GraphDb, call: string): Reading & { files: Map<string, string> } => {
   const meta = db.node(call)?.meta;
   const reads = meta?.[ANSWER_READ_META];
   const files = new Map<string, string>();
@@ -106,7 +110,7 @@ export const answerOf = (
     .filter((id) => only === undefined || id === only)
     .sort();
   if (callers.length === 0) return undefined;
-  const readings = callers.map((id) => ({ id, reading: readingOf(db, id) }));
+  const readings = callers.map((id) => ({ id, reading: answerReadingOf(db, id) }));
   // No client reads anything of the answer, nor hands it on: there is nothing to say about it.
   if (readings.every((each) => each.reading.reads.length === 0 && each.reading.unread.length === 0)) return undefined;
   const left: string[] = [];

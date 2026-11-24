@@ -16,6 +16,7 @@
       "kind": "sse",
       "selectedIn": "AlertsBadgeComponent.ngOnInit",
       "via": "if",
+      "endLine": 20,
       "reach": "alive",
       "from": "POST /boards/:param/cards/:param/archive (boards-api)",
       "ways": 8
@@ -29,6 +30,7 @@
       "kind": "sse",
       "selectedIn": "ArchivePanelComponent.ngOnInit",
       "via": "if",
+      "endLine": 28,
       "reach": "alive",
       "from": "POST /boards/:param/cards/:param/archive (boards-api)",
       "ways": 8
@@ -41,6 +43,7 @@
       "service": "web",
       "kind": "sse",
       "via": "if",
+      "endLine": 15,
       "reach": "alive",
       "from": "POST /boards/:param/cards/:param/archive (boards-api)",
       "ways": 3

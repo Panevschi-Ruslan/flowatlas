@@ -7,7 +7,11 @@
     "service": "storefront",
     "reach": "maybe",
     "from": "behind",
-    "gap": "gap:storefront|src/jobs/reminder.job.ts|di-type-unresolved"
+    "gap": "gap:storefront|src/jobs/reminder.job.ts|di-type-unresolved",
+    "confirm": {
+      "grep": "start",
+      "repo": "storefront"
+    }
   },
   "topOfChain": true,
   "gapsInFile": 2,

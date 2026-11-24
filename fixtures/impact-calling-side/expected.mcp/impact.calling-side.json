@@ -46,9 +46,14 @@
       "label": "OpsBot.handleStatus",
       "loc": "src/ops-bot.ts:29",
       "service": "ops-bot",
+      "endLine": 31,
       "reach": "maybe",
       "from": "behind",
       "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver",
+      "confirm": {
+        "grep": "handleStatus",
+        "repo": "ops-bot"
+      },
       "via": "PATCH /orders/status (shop-api)"
     }
   ],

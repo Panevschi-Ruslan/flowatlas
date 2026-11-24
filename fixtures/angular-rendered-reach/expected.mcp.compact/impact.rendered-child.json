@@ -20,10 +20,14 @@
     },
     {
       "id": "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey",
-      "line": 21,
+      "line": "21-23",
       "reach": "maybe",
       "from": "behind",
       "gap": "gap:catalog-web|src/app/items-lookup.service.ts|navigation-unresolved",
+      "confirm": {
+        "grep": "byKey",
+        "repo": "catalog-web"
+      },
       "via": "GET /items/:param (catalog-api)"
     }
   ],

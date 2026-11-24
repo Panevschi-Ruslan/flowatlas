@@ -7,7 +7,7 @@
   "consumers": [
     {
       "id": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
-      "line": 29,
+      "line": "29-31",
       "kind": "sse",
       "selectedIn": "BoardPageComponent.ngOnInit",
       "via": "filter",
@@ -17,7 +17,7 @@
     },
     {
       "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
-      "line": 32,
+      "line": "32-34",
       "kind": "sse",
       "selectedIn": "CardTimelineComponent.ngOnInit",
       "via": "if",
@@ -27,7 +27,7 @@
     },
     {
       "id": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
-      "line": 13,
+      "line": "13-15",
       "kind": "sse",
       "via": "if",
       "reach": "alive",

@@ -16,6 +16,7 @@
       "kind": "event",
       "selectedIn": "DeskWatcher.onModuleInit",
       "via": "if",
+      "endLine": 34,
       "reach": "alive",
       "from": "event desk_alerts"
     }

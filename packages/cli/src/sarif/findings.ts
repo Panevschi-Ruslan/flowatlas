@@ -24,6 +24,10 @@ const FINDING_HELP: Readonly<Record<string, readonly [short: string, help: strin
     'field read that no sender sends',
     'The receiving code reads a field no sender on the crossing sends: usually a field renamed on one side. Send it, or read the field the sender names.',
   ],
+  'answer-field-never-returned': [
+    'field of an answer read that the route never returns',
+    "The client reads a field of a route's answer that the answer's declared shape does not hold: usually a field renamed on one side. Return it, or read the field the route answers.",
+  ],
   'type-never-published': [
     'type of message handled that nothing publishes',
     'Every publish on the channel says the type it sends, and none sends this one: the handler waits for a message that never comes. Correct the type on one side.',

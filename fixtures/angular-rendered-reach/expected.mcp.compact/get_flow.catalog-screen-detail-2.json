@@ -12,7 +12,7 @@
       {
         "id": "catalog-web#src/app/catalog-page.component.ts:CatalogPageComponent",
         "type": "ui_component",
-        "line": 4,
+        "line": "4-11",
         "kind": "standalone",
         "meta": {
           "signature": {
@@ -27,7 +27,7 @@
           {
             "id": "catalog-web#src/app/item-card.component.ts:ItemCardComponent",
             "type": "ui_component",
-            "line": 12,
+            "line": "12-27",
             "kind": "standalone",
             "meta": {
               "signature": {

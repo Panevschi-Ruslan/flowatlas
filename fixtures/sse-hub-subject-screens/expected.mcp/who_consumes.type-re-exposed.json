@@ -16,6 +16,7 @@
       "kind": "sse",
       "selectedIn": "BoardPageComponent.ngOnInit",
       "via": "filter",
+      "endLine": 31,
       "reach": "alive",
       "from": "POST /boards/:param/cards (boards-api)",
       "ways": 8
@@ -29,6 +30,7 @@
       "kind": "sse",
       "selectedIn": "CardTimelineComponent.ngOnInit",
       "via": "if",
+      "endLine": 30,
       "reach": "alive",
       "from": "POST /boards/:param/cards (boards-api)",
       "ways": 8

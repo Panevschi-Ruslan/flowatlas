@@ -15,6 +15,7 @@
       "service": "web",
       "kind": "sse",
       "via": "if",
+      "endLine": 15,
       "reach": "alive",
       "from": "POST /boards/:param/cards/:param/archive (boards-api)",
       "ways": 3

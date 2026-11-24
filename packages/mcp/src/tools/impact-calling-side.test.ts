@@ -79,7 +79,16 @@ describe('impact lists every way in that could break, in one call', () => {
   it('keeps a row its id, service and line at detail 1 when compact, the crossing and the reach beside them', async () => {
     const response = (await client.callTool({ name: 'impact', arguments: { symbol: TARGET } })) as { content: Array<{ text: string }> };
     const compact = JSON.parse(response.content[0]!.text);
-    expect(compact.entries[3]).toEqual({ id: HANDLER, line: 29, reach: 'maybe', from: 'behind', gap: GAP, via: 'PATCH /orders/status (shop-api)' });
+    // Where the method ends goes beside its line, and how to confirm the maybe beside it (P393).
+    expect(compact.entries[3]).toEqual({
+      id: HANDLER,
+      line: expect.stringMatching(/^29-\d+$/),
+      reach: 'maybe',
+      from: 'behind',
+      gap: GAP,
+      confirm: { grep: 'handleStatus', repo: 'ops-bot' },
+      via: 'PATCH /orders/status (shop-api)',
+    });
   });
 
   it('pages the ways in and the maybe rows as one list', async () => {

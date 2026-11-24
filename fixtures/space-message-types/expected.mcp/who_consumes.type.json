@@ -16,6 +16,7 @@
       "kind": "event",
       "selectedIn": "AuditTrail.record",
       "via": "map",
+      "endLine": 36,
       "reach": "alive",
       "from": "POST /spaces/:param/members (docs-api)"
     },
@@ -28,6 +29,7 @@
       "kind": "event",
       "selectedIn": "SpaceEventsDispatcher.dispatch",
       "via": "switch",
+      "endLine": 14,
       "reach": "alive",
       "from": "event space:*:events"
     },
@@ -40,6 +42,7 @@
       "kind": "event",
       "selectedIn": "RegistryDispatcher.route",
       "via": "decorator",
+      "endLine": 16,
       "reach": "alive",
       "from": "POST /spaces/:param/members (docs-api)"
     }

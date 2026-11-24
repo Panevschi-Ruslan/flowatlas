@@ -28,3 +28,9 @@ export interface ItemChanged {
   itemId: string;
   name: string;
 }
+
+/** One row of `GET /items`: the thumbnail is no longer sent. */
+export interface ItemRow {
+  id: string;
+  name: string;
+}
