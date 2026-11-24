@@ -3,10 +3,10 @@
     "call-to-missing-route": 1,
     "field-never-sent": 2,
     "type-never-published": 1,
-    "unguarded-among-guarded": 1,
     "annotation-to-missing-route": 1,
-    "unguarded": 1,
-    "message-type-unselected": 1
+    "unguarded-among-guarded": 1,
+    "message-type-unselected": 1,
+    "unguarded": 1
   },
   "top": {
     "call-to-missing-route": [
@@ -78,6 +78,19 @@
         "next": "who_emits({channel: \"channel:catalog_events\"})"
       }
     ],
+    "annotation-to-missing-route": [
+      {
+        "kind": "annotation-to-missing-route",
+        "id": "http_out:storefront#src/catalog.client.ts:40:34",
+        "to": "catalog-api",
+        "message": "@CallsService points at GET /products/:id/reviews, which catalog-api does not serve",
+        "precision": "high",
+        "evidence": "every route of the service the annotation names was read: no address left partly unread, no catch-all",
+        "fix": "the nearest route: GET /products/:param (one segment off: reviews added)",
+        "rank": 1,
+        "next": "get_source({symbol: \"http_out:storefront#src/catalog.client.ts:40:34\"})"
+      }
+    ],
     "unguarded-among-guarded": [
       {
         "kind": "unguarded-among-guarded",
@@ -96,17 +109,14 @@
         "next": "get_flow({entry: \"entry:catalog-api:http:DELETE:/products/:param\"})"
       }
     ],
-    "annotation-to-missing-route": [
+    "message-type-unselected": [
       {
-        "kind": "annotation-to-missing-route",
-        "id": "http_out:storefront#src/catalog.client.ts:40:34",
-        "to": "catalog-api",
-        "message": "@CallsService points at GET /products/:id/reviews, which catalog-api does not serve",
-        "precision": "high",
-        "evidence": "every route of the service the annotation names was read: no address left partly unread, no catch-all",
-        "fix": "the nearest route: GET /products/:param (one segment off: reviews added)",
+        "kind": "message-type-unselected",
+        "id": "producer:catalog-api#src/products/products.service.ts:34:11",
+        "message": "no code that runs selects LISTING_CANCELLED on catalog_events: 1 consumer chooses other types (CatalogEventsService.onCatalogEvent)",
+        "precision": "medium",
         "rank": 1,
-        "next": "get_source({symbol: \"http_out:storefront#src/catalog.client.ts:40:34\"})"
+        "next": "get_source({symbol: \"producer:catalog-api#src/products/products.service.ts:34:11\"})"
       }
     ],
     "unguarded": [
@@ -124,16 +134,6 @@
           "services": 1
         },
         "next": "get_flow({entry: \"entry:catalog-api:http:GET:/stock/:param\"})"
-      }
-    ],
-    "message-type-unselected": [
-      {
-        "kind": "message-type-unselected",
-        "id": "producer:catalog-api#src/products/products.service.ts:34:11",
-        "message": "no code that runs selects LISTING_CANCELLED on catalog_events: 1 consumer chooses other types (CatalogEventsService.onCatalogEvent)",
-        "precision": "medium",
-        "rank": 1,
-        "next": "get_source({symbol: \"producer:catalog-api#src/products/products.service.ts:34:11\"})"
       }
     ]
   },

@@ -1,8 +1,8 @@
 {
   "counts": {
     "call-to-missing-route": 2,
-    "unguarded": 4,
-    "one-ended-channel": 2
+    "one-ended-channel": 2,
+    "unguarded": 4
   },
   "top": {
     "call-to-missing-route": [
@@ -39,6 +39,34 @@
         "fix": "the nearest route: GET /orders/:param (one segment off: receipt added)",
         "rank": 2,
         "next": "get_source({symbol: \"ui_api_call:web#src/app/orders-api.service.ts:26:12\"})"
+      }
+    ],
+    "one-ended-channel": [
+      {
+        "kind": "one-ended-channel",
+        "id": "channel:invoice.requested",
+        "service": "billing",
+        "loc": "src/invoices/invoices.consumer.ts:28",
+        "message": "no producer in any repo",
+        "precision": "medium",
+        "rank": 1,
+        "reach": {
+          "ends": 1
+        },
+        "next": "who_consumes({channel: \"channel:invoice.requested\"})"
+      },
+      {
+        "kind": "one-ended-channel",
+        "id": "channel:order.archived",
+        "service": "orders",
+        "loc": "src/orders/orders.service.ts:61",
+        "message": "no consumer in any repo",
+        "precision": "medium",
+        "rank": 2,
+        "reach": {
+          "ends": 1
+        },
+        "next": "who_emits({channel: \"channel:order.archived\"})"
       }
     ],
     "unguarded": [
@@ -87,34 +115,6 @@
           "reads": 1
         },
         "next": "get_flow({entry: \"entry:orders:http:GET:/orders/latest\"})"
-      }
-    ],
-    "one-ended-channel": [
-      {
-        "kind": "one-ended-channel",
-        "id": "channel:invoice.requested",
-        "service": "billing",
-        "loc": "src/invoices/invoices.consumer.ts:28",
-        "message": "no producer in any repo",
-        "precision": "medium",
-        "rank": 1,
-        "reach": {
-          "ends": 1
-        },
-        "next": "who_consumes({channel: \"channel:invoice.requested\"})"
-      },
-      {
-        "kind": "one-ended-channel",
-        "id": "channel:order.archived",
-        "service": "orders",
-        "loc": "src/orders/orders.service.ts:61",
-        "message": "no consumer in any repo",
-        "precision": "medium",
-        "rank": 2,
-        "reach": {
-          "ends": 1
-        },
-        "next": "who_emits({channel: \"channel:order.archived\"})"
       }
     ]
   },

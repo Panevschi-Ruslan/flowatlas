@@ -494,7 +494,7 @@
                   "params": [
                     {
                       "name": "product",
-                      "type": "{\u202622 fields}"
+                      "type": "{…22 fields}"
                     }
                   ],
                   "returns": "string"
@@ -1864,9 +1864,9 @@
       ],
       "expect": {
         "says": [
-          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { \u2026 }",
-          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { \u2026 }",
-          "48    listNotes(@Param('orderId') orderId: string): string[] { \u2026 }",
+          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { … }",
+          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { … }",
+          "48    listNotes(@Param('orderId') orderId: string): string[] { … }",
           "whole: true"
         ],
         "saysNot": [
@@ -2895,13 +2895,6 @@
       "complete": true,
       "calls": 1
     },
-    "findings.deployment-settings": {
-      "chars": 5272,
-      "tokens": 1318,
-      "rows": 12,
-      "complete": null,
-      "calls": 1
-    },
     "who_calls.service-picks": {
       "chars": 1718,
       "tokens": 430,
@@ -3092,8 +3085,8 @@
       "calls": 1
     },
     "findings.route-order": {
-      "chars": 2708,
-      "tokens": 677,
+      "chars": 2702,
+      "tokens": 676,
       "rows": 5,
       "complete": null,
       "calls": 1
@@ -3173,6 +3166,13 @@
       "tokens": 379,
       "rows": 9,
       "complete": true,
+      "calls": 1
+    },
+    "findings.deployment-settings": {
+      "chars": 5506,
+      "tokens": 1377,
+      "rows": 12,
+      "complete": null,
       "calls": 1
     }
   }

@@ -1200,7 +1200,7 @@ describe('dead, findings, type_usage and scoped prompts', () => {
     ]);
     const none = await call('findings', { kind: 'n-plus-one' });
     expect(none).toMatchObject({ rows: [], total: 0 });
-    expect(none.note).toContain('the kinds found are call-to-missing-route, unguarded, one-ended-channel');
+    expect(none.note).toContain('the kinds found are call-to-missing-route, one-ended-channel, unguarded');
   });
 
   it('lists the ways in and the crossing that carry a shared type, and the types that hold one', async () => {
