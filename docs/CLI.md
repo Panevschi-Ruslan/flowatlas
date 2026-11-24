@@ -2012,17 +2012,17 @@ server's `start_here` says the same under `moved`.
 ### `flowatlas agents install | status | remove`
 
 Tells each assistant in the project's repositories when to ask the graph rather
-than search the files, and with `--hook` adds a Claude Code hook that says, after
-a search, what lies in the repositories it could not see (P227), and one that
-hands the model the graph's answer for what a prompt names before its first
-turn (P386). The files, the
-hook and what each says are in the
+than search the files, and with `--hook` adds three Claude Code hooks: after a
+search, what lies in the repositories it could not see (P227); after an edit
+that takes out a name another repository uses, who uses it (P387); and before
+a prompt's first turn, the graph's answer for what it names (P386). The files,
+the hooks and what each says are in the
 [graph server guide](mcp.md#tell-the-assistant-when-to-ask).
 
 | Flag | Does |
 |---|---|
 | `--instructions` | also a marked block in `AGENTS.md` (made where there is none), `CLAUDE.md` and `.github/copilot-instructions.md` (where they are) |
-| `--hook` | also the search hook and the prompt hook (prompt cards, P386), in `.claude/settings.local.json` |
+| `--hook` | also the search hook, the edit hook and the prompt hook (prompt cards, P386), in `.claude/settings.local.json` |
 | `--no-prompt-cards` | with `--hook`, leave the prompt hook out, and take out one written before |
 | `--shared` | the hooks in `.claude/settings.json`, committed, instead |
 | `--force` | replace a guide edited by hand, or a file of that name that is not flowatlas's |
@@ -4589,6 +4589,36 @@ a segment is two `*`; everything else, dots and brackets included, is literal.
 A route pattern (`--path`, `doctor.publicRoutes`) is not a path on disk and
 keeps its own rule: `*` is any run of characters, `/` included, so
 `GET /api/*` covers `/api/a/b`.
+
+### `flowatlas check-change`
+
+What the working tree breaks across repositories before it is committed
+(P387): the working tree against the graph already built, reading again only
+the services whose files changed since the build (against the stamps the build
+wrote, and new files git lists) and taking every other one from the built
+graph. The answer is `diff`'s with `what_changed`'s verdict: calls and channel
+ends that lost what they joined, new contract errors, new findings, the ways in
+the change reaches, and what was not checked. The graph server's
+`check_change` runs it, in a process of its own, stopped at its bound.
+
+| Flag | Default | Does |
+|---|---|---|
+| `--base <ref>` | the built graph | compare with this git ref instead, for the services that differ from it |
+| `--service <name...>` | those that changed | read only these services again |
+| `--format <name>` | `text` | `text`, or `json`: the answer `check_change` gives |
+| `--max-nodes <n>` | `20` | most rows of each list |
+| `--timeout <seconds>` | none | give up after this long, exit 2 |
+
+```
+unsafe: working tree against built graph
+  - 1 call lost its target: `http_out:storefront#src/catalog.client.ts:25:26` joined `entry:catalog-api:http:PATCH:/items/:param/archive` and is now target-route-not-found
+  - 1 removed way in is still called from another service: `entry:catalog-api:http:PATCH:/items/:param/archive` (called from storefront)
+read again: catalog-api (2.1s)
+lost what they joined (1):
+  http_out:storefront#src/catalog.client.ts:25:26 -> entry:catalog-api:http:PATCH:/items/:param/archive: target-route-not-found
+ways in the change reaches (1):
+  DELETE /shop/items/:param
+```
 
 ### `flowatlas diff <base-ref> [head-ref]`
 

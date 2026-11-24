@@ -5,7 +5,7 @@ import { registerPrompts } from './prompts.js';
 import { DbHandle, type DbHandleOptions } from './query/db.js';
 import { registerResources, type OverviewWriter, type ReasonHint } from './resources.js';
 import { registerCantFollow } from './tools/cant-follow.js';
-import { registerChanges } from './tools/changes.js';
+import { registerChanges, type ChangeChecker } from './tools/changes.js';
 import { registerChannels } from './tools/channels.js';
 import type { ContractChecker, MissingCandidates, PatternTester, ToolContext, TrafficChecker } from './tools/common.js';
 import { registerContract } from './tools/contract.js';
@@ -125,6 +125,8 @@ export interface ServerOptions extends DbHandleOptions {
    * `REBUILD_EVERY_MS`.
    */
   rebuild?: () => void;
+  /** Compares the working tree with the built graph, from the command line, which builds (P387): `check_change`. */
+  changeChecker?: ChangeChecker;
 }
 
 /** The shortest time between two background builds the server starts: `build --background` coalesces the rest. */
@@ -165,6 +167,7 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
     sources: handle.config !== undefined,
     rules: rulesConfigured(handle.config),
     tester: options.patternTester !== undefined,
+    changer: options.changeChecker !== undefined,
   });
 
   const server = new McpServer(
@@ -179,6 +182,7 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
     handle,
     settings,
     tester: options.patternTester !== undefined,
+    changer: options.changeChecker !== undefined,
     ...(options.toolsPollMs === undefined ? {} : { pollMs: options.toolsPollMs }),
   });
   const context: ToolContext = {
@@ -188,6 +192,7 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
     ...(options.patternTester === undefined ? {} : { patternTester: options.patternTester }),
     ...(options.missingCandidates === undefined ? {} : { missingCandidates: options.missingCandidates }),
     ...(options.trafficChecker === undefined ? {} : { trafficChecker: options.trafficChecker }),
+    ...(options.changeChecker === undefined ? {} : { changeChecker: options.changeChecker }),
   };
 
   listing.capture(() => registerTools(server, context));

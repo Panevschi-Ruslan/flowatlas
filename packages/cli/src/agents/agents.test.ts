@@ -236,7 +236,7 @@ describe('flowatlas agents install, status and remove', () => {
     expect(readFileSync(rule, 'utf8')).toBe('# our own rule\n');
   });
 
-  it('with --hook merges the search hook beside a hook already there, and remove takes out only it', () => {
+  it('with --hook merges the search and edit hooks beside a hook already there, and remove takes out only them', () => {
     const { config, dir } = project('hook');
     const settings = join(dir('web'), '.claude', 'settings.local.json');
     mkdirSync(join(dir('web'), '.claude'), { recursive: true });
@@ -245,13 +245,16 @@ describe('flowatlas agents install, status and remove', () => {
     installAgents({ config, repo: 'web', hook: true });
     const written = JSON.parse(readFileSync(settings, 'utf8'));
     expect(written.permissions).toEqual(theirs.permissions);
-    expect(written.hooks.PostToolUse).toHaveLength(2);
+    expect(written.hooks.PostToolUse).toHaveLength(3);
     expect(written.hooks.PostToolUse[1]).toMatchObject({ matcher: 'Grep|Bash', hooks: [{ type: 'command', timeout: 5 }] });
     expect(written.hooks.PostToolUse[1].hooks[0].command).toMatch(/search-hook\.js" --names ".*names\.json"$/);
+    // The edit hook (P387), after every edit and whole file written.
+    expect(written.hooks.PostToolUse[2]).toMatchObject({ matcher: 'Edit|MultiEdit|Write', hooks: [{ type: 'command', timeout: 5 }] });
+    expect(written.hooks.PostToolUse[2].hooks[0].command).toMatch(/edit-hook\.js" --edits ".*edits\.json"$/);
     installAgents({ config, repo: 'web', hook: true, shared: true });
-    expect(JSON.parse(readFileSync(join(dir('web'), '.claude', 'settings.json'), 'utf8')).hooks.PostToolUse[0].hooks[0].command).toMatch(
-      /^flowatlas agents search-hook --names "\.\.\/\.flowatlas\/names\.json"$/,
-    );
+    const shared = JSON.parse(readFileSync(join(dir('web'), '.claude', 'settings.json'), 'utf8')).hooks.PostToolUse;
+    expect(shared[0].hooks[0].command).toMatch(/^flowatlas agents search-hook --names "\.\.\/\.flowatlas\/names\.json"$/);
+    expect(shared[1].hooks[0].command).toMatch(/^flowatlas agents edit-hook --edits "\.\.\/\.flowatlas\/edits\.json"$/);
     removeAgents({ config, repo: 'web' });
     expect(JSON.parse(readFileSync(settings, 'utf8'))).toEqual(theirs);
     expect(existsSync(join(dir('web'), '.claude', 'settings.json'))).toBe(false);

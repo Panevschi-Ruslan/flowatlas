@@ -19,7 +19,7 @@ const FIXTURE = join(ROOT, 'fixtures', 'multi-repo');
 const CONFIG = join(FIXTURE, 'flowatlas.config.json');
 
 /** The tools the multi-repo graph cannot answer: no observed file, no rules, no diff, no pattern tester. */
-const UNANSWERED = ['what_changed', 'check_rules', 'test_pattern', 'hot_paths', 'slow_steps', 'trace_for', 'undeclared_failures', 'never_seen'];
+const UNANSWERED = ['what_changed', 'check_rules', 'test_pattern', 'check_change', 'hot_paths', 'slow_steps', 'trace_for', 'undeclared_failures', 'never_seen'];
 const RUN_TIME = ['hot_paths', 'slow_steps', 'trace_for', 'undeclared_failures', 'never_seen'];
 
 const dirs: string[] = [];
@@ -117,7 +117,7 @@ describe('the tools a project is offered (P201)', () => {
     expect(await plain.names()).toEqual(without(UNANSWERED));
     const { answer } = await plain.call('start_here');
     expect(answer.hidden).toBe(
-      'what_changed: after flowatlas diff or check --env · check_rules: after rules[] in flowatlas.config.json · test_pattern: under flowatlas mcp · ' +
+      'what_changed: after flowatlas diff or check --env · check_rules: after rules[] in flowatlas.config.json · test_pattern: under flowatlas mcp · check_change: under flowatlas mcp with a configuration · ' +
         'hot_paths, slow_steps, trace_for, undeclared_failures, never_seen: after flowatlas observe',
     );
     // Deciding the list told nobody: the client was listing.

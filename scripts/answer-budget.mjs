@@ -47,7 +47,9 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createFlowatlasServer, INSTRUCTIONS_MAX } from '@flowatlas/mcp';
 import { loadConfig } from '@flowatlas/core';
 import { ALWAYS_LOAD_KEY, CORE_TOOLS, UPFRONT_LISTING_MAX } from '@flowatlas/mcp';
-import { guideDescription, missingCandidatesFor, promptCard, readCardNamesAt, reasonCatalog, sharedBlock } from '../packages/cli/dist/index.js';
+import { rmSync } from 'node:fs';
+import { changeCheckerFor, guideDescription, missingCandidatesFor, promptCard, readCardNamesAt, reasonCatalog, sharedBlock } from '../packages/cli/dist/index.js';
+import { editedFixtureProject } from './edit-fixture.mjs';
 import { asksFurther, ceilingOf, followOn, overBudget, rowsByList, tokensOf, wrongIn } from './answer-budget-rules.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -191,10 +193,23 @@ for (const [part, chars] of Object.entries(fixed)) {
   else if (chars > ceilingOf(was, tolerance)) problems.push(`fixed ${part}: ${chars} characters, past its budget of ${was} (at most ${ceilingOf(was, tolerance)})`);
 }
 
+/**
+ * Where a question is asked: a fixture's built graph, or for one marked
+ * `edited` (P387) the fixture built and then edited, its working tree ahead of
+ * its graph, with the command line's change checker handed to the server.
+ */
 const byFixture = new Map();
-for (const question of budget.questions) byFixture.set(question.fixture, [...(byFixture.get(question.fixture) ?? []), question]);
-for (const [fixtureName, questions] of byFixture) {
-  const client = await connect(join(root, 'fixtures', fixtureName));
+for (const question of budget.questions) {
+  const key = `${question.fixture}${question.edited === true ? '#edited' : ''}`;
+  byFixture.set(key, [...(byFixture.get(key) ?? []), question]);
+}
+for (const [key, questions] of byFixture) {
+  const [fixtureName, edited] = key.split('#');
+  const made = edited === undefined ? undefined : await editedFixtureProject(root);
+  const client =
+    made === undefined
+      ? await connect(join(root, 'fixtures', fixtureName))
+      : await connect(made.project, { changeChecker: changeCheckerFor(() => made.config) });
   try {
     for (const question of questions) {
       if (question.prompt !== undefined) {
@@ -220,6 +235,7 @@ for (const [fixtureName, questions] of byFixture) {
     }
   } finally {
     await client.close();
+    if (made !== undefined) rmSync(made.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
 }
 for (const id of mismatched) problems.push(`${id}: the text is not JSON.stringify(structuredContent), what Claude Code hands the model`);

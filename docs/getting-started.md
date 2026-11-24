@@ -567,7 +567,7 @@ flowatlas agents install --hook
 - [Through a change, start to finish](workflow.md) — which command to reach for
   before a change, while coding, before the PR, in CI, at deploy and after it runs.
 - [The graph server](mcp.md) — setup for Claude Code, Cursor, VS Code and Claude
-  Desktop, what each of the twenty-six tools takes, and the order to call them in.
+  Desktop, what each of the twenty-seven tools takes, and the order to call them in.
 - [The command reference](CLI.md) — every command, every flag, every
   configuration key, and every reason a row can carry.
 - [Running it in CI](ci.md) — the staged adoption that does not fail the build on

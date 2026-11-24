@@ -92,8 +92,8 @@ the project: the other callers are in checkouts it cannot see.
 ```sh
 flowatlas agents install                   # the guide, in the files each assistant reads
 flowatlas agents install --instructions    # and a marked block in AGENTS.md, CLAUDE.md, Copilot's file
-flowatlas agents install --hook            # and the Claude Code search hook and prompt hook
-flowatlas agents install --hook --no-prompt-cards   # the search hook only
+flowatlas agents install --hook            # and the Claude Code search, edit and prompt hooks
+flowatlas agents install --hook --no-prompt-cards   # the search and edit hooks only
 flowatlas agents status
 flowatlas agents remove                    # takes out what install wrote, and nothing else
 ```
@@ -225,6 +225,33 @@ else. `--no-prompt-cards` leaves the prompt hook out (and takes out one written
 before); `--shared` writes it as `flowatlas agents prompt-hook`, which starts
 the whole command line on every prompt, so personal settings are the fast way.
 
+**The edit hook.** `--hook` adds a second hook (P387), after an `Edit`,
+`MultiEdit` or `Write`. When the edit takes out a name another repository
+uses - a route declared in the file (its verb, its path, or the whole
+declaration), a channel or a type of message published or taken there, a field
+of a message or a request body sent there that the other side reads (or read
+there that the other side sends, as a key or a member: `deskNo: deskNumber`
+counts as `deskNumber` gone), a deployed function's name - it adds one line per
+name, at most three and a count of the rest:
+
+```
+flowatlas: this edit took out `PATCH /items/:id/archive` (declared at line 22), called by storefront CatalogClient.archive (src/catalog.client.ts:25). Change them too; impact({symbol: "entry:catalog-api:http:PATCH:/items/:param/archive"}) lists every use.
+```
+
+A name is taken out when the file around the edit held it more often before
+than after, and the file now holds it less often than when the graph was built:
+a name moved within the edit, or written back, says nothing, and so does an
+edit that touches no such name. A route's line the file holds more than once
+(`@Get()` in two controllers) is taken as the lines after it until it is the
+file's only one like it, and as the edited one only where the edit was. A
+`Write` is compared with the file before when Claude Code passes it
+(`originalFile`), and with the build otherwise. The hook reads
+`<output>/edits.json`, which `build` writes beside `names.json` (each file's
+names, how often the file spelled each and who uses it), and the edited file;
+a name its file does not spell (a channel built from a constant) is not in it.
+It never refuses or fails an edit, and anything slower than 300 ms is silence.
+`--shared` writes it as `flowatlas agents edit-hook --edits <path>`.
+
 ---
 
 ## The tools
@@ -260,7 +287,7 @@ answer needs is said in that tool's description.
 ### Which tools appear when
 
 Every tool's name, description and inputs are read by the assistant at the
-start of a session, about 11,000 characters for all 26 tools. A tool the
+start of a session, about 13,500 characters for all 27 tools. A tool the
 project cannot answer yet would cost that and answer an error, so the server
 lists only the tools whose needs hold. Tools follow what the project has, not
 which frameworks it uses:
@@ -276,6 +303,7 @@ which frameworks it uses:
 | `what_changed` | a `diff.json` or a `check.<env>.json` is beside the graph | the output directory |
 | `check_rules` | the configuration has `rules` | the configuration |
 | `test_pattern` | the readers are there to run a pattern (always under `flowatlas mcp`) | the server's options |
+| `check_change` | the server was started with a configuration and the change checker (always under `flowatlas mcp --config`, or found from the working directory) | the server's options |
 | `hot_paths`, `slow_steps`, `trace_for`, `undeclared_failures`, `never_seen` | an observed file is beside the graph (`flowatlas observe`) | the observed file |
 
 Before any graph is built only the "always" tools are listed, each answering
@@ -1655,7 +1683,23 @@ started without them says so.
 |---|---|---|
 | `what_changed` | the last `flowatlas diff`, read back: nodes, edges and types added, removed or changed, the ways in that reach them, and the contracts the branch broke; with `verdict`, whether it is safe to merge and why. `file: "check.prod.json"` reads what `flowatlas check --env prod` compared instead (the deployed side as base) and adds `check: { environment, verdict, because }` | `service`, `file`, `verdict`, `offset` |
 
-It reads the `diff.json` that `flowatlas diff <base-ref>` writes rather than
+| `check_change` | the working tree against the built graph, before anything is committed (P387): the verdict and `because` as `what_changed({verdict: true})` gives them, then calls and channel ends that lost what they joined (`vanishedTargets`), new contract errors (`breaks`), new findings and gaps, the ways in the changed code reaches (`retest`), `read` (the services read again), `ms`, and `complete: false` with `left` naming what was not checked; with `base`, that git ref in place of the built graph | `base`, `services`, `timeoutSeconds`, `service`, `offset` |
+
+`check_change` reads again only the services whose files changed since the
+build - a file the build read that changed or went, against the stamps it wrote
+beside the graph, or a new file git lists - and takes every other one from the
+built graph on both sides, so an edit to one service is compared in the time
+that service takes to read. `services` names the ones to read instead; with
+`base` they are those that differ from the ref. The command line runs it in a
+process of its own (`flowatlas check-change`) and stops it at `timeoutSeconds`
+(120 unless asked, at most 600), answering an error that says so and how to ask
+again; a later page reads the same check rather than building again. A service
+the build wrote no stamps for is read whole, and one not on disk is the built
+graph's on both sides, each said under `left`. The field a message or a body
+sends under another name is said by the edit hook as it is made; it is not yet
+a contract break here.
+
+`what_changed` reads the `diff.json` that `flowatlas diff <base-ref>` writes rather than
 building two revisions inside a tool call; run the command to refresh it. At
 `detail: 0` a changed node is its id and a way in its id, type and the changed
 node it `reaches`; at 1 they add service and label (and a way in its kind and

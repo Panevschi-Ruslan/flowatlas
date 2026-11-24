@@ -114,8 +114,22 @@ export type { Carries, EdgeUse, EntryUse, TypeUses } from './tools/type-usage.js
 export { CONTRACT_STATUS_RANK, crossingsBetween, crossingStatusOf } from './tools/contract.js';
 export { runSearch, SEARCH_KINDS } from './tools/search.js';
 export type { GapHit, SearchKind, TypeHit } from './tools/search.js';
-export { diffState, readDiff, serviceInId, sideLabel, summariseChanges, verdictOf, VERDICTS } from './tools/changes.js';
+export {
+  CHECK_CHANGE_SECONDS,
+  CHECK_CHANGE_SECONDS_MAX,
+  checkChangeAnswer,
+  diffState,
+  readDiff,
+  serviceInId,
+  sideLabel,
+  summariseChanges,
+  verdictOf,
+  VERDICTS,
+} from './tools/changes.js';
 export type {
+  ChangeCheck,
+  ChangeChecker,
+  ChangeCheckInput,
   ChangedEntry,
   NewFinding,
   NewGap,
@@ -181,3 +195,6 @@ export { impactOf, throughByConsumer } from './tools/reach.js';
 export type { ImpactInput, ImpactOf, ThroughChannel, ThroughConsumer } from './tools/reach.js';
 export { viaSaid } from './query/ways-in.js';
 export type { Reach, Walked, WalkedFrom, WayInFound } from './query/ways-in.js';
+// The names an edit in one file can break in another repository, for the edit hook (P387).
+export { crossingNamesOf } from './query/crossing-names.js';
+export type { CrossingKind, CrossingName, CrossingRole } from './query/crossing-names.js';

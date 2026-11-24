@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T16:09:09.246Z",
+  "configHash": "b02f18a51867",
+  "services": [
+    {
+      "name": "alerts-bot",
+      "repo": "./alerts-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 8,
+      "edges": 4,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1343,
+      "packages": {
+        "name": "alerts-bot",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/common",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 23,
+      "edges": 14,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1345,
+      "packages": {
+        "name": "catalog-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 19,
+      "edges": 15,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1384,
+      "packages": {
+        "name": "storefront",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 3,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 1,
+    "linked": 1,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 8,
+    "called": 3,
+    "uncalled": [
+      "entry:catalog-api:http:GET:/tags",
+      "entry:catalog-api:http:POST:/items/:param/take",
+      "entry:storefront:http:DELETE:/shop/items/:param",
+      "entry:storefront:http:GET:/shop/items",
+      "entry:storefront:http:GET:/shop/items/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 50,
+    "edges": 38,
+    "types": 2,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 0
+  }
+}

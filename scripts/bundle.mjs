@@ -35,9 +35,9 @@ const external = Object.keys(manifest.dependencies ?? {});
 rmSync(join(cli, 'dist'), { recursive: true, force: true });
 
 const result = await build({
-  // The search hook is an entry of its own (P227 D6): a search runs it, and it must not load the command.
+  // The search and edit hooks are entries of their own (P227 D6, P387): a search or an edit runs one, and it must not load the command.
   // So is the prompt hook (P386): every prompt runs it, and only one naming something loads the graph server.
-  entryPoints: [join(cli, 'src', 'index.ts'), join(cli, 'src', 'search-hook.ts'), join(cli, 'src', 'prompt-hook.ts')],
+  entryPoints: [join(cli, 'src', 'index.ts'), join(cli, 'src', 'search-hook.ts'), join(cli, 'src', 'edit-hook.ts'), join(cli, 'src', 'prompt-hook.ts')],
   outdir: join(cli, 'dist'),
   bundle: true,
   // A dynamic import stays dynamic: the graph server is loaded by `flowatlas mcp`

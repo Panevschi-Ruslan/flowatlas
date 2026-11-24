@@ -124,7 +124,7 @@ export const noCodeSaid = (settings: ListingSettings): string =>
  * tester. Decided once, before the first question, so the instructions a
  * session is given at the start name none of them.
  */
-export const neverListed = (settings: ListingSettings, started: { sources: boolean; rules: boolean; tester: boolean }): Set<ToolName> => {
+export const neverListed = (settings: ListingSettings, started: { sources: boolean; rules: boolean; tester: boolean; changer?: boolean }): Set<ToolName> => {
   const facts: ToolFacts = {
     graph: { nodes: new Set(), entryKinds: new Set(), edges: new Set(), types: 0 },
     observed: false,
@@ -162,6 +162,8 @@ export interface ListingOptions {
   settings: ListingSettings;
   /** Whether the server was handed the pattern tester (`test_pattern`). */
   tester: boolean;
+  /** Whether the server was handed the change checker (`check_change`, P387). */
+  changer?: boolean;
   /** How often to look for changes while connected; 0 never looks. */
   pollMs?: number;
 }
@@ -171,6 +173,7 @@ export class ToolListing {
   readonly #handle: DbHandle;
   readonly #settings: ListingSettings;
   readonly #tester: boolean;
+  readonly #changer: boolean;
   /** Read once: the configuration is not read again while the server runs. */
   readonly #rules: boolean;
   readonly #pollMs: number;
@@ -188,6 +191,7 @@ export class ToolListing {
     this.#handle = options.handle;
     this.#settings = options.settings;
     this.#tester = options.tester;
+    this.#changer = options.changer === true;
     this.#rules = rulesConfigured(options.handle.config);
     this.#pollMs = options.pollMs ?? LISTING_POLL_MS;
     this.#log = questionLogSettings(options.handle.config);
@@ -371,6 +375,7 @@ export class ToolListing {
       rules: this.#rules,
       sources: handle.config !== undefined,
       tester: this.#tester,
+      changer: this.#changer,
     };
   }
 

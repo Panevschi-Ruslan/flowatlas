@@ -1,3 +1,4 @@
+import type { ChangeChecker } from './changes.js';
 import type { DetailLevel, EntryShapes, GraphEdge } from '@flowatlas/core';
 import type { MissingGroup, GraphDb } from '@flowatlas/linker';
 import type { GetPromptResult } from '@modelcontextprotocol/sdk/types.js';
@@ -72,6 +73,8 @@ export interface ToolContext {
    * one line (P201); and a prompt's text without a call to one of them (P360).
    */
   listing?: { hiddenLine(): string | undefined; offeredPrompt?(result: GetPromptResult): GetPromptResult };
+  /** Filled by the command line (P387): the working tree compared with the built graph, for `check_change`. */
+  changeChecker?: ChangeChecker;
 }
 
 /** The directories that look like each group's repository, by path, aligned with `groups`. */

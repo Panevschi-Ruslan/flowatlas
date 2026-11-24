@@ -56,10 +56,11 @@ const flatten = (node: FlowNode): FlowNode[] => [
 ];
 
 describe('the tools a session is offered', () => {
-  it('are exactly the twenty-three the project promises', async () => {
+  it('are exactly the twenty-seven the project promises', async () => {
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       'cant_follow',
+      'check_change',
       'check_contract',
       'check_rules',
       'dead',
@@ -293,6 +294,12 @@ describe('the tools a session is offered', () => {
    * `check_contract` and `dead`: 12,904 read, 36,488 in all (36,146 without
    * the marks), 32,848 for the nineteen; the ceilings moved to the next 50
    * above.
+   *
+   * P387 added one tool, `check_change`, listed only where the command line
+   * hands the server its checker (never upfront): one sentence, two inputs
+   * undescribed beside the shared bounds, and the output schema it shares
+   * with `what_changed`: 13,451 read, 37,176 in all; both ceilings moved to
+   * the next 50 above.
    */
   /**
    * The instructions are re-sent on every turn (P366): 6,435 characters

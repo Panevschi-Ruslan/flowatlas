@@ -260,6 +260,42 @@ only one of them moved.
   a message type (1,352), what breaks if a handler two services share changes,
   the service named (978), what in a service is unused (640), and a prompt
   naming nothing (no card).
+- **Breakage caught while editing, and the working tree checked in one call
+  (P387).** `flowatlas agents install --hook` adds a second Claude Code hook,
+  after `Edit`, `MultiEdit` and `Write`: when an edit takes out a name another
+  repository uses - a route declared in the file (verb, path or the whole
+  declaration), a channel or a type of message published or taken there, a
+  field of a message or request body sent or read there (as a key or a member,
+  so `deskNo: deskNumber` is `deskNumber` gone), a deployed function's name - it
+  adds one line per name naming who uses it and the call that lists every use,
+  at most three; silent otherwise, and for a name moved within the edit or
+  written back. It reads `edits.json`, which `build` now writes beside
+  `names.json` (each file's crossing names, how often the file spells each, who
+  uses them), and the edited file: about 120 ms, a process start. A route line
+  the file holds twice (`@Get()` in two controllers) is told apart by the lines
+  after it, and taken as edited only where the edit was. New `check_change`
+  tool (not upfront, listed under `flowatlas mcp` with a configuration) and
+  `flowatlas check-change` command: the working tree against the built graph
+  (or `--base <ref>`), reading again only the services whose files changed
+  since the build and taking the rest from the built graph, answered as
+  `what_changed({verdict: true})` answers a diff - the verdict and why, calls
+  and channel ends that lost what they joined, new contract errors, new
+  findings and gaps, the ways in the change reaches - with `read`, `ms` and
+  `complete: false` naming what was not checked; the server runs it in a
+  process of its own and stops it at `timeoutSeconds` (120, at most 600), a
+  later page reading the same check. A new fixture, `edit-breaks-other-repos`
+  (a catalog, a storefront calling three of its routes, a bot taking its stock
+  messages, and `edits/` renaming the archive route and sending `sku` under
+  another key), with snapshots of `check_change` (verbose and compact) and of
+  the hook on five edits, and two answer-budget questions with hand-written
+  answers: what an uncommitted change breaks elsewhere, 1,849 characters in one
+  call where `what_changed` answered an error (no `diff.json`, and `flowatlas
+  diff` compares commits), and a check of one unchanged service, 707. The
+  listing of every tool grows by the new tool's entry (12,904 to 13,451 read,
+  the answer budget re-recorded; the tool listing ceilings move to 13,500 and
+  37,200); the upfront listing does not move. Six `start_here` snapshots name
+  `check_change` under `hidden` where the suite's server is not handed the
+  checker.
 
 - **who_calls answers stay small and finish, also on several symbols
   (P379).** `depth` is how far the tree of callers is drawn, never a cut:

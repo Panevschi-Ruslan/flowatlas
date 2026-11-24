@@ -512,7 +512,7 @@ a ToolSearch call for them; `"mcp": { "alwaysLoad": false }` or
 
 `--install` writes `.mcp.json` into each repository, merging rather than
 overwriting so any servers already there survive. After that, `claude mcp list`
-shows `flowatlas`, and a session has these twenty-six tools, beside three
+shows `flowatlas`, and a session has these twenty-seven tools, beside three
 prompts and the `flowatlas://` resources. Only the tools the project can answer
 are listed: the run-time ones appear after `flowatlas observe`, `check_rules`
 once rules are configured, `what_changed` after `flowatlas diff` or `check --env`, and the
@@ -534,6 +534,7 @@ channel and type tools once the graph holds one, without restarting anything
 | `find_symbol` | fuzzy search, by substring or camel-case initials |
 | `search` | one query over routes, channels, tables, types, gaps, failures and classes |
 | `what_changed` | the last `flowatlas diff`, read back |
+| `check_change` | the working tree against the built graph before it is committed: lost joins, new contract errors and findings, the ways in the change reaches |
 | `get_source` | the code of one symbol, and the only tool returning code |
 | `describe_for_prompt` | an entry, channel, symbol or gap, or a whole class, file or service, as bounded Markdown to paste into a prompt; the page's *Copy as prompt* writes the same text |
 | `cant_follow` | why the reading stopped: every step it could not follow, by cause and by package |

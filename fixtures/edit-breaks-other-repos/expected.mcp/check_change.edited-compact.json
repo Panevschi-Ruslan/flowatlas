@@ -1,0 +1,92 @@
+{
+  "verdict": "unsafe",
+  "because": [
+    "1 call lost its target: `http_out:storefront#src/catalog.client.ts:25:26` joined `entry:catalog-api:http:PATCH:/items/:param/archive` and is now target-route-not-found",
+    "1 removed way in is still called from another service: `entry:catalog-api:http:PATCH:/items/:param/archive` (called from storefront)"
+  ],
+  "compared": "working tree against built graph (alerts-bot <commit>, catalog-api <commit>, storefront <commit>)",
+  "read": [
+    "catalog-api"
+  ],
+  "ms": 0,
+  "counts": {
+    "nodes": {
+      "added": 1,
+      "removed": 1,
+      "changed": 0,
+      "moved": 0
+    },
+    "edges": {
+      "added": 1,
+      "removed": 2,
+      "changed": 2
+    },
+    "types": {
+      "added": 0,
+      "removed": 0,
+      "changed": 0
+    },
+    "entries": 1,
+    "contracts": {
+      "new": 0,
+      "breaks": 0,
+      "fixed": 0
+    },
+    "gaps": {
+      "added": 1,
+      "removed": 0
+    },
+    "lostJoins": 1,
+    "flows": 3
+  },
+  "nodes": {
+    "added": [
+      "entry:catalog-api:http:PATCH:/items/:param/retire"
+    ],
+    "removed": [
+      "entry:catalog-api:http:PATCH:/items/:param/archive"
+    ]
+  },
+  "types": {},
+  "breaks": [],
+  "newGaps": [
+    {
+      "id": "gap:storefront|src/catalog.client.ts|target-route-not-found",
+      "line": 25,
+      "node": "http_out:storefront#src/catalog.client.ts:25:26",
+      "sites": 1,
+      "next": "get_source({symbol: \"http_out:storefront#src/catalog.client.ts:25:26\"})"
+    }
+  ],
+  "vanishedTargets": [
+    {
+      "caller": "http_out:storefront#src/catalog.client.ts:25:26",
+      "target": "entry:catalog-api:http:PATCH:/items/:param/archive",
+      "now": "target-route-not-found"
+    }
+  ],
+  "retest": [
+    {
+      "id": "entry:storefront:http:DELETE:/shop/items/:param",
+      "confidence": "static",
+      "reaches": "entry:catalog-api:http:PATCH:/items/:param/archive",
+      "flow": {
+        "side": "both",
+        "added": 1,
+        "removed": 1,
+        "changed": 0,
+        "steps": [
+          "- storefront → catalog-api PATCH /items/:param/archive",
+          "+ storefront stops here: target-route-not-found"
+        ]
+      },
+      "changed": 1
+    }
+  ],
+  "newFindings": [],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:storefront:http:DELETE:/shop/items/:param\"})",
+    "get_source({symbol: \"http_out:storefront#src/catalog.client.ts:25:26\"})"
+  ]
+}

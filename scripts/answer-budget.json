@@ -2365,6 +2365,56 @@
         "silent": true
       },
       "note": "P386: a prompt naming nothing the graph holds gets no card and costs nothing."
+    },
+    {
+      "id": "check_change.edited",
+      "ask": "what does my uncommitted change break in the other repositories",
+      "fixture": "edit-breaks-other-repos",
+      "edited": true,
+      "tool": "check_change",
+      "args": {},
+      "lists": [
+        "vanishedTargets",
+        "retest"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "vanishedTargets": [
+            "http_out:storefront#src/catalog.client.ts:25:26"
+          ],
+          "retest": [
+            "entry:storefront:http:DELETE:/shop/items/:param"
+          ]
+        },
+        "exact": [
+          "vanishedTargets",
+          "retest"
+        ]
+      },
+      "note": "P387: the archive route renamed in the working tree, not committed or built: the storefront's call to it lost its route, and the storefront's DELETE route reaches it. Before, what_changed answered an error (no diff.json) and the agent ran flowatlas diff against a commit, which the uncommitted edit is not."
+    },
+    {
+      "id": "check_change.one-service",
+      "ask": "does what I changed in the alerts bot break anything elsewhere",
+      "fixture": "edit-breaks-other-repos",
+      "edited": true,
+      "tool": "check_change",
+      "args": {
+        "services": [
+          "alerts-bot"
+        ]
+      },
+      "lists": [
+        "vanishedTargets"
+      ],
+      "expect": {
+        "complete": true,
+        "exact": [
+          "vanishedTargets"
+        ]
+      },
+      "note": "P387: only the alerts bot read again, where nothing changed: no lost join, the catalog's edits are not this question's."
     }
   ],
   "fixed": {
@@ -2688,6 +2738,20 @@
       "chars": 411,
       "tokens": 103,
       "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "check_change.edited": {
+      "chars": 1849,
+      "tokens": 463,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "check_change.one-service": {
+      "chars": 707,
+      "tokens": 177,
+      "rows": 0,
       "complete": true,
       "calls": 1
     },

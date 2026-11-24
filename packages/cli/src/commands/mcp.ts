@@ -12,6 +12,7 @@ import { overviewOf } from '../overview/overview.js';
 import { renderOverview } from '../overview/render.js';
 import { ownBin } from '../own-path.js';
 import { VERSION } from '../version.js';
+import { changeCheckerFor } from './check-change.js';
 
 export const MCP_FILE = '.mcp.json';
 
@@ -284,6 +285,8 @@ export const registerMcp = (program: Command): void => {
             if (configPath === undefined) return;
             spawn(process.execPath, [binPath(), 'build', '--background', '--config', configPath], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
           },
+          // The working tree against the built graph, for check_change (P387): built by this command, in a process of its own.
+          changeChecker: changeCheckerFor(() => handle.configPath),
           ...missingCandidatesFor(options.config),
           ...(options.allTools === true ? { allTools: true } : {}),
           // Commander reads `--no-always-load` as `alwaysLoad: false`, and true otherwise.

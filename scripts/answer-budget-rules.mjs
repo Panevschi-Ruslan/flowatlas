@@ -50,7 +50,7 @@ export const rowsOf = (rows) =>
   rows.flatMap((row) => (row !== null && typeof row === 'object' ? [row, ...rowsOf(Array.isArray(row.children) ? row.children : [])] : []));
 
 /** What a row is matched by: its `id`, on a field's row its `field`, and on a row of `throughChannels` its `consumer` (P378). */
-export const keysOf = (row) => [row.id, row.field, row.consumer].filter((key) => typeof key === 'string');
+export const keysOf = (row) => [row.id, row.field, row.consumer, row.caller].filter((key) => typeof key === 'string');
 
 /** The rows of every list across the pages of one question's answers. */
 export const rowsByList = (answers, names) => {

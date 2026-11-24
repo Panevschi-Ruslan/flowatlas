@@ -92,6 +92,7 @@ import { EXIT } from '../exit.js';
 import { writeFreshness } from '../build/freshness.js';
 import { namesOf, writeNames } from '../agents/names.js';
 import { cardNamesOf, writeCardNames } from '../agents/card-names.js';
+import { writeEditIndex } from '../agents/edit-index.js';
 import { PULLED_DIR, pulledServiceGraphPath } from '../team/bundle.js';
 import { acquireBuildLock, BuildBusyError, claimAgain, leaveQueue, queueAgain, rotateBuildLog, type LockHolder } from '../build/lock.js';
 import { waysInByService, waysInTotal } from '../doctor/ways-in.js';
@@ -1312,6 +1313,12 @@ const buildHoldingLock = async (options: BuildOptions): Promise<BuildResult> => 
     writeNames(outputDir, namesOf(result.project, serviceDirs));
     // And the names a prompt card can answer for (P386).
     writeCardNames(outputDir, cardNamesOf(result.project, serviceDirs));
+    // And what an edit in each file can break elsewhere, for the edit hook (P387).
+    try {
+      writeEditIndex(outputDir, serviceDirs, result.project.builtAt);
+    } catch {
+      // The hook is a help: without its index it says nothing, and the build stands.
+    }
   }
   pruneServiceDirs(outputDir, loaded.config.services);
   const leftovers = leftoverRepoOutputs(

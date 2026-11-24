@@ -3,6 +3,8 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { checkoutTopOf, isWithinDir, loadConfig, toPosixPath, type LoadedConfig } from '@flowatlas/core';
 import { Command } from 'commander';
 import { CARD_NAMES_FILE } from '../agents/card-names.js';
+import { EDITS_FILE } from '../agents/edit-match.js';
+import { runEditHook } from '../agents/edit-hook.js';
 import { NAMES_FILE } from '../agents/names.js';
 import { runPromptHook } from '../agents/prompt-hook.js';
 import { runSearchHook } from '../agents/search-hook.js';
@@ -29,11 +31,11 @@ import { ownBin } from '../own-path.js';
  * `.mcp.json` says the server exists; nothing said when to choose it, so an
  * assistant in one checkout searched that checkout and answered a question
  * about the whole project from half of it. `install` writes the guide where
- * each assistant reads its instructions, and with `--hook` a Claude Code hook
- * that, after a search naming something the graph joins across repositories,
- * adds what the search could not see, and one that, when a prompt names
- * something the graph holds, adds the graph's answer before the first turn
- * (P386).
+ * each assistant reads its instructions, and with `--hook` three Claude Code
+ * hooks: after a search naming something the graph joins across repositories,
+ * what the search could not see; after an edit that takes out a name another
+ * repository uses, who uses it (P387); and when a prompt names something the
+ * graph holds, the graph's answer before the first turn (P386).
  *
  * Files flowatlas owns - a skill, a Cursor rule - are written by default;
  * files a team owns - `AGENTS.md`, `CLAUDE.md`, Copilot's instructions - get a
@@ -48,7 +50,7 @@ export interface AgentsOptions {
   dryRun?: boolean;
   /** Also write the marked block into the files a team owns. */
   instructions?: boolean;
-  /** Also add the search hook, and the prompt hook unless `promptCards` is false. */
+  /** Also add the search hook and the edit hook, and the prompt hook unless `promptCards` is false. */
   hook?: boolean;
   /**
    * With `hook`: the prompt hook too (P386), on unless said; `--no-prompt-cards`
@@ -210,18 +212,24 @@ const write = (path: string, text: string, dryRun: boolean | undefined): void =>
 const settingsPath = (repoDir: string, shared: boolean | undefined): string =>
   join(repoDir, '.claude', shared === true ? 'settings.json' : 'settings.local.json');
 
-/** The hook's command marker: any hook entry whose command has it is ours. */
+/** The hooks' command markers: any hook entry whose command has one is ours. */
 const HOOK_MARK = 'search-hook';
+const EDIT_HOOK_MARK = 'edit-hook';
 
 /**
  * How the hook is started. Personal settings name this machine's files, which
  * starts fastest (D6); settings a team commits cannot, so they name the
  * command and an index path relative to the repository.
  */
-export const searchHookCommand = (repoDir: string, namesPath: string, shared: boolean | undefined): string => {
-  if (shared === true) return `flowatlas agents ${HOOK_MARK} --names ${JSON.stringify(toPosixPath(relative(repoDir, namesPath)))}`;
-  const script = join(dirname(ownBin(import.meta.url)), '..', 'dist', `${HOOK_MARK}.js`);
-  return `${JSON.stringify(process.execPath)} ${JSON.stringify(script)} --names ${JSON.stringify(namesPath)}`;
+export const searchHookCommand = (repoDir: string, namesPath: string, shared: boolean | undefined): string => hookCommand(HOOK_MARK, '--names', repoDir, namesPath, shared);
+
+/** How the edit hook is started (P387), the same way: this machine's files, or the command for settings a team commits. */
+export const editHookCommand = (repoDir: string, editsPath: string, shared: boolean | undefined): string => hookCommand(EDIT_HOOK_MARK, '--edits', repoDir, editsPath, shared);
+
+const hookCommand = (mark: string, flag: string, repoDir: string, indexPath: string, shared: boolean | undefined): string => {
+  if (shared === true) return `flowatlas agents ${mark} ${flag} ${JSON.stringify(toPosixPath(relative(repoDir, indexPath)))}`;
+  const script = join(dirname(ownBin(import.meta.url)), '..', 'dist', `${mark}.js`);
+  return `${JSON.stringify(process.execPath)} ${JSON.stringify(script)} ${flag} ${JSON.stringify(indexPath)}`;
 };
 
 /** The prompt hook's command marker (P386). */
@@ -263,7 +271,7 @@ const marked =
   (mark: string) =>
   (entry: HookEntry): boolean =>
     (entry.hooks ?? []).some((hook) => typeof hook.command === 'string' && hook.command.includes(mark));
-const isOurs = marked(HOOK_MARK);
+const isOurs = (entry: HookEntry): boolean => marked(HOOK_MARK)(entry) || marked(EDIT_HOOK_MARK)(entry);
 const isOurPrompt = marked(PROMPT_MARK);
 
 /** Whether settings hold either hook `install` writes. */
@@ -293,11 +301,12 @@ export const withPromptHook = (settings: Settings, command: string): Settings =>
 export const withoutPromptHook = (settings: Settings): Settings =>
   withEntries(settings, 'UserPromptSubmit', (settings.hooks?.UserPromptSubmit ?? []).filter((entry) => !isOurPrompt(entry)));
 
-/** The settings with the hook in, merged beside every other hook (D1). */
-export const withSearchHook = (settings: Settings, command: string): Settings => {
+/** The settings with the hooks in, merged beside every other hook (D1): the search hook, and the edit hook where one is given (P387). */
+export const withSearchHook = (settings: Settings, command: string, editCommand?: string): Settings => {
   const post = (settings.hooks?.PostToolUse ?? []).filter((entry) => !isOurs(entry));
   // Bash too: an assistant often searches with grep or rg through the shell.
   post.push({ matcher: 'Grep|Bash', hooks: [{ type: 'command', command, timeout: 5 }] });
+  if (editCommand !== undefined) post.push({ matcher: 'Edit|MultiEdit|Write', hooks: [{ type: 'command', command: editCommand, timeout: 5 }] });
   return { ...settings, hooks: { ...(settings.hooks ?? {}), PostToolUse: post } };
 };
 
@@ -351,7 +360,11 @@ export const installAgents = (options: AgentsOptions = {}): AgentsRun => {
       const path = settingsPath(repo.dir, options.shared);
       const existing = read(path);
       const settings = parseSettings(path, existing);
-      const searching = withSearchHook(settings, searchHookCommand(repo.dir, join(loaded.outputDir, NAMES_FILE), options.shared));
+      const searching = withSearchHook(
+        settings,
+        searchHookCommand(repo.dir, join(loaded.outputDir, NAMES_FILE), options.shared),
+        editHookCommand(repo.dir, join(loaded.outputDir, EDITS_FILE), options.shared),
+      );
       const next = json(
         options.promptCards === false
           ? withoutPromptHook(searching)
@@ -463,7 +476,7 @@ export const registerAgents = (program: Command): void => {
       .option('--dry-run', 'say what would change and write nothing');
   common(agents.command('install').description('write the guide for each assistant into every repository'))
     .option('--instructions', 'also add the guide, as a marked block, to AGENTS.md, CLAUDE.md and Copilot instructions')
-    .option('--hook', 'also add the Claude Code hooks: what a search could not see, and the graph’s answer for what a prompt names')
+    .option('--hook', 'also add the Claude Code hooks: what a search could not see, who uses a name an edit took out, and the graph’s answer for what a prompt names')
     .option('--no-prompt-cards', 'with --hook, leave out the prompt hook (and take out one written before)')
     .option('--shared', 'put the hook in .claude/settings.json, committed, not settings.local.json')
     .option('--force', 'replace a guide edited by hand, or a file of that name that is not flowatlas’s')
@@ -495,6 +508,16 @@ export const registerAgents = (program: Command): void => {
         await runPromptHook(options.cards === undefined ? [] : ['--cards', options.cards]);
         // The graph server it started may hold a handle a little longer; the answer is written.
         process.exit(0);
+      }),
+    { hidden: true },
+  );
+  agents.addCommand(
+    new Command(EDIT_HOOK_MARK)
+      .description('the edit hook: reads a Claude Code hook call on stdin')
+      .allowUnknownOption()
+      .option('--edits <path>', 'the edit index')
+      .action(async (options: { edits?: string }) => {
+        await runEditHook(options.edits === undefined ? [] : ['--edits', options.edits]);
       }),
     { hidden: true },
   );

@@ -24,7 +24,7 @@ import { REVERSE_EDGES } from '../query/flow.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import { loadObservedCounts, nodeSeen, type ObservedCounts } from '../query/observed.js';
 import { truncationMessage } from '../query/types.js';
-import { bound, callOf, commonInput, pagedNext, pageInput, READ_ONLY, respond, serviceInput, type ToolContext } from './common.js';
+import { bound, callOf, commonInput, completeOf, pagedNext, pageInput, READ_ONLY, respond, serviceInput, type ToolContext } from './common.js';
 
 /**
  * What a branch changed, as `flowatlas diff` last worked it out (P72).
@@ -746,7 +746,80 @@ export const diffState = (dbPath: string): { state: 'missing' | 'older' | 'fresh
   }
 };
 
+/* ── check_change (P387) ── */
+
+/** What `check_change` is asked: compare with a base ref in place of the built graph, read only these services, stop after this long. */
+export interface ChangeCheckInput {
+  base?: string;
+  services?: string[];
+  timeoutMs: number;
+}
+
+/**
+ * The working tree (or a base ref) compared with the built graph, as the
+ * command line worked it out: the same document `flowatlas diff` writes, the
+ * services it read from the working tree, and what it could not check.
+ */
+export interface ChangeCheck {
+  report: DiffReport;
+  /** The services read again for the comparison; every other one is the built graph's on both sides. */
+  read: string[];
+  /** What was not checked, each a sentence: a service not read, a file the build has no stamp for, a timeout. */
+  unchecked: string[];
+  ms: number;
+}
+
+/**
+ * Runs the comparison (P387). The server builds nothing itself: the command
+ * line that started it hands this in, and runs the build in a process of its
+ * own, stopped at `timeoutMs`.
+ */
+export type ChangeChecker = (input: ChangeCheckInput) => Promise<ChangeCheck | { error: string; unchecked?: string[] }>;
+
+/** How long a check runs when nobody says, and the most it may be asked for, in seconds. */
+export const CHECK_CHANGE_SECONDS = 120;
+export const CHECK_CHANGE_SECONDS_MAX = 600;
+
+/**
+ * A check's answer: the verdict and its reasons first, then what it rests on -
+ * calls and channel ends that lost what they joined (`vanishedTargets`), new
+ * contract errors (`breaks`), new findings and gaps, and the ways in the
+ * changed code reaches (`retest`) - with the services read and what was not
+ * checked, `complete` only when nothing was left out.
+ */
+export const checkChangeAnswer = (
+  check: ChangeCheck,
+  options: { service?: string; maxNodes: number; offset?: number; detail?: DetailLevel; db?: GraphDb },
+): object => {
+  const { db } = options;
+  const changes = summariseChanges(check.report, {
+    ...(options.service === undefined ? {} : { service: options.service }),
+    ...(db === undefined ? {} : { serviceOf: (id: string) => db.node(id)?.repo }),
+    maxNodes: options.maxNodes,
+    ...(options.offset === undefined ? {} : { offset: options.offset }),
+    ...(options.detail === undefined ? {} : { detail: options.detail }),
+    verdict: db === undefined ? {} : { db },
+  });
+  const { base, head, generatedAt: _generatedAt, verdict, because, truncated, nextOffset, warnings, ...rest } = changes;
+  const unchecked = [...check.unchecked, ...warnings];
+  return {
+    verdict,
+    because,
+    compared: `${head.label} against ${base.label}`,
+    read: check.read,
+    ms: check.ms,
+    ...rest,
+    ...(truncated === undefined ? {} : { truncated }),
+    ...(nextOffset === undefined ? {} : { nextOffset }),
+    ...completeOf([...unchecked.map((said) => `unchecked: ${said}`), truncated === undefined ? undefined : `page: ${truncated}`]),
+  };
+};
+
+/** How long a check is kept for the pages after its first. */
+const KEEP_CHECK_MS = 10 * 60_000;
+
 export const registerChanges = (server: McpServer, ctx: ToolContext): void => {
+  let lastCheck: { key: string; at: number; checked: ChangeCheck } | undefined;
   server.registerTool(
     'what_changed',
     {
@@ -787,6 +860,57 @@ export const registerChanges = (server: McpServer, ctx: ToolContext): void => {
             { tool: 'what_changed', args, nextOffset: changes.nextOffset },
             input.verdict === true ? verdictNextOf(changes) : nextOf(changes),
           ),
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    'check_change',
+    {
+      title: 'Check the working tree',
+      description:
+        'Before committing: the working tree against the built graph (or a `base` ref): lost joins, new contract errors and findings, ways in the change reaches, what was not checked.',
+      inputSchema: {
+        base: z.string().optional(),
+        services: z.array(z.string()).optional(),
+        timeoutSeconds: z.number().int().min(10).max(CHECK_CHANGE_SECONDS_MAX).optional(),
+        service: serviceInput,
+        ...commonInput,
+        ...pageInput,
+      },
+      annotations: READ_ONLY,
+    },
+    async (input) => {
+      if (ctx.changeChecker === undefined) {
+        return respond({ error: 'check_change builds the changed services, which this server was started without; run flowatlas mcp with --config, or flowatlas check-change' });
+      }
+      const { detail, maxNodes, note } = bound(input);
+      // A later page reads the check the first page ran, rather than building again.
+      const key = JSON.stringify([input.base ?? null, input.services ?? null]);
+      const kept = (input.offset ?? 0) > 0 && lastCheck?.key === key && Date.now() - lastCheck.at < KEEP_CHECK_MS ? lastCheck.checked : undefined;
+      const checked =
+        kept ??
+        (await ctx.changeChecker({
+          ...(input.base === undefined ? {} : { base: input.base }),
+          ...(input.services === undefined ? {} : { services: input.services }),
+          timeoutMs: (input.timeoutSeconds ?? CHECK_CHANGE_SECONDS) * 1000,
+        }));
+      if (!('error' in checked)) lastCheck = { key, at: Date.now(), checked };
+      if ('error' in checked) return respond({ error: checked.error, ...(checked.unchecked === undefined ? {} : { unchecked: checked.unchecked }) });
+      const opened = ctx.handle.open();
+      const answer = checkChangeAnswer(checked, {
+        ...(input.service === undefined ? {} : { service: input.service }),
+        maxNodes,
+        offset: input.offset,
+        detail,
+        ...('db' in opened ? { db: opened.db } : {}),
+      }) as WhatChanged & { nextOffset?: number };
+      const args = { base: input.base, services: input.services, service: input.service, detail: input.detail, maxNodes };
+      return respond(
+        withNext(
+          { ...answer, ...(note === undefined ? {} : { note }) },
+          pagedNext({ tool: 'check_change', args, nextOffset: answer.nextOffset }, verdictNextOf(answer)),
         ),
       );
     },

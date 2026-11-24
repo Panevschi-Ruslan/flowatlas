@@ -21,7 +21,7 @@
  * lists for it as it is (P201: `auto`, the default): what the project can
  * answer with the options the suite hands the server, so a fixture that
  * gains an observed file, a rule or a channel shows the tools it gains. The
- * whole list (`all`) is the same twenty-six names for every fixture and is
+ * whole list (`all`) is the same twenty-seven names for every fixture and is
  * held by the tool tests, with its size.
  *
  * Every question is asked with `verbose: true` (P365), so these hold the whole
@@ -38,8 +38,9 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createFlowatlasServer, DbHandle } from '@flowatlas/mcp';
 import { loadConfig } from '@flowatlas/core';
-import { missingCandidatesFor, reasonCatalog, testPatternText, trafficHook } from '../packages/cli/dist/index.js';
+import { changeCheckerFor, editContextFor, missingCandidatesFor, reasonCatalog, testPatternText, trafficHook } from '../packages/cli/dist/index.js';
 import { diffFixtureProject } from './diff-fixture.mjs';
+import { editedFixtureProject } from './edit-fixture.mjs';
 import { checkedDeployedProject } from './deployed-fixture.mjs';
 import { readGraphFile, resolveNodeId } from './fixture-nodes.mjs';
 
@@ -727,6 +728,53 @@ const databaseAloneCopy = () => {
 };
 
 /**
+ * A change not yet committed (P387): `fixtures/edit-breaks-other-repos` built,
+ * then its `edits/` laid over the working tree - the archive route renamed,
+ * the stock message's `sku` sent under another key. `check_change` compares
+ * the working tree with the built graph through the command line's own
+ * checker, as `flowatlas mcp` hands it; the edit hook is asked about the same
+ * edits made one at a time, about a whole file written, and about edits that
+ * take out nothing another repository uses.
+ */
+const EDITED_CONTROLLER = 'catalog-api/src/items/items.controller.ts';
+const EDITED_SERVICE = 'catalog-api/src/items/items.service.ts';
+const EDITED_CASES = [
+  ['tools.listed', '#listToolNames', {}],
+  ['check_change.edited', 'check_change', {}],
+  ['check_change.edited-compact', 'check_change', { verbose: false }],
+  ['check_change.unknown-service', 'check_change', { services: ['payments'] }],
+  ['edit-hook.route-renamed', '#editHook', { file: EDITED_CONTROLLER, old: "@Patch(':id/archive')", new: "@Patch(':id/retire')" }],
+  ['edit-hook.field-renamed', '#editHook', { file: EDITED_SERVICE, old: "{ type: 'STOCK_LOW', sku, remaining }", new: "{ type: 'STOCK_LOW', itemCode: sku, remaining }" }],
+  ['edit-hook.file-written', '#editHook', { file: EDITED_CONTROLLER, write: true }],
+  ['edit-hook.other-get-line', '#editHook', { file: EDITED_CONTROLLER, old: "@Get()\n  list(): string[] {", new: "@Get('all')\n  list(): string[] {" }],
+  ['edit-hook.nothing-crosses', '#editHook', { file: EDITED_SERVICE, old: 'return id;', new: 'return id.trim();' }],
+];
+
+/** The hook's answer for one edit of the edited project: the call Claude Code would send, the file as the edit left it. */
+const editHookAsk = (args, made) => {
+  const edited = made.edited.find((each) => each.file === args.file);
+  const path = join(made.project, args.file);
+  let now = readFileSync(path, 'utf8');
+  if (args.old !== undefined && !now.includes(args.new) && now.includes(args.old)) now = now.replace(args.old, args.new);
+  const call =
+    args.write === true
+      ? { tool_name: 'Write', tool_input: { file_path: path, content: now }, tool_response: { type: 'update', filePath: path, originalFile: edited?.before } }
+      : { tool_name: 'Edit', tool_input: { file_path: path, old_string: args.old, new_string: args.new } };
+  const index = JSON.parse(readFileSync(join(made.project, '.flowatlas', 'edits.json'), 'utf8'));
+  return { context: editContextFor(call, index, now, 'linux') ?? null };
+};
+
+/**
+ * What changes from run to run in a check's answer: how long it took, and the
+ * commit the copy's checkout is on (it is this repository's, as the copy sits
+ * inside it).
+ */
+const steadyCheck = (parsed) =>
+  typeof parsed?.ms === 'number'
+    ? { ...parsed, ms: 0, compared: String(parsed.compared).replace(/\b[0-9a-f]{8}\b/g, '<commit>') }
+    : parsed;
+
+/**
  * What a client asks besides a tool, by the name a case gives it, and the
  * document recorded: the listing as it comes, a resource's JSON read back.
  */
@@ -742,6 +790,7 @@ const CLIENT_ASKS = {
     const response = await client.callTool(args);
     return { text: response.content[0].text, structuredContent: response.structuredContent !== undefined };
   },
+  '#editHook': (_client, args, made) => editHookAsk(args, made),
 };
 
 /**
@@ -1113,6 +1162,14 @@ const SUITES = [
     // Made, built and checked each run, and removed after: the fixture is three histories as files.
     setup: () => checkedDeployedProject(root),
   },
+  {
+    outDir: join(root, 'fixtures', 'edit-breaks-other-repos', 'expected.mcp'),
+    cases: EDITED_CASES,
+    // Made, built and edited each run, and removed after: the fixture is a project and the edits made to it.
+    setup: () => editedFixtureProject(root),
+    options: (_copy, made) => ({ changeChecker: changeCheckerFor(() => made.config) }),
+    steady: steadyCheck,
+  },
 ];
 
 const problems = [];
@@ -1129,7 +1186,7 @@ for (const suite of SUITES) {
     // Nothing changes under a suite while it runs; the list is decided at each question.
     toolsPollMs: 0,
     ...(copy === undefined ? {} : { dbPath: join(copy, 'graph.db') }),
-    ...(typeof suite.options === 'function' ? suite.options(copy) : (suite.options ?? {})),
+    ...(typeof suite.options === 'function' ? suite.options(copy, made) : (suite.options ?? {})),
   });
   await server.connect(serverSide);
   const client = new Client({ name: 'snapshots', version: '0' });
@@ -1149,7 +1206,7 @@ for (const suite of SUITES) {
 
   for (const [name, tool, args] of suite.cases) {
     let parsed;
-    if (tool.startsWith('#')) parsed = await CLIENT_ASKS[tool](client, args);
+    if (tool.startsWith('#')) parsed = await CLIENT_ASKS[tool](client, args, made);
     else {
       // Asked `verbose` unless the case says otherwise (P365): these snapshots hold the whole answer, the compact ones what an agent is handed.
       const response = await client.callTool({ name: tool, arguments: { verbose: true, ...args } });
@@ -1159,6 +1216,7 @@ for (const suite of SUITES) {
         problems.push(`${name}: structuredContent is not the document the text holds`);
       }
     }
+    if (suite.steady !== undefined) parsed = suite.steady(parsed);
     const actual = `${JSON.stringify(parsed, null, 2)}\n`;
     const path = join(suite.outDir, `${name}.json`);
     const promptFile = suite.prompts?.files[name];
