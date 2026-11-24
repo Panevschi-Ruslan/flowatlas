@@ -128,7 +128,7 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
     {
       title: 'List entry points',
       description:
-        'Ways in: routes, procedures, screens, bot commands, jobs, handlers; `in` a class, method or file lists its own, with `reach`.',
+        'Ways in, of any `kind`; `in` a class, method or file lists its own, with `reach`.',
       inputSchema: {
         service: serviceInput,
         kind: z.enum(ENTRY_KINDS).optional(),

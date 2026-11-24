@@ -99,27 +99,45 @@ const reposOf = (loaded: LoadedConfig, only: string | undefined): Repo[] => {
  * Claude Code names its tools after. `SERVER_KEY`, what `flowatlas mcp
  * install` writes, where the file says none.
  */
-export const serverKeyIn = (repoDir: string): string => {
+export const serverKeyIn = (repoDir: string): string => registeredServer(repoDir).key;
+
+type ServerEntry = { command?: unknown; args?: unknown; alwaysLoad?: unknown };
+
+/**
+ * The graph server's entry in a repository's `.mcp.json` (P380): its key, and
+ * whether it leaves the core tools upfront - not when the entry says
+ * `"alwaysLoad": false` (Claude Code then defers every tool of the server) or
+ * starts the server with `--no-always-load`.
+ */
+export const registeredServer = (repoDir: string): { key: string; alwaysLoad: boolean } => {
   const text = read(join(repoDir, MCP_FILE));
-  if (text === undefined) return SERVER_KEY;
+  if (text === undefined) return { key: SERVER_KEY, alwaysLoad: true };
+  const said = (key: string, entry: ServerEntry | undefined) => ({
+    key,
+    alwaysLoad: entry?.alwaysLoad !== false && !(Array.isArray(entry?.args) && entry.args.includes('--no-always-load')),
+  });
   try {
-    const servers = (JSON.parse(text) as { mcpServers?: Record<string, { command?: unknown; args?: unknown }> }).mcpServers ?? {};
-    if (SERVER_KEY in servers) return SERVER_KEY;
+    const servers = (JSON.parse(text) as { mcpServers?: Record<string, ServerEntry> }).mcpServers ?? {};
+    if (SERVER_KEY in servers) return said(SERVER_KEY, servers[SERVER_KEY]);
     for (const [key, entry] of Object.entries(servers)) {
       const words = [entry?.command, ...(Array.isArray(entry?.args) ? entry.args : [])].filter((word): word is string => typeof word === 'string');
-      if (words.includes('mcp') && words.some((word) => /flowatlas/.test(word))) return key;
+      if (words.includes('mcp') && words.some((word) => /flowatlas/.test(word))) return said(key, entry);
     }
   } catch {
     // Not JSON: the server is not registered there in any way a client reads.
   }
-  return SERVER_KEY;
+  return { key: SERVER_KEY, alwaysLoad: true };
 };
 
-const guideFor = (loaded: LoadedConfig, repo: Repo): AgentGuide => ({
-  services: loaded.config.services.map((service) => ({ name: service.name, type: service.type })),
-  here: repo.services,
-  server: serverKeyIn(repo.dir),
-});
+const guideFor = (loaded: LoadedConfig, repo: Repo): AgentGuide => {
+  const server = registeredServer(repo.dir);
+  return {
+    services: loaded.config.services.map((service) => ({ name: service.name, type: service.type })),
+    here: repo.services,
+    server: server.key,
+    alwaysLoad: server.alwaysLoad && loaded.config.mcp?.alwaysLoad !== false,
+  };
+};
 
 /**
  * The configuration a run writes for, refusing one found from a checkout that

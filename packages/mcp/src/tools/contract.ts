@@ -285,7 +285,7 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
     {
       title: 'Check a contract',
       description:
-        'Whether what one side of a crossing sends is what the other expects. On a route (`GET /x` or id): the body fields read on its path, guards included; on a `channel` (and `type`): fields read, not sent (`missing`), and sent, never read (`unused`). `field` keeps one.',
+        'Whether one side of a crossing sends what the other expects. A route (`GET /x` or id): the body fields read on its path, guards included; a `channel` (and `type`): fields read, not sent (`missing`), sent, never read (`unused`). `field` keeps one.',
       inputSchema: {
         edge: z.string().optional().describe('"<from> -http_calls-> <to>", or an entry'),
         from: z.string().optional(),

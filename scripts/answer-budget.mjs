@@ -39,7 +39,8 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createFlowatlasServer } from '@flowatlas/mcp';
 import { loadConfig } from '@flowatlas/core';
-import { CORE_TOOLS, guideDescription, missingCandidatesFor, reasonCatalog, sharedBlock } from '../packages/cli/dist/index.js';
+import { ALWAYS_LOAD_KEY, CORE_TOOLS, UPFRONT_LISTING_MAX } from '@flowatlas/mcp';
+import { guideDescription, missingCandidatesFor, reasonCatalog, sharedBlock } from '../packages/cli/dist/index.js';
 import { asksFurther, ceilingOf, followOn, overBudget, rowsByList, tokensOf, wrongIn } from './answer-budget-rules.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -75,9 +76,10 @@ const modelVisible = (tools) => JSON.stringify(tools.map(({ name, description, i
  * The overhead every turn carries, measured on one fixture: the instructions;
  * the guide block `flowatlas agents install --instructions` writes into a
  * team's AGENTS.md or CLAUDE.md and the skill's description, both read every
- * turn; and the listing a model reads, for the core tools the guide has an
- * agent load in one ToolSearch call, the tools the project is offered, and
- * all of them.
+ * turn; and the listing a model reads, for the core tools the server lists to
+ * load upfront (P380: read every turn too), the tools the project is offered,
+ * and all of them. `listingCore` is measured on the tools the listing marks
+ * `anthropic/alwaysLoad`, which must be exactly `CORE_TOOLS`.
  */
 const measureFixed = async () => {
   const fixture = join(root, 'fixtures', budget.fixedOn);
@@ -93,7 +95,8 @@ const measureFixed = async () => {
       instructions: plain.getInstructions()?.length ?? 0,
       guideBlock: sharedBlock(guide).length,
       skillDescription: guideDescription(guide).length,
-      listingCore: modelVisible(every.filter((tool) => CORE_TOOLS.includes(tool.name))).length,
+      listingCore: modelVisible(every.filter((tool) => tool._meta?.[ALWAYS_LOAD_KEY] === true)).length,
+      upfront: every.filter((tool) => tool._meta?.[ALWAYS_LOAD_KEY] === true).map((tool) => tool.name),
       listingDefault: modelVisible(listed).length,
       listingAll: modelVisible(every).length,
     };
@@ -135,7 +138,10 @@ const notes = [];
 const before = budget.recorded ?? {};
 const after = {};
 const fixedBefore = budget.fixed ?? {};
-const fixed = await measureFixed();
+const { upfront, ...fixed } = await measureFixed();
+// The upfront set is the core set, and its listing fits the ceiling written by hand (P380), whatever was recorded.
+if ([...upfront].sort().join() !== [...CORE_TOOLS].sort().join()) problems.push(`the tools listed to load upfront (${upfront.join(', ')}) are not the core tools (${CORE_TOOLS.join(', ')})`);
+if (fixed.listingCore > UPFRONT_LISTING_MAX) problems.push(`fixed listingCore: ${fixed.listingCore} characters, past UPFRONT_LISTING_MAX (${UPFRONT_LISTING_MAX}): the upfront tools are sent on every turn`);
 for (const [part, chars] of Object.entries(fixed)) {
   const was = fixedBefore[part];
   if (update) continue;
@@ -175,9 +181,8 @@ const delta = (now, was) => (was === undefined || now === was ? '' : ` (was ${wa
 const printTable = () => {
   console.log('Fixed overhead          chars  tokens (est. characters / 4)');
   for (const [part, chars] of Object.entries(fixed)) console.log(`  ${part.padEnd(20)}${pad(chars, 7)}${pad(tokensOf(chars), 7)}${delta(chars, fixedBefore[part])}`);
-  const perTurn = fixed.instructions + fixed.guideBlock + fixed.skillDescription;
-  console.log(`  ${'every turn'.padEnd(20)}${pad(perTurn, 7)}${pad(tokensOf(perTurn), 7)}  instructions + guide block + skill description`);
-  console.log(`  ${'with core tools'.padEnd(20)}${pad(perTurn + fixed.listingCore, 7)}${pad(tokensOf(perTurn + fixed.listingCore), 7)}  once ToolSearch has loaded them`);
+  const perTurn = fixed.instructions + fixed.guideBlock + fixed.skillDescription + fixed.listingCore;
+  console.log(`  ${'every turn'.padEnd(20)}${pad(perTurn, 7)}${pad(tokensOf(perTurn), 7)}  instructions + guide block + skill description + core tools, upfront`);
   console.log('');
   console.log(`${'Per question'.padEnd(34)}${pad('chars', 7)}${pad('tokens', 7)}${pad('rows', 6)}  complete  calls`);
   let total = 0;

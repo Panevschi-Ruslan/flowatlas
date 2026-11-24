@@ -1248,6 +1248,14 @@ export const mcpSettingsSchema = z.strictObject({
   rebuild: z.enum(['off', 'on-change']).default('off'),
   /** `on-start`: the server pulls the team's graph (`remote`) when it starts, a conditional request when nothing is new (P236). */
   pull: z.enum(['off', 'on-start']).default('off'),
+  /**
+   * Whether the core tools are listed to load upfront (P380): Claude Code
+   * then has their schemas from the first turn, with no ToolSearch call, and
+   * pays for them on every turn. `false` leaves every tool deferred, as
+   * `flowatlas mcp --no-always-load` does, and the guide `agents install`
+   * writes says to load them in one ToolSearch call.
+   */
+  alwaysLoad: z.boolean().default(true),
 });
 
 /**

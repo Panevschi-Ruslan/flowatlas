@@ -12,6 +12,7 @@ import { createFlowatlasServer, type ServerOptions } from './server.js';
 import { entry, node, edge, writeTestDb } from './test-graph.js';
 import { listingSettingsOf, ToolListing } from './tool-listing.js';
 import { NEEDS, TOOL_NAMES, TOOL_NEEDS } from './tool-needs.js';
+import { ALWAYS_LOAD_KEY, CORE_TOOLS, isCoreTool, UPFRONT_DESCRIPTION_MAX, UPFRONT_LISTING_MAX } from './upfront.js';
 
 const ROOT = resolve(import.meta.dirname, '../../..');
 const FIXTURE = join(ROOT, 'fixtures', 'multi-repo');
@@ -253,5 +254,63 @@ describe('the mcp block of the configuration (P201)', () => {
       '"dead" is in both mcp.include and mcp.exclude.',
     );
     expect(() => createFlowatlasServer({ configPath: configWith({ tools: 'some' }) })).toThrow(/mcp\.tools/);
+  });
+});
+
+describe('the core tools, listed to load upfront (P380)', () => {
+  /** Each listed tool, the names of those carrying the upfront mark, and the model-visible listing of those. */
+  const listedUpfront = async (options: ServerOptions) => {
+    const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
+    await createFlowatlasServer({ toolsPollMs: 0, ...options }).connect(serverSide);
+    const client = new Client({ name: 'upfront-test', version: '0' });
+    await client.connect(clientSide);
+    clients.push(client);
+    const { tools } = await client.listTools();
+    const marked = tools.filter((tool) => tool._meta?.[ALWAYS_LOAD_KEY] === true);
+    for (const tool of tools) if (tool._meta !== undefined) expect(Object.keys(tool._meta), tool.name).toEqual([ALWAYS_LOAD_KEY]);
+    return {
+      marked: marked.map((tool) => tool.name).sort(),
+      tools,
+      read: JSON.stringify(marked.map(({ name, description, inputSchema }) => ({ name, description, inputSchema }))),
+    };
+  };
+
+  it('marks exactly the core tools `anthropic/alwaysLoad`, as the guide names them, and nothing else', async () => {
+    const all = await listedUpfront({ configPath: CONFIG, allTools: true });
+    expect(all.marked).toEqual([...CORE_TOOLS].sort());
+    for (const tool of all.tools) expect(tool._meta?.[ALWAYS_LOAD_KEY] === true, tool.name).toBe(isCoreTool(tool.name));
+    // A core tool the project cannot answer is not listed, so not loaded either; the others keep the mark.
+    const offered = await listedUpfront({ configPath: CONFIG });
+    expect(offered.marked).toEqual([...CORE_TOOLS].filter((name) => offered.tools.some((tool) => tool.name === name)).sort());
+  });
+
+  it('keeps what is loaded upfront inside the description cap Claude Code applies and the listing ceiling', async () => {
+    const { tools, read } = await listedUpfront({ configPath: CONFIG, allTools: true });
+    for (const tool of tools.filter((listed) => isCoreTool(listed.name))) expect(tool.description!.length, tool.name).toBeLessThanOrEqual(UPFRONT_DESCRIPTION_MAX);
+    expect(read.length).toBeLessThanOrEqual(UPFRONT_LISTING_MAX);
+  });
+
+  it('lists no bound a model never needs, and still refuses a call past it', async () => {
+    const { tools } = await listedUpfront({ configPath: CONFIG, allTools: true });
+    const input = (name: string) => (tools.find((tool) => tool.name === name)?.inputSchema as { properties: Record<string, Record<string, unknown>> }).properties;
+    expect(input('dead')['ids']).toEqual({ maxItems: 20, type: 'array', items: { type: 'string' } });
+    expect(input('who_calls')['depth']).toEqual({ description: 'tree hops', type: 'integer', maximum: 16 });
+    const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
+    await createFlowatlasServer({ configPath: CONFIG, allTools: true, toolsPollMs: 0 }).connect(serverSide);
+    const plain = new Client({ name: 'bounds-test', version: '0' });
+    await plain.connect(clientSide);
+    clients.push(plain);
+    expect((await plain.callTool({ name: 'dead', arguments: { ids: [] } })).isError).toBe(true);
+    expect((await plain.callTool({ name: 'who_calls', arguments: { symbol: 'OrdersService', depth: 0 } })).isError).toBe(true);
+  });
+
+  it('marks none with alwaysLoad: false (--no-always-load), or mcp.alwaysLoad: false in the configuration', async () => {
+    expect((await listedUpfront({ configPath: CONFIG, allTools: true, alwaysLoad: false })).marked).toEqual([]);
+    const configPath = configWith({ alwaysLoad: false });
+    expect((await listedUpfront({ configPath, dbPath: fixtureCopy('deferred'), allTools: true })).marked).toEqual([]);
+    // The command line cannot turn back on what the configuration turned off; on is the default.
+    expect(listingSettingsOf({ tools: 'auto', include: [], exclude: [], rebuild: 'off', pull: 'off', alwaysLoad: false }, { alwaysLoad: true }).alwaysLoad).toBe(false);
+    expect(listingSettingsOf(undefined).alwaysLoad).toBe(true);
+    expect(() => createFlowatlasServer({ configPath: configWith({ alwaysLoad: 'yes' }) })).toThrow(/mcp\.alwaysLoad/);
   });
 });

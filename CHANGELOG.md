@@ -36,6 +36,38 @@ only one of them moved.
   to 2,321, `who_calls` 999 to 967 up to 2,926 to 2,862). Ten existing
   `who_calls` snapshots asked with a depth now list the ways in; the two named
   `depth-cut` are `depth-drawn`.
+- **No turn spent loading the core tools (P380).** Claude Code defers every
+  MCP tool by default, so a graph session's first turn went on a ToolSearch
+  call, a turn that re-sends the whole session's context. The graph server now
+  lists nine core tools with `_meta: {"anthropic/alwaysLoad": true}`, which
+  Claude Code v2.1.285 and later loads upfront: `who_calls`, `list_entries`,
+  `who_consumes`, `check_contract`, `find_symbol`, `impact`, `search`,
+  `get_flow` and `dead`, chosen from what agents asked (`check_contract` in,
+  `who_emits` out of the set the guide used to load). One list, `CORE_TOOLS`
+  in `@flowatlas/mcp`, is what the server marks and what the guide names. The
+  guide `flowatlas agents install` writes tells no ToolSearch call for them,
+  only one call for any other tool a question needs (the skill keeps the
+  `select:` line for older Claude Code), and the instructions say the same.
+  `"mcp": { "alwaysLoad": false }` in the configuration or `flowatlas mcp
+  --no-always-load` marks no tool, and the guide then writes the one
+  ToolSearch call that loads them; `agents install` also reads
+  `"alwaysLoad": false` or `--no-always-load` from a repository's
+  `.mcp.json` entry. Upfront tools are paid on every turn, so the listing is
+  leaner: a listed schema leaves out the lower bounds that say nothing
+  (`minItems: 1`, `minLength: 1`, `minimum: 0` or `1`, still checked on every
+  call), the descriptions of `search`, `list_entries`, `who_consumes`,
+  `check_contract` and `dead` are shorter, and the instructions leave out what
+  the core tools say themselves. Measured on the main fixture: the upfront
+  listing 5,633 characters (about 1,400 tokens; the nine loaded by ToolSearch
+  before were 5,870), held under `UPFRONT_LISTING_MAX` (5,700) by the tests
+  and the answer budget; the instructions 2,493 to 2,384; the guide block
+  1,205 to 1,055; every tool's listing 13,346 to 12,904. What a turn carries
+  is 9,340 characters with the core tools in it, where it was 3,966 before
+  the ToolSearch turn and 9,836 after it. The answer budget measures
+  `listingCore` on the tools the listing marks, fails when they are not
+  exactly `CORE_TOOLS` or their listing passes the ceiling, and counts them in
+  every turn.
+
 - **What lies past a channel, said once per consumer (P378).**
   `throughChannels`, in `impact` and `who_calls` alike, is one row per
   consumer: `{consumer, channels, consumers?, ways, sample?, walkCut?}`,

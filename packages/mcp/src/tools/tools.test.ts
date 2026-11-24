@@ -284,23 +284,32 @@ describe('the tools a session is offered', () => {
    * and in `get_flow`'s `entry` that it takes any name: 13,314 read, 36,564 in
    * all, 32,828 for the nineteen tools. Together with P378, 32,852 for the
    * nineteen, the ceiling moved to the next 50.
+   *
+   * P380 marks the nine core tools to load upfront (`_meta`, 30 characters
+   * each, not read by the model), lists no lower bound that says nothing
+   * (`minItems: 1`, `minLength: 1`, `minimum: 0` or `1`) and shortens the
+   * descriptions of `search`, `list_entries`, `who_consumes`,
+   * `check_contract` and `dead`: 12,904 read, 36,488 in all (36,146 without
+   * the marks), 32,848 for the nineteen; the ceilings moved to the next 50
+   * above.
    */
   /**
    * The instructions are re-sent on every turn (P366): 6,435 characters
    * before, 2,131 after, with room under the ceiling for a line or two that
-   * describes a field every answer carries.
+   * describes a field every answer carries. P380 left out what the core
+   * tools, loaded upfront beside them, say themselves: 2,493 to 2,384.
    */
   it('come with instructions that fit their ceiling, and name the tool to begin with and every chain', () => {
     expect(INSTRUCTIONS.length).toBeLessThanOrEqual(INSTRUCTIONS_MAX);
     expect(client.getInstructions()).toBe(INSTRUCTIONS);
-    for (const said of ['Begin with start_here', '- entry: ', '- channel: ', '- symbol: ', '- shape: ', 'Only the tools this project can answer', '`detail` 0']) expect(INSTRUCTIONS).toContain(said);
+    for (const said of ['start_here when you do not know where to begin', 'loads by ToolSearch', '- entry: ', '- channel: ', '- symbol: ', '- shape: ', 'Only the tools this project can answer', '`detail` 0']) expect(INSTRUCTIONS).toContain(said);
   });
 
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(13350);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(36600);
+    expect(read.length).toBeLessThan(12950);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(36500);
   });
 
   /**

@@ -14,6 +14,7 @@ import { serviceNamed, type ServiceNamed } from './query/service-name.js';
 import { canAnswer, isToolName, NEEDS, TOOL_NAMES, TOOL_NEEDS, type Need, type ToolFacts, type ToolName } from './tool-needs.js';
 import { changeDocumentsBeside } from './tools/changes.js';
 import { respond, verboseInput } from './tools/common.js';
+import { isCoreTool, withAlwaysLoad } from './upfront.js';
 
 /**
  * The tools a session is offered follow the project (P201).
@@ -34,6 +35,11 @@ export interface ListingSettings {
   tools: 'auto' | 'all';
   include: ReadonlySet<ToolName>;
   exclude: ReadonlySet<ToolName>;
+  /**
+   * Whether the core tools are listed to load upfront (P380): `mcp.alwaysLoad`
+   * in the configuration, off with `flowatlas mcp --no-always-load`.
+   */
+  alwaysLoad: boolean;
 }
 
 /** How often a connected server looks for a graph, an observed file or a diff that changed. */
@@ -46,7 +52,7 @@ export const LISTING_POLL_MS = 2000;
  */
 export const listingSettingsOf = (
   settings: McpSettings | undefined,
-  options: { allTools?: boolean; configPath?: string } = {},
+  options: { allTools?: boolean; alwaysLoad?: boolean; configPath?: string } = {},
 ): ListingSettings => {
   const issues: string[] = [];
   const named = (key: 'include' | 'exclude'): Set<ToolName> => {
@@ -65,8 +71,10 @@ export const listingSettingsOf = (
   if (issues.length > 0) {
     throw new ConfigInvalidError(options.configPath ?? 'flowatlas.config.json', issues, `The tools are: ${TOOL_NAMES.join(', ')}.`);
   }
-  if (options.allTools === true) return { tools: 'all', include: new Set(), exclude: new Set() };
-  return { tools: settings?.tools ?? 'auto', include, exclude };
+  // Off when either says so: the command line cannot turn on what the configuration turned off.
+  const alwaysLoad = options.alwaysLoad !== false && settings?.alwaysLoad !== false;
+  if (options.allTools === true) return { tools: 'all', include: new Set(), exclude: new Set(), alwaysLoad };
+  return { tools: settings?.tools ?? 'auto', include, exclude, alwaysLoad };
 };
 
 type Handler = (request: never, extra: never) => unknown;
@@ -198,7 +206,7 @@ export class ToolListing {
       setRequestHandler.call(sdk, schema as never, this.#guard(schema, handler) as never)) as typeof sdk.setRequestHandler;
     this.#server.registerTool = ((name: string, config: { inputSchema?: Record<string, unknown> }, ...rest: unknown[]) => {
       if (!isToolName(name)) throw new Error(`tool ${name} has no row in TOOL_NEEDS (tool-needs.ts)`);
-      const tool = (registerTool as (...args: unknown[]) => RegisteredTool).call(this.#server, name, withVerbose(name, config), ...rest);
+      const tool = (registerTool as (...args: unknown[]) => RegisteredTool).call(this.#server, name, this.#upfront(name, withVerbose(name, config)), ...rest);
       this.#tools.set(name, tool);
       return tool;
     }) as McpServer['registerTool'];
@@ -324,6 +332,16 @@ export class ToolListing {
     const missing = needs.map((need) => NEEDS[need].missing).join(', and ');
     const appears = needs.map((need) => NEEDS[need].appears).join(' or ');
     return { error: `${name} is not listed for this project: ${missing}; it appears ${appears}`, needs };
+  }
+
+  /**
+   * A core tool's configuration marked to load upfront (P380), unless the
+   * settings turned that off: `tools/list` then carries
+   * `_meta: {"anthropic/alwaysLoad": true}` on exactly the core tools listed.
+   */
+  #upfront<T extends object>(name: string, config: T): T {
+    if (!this.#settings.alwaysLoad || !isCoreTool(name)) return config;
+    return { ...config, _meta: withAlwaysLoad((config as { _meta?: Record<string, unknown> })._meta) };
   }
 
   #needsOf(name: ToolName): Need[] {

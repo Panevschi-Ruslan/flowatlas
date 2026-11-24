@@ -39,6 +39,10 @@ export const SERVER_NAME = 'flowatlas';
  * shares - and what one tool's answer needs is said on that tool. At most
  * `INSTRUCTIONS_MAX` characters, with room for a line or two more.
  *
+ * The core tools load upfront too (P380), so their descriptions are re-sent
+ * on every turn beside these lines: what one of them says (a channel's `type`
+ * and `field`, what `search` finds) is said there, not again here.
+ *
  * The chains are spelled out because they are the point: every row carries an
  * `id` the next tool takes as it is, and every answer ends with `next`, the
  * calls that take the ids it just returned.
@@ -47,21 +51,21 @@ const INSTRUCTION_LINES: readonly string[] = [
   'A map of every repository in this project, already joined.',
   // The same questions the files `flowatlas agents install` writes list (P227).
   agentQuestionsLine(),
-  'Begin with start_here: counts per service, the commonest gaps, entry ids to start from.',
+  'Ask the tool your question needs; start_here when you do not know where to begin (counts per service, the commonest gaps, entry ids).',
   'Every row carries an `id` the next tool takes as it is; every answer ends with `next`, the calls that take those ids. The chains:',
   '- entry: list_entries -> get_flow({entry: id}) -> get_source({symbol: id}) on the step that matters.',
-  '- channel: who_emits or who_consumes({channel: id}), `type` for one message type, `field` for who sends or reads it -> get_flow({entry: id}) on a handler.',
+  '- channel: who_emits or who_consumes({channel: id}) -> get_flow({entry: id}) on a handler.',
   '- symbol: find_symbol -> who_calls or impact({symbol: id}) -> get_flow on an entry it names.',
-  '- shape: get_type({type: id}) -> type_usage; check_contract on a crossing, a route (body fields read) or a channel (fields read, not sent); get_spec({service}).',
-  '- name: search({query}) finds a route, channel, message type, table, type, class, gap or field.',
+  '- shape: get_type({type: id}) -> type_usage; check_contract on a crossing, a route or a channel; get_spec({service}).',
+  '- name: search({query}), any kind of node.',
   '- stops: cant_follow -> get_source on a place it names; test_pattern on a draft rule.',
-  '- dead code: findings() -> findings({kind}); dead({id}) (on a class, each way in it declares) or dead({service}).',
+  '- dead code: findings() -> findings({kind}); dead({id}) or dead({service}).',
   '- run time: hot_paths -> slow_steps({entry: id}) -> trace_for({entry: id}); undeclared_failures; never_seen -> dead({id}).',
   '- to hand on: describe_for_prompt({id}), as Markdown.',
   "Shared inputs: `detail` 0 is ids only, 1 (the default) adds file:line, service and kind, 2 a list row's plain facts, one node's all; `service` keeps one service; `maxNodes` caps rows (150 unless said); a cut list says `nextOffset`: ask again with `offset: nextOffset`.",
-  'Only the tools this project can answer are listed: run-time ones after flowatlas observe, check_rules with rules, what_changed after flowatlas diff, channel and type tools once the graph holds one; start_here names the rest in `hidden`.',
+  'Only the tools this project can answer are listed: run-time ones after flowatlas observe, check_rules with rules, what_changed after flowatlas diff, channel and type tools once the graph holds one; start_here names the rest in `hidden`. In Claude Code a tool not loaded yet loads by ToolSearch: every one you need in one call.',
   'Answers are compact: a row leaves out what its `id` says; `verbose: true` gives every field.',
-  'Rows of code carry `reach` (alive; maybe: behind an unread call, see `gap`, `behind`; unreached; dead; outside: called from outside the project) and `from`, the nearest way in: no need to check them; keep maybe rows when asked what breaks. `complete: true` is the whole answer, else `left` says what was cut. Several at once: dead `ids`, find_symbol and search `queries`, get_type `types`, who_calls `symbols`.',
+  'Rows of code carry `reach` (alive; maybe: behind an unread call, see `gap`, `behind`; unreached; dead; outside: called from outside the project) and `from`, the nearest way in: no need to check them; keep maybe rows when asked what breaks. `complete: true` is the whole answer, else `left` says what was cut. Several at once: `ids`, `queries`, `symbols`, `types`.',
 ];
 
 /** The most characters the instructions may run to (P366): they are re-sent on every turn of a session. */
@@ -111,6 +115,12 @@ export interface ServerOptions extends DbHandleOptions {
    * configuration's `mcp` block says (`flowatlas mcp --all-tools`, P201).
    */
   allTools?: boolean;
+  /**
+   * `false` lists no tool to load upfront (`flowatlas mcp --no-always-load`,
+   * P380); otherwise the core tools are, unless the configuration's
+   * `mcp.alwaysLoad` is `false`.
+   */
+  alwaysLoad?: boolean;
   /** How often, in ms, a connected server looks for a graph, observed file or diff that changed; 0 never. */
   toolsPollMs?: number;
   /**
@@ -152,6 +162,7 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
   }
   const settings = listingSettingsOf(handle.config?.mcp, {
     ...(options.allTools === undefined ? {} : { allTools: options.allTools }),
+    ...(options.alwaysLoad === undefined ? {} : { alwaysLoad: options.alwaysLoad }),
     ...(handle.configPath === undefined ? {} : { configPath: handle.configPath }),
   });
 

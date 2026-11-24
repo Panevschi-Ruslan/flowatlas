@@ -225,6 +225,7 @@ export const registerMcp = (program: Command): void => {
     .option('--repo <name>', 'with --install, only this service')
     .option('--dry-run', 'with --install, say what would change and write nothing')
     .option('--all-tools', 'list every tool, not only those the project can answer')
+    .option('--no-always-load', 'list no tool to load upfront: Claude Code defers every tool, the core ones too')
     .action(
       async (options: {
         config?: string;
@@ -233,6 +234,7 @@ export const registerMcp = (program: Command): void => {
         repo?: string;
         dryRun?: boolean;
         allTools?: boolean;
+        alwaysLoad?: boolean;
       }) => {
         if (options.install === true) {
           installMcp({
@@ -284,6 +286,8 @@ export const registerMcp = (program: Command): void => {
           },
           ...missingCandidatesFor(options.config),
           ...(options.allTools === true ? { allTools: true } : {}),
+          // Commander reads `--no-always-load` as `alwaysLoad: false`, and true otherwise.
+          ...(options.alwaysLoad === false ? { alwaysLoad: false } : {}),
         });
       },
     );

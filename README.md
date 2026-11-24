@@ -505,6 +505,10 @@ than search: a skill for Claude Code, a rule for Cursor, and with
 `--instructions` a block in `AGENTS.md`; `--hook` adds a Claude Code hook that,
 after a search naming a route another repository calls, says which repositories
 call it ([the graph server](docs/mcp.md#tell-the-assistant-when-to-ask)).
+In Claude Code the nine core tools load upfront, so a session spends no turn on
+a ToolSearch call for them; `"mcp": { "alwaysLoad": false }` or
+`flowatlas mcp --no-always-load` keeps every tool deferred
+([the core tools, loaded upfront](docs/mcp.md#the-core-tools-loaded-upfront)).
 
 `--install` writes `.mcp.json` into each repository, merging rather than
 overwriting so any servers already there survive. After that, `claude mcp list`

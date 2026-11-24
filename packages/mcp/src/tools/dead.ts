@@ -305,7 +305,7 @@ export const registerDead = (server: McpServer, ctx: ToolContext): void => {
     {
       title: 'Is this dead',
       description:
-        "Whether a node is `dead`, `likely-dead` (a call read in part could reach it: `couldHit`), `unknown` or `alive`, and what could make that wrong; a class or a file also judges each way in it declares (`waysIn`); or a service's dead rows, verdict first.",
+        "Whether a node is `dead`, `likely-dead` (a call read in part could reach it: `couldHit`), `unknown` or `alive`, and why that could be wrong; a class or file also judges each way in it declares (`waysIn`); or a service's dead rows.",
       inputSchema: {
         id: z.string().optional(),
         ids: severalInput(),

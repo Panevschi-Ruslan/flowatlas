@@ -54,7 +54,10 @@ Inside this workspace, where the package is linked rather than published:
 `--db <path>` names a database directly, and `FLOWATLAS_DB` does the same through
 the environment. With neither, the server looks for a configuration from the
 directory it was started in. `--all-tools` lists every tool, not only those the
-project can answer.
+project can answer. The nine core tools are listed with
+`_meta: {"anthropic/alwaysLoad": true}`, so Claude Code loads them upfront;
+`--no-always-load` (or `mcp.alwaysLoad: false` in the configuration) lists
+none that way.
 
 The server answers `initialize` as `flowatlas`. Under `flowatlas mcp` its
 `serverInfo.version` is the installed command's version; the workspace bin

@@ -371,7 +371,7 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
   ends(
     'who_consumes',
     'Who handles a channel',
-    'What handles a channel; empty means nothing does. A name written as code answers for the channel it denotes (`channelUsed`); `type` keeps the handlers that select one message type, or says `unselected` with its `sureness`, `field` those reading it (`readIn`).',
+    'What handles a channel (none: nothing does); a name written as code answers for its channel (`channelUsed`). `type` keeps the handlers of one message type (else `unselected`, with `sureness`), `field` those reading it (`readIn`).',
     'consumers',
   );
 };

@@ -4,10 +4,12 @@ import { join } from 'node:path';
 import { AGENT_HABITS, AGENT_QUESTIONS, agentQuestionsLine, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import { INSTRUCTIONS } from '@flowatlas/mcp';
 import { afterAll, describe, expect, it } from 'vitest';
-import { agentsStatus, installAgents, removeAgents, serverKeyIn, withSearchHook, withoutSearchHook } from '../commands/agents.js';
+import { agentsStatus, installAgents, registeredServer, removeAgents, serverKeyIn, withSearchHook, withoutSearchHook } from '../commands/agents.js';
 import { namesOf, NAMES_FORMAT_VERSION, type NamesIndex } from './names.js';
 import { contextFor, hookOutput, longestLiteral, patternsOf, runSearchHook, shellWords } from './search-hook.js';
 import {
+  ALWAYS_LOAD_SINCE,
+  CORE_TOOLS,
   GUIDE_MAX_LINES,
   guideBody,
   ownedFile,
@@ -55,9 +57,6 @@ describe('the guide every assistant is given (P227)', () => {
   it('keeps the block a team’s file holds short, and says in it how to spend few turns (P366)', () => {
     const block = sharedBlock(GUIDE);
     expect(block.length).toBeLessThanOrEqual(SHARED_MAX_CHARS);
-    expect(block).toContain(
-      '`select:mcp__flowatlas__search,mcp__flowatlas__who_calls,mcp__flowatlas__who_consumes,mcp__flowatlas__who_emits,mcp__flowatlas__dead,mcp__flowatlas__impact,mcp__flowatlas__find_symbol,mcp__flowatlas__list_entries,mcp__flowatlas__get_flow`',
-    );
     for (const habit of AGENT_HABITS) expect(block).toContain(`- ${habit}`);
     expect(block).toContain('`complete: true`');
     expect(block).toContain('`verbose: true`');
@@ -69,8 +68,46 @@ describe('the guide every assistant is given (P227)', () => {
     expect(skill).toContain('ToolSearch call');
   });
 
+  /**
+   * The server lists its core tools to load upfront (P380), so the block read
+   * on every turn spends no turn and no characters on a ToolSearch call for
+   * them: it says they are loaded, and to load any other with every tool
+   * needed in one call. The skill, read when used, keeps the call for a
+   * Claude Code too old to load them; where the server leaves them deferred,
+   * both say the call.
+   */
+  it('tells no ToolSearch call for the core tools where the server loads them upfront, and the one call where it does not (P380)', () => {
+    const select = `\`${toolSearchQuery()}\``;
+    expect(select).toBe(`\`select:${CORE_TOOLS.map((tool) => `mcp__flowatlas__${tool}`).join(',')}\``);
+    expect(CORE_TOOLS).toContain('check_contract');
+    expect(CORE_TOOLS).not.toContain('who_emits');
+    const block = sharedBlock(GUIDE);
+    expect(block).toContain('- In Claude Code the core graph tools are loaded already, with no ToolSearch call; load any other in ONE ToolSearch call with every tool you need.');
+    expect(block).not.toContain('select:');
+    const skill = ownedFile('claude-skill', GUIDE);
+    expect(skill).toContain(`loaded already, with no ToolSearch call; load any other in ONE ToolSearch call with every tool you need. Before Claude Code ${ALWAYS_LOAD_SINCE}: ${select}.`);
+
+    const deferred = { ...GUIDE, alwaysLoad: false };
+    expect(sharedBlock(deferred)).toContain(`- In Claude Code, load the tools in ONE ToolSearch call: ${select}.`);
+    expect(sharedBlock(deferred).length).toBeLessThanOrEqual(SHARED_MAX_CHARS);
+    expect(ownedFile('claude-skill', deferred)).toContain(`load the tools in ONE ToolSearch call: ${select}. Begin with`);
+    expect(ownedFile('claude-skill', deferred)).not.toContain('loaded already');
+  });
+
+  it('reads from .mcp.json whether the server leaves the core tools upfront (P380)', () => {
+    const dir = join(scratch, 'upfront');
+    mkdirSync(dir, { recursive: true });
+    expect(registeredServer(dir)).toEqual({ key: 'flowatlas', alwaysLoad: true });
+    writeFileSync(join(dir, '.mcp.json'), JSON.stringify({ mcpServers: { flowatlas: { command: 'flowatlas', args: ['mcp'], alwaysLoad: false } } }));
+    expect(registeredServer(dir)).toEqual({ key: 'flowatlas', alwaysLoad: false });
+    writeFileSync(join(dir, '.mcp.json'), JSON.stringify({ mcpServers: { graph: { command: 'npx', args: ['flowatlas', 'mcp', '--no-always-load'] } } }));
+    expect(registeredServer(dir)).toEqual({ key: 'graph', alwaysLoad: false });
+    writeFileSync(join(dir, '.mcp.json'), JSON.stringify({ mcpServers: { flowatlas: { command: 'flowatlas', args: ['mcp'], alwaysLoad: true } } }));
+    expect(registeredServer(dir)).toEqual({ key: 'flowatlas', alwaysLoad: true });
+  });
+
   it('writes the ToolSearch line with the name the server is registered under', () => {
-    expect(toolSearchQuery('graph.map')).toMatch(/^select:mcp__graph_map__search,mcp__graph_map__who_calls,/);
+    expect(toolSearchQuery('graph.map')).toMatch(new RegExp(`^select:mcp__graph_map__${CORE_TOOLS[0]},mcp__graph_map__${CORE_TOOLS[1]},`));
     const dir = join(scratch, 'registered');
     mkdirSync(dir, { recursive: true });
     expect(serverKeyIn(dir)).toBe('flowatlas');
@@ -125,6 +162,20 @@ describe('flowatlas agents install, status and remove', () => {
     expect(readFileSync(join(dir('web'), 'CLAUDE.md'), 'utf8')).toBe('# Web\n\nRun the tests before a commit.\n');
     expect(existsSync(join(dir('gateway'), 'AGENTS.md'))).toBe(false);
     expect(existsSync(join(dir('web'), '.claude', 'skills', 'flowatlas', 'SKILL.md'))).toBe(false);
+  });
+
+  it('writes the ToolSearch call into the block where the configuration or .mcp.json leaves the core tools deferred (P380)', () => {
+    const { config, dir } = project('deferred');
+    installAgents({ config, instructions: true });
+    expect(readFileSync(join(dir('web'), 'CLAUDE.md'), 'utf8')).toContain('core graph tools are loaded already');
+    writeFileSync(join(dir('gateway'), '.mcp.json'), JSON.stringify({ mcpServers: { flowatlas: { command: 'flowatlas', args: ['mcp'], alwaysLoad: false } } }));
+    installAgents({ config, instructions: true });
+    expect(readFileSync(join(dir('gateway'), 'AGENTS.md'), 'utf8')).toContain(`load the tools in ONE ToolSearch call: \`${toolSearchQuery()}\``);
+    expect(readFileSync(join(dir('web'), 'CLAUDE.md'), 'utf8')).toContain('core graph tools are loaded already');
+    const written = JSON.parse(readFileSync(config, 'utf8')) as Record<string, unknown>;
+    writeFileSync(config, JSON.stringify({ ...written, mcp: { alwaysLoad: false } }));
+    installAgents({ config, instructions: true });
+    expect(readFileSync(join(dir('web'), 'CLAUDE.md'), 'utf8')).toContain(`load the tools in ONE ToolSearch call: \`${toolSearchQuery()}\``);
   });
 
   it('keeps a guide edited by hand, refuses a file of that name that is not flowatlas’s, and says which', () => {

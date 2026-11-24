@@ -77,6 +77,7 @@ and let it talk on stdin and stdout.
 | `--repo <name>` | with `--install`, only this service |
 | `--dry-run` | with `--install`, say what would change and write nothing |
 | `--all-tools` | list every tool, not only those the project can answer, whatever the configuration's `mcp` block says |
+| `--no-always-load` | list no tool to load upfront: Claude Code defers every tool, the core ones too (see [The core tools, loaded upfront](#the-core-tools-loaded-upfront)) |
 
 The server answers `initialize` as `flowatlas`, with the version of the command
 you installed as `serverInfo.version` (`flowatlas --version` prints the same).
@@ -109,10 +110,13 @@ start of every session and sent again on every turn, so its block is shorter
 than the guide (P366): the services, the questions in a few words, where the
 full guide is, and five lines on spending few turns:
 
-- load the tools in one ToolSearch call, with the `select:` line written out
-  for `search`, `who_calls`, `who_consumes`, `who_emits`, `dead`, `impact`,
-  `find_symbol`, `list_entries` and `get_flow` under the name the server is
-  registered as in the repository's `.mcp.json` (`mcp__flowatlas__search`, …);
+- in Claude Code the core tools are loaded already (P380, [below](#the-core-tools-loaded-upfront)):
+  no ToolSearch call for them; any other tool loads in one ToolSearch call with
+  every tool the question needs. Where the server leaves them deferred
+  (`mcp.alwaysLoad: false` in the configuration, or the repository's
+  `.mcp.json` entry saying `"alwaysLoad": false` or `--no-always-load`), the
+  line is the one call that loads them, the `select:` line written out under
+  the name the server is registered as there (`mcp__flowatlas__who_calls`, …);
 - an answer that says `complete: true` is the whole answer: check only what it
   lists as left unread or unsure, not its rows one by one or with a search;
 - keep `reach: "maybe"` rows when asked what breaks or calls something: they
@@ -254,6 +258,42 @@ the nearest tool (`mcp.exclude.0: no tool is named "check_rule"; did you mean
 check_rules?`); a tool in both lists is refused too. `flowatlas mcp --all-tools`
 lists every tool and ignores the block.
 
+### The core tools, loaded upfront
+
+Claude Code defers every MCP tool by default: a session sees the tools' names
+only, and its first turn on a graph question went on a ToolSearch call loading
+them, a turn that re-sends the whole session's context. Since P380 the server
+lists nine core tools with `_meta: {"anthropic/alwaysLoad": true}`, which
+Claude Code v2.1.285 and later loads upfront, so their schemas are there from
+the first turn: `who_calls`, `list_entries`, `who_consumes`, `check_contract`,
+`find_symbol`, `impact`, `search`, `get_flow` and `dead`, the tools agents ask
+most. The rest (`who_emits`, `get_source`, `start_here`, …) load by ToolSearch
+when a question needs them, every one needed in one call; the instructions say
+so, and the guide `flowatlas agents install` writes tells no ToolSearch call
+for the core tools. One list (`CORE_TOOLS`) is what the server marks and what
+the guide names.
+
+An upfront tool is paid on every turn of every session, asked or not, so the
+nine are listed lean: their model-visible listing (name, description, input
+schema) is 5,633 characters (about 1,400 tokens) on the main fixture, held
+under `UPFRONT_LISTING_MAX` (5,700) by the tests and the [answer
+budget](#the-answer-budget-p373); a listed schema leaves out the lower bounds
+that say nothing (`minItems: 1`, `minLength: 1`, `minimum: 0` or `1`, still
+checked on every call), and the instructions leave out what the core tools'
+descriptions say. Each upfront description stays under the 4,096 characters
+Claude Code keeps of one.
+
+To keep every tool deferred:
+
+- `"mcp": { "alwaysLoad": false }` in `flowatlas.config.json`, or
+  `flowatlas mcp --no-always-load` in the server's command: no tool is marked,
+  and the guide `agents install` writes says the one ToolSearch call that loads
+  the core tools;
+- or, in Claude Code's MCP configuration, `"alwaysLoad": false` on the
+  server's entry (Claude Code v2.1.287 or later), which defers every tool of
+  the server whatever it marks; `agents install` reads it from the
+  repository's `.mcp.json` and writes the guide to match.
+
 ### Answers
 
 Every answer is one compact JSON document, in the text content and again as
@@ -386,9 +426,11 @@ misses one it must; says `complete: false` where the right answer is
 complete; takes more calls than recorded; or answers complete and still took
 more than one. The fixed overhead is held the same way: the instructions, the
 guide block and skill description `flowatlas agents install` writes (read on
-every turn), and the listing a model reads for the core tools the guide has
-it load in one ToolSearch call, the tools the main fixture is offered and all
-of them.
+every turn), and the listing a model reads for the core tools the server
+lists to load upfront (read on every turn too since P380: the tools marked
+`anthropic/alwaysLoad`, which must be exactly `CORE_TOOLS`, and whose listing
+must also fit `UPFRONT_LISTING_MAX`), the tools the main fixture is offered and
+all of them.
 
 `node scripts/answer-budget.mjs --table` prints the table, the fixed overhead
 first and then each question; `--update` re-records the sizes (never the

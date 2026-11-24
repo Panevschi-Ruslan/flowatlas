@@ -618,7 +618,7 @@ export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
     'search',
     {
       title: 'Search everything',
-      description: 'One query over routes, channels, messages, tables, types, gaps, failures, classes and fields read or sent.',
+      description: 'Any node by name (`kinds` narrows), a field read or sent, or a route by the path a client writes.',
       inputSchema: {
         query: z.string().min(1).optional(),
         queries: severalInput(),

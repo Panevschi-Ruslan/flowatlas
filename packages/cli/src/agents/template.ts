@@ -1,5 +1,8 @@
 import { createHash } from 'node:crypto';
 import { AGENT_HABITS, AGENT_QUESTIONS, AGENT_RULES } from '@flowatlas/core';
+import { CORE_TOOLS } from '@flowatlas/mcp';
+
+export { CORE_TOOLS };
 
 /**
  * What `flowatlas agents install` writes for each assistant (P227).
@@ -22,6 +25,12 @@ export interface AgentGuide {
   here: readonly string[];
   /** The name the graph server is registered under in that repository's `.mcp.json`; `flowatlas` when it says none. */
   server?: string;
+  /**
+   * Whether the graph server lists its core tools to load upfront there
+   * (P380): unless the configuration's `mcp.alwaysLoad` or the `.mcp.json`
+   * entry (`"alwaysLoad": false`, `--no-always-load`) turns it off.
+   */
+  alwaysLoad?: boolean;
 }
 
 /** Where an assistant reads instructions from, and whether the file is flowatlas's own. */
@@ -62,9 +71,6 @@ const others = (guide: AgentGuide): string[] => guide.services.map((service) => 
 export const guideDescription = (guide: AgentGuide): string =>
   `Use for questions that cross this project's repositories (${guide.services.map((service) => service.name).join(', ')}): who calls this, what breaks if it changes, who handles a message, how a request flows, is it dead. A search of one checkout cannot see the others; the flowatlas graph joins them.`;
 
-/** The tools a session loads at once (P366): the ones nearly every question takes. */
-export const CORE_TOOLS: readonly string[] = ['search', 'who_calls', 'who_consumes', 'who_emits', 'dead', 'impact', 'find_symbol', 'list_entries', 'get_flow'];
-
 /** The name the graph server is registered under when a repository's `.mcp.json` says nothing else. */
 export const DEFAULT_SERVER = 'flowatlas';
 
@@ -72,15 +78,31 @@ export const DEFAULT_SERVER = 'flowatlas';
  * The ToolSearch query that loads the core tools in one call (P366), with
  * the names Claude Code gives a server's tools: `mcp__<server>__<tool>`, the
  * server's name with anything but letters, digits, `_` and `-` made `_`.
- * Each tool loaded alone is a turn of its own.
+ * Each tool loaded alone is a turn of its own. Since P380 the server lists
+ * the core tools to load upfront, so the guide writes this only where they
+ * do not (turned off, or a Claude Code too old to read the mark).
  */
 export const toolSearchQuery = (server: string = DEFAULT_SERVER): string => {
   const prefix = `mcp__${server.replace(/[^A-Za-z0-9_-]/g, '_')}__`;
   return `select:${CORE_TOOLS.map((tool) => `${prefix}${tool}`).join(',')}`;
 };
 
+/** The Claude Code release that first loads a tool its server marks upfront. */
+export const ALWAYS_LOAD_SINCE = 'v2.1.285';
+
+/**
+ * How to load the tools, in a line (P380): with the core tools upfront there
+ * is no ToolSearch call to make for them, only one for every other tool a
+ * question needs; with them deferred, the one call that loads them.
+ */
 const toolSearchLine = (guide: AgentGuide): string =>
-  `In Claude Code, load the tools in ONE ToolSearch call: \`${toolSearchQuery(guide.server)}\`.`;
+  guide.alwaysLoad === false
+    ? `In Claude Code, load the tools in ONE ToolSearch call: \`${toolSearchQuery(guide.server)}\`.`
+    : 'In Claude Code the core graph tools are loaded already, with no ToolSearch call; load any other in ONE ToolSearch call with every tool you need.';
+
+/** The same for the full guide, read when used: where the core tools are upfront, the call for a Claude Code that does not load them. */
+const toolSearchSaid = (guide: AgentGuide): string =>
+  guide.alwaysLoad === false ? toolSearchLine(guide) : `${toolSearchLine(guide)} Before Claude Code ${ALWAYS_LOAD_SINCE}: \`${toolSearchQuery(guide.server)}\`.`;
 
 const servicesLine = (guide: AgentGuide): string =>
   `This repository (${guide.here.join(', ')}) is one of ${guide.services.length} that flowatlas joins: ${guide.services.map((service) => `${service.name} (${service.type})`).join(', ')}.`;
@@ -104,7 +126,7 @@ export const guideBody = (guide: AgentGuide): string => {
     '',
     '## How',
     '',
-    `- ${toolSearchLine(guide)} Begin with \`start_here\` when you do not know where to start.`,
+    `- ${toolSearchSaid(guide)} Begin with \`start_here\` when you do not know where to start.`,
     ...[...AGENT_HABITS, ...AGENT_RULES].map((rule) => `- ${rule}`),
     '',
     'The graph server is registered in `.mcp.json`. Without it, every command above answers with `--format json`.',

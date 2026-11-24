@@ -1488,12 +1488,12 @@
     }
   ],
   "fixed": {
-    "instructions": 2493,
-    "guideBlock": 1205,
+    "instructions": 2384,
+    "guideBlock": 1055,
     "skillDescription": 268,
-    "listingCore": 5870,
-    "listingDefault": 10667,
-    "listingAll": 13346
+    "listingCore": 5633,
+    "listingDefault": 10321,
+    "listingAll": 12904
   },
   "recorded": {
     "impact.multi-repo": {

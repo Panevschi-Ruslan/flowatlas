@@ -34,7 +34,29 @@ const thinned = (property: Json, shared: Json): Json => {
   return kept;
 };
 
-/** A tool's input schema as listed: no `$schema` header, and the shared inputs reduced to what they say of their own. */
+/**
+ * The lower bounds a model never needs told (P380): a list or a string of at
+ * least one, a number of at least 0 or 1. Nobody asks for an empty list or a
+ * depth of 0, and a call that did is still refused by the full schema; the
+ * core tools are listed on every turn, so each costs every turn.
+ */
+const SAYS_NOTHING: ReadonlyMap<string, ReadonlySet<unknown>> = new Map([
+  ['minItems', new Set([0, 1])],
+  ['minLength', new Set([0, 1])],
+  ['minimum', new Set([0, 1])],
+]);
+
+/** One input's schema without the lower bounds that say nothing, its items' too. */
+const withoutTrivialBounds = (property: Json): Json => {
+  const kept: Json = {};
+  for (const [key, value] of Object.entries(property)) {
+    if (SAYS_NOTHING.get(key)?.has(value) === true) continue;
+    kept[key] = key === 'items' && value !== null && typeof value === 'object' && !Array.isArray(value) ? withoutTrivialBounds(value as Json) : value;
+  }
+  return kept;
+};
+
+/** A tool's input schema as listed: no `$schema` header, the shared inputs reduced to what they say of their own, no bound that says nothing. */
 export const listedInputSchema = (schema: Json): Json => {
   const { $schema: _header, ...rest } = schema;
   const properties = rest['properties'];
@@ -42,7 +64,8 @@ export const listedInputSchema = (schema: Json): Json => {
   const out: Json = {};
   for (const [name, property] of Object.entries(properties as Record<string, Json>)) {
     const shared = SHARED.get(name);
-    out[name] = shared === undefined || property === null || typeof property !== 'object' ? property : thinned(property, shared);
+    if (property === null || typeof property !== 'object') out[name] = property;
+    else out[name] = withoutTrivialBounds(shared === undefined ? property : thinned(property, shared));
   }
   return { ...rest, properties: out };
 };
