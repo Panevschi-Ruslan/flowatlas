@@ -179,6 +179,8 @@ export const shapeFields = (db: GraphDb, ref: string | undefined, type?: string,
 };
 
 const astFields = (db: GraphDb, ast: TypeRefAst, type: string | undefined, depth: number): string[] | undefined => {
+  // A type made of itself (`type Json = string | Json[]`) is not walked forever: past the depth a shape is read to, it is unknown.
+  if (depth > 4) return undefined;
   if (ast.kind === 'object') return ast.fields.map((field) => field.name);
   if (ast.kind === 'id') {
     const entry = db.type(ast.id);
