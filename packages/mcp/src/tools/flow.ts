@@ -176,7 +176,7 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
     {
       title: 'Trace an entry point',
       description:
-        'One entry followed across repositories, as a call-order tree with guards; with `to`, the shortest ways there. A node met again is `{id, ref: true, seenAt}`; `stoppedBy` says what cut it and `crossingsLeft` the crossings to ask on.',
+        'One entry followed across repositories, as a call-order tree with guards; with `to`, the shortest ways there. `stoppedBy` says what cut it and `crossingsLeft` the crossings to ask on.',
       inputSchema: {
         entry: z.string().describe('"POST /orders", an id or a name'),
         to: z.string().optional(),
