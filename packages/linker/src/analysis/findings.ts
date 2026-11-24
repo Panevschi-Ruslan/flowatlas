@@ -178,6 +178,8 @@ const PRECISION: Readonly<Record<string, Precision>> = {
   'field-never-sent': 'high',
   'type-never-published': 'high',
   'annotation-to-missing-route': 'high',
+  // A literal route an earlier parameter route answers never runs (P385).
+  'route-shadowed-by-earlier': 'high',
   'unguarded-among-guarded': 'medium',
   'env-not-set': 'medium',
   'n-plus-one': 'medium',
@@ -185,6 +187,16 @@ const PRECISION: Readonly<Record<string, Precision>> = {
   unguarded: 'low',
   'one-ended-channel': 'medium',
   rule: 'high',
+  // A deployment's settings against the code it runs (P389): a lost or repeated message is a defect; a missing
+  // redrive, few receives, an unretried function or a callback with no heartbeat is advice, ranked below.
+  'batch-failures-unreported': 'high',
+  'queue-visibility-short': 'high',
+  'batch-failures-ignored': 'medium',
+  'workflow-task-untimed': 'medium',
+  'queue-redrive-missing': 'low',
+  'queue-receives-few': 'low',
+  'workflow-lambda-unretried': 'low',
+  'workflow-callback-no-heartbeat': 'low',
 };
 
 /** How sure a finding of a kind is, at a severity where the kind has several. */
@@ -490,12 +502,17 @@ const DEFAULT_RANKER: Ranker = { order: (a: FindingRow, b: FindingRow) => most(a
 
 /** The order kinds are listed in: what looks broken between the services first, the named kinds, then every other by name. */
 export const compareFindingKinds = (a: string, b: string): number => {
+  // The surest kinds first, whichever ticket added them (a shadowed route, a lost message), then the listed order.
+  const sure = (kind: string): number => PRECISION_ORDER.indexOf(precisionOf(kind));
   const at = (kind: string): number => {
     const index = (FINDING_KINDS as readonly string[]).indexOf(kind);
     return index < 0 ? FINDING_KINDS.length : index;
   };
-  return at(a) - at(b) || byId(a, b);
+  return sure(a) - sure(b) || at(a) - at(b) || byId(a, b);
 };
+
+/** Precision, surest first. */
+const PRECISION_ORDER: readonly Precision[] = ['high', 'medium', 'low'];
 
 /**
  * The findings ranked by reach (P95): each kind measured and ordered by its
