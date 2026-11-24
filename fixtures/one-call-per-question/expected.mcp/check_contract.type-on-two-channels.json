@@ -1,0 +1,105 @@
+{
+  "type": "HELP_REQUESTED",
+  "carriedBy": [
+    "channel:desk_events",
+    "channel:floor_events"
+  ],
+  "answers": [
+    {
+      "channel": "channel:desk_events",
+      "type": "HELP_REQUESTED",
+      "producers": [
+        {
+          "id": "producer:shop-api#src/desk/desk.service.ts:10:11",
+          "type": "producer",
+          "label": "event desk_events",
+          "loc": "src/desk/desk.service.ts:10",
+          "service": "shop-api",
+          "kind": "event",
+          "reach": "alive",
+          "from": "POST /api/desks/:param/help",
+          "sends": [
+            "type",
+            "deskNumber",
+            "note"
+          ]
+        }
+      ],
+      "consumers": [
+        {
+          "id": "consumer:ops-bot#src/notify/notify.service.ts:NotifyService.page",
+          "type": "consumer",
+          "label": "NotifyService.page",
+          "loc": "src/notify/notify.service.ts:20",
+          "service": "ops-bot",
+          "kind": "event",
+          "reach": "alive",
+          "from": "POST /api/desks/:param/help (shop-api)",
+          "reads": [
+            "deskId",
+            "note",
+            "type"
+          ]
+        }
+      ],
+      "missing": [
+        {
+          "field": "deskId",
+          "id": "ops-bot#src/notify/notify.service.ts:NotifyService.onDeskEvent",
+          "line": 16
+        }
+      ],
+      "unused": [
+        {
+          "field": "deskNumber",
+          "sentBy": [
+            "producer:shop-api#src/desk/desk.service.ts:10:11"
+          ]
+        }
+      ],
+      "complete": true
+    },
+    {
+      "channel": "channel:floor_events",
+      "type": "HELP_REQUESTED",
+      "producers": [
+        {
+          "id": "producer:shop-api#src/floor/floor.service.ts:10:11",
+          "type": "producer",
+          "label": "event floor_events",
+          "loc": "src/floor/floor.service.ts:10",
+          "service": "shop-api",
+          "kind": "event",
+          "reach": "alive",
+          "from": "POST /api/floor/:param/help",
+          "sends": [
+            "type",
+            "table",
+            "note"
+          ]
+        }
+      ],
+      "consumers": [
+        {
+          "id": "consumer:ops-bot#src/floor/floor.watcher.ts:FloorWatcher.onFloorEvent",
+          "type": "consumer",
+          "label": "FloorWatcher.onFloorEvent",
+          "loc": "src/floor/floor.watcher.ts:13",
+          "service": "ops-bot",
+          "kind": "event",
+          "reach": "alive",
+          "from": "POST /api/floor/:param/help (shop-api)",
+          "reads": [
+            "note",
+            "table",
+            "type"
+          ]
+        }
+      ],
+      "missing": [],
+      "unused": [],
+      "complete": true
+    }
+  ],
+  "complete": true
+}

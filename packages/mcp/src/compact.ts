@@ -61,11 +61,12 @@
  *
  * A field it does not know is kept, so a field a later tool adds is handed on
  * whole. `verbose: true` on any tool skips this and answers as before.
- * `get_source` is never compacted: what it returns is code, said once already.
+ * `get_source` and `describe_for_prompt` answer compact as plain text instead
+ * (P382, `plain-text.ts`): code and Markdown, not a document to slim.
  */
 
-/** Tools whose answer is handed on as written, `verbose` or not. */
-export const FULL_ANSWER_TOOLS: ReadonlySet<string> = new Set(['get_source']);
+/** Tools whose answer is handed on as written, `verbose` or not: none since P382, kept for a tool that needs it. */
+export const FULL_ANSWER_TOOLS: ReadonlySet<string> = new Set<string>();
 
 /** How many calls a compact `next` holds when the list was not cut. */
 export const COMPACT_MAX_NEXT = 2;

@@ -130,3 +130,10 @@ test('every question names its fixture, tool, lists and a right answer, and ids 
   }
   for (const id of Object.keys(budget.recorded ?? {})) assert.ok(ids.includes(id), `${id} recorded for no question`);
 });
+
+test('holds a plain-text answer to what its text must and must not say (P382)', () => {
+  const result = { first: { text: '29  cancel() { … }' }, lists: new Map(), measured: { complete: null, calls: 1 } };
+  assert.deepEqual(wrongIn({ says: ['cancel() { … }'], saysNot: ['\\n'] }, result), []);
+  assert.deepEqual(wrongIn({ says: ['ready()'] }, result), ['the text does not say "ready()"']);
+  assert.deepEqual(wrongIn({ saysNot: ['cancel'] }, result), ['the text says "cancel", which it must not']);
+});

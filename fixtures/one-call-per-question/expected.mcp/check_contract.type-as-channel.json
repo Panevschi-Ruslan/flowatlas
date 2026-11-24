@@ -1,0 +1,50 @@
+{
+  "channel": "channel:order_updates",
+  "type": "ORDER_READY",
+  "producers": [
+    {
+      "id": "producer:shop-api#src/orders/orders.service.ts:11:11",
+      "type": "producer",
+      "label": "event order_updates",
+      "loc": "src/orders/orders.service.ts:11",
+      "service": "shop-api",
+      "kind": "event",
+      "reach": "alive",
+      "from": "POST /api/orders/:param/ready",
+      "sends": [
+        "type",
+        "orderId",
+        "label"
+      ]
+    }
+  ],
+  "consumers": [
+    {
+      "id": "consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady",
+      "type": "consumer",
+      "label": "BotService.handleOrderReady",
+      "loc": "src/bot/bot.service.ts:16",
+      "service": "ops-bot",
+      "kind": "event",
+      "reach": "alive",
+      "from": "POST /events/orders",
+      "reads": [
+        "label",
+        "type"
+      ]
+    }
+  ],
+  "missing": [],
+  "unused": [
+    {
+      "field": "orderId",
+      "sentBy": [
+        "producer:shop-api#src/orders/orders.service.ts:11:11"
+      ]
+    }
+  ],
+  "complete": true,
+  "next": [
+    "who_consumes({channel: \"channel:order_updates\", type: \"ORDER_READY\"})"
+  ]
+}

@@ -50,7 +50,7 @@ describe('the guide every assistant is given (P227)', () => {
     expect(skill).toMatch(/^---\nname: flowatlas\ndescription: "Use for questions that cross this project's repositories/);
     expect(ownedFile('cursor-rule', GUIDE)).toMatch(/\nalwaysApply: false\n---\n/);
     expect(ownedState(skill)).toBe('ours');
-    expect(ownedState(skill.replace('Narrow, then read', 'Read'))).toBe('edited');
+    expect(ownedState(skill.replace('One call per question', 'Read'))).toBe('edited');
     expect(ownedState('# my own skill\n')).toBe('foreign');
   });
 
@@ -60,7 +60,8 @@ describe('the guide every assistant is given (P227)', () => {
     for (const habit of AGENT_HABITS) expect(block).toContain(`- ${habit}`);
     expect(block).toContain('`complete: true`');
     expect(block).toContain('`verbose: true`');
-    expect(block).toContain('.claude/skills/flowatlas/SKILL.md');
+    // No line points at the full guide (P382): the skill loads itself, and a pointer invited a Read.
+    expect(block).not.toContain('SKILL.md');
     // The table is the full guide's: loaded when used, not on every turn.
     expect(block).not.toContain('| Question |');
     const skill = ownedFile('claude-skill', GUIDE);
@@ -90,20 +91,53 @@ describe('the guide every assistant is given (P227)', () => {
     const deferred = { ...GUIDE, alwaysLoad: false };
     expect(sharedBlock(deferred)).toContain(`- In Claude Code, load the tools in ONE ToolSearch call: ${select}.`);
     expect(sharedBlock(deferred).length).toBeLessThanOrEqual(SHARED_MAX_CHARS);
-    expect(ownedFile('claude-skill', deferred)).toContain(`load the tools in ONE ToolSearch call: ${select}. Begin with`);
+    expect(ownedFile('claude-skill', deferred)).toContain(`load the tools in ONE ToolSearch call: ${select}.\n`);
     expect(ownedFile('claude-skill', deferred)).not.toContain('loaded already');
+  });
+
+  /**
+   * Claude Code reads `CLAUDE.md` beside the server's instructions where the
+   * repository's `.mcp.json` registers the server (P382): those say the
+   * questions, the call for each and the habits on every turn already, so
+   * the block keeps the services and the one habit for an edit. `AGENTS.md`
+   * and Copilot's file, read by assistants that may never start the server,
+   * keep the whole block.
+   */
+  it('shrinks the CLAUDE.md block where the server is registered, and keeps the whole block elsewhere (P382)', () => {
+    const registered = { ...GUIDE, registered: true };
+    const claude = sharedBlock(registered, 'claude-md');
+    expect(claude.length).toBeLessThanOrEqual(450);
+    expect(claude).toContain('one of 3 that the flowatlas graph joins (gateway, orders, web)');
+    expect(claude).toContain(`- ${AGENT_HABITS[0]}`);
+    expect(AGENT_HABITS[0]).toContain('`impact` first');
+    expect(claude).not.toContain('`complete: true`');
+    expect(sharedBlock(registered, 'agents-md')).toBe(sharedBlock(GUIDE));
+    expect(sharedBlock(registered, 'copilot')).toBe(sharedBlock(GUIDE));
+    expect(sharedBlock(GUIDE, 'claude-md')).toBe(sharedBlock(GUIDE));
+    expect(sharedBlock({ ...registered, alwaysLoad: false }, 'claude-md')).toContain(`ONE ToolSearch call: \`${toolSearchQuery()}\``);
+  });
+
+  /** A question is one call (P382): no rule teaches a lookup first, and the habits name each tool's own key for several. */
+  it('teaches one call per question and names each tool\'s key for several at once (P382)', () => {
+    const skill = ownedFile('claude-skill', GUIDE);
+    expect(skill).not.toContain('Narrow, then read');
+    expect(skill).not.toContain('Begin with');
+    expect(skill).toContain('One call per question');
+    expect(AGENT_HABITS.join(' ')).toContain('who_calls and impact `symbols`, dead `ids`, find_symbol and search `queries`, get_type `types`');
+    expect(AGENT_HABITS.join(' ')).not.toContain('`ids: [...]`');
+    expect(INSTRUCTIONS).toContain('Before changing a route, handler, body type or message payload: impact first.');
   });
 
   it('reads from .mcp.json whether the server leaves the core tools upfront (P380)', () => {
     const dir = join(scratch, 'upfront');
     mkdirSync(dir, { recursive: true });
-    expect(registeredServer(dir)).toEqual({ key: 'flowatlas', alwaysLoad: true });
+    expect(registeredServer(dir)).toEqual({ key: 'flowatlas', alwaysLoad: true, registered: false });
     writeFileSync(join(dir, '.mcp.json'), JSON.stringify({ mcpServers: { flowatlas: { command: 'flowatlas', args: ['mcp'], alwaysLoad: false } } }));
-    expect(registeredServer(dir)).toEqual({ key: 'flowatlas', alwaysLoad: false });
+    expect(registeredServer(dir)).toEqual({ key: 'flowatlas', alwaysLoad: false, registered: true });
     writeFileSync(join(dir, '.mcp.json'), JSON.stringify({ mcpServers: { graph: { command: 'npx', args: ['flowatlas', 'mcp', '--no-always-load'] } } }));
-    expect(registeredServer(dir)).toEqual({ key: 'graph', alwaysLoad: false });
+    expect(registeredServer(dir)).toEqual({ key: 'graph', alwaysLoad: false, registered: true });
     writeFileSync(join(dir, '.mcp.json'), JSON.stringify({ mcpServers: { flowatlas: { command: 'flowatlas', args: ['mcp'], alwaysLoad: true } } }));
-    expect(registeredServer(dir)).toEqual({ key: 'flowatlas', alwaysLoad: true });
+    expect(registeredServer(dir)).toEqual({ key: 'flowatlas', alwaysLoad: true, registered: true });
   });
 
   it('writes the ToolSearch line with the name the server is registered under', () => {
@@ -164,6 +198,17 @@ describe('flowatlas agents install, status and remove', () => {
     expect(existsSync(join(dir('web'), '.claude', 'skills', 'flowatlas', 'SKILL.md'))).toBe(false);
   });
 
+  it('writes the short block into a CLAUDE.md whose repository registers the server, and says it is installed (P382)', () => {
+    const { config, dir } = project('beside-instructions');
+    writeFileSync(join(dir('web'), '.mcp.json'), JSON.stringify({ mcpServers: { flowatlas: { command: 'flowatlas', args: ['mcp'] } } }));
+    installAgents({ config, instructions: true });
+    const claude = readFileSync(join(dir('web'), 'CLAUDE.md'), 'utf8');
+    expect(claude).toContain('its instructions name the one call for each question');
+    expect(claude).not.toContain('`complete: true`');
+    expect(agentsStatus({ config, repo: 'web' }).changes.find((change) => change.file.endsWith('CLAUDE.md'))?.state).toBe('installed');
+    expect(installAgents({ config, instructions: true, repo: 'web' }).changes.find((change) => change.file.endsWith('CLAUDE.md'))?.state).toBe('unchanged');
+  });
+
   it('writes the ToolSearch call into the block where the configuration or .mcp.json leaves the core tools deferred (P380)', () => {
     const { config, dir } = project('deferred');
     installAgents({ config, instructions: true });
@@ -182,7 +227,7 @@ describe('flowatlas agents install, status and remove', () => {
     const { config, dir } = project('edited');
     installAgents({ config, repo: 'web' });
     const skill = join(dir('web'), '.claude', 'skills', 'flowatlas', 'SKILL.md');
-    writeFileSync(skill, readFileSync(skill, 'utf8').replace('Narrow, then read', 'Read'));
+    writeFileSync(skill, readFileSync(skill, 'utf8').replace('One call per question', 'Read'));
     const rule = join(dir('web'), '.cursor', 'rules', 'flowatlas.mdc');
     writeFileSync(rule, '# our own rule\n');
     expect(installAgents({ config, repo: 'web' }).changes.map((change) => change.state)).toEqual(['edited by hand', 'not flowatlas']);

@@ -491,7 +491,7 @@
               "edge": {
                 "type": "calls",
                 "params": [
-                  "{…22 fields}"
+                  "{\u202622 fields}"
                 ],
                 "returns": "string"
               }
@@ -1763,6 +1763,146 @@
         ]
       },
       "note": "P381: the filter says the two ways in it left out and the call without it, never complete."
+    },
+    {
+      "id": "check_contract.route-alias",
+      "ask": "who reads userRef of the body sent to PATCH /api/orders/:orderId/cancel",
+      "fixture": "one-call-per-question",
+      "tool": "check_contract",
+      "args": {
+        "route": "PATCH /api/orders/:orderId/cancel",
+        "field": "userRef"
+      },
+      "lists": [
+        "reads"
+      ],
+      "expect": {
+        "complete": true,
+        "exact": [
+          "reads"
+        ],
+        "lists": {
+          "reads": [
+            "shop-api#src/auth/client.guard.ts:ClientGuard.clientRef"
+          ]
+        }
+      },
+      "note": "P382: `route` is read as `edge`, the parameter named as the caller names it; it answered \"give either edge, or both from and to\", and the agent grepped and read the handlers."
+    },
+    {
+      "id": "check_contract.type-on-two-channels",
+      "ask": "does every handler of HELP_REQUESTED get the fields it reads",
+      "fixture": "one-call-per-question",
+      "tool": "check_contract",
+      "args": {
+        "channel": "HELP_REQUESTED"
+      },
+      "lists": [
+        "missing",
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "exact": [
+          "missing"
+        ],
+        "lists": {
+          "missing": [
+            "deskId"
+          ],
+          "consumers": [
+            "consumer:ops-bot#src/notify/notify.service.ts:NotifyService.page",
+            "consumer:ops-bot#src/floor/floor.watcher.ts:FloorWatcher.onFloorEvent"
+          ]
+        }
+      },
+      "note": "P382: a type of message given as the channel is answered on each channel carrying it; it answered no channel \"HELP_REQUESTED\"."
+    },
+    {
+      "id": "check_contract.type-as-channel",
+      "ask": "what does each side of ORDER_READY send and read",
+      "fixture": "one-call-per-question",
+      "tool": "check_contract",
+      "args": {
+        "channel": "ORDER_READY"
+      },
+      "lists": [
+        "consumers",
+        "producers"
+      ],
+      "expect": {
+        "complete": true,
+        "exact": [
+          "consumers"
+        ],
+        "lists": {
+          "consumers": [
+            "consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady"
+          ],
+          "producers": [
+            "producer:shop-api#src/orders/orders.service.ts:11:11"
+          ]
+        }
+      },
+      "note": "P382: the one channel carrying the type, answered for that type."
+    },
+    {
+      "id": "get_source.class-skeleton",
+      "ask": "what does OrdersController hold, and where",
+      "fixture": "one-call-per-question",
+      "tool": "get_source",
+      "args": {
+        "symbol": "OrdersController"
+      },
+      "lists": [
+        "text"
+      ],
+      "expect": {
+        "says": [
+          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { \u2026 }",
+          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { \u2026 }",
+          "48    listNotes(@Param('orderId') orderId: string): string[] { \u2026 }",
+          "whole: true"
+        ],
+        "saysNot": [
+          "pinnedA - pinnedB",
+          "\\n"
+        ]
+      },
+      "note": "P382: a class answers its skeleton as plain text, each body folded with its line numbers; it answered every body as a JSON string, escaped."
+    },
+    {
+      "id": "get_flow.detail-2-once",
+      "ask": "what runs behind PATCH /api/orders/:orderId/cancel, at detail 2",
+      "fixture": "one-call-per-question",
+      "tool": "get_flow",
+      "args": {
+        "route": "PATCH /api/orders/:orderId/cancel",
+        "detail": 2
+      },
+      "lists": [
+        "root"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "root": [
+            "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+            "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+            "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+            "channel:order_updates",
+            "ops-bot#src/bot/bot.service.ts:BotService.handleOrderCancelled"
+          ]
+        },
+        "rowsSay": {
+          "root": {
+            "shop-api#src/orders/orders.controller.ts:OrdersController.cancel": {
+              "edge": "handles"
+            }
+          }
+        }
+      },
+      "note": "P382: `route` is read as `entry`; the step's edge says no types its signature says, and the reader's own meta and the route's fails and guards said twice are gone."
     }
   ],
   "fixed": {
@@ -2086,6 +2226,41 @@
       "chars": 411,
       "tokens": 103,
       "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "check_contract.route-alias": {
+      "chars": 394,
+      "tokens": 99,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "check_contract.type-on-two-channels": {
+      "chars": 1300,
+      "tokens": 325,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "check_contract.type-as-channel": {
+      "chars": 664,
+      "tokens": 166,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "get_source.class-skeleton": {
+      "chars": 1322,
+      "tokens": 331,
+      "rows": 0,
+      "complete": null,
+      "calls": 1
+    },
+    "get_flow.detail-2-once": {
+      "chars": 5186,
+      "tokens": 1297,
+      "rows": 17,
       "complete": true,
       "calls": 1
     },

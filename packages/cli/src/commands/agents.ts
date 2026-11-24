@@ -107,13 +107,16 @@ type ServerEntry = { command?: unknown; args?: unknown; alwaysLoad?: unknown };
  * The graph server's entry in a repository's `.mcp.json` (P380): its key, and
  * whether it leaves the core tools upfront - not when the entry says
  * `"alwaysLoad": false` (Claude Code then defers every tool of the server) or
- * starts the server with `--no-always-load`.
+ * starts the server with `--no-always-load`; and whether there is one at
+ * all (`registered`, P382), where Claude Code then reads the server's
+ * instructions in every session.
  */
-export const registeredServer = (repoDir: string): { key: string; alwaysLoad: boolean } => {
+export const registeredServer = (repoDir: string): { key: string; alwaysLoad: boolean; registered: boolean } => {
   const text = read(join(repoDir, MCP_FILE));
-  if (text === undefined) return { key: SERVER_KEY, alwaysLoad: true };
+  if (text === undefined) return { key: SERVER_KEY, alwaysLoad: true, registered: false };
   const said = (key: string, entry: ServerEntry | undefined) => ({
     key,
+    registered: true,
     alwaysLoad: entry?.alwaysLoad !== false && !(Array.isArray(entry?.args) && entry.args.includes('--no-always-load')),
   });
   try {
@@ -126,7 +129,7 @@ export const registeredServer = (repoDir: string): { key: string; alwaysLoad: bo
   } catch {
     // Not JSON: the server is not registered there in any way a client reads.
   }
-  return { key: SERVER_KEY, alwaysLoad: true };
+  return { key: SERVER_KEY, alwaysLoad: true, registered: false };
 };
 
 const guideFor = (loaded: LoadedConfig, repo: Repo): AgentGuide => {
@@ -136,6 +139,7 @@ const guideFor = (loaded: LoadedConfig, repo: Repo): AgentGuide => {
     here: repo.services,
     server: server.key,
     alwaysLoad: server.alwaysLoad && loaded.config.mcp?.alwaysLoad !== false,
+    registered: server.registered,
   };
 };
 
@@ -284,7 +288,7 @@ export const installAgents = (options: AgentsOptions = {}): AgentsRun => {
         const existing = read(path);
         // Only AGENTS.md is made where there is none: the others are a tool's own file, and written only where it is used.
         if (existing === undefined && target !== 'agents-md') continue;
-        const block = sharedBlock(guide);
+        const block = sharedBlock(guide, target);
         // Claude Code reads AGENTS.md only where there is no CLAUDE.md, so a CLAUDE.md gets the guide itself.
         const next = withGuideBlock(existing, block);
         if (next === existing) {
@@ -334,7 +338,7 @@ export const agentsStatus = (options: AgentsOptions = {}): AgentsRun => {
                   : 'out of date';
       } else {
         if (existing === undefined || !hasGuideBlock(existing)) continue;
-        state = existing.includes(sharedBlock(guide)) ? 'installed' : 'out of date';
+        state = existing.includes(sharedBlock(guide, target)) ? 'installed' : 'out of date';
       }
       run.changes.push({ services: repo.services, file: path, state });
     }

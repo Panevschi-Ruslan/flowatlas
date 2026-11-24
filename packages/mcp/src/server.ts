@@ -34,38 +34,33 @@ export const SERVER_NAME = 'flowatlas';
  * What a session is told before its first question, and again on every turn
  * after it (P366): a client re-sends the instructions with every request,
  * while a tool's description and input reach the model only once the tool is
- * loaded. So this says what no single tool can - which tool to begin with,
- * how their ids chain, which tools are listed when, and the inputs every tool
- * shares - and what one tool's answer needs is said on that tool. At most
- * `INSTRUCTIONS_MAX` characters, with room for a line or two more.
+ * loaded. So this says what no single tool can - which call answers each
+ * question, what every answer's rows and `complete` mean, which tools are
+ * listed when, and the inputs every tool shares - and what one tool's answer
+ * needs is said on that tool. At most `INSTRUCTIONS_MAX` characters in every
+ * variant a server can be started in.
  *
  * The core tools load upfront too (P380), so their descriptions are re-sent
  * on every turn beside these lines: what one of them says (a channel's `type`
  * and `field`, what `search` finds) is said there, not again here.
  *
- * The chains are spelled out because they are the point: every row carries an
- * `id` the next tool takes as it is, and every answer ends with `next`, the
- * calls that take the ids it just returned.
+ * A question is one call (P382): each line names the call that answers a
+ * question, with the name as the question has it, never a chain that starts
+ * by looking the id up. The lines every answer needs come first: a client
+ * before Claude Code v2.1.296 kept only the first 2,048 characters.
  */
 const INSTRUCTION_LINES: readonly string[] = [
-  'A map of every repository in this project, already joined.',
-  // The same questions the files `flowatlas agents install` writes list (P227).
+  'A map of every repository in this project, already joined: ask it, not a search of the files. Each question is one call:',
+  // The same questions the files `flowatlas agents install` writes list (P227), each with its call (P382).
   agentQuestionsLine(),
-  'Ask the tool your question needs; start_here when you do not know where to begin (counts per service, the commonest gaps, entry ids).',
-  'Every row carries an `id` the next tool takes as it is; every answer ends with `next`, the calls that take those ids. The chains:',
-  '- entry: list_entries -> get_flow({entry: id}) -> get_source({symbol: id}) on the step that matters.',
-  '- channel: who_emits or who_consumes({channel: id}) -> get_flow({entry: id}) on a handler.',
-  '- symbol: find_symbol -> who_calls or impact({symbol: id}) -> get_flow on an entry it names.',
-  '- shape: get_type({type: id}) -> type_usage; check_contract on a crossing, a route or a channel; get_spec({service}).',
-  '- name: search({query}), any kind of node.',
-  '- stops: cant_follow -> get_source on a place it names; test_pattern on a draft rule.',
-  '- dead code: findings() -> findings({kind}); dead({id}) or dead({service}).',
-  '- run time: hot_paths -> slow_steps({entry: id}) -> trace_for({entry: id}); undeclared_failures; never_seen -> dead({id}).',
-  '- to hand on: describe_for_prompt({id}), as Markdown.',
-  "Shared inputs: `detail` 0 is ids only, 1 (the default) adds file:line, service and kind, 2 a list row's plain facts, one node's all; `service` keeps one service; `maxNodes` caps rows (150 unless said); a cut list says `nextOffset`: ask again with `offset: nextOffset`.",
+  'A symbol is an id, a `Class.method` or a route said aloud ("GET /orders/:id"); `service` picks among same-named ones. Before changing a route, handler, body type or message payload: impact first.',
+  'Rows of code carry `reach` (alive; maybe: behind an unread call, `gap`, `behind`; unreached; dead; outside: called from outside the project) and `from`, the nearest way in: no need to check them; keep maybe rows when asked what breaks. `complete: true` is the whole answer, else `left` says what was cut. Several at once: who_calls and impact `symbols`, dead `ids`, find_symbol and search `queries`, get_type `types`.',
+  'Each row\'s `id` goes into the next tool as it is; `next` lists the calls that take them.',
+  'More: search({query}) any node by name or words; list_entries the ways in; find_symbol a symbol; get_source({symbol: id}) a step\'s code; get_type({type: id}) -> type_usage; get_spec({service}); findings() what looks wrong; test_pattern a draft rule; start_here a project you do not know (counts, gaps, entry ids).',
+  'Run time: hot_paths -> slow_steps or trace_for({entry: id}); undeclared_failures; never_seen.',
+  "Shared inputs: `detail` 0 ids only, 1 (the default) adds file:line, service and kind, 2 a list row's plain facts, one node's all; `service` names where the thing is (a list: the one it keeps); `maxNodes` caps rows (150 unless said); a cut list says `nextOffset`: pass it as `offset`.",
+  'Answers are compact; `verbose: true` gives every field.',
   'Only the tools this project can answer are listed: run-time ones after flowatlas observe, check_rules with rules, what_changed after flowatlas diff, channel and type tools once the graph holds one; start_here names the rest in `hidden`. In Claude Code a tool not loaded yet loads by ToolSearch: every one you need in one call.',
-  'Answers are compact: a row leaves out what its `id` says; `verbose: true` gives every field.',
-  'Rows of code carry `reach` (alive; maybe: behind an unread call, see `gap`, `behind`; unreached; dead; outside: called from outside the project) and `from`, the nearest way in: no need to check them; keep maybe rows when asked what breaks. `complete: true` is the whole answer, else `left` says what was cut. Several at once: `ids`, `queries`, `symbols`, `types`.',
 ];
 
 /** The most characters the instructions may run to (P366): they are re-sent on every turn of a session. */
@@ -75,7 +70,7 @@ export const INSTRUCTIONS_MAX = 2500;
 const LISTING_LINE = INSTRUCTION_LINES.find((line) => line.startsWith('Only the tools this project can answer')) as string;
 
 /** Said instead of the chains' last step when the server serves no code (P360). */
-const NO_CODE_LINE = 'This server serves no code: to read a step, open the file and line its row gives at `detail` 1 (`loc`, or the file in its `id` and `line`), in its repository.';
+const NO_CODE_LINE = 'This server serves no code: read a step at the file and line its row gives (`loc`, or its `id` and `line`), in its repository.';
 
 export const INSTRUCTIONS = INSTRUCTION_LINES.join('\n');
 

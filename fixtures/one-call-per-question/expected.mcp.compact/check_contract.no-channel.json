@@ -1,0 +1,12 @@
+{
+  "error": "no channel or type of message \"NO_SUCH_THING\"",
+  "channels": [
+    "channel:desk_events",
+    "channel:floor_events",
+    "channel:order_updates"
+  ],
+  "next": [
+    "check_contract({channel: \"channel:desk_events\"})",
+    "check_contract({channel: \"channel:floor_events\"})"
+  ]
+}

@@ -107,8 +107,14 @@ questions. Nothing in it changes with a build; counts and gaps come from
 
 A team's own file (`AGENTS.md`, `CLAUDE.md`, Copilot's) is read whole at the
 start of every session and sent again on every turn, so its block is shorter
-than the guide (P366): the services, the questions in a few words, where the
-full guide is, and five lines on spending few turns:
+than the guide (P366): the services, the questions in a few words, and five
+lines on spending few turns. It names no full guide to read (P382): the skill
+loads itself when its description fits, and a line pointing at it invited a
+Read, a turn of its own.
+
+- before changing a route, handler, body type or message payload: `impact`
+  first (P382), the one habit that saves a broken caller in a repository the
+  agent never opened;
 
 - in Claude Code the core tools are loaded already (P380, [below](#the-core-tools-loaded-upfront)):
   no ToolSearch call for them; any other tool loads in one ToolSearch call with
@@ -118,16 +124,27 @@ full guide is, and five lines on spending few turns:
   line is the one call that loads them, the `select:` line written out under
   the name the server is registered as there (`mcp__flowatlas__who_calls`, …);
 - an answer that says `complete: true` is the whole answer: check only what it
-  lists as left unread or unsure, not its rows one by one or with a search;
-- keep `reach: "maybe"` rows when asked what breaks or calls something: they
-  sit behind an unread call (`gap`), not nowhere (P367);
-- pass several ids in one call, and send calls that do not need each other
-  together;
-- answers are compact: ask `verbose: true` only when a field you need is
-  missing.
+  lists as unread or unsure, not its rows; keep its `reach: "maybe"` rows when
+  asked what breaks: they sit behind an unread call (`gap`), not nowhere
+  (P367);
+- several in one call, under each tool's own key: who_calls and impact
+  `symbols`, dead `ids`, find_symbol and search `queries`, get_type `types`;
+  calls that do not need each other together;
+- answers are compact: `verbose: true` gives every field.
+
+Where Claude Code reads the server's instructions beside the block, they say
+the questions, the call for each and the habits on every turn already, so the
+block in `CLAUDE.md` of a repository whose `.mcp.json` registers the server is
+the services and the habit for an edit, about 370 characters where the whole
+block is about 1,050 (P382); with the core tools deferred it keeps the
+ToolSearch line too. `AGENTS.md` and Copilot's file, read by assistants that
+may never start the server, keep the whole block.
 
 The guide (the skill and the Cursor rule, read when used) says the same with
-the table and the other rules.
+the table and the other rules: one call per question, each tool taking the
+name as the agent has it (an id, `Class.method`, a route said aloud) and
+`service` picking among same-named ones; `start_here` only for a project the
+agent does not know.
 
 Found from the working directory, the project is the nearest configuration
 above it. Run inside a git repository that is none of the project's (neither
@@ -275,7 +292,7 @@ the guide names.
 
 An upfront tool is paid on every turn of every session, asked or not, so the
 nine are listed lean: their model-visible listing (name, description, input
-schema) is 5,633 characters (about 1,400 tokens) on the main fixture, held
+schema) is 5,655 characters (about 1,400 tokens) on the main fixture (5,633 before P382), held
 under `UPFRONT_LISTING_MAX` (5,700) by the tests and the [answer
 budget](#the-answer-budget-p373); a listed schema leaves out the lower bounds
 that say nothing (`minItems: 1`, `minLength: 1`, `minimum: 0` or `1`, still
@@ -297,9 +314,18 @@ To keep every tool deferred:
 ### Answers
 
 Every answer is one compact JSON document, in the text content and again as
-`structuredContent`, so a client reads whichever it prefers. `start_here`,
-`list_entries`, `find_symbol`, `who_emits`, `who_consumes`, `get_type`,
-`get_source`, `search`, `cant_follow`, `dead`, `findings` and `type_usage` declare an `outputSchema`, and a
+`structuredContent`, so a client reads whichever it prefers. Claude Code hands
+the model `JSON.stringify(structuredContent)` on a success, so the two are
+held to be the same characters (the [answer budget](#the-answer-budget-p373)
+fails otherwise, P382): what is measured is what the model reads. The two
+tools whose answer is a text to read answer compact as that text, with no
+structured content to escape it into (P382): `get_source` the code (a line
+saying the id and the lines, the code, then each other field on a line of
+its own) and `describe_for_prompt` its Markdown (then whatever the Markdown
+does not already say). `verbose: true` gives either one's JSON document.
+`start_here`, `list_entries`, `find_symbol`, `who_emits`, `who_consumes`,
+`get_type`, `search`, `cant_follow`, `dead`, `findings` and `type_usage`
+declare an `outputSchema`, and a
 client can check every answer against it; the tree tools follow once their
 shape is settled. An answer that is an error (`{ "error": … }`) carries
 `isError: true` and no `structuredContent`, every time, so a client shows a
@@ -430,7 +456,31 @@ every turn), and the listing a model reads for the core tools the server
 lists to load upfront (read on every turn too since P380: the tools marked
 `anthropic/alwaysLoad`, which must be exactly `CORE_TOOLS`, and whose listing
 must also fit `UPFRONT_LISTING_MAX`), the tools the main fixture is offered and
-all of them.
+all of them. Since P382 it measures the instructions of a server started on a
+database alone too (`instructionsDb`, both held under `INSTRUCTIONS_MAX`) and
+the short `CLAUDE.md` block (`guideBlockClaude`); it fails an answer whose
+text is not `JSON.stringify(structuredContent)`, what Claude Code hands the
+model; and an answer handed on as plain text (`get_source`,
+`describe_for_prompt`) is held to the strings its text must hold (`says`) and
+must not (`saysNot`).
+
+P382 added five, each one call: `check_contract` with `route` and the route's
+parameter named as the caller names it (394 characters, where the call
+answered a 49-character error and the agent grepped), with a type of message
+two channels carry given as the channel (1,300, both channels, where it
+answered "no channel" and took two more calls, 1,384), with a type one channel
+carries (664, where it took an error and a second call), `get_source` on a
+controller (its skeleton as plain text, 1,322, where it answered the class's
+code escaped in JSON, 1,769), and `get_flow` at detail 2 on the cancel route
+(5,186 where 6,219: no reader's meta, no edge types the step's signature
+says, no fails and guards twice). Two answers already budgeted fell for the
+same reason: `get_flow` at detail 2 on a route 2,766 to 2,143, and on a
+screen's method 1,933 to 1,668. The instructions went from 2,384 to 2,368
+(2,426 to 2,428 on a database alone, `service` now saying where the thing is), the guide block from 1,055 to 1,054,
+and in a `CLAUDE.md` read beside the instructions to 366; the listing grew by
+`get_source`'s `whole` and `verbose` and `check_contract`'s description saying
+a route and a type alone (core 5,633 to 5,655, offered 10,321 to 10,428, all
+12,904 to 13,011).
 
 `node scripts/answer-budget.mjs --table` prints the table, the fixed overhead
 first and then each question; `--update` re-records the sizes (never the
@@ -662,7 +712,8 @@ search({query}) → whichever of the above its row's id goes to
 cant_follow → get_source on a place it names
 ```
 
-The server's instructions describe the same chains. `list_entries`,
+The server's instructions name the one call for each question instead
+(P382), with the name as the question has it. `list_entries`,
 `find_symbol`, `search`, `who_calls`, `impact`, `who_emits`, `who_consumes`,
 `start_here`, `what_changed`, `cant_follow`, `dead`, `findings`, `type_usage`,
 `check_rules`, `test_pattern` and the traffic tools `hot_paths`, `slow_steps`,
@@ -923,7 +974,7 @@ route matched too. A helper's choices count: `423` finds the routes whose
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `get_flow` | one entry, or any symbol, followed through every repository it reaches, in call order, with the guard chain; with `to`, only the shortest ways to that node | `entry` (required: a route said aloud, an id, `Class.method` or a short name, as `who_calls` takes it), `to`, `depth` (8, one more per workflow step), `maxChars` |
+| `get_flow` | one entry, or any symbol, followed through every repository it reaches, in call order, with the guard chain; with `to`, only the shortest ways to that node. At detail 2 each fact is said once (P382): an edge leaves out the `params` and `returns` the step's signature says, every step leaves out the reader's own meta (`adapter`, `controller`, `rawPath`, `source`, `package`, `receiver`, `entityType`), and a step with its own `fails` and `guards` leaves out the meta's `fails` and `access` | `entry` (required: a route said aloud, an id, `Class.method` or a short name, as `who_calls` takes it; `route` and `symbol` are read as it), `to`, `depth` (8, one more per workflow step), `maxChars` |
 | `who_calls` | everything that reaches a symbol, backwards across repositories, up to every way in: the nearest callers as a tree, then each way in once under `waysIn` | `symbol` or `symbols` (required), `depth` (how many hops the tree draws, 16 at most; unset, two, one on a class or several symbols; the ways in past it are listed whatever it is), `service` |
 | `impact` | every way in whose code calls a symbol, in any service: its own, those past each route on the calling side with `via`, and `maybe` rows where a chain stops at an unread call; the ways in only beyond a channel a consumer on the way takes messages from counted in `throughChannels`, one row per consumer | `symbol` (required), `channel` (list one of `throughChannels`: a channel, or a consumer for all of its), `service`, `offset` |
 
@@ -1325,7 +1376,19 @@ edge names answers with `nested` and a note: it is used inside one function at
 most. `get_type`'s `next` names `type_usage` first.
 
 `check_contract` identifies a crossing either by its two ends or by one string:
-`"from -http_calls-> to"`. Its `findings`, when the contracts checker is
+`"from -http_calls-> to"`. It takes a question as an agent writes it (P382):
+`route` or `entry` is read as `edge` (the server reads the names agents reach
+for as each tool's own input where that is not given too: `route` and
+`symbol` for `get_flow`'s `entry`, `id` for `get_source`'s `symbol`, `route`
+for `who_calls` and `impact`, `symbol` for `dead`'s `id` and `symbols` for its `ids`, `id` for `get_type`'s `type`; they are not listed, so the upfront listing pays
+nothing for them); one end alone (`to: entry` or `from: entry`) is the entry;
+a handler alone answers the error with `check_contract` on the route it
+handles; and a type of message given as `channel` (`HELP_REQUESTED`, in any
+case) is answered on the channel carrying it, or, where several carry it, on
+each in one answer, `{ type, carriedBy, answers, complete }`. An input that
+names nothing answers an error whose `next` holds the exact calls to make:
+the nearest ways in or channels, the channels there are, the calls into or
+out of the end given, or a `search` for the route by its path. Its `findings`, when the contracts checker is
 installed (`flowatlas mcp` installs it), are `{ severity, kind, direction,
 field, expected, actual, message, ignored? }`; the crossing is the answer's
 `edge`.
@@ -1606,7 +1669,19 @@ the same `graph.db not found … run flowatlas build` the tools answer.
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `get_source` | the code of one symbol, by id or by name | `symbol` (required), `context`, `fromLine`, `maxLines` |
+| `get_source` | the code of one symbol, by id or by name, as plain text; a class as its skeleton | `symbol` (required), `context`, `fromLine`, `maxLines`, `whole` |
+
+Compact, the answer is the code as plain text (P382): a first line `// <id>
+<file>:<line>-<endLine>`, the code, then `// next: …` and any other field on
+lines of their own, with no JSON string to escape it into. A class read from
+its start answers its skeleton: its decorators, its declaration and each
+member's first lines, every line with its number in the file, each body folded
+to `{ … }` on the line that opens it (`skeleton: true` in the document);
+`whole: true` gives the class's code, `fromLine` reads on from a line as
+before, and `next` starts with the `whole` call. `verbose: true` answers the
+JSON document (`id`, `file`, `line`, `endLine`, `code`, `skeleton?`,
+`truncated?`, `requests?`, `next`), as before; it lists no output schema, since
+a client reads a plain answer only where no structured content comes with it.
 
 At most `maxLines` lines (400, the most there is) per answer. A declaration
 longer than that says `truncated: "declaration continues past line N; ask with
@@ -1619,14 +1694,15 @@ asks for that one name.
 
 ## Using it well
 
-The shape that works is **narrow, then read**:
-
-1. `find_symbol` or `list_entries` to get the exact id.
-2. `get_flow`, `who_calls` or `impact` to see what it connects to.
-3. `get_source` on the one or two names that turned out to matter.
-
-Going straight to `get_source` on a guess costs a lot of context and usually
-answers the wrong question. The graph is cheap; source is not.
+The shape that works is **one call per question** (P382): the tool the
+question needs, with the name as you have it. `who_calls`, `impact`,
+`get_flow`, `get_source` and `check_contract` each take an id, a
+`Class.method` or a route said aloud, and `service` picks among same-named
+ones; a lookup first (`find_symbol`, then the question's own tool) is a turn
+for nothing. Before changing a route, handler, body type or message payload,
+ask `impact` first. Read code (`get_source`) only for the step an answer
+points at: a class answers its skeleton, a method its code. The graph is
+cheap; source is not.
 
 Some prompts that work as they are:
 

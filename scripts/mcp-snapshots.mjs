@@ -205,7 +205,8 @@ const COMPACT_CASES = [
   ['dead.service', 'dead', { service: 'gateway', verbose: false }],
   ['who_consumes.order-created', 'who_consumes', { channel: 'order.created', detail: 2, verbose: false }],
   ['who_emits.order-created', 'who_emits', { channel: 'order.created', verbose: false }],
-  ['describe_for_prompt.entry', 'describe_for_prompt', { id: 'entry:orders:http:POST:/orders', verbose: false }],
+  // Its Markdown as plain text (P382), recorded as `{text}`.
+  ['describe_for_prompt.entry', '#callText', { name: 'describe_for_prompt', arguments: { id: 'entry:orders:http:POST:/orders' } }],
 ];
 
 /** Message types chosen by screens' handlers through a stream wrapper, compact (P365), at both levels of detail. */
@@ -428,6 +429,32 @@ const PICKED_CASES = [
 ];
 /** The same, compact: what an agent is handed. */
 const PICKED_COMPACT_CASES = PICKED_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
+ * One call per question (P382): check_contract on a route said with `route`
+ * and another parameter name, on a type of message given as the channel (one
+ * channel carries one type, two carry the other), and on inputs that name
+ * nothing, each error naming the calls to make; a class's skeleton; a
+ * detail-2 flow that says each fact once.
+ */
+const ONE_CALL_CASES = [
+  ['check_contract.route-alias', 'check_contract', { route: 'PATCH /api/orders/:orderId/cancel', field: 'userRef' }],
+  ['check_contract.type-as-channel', 'check_contract', { channel: 'ORDER_READY' }],
+  ['check_contract.type-on-two-channels', 'check_contract', { channel: 'HELP_REQUESTED' }],
+  ['check_contract.nothing-named', 'check_contract', {}],
+  ['check_contract.handler-alone', 'check_contract', { from: 'shop-api#src/orders/orders.controller.ts:OrdersController.cancel' }],
+  ['check_contract.no-channel', 'check_contract', { channel: 'NO_SUCH_THING' }],
+  ['get_source.class-skeleton', 'get_source', { symbol: 'OrdersController' }],
+  ['get_flow.detail-2-once', 'get_flow', { route: 'PATCH /api/orders/:orderId/cancel', detail: 2 }],
+];
+/**
+ * The same, compact: what an agent is handed; get_source and
+ * describe_for_prompt as the plain text they answer, recorded as `{text}`.
+ */
+const ONE_CALL_COMPACT_CASES = [
+  ...ONE_CALL_CASES.filter(([name]) => !name.startsWith('get_source')).map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]),
+  ['get_source.class-skeleton', '#callText', { name: 'get_source', arguments: { symbol: 'OrdersController' } }],
+  ['get_source.method', '#callText', { name: 'get_source', arguments: { symbol: 'OrdersController.addNote' } }],
+  ['describe_for_prompt.route', '#callText', { name: 'describe_for_prompt', arguments: { id: 'PATCH /api/orders/:orderId/cancel' } }],
+];
 
 /** The same impact and a flow through the rendered child, compact (P370). */
 const RENDERED_REACH_COMPACT_CASES = [
@@ -663,6 +690,11 @@ const CLIENT_ASKS = {
   '#listResources': (client) => client.listResources(),
   '#listResourceTemplates': (client) => client.listResourceTemplates(),
   '#readResource': async (client, args) => JSON.parse((await client.readResource(args)).contents[0].text),
+  // An answer handed on as plain text (P382): its text, and that no structured content came with it.
+  '#callText': async (client, args) => {
+    const response = await client.callTool(args);
+    return { text: response.content[0].text, structuredContent: response.structuredContent !== undefined };
+  },
 };
 
 /**
@@ -939,6 +971,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'service-picks-the-symbol'),
     outDir: join(root, 'fixtures', 'service-picks-the-symbol', 'expected.mcp.compact'),
     cases: PICKED_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'one-call-per-question'),
+    outDir: join(root, 'fixtures', 'one-call-per-question', 'expected.mcp'),
+    cases: ONE_CALL_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'one-call-per-question'),
+    outDir: join(root, 'fixtures', 'one-call-per-question', 'expected.mcp.compact'),
+    cases: ONE_CALL_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

@@ -6,6 +6,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { readGraphFile, resolveNodeId } from '../../../../scripts/fixture-nodes.mjs';
 import { createFlowatlasServer, INSTRUCTIONS, INSTRUCTIONS_MAX } from '../server.js';
+import { UPFRONT_DESCRIPTION_MAX } from '../upfront.js';
 import type { FlowNode } from '../query/types.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
@@ -298,11 +299,47 @@ describe('the tools a session is offered', () => {
    * before, 2,131 after, with room under the ceiling for a line or two that
    * describes a field every answer carries. P380 left out what the core
    * tools, loaded upfront beside them, say themselves: 2,493 to 2,384.
+   *
+   * P382 says each question with its one call, where chains began by looking
+   * the id up, and checks every variant a server starts in: started on a
+   * database alone, with no code to serve and its own last line, it sent
+   * 2,535 characters, past the ceiling no test measured it against. Now
+   * 2,341 from a configuration (2,368 with the pattern tester, 2,384 before), 2,428 from a database alone, 2,455 from a
+   * database with the pattern tester. The line every answer needs (`reach`,
+   * `complete`, the plural keys) is in the first 2,048 characters, all a
+   * client before Claude Code v2.1.296 kept.
    */
-  it('come with instructions that fit their ceiling, and name the tool to begin with and every chain', () => {
+  it('come with instructions that fit their ceiling in every variant, a call for each question, and no lookup first (P382)', async () => {
     expect(INSTRUCTIONS.length).toBeLessThanOrEqual(INSTRUCTIONS_MAX);
+    expect(INSTRUCTIONS_MAX).toBeLessThan(UPFRONT_DESCRIPTION_MAX);
     expect(client.getInstructions()).toBe(INSTRUCTIONS);
-    for (const said of ['start_here when you do not know where to begin', 'loads by ToolSearch', '- entry: ', '- channel: ', '- symbol: ', '- shape: ', 'Only the tools this project can answer', '`detail` 0']) expect(INSTRUCTIONS).toContain(said);
+    for (const said of ['who calls this: who_calls({symbol})', 'does each side send what the other reads: check_contract', 'a route said aloud', 'impact first', 'loads by ToolSearch', 'Only the tools this project can answer', '`detail` 0', 'start_here a project you do not know'])
+      expect(INSTRUCTIONS).toContain(said);
+    for (const gone of ['find_symbol -> who_calls', 'list_entries -> get_flow', 'Begin with']) expect(INSTRUCTIONS).not.toContain(gone);
+    expect(INSTRUCTIONS.indexOf('`complete: true` is the whole answer')).toBeLessThan(2048 - 200);
+    expect(INSTRUCTIONS.indexOf('get_type `types`')).toBeLessThan(2048);
+    const db = join(FIXTURE, '.flowatlas', 'graph.db');
+    const variants: Array<[string, Parameters<typeof createFlowatlasServer>[0]]> = [
+      ['a configuration with the tester', { configPath: CONFIG, patternTester: async () => ({ rules: [] }) }],
+      ['a database alone', { dbPath: db }],
+      ['a database alone with the tester', { dbPath: db, patternTester: async () => ({ rules: [] }) }],
+    ];
+    for (const [name, options] of variants) {
+      const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
+      await createFlowatlasServer({ toolsPollMs: 0, ...options }).connect(serverSide);
+      const other = new Client({ name: 'test', version: '0' });
+      await other.connect(clientSide);
+      try {
+        const said = other.getInstructions() ?? '';
+        expect(said.length, name).toBeLessThanOrEqual(INSTRUCTIONS_MAX);
+        if (name.startsWith('a database')) {
+          expect(said, name).toContain('This server serves no code');
+          expect(said, name).not.toContain('get_source');
+        }
+      } finally {
+        await other.close();
+      }
+    }
   });
 
   /**
@@ -311,12 +348,22 @@ describe('the tools a session is offered', () => {
    * who_emits' `channels`, list_entries' `called`) and by the output schemas
    * that answer several channels and say `callers` and `throughDead`, the core
    * descriptions trimmed so the upfront listing stays under its ceiling.
+   *
+   * What a model reads of the listing is each tool's name, description and
+   * input schema; an output schema never reaches it (Claude Code hands it
+   * the structured content, not the schema it fits), so the ceilings measure
+   * what is read, and the output schemas have a ceiling of their own for the
+   * client. P382 gave get_source `whole` and `verbose` and dropped its output
+   * schema, and named a route and a type alone on check_contract: 13,011
+   * read (12,904 before) and 18,896 of output schemas, each ceiling the next
+   * 50 above.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(13000);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(37250);
+    expect(read.length).toBeLessThan(13050);
+    const output = JSON.stringify(tools.map(({ name, outputSchema }) => ({ name, outputSchema })));
+    expect(output.length).toBeLessThan(18950);
   });
 
   /**
@@ -353,8 +400,8 @@ describe('the tools a session is offered', () => {
       const { tools } = await plain.listTools();
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-      expect(read.length).toBeLessThan(99999);
-      expect(JSON.stringify({ tools }).length).toBeLessThan(33600);
+      // What the model reads of the nineteen (P382): 10,428, where this measured the output schemas too.
+      expect(read.length).toBeLessThan(10450);
     } finally {
       await plain.close();
     }
@@ -367,7 +414,6 @@ describe('the tools a session is offered', () => {
       'dead',
       'find_symbol',
       'findings',
-      'get_source',
       'get_type',
       'list_entries',
       'search',
@@ -843,7 +889,7 @@ describe('whether two services still agree', () => {
 
   it('says so when there is no such edge', async () => {
     const answer = await call('check_contract', { from: 'a', to: 'b' });
-    expect(answer.error).toContain('no edge');
+    expect(answer.error).toContain('no call');
   });
 
   it('lists every crossing between two services, each with the call that checks it (P94)', async () => {

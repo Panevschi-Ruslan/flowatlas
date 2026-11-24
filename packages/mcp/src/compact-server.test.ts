@@ -44,16 +44,14 @@ const QUESTIONS: Array<[string, Record<string, unknown>]> = [
   ['search', { query: 'orders' }],
   ['dead', { service: 'gateway' }],
   ['who_consumes', { channel: 'order.created', detail: 2 }],
-  ['describe_for_prompt', { id: 'entry:orders:http:POST:/orders' }],
 ];
 
 describe('compact answers at the boundary (P365)', () => {
-  it('lists verbose on every tool but get_source, and output schemas that require no field', async () => {
+  it('lists verbose on every tool, and output schemas that require no field', async () => {
     const { tools } = await client.listTools();
     for (const tool of tools) {
       const properties = (tool.inputSchema.properties ?? {}) as Record<string, unknown>;
-      if (tool.name === 'get_source') expect(properties.verbose, tool.name).toBeUndefined();
-      else expect(properties.verbose, tool.name).toEqual({ type: 'boolean' });
+      expect(properties.verbose, tool.name).toEqual({ type: 'boolean' });
       if (tool.outputSchema !== undefined) expect(JSON.stringify(tool.outputSchema), tool.name).not.toContain('"required"');
     }
   });
@@ -107,9 +105,16 @@ describe('compact answers at the boundary (P365)', () => {
     expect(rows.some((row) => typeof row.line === 'number')).toBe(true);
   });
 
-  it('hands get_source over whole', async () => {
+  /** Code and Markdown as the text they are (P382): no structured content to escape them into. */
+  it('hands get_source and describe_for_prompt over as plain text, and the document with verbose: true', async () => {
     const full = await ask('get_source', { symbol: SYMBOL, verbose: true });
     const short = await ask('get_source', { symbol: SYMBOL });
-    expect(short.content[0]!.text).toBe(full.content[0]!.text);
+    const code = (JSON.parse(full.content[0]!.text) as { code: string }).code;
+    expect(short.structuredContent).toBeUndefined();
+    expect(short.content[0]!.text).toContain(code);
+    const markdown = (JSON.parse((await ask('describe_for_prompt', { id: 'entry:orders:http:POST:/orders', verbose: true })).content[0]!.text) as { markdown: string }).markdown;
+    const said = await ask('describe_for_prompt', { id: 'entry:orders:http:POST:/orders' });
+    expect(said.structuredContent).toBeUndefined();
+    expect(said.content[0]!.text.startsWith(markdown.trimEnd())).toBe(true);
   });
 });

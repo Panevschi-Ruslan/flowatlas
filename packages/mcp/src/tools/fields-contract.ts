@@ -15,6 +15,7 @@ import {
   unreadIn,
   type Reading,
 } from '../query/fields.js';
+import { nearNames } from '../query/names.js';
 import { withNext } from '../query/next.js';
 import type { ReachReader } from '../query/ways-in.js';
 import { callOf, completeOf } from './common.js';
@@ -121,6 +122,25 @@ export const compareFields = (
 };
 
 /**
+ * The channels that carry a type of message written as `value` (P382): an
+ * agent that knows the message (`HELP_REQUESTED`) and not the channel it
+ * travels on writes it as the channel. The type as written first, then
+ * written in another case; by channel id.
+ */
+export const channelsCarrying = (db: GraphDb, value: string): Array<{ channel: string; type: string }> => {
+  const wanted = value.trim();
+  if (wanted === '') return [];
+  const types = db.nodesByType('channel').filter(isMessageTypeNode);
+  const said = (node: GraphNode): string => String(node.meta?.['messageType'] ?? node.label);
+  const exact = types.filter((node) => said(node) === wanted);
+  const found = exact.length > 0 ? exact : types.filter((node) => said(node).toLowerCase() === wanted.toLowerCase());
+  return found
+    .map((node) => ({ channel: String(node.meta?.['channel'] ?? ''), type: said(node) }))
+    .filter((one) => one.channel !== '' && db.node(one.channel) !== undefined)
+    .sort((a, b) => (a.channel < b.channel ? -1 : a.channel > b.channel ? 1 : 0));
+};
+
+/**
  * `check_contract({channel, type?, field?})`: every publish and every
  * handler of the channel (or of the type), what each sends and reads, and
  * where they disagree.
@@ -132,9 +152,17 @@ export const channelContract = (
 ): object => {
   const found = resolveChannelRef(db, input.channel);
   if (found === undefined || 'candidates' in found) {
+    // No channel of that name (P382): the nearest channels, each as the call to make.
+    const channels = db.nodesByType('channel').filter((node) => !isMessageTypeNode(node));
+    const close = found === undefined ? nearNames(channels, input.channel, 3) : found.candidates;
+    // Nothing near: the channels there are, a few, so the next call is one of them and not a search.
+    const near = close.length > 0 ? close : [...channels].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).slice(0, 3);
     return withNext(
-      { error: found === undefined ? `no channel ${JSON.stringify(input.channel.trim())}` : `${JSON.stringify(input.channel.trim())} fits ${found.candidates.length} channels; ask for one of them` },
-      (found?.candidates ?? []).slice(0, 2).map((node) => callOf('check_contract', { channel: node.id, type: input.type })),
+      {
+        error: found === undefined ? `no channel or type of message ${JSON.stringify(input.channel.trim())}` : `${JSON.stringify(input.channel.trim())} fits ${found.candidates.length} channels; ask for one of them`,
+        ...(found === undefined && near.length > 0 ? { [close.length > 0 ? 'near' : 'channels']: near.map((node) => node.id) } : {}),
+      },
+      near.slice(0, 2).map((node) => callOf('check_contract', { channel: node.id, type: input.type, field: input.field })),
     );
   }
   const parent = isMessageTypeNode(found.node) ? (db.node(String(found.node.meta?.['channel'] ?? '')) ?? found.node) : found.node;

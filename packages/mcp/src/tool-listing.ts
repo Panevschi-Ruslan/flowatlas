@@ -3,7 +3,9 @@ import { ConfigInvalidError, observedPathFor, ruleSetOf, type FlowatlasConfig, t
 import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer, RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema, type GetPromptResult } from '@modelcontextprotocol/sdk/types.js';
+import { withInputAliases } from './input-aliases.js';
 import { listedTools } from './listed-schema.js';
+import { plainTextOf } from './plain-text.js';
 import { compactAnswer, compactOutputSchema, FULL_ANSWER_TOOLS } from './compact.js';
 import { offeredOnly, offeredText, type Offer } from './offered.js';
 import type { DbHandle } from './query/db.js';
@@ -401,8 +403,9 @@ export class ToolListing {
         const refused = this.refusal(request.params.name);
         if (refused !== undefined) return respond(refused);
         // `verbose` is the boundary's, not the tool's (P365): the tool answers as it always has, and is never told.
-        // Several inputs said any way a guide teaches (`ids`, a list in the single input) are the tool's list (P381).
-        const { verbose, ...asked } = pluralAsked(request.params.name, request.params.arguments ?? {});
+        // An input under the name an agent reaches for is the tool's own (P382), and several inputs said any way a
+        // guide teaches are the tool's list (P381).
+        const { verbose, ...asked } = pluralAsked(request.params.name, withInputAliases(request.params.name, request.params.arguments ?? {}));
         const compact = verbose !== true && !FULL_ANSWER_TOOLS.has(request.params.name);
         // A service said by its repository's folder is the service (P377); one named nowhere answers the services there are.
         const said = typeof asked['service'] === 'string' ? this.#serviceNamed(asked['service']) : undefined;
@@ -415,7 +418,7 @@ export class ToolListing {
         const notNamed = named !== undefined && 'error' in named ? named : callersIn !== undefined && 'error' in callersIn ? callersIn : undefined;
         const toTool = request.params.arguments === undefined ? request : { ...request, params: { ...request.params, arguments: asked } };
         const answered = () =>
-          notNamed !== undefined ? respond(notNamed) : this.#offered(handler(toTool as never, extra), compact);
+          notNamed !== undefined ? respond(notNamed) : this.#offered(handler(toTool as never, extra), compact, request.params.name);
         if (!this.#log.enabled) return answered();
         // Logged here, once for every tool, so a tool added later is logged too (P235).
         const handle = this.#handle;
@@ -436,8 +439,8 @@ export class ToolListing {
    * place every answer passes, so a tool added later is held to both too.
    * The text and `structuredContent` stay one document.
    */
-  #offered(result: unknown, compact: boolean): unknown {
-    if (result instanceof Promise) return result.then((settled: unknown) => this.#offered(settled, compact));
+  #offered(result: unknown, compact: boolean, tool: string): unknown {
+    if (result instanceof Promise) return result.then((settled: unknown) => this.#offered(settled, compact, tool));
     const offer = this.offer();
     const answer = result as { content?: Array<{ type: string; text?: string }>; structuredContent?: Record<string, unknown> } | undefined;
     const first = answer?.content?.[0];
@@ -450,6 +453,9 @@ export class ToolListing {
       return { ...answer, content: [{ ...first, text: offeredText(first.text, offer) }, ...(answer.content ?? []).slice(1)] };
     }
     const offered = offer === undefined ? document : offeredOnly(document, offer);
+    // Code and Markdown are handed on as the text they are, with no structured content to escape them into (P382).
+    const plain = compact ? plainTextOf(tool, offered) : undefined;
+    if (plain !== undefined) return { content: [{ type: 'text' as const, text: plain }] };
     const kept = compact ? compactAnswer(offered) : offered;
     if (kept === document) return result;
     const text = JSON.stringify(kept);

@@ -38,7 +38,7 @@ export const UPFRONT_DESCRIPTION_MAX = 4096;
 /**
  * The most characters the upfront tools' listing may run to as a model reads
  * it (name, description and input schema of each): it is sent on every turn.
- * Measured at 5,633 for the nine on the main fixture (the nine the guide had
+ * Measured at 5,633 for the nine on the main fixture, 5,655 since P382 (the nine the guide had
  * loaded by ToolSearch were 5,870); the ceiling the next 50 above, and one more.
  */
 export const UPFRONT_LISTING_MAX = 5700;

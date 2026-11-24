@@ -1,12 +1,14 @@
-import { isEntryId, type GraphEdge } from '@flowatlas/core';
+import { isEntryId, isMessageTypeNode, type GraphEdge } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { resolveChannelRef } from '../query/channel-ref.js';
+import { nearNames } from '../query/names.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import { loadObserved } from '../query/observed.js';
 import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
 import { reachReader } from '../query/ways-in.js';
-import { bodyReadsOf, channelContract, requestFields } from './fields-contract.js';
+import { bodyReadsOf, channelContract, channelsCarrying, requestFields } from './fields-contract.js';
 import {
   callOf,
   commonInput,
@@ -279,15 +281,89 @@ const parseEdgeRef = (ref: string): { from: string; type?: string; to: string } 
   return { from: (plain[0] ?? '').trim(), to: (plain[1] ?? '').trim() };
 };
 
+/**
+ * A route or entry that names nothing in the graph (P382): the nearest ways
+ * in, each as the call that checks it, or the search that finds a route by
+ * its path; never a bare "no entry" that sends the agent to grep.
+ */
+const noEntry = (db: GraphDb, asked: string, field: string | undefined): object => {
+  // An entry id is looked for by its route as said aloud: `entry:shop:http:GET:/x` as `GET /x`.
+  const route = /^entry:[^:]+:http:([A-Z]+):(.*)$/.exec(asked.trim());
+  const aloud = route === null ? asked.trim() : `${route[1]} ${route[2]}`;
+  const near = nearNames(db.nodesByType('entry'), aloud, 3);
+  return withNext(
+    { error: `no way in matches ${JSON.stringify(asked.trim())}`, ...(near.length === 0 ? {} : { near: near.map((node) => node.id) }) },
+    near.length > 0
+      ? near.slice(0, MAX_NEXT).map((node) => callOf('check_contract', { edge: node.id, field }))
+      : [callOf('search', { query: aloud, kinds: ['routes'] })],
+  );
+};
+
+/**
+ * The calls that would answer, where none was named (P382): for one end
+ * alone that is no way in, each call it makes to a route or each call into
+ * it; otherwise the first route something calls and the first channel with a
+ * publish, so the agent sees the inputs filled in rather than a rule.
+ */
+const exampleCalls = (db: GraphDb, field: string | undefined, end: string | undefined): string[] => {
+  const node = end === undefined ? undefined : db.node(end.trim());
+  if (node !== undefined) {
+    const calls = [
+      // A handler: the route it handles, checked as a route.
+      ...db.edgesTo(node.id, ['handles']).flatMap((edge) => (isEntryId(edge.from) ? [callOf('check_contract', { edge: edge.from, field })] : [])),
+      ...db.edgesFrom(node.id, [...REQUEST_EDGES]).map((edge) => callOf('check_contract', { from: edge.from, to: edge.to, field })),
+      ...db.edgesTo(node.id, [...REQUEST_EDGES]).map((edge) => callOf('check_contract', { from: edge.from, to: edge.to, field })),
+    ];
+    if (calls.length > 0) return calls.slice(0, MAX_NEXT);
+  }
+  const called = db.allEdges().find((edge) => (REQUEST_EDGES as readonly string[]).includes(edge.type) && isEntryId(edge.to));
+  const published = db.nodesByType('channel').find((channel) => !isMessageTypeNode(channel) && db.edgesTo(channel.id, ['emits']).length > 0);
+  return [
+    ...(called === undefined ? [] : [callOf('check_contract', { edge: db.node(called.to)?.label ?? called.to, field })]),
+    ...(published === undefined ? [] : [callOf('check_contract', { channel: published.id, field })]),
+  ];
+};
+
+/**
+ * A type of message several channels carry, asked as the channel (P382):
+ * each channel's answer for that type, in one answer, as several symbols
+ * are answered; the whole answer only when each is.
+ */
+const severalChannels = (
+  db: GraphDb,
+  reader: ReturnType<typeof reachReader>,
+  carried: ReadonlyArray<{ channel: string; type: string }>,
+  field: string | undefined,
+  maxNodes: number,
+): object => {
+  const shown = carried.slice(0, MAX_CARRIERS);
+  const answers = shown.map((one) => channelContract(db, reader, { channel: one.channel, type: one.type, field, maxNodes }) as { complete?: boolean; next?: string[] });
+  return withNext(
+    {
+      type: carried[0]!.type,
+      carriedBy: carried.map((one) => one.channel),
+      answers: answers.map(({ next: _next, ...answer }) => answer),
+      ...completeOf([
+        ...answers.flatMap((answer, index) => (answer.complete === false ? [`unsure: the answer on ${shown[index]!.channel} is not complete`] : [])),
+        carried.length > shown.length && `page: ${carried.length - shown.length} more channels carry it`,
+      ]),
+    },
+    [],
+  );
+};
+
+/** The most channels one answer about a type of message covers. */
+const MAX_CARRIERS = 3;
+
 export const registerContract = (server: McpServer, ctx: ToolContext): void => {
   server.registerTool(
     'check_contract',
     {
       title: 'Check a contract',
       description:
-        'Whether one side of a crossing sends what the other expects. A route (`GET /x` or id): the body fields read on its path, guards included; a `channel` (and `type`): fields read, not sent (`missing`), sent, never read (`unused`). `field` keeps one.',
+        'Whether one side of a crossing sends what the other reads. A route (`edge`: "GET /x" or id): the body fields read on its path, guards included; a `channel` and `type`, or a type alone: fields read, not sent (`missing`), sent, never read (`unused`). `field` keeps one.',
       inputSchema: {
-        edge: z.string().optional().describe('"<from> -http_calls-> <to>", or an entry'),
+        edge: z.string().optional().describe('a route, or "<from> -http_calls-> <to>"'),
         from: z.string().optional(),
         to: z.string().optional(),
         channel: z.string().optional(),
@@ -306,21 +382,32 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
         const field = input.field?.trim() || undefined;
         // A channel, or one type of message on it (P368): what each end sends and reads.
         if (input.channel !== undefined) {
-          return channelContract(db, reachReader(db, ctx.handle, 1), { channel: input.channel, type: input.type, field, maxNodes: input.maxNodes });
+          const reader = reachReader(db, ctx.handle, 1);
+          // A type of message given as the channel (P382): answered on the channel or channels carrying it.
+          const carried = resolveChannelRef(db, input.channel) === undefined && input.type === undefined ? channelsCarrying(db, input.channel) : [];
+          if (carried.length === 1) return channelContract(db, reader, { channel: carried[0]!.channel, type: carried[0]!.type, field, maxNodes: input.maxNodes });
+          if (carried.length > 1) return severalChannels(db, reader, carried, field, input.maxNodes);
+          return channelContract(db, reader, { channel: input.channel, type: input.type, field, maxNodes: input.maxNodes });
         }
+        // One end alone, `{to: entry}` or `{from: entry}`: the entry it names, as `edge` would (P382).
+        const alone = input.edge === undefined && (input.from === undefined) !== (input.to === undefined) ? (input.from ?? input.to) : undefined;
+        const edgeAsked = input.edge ?? alone;
         // An entry said aloud, `PATCH /orders/:id/cancel`, is the entry it names (P368).
-        const said = input.edge !== undefined && parseEdgeRef(input.edge) === undefined && !isEntryId(input.edge.trim()) ? resolveEntryRef(db, input.edge) : undefined;
+        const said = edgeAsked !== undefined && parseEdgeRef(edgeAsked) === undefined && !isEntryId(edgeAsked.trim()) ? resolveEntryRef(db, edgeAsked) : undefined;
         if (said !== undefined && !isResolved(said)) {
-          return withNext(
-            { error: `${JSON.stringify(input.edge)} names no one entry`, candidates: said.candidates.slice(0, 5).map((node) => node.id) },
-            said.candidates.slice(0, 2).map((node) => callOf('check_contract', { edge: node.id, field })),
-          );
+          if (said.candidates.length > 0) {
+            return withNext(
+              { error: `${JSON.stringify(edgeAsked)} names no one entry`, candidates: said.candidates.slice(0, 5).map((node) => node.id) },
+              said.candidates.slice(0, 2).map((node) => callOf('check_contract', { edge: node.id, field })),
+            );
+          }
+          if (alone === undefined) return noEntry(db, edgeAsked as string, field);
         }
-        const entryAsked = said !== undefined && isResolved(said) ? said.id : input.edge?.trim();
+        const entryAsked = said !== undefined && isResolved(said) ? said.id : edgeAsked?.trim();
         // An entry on its own (P113): what traffic carried into it against its code, and the calls into it.
         if (entryAsked !== undefined && parseEdgeRef(entryAsked) === undefined && isEntryId(entryAsked)) {
           const entry = entryAsked;
-          if (db.node(entry) === undefined) return { error: `no entry ${entry}` };
+          if (db.node(entry) === undefined) return noEntry(db, entry, field);
           const into = db
             .edgesTo(entry, [...REQUEST_EDGES])
             .sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
@@ -350,7 +437,11 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
               ? { from: input.from, to: input.to }
               : undefined;
         if (parsed === undefined) {
-          return { error: 'give either edge, or both from and to' };
+          // Nothing to check named (P382): the calls that would be, written out, never a rule to guess from.
+          return withNext(
+            { error: alone === undefined ? 'name what to check: a route, a channel, or both ends of a call' : `${JSON.stringify(alone)} is one end and no route: give the route it handles or both ends of its call` },
+            exampleCalls(db, field, alone),
+          );
         }
 
         // Two service names (a node of either name wins, as before): every
@@ -386,7 +477,13 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
           .filter((edge) => parsed.type === undefined || edge.type === parsed.type);
         const edge = candidates[0];
         if (edge === undefined) {
-          return { error: `no edge from ${parsed.from} to ${parsed.to}` };
+          // The calls there are, from the one end or into the other (P382): each the call that checks it.
+          const into = isEntryId(parsed.to) && db.node(parsed.to) !== undefined ? [callOf('check_contract', { edge: parsed.to, field })] : [];
+          const from = db
+            .edgesFrom(parsed.from, [...REQUEST_EDGES])
+            .slice(0, MAX_NEXT)
+            .map((found) => callOf('check_contract', { from: found.from, to: found.to, field }));
+          return withNext({ error: `no call from ${parsed.from} to ${parsed.to}` }, [...into, ...from].slice(0, MAX_NEXT));
         }
 
         const { request, response } = sidesOf(db, edge);

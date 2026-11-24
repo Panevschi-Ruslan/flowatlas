@@ -77,7 +77,8 @@ describe('an answer about a method says where its requests land', () => {
   });
 
   it('get_source: the address as written where it is joined to no route', async () => {
-    const answer = await call('get_source', { symbol: EXPORT });
+    // The document, asked verbose: compact, get_source answers the code as plain text (P382).
+    const answer = await call('get_source', { symbol: EXPORT }, true);
     expect(answer.requests).toBeUndefined();
     expect(answer.requestsUnjoined).toEqual(['POST ${apiUrl}/admin/:param/catalog/export']);
   });

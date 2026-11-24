@@ -1,0 +1,487 @@
+{
+  "root": {
+    "node": {
+      "id": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+      "type": "entry",
+      "label": "PATCH /api/orders/:param/cancel",
+      "loc": "src/orders/orders.controller.ts:27",
+      "service": "shop-api",
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/api/orders/:param/cancel"
+      }
+    },
+    "guards": [
+      {
+        "id": "shop-api#src/auth/client.guard.ts:ClientGuard",
+        "label": "ClientGuard",
+        "kind": "guard",
+        "order": 0,
+        "loc": "src/auth/client.guard.ts:9",
+        "where": "route",
+        "via": "@UseGuards on OrdersController.cancel"
+      }
+    ],
+    "fails": [
+      {
+        "status": 403,
+        "exception": "ForbiddenException",
+        "sources": [
+          "guard"
+        ],
+        "sites": 1,
+        "at": "shop-api#src/auth/client.guard.ts:ClientGuard",
+        "loc": "src/orders/orders.controller.ts:28",
+        "places": [
+          {
+            "at": "shop-api#src/auth/client.guard.ts:ClientGuard",
+            "loc": "src/orders/orders.controller.ts:28",
+            "source": "guard"
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "node": {
+          "id": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+          "type": "method",
+          "label": "OrdersController.cancel",
+          "loc": "src/orders/orders.controller.ts:27",
+          "meta": {
+            "signature": {
+              "params": [
+                {
+                  "name": "orderId",
+                  "type": "string"
+                },
+                {
+                  "name": "_body",
+                  "type": "type:shop-api#CancelOrderBody"
+                }
+              ],
+              "returns": "void"
+            },
+            "fieldsRead": []
+          }
+        },
+        "edge": {
+          "type": "handles",
+          "confidence": "static"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+              "type": "method",
+              "label": "OrdersService.cancel",
+              "loc": "src/orders/orders.service.ts:14",
+              "meta": {
+                "signature": {
+                  "params": [
+                    {
+                      "name": "orderId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "reason",
+                      "type": "string"
+                    }
+                  ],
+                  "returns": "void"
+                }
+              }
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "producer:shop-api#src/orders/orders.service.ts:16:11",
+                  "type": "producer",
+                  "label": "event order_updates",
+                  "loc": "src/orders/orders.service.ts:16",
+                  "kind": "event",
+                  "meta": {
+                    "kind": "event",
+                    "channelVia": "literal",
+                    "method": "publish",
+                    "messageTypes": [
+                      "ORDER_CANCELLED"
+                    ],
+                    "discriminator": "type"
+                  }
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "channel:order_updates",
+                      "type": "channel",
+                      "label": "order_updates",
+                      "loc": "src/orders/orders.service.ts:11",
+                      "meta": {
+                        "channelKind": "channel",
+                        "adapters": [
+                          "event-bus"
+                        ],
+                        "producers": 2,
+                        "consumers": 1
+                      }
+                    },
+                    "edge": {
+                      "type": "emits",
+                      "confidence": "static",
+                      "params": [
+                        "type:shop-api#OrderCancelledFrame"
+                      ]
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "consumer:ops-bot#src/events/events.controller.ts:EventsController.receive",
+                          "type": "consumer",
+                          "label": "EventsController.receive",
+                          "loc": "src/events/events.controller.ts:10",
+                          "service": "ops-bot",
+                          "kind": "event",
+                          "meta": {
+                            "kind": "event",
+                            "decorator": "Consumes",
+                            "entryId": null,
+                            "discriminator": "type",
+                            "selects": [
+                              {
+                                "type": "ORDER_CANCELLED",
+                                "consumer": "consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderCancelled",
+                                "via": "switch",
+                                "line": 16
+                              },
+                              {
+                                "type": "ORDER_READY",
+                                "consumer": "consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady",
+                                "via": "switch",
+                                "line": 14
+                              }
+                            ]
+                          }
+                        },
+                        "edge": {
+                          "type": "consumes",
+                          "confidence": "marker"
+                        },
+                        "children": [
+                          {
+                            "node": {
+                              "id": "ops-bot#src/events/events.controller.ts:EventsController.receive",
+                              "type": "method",
+                              "label": "EventsController.receive",
+                              "loc": "src/events/events.controller.ts:10",
+                              "meta": {
+                                "signature": {
+                                  "params": [
+                                    {
+                                      "name": "event",
+                                      "type": "type:ops-bot#OrderEvent"
+                                    }
+                                  ],
+                                  "returns": "Promise<string>|string"
+                                },
+                                "markers": [
+                                  {
+                                    "name": "Consumes",
+                                    "args": [
+                                      "order_updates"
+                                    ]
+                                  }
+                                ],
+                                "fieldsRead": [
+                                  {
+                                    "field": "type",
+                                    "line": 13
+                                  },
+                                  {
+                                    "field": "orderId",
+                                    "in": "ops-bot#src/bot/bot.service.ts:BotService.handleOrderCancelled",
+                                    "line": 23,
+                                    "when": [
+                                      "ORDER_CANCELLED"
+                                    ]
+                                  },
+                                  {
+                                    "field": "reason",
+                                    "in": "ops-bot#src/bot/bot.service.ts:BotService.handleOrderCancelled",
+                                    "line": 23,
+                                    "when": [
+                                      "ORDER_CANCELLED"
+                                    ]
+                                  },
+                                  {
+                                    "field": "label",
+                                    "in": "ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady",
+                                    "line": 17,
+                                    "when": [
+                                      "ORDER_READY"
+                                    ]
+                                  }
+                                ]
+                              }
+                            },
+                            "edge": {
+                              "type": "handles",
+                              "confidence": "marker"
+                            },
+                            "children": [
+                              {
+                                "node": {
+                                  "id": "ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady",
+                                  "type": "method",
+                                  "label": "BotService.handleOrderReady",
+                                  "loc": "src/bot/bot.service.ts:16",
+                                  "meta": {
+                                    "signature": {
+                                      "params": [
+                                        {
+                                          "name": "event",
+                                          "type": "type:ops-bot#OrderEvent"
+                                        }
+                                      ],
+                                      "returns": "string"
+                                    }
+                                  }
+                                },
+                                "edge": {
+                                  "type": "calls",
+                                  "confidence": "static"
+                                },
+                                "children": []
+                              },
+                              {
+                                "node": {
+                                  "id": "ops-bot#src/bot/bot.service.ts:BotService.handleOrderCancelled",
+                                  "ref": true,
+                                  "seenAt": "consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderCancelled"
+                                },
+                                "edge": {
+                                  "type": "calls",
+                                  "confidence": "static",
+                                  "params": [
+                                    "type:ops-bot#OrderEvent"
+                                  ],
+                                  "returns": "string"
+                                },
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "node": {
+                      "id": "channel:order_updates#ORDER_CANCELLED",
+                      "type": "channel",
+                      "label": "order_updates#ORDER_CANCELLED",
+                      "loc": "src/orders/orders.service.ts:16",
+                      "kind": "message_type",
+                      "meta": {
+                        "channel": "channel:order_updates",
+                        "messageType": "ORDER_CANCELLED",
+                        "discriminator": "type",
+                        "channelKind": "channel",
+                        "producers": 1,
+                        "consumers": 1
+                      }
+                    },
+                    "edge": {
+                      "type": "emits",
+                      "confidence": "static",
+                      "params": [
+                        "type:shop-api#OrderCancelledFrame"
+                      ]
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderCancelled",
+                          "type": "consumer",
+                          "label": "BotService.handleOrderCancelled",
+                          "loc": "src/bot/bot.service.ts:22",
+                          "service": "ops-bot",
+                          "kind": "event",
+                          "meta": {
+                            "kind": "event",
+                            "selectedBy": "consumer:ops-bot#src/events/events.controller.ts:EventsController.receive",
+                            "messageTypes": [
+                              "ORDER_CANCELLED"
+                            ]
+                          }
+                        },
+                        "edge": {
+                          "type": "consumes",
+                          "confidence": "marker"
+                        },
+                        "children": [
+                          {
+                            "node": {
+                              "id": "ops-bot#src/bot/bot.service.ts:BotService.handleOrderCancelled",
+                              "type": "method",
+                              "label": "BotService.handleOrderCancelled",
+                              "loc": "src/bot/bot.service.ts:22",
+                              "meta": {
+                                "signature": {
+                                  "params": [
+                                    {
+                                      "name": "event",
+                                      "type": "type:ops-bot#OrderEvent"
+                                    }
+                                  ],
+                                  "returns": "string"
+                                }
+                              }
+                            },
+                            "edge": {
+                              "type": "handles",
+                              "confidence": "static"
+                            },
+                            "children": [
+                              {
+                                "node": {
+                                  "id": "http_out:ops-bot#src/bot/bot.service.ts:24:11",
+                                  "type": "http_out",
+                                  "label": "PATCH /api/orders/:param/cancel",
+                                  "loc": "src/bot/bot.service.ts:24",
+                                  "meta": {
+                                    "method": "PATCH",
+                                    "url": "${SHOP_API_URL}/api/orders/:param/cancel",
+                                    "path": "/api/orders/:param/cancel",
+                                    "baseUrlEnv": "SHOP_API_URL",
+                                    "responseType": null,
+                                    "bodyType": "string",
+                                    "bodyFrom": "type",
+                                    "targetService": "shop-api"
+                                  }
+                                },
+                                "edge": {
+                                  "type": "calls",
+                                  "confidence": "static"
+                                },
+                                "children": [
+                                  {
+                                    "node": {
+                                      "id": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+                                      "ref": true
+                                    },
+                                    "edge": {
+                                      "type": "http_calls",
+                                      "confidence": "static",
+                                      "params": [
+                                        "string"
+                                      ]
+                                    },
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "node": {
+                                  "id": "ops-bot#src/shop.client.ts:ShopClient.cancelOrder",
+                                  "type": "method",
+                                  "label": "ShopClient.cancelOrder",
+                                  "loc": "src/shop.client.ts:14",
+                                  "meta": {
+                                    "signature": {
+                                      "params": [
+                                        {
+                                          "name": "orderId",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "name": "userRef",
+                                          "type": "string"
+                                        }
+                                      ],
+                                      "returns": "void"
+                                    }
+                                  }
+                                },
+                                "edge": {
+                                  "type": "calls",
+                                  "confidence": "static"
+                                },
+                                "children": [
+                                  {
+                                    "node": {
+                                      "id": "config_key:ops-bot#SHOP_API_URL",
+                                      "type": "config_key",
+                                      "label": "SHOP_API_URL",
+                                      "loc": "src/shop.client.ts:15",
+                                      "meta": {
+                                        "key": "SHOP_API_URL"
+                                      }
+                                    },
+                                    "edge": {
+                                      "type": "reads_config",
+                                      "confidence": "static"
+                                    },
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "node": {
+                  "id": "shop-api#src/bus/event-bus.ts:EventBus.publish",
+                  "type": "method",
+                  "label": "EventBus.publish",
+                  "loc": "src/bus/event-bus.ts:8",
+                  "meta": {
+                    "signature": {
+                      "params": [
+                        {
+                          "name": "channel",
+                          "type": "string"
+                        },
+                        {
+                          "name": "message",
+                          "type": "unknown"
+                        }
+                      ],
+                      "returns": "void"
+                    }
+                  }
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 0,
+  "complete": true,
+  "next": [
+    "describe_for_prompt({id: \"entry:shop-api:http:PATCH:/api/orders/:param/cancel\"})",
+    "impact({symbol: \"entry:shop-api:http:PATCH:/api/orders/:param/cancel\"})",
+    "get_source({symbol: \"shop-api#src/orders/orders.controller.ts:OrdersController.cancel\"})"
+  ]
+}

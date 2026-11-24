@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { endOfDeclaration } from './source.js';
+import { classSkeleton, endOfDeclaration } from './source.js';
 
 const endOf = (text: string): number => endOfDeclaration(text.split('\n'), 0);
 
@@ -43,5 +43,44 @@ describe('where a declaration ends', () => {
   it('reads a declaration with no decorator as before', () => {
     expect(endOf(['function run() {', '  if (a) {', '    b();', '  }', '}', 'next();'].join('\n'))).toBe(4);
     expect(endOf(['const value = { a: 1 };', 'next();'].join('\n'))).toBe(0);
+  });
+});
+
+describe('a class skeleton (P382)', () => {
+  it('keeps decorators, the declaration and every member first line, each body folded, with its line number', () => {
+    const lines = [
+      '@Thing({',
+      "  name: 'shelf',",
+      '})',
+      'export class Shelf {',
+      '  private readonly items = new Map<string, number>();',
+      '',
+      '  count(): number {',
+      '    return this.items.size;',
+      '  }',
+      '',
+      "  @On('add')",
+      '  add(',
+      '    name: string,',
+      '  ): void {',
+      '    if (name) {',
+      '      this.items.set(name, 1);',
+      '    }',
+      '  }',
+      '  one(): number { return 1; }',
+      '}',
+    ];
+    expect(classSkeleton(lines, 0, lines.length - 1).split('\n')).toEqual([
+      '1  @Thing({ … })',
+      '4  export class Shelf {',
+      '5    private readonly items = new Map<string, number>();',
+      '7    count(): number { … }',
+      "11    @On('add')",
+      '12    add(',
+      '13      name: string,',
+      '14    ): void { … }',
+      '19    one(): number { return 1; }',
+      '20  }',
+    ]);
   });
 });

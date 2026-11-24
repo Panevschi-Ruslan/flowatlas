@@ -125,6 +125,9 @@ export const asksFurther = (tool, args, answer) => {
 export const wrongIn = (expect, { first, lists, measured }) => {
   const wrong = [];
   if (first.error !== undefined) wrong.push(`answered an error: ${first.error}`);
+  // A plain-text answer (P382): what its text must hold.
+  for (const said of expect.says ?? []) if (typeof first.text !== 'string' || !first.text.includes(said)) wrong.push(`the text does not say ${JSON.stringify(said)}`);
+  for (const said of expect.saysNot ?? []) if (typeof first.text === 'string' && first.text.includes(said)) wrong.push(`the text says ${JSON.stringify(said)}, which it must not`);
   const listed = (name) => new Set((lists.get(name) ?? []).flatMap(keysOf));
   for (const [name, ids] of Object.entries(expect.lists ?? {})) {
     const held = listed(name);

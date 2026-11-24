@@ -152,7 +152,7 @@ describe('a server on a database alone suggests no tool it hides (P360)', () => 
     const instructions = client.getInstructions() ?? '';
     const lines = instructions.split('\n').filter((line) => !line.startsWith('Only the tools this project can answer'));
     expect(lines.filter((line) => /\b(?:get_source|check_rules|test_pattern)\b/.test(line))).toEqual([]);
-    expect(instructions).toContain('- entry: list_entries -> get_flow({entry: id}).');
+    expect(instructions).toContain('how a request flows: get_flow({entry})');
     expect(instructions).toContain('This server serves no code');
   });
 });

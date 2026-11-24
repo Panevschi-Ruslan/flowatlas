@@ -31,6 +31,12 @@ export interface AgentGuide {
    * entry (`"alwaysLoad": false`, `--no-always-load`) turns it off.
    */
   alwaysLoad?: boolean;
+  /**
+   * Whether that repository's `.mcp.json` registers the graph server (P382):
+   * Claude Code then hands every session the server's instructions, which say
+   * the questions, the call for each and the habits.
+   */
+  registered?: boolean;
 }
 
 /** Where an assistant reads instructions from, and whether the file is flowatlas's own. */
@@ -126,7 +132,7 @@ export const guideBody = (guide: AgentGuide): string => {
     '',
     '## How',
     '',
-    `- ${toolSearchSaid(guide)} Begin with \`start_here\` when you do not know where to start.`,
+    `- ${toolSearchSaid(guide)}`,
     ...[...AGENT_HABITS, ...AGENT_RULES].map((rule) => `- ${rule}`),
     '',
     'The graph server is registered in `.mcp.json`. Without it, every command above answers with `--format json`.',
@@ -138,19 +144,44 @@ export const guideBody = (guide: AgentGuide): string => {
  * What a team's own file holds (P366): `AGENTS.md`, `CLAUDE.md` and Copilot's
  * instructions are read whole at the start of every session and sent again on
  * every turn, so the block says only when to ask the graph and how to spend
- * few turns doing it, and points at the full guide, which is read when used.
+ * few turns doing it. It names no full guide to read (P382): the skill loads
+ * when its description fits, and a line pointing at it invited a Read, a turn
+ * of its own. Where the server's instructions are read beside it
+ * (`besideInstructions`), they say the questions, the call for each and the
+ * habits, and the block keeps the services and the habit for an edit.
  */
-export const sharedBody = (guide: AgentGuide): string => {
-  const lines = [
-    '## flowatlas',
-    '',
-    `This repository (${guide.here.join(', ')}) is one of ${guide.services.length} that the flowatlas graph joins (${guide.services.map((service) => service.name).join(', ')}). Ask the graph, not a search of this checkout: ${AGENT_QUESTIONS.map((question) => question.short).join(', ')}. The full guide is \`${TARGET_PATH['claude-skill']}\`.`,
-    '',
-    `- ${toolSearchLine(guide)}`,
-    ...AGENT_HABITS.map((habit) => `- ${habit}`),
-  ];
+export const sharedBody = (guide: AgentGuide, target: AgentTarget = 'agents-md'): string => {
+  const services = `This repository (${guide.here.join(', ')}) is one of ${guide.services.length} that the flowatlas graph joins (${guide.services.map((service) => service.name).join(', ')}).`;
+  const lines = besideInstructions(guide, target)
+    ? [
+        '## flowatlas',
+        '',
+        `${services} Ask its server (\`.mcp.json\`), not a search of this checkout: its instructions name the one call for each question.`,
+        '',
+        `- ${AGENT_HABITS[0]}`,
+        ...(guide.alwaysLoad === false ? [`- ${toolSearchLine(guide)}`] : []),
+      ]
+    : [
+        '## flowatlas',
+        '',
+        `${services} Ask it, not a search here: ${AGENT_QUESTIONS.map((question) => question.short).join(', ')}.`,
+        '',
+        `- ${toolSearchLine(guide)}`,
+        ...AGENT_HABITS.map((habit) => `- ${habit}`),
+      ];
   return `${lines.join('\n')}\n`;
 };
+
+/**
+ * Whether a team's file is read beside the graph server's instructions
+ * (P382): `CLAUDE.md` is Claude Code's, and where the repository's
+ * `.mcp.json` registers the server Claude Code hands every session its
+ * instructions too. `AGENTS.md` and Copilot's file are read by assistants
+ * that may never start the server, so they keep the questions and habits.
+ */
+export function besideInstructions(guide: AgentGuide, target: AgentTarget): boolean {
+  return target === 'claude-md' && guide.registered === true;
+}
 
 /** A file's whole text for an owned target, its mark first after any frontmatter. */
 export const ownedFile = (target: AgentTarget, guide: AgentGuide): string => {
@@ -163,7 +194,7 @@ export const ownedFile = (target: AgentTarget, guide: AgentGuide): string => {
 };
 
 /** The marked block a shared file holds. */
-export const sharedBlock = (guide: AgentGuide): string => `${BLOCK_OPEN}\n${sharedBody(guide)}${BLOCK_CLOSE}`;
+export const sharedBlock = (guide: AgentGuide, target: AgentTarget = 'agents-md'): string => `${BLOCK_OPEN}\n${sharedBody(guide, target)}${BLOCK_CLOSE}`;
 
 const BLOCK = /\n?<!-- flowatlas:agents -->\n[\s\S]*?<!-- \/flowatlas:agents -->\n?/;
 

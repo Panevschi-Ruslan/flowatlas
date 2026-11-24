@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T15:49:53.332Z",
+  "configHash": "bde030226f67",
+  "services": [
+    {
+      "name": "ops-bot",
+      "repo": "./ops-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 28,
+      "edges": 20,
+      "types": 3,
+      "unresolved": 0,
+      "durationMs": 7572,
+      "packages": {
+        "name": "ops-bot",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop-api",
+      "repo": "./shop-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 36,
+      "edges": 30,
+      "types": 7,
+      "unresolved": 0,
+      "durationMs": 6646,
+      "packages": {
+        "name": "shop-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 1,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 3,
+    "linked": 3,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 7,
+    "called": 1,
+    "uncalled": [
+      "entry:ops-bot:http:POST:/events/orders",
+      "entry:shop-api:http:GET:/api/orders/:param/notes",
+      "entry:shop-api:http:POST:/api/desks/:param/help",
+      "entry:shop-api:http:POST:/api/floor/:param/help",
+      "entry:shop-api:http:POST:/api/orders/:param/notes",
+      "entry:shop-api:http:POST:/api/orders/:param/ready"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 10,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 65,
+    "edges": 59,
+    "types": 10,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 0
+  }
+}

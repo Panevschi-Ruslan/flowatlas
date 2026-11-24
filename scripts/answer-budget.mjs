@@ -22,7 +22,14 @@
  * that must hold exactly the ids given (`exact`), what a row must say
  * (`rowsSay`: a verdict, a `reach`), and `complete`. A row is matched by its
  * `id` or, on a field's row, its `field`. `--update` rewrites only `fixed` and
- * `recorded`, the sizes. The rules are `answer-budget-rules.mjs`.
+ * `recorded`, the sizes. A tool that answers plain text (`get_source`,
+ * `describe_for_prompt`, P382) is measured by its text, and what it must say
+ * is written as `says`, strings the text holds. The rules are
+ * `answer-budget-rules.mjs`.
+ *
+ * Claude Code hands the model `JSON.stringify(structuredContent)` on a
+ * success, so every success answer's text must be exactly that, or what is
+ * measured here is not what the model reads (P382); it fails otherwise.
  *
  * It fails when an answer, or a part of the fixed overhead, grows past its
  * recorded size by more than 10% or 300 characters, whichever is larger; when
@@ -37,7 +44,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { createFlowatlasServer } from '@flowatlas/mcp';
+import { createFlowatlasServer, INSTRUCTIONS_MAX } from '@flowatlas/mcp';
 import { loadConfig } from '@flowatlas/core';
 import { ALWAYS_LOAD_KEY, CORE_TOOLS, UPFRONT_LISTING_MAX } from '@flowatlas/mcp';
 import { guideDescription, missingCandidatesFor, reasonCatalog, sharedBlock } from '../packages/cli/dist/index.js';
@@ -85,6 +92,11 @@ const measureFixed = async () => {
   const fixture = join(root, 'fixtures', budget.fixedOn);
   const plain = await connect(fixture);
   const all = await connect(fixture, { allTools: true });
+  // Started on a database alone (`flowatlas mcp --db`): no code served, its own last line (P382).
+  const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
+  await createFlowatlasServer({ dbPath: join(fixture, '.flowatlas', 'graph.db'), toolsPollMs: 0 }).connect(serverSide);
+  const db = new Client({ name: 'answer-budget', version: '0' });
+  await db.connect(clientSide);
   try {
     const listed = (await plain.listTools()).tools;
     const every = (await all.listTools()).tools;
@@ -93,7 +105,10 @@ const measureFixed = async () => {
     const guide = { services, here: [services[0].name] };
     return {
       instructions: plain.getInstructions()?.length ?? 0,
+      instructionsDb: db.getInstructions()?.length ?? 0,
       guideBlock: sharedBlock(guide).length,
+      // CLAUDE.md where .mcp.json registers the server: read beside its instructions (P382).
+      guideBlockClaude: sharedBlock({ ...guide, registered: true }, 'claude-md').length,
       skillDescription: guideDescription(guide).length,
       listingCore: modelVisible(every.filter((tool) => tool._meta?.[ALWAYS_LOAD_KEY] === true)).length,
       upfront: every.filter((tool) => tool._meta?.[ALWAYS_LOAD_KEY] === true).map((tool) => tool.name),
@@ -103,6 +118,7 @@ const measureFixed = async () => {
   } finally {
     await plain.close();
     await all.close();
+    await db.close();
   }
 };
 
@@ -117,7 +133,9 @@ const ask = async (client, question) => {
     const response = await client.callTool({ name: question.tool, arguments: args });
     const text = response.content[0].text;
     chars += text.length;
-    const parsed = JSON.parse(text);
+    // A plain-text answer (P382) has no structured content; any other success is its structured content, as text.
+    if (response.structuredContent !== undefined && text !== JSON.stringify(response.structuredContent)) mismatched.push(question.id);
+    const parsed = response.structuredContent === undefined && response.isError !== true && !text.startsWith('{') ? { text } : JSON.parse(text);
     answers.push(parsed);
     counted.push(parsed);
     const on = response.isError === true ? undefined : followOn(question.tool, args, parsed);
@@ -135,12 +153,15 @@ const ask = async (client, question) => {
 
 const problems = [];
 const notes = [];
+const mismatched = [];
 const before = budget.recorded ?? {};
 const after = {};
 const fixedBefore = budget.fixed ?? {};
 const { upfront, ...fixed } = await measureFixed();
 // The upfront set is the core set, and its listing fits the ceiling written by hand (P380), whatever was recorded.
 if ([...upfront].sort().join() !== [...CORE_TOOLS].sort().join()) problems.push(`the tools listed to load upfront (${upfront.join(', ')}) are not the core tools (${CORE_TOOLS.join(', ')})`);
+// Every variant of the instructions within their ceiling (P382): a server on a database alone sent 2,535.
+for (const part of ['instructions', 'instructionsDb']) if (fixed[part] > INSTRUCTIONS_MAX) problems.push(`fixed ${part}: ${fixed[part]} characters, past INSTRUCTIONS_MAX (${INSTRUCTIONS_MAX})`);
 if (fixed.listingCore > UPFRONT_LISTING_MAX) problems.push(`fixed listingCore: ${fixed.listingCore} characters, past UPFRONT_LISTING_MAX (${UPFRONT_LISTING_MAX}): the upfront tools are sent on every turn`);
 for (const [part, chars] of Object.entries(fixed)) {
   const was = fixedBefore[part];
@@ -174,6 +195,7 @@ for (const [fixtureName, questions] of byFixture) {
     await client.close();
   }
 }
+for (const id of mismatched) problems.push(`${id}: the text is not JSON.stringify(structuredContent), what Claude Code hands the model`);
 if (!update) for (const id of Object.keys(before)) if (!budget.questions.some((question) => question.id === id)) problems.push(`${id}: a budget for a question nobody asks any more`);
 
 const pad = (value, width) => String(value).padStart(width);

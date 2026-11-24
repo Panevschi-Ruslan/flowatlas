@@ -62,6 +62,48 @@ only one of them moved.
   gain `byKind` and `changing`, of `who_calls` on `GET /orders/123` answer both
   routes, and `who_calls` on another service's symbol with `service` says what
   it left out.
+- **One call per question: the guidance, inputs taken as agents write them,
+  and the fixed overhead (P382).** The server's instructions name the one call
+  for each question (`who calls this: who_calls({symbol})`, …, `does each side
+  send what the other reads: check_contract({route} or {channel})`) where they
+  taught chains beginning with a lookup, say a symbol is an id, a
+  `Class.method` or a route said aloud with `service` picking among
+  same-named ones, and say "before changing a route, handler, body type or
+  message payload: impact first"; the line every answer needs (`reach`,
+  `complete`, each tool's plural key) sits in the first 2,048 characters older
+  clients kept, and every variant is held under the ceiling (2,368 from a
+  configuration, 2,428 on a database alone, where 2,384 and 2,426). The guide
+  `flowatlas agents install` writes drops "Narrow, then read" and "Begin with
+  start_here" for one call per question, names each tool's key for several
+  at once (who_calls and impact `symbols`, dead `ids`, find_symbol and search
+  `queries`, get_type `types`) where it named one `ids` who_calls refused,
+  points at no full guide, and in a `CLAUDE.md` whose repository's
+  `.mcp.json` registers the server, read beside the server's instructions,
+  writes the services and the edit habit only (366 characters where 1,054).
+  `check_contract` reads `route` or `entry` as `edge` (the server reads the
+  names agents reach for as each tool's input, unlisted: `route`/`symbol` for
+  `get_flow`, `id` for `get_source`, `route` for `who_calls` and `impact`,
+  `symbol` for `dead`'s `id`),
+  takes one end alone, answers a type of message given as the channel on the
+  channel or channels carrying it, and every input it cannot answer names the
+  exact calls to make in `next`. `get_source` and `describe_for_prompt`
+  answer compact as plain text, the code or Markdown unescaped with no
+  structured content, `verbose: true` the JSON document; a class answers its
+  skeleton, bodies folded with line numbers, `whole: true` all of it.
+  `get_flow` at detail 2 says each fact once: no edge types the step's
+  signature says, no reader meta (`adapter`, `controller`, `rawPath`,
+  `source`, `package`, `receiver`, `entityType`), no fails and guards twice.
+  The answer budget fails a text that is not
+  `JSON.stringify(structuredContent)`, measures the database-alone
+  instructions and the short `CLAUDE.md` block, and the tool tests' listing
+  ceilings measure what the model reads. A new fixture,
+  `one-call-per-question`, with verbose and compact snapshots and five
+  budget questions, each one call: the route by `route` 394 characters (an
+  error before), a type two channels carry 1,300 (an error, then 1,384 in two
+  calls), a type one carries 664, a controller's skeleton 1,322 (1,769
+  escaped), a detail-2 flow 5,186 (6,219); `get_flow.route-detail-2` 2,766 to
+  2,143 and `get_flow.inline-type` 1,933 to 1,668 for the same reason.
+
 - **who_calls answers stay small and finish, also on several symbols
   (P379).** `depth` is how far the tree of callers is drawn, never a cut:
   every way in past it is listed under `waysIn` whatever it is, one symbol or

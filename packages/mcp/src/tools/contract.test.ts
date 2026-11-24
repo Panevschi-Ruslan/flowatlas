@@ -100,7 +100,8 @@ describe('check_contract with traffic shapes (P113)', () => {
       callers: 0,
     });
     expect((await unchecked('check_contract', { edge: INVOICE })).traffic).toBeUndefined();
-    expect(await call('check_contract', { edge: 'entry:nowhere:http:GET:/x' })).toEqual({ error: 'no entry entry:nowhere:http:GET:/x' });
+    // An entry that is none answers the nearest ways in, each as the call that checks it (P382).
+    expect(await call('check_contract', { edge: 'entry:nowhere:http:GET:/x' })).toMatchObject({ error: 'no way in matches "entry:nowhere:http:GET:/x"', next: ['search({query: "GET /x", kinds: ["routes"]})'] });
   });
 
   it('has get_flow hint check_contract on a way in whose traffic differs, and only there', async () => {

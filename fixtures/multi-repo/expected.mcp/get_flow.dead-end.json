@@ -9,10 +9,7 @@
       "kind": "http",
       "meta": {
         "method": "POST",
-        "path": "/orders/:param/cancel",
-        "rawPath": "/orders/:id/cancel",
-        "controller": "OrdersController",
-        "adapter": "nestjs-http"
+        "path": "/orders/:param/cancel"
       }
     },
     "children": [
@@ -37,11 +34,7 @@
         },
         "edge": {
           "type": "handles",
-          "confidence": "static",
-          "params": [
-            "string"
-          ],
-          "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+          "confidence": "static"
         },
         "children": [
           {
@@ -64,11 +57,7 @@
             },
             "edge": {
               "type": "calls",
-              "confidence": "static",
-              "params": [
-                "string"
-              ],
-              "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+              "confidence": "static"
             },
             "children": [
               {
@@ -78,8 +67,7 @@
                   "label": "ORDERS_URL",
                   "loc": "src/clients/orders.client.ts:33",
                   "meta": {
-                    "key": "ORDERS_URL",
-                    "source": "config.get"
+                    "key": "ORDERS_URL"
                   }
                 },
                 "edge": {

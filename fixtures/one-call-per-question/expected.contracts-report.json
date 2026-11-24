@@ -1,0 +1,174 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-24T15:49:57.166Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:11:11",
+        "to": "consumer:ops-bot#src/events/events.controller.ts:EventsController.receive",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:11:11|emits|consumer:ops-bot#src/events/events.controller.ts:EventsController.receive",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#OrderReadyFrame",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.markReady"
+      },
+      "receiver": {
+        "service": "ops-bot",
+        "typeId": "type:ops-bot#OrderEvent",
+        "symbol": "ops-bot#src/events/events.controller.ts:EventsController.receive"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:16:11",
+        "to": "consumer:ops-bot#src/events/events.controller.ts:EventsController.receive",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:16:11|emits|consumer:ops-bot#src/events/events.controller.ts:EventsController.receive",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#OrderCancelledFrame",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.cancel"
+      },
+      "receiver": {
+        "service": "ops-bot",
+        "typeId": "type:ops-bot#OrderEvent",
+        "symbol": "ops-bot#src/events/events.controller.ts:EventsController.receive"
+      },
+      "findings": [
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:shop-api#src/orders/orders.service.ts:16:11",
+            "to": "consumer:ops-bot#src/events/events.controller.ts:EventsController.receive",
+            "type": "emits"
+          },
+          "edgeKey": "producer:shop-api#src/orders/orders.service.ts:16:11|emits|consumer:ops-bot#src/events/events.controller.ts:EventsController.receive",
+          "direction": "payload",
+          "sender": {
+            "service": "shop-api",
+            "typeId": "type:shop-api#OrderCancelledFrame",
+            "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.cancel"
+          },
+          "receiver": {
+            "service": "ops-bot",
+            "typeId": "type:ops-bot#OrderEvent",
+            "symbol": "ops-bot#src/events/events.controller.ts:EventsController.receive"
+          },
+          "typeId": "type:ops-bot#OrderEvent",
+          "field": "reason",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`reason` is optional for receiver ops-bot and always sent by sender shop-api",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:16:11",
+        "to": "consumer:ops-bot#src/events/events.controller.ts:EventsController.receive",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:16:11|emits|consumer:ops-bot#src/events/events.controller.ts:EventsController.receive",
+      "direction": "payload",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#OrderCancelledFrame",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.cancel"
+      },
+      "receiver": {
+        "service": "ops-bot",
+        "typeId": "type:ops-bot#OrderEvent",
+        "symbol": "ops-bot#src/events/events.controller.ts:EventsController.receive"
+      },
+      "typeId": "type:ops-bot#OrderEvent",
+      "field": "reason",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`reason` is optional for receiver ops-bot and always sent by sender shop-api",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:ops-bot#src/bot/bot.service.ts:24:11",
+        "to": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:ops-bot#src/bot/bot.service.ts:24:11|http_calls|entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+      "direction": "request",
+      "reason": "body-already-serialised",
+      "message": "ops-bot#src/bot/bot.service.ts:BotService.handleOrderCancelled has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:ops-bot#src/bot/bot.service.ts:24:11",
+        "to": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:ops-bot#src/bot/bot.service.ts:24:11|http_calls|entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/desk/desk.service.ts:10:11",
+        "to": "consumer:ops-bot#src/notify/notify.service.ts:NotifyService.onDeskEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/desk/desk.service.ts:10:11|emits|consumer:ops-bot#src/notify/notify.service.ts:NotifyService.onDeskEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:ops-bot#src/notify/notify.service.ts:NotifyService.onDeskEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/floor/floor.service.ts:10:11",
+        "to": "consumer:ops-bot#src/floor/floor.watcher.ts:FloorWatcher.onFloorEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/floor/floor.service.ts:10:11|emits|consumer:ops-bot#src/floor/floor.watcher.ts:FloorWatcher.onFloorEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:ops-bot#src/floor/floor.watcher.ts:FloorWatcher.onFloorEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    }
+  ],
+  "summary": {
+    "edges": 2,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 2,
+    "unchecked": 4,
+    "errors": 0,
+    "warnings": 1,
+    "infos": 0,
+    "ignored": 0
+  }
+}

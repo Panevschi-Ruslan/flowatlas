@@ -67,7 +67,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
     <span>339 fixtures</span>
-    <span>896 snapshot files</span>
+    <span>897 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -2419,6 +2419,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>A Nuxt 4 application (P240): its code under <code>app/</code>, the server and <code>shared/</code> beside it, and a <code>tsconfig.json</code> that refers to the four tsconfigs <code>nuxi prepare</code> writes into <code>.nuxt/</code> - none of which a fresh clone has.</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="one-call-per-question everything else a question an agent asks is one call (p382): the inputs it writes are taken as it writes them, a message type given as the channel is answered on the channels carrying it, every input error names the exact call to make, a class's code answers its skeleton as plain text, and a detail-2 flow says each fact once.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/one-call-per-question">one-call-per-question</a>
+          <span class="kind">2 services</span>
+        </div>
+        <p>A question an agent asks is one call (P382): the inputs it writes are taken as it writes them, a message type given as the channel is answered on the channels carrying it, every input error names the exact call to make, a class's code answers its skeleton as plain text, and a detail-2 flow says each fact once.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.mcp</code> <code>expected.mcp.compact</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="orpc-contract everything else a contract-first orpc service (p58): the routes, inputs, outputs and failures written on a contract, implemented elsewhere, and served as rest routes.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/orpc-contract">orpc-contract</a>
@@ -2666,14 +2674,6 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A workspace of three configured services: a NestJS API (<code>apps/api</code>) serving GraphQL at <code>/graphql</code> and REST under a <code>v1</code> prefix, a storefront that declares nothing of it, and a back office that declares the API's package (<code>&quot;@shop/api&quot;: &quot;workspace:^&quot;</code>) to import its <code>Order</code> type and one helper (P282).</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
-      </li>
-      <li class="fixture" data-search="service-picks-the-symbol everything else answers that never say they are complete when they are not (p381): a route two services serve under the same path, said aloud with and without the service that picks it; a filter that keeps one service's callers; a name nothing holds; impact summed by kind, and on several symbols at once; code called only through a route nothing requests; and routes no caller joins, one judged dead and one a maybe.">
-        <div class="head">
-          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/service-picks-the-symbol">service-picks-the-symbol</a>
-          <span class="kind">4 services</span>
-        </div>
-        <p>Answers that never say they are complete when they are not (P381): a route two services serve under the same path, said aloud with and without the service that picks it; a filter that keeps one service's callers; a name nothing holds; impact summed by kind, and on several symbols at once; code called only through a route nothing requests; and routes no caller joins, one judged dead and one a maybe.</p>
-        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.mcp</code> <code>expected.mcp.compact</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="settings-branches-helpers everything else a next `web` whose server code and browser code reach two services through settings chosen by a condition nobody settles, or read inside a function handed nothing.">
         <div class="head">

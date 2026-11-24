@@ -34,11 +34,7 @@
         },
         "edge": {
           "type": "calls",
-          "confidence": "static",
-          "params": [
-            "{sku:string;name:string;description?:string;image?:string;price:number;currency?:string;weight?:number;width?:number;height?:number;depth?:number;color?:string;brand?:string;category?:string;tags?:string[];barcode?:string;supplier?:string;origin?:string;taxClass?:string;visible?:boolean;featured?:boolean;minOrder?:number;maxOrder?:number}"
-          ],
-          "returns": "string"
+          "confidence": "static"
         },
         "children": [
           {
@@ -61,7 +57,6 @@
                   "price",
                   "sku"
                 ],
-                "package": "@angular/common/http",
                 "via": "template-env",
                 "targetService": "stock-api"
               }
@@ -81,10 +76,7 @@
                   "kind": "http",
                   "meta": {
                     "method": "POST",
-                    "path": "/products",
-                    "rawPath": "/products",
-                    "controller": "ProductsController",
-                    "adapter": "nestjs-http"
+                    "path": "/products"
                   }
                 },
                 "edge": {
@@ -126,11 +118,7 @@
                     },
                     "edge": {
                       "type": "handles",
-                      "confidence": "static",
-                      "params": [
-                        "{sku:string;name:string;description?:string;image?:string;price:number;currency?:string;weight?:number;width?:number;height?:number;depth?:number;color?:string;brand?:string;category?:string;tags?:string[];barcode?:string;supplier?:string;origin?:string;taxClass?:string;visible?:boolean;featured?:boolean;minOrder?:number;maxOrder?:number}"
-                      ],
-                      "returns": "string"
+                      "confidence": "static"
                     },
                     "children": [
                       {
@@ -157,12 +145,7 @@
                         },
                         "edge": {
                           "type": "calls",
-                          "confidence": "static",
-                          "params": [
-                            "string",
-                            "string"
-                          ],
-                          "returns": "string"
+                          "confidence": "static"
                         },
                         "children": []
                       }

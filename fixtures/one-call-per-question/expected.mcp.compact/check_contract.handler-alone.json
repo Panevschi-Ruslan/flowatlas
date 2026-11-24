@@ -1,0 +1,6 @@
+{
+  "error": "\"shop-api#src/orders/orders.controller.ts:OrdersController.cancel\" is one end and no route: give the route it handles or both ends of its call",
+  "next": [
+    "check_contract({edge: \"entry:shop-api:http:PATCH:/api/orders/:param/cancel\"})"
+  ]
+}

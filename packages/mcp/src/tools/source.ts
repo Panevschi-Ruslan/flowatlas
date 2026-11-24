@@ -7,7 +7,7 @@ import { isResolved, resolveSymbol } from '../query/entry-ref.js';
 import { nearNames } from '../query/names.js';
 import { MAX_NEXT, nextFor, withNext } from '../query/next.js';
 import { requestsOf } from '../query/requests.js';
-import { nextOutput, nodeOutput, READ_ONLY, requestsOutput, withDb, type ToolContext } from './common.js';
+import { READ_ONLY, withDb, type ToolContext } from './common.js';
 
 /**
  * Where a declaration ends, read by counting braces from where it starts.
@@ -98,36 +98,91 @@ export const sourceWindow = (
   return { from, to, end, continues };
 };
 
-/**
- * What get_source answers: the code of one symbol, or the part of it asked
- * for; or, for a name that means more than one, the candidates (P94).
- */
-export const getSourceOutput = {
-  id: z.string().optional(),
-  file: z.string().optional(),
-  line: z.number().optional(),
-  endLine: z.number().optional(),
-  code: z.string().optional(),
-  candidates: z.array(nodeOutput).optional(),
-  truncated: z.string().optional(),
-  note: z.string().optional(),
-  ...requestsOutput,
-  next: nextOutput,
+/** Where a member's body is folded in a skeleton: its first line, this, and the line that closes it. */
+const FOLD = ' … ';
+
+/** Braces opened less closed on a line, counted as `endOfDeclaration` counts them. */
+const braceDelta = (line: string): number => {
+  let delta = 0;
+  for (const character of line) {
+    if (character === '{') delta += 1;
+    else if (character === '}') delta -= 1;
+  }
+  return delta;
 };
+
+/**
+ * A class's skeleton (P382): its decorators, its declaration and every
+ * member's first lines, each body folded to `{ … }` on one line, every line
+ * with its number in the file so a method is read on with `fromLine` or by
+ * its own id. An agent asking for a class wants where its members are and
+ * what they take, and was handed every body: a 400-line answer for a
+ * question one signature answers. `lines` are the file's, `from` and `to`
+ * the declaration's first and last index.
+ */
+export const classSkeleton = (lines: readonly string[], from: number, to: number): string => {
+  const out: string[] = [];
+  let depth = 0;
+  // The class's own brace: lines inside it at its depth are members, deeper ones bodies.
+  let body: number | undefined;
+  let folding: { at: number; depth: number } | undefined;
+  for (let index = from; index <= to; index += 1) {
+    const line = lines[index] ?? '';
+    const before = depth;
+    depth += braceDelta(line);
+    if (folding !== undefined) {
+      if (depth <= folding.depth) {
+        out[folding.at] = `${out[folding.at]}${FOLD}${line.trim()}`;
+        folding = undefined;
+      }
+      continue;
+    }
+    if (body === undefined && /\bclass\b/.test(line) && line.includes('{')) body = before + 1;
+    if (line.trim() === '') continue;
+    out.push(`${index + 1}  ${line}`);
+    // A member whose body goes on past its first line: folded until it closes.
+    if (body !== undefined && before >= body && depth > before) folding = { at: out.length - 1, depth: before };
+    // A decorator's options written over several lines, before the class: folded the same way.
+    else if (body === undefined && depth > before && !/\bclass\b/.test(line)) folding = { at: out.length - 1, depth: before };
+  }
+  return out.join('\n');
+};
+
+/** Whether a node is a class whose skeleton answers by default: a declaration that holds members. */
+const CLASS_TYPES: ReadonlySet<string> = new Set(['provider', 'module', 'guard', 'interceptor', 'pipe', 'middleware', 'ui_component']);
+
+/**
+ * What get_source answers (P94, P382): the code of one symbol, or the part of
+ * it asked for, or a class's skeleton; or, for a name that means more than
+ * one, the candidates. No output schema: the answer an agent is handed is the
+ * code as plain text (`plain-text.ts`), which a client reads only where no
+ * structured content comes with it; `verbose: true` gives this document.
+ */
+export interface SourceAnswer {
+  id?: string;
+  file?: string;
+  line?: number;
+  endLine?: number;
+  code?: string;
+  /** The code is the class's skeleton, each body folded; `whole: true` gives it all. */
+  skeleton?: boolean;
+  truncated?: string;
+  note?: string;
+}
 
 export const registerSource = (server: McpServer, ctx: ToolContext): void => {
   server.registerTool(
     'get_source',
     {
       title: 'Read the source of a symbol',
-      description: 'The code of one symbol; the only tool that returns source. A long one says `truncated` and the `fromLine` to read on from.',
+      description: 'The code of one symbol, as text; a class as its skeleton (`whole: true` for all of it). A long one says `truncated` and the `fromLine` to read on from.',
       inputSchema: {
         symbol: z.string().describe('node id or name'),
         context: z.number().int().min(0).max(50).default(0).describe('lines either side'),
         fromLine: z.number().int().min(1).max(1000000).optional().describe('read on from this line'),
         maxLines: z.number().int().min(1).max(MAX_LINES).default(MAX_LINES),
+        whole: z.boolean().optional(),
       },
-      outputSchema: getSourceOutput,
       annotations: READ_ONLY,
     },
     (input) =>
@@ -175,6 +230,22 @@ export const registerSource = (server: McpServer, ctx: ToolContext): void => {
           context: input.context,
         });
         const past = window.from > window.end;
+        // A class read from its start answers its skeleton, unless asked whole (P382): members, bodies folded.
+        const skeleton = CLASS_TYPES.has(node.type) && input.whole !== true && input.fromLine === undefined && !past;
+        if (skeleton) {
+          return withNext(
+            {
+              id: node.id,
+              file: node.file,
+              line: start + 1,
+              endLine: window.end + 1,
+              code: classSkeleton(lines, start, window.end),
+              skeleton: true,
+              ...requestsOf(db, node),
+            },
+            [`get_source({symbol: ${JSON.stringify(node.id)}, whole: true})`, ...nextFor(node).filter((hint) => !hint.startsWith('get_source'))].slice(0, MAX_NEXT),
+          );
+        }
 
         return withNext(
           {
