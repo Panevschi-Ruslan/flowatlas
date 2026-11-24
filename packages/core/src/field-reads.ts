@@ -51,6 +51,8 @@ export interface FieldRead {
   when?: string[];
   /** `default`: read through a key settled from a default the code holds, which options may replace (P374). */
   sureness?: FieldSureness;
+  /** The file the read is written in, where it is not the function's: a component's template (P391). */
+  file?: string;
 }
 
 /** How a read was settled where it is not plainly written: through a key held as a default (P374). */
@@ -62,6 +64,8 @@ export interface FieldUnread {
   line: number;
   why: string;
   when?: string[];
+  /** The file the use is written in, where it is not the function's: a component's template (P391). */
+  file?: string;
 }
 
 /** What a function reads of what it is handed. */
@@ -84,7 +88,30 @@ export interface FieldsRead {
 export type ValueState =
   | { kind: 'payload'; prefix: readonly string[]; sureness?: FieldSureness }
   | { kind: 'request' }
-  | { kind: 'context' };
+  | { kind: 'context' }
+  | ResponseState
+  | HolderState;
+
+/**
+ * An object that holds a value under one key (P391): the props a component
+ * is handed, `order` being the value bound to `<Row order={o} />`.
+ */
+export interface HolderState {
+  kind: 'holder';
+  key: string;
+  inner: ValueState;
+}
+
+/**
+ * A response a client is handed (P391), whose body is reached by a key
+ * (`res.data`, `res.body`) or a call (`await res.json()`); anything else read
+ * off it (`status`, `ok`, `headers`) is not the body.
+ */
+export interface ResponseState {
+  kind: 'response';
+  bodyKeys: readonly string[];
+  bodyCalls: readonly string[];
+}
 
 /** Where the walk starts: a parameter of the function, as a state. */
 export interface FieldStart {
@@ -105,6 +132,53 @@ export interface FieldReadOptions {
   maxFunctions?: number;
   /** How many reads one walk records. */
   maxReads?: number;
+  /**
+   * Follow a list into what is done with each element (P391): the callback of
+   * `map`, `filter`, `find`, `forEach` and the like, a `for…of` over a part,
+   * what `filter` or `find` hands back, `.length` not a field, and a promise's
+   * `then`. Off for what a handler is handed, whose reads are written already.
+   */
+  followLists?: boolean;
+  /**
+   * Asked first where the value leaves what this walk follows (P391): handed
+   * back, stored in a member, handed to a function not of the repository, or
+   * bound to an element's attribute. True where the caller followed it on; the
+   * walk otherwise says it as it always has.
+   */
+  escape?: (use: FieldEscape, walk: FieldWalk) => boolean;
+}
+
+/** Where a value leaves what the walk follows on its own (P391). */
+export interface FieldEscape {
+  /** `returned` by its function, `stored` in something not a local, `handed` to a call, `bound` to a JSX attribute. */
+  kind: 'returned' | 'stored' | 'handed' | 'bound';
+  /** The value, as the outermost expression that holds it. */
+  node: TsNode;
+  /** The return, the assignment, the call or the attribute. */
+  at: TsNode;
+  fn: FunctionLike;
+  state: ValueState;
+  when: readonly string[] | undefined;
+  depth: number;
+  /** The argument it is, where it is handed to a call. */
+  index?: number;
+}
+
+/** What an escape may do to carry the walk on (P391). */
+export interface FieldWalk {
+  /** Follows a value held at `node`, in `fn`. */
+  followValue(fn: FunctionLike, node: TsNode, state: ValueState, depth: number, when?: readonly string[]): void;
+  /** Follows a parameter of `fn` that holds a state. */
+  readParameter(fn: FunctionLike, index: number, state: ValueState, depth: number, when?: readonly string[]): void;
+  /** Records a read made where no code of the walk stands: a component's template. */
+  addRead(read: FieldRead): void;
+  addUnread(row: FieldUnread): void;
+  /** Whether one more function may be read, counting it; false (and the walk said cut) past the bound. */
+  enter(fn: FunctionLike): boolean;
+  /** The id of the node the rows are written on. */
+  readonly rootId: string | undefined;
+  /** The id of the function a node is in, as rows name it. */
+  inOf(node: TsNode): string | undefined;
 }
 
 /** What hops a request object takes to another one: `ctx.request`, `c.req`, `request.raw`. */
@@ -378,6 +452,10 @@ const through = (state: ValueState, key: string, isCall: boolean, sureness?: Fie
     const settled = sureness ?? state.sureness;
     return { kind: 'payload', prefix: [...state.prefix, key], ...(settled === undefined ? {} : { sureness: settled }) };
   }
+  if (state.kind === 'holder') return !isCall && key === state.key ? state.inner : undefined;
+  if (state.kind === 'response') {
+    return (isCall ? state.bodyCalls : state.bodyKeys).includes(key) ? { kind: 'payload', prefix: [] } : undefined;
+  }
   if (state.kind === 'request') {
     if (isCall) return BODY_CALLS.has(key) ? { kind: 'payload', prefix: [] } : undefined;
     if (key === 'body') return { kind: 'payload', prefix: [] };
@@ -406,6 +484,172 @@ const bodyByArgument = (call: CallExpression): boolean => {
   return Node.isPropertyAccessExpression(callee) && callee.getName() === 'valid' && stringOf(call.getArguments()[0]) === 'json';
 };
 
+/** Whether a value goes on through its parent as it was: either side of `??` or `||`, a branch of `?:` (P391). */
+const isPassedOn = (parent: TsNode, node: TsNode): boolean => {
+  if (Node.isBinaryExpression(parent)) {
+    const operator = parent.getOperatorToken().getKind();
+    return operator === SyntaxKind.QuestionQuestionToken || operator === SyntaxKind.BarBarToken;
+  }
+  return Node.isConditionalExpression(parent) && parent.getCondition() !== node;
+};
+
+/** List methods whose callback is handed each element, by the parameter it is handed at. */
+const ELEMENT_CALLBACKS: ReadonlyMap<string, number> = new Map([
+  ['map', 0],
+  ['flatMap', 0],
+  ['forEach', 0],
+  ['filter', 0],
+  ['find', 0],
+  ['findLast', 0],
+  ['findIndex', 0],
+  ['findLastIndex', 0],
+  ['some', 0],
+  ['every', 0],
+  ['reduce', 1],
+  ['reduceRight', 1],
+]);
+
+/** List methods that hand back elements of the same list, so what is read off the result is read off the list. */
+const KEEPS_ELEMENTS: ReadonlySet<string> = new Set(['filter', 'find', 'findLast', 'slice', 'sort', 'reverse', 'at', 'toSorted', 'toReversed', 'concat']);
+
+/** Whether a value is a list, or a list or nothing. */
+const isList = (node: TsNode): boolean => {
+  const type = node.getType();
+  if (type.isArray() || type.isTuple()) return true;
+  const kept = type.getNonNullableType();
+  return kept.isArray() || kept.isTuple();
+};
+
+/** Whether a value is a promise, whose `then` is handed it. */
+const isPromise = (node: TsNode): boolean => {
+  const name = node.getType().getNonNullableType().getSymbol()?.getName();
+  return name === 'Promise' || name === 'PromiseLike';
+};
+
+/** The function a callback argument is: written in place, or the repository's own named one. */
+const callbackOf = (walk: Walk, argument: TsNode | undefined): FunctionLike | undefined => {
+  if (argument === undefined) return undefined;
+  if (Node.isArrowFunction(argument) || Node.isFunctionExpression(argument)) return argument;
+  const name = Node.isPropertyAccessExpression(argument) ? argument.getNameNode() : argument;
+  for (const declaration of name.getSymbol()?.getDeclarations() ?? []) {
+    if (!walk.options.isOwn(declaration)) continue;
+    const fn = functionLikeOf(declaration);
+    if (fn !== undefined && fn.getBody() !== undefined) return fn;
+  }
+  return undefined;
+};
+
+/** Counts one more function into the walk; false, and the walk said cut, where the bound is reached. */
+const enter = (walk: Walk, fn: FunctionLike): boolean => {
+  if (walk.functions.has(fn)) return true;
+  if (walk.functions.size >= (walk.options.maxFunctions ?? MAX_FUNCTIONS)) {
+    walk.cut = `more than ${walk.options.maxFunctions ?? MAX_FUNCTIONS} functions`;
+    return false;
+  }
+  walk.functions.add(fn);
+  return true;
+};
+
+/** Follows a callback's parameter, within the bounds. */
+const intoCallback = (walk: Walk, callback: FunctionLike | undefined, index: number, state: ValueState, depth: number, when: readonly string[] | undefined): void => {
+  if (callback === undefined || !enter(walk, callback)) return;
+  readParameter(walk, callback, index, state, depth, when);
+};
+
+/**
+ * A member read off a list or a promise, where lists are followed (P391):
+ * `.length` is no field, a callback of `map` or `filter` is handed each
+ * element at the list's own path, what `filter` or `find` hands back goes on
+ * as the list, and a promise's `then` hands its callback the value. Undefined
+ * where the read is an ordinary one; else the node to go on from, or `stop`.
+ */
+const listUse = (
+  walk: Walk,
+  node: TsNode,
+  access: TsNode & { getName(): string },
+  state: { kind: 'payload'; prefix: readonly string[]; sureness?: FieldSureness },
+  depth: number,
+  when: readonly string[] | undefined,
+  fresh: boolean,
+): TsNode | 'stop' | undefined => {
+  const name = access.getName();
+  const call = access.getParent();
+  const isCall = call !== undefined && Node.isCallExpression(call) && call.getExpression() === (access as TsNode);
+  if (isCall && name === 'then' && isPromise(node)) {
+    intoCallback(walk, callbackOf(walk, call.getArguments()[0]), 0, state, depth, when);
+    return 'stop';
+  }
+  // `name.length`, `name.trim()`: what is read off a string or a number is no field of it.
+  const kept = node.getType().getNonNullableType();
+  if (kept.isString() || kept.isNumber() || kept.isBoolean() || kept.isStringLiteral() || kept.isNumberLiteral()) {
+    if (fresh) addRead(walk, state.prefix, access, when, state.sureness);
+    return 'stop';
+  }
+  if (!isList(node)) return undefined;
+  if (fresh) addRead(walk, state.prefix, access, when, state.sureness);
+  if (!isCall) return 'stop';
+  const at = ELEMENT_CALLBACKS.get(name);
+  if (at !== undefined) intoCallback(walk, callbackOf(walk, call.getArguments()[0]), at, state, depth, when);
+  return KEEPS_ELEMENTS.has(name) ? call : 'stop';
+};
+
+/** The hands an escape is given to carry the walk on (P391). */
+const handleOf = (walk: Walk): FieldWalk => ({
+  followValue: (fn, node, state, depth, when) => followValue(walk, fn, { states: new Map(), assigned: new Set() }, node, state, depth, when),
+  readParameter: (fn, index, state, depth, when) => readParameter(walk, fn, index, state, depth, when),
+  addRead: (read) => {
+    const key = `${read.field}|${read.in ?? ''}|${read.file ?? ''}|${read.line}`;
+    if (walk.reads.has(key)) return;
+    if (walk.reads.size >= (walk.options.maxReads ?? MAX_READS)) {
+      walk.cut = `more than ${walk.options.maxReads ?? MAX_READS} reads`;
+      return;
+    }
+    walk.reads.set(key, read);
+  },
+  addUnread: (row) => {
+    const key = `${row.why}|${row.in ?? ''}|${row.file ?? ''}|${row.line}`;
+    if (walk.unread.has(key) || walk.unread.size >= MAX_UNREAD) return;
+    walk.unread.set(key, row);
+  },
+  enter: (fn) => enter(walk, fn),
+  rootId: walk.rootId,
+  inOf: (node) => inOf(walk, node),
+});
+
+/**
+ * Where a value leaves the function, asked of the escape first (P391): handed
+ * back, stored in what is not a local, or bound to a JSX attribute. True where
+ * it was taken up, or said.
+ */
+const settleEscaped = (
+  walk: Walk,
+  fn: FunctionLike,
+  node: TsNode,
+  parent: TsNode,
+  state: ValueState,
+  depth: number,
+  when: readonly string[] | undefined,
+  whole: boolean,
+): boolean => {
+  const attribute = Node.isJsxExpression(parent) ? parent.getParent() : undefined;
+  const kind: FieldEscape['kind'] | undefined =
+    Node.isReturnStatement(parent) || (Node.isArrowFunction(parent) && parent.getBody() === node)
+      ? 'returned'
+      : Node.isBinaryExpression(parent) && parent.getRight() === node && parent.getOperatorToken().getKind() === SyntaxKind.EqualsToken && localAssigned(parent.getLeft(), fn) === undefined
+        ? 'stored'
+        : attribute !== undefined && Node.isJsxAttribute(attribute)
+          ? 'bound'
+          : undefined;
+  if (kind === undefined) return false;
+  const at = kind === 'bound' ? (attribute as TsNode) : parent;
+  if (walk.options.escape?.({ kind, node, at, fn, state, when, depth }, handleOf(walk)) === true) return true;
+  if (kind === 'bound') {
+    if (whole) addUnread(walk, at, `bound to ${at.getText().split('=')[0]?.slice(0, 40) ?? 'an attribute'}`, when);
+    return true;
+  }
+  return false;
+};
+
 /**
  * Follows one expression that holds a state: up through the reads made of it,
  * and on into whatever it is bound to or handed to.
@@ -431,9 +675,22 @@ const followValue = (
       node = parent;
       continue;
     }
+    // `res.items ?? []`, `ok ? res.items : []`: the value goes on as it was (P391).
+    if (walk.options.followLists === true && isPassedOn(parent, node)) {
+      node = parent;
+      continue;
+    }
     if (Node.isPropertyAccessExpression(parent) && parent.getExpression() === node) {
       const call = parent.getParent();
       const isCall = call !== undefined && Node.isCallExpression(call) && call.getExpression() === parent;
+      if (walk.options.followLists === true && current.kind === 'payload') {
+        const listed = listUse(walk, node, parent, current, depth, whenOf(parent, fn, bindings) ?? inherited, fresh(current));
+        if (listed === 'stop') return;
+        if (listed !== undefined) {
+          node = listed;
+          continue;
+        }
+      }
       const next =
         through(current, parent.getName(), isCall) ??
         (current.kind === 'request' && isCall && bodyByArgument(call) ? ({ kind: 'payload', prefix: [] } as const) : undefined);
@@ -463,7 +720,8 @@ const followValue = (
         continue;
       }
       // An element of a list keeps the path; any other key is a field the reading cannot name.
-      if (argument !== undefined && argument.getType().isNumber()) {
+      // A number written out (`items[0]`) is a number literal's type, taken as an element where lists are followed (P391).
+      if (argument !== undefined && (argument.getType().isNumber() || (walk.options.followLists === true && argument.getType().isNumberLiteral()))) {
         node = parent;
         continue;
       }
@@ -493,6 +751,7 @@ const settle = (
   const parent = node.getParent();
   if (parent === undefined) return;
   const whole = state.kind !== 'payload' || state.prefix.length === 0;
+  if (walk.options.escape !== undefined && settleEscaped(walk, fn, node, parent, state, depth, when, whole)) return;
   if (Node.isVariableDeclaration(parent) && parent.getInitializer() === node) {
     const name = parent.getNameNode();
     if (Node.isIdentifier(name)) {
@@ -504,7 +763,20 @@ const settle = (
     return;
   }
   if (Node.isCallExpression(parent) && parent.getArguments().includes(node as never)) {
-    handOff(walk, parent, parent.getArguments().indexOf(node as never), state, depth, when);
+    handOff(walk, parent, parent.getArguments().indexOf(node as never), state, depth, when, fn, node);
+    return;
+  }
+  // A part of an answer walked element by element (P391).
+  if (walk.options.followLists === true && !whole && Node.isForOfStatement(parent) && parent.getExpression() === node) {
+    const declared = parent.getInitializer();
+    const first = Node.isVariableDeclarationList(declared) ? declared.getDeclarations()[0] : undefined;
+    const name = first?.getNameNode();
+    if (first !== undefined && name !== undefined && Node.isIdentifier(name)) {
+      bindings.states.set(first, state);
+      followName(walk, fn, bindings, first, state, depth, when);
+    } else if (name !== undefined && Node.isObjectBindingPattern(name)) {
+      destructure(walk, fn, bindings, name, state, depth, when);
+    }
     return;
   }
   if (!whole) return;
@@ -620,9 +892,14 @@ const handOff = (
   state: ValueState,
   depth: number,
   when: readonly string[] | undefined,
+  fn?: FunctionLike,
+  node?: TsNode,
 ): void => {
   const whole = state.kind !== 'payload' || state.prefix.length === 0;
   const target = calledFunction(call, walk);
+  if (target === undefined && fn !== undefined && node !== undefined && walk.options.escape?.({ kind: 'handed', node, at: call, fn, state, when, depth, index }, handleOf(walk)) === true) {
+    return;
+  }
   if (target === undefined) {
     // A part of the payload handed on has been read already; only the whole of it is lost here.
     if (whole) addUnread(walk, call, `handed to ${calleeText(call)}`, when);
@@ -682,8 +959,24 @@ export const readFields = (fn: FunctionLike, starts: readonly FieldStart[], opti
     rootId: options.rootId ?? options.idOf(fn),
   };
   for (const start of starts) readParameter(walk, fn, start.param, start.state, 0, undefined);
-  const byLine = (a: { line: number; in?: string }, b: { line: number; in?: string }): number =>
-    (a.in ?? '') < (b.in ?? '') ? -1 : (a.in ?? '') > (b.in ?? '') ? 1 : a.line - b.line;
+  return rowsOf(walk);
+};
+
+/**
+ * A walk whose starts the caller makes (P391): `run` is handed what an
+ * escape is, to follow values and parameters and record reads, and the rows
+ * come back as `readFields` hands them.
+ */
+export const walkFields = (options: FieldReadOptions, run: (walk: FieldWalk) => void): FieldsRead => {
+  const walk: Walk = { options, reads: new Map(), unread: new Map(), functions: new Set(), rootId: options.rootId };
+  run(handleOf(walk));
+  return rowsOf(walk);
+};
+
+/** The rows a walk recorded, by the function, the file and the line. */
+const rowsOf = (walk: Walk): FieldsRead => {
+  const byLine = (a: { line: number; in?: string; file?: string }, b: { line: number; in?: string; file?: string }): number =>
+    (a.in ?? '') < (b.in ?? '') ? -1 : (a.in ?? '') > (b.in ?? '') ? 1 : (a.file ?? '') < (b.file ?? '') ? -1 : (a.file ?? '') > (b.file ?? '') ? 1 : a.line - b.line;
   return {
     reads: [...walk.reads.values()].sort((a, b) => byLine(a, b) || (a.field < b.field ? -1 : a.field > b.field ? 1 : 0)),
     unread: [...walk.unread.values()].sort(byLine),

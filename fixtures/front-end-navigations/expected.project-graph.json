@@ -1554,6 +1554,7 @@
         "responseHeaderKeys": [
           "x-total-count"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "literal"
       }
@@ -1577,6 +1578,7 @@
         "bodyKeys": [
           "path"
         ],
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal",

@@ -2387,6 +2387,7 @@
         "queryKeys": [
           "shopId"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "market-api"
@@ -2412,6 +2413,7 @@
           "name",
           "shopId"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "market-api"
@@ -2432,6 +2434,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "unknown",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "market-api"
@@ -2456,6 +2459,7 @@
         "queryKeys": [
           "shopId"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "market-api"
@@ -2481,6 +2485,7 @@
           "name",
           "shopId"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "market-api"
@@ -2501,6 +2506,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "void",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "market-api"
@@ -2544,6 +2550,7 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "market-api"
@@ -2566,6 +2573,7 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "market-api"
@@ -2586,6 +2594,18 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "string[]",
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.routeAction",
+            "line": 35,
+            "why": "handed to this.board.ackCall, deeper than the walk follows"
+          },
+          {
+            "line": 21,
+            "why": "cut: deeper than 4 calls"
+          }
+        ],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "market-api"
@@ -2608,6 +2628,7 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "market-api"

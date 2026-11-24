@@ -1,0 +1,61 @@
+{
+  "entry": "entry:shop-api:http:GET:/api/orders/:param",
+  "reads": [],
+  "note": "no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches",
+  "answer": {
+    "type": "type:shop-api#OrderDetail",
+    "reads": [
+      {
+        "field": "customer.name",
+        "id": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent",
+        "line": 9,
+        "call": "ui_api_call:shop-web#src/app/orders.service.ts:29:12"
+      },
+      {
+        "field": "lines",
+        "id": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent",
+        "line": 10,
+        "call": "ui_api_call:shop-web#src/app/orders.service.ts:29:12"
+      },
+      {
+        "field": "lines.sku",
+        "id": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent",
+        "line": 10,
+        "call": "ui_api_call:shop-web#src/app/orders.service.ts:29:12"
+      },
+      {
+        "field": "lines.qty",
+        "id": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent",
+        "line": 11,
+        "call": "ui_api_call:shop-web#src/app/orders.service.ts:29:12"
+      },
+      {
+        "field": "lines.sku",
+        "id": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent",
+        "line": 11,
+        "call": "ui_api_call:shop-web#src/app/orders.service.ts:29:12"
+      },
+      {
+        "field": "customer.email",
+        "id": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent.email",
+        "line": 31,
+        "call": "ui_api_call:shop-web#src/app/orders.service.ts:29:12"
+      },
+      {
+        "field": "lines",
+        "id": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent.ngOnInit",
+        "line": 26,
+        "call": "ui_api_call:shop-web#src/app/orders.service.ts:29:12"
+      }
+    ]
+  },
+  "callers": 2,
+  "complete": false,
+  "left": [
+    "unsure: ProfileCard: handed to JSON.stringify, line 11"
+  ],
+  "next": [
+    "check_contract({from: \"ui_api_call:shop-app#src/api.ts:28:26\", to: \"entry:shop-api:http:GET:/api/orders/:param\"})",
+    "check_contract({from: \"ui_api_call:shop-web#src/app/orders.service.ts:29:12\", to: \"entry:shop-api:http:GET:/api/orders/:param\"})"
+  ]
+}

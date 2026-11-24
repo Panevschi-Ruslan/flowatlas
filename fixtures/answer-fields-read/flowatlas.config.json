@@ -1,0 +1,20 @@
+{
+  "services": [
+    { "name": "shop-api", "repo": "./shop-api", "type": "nestjs" },
+    {
+      "name": "shop-web",
+      "repo": "./shop-web",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"],
+      "apiTarget": { "apiUrl": "shop-api" }
+    },
+    {
+      "name": "shop-app",
+      "repo": "./shop-app",
+      "type": "react",
+      "apiBaseEnv": ["VITE_SHOP_URL"],
+      "apiTarget": { "VITE_SHOP_URL": "shop-api" }
+    }
+  ],
+  "output": ".flowatlas"
+}

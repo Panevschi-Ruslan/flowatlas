@@ -19,6 +19,7 @@ import {
   writtenKey,
   responseHeadersRead,
   type AnswerHanded,
+  type AnswerStart,
   requestBodyOf,
   requestVerbOf,
   resolveTypeOrigin,
@@ -44,6 +45,7 @@ import type { CallExpression, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { AngularExtractContext } from '../context.js';
 import { ANGULAR_HTTP } from '../index-classes.js';
+import { answerReader, throughOf } from '../util/answer.js';
 import { noteIfUnreferenced, requestIdOf, requestsOf, wrapperOf, type RequestSite } from '../util/forward.js';
 import { interceptedBase, interceptorBaseOf, interceptorHeadersOf, type InterceptorBase, type InterceptorHeaders } from '../util/interceptor-base.js';
 import type { ApiUrl } from '../util/url.js';
@@ -123,6 +125,8 @@ interface Spelling {
    * only where the call observes the whole response.
    */
   readonly answer?: (network: CallExpression) => AnswerHanded | undefined;
+  /** How the answer comes back and what it is, for the fields its caller reads (P391); undefined where it is not followed. */
+  readonly answerAs?: (network: CallExpression) => Pick<AnswerStart, 'comes' | 'state'> | undefined;
 }
 
 /**
@@ -159,6 +163,7 @@ interface QueryShape {
  */
 export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
   const apiBaseEnv = ctx.service.apiBaseEnv ?? [];
+  const answers = answerReader(ctx);
 
   const verbOf = (call: CallExpression, name: string): string | null => {
     const shape = VERBS.get(name);
@@ -193,6 +198,10 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
             headers: (network: CallExpression) => headersAt(network, shape.optionsIndex as number),
             answer: (network: CallExpression) => (observesResponse(network, shape.optionsIndex as number) ? ('observable' as const) : undefined),
           }),
+      answerAs: (network: CallExpression) =>
+        shape.optionsIndex !== null && observesResponse(network, shape.optionsIndex)
+          ? { comes: 'observable', state: { kind: 'response', bodyKeys: ['body'], bodyCalls: [] } }
+          : { comes: 'observable', state: { kind: 'payload', prefix: [] } },
     };
   };
 
@@ -270,6 +279,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     client: { package: null, client: PLATFORM_FETCH.name },
     headers: (network) => headersAt(network, PLATFORM_FETCH.optionsAt),
     answer: () => 'promise',
+    answerAs: () => ({ comes: 'promise', state: { kind: 'response', bodyKeys: [], bodyCalls: ['json'] } }),
   };
 
   const typeOfResponse = (call: CallExpression): string | null => {
@@ -446,6 +456,9 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     // The headers the caller reads off the answer, where the request is made where it is read (P265).
     const handed = call === network ? spelling.answer?.(network) : undefined;
     const answerHeaders = handed === undefined ? undefined : responseHeadersRead(network, handed);
+    // The fields of the answer its caller reads, followed to the screen (P391).
+    const answerAs = spelling.answerAs?.(network);
+    const answerMeta = answerAs === undefined ? {} : answers.metaOf({ call: network, ...answerAs, through: throughOf(network, call, frames) }, id);
     const application = applicationOfFile(ctx.meta, file);
 
     ctx.builder.addNode({
@@ -482,6 +495,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         // The headers it reads off the answer, for a procedure whose output declares them (P265).
         ...(answerHeaders === undefined || answerHeaders.keys.length === 0 ? {} : { responseHeaderKeys: answerHeaders.keys }),
         ...(answerHeaders?.unread === true ? { responseHeadersUnread: true } : {}),
+        ...answerMeta,
         ...spelling.client,
         // Which application this request is written in, where the service holds
         // more than one; the other half of what an entry records about its own

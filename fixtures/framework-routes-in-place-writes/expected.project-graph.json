@@ -980,6 +980,14 @@
         "bodyKeys": [
           "email"
         ],
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "site#src/pages/index.tsx:Home",
+            "line": 14,
+            "why": "handed back from a function with no name to find its callers by"
+          }
+        ],
         "package": null,
         "client": "fetch",
         "via": "literal",
@@ -1001,6 +1009,13 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [
+          {
+            "field": "length",
+            "in": "site#src/pages/index.tsx:Home",
+            "line": 15
+          }
+        ],
         "package": null,
         "client": "fetch",
         "via": "literal",

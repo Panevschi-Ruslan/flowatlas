@@ -685,6 +685,7 @@
           "orderId",
           "status"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "shop-api"

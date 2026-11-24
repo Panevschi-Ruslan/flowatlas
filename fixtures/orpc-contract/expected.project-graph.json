@@ -668,6 +668,7 @@
         "baseUrlEnv": "VITE_ORDERS_URL",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "template-env",

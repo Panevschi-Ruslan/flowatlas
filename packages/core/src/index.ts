@@ -734,8 +734,10 @@ export type {
 export { isLibFile, TypeCollector } from './types/collector.js';
 export type { TypeCollectorOptions } from './types/collector.js';
 export { functionLikeOf, recordSignatures, recordStatedSignatures } from './types/signatures.js';
-export { FIELDS_READ_META, FIELDS_UNREAD_META, readFields } from './field-reads.js';
-export type { FieldRead, FieldReadOptions, FieldStart, FieldsRead, FieldSureness, FieldUnread, ValueState } from './field-reads.js';
+export { FIELDS_READ_META, FIELDS_UNREAD_META, readFields, walkFields } from './field-reads.js';
+export type { FieldEscape, FieldRead, FieldReadOptions, FieldStart, FieldsRead, FieldSureness, FieldUnread, FieldWalk, HolderState, ResponseState, ValueState } from './field-reads.js';
+export { ANSWER_READ_META, ANSWER_UNREAD_META, answerFieldsRead } from './answer-reads.js';
+export type { AnswerComes, AnswerReadOptions, AnswerStart, AnswerMemberUse } from './answer-reads.js';
 export type { FunctionLike, RecordedSignature, StatedPart, StatedSignature, StatedType } from './types/signatures.js';
 export { mergeFieldMeta } from './types/field-meta.js';
 export type { FieldDeclaration, FieldMetaReader, FieldMetaResult, UnreadAnnotation } from './types/field-meta.js';

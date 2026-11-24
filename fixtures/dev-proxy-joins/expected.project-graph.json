@@ -1044,6 +1044,7 @@
         "baseUrlEnv": null,
         "responseType": "unknown[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "literal",
         "targetService": "billing"
@@ -1064,6 +1065,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal",
@@ -1085,6 +1087,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal",
@@ -1106,6 +1109,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal",
@@ -1127,6 +1131,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -1148,6 +1153,13 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "line": 9,
+            "why": "the answer is held outside a function"
+          }
+        ],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -1169,6 +1181,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal",
@@ -1190,6 +1203,14 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "web#src/Shop.tsx:Shop",
+            "line": 12,
+            "why": "handed back from a function with no name to find its callers by"
+          }
+        ],
         "package": null,
         "client": "fetch",
         "via": "literal",
@@ -1211,6 +1232,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal",
@@ -1232,6 +1254,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal"
@@ -1252,6 +1275,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal"
@@ -1272,6 +1296,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal",

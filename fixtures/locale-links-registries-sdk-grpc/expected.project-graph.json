@@ -1081,6 +1081,14 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "wiki#src/components/Header.tsx:Header",
+            "line": 11,
+            "why": "the promise used as void loadTeams('/api/teams')"
+          }
+        ],
         "package": null,
         "client": "fetch",
         "via": "literal",
@@ -1102,6 +1110,14 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "wiki#src/components/Header.tsx:Header",
+            "line": 11,
+            "why": "the promise used as void loadTeams('/api/teams')"
+          }
+        ],
         "package": null,
         "client": "fetch",
         "via": "literal",
@@ -1123,6 +1139,13 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [
+          {
+            "field": "id",
+            "in": "wiki#src/stores/ActivityStore.ts:ActivityStore.remove",
+            "line": 20
+          }
+        ],
         "package": null,
         "client": "fetch",
         "via": "literal"
@@ -1143,6 +1166,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal"

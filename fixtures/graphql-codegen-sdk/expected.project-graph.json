@@ -945,6 +945,13 @@
         "bodyType": "{query:string;variables?:unknown;headers?:Headers}",
         "bodyFrom": "literal",
         "headersUnread": true,
+        "answerRead": [
+          {
+            "field": "data",
+            "in": "shop#app/api-client.ts:requester",
+            "line": 19
+          }
+        ],
         "package": null,
         "client": "fetch",
         "via": null

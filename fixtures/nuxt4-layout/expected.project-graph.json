@@ -381,6 +381,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -406,6 +407,7 @@
         "bodyKeys": [
           "item"
         ],
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -431,6 +433,7 @@
         "queryKeys": [
           "q"
         ],
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",

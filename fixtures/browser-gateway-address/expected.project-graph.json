@@ -355,6 +355,7 @@
           "name",
           "slot"
         ],
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "const",
@@ -399,6 +400,13 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [
+          {
+            "field": "slots",
+            "in": "web#js/slots.js:loadSlots",
+            "line": 3
+          }
+        ],
         "package": null,
         "client": "fetch",
         "via": "const",
@@ -421,6 +429,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "const",

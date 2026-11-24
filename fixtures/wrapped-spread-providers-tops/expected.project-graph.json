@@ -1163,6 +1163,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "ky",
         "client": "ky",
         "via": "const",

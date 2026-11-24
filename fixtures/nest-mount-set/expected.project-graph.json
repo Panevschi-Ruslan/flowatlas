@@ -199,6 +199,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal"
@@ -219,6 +220,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal"
@@ -239,6 +241,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal"

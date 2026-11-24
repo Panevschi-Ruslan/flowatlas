@@ -2415,6 +2415,82 @@
         ]
       },
       "note": "P387: only the alerts bot read again, where nothing changed: no lost join, the catalog's edits are not this question's."
+    },
+    {
+      "id": "answer.field-breaks",
+      "ask": "which screens break if status of GET /api/orders changes",
+      "fixture": "answer-fields-read",
+      "tool": "check_contract",
+      "args": {
+        "edge": "GET /api/orders",
+        "field": "status"
+      },
+      "lists": [
+        "answer.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "reads": [
+            "shop-app#src/OrdersList.tsx:OrderRow",
+            "shop-web#src/app/order-badge.component.ts:OrderBadgeComponent"
+          ]
+        },
+        "exact": [
+          "reads"
+        ]
+      }
+    },
+    {
+      "id": "answer.not-answered",
+      "ask": "does a client read a field GET /api/profile never answers",
+      "fixture": "answer-fields-read",
+      "tool": "check_contract",
+      "args": {
+        "edge": "GET /api/profile"
+      },
+      "lists": [
+        "answer.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "missing": [
+            "nickname"
+          ]
+        },
+        "exact": [
+          "missing"
+        ]
+      }
+    },
+    {
+      "id": "answer.unused",
+      "ask": "which fields of GET /api/orders does no client read",
+      "fixture": "answer-fields-read",
+      "tool": "check_contract",
+      "args": {
+        "edge": "GET /api/orders"
+      },
+      "lists": [
+        "answer.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "unused": [
+            "internalNote",
+            "placedAt"
+          ],
+          "missing": [
+            "discount"
+          ]
+        },
+        "exact": [
+          "unused",
+          "missing"
+        ]
+      }
     }
   ],
   "fixed": {
@@ -2738,6 +2814,27 @@
       "chars": 411,
       "tokens": 103,
       "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "answer.field-breaks": {
+      "chars": 728,
+      "tokens": 182,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "answer.not-answered": {
+      "chars": 702,
+      "tokens": 176,
+      "rows": 4,
+      "complete": true,
+      "calls": 1
+    },
+    "answer.unused": {
+      "chars": 1516,
+      "tokens": 379,
+      "rows": 9,
       "complete": true,
       "calls": 1
     },

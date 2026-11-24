@@ -879,6 +879,7 @@
         "bodyKeys": [
           "id"
         ],
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -904,6 +905,7 @@
         "bodyKeys": [
           "name"
         ],
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -925,6 +927,13 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "line": 14,
+            "why": "the answer is held outside a function"
+          }
+        ],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -950,6 +959,7 @@
         "bodyKeys": [
           "name"
         ],
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -971,6 +981,13 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "line": 17,
+            "why": "the answer is held outside a function"
+          }
+        ],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -992,6 +1009,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -1013,6 +1031,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",

@@ -582,6 +582,14 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "shop#src/routes/(app)/orders/[id]/+page.ts:load",
+            "line": 3,
+            "why": "put inside another value"
+          }
+        ],
         "package": null,
         "client": "fetch",
         "via": "literal",
@@ -604,6 +612,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal",
@@ -625,6 +634,14 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "shop#src/routes/(app)/+layout.ts:load",
+            "line": 3,
+            "why": "put inside another value"
+          }
+        ],
         "package": null,
         "client": "fetch",
         "via": "literal",

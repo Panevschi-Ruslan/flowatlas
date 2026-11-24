@@ -651,6 +651,7 @@
         "baseUrlEnv": "VITE_API_URL",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "template-env",

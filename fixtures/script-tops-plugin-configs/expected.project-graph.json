@@ -347,6 +347,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "ky",
         "client": "ky",
         "via": "const",
@@ -373,6 +374,7 @@
         "bodyKeys": [
           "page"
         ],
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "const",
@@ -417,6 +419,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "const",

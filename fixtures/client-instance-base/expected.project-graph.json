@@ -667,6 +667,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:console#Item[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "baseFrom": "interceptor",
@@ -692,6 +693,7 @@
         "bodyKeys": [
           "name"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "baseFrom": "interceptor",
@@ -738,6 +740,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "literal"

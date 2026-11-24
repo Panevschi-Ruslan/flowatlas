@@ -1,0 +1,1346 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T19:22:45.660Z",
+  "services": [
+    {
+      "name": "shop-api",
+      "repo": "./shop-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop-web",
+      "repo": "./shop-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    },
+    {
+      "name": "shop-app",
+      "repo": "./shop-app",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop-api:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "globalPrefix": "api",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:GET:/api/orders/:param",
+      "type": "entry",
+      "label": "GET /api/orders/:param",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 31,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders/:param",
+        "rawPath": "/api/orders/:id",
+        "globalPrefix": "api",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:GET:/api/profile",
+      "type": "entry",
+      "label": "GET /api/profile",
+      "repo": "shop-api",
+      "file": "src/profile/profile.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/profile",
+        "rawPath": "/api/profile",
+        "globalPrefix": "api",
+        "controller": "ProfileController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-app:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "shop-app",
+      "file": "src/App.tsx",
+      "line": 10,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "route-table",
+        "screens": [
+          "OrdersList"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop-app:screen:/profile",
+      "type": "entry",
+      "label": "/profile",
+      "repo": "shop-app",
+      "file": "src/App.tsx",
+      "line": 11,
+      "kind": "screen",
+      "meta": {
+        "path": "/profile",
+        "by": "route-table",
+        "screens": [
+          "ProfileCard"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop-web:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "shop-web",
+      "file": "src/app/app.routes.ts",
+      "line": 7,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "angular-routes",
+        "screens": [
+          "OrdersComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop-web:screen:/orders/:param",
+      "type": "entry",
+      "label": "/orders/:param",
+      "repo": "shop-web",
+      "file": "src/app/app.routes.ts",
+      "line": 8,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders/:param",
+        "by": "angular-routes",
+        "screens": [
+          "OrderDetailComponent"
+        ]
+      }
+    },
+    {
+      "id": "repo:shop-api",
+      "type": "repo",
+      "label": "shop-api",
+      "repo": "shop-api",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "globalPrefix": "api",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop-app",
+      "type": "repo",
+      "label": "shop-app",
+      "repo": "shop-app",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "functions": 7,
+          "components": 4,
+          "hooks": 0,
+          "skippedExternalCalls": {
+            "axios": 1,
+            "@tanstack/react-query": 1,
+            "react": 3
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:shop-web",
+      "type": "repo",
+      "label": "shop-web",
+      "repo": "shop-web",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "templates": 3,
+          "skippedExternalCalls": {
+            "rxjs": 1,
+            "@angular/common": 2
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "shop-api",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "ProfileController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 24,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.list",
+      "type": "method",
+      "label": "OrdersController.list",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop-api#OrderSummary[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.one",
+      "type": "method",
+      "label": "OrdersController.one",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-api#OrderDetail"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-api#src/profile/profile.controller.ts:ProfileController",
+      "type": "provider",
+      "label": "ProfileController",
+      "repo": "shop-api",
+      "file": "src/profile/profile.controller.ts",
+      "line": 9,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/profile/profile.controller.ts:ProfileController.me",
+      "type": "method",
+      "label": "ProfileController.me",
+      "repo": "shop-api",
+      "file": "src/profile/profile.controller.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop-api#Profile"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-app#src/App.tsx:App",
+      "type": "ui_component",
+      "label": "App",
+      "repo": "shop-app",
+      "file": "src/App.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop-app#src/OrdersList.tsx:OrderRow",
+      "type": "ui_component",
+      "label": "OrderRow",
+      "repo": "shop-app",
+      "file": "src/OrdersList.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ order }",
+              "type": "{order:type:shop-app#OrderSummary}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop-app#src/OrdersList.tsx:OrdersList",
+      "type": "ui_component",
+      "label": "OrdersList",
+      "repo": "shop-app",
+      "file": "src/OrdersList.tsx",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/orders"
+      }
+    },
+    {
+      "id": "shop-app#src/ProfileCard.tsx:ProfileCard",
+      "type": "ui_component",
+      "label": "ProfileCard",
+      "repo": "shop-app",
+      "file": "src/ProfileCard.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/profile"
+      }
+    },
+    {
+      "id": "shop-app#src/api.ts:fetchOrder",
+      "type": "function",
+      "label": "fetchOrder",
+      "repo": "shop-app",
+      "file": "src/api.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop-app#src/api.ts:fetchProfile",
+      "type": "function",
+      "label": "fetchProfile",
+      "repo": "shop-app",
+      "file": "src/api.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop-app#Profile"
+        }
+      }
+    },
+    {
+      "id": "shop-app#src/api.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "shop-app",
+      "file": "src/api.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop-app#OrderSummary[]"
+        }
+      }
+    },
+    {
+      "id": "shop-web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "shop-web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "shop-web#src/app/order-badge.component.ts:OrderBadgeComponent",
+      "type": "ui_component",
+      "label": "OrderBadgeComponent",
+      "repo": "shop-web",
+      "file": "src/app/order-badge.component.ts",
+      "line": 5,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:shop-web#OrderSummary",
+              "optional": true
+            }
+          ],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-order-badge"
+      }
+    },
+    {
+      "id": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent",
+      "type": "ui_component",
+      "label": "OrderDetailComponent",
+      "repo": "shop-web",
+      "file": "src/app/order-detail.component.ts",
+      "line": 5,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-order-detail",
+        "route": "/orders/:param"
+      }
+    },
+    {
+      "id": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent.email",
+      "type": "method",
+      "label": "OrderDetailComponent.email",
+      "repo": "shop-web",
+      "file": "src/app/order-detail.component.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:shop-web#OrderDetail"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent.ngOnInit",
+      "type": "method",
+      "label": "OrderDetailComponent.ngOnInit",
+      "repo": "shop-web",
+      "file": "src/app/order-detail.component.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders.component.ts:OrdersComponent",
+      "type": "ui_component",
+      "label": "OrdersComponent",
+      "repo": "shop-web",
+      "file": "src/app/orders.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-orders",
+        "route": "/orders"
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "shop-web",
+      "file": "src/app/orders.service.ts",
+      "line": 20,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders.service.ts:OrdersService.list",
+      "type": "method",
+      "label": "OrdersService.list",
+      "repo": "shop-web",
+      "file": "src/app/orders.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop-web#OrderSummary[]"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders.service.ts:OrdersService.one",
+      "type": "method",
+      "label": "OrdersService.one",
+      "repo": "shop-web",
+      "file": "src/app/orders.service.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-web#OrderDetail"
+        }
+      }
+    },
+    {
+      "id": "ui_action:shop-web#src/app/order-detail.component.ts:14:13",
+      "type": "ui_action",
+      "label": "click=\"email(order)\"",
+      "repo": "shop-web",
+      "file": "src/app/order-detail.component.ts",
+      "line": 14,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "email(order)",
+        "component": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent",
+        "template": "src/app/order-detail.component.ts",
+        "args": [
+          "order"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:shop-web#src/app/order-detail.component.ts:23:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "shop-web",
+      "file": "src/app/order-detail.component.ts",
+      "line": 23,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent",
+        "template": "src/app/order-detail.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-app#src/api.ts:19:58",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "shop-app",
+      "file": "src/api.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_SHOP_URL}/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": "VITE_SHOP_URL",
+        "responseType": "type:shop-app#OrderSummary[]",
+        "bodyType": null,
+        "answerRead": [
+          {
+            "field": "status",
+            "in": "shop-app#src/OrdersList.tsx:OrderRow",
+            "line": 6
+          },
+          {
+            "field": "id",
+            "in": "shop-app#src/OrdersList.tsx:OrdersList",
+            "line": 12
+          }
+        ],
+        "package": "axios",
+        "client": "axios",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-app#src/api.ts:23:26",
+      "type": "ui_api_call",
+      "label": "GET /api/profile",
+      "repo": "shop-app",
+      "file": "src/api.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_SHOP_URL}/api/profile",
+        "path": "/api/profile",
+        "baseUrlEnv": "VITE_SHOP_URL",
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [
+          {
+            "field": "avatarUrl",
+            "in": "shop-app#src/ProfileCard.tsx:ProfileCard",
+            "line": 15
+          },
+          {
+            "field": "name",
+            "in": "shop-app#src/ProfileCard.tsx:ProfileCard",
+            "line": 16
+          },
+          {
+            "field": "nickname",
+            "in": "shop-app#src/ProfileCard.tsx:ProfileCard",
+            "line": 17
+          }
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-app#src/api.ts:28:26",
+      "type": "ui_api_call",
+      "label": "GET /api/orders/:param",
+      "repo": "shop-app",
+      "file": "src/api.ts",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_SHOP_URL}/api/orders/:param",
+        "path": "/api/orders/:param",
+        "baseUrlEnv": "VITE_SHOP_URL",
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "shop-app#src/ProfileCard.tsx:ProfileCard",
+            "line": 11,
+            "why": "handed to JSON.stringify"
+          }
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/orders.service.ts:25:12",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "shop-web",
+      "file": "src/app/orders.service.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:shop-web#OrderSummary[]",
+        "bodyType": null,
+        "answerRead": [
+          {
+            "field": "status",
+            "in": "shop-web#src/app/order-badge.component.ts:OrderBadgeComponent",
+            "line": 8,
+            "file": "src/app/order-badge.component.ts"
+          },
+          {
+            "field": "id",
+            "in": "shop-web#src/app/orders.component.ts:OrdersComponent",
+            "line": 12,
+            "file": "src/app/orders.component.ts"
+          },
+          {
+            "field": "discount",
+            "in": "shop-web#src/app/orders.component.ts:OrdersComponent",
+            "line": 13,
+            "file": "src/app/orders.component.ts"
+          },
+          {
+            "field": "total",
+            "in": "shop-web#src/app/orders.component.ts:OrdersComponent",
+            "line": 13,
+            "file": "src/app/orders.component.ts"
+          }
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/orders.service.ts:29:12",
+      "type": "ui_api_call",
+      "label": "GET /api/orders/:param",
+      "repo": "shop-web",
+      "file": "src/app/orders.service.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/orders/:param",
+        "path": "/api/orders/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:shop-web#OrderDetail",
+        "bodyType": null,
+        "answerRead": [
+          {
+            "field": "customer.name",
+            "in": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent",
+            "line": 9,
+            "file": "src/app/order-detail.component.ts"
+          },
+          {
+            "field": "lines",
+            "in": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent",
+            "line": 10,
+            "file": "src/app/order-detail.component.ts"
+          },
+          {
+            "field": "lines.sku",
+            "in": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent",
+            "line": 10,
+            "file": "src/app/order-detail.component.ts"
+          },
+          {
+            "field": "lines.qty",
+            "in": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent",
+            "line": 11,
+            "file": "src/app/order-detail.component.ts"
+          },
+          {
+            "field": "lines.sku",
+            "in": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent",
+            "line": 11,
+            "file": "src/app/order-detail.component.ts"
+          },
+          {
+            "field": "customer.email",
+            "in": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent.email",
+            "line": 31
+          },
+          {
+            "field": "lines",
+            "in": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent.ngOnInit",
+            "line": 26
+          }
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop-api:http:GET:/api/orders",
+      "to": "shop-api#src/orders/orders.controller.ts:OrdersController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:shop-api#OrderSummary[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 26
+    },
+    {
+      "from": "entry:shop-api:http:GET:/api/orders/:param",
+      "to": "shop-api#src/orders/orders.controller.ts:OrdersController.one",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop-api#OrderDetail",
+      "file": "src/orders/orders.controller.ts",
+      "line": 31,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shop-api:http:GET:/api/profile",
+      "to": "shop-api#src/profile/profile.controller.ts:ProfileController.me",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:shop-api#Profile",
+      "file": "src/profile/profile.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:shop-app:screen:/orders",
+      "to": "shop-app#src/OrdersList.tsx:OrdersList",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 10,
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
+      "from": "entry:shop-app:screen:/profile",
+      "to": "shop-app#src/ProfileCard.tsx:ProfileCard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 11,
+      "meta": {
+        "route": "/profile"
+      }
+    },
+    {
+      "from": "entry:shop-web:screen:/orders",
+      "to": "shop-web#src/app/orders.component.ts:OrdersComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 7,
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
+      "from": "entry:shop-web:screen:/orders/:param",
+      "to": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 8,
+      "meta": {
+        "route": "/orders/:param"
+      }
+    },
+    {
+      "from": "shop-app#src/OrdersList.tsx:OrdersList",
+      "to": "shop-app#src/OrdersList.tsx:OrderRow",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{order:type:shop-app#OrderSummary}"
+      ],
+      "returns": "unknown",
+      "file": "src/OrdersList.tsx",
+      "line": 12,
+      "meta": {
+        "renders": "OrderRow"
+      }
+    },
+    {
+      "from": "shop-app#src/ProfileCard.tsx:ProfileCard",
+      "to": "shop-app#src/api.ts:fetchOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/ProfileCard.tsx",
+      "line": 11
+    },
+    {
+      "from": "shop-app#src/ProfileCard.tsx:ProfileCard",
+      "to": "shop-app#src/api.ts:fetchProfile",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:shop-app#Profile",
+      "file": "src/ProfileCard.tsx",
+      "line": 9
+    },
+    {
+      "from": "shop-app#src/api.ts:fetchOrder",
+      "to": "ui_api_call:shop-app#src/api.ts:28:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 28
+    },
+    {
+      "from": "shop-app#src/api.ts:fetchProfile",
+      "to": "ui_api_call:shop-app#src/api.ts:23:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 23
+    },
+    {
+      "from": "shop-app#src/api.ts:listOrders",
+      "to": "ui_api_call:shop-app#src/api.ts:19:58",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 19
+    },
+    {
+      "from": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent",
+      "to": "shop-web#src/app/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/order-detail.component.ts",
+      "line": 21
+    },
+    {
+      "from": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent.ngOnInit",
+      "to": "shop-web#src/app/orders.service.ts:OrdersService.one",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop-web#OrderDetail",
+      "file": "src/app/order-detail.component.ts",
+      "line": 24
+    },
+    {
+      "from": "shop-web#src/app/orders.component.ts:OrdersComponent",
+      "to": "shop-web#src/app/order-badge.component.ts:OrderBadgeComponent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 14,
+      "meta": {
+        "renders": "app-order-badge"
+      }
+    },
+    {
+      "from": "shop-web#src/app/orders.component.ts:OrdersComponent",
+      "to": "shop-web#src/app/order-badge.component.ts:OrderBadgeComponent",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 9
+    },
+    {
+      "from": "shop-web#src/app/orders.component.ts:OrdersComponent",
+      "to": "shop-web#src/app/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 20,
+      "meta": {
+        "via": "field-inject"
+      }
+    },
+    {
+      "from": "shop-web#src/app/orders.service.ts:OrdersService",
+      "to": "shop-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders.service.ts",
+      "line": 22
+    },
+    {
+      "from": "shop-web#src/app/orders.service.ts:OrdersService.list",
+      "to": "ui_api_call:shop-web#src/app/orders.service.ts:25:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.service.ts",
+      "line": 25
+    },
+    {
+      "from": "shop-web#src/app/orders.service.ts:OrdersService.one",
+      "to": "ui_api_call:shop-web#src/app/orders.service.ts:29:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.service.ts",
+      "line": 29
+    },
+    {
+      "from": "ui_action:shop-web#src/app/order-detail.component.ts:14:13",
+      "to": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent.email",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/order-detail.component.ts",
+      "line": 14
+    },
+    {
+      "from": "ui_action:shop-web#src/app/order-detail.component.ts:23:3",
+      "to": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/order-detail.component.ts",
+      "line": 23
+    },
+    {
+      "from": "ui_api_call:shop-app#src/api.ts:19:58",
+      "to": "entry:shop-api:http:GET:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 19,
+      "returns": "type:shop-app#OrderSummary[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-app#src/api.ts:23:26",
+      "to": "entry:shop-api:http:GET:/api/profile",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 23,
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-app#src/api.ts:28:26",
+      "to": "entry:shop-api:http:GET:/api/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 28,
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/orders.service.ts:25:12",
+      "to": "entry:shop-api:http:GET:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders.service.ts",
+      "line": 25,
+      "returns": "type:shop-web#OrderSummary[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/orders.service.ts:29:12",
+      "to": "entry:shop-api:http:GET:/api/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders.service.ts",
+      "line": 29,
+      "returns": "type:shop-web#OrderDetail",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    }
+  ],
+  "types": {
+    "type:shop-api#OrderDetail": {
+      "name": "OrderDetail",
+      "kind": "object",
+      "declaredIn": "shop-api#src/orders/orders.controller.ts",
+      "structuralHash": "a89cd1c6e2c55412",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "lines",
+          "type": "type:shop-api#OrderLine[]",
+          "optional": false
+        },
+        {
+          "name": "customer",
+          "type": "{name:string;email:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-api#OrderLine": {
+      "name": "OrderLine",
+      "kind": "object",
+      "declaredIn": "shop-api#src/orders/orders.controller.ts",
+      "structuralHash": "f8a8acd9ba59406f",
+      "fields": [
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "qty",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-api#OrderSummary": {
+      "name": "OrderSummary",
+      "kind": "object",
+      "declaredIn": "shop-api#src/orders/orders.controller.ts",
+      "structuralHash": "7d2f345037696e99",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "placedAt",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "internalNote",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-api#Profile": {
+      "name": "Profile",
+      "kind": "object",
+      "declaredIn": "shop-api#src/profile/profile.controller.ts",
+      "structuralHash": "b47edb05bc0a703c",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "avatarUrl",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-app#OrderSummary": {
+      "name": "OrderSummary",
+      "kind": "object",
+      "declaredIn": "shop-app#src/api.ts",
+      "structuralHash": "55cfe5f414d58227",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-app#Profile": {
+      "name": "Profile",
+      "kind": "object",
+      "declaredIn": "shop-app#src/api.ts",
+      "structuralHash": "e40e4b8f6016eba0",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "avatarUrl",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "nickname",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-web#OrderDetail": {
+      "name": "OrderDetail",
+      "kind": "object",
+      "declaredIn": "shop-web#src/app/orders.service.ts",
+      "structuralHash": "5fcbaa80aa0d40ff",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "lines",
+          "type": "{sku:string;qty:number}[]",
+          "optional": false
+        },
+        {
+          "name": "customer",
+          "type": "{name:string;email:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-web#OrderSummary": {
+      "name": "OrderSummary",
+      "kind": "object",
+      "declaredIn": "shop-web#src/app/orders.service.ts",
+      "structuralHash": "2d8768388fedb723",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "discount",
+          "type": "number",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": []
+}

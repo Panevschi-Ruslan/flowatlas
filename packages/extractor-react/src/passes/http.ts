@@ -61,6 +61,7 @@ import { basedBy, rewriteFor, unreadOpening } from '../util/request-rewrite.js';
 import { placedOut, receiverValues, valuesAlong } from '../util/receiver-values.js';
 import { sentThrough } from '../util/sent-later.js';
 import { analyzeApiUrl, analyzeClientBase, isSomewhere, underBase, type ApiUrl } from '../util/url.js';
+import { answerAsOf, answerMetaOf, throughOf } from '../util/answer.js';
 import { definePass } from './types.js';
 
 /** One request found in the source, before its address has been worked out. */
@@ -194,6 +195,7 @@ const QUERY_BUILDERS = [PLATFORM_QUERY];
 
 export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
   const apiBaseEnv = ctx.service.apiBaseEnv ?? [];
+  const answers = answerMetaOf(ctx);
 
   /**
    * The verb one call sends: the one its spelling always means, or, where the
@@ -599,6 +601,9 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     const headers = found.described === undefined ? headersOf(network, shape, hooked ?? found.instance) : {};
     // The headers the caller reads off the answer, where the request is made where it is read (P265).
     const answerHeaders = site.call === network && found.described === undefined && answersWithResponse(client, network) ? responseHeadersRead(network, 'promise') : undefined;
+    // The fields of the answer its caller reads, followed to the screen (P391).
+    const answerAs = found.described === undefined ? answerAsOf(client, network) : undefined;
+    const answerMeta = answerAs === undefined ? {} : answers({ call: network, ...answerAs, through: throughOf(network, site.call, request.calls) }, id);
     const application = applicationOfFile(ctx.meta, site.file);
     // A GraphQL operation a helper of the repository's posts, with the
     // document its caller hands it (P266): read where the caller writes it.
@@ -638,6 +643,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         // The headers it reads off the answer, for a procedure whose output declares them (P265).
         ...(answerHeaders === undefined || answerHeaders.keys.length === 0 ? {} : { responseHeaderKeys: answerHeaders.keys }),
         ...(answerHeaders?.unread === true ? { responseHeadersUnread: true } : {}),
+        ...answerMeta,
         package: client.package,
         client: client.name,
         // Which application this request is written in, where the service holds

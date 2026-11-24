@@ -889,6 +889,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -910,6 +911,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -931,6 +933,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -952,6 +955,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -973,6 +977,13 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "line": 8,
+            "why": "the answer is held outside a function"
+          }
+        ],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -994,6 +1005,13 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "line": 6,
+            "why": "the answer is held outside a function"
+          }
+        ],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -1015,6 +1033,13 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "line": 6,
+            "why": "the answer is held outside a function"
+          }
+        ],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -1036,6 +1061,13 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "line": 8,
+            "why": "the answer is held outside a function"
+          }
+        ],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -1057,6 +1089,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -1082,6 +1115,7 @@
         "bodyKeys": [
           "path"
         ],
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",

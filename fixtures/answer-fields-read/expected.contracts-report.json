@@ -1,0 +1,466 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-24T19:22:50.807Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "ui_api_call:shop-app#src/api.ts:19:58",
+        "to": "entry:shop-api:http:GET:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-app#src/api.ts:19:58|hits|entry:shop-api:http:GET:/api/orders",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#OrderSummary[]",
+        "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.list"
+      },
+      "receiver": {
+        "service": "shop-app",
+        "typeId": "type:shop-app#OrderSummary[]",
+        "symbol": "shop-app#src/api.ts:listOrders"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "ui_api_call:shop-app#src/api.ts:19:58",
+            "to": "entry:shop-api:http:GET:/api/orders",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:shop-app#src/api.ts:19:58|hits|entry:shop-api:http:GET:/api/orders",
+          "direction": "response",
+          "sender": {
+            "service": "shop-api",
+            "typeId": "type:shop-api#OrderSummary[]",
+            "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.list"
+          },
+          "receiver": {
+            "service": "shop-app",
+            "typeId": "type:shop-app#OrderSummary[]",
+            "symbol": "shop-app#src/api.ts:listOrders"
+          },
+          "typeId": "type:shop-app#OrderSummary[]",
+          "field": "[].internalNote",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender shop-api sends `[].internalNote: string`; receiver shop-app declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "ui_api_call:shop-app#src/api.ts:19:58",
+            "to": "entry:shop-api:http:GET:/api/orders",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:shop-app#src/api.ts:19:58|hits|entry:shop-api:http:GET:/api/orders",
+          "direction": "response",
+          "sender": {
+            "service": "shop-api",
+            "typeId": "type:shop-api#OrderSummary[]",
+            "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.list"
+          },
+          "receiver": {
+            "service": "shop-app",
+            "typeId": "type:shop-app#OrderSummary[]",
+            "symbol": "shop-app#src/api.ts:listOrders"
+          },
+          "typeId": "type:shop-app#OrderSummary[]",
+          "field": "[].placedAt",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender shop-api sends `[].placedAt: string`; receiver shop-app declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders.service.ts:25:12",
+        "to": "entry:shop-api:http:GET:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders.service.ts:25:12|hits|entry:shop-api:http:GET:/api/orders",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#OrderSummary[]",
+        "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.list"
+      },
+      "receiver": {
+        "service": "shop-web",
+        "typeId": "type:shop-web#OrderSummary[]",
+        "symbol": "shop-web#src/app/orders.service.ts:OrdersService.list"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "ui_api_call:shop-web#src/app/orders.service.ts:25:12",
+            "to": "entry:shop-api:http:GET:/api/orders",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:shop-web#src/app/orders.service.ts:25:12|hits|entry:shop-api:http:GET:/api/orders",
+          "direction": "response",
+          "sender": {
+            "service": "shop-api",
+            "typeId": "type:shop-api#OrderSummary[]",
+            "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.list"
+          },
+          "receiver": {
+            "service": "shop-web",
+            "typeId": "type:shop-web#OrderSummary[]",
+            "symbol": "shop-web#src/app/orders.service.ts:OrdersService.list"
+          },
+          "typeId": "type:shop-web#OrderSummary[]",
+          "field": "[].internalNote",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender shop-api sends `[].internalNote: string`; receiver shop-web declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "ui_api_call:shop-web#src/app/orders.service.ts:25:12",
+            "to": "entry:shop-api:http:GET:/api/orders",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:shop-web#src/app/orders.service.ts:25:12|hits|entry:shop-api:http:GET:/api/orders",
+          "direction": "response",
+          "sender": {
+            "service": "shop-api",
+            "typeId": "type:shop-api#OrderSummary[]",
+            "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.list"
+          },
+          "receiver": {
+            "service": "shop-web",
+            "typeId": "type:shop-web#OrderSummary[]",
+            "symbol": "shop-web#src/app/orders.service.ts:OrdersService.list"
+          },
+          "typeId": "type:shop-web#OrderSummary[]",
+          "field": "[].placedAt",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender shop-api sends `[].placedAt: string`; receiver shop-web declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders.service.ts:29:12",
+        "to": "entry:shop-api:http:GET:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders.service.ts:29:12|hits|entry:shop-api:http:GET:/api/orders/:param",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#OrderDetail",
+        "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.one"
+      },
+      "receiver": {
+        "service": "shop-web",
+        "typeId": "type:shop-web#OrderDetail",
+        "symbol": "shop-web#src/app/orders.service.ts:OrdersService.one"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "ui_api_call:shop-web#src/app/orders.service.ts:29:12",
+            "to": "entry:shop-api:http:GET:/api/orders/:param",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:shop-web#src/app/orders.service.ts:29:12|hits|entry:shop-api:http:GET:/api/orders/:param",
+          "direction": "response",
+          "sender": {
+            "service": "shop-api",
+            "typeId": "type:shop-api#OrderDetail",
+            "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.one"
+          },
+          "receiver": {
+            "service": "shop-web",
+            "typeId": "type:shop-web#OrderDetail",
+            "symbol": "shop-web#src/app/orders.service.ts:OrdersService.one"
+          },
+          "typeId": "type:shop-web#OrderDetail",
+          "field": "total",
+          "expected": null,
+          "actual": "number",
+          "rule": null,
+          "message": "sender shop-api sends `total: number`; receiver shop-web declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "ui_api_call:shop-app#src/api.ts:19:58",
+        "to": "entry:shop-api:http:GET:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-app#src/api.ts:19:58|hits|entry:shop-api:http:GET:/api/orders",
+      "direction": "response",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#OrderSummary[]",
+        "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.list"
+      },
+      "receiver": {
+        "service": "shop-app",
+        "typeId": "type:shop-app#OrderSummary[]",
+        "symbol": "shop-app#src/api.ts:listOrders"
+      },
+      "typeId": "type:shop-app#OrderSummary[]",
+      "field": "[].internalNote",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender shop-api sends `[].internalNote: string`; receiver shop-app declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "ui_api_call:shop-app#src/api.ts:19:58",
+        "to": "entry:shop-api:http:GET:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-app#src/api.ts:19:58|hits|entry:shop-api:http:GET:/api/orders",
+      "direction": "response",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#OrderSummary[]",
+        "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.list"
+      },
+      "receiver": {
+        "service": "shop-app",
+        "typeId": "type:shop-app#OrderSummary[]",
+        "symbol": "shop-app#src/api.ts:listOrders"
+      },
+      "typeId": "type:shop-app#OrderSummary[]",
+      "field": "[].placedAt",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender shop-api sends `[].placedAt: string`; receiver shop-app declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders.service.ts:25:12",
+        "to": "entry:shop-api:http:GET:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders.service.ts:25:12|hits|entry:shop-api:http:GET:/api/orders",
+      "direction": "response",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#OrderSummary[]",
+        "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.list"
+      },
+      "receiver": {
+        "service": "shop-web",
+        "typeId": "type:shop-web#OrderSummary[]",
+        "symbol": "shop-web#src/app/orders.service.ts:OrdersService.list"
+      },
+      "typeId": "type:shop-web#OrderSummary[]",
+      "field": "[].internalNote",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender shop-api sends `[].internalNote: string`; receiver shop-web declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders.service.ts:25:12",
+        "to": "entry:shop-api:http:GET:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders.service.ts:25:12|hits|entry:shop-api:http:GET:/api/orders",
+      "direction": "response",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#OrderSummary[]",
+        "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.list"
+      },
+      "receiver": {
+        "service": "shop-web",
+        "typeId": "type:shop-web#OrderSummary[]",
+        "symbol": "shop-web#src/app/orders.service.ts:OrdersService.list"
+      },
+      "typeId": "type:shop-web#OrderSummary[]",
+      "field": "[].placedAt",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender shop-api sends `[].placedAt: string`; receiver shop-web declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders.service.ts:29:12",
+        "to": "entry:shop-api:http:GET:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders.service.ts:29:12|hits|entry:shop-api:http:GET:/api/orders/:param",
+      "direction": "response",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#OrderDetail",
+        "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.one"
+      },
+      "receiver": {
+        "service": "shop-web",
+        "typeId": "type:shop-web#OrderDetail",
+        "symbol": "shop-web#src/app/orders.service.ts:OrdersService.one"
+      },
+      "typeId": "type:shop-web#OrderDetail",
+      "field": "total",
+      "expected": null,
+      "actual": "number",
+      "rule": null,
+      "message": "sender shop-api sends `total: number`; receiver shop-web declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:shop-app#src/api.ts:19:58",
+        "to": "entry:shop-api:http:GET:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-app#src/api.ts:19:58|hits|entry:shop-api:http:GET:/api/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-app#src/api.ts:listOrders declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-app#src/api.ts:23:26",
+        "to": "entry:shop-api:http:GET:/api/profile",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-app#src/api.ts:23:26|hits|entry:shop-api:http:GET:/api/profile",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-app#src/api.ts:fetchProfile declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-app#src/api.ts:23:26",
+        "to": "entry:shop-api:http:GET:/api/profile",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-app#src/api.ts:23:26|hits|entry:shop-api:http:GET:/api/profile",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop-app#src/api.ts:fetchProfile declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-app#src/api.ts:28:26",
+        "to": "entry:shop-api:http:GET:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-app#src/api.ts:28:26|hits|entry:shop-api:http:GET:/api/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-app#src/api.ts:fetchOrder declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-app#src/api.ts:28:26",
+        "to": "entry:shop-api:http:GET:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-app#src/api.ts:28:26|hits|entry:shop-api:http:GET:/api/orders/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop-app#src/api.ts:fetchOrder declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders.service.ts:25:12",
+        "to": "entry:shop-api:http:GET:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders.service.ts:25:12|hits|entry:shop-api:http:GET:/api/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-web#src/app/orders.service.ts:OrdersService.list declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders.service.ts:29:12",
+        "to": "entry:shop-api:http:GET:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders.service.ts:29:12|hits|entry:shop-api:http:GET:/api/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-web#src/app/orders.service.ts:OrdersService.one declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 3,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 3,
+    "unchecked": 7,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 5,
+    "ignored": 0
+  }
+}

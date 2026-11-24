@@ -296,6 +296,19 @@ only one of them moved.
   37,200); the upfront listing does not move. Six `start_here` snapshots name
   `check_change` under `hidden` where the suite's server is not handed the
   checker.
+- **Which fields of a route's answer each client reads (P391).** The Angular
+  and React readers follow the answer from the call that makes a request to
+  where it is used, through `await`, `then`, `json()`, axios's `data`,
+  `subscribe`, `pipe` and its operators, `firstValueFrom` and `toSignal`,
+  handed back from client methods to their callers, into a component's member,
+  its template (`{{ order.total }}`, `@for`, the async pipe, `@if (…; as x)`)
+  and a child it binds the value to, into a React state's setter, a
+  component's props and a query hook's `data`, and write `meta.answerRead`
+  (and `meta.answerUnread`, every use not followed) on the request.
+  `check_contract` on a route answers `answer`: what each client reads, with
+  `field` the code that breaks if one field changes, `missing` (read, never
+  answered) and `unused` (answered, read by no client); on one request's edge,
+  the same for that request.
 
 - **who_calls answers stay small and finish, also on several symbols
   (P379).** `depth` is how far the tree of callers is drawn, never a cut:

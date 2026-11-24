@@ -37,7 +37,7 @@ const NAVIGATING: ReadonlySet<string> = new Set(['navigate', 'navigateByUrl']);
 /** Framework callbacks that run a component's own code without anyone asking. */
 const LIFECYCLE = ['ngOnInit', 'ngAfterViewInit', 'ngOnDestroy'] as const;
 
-interface TemplateText {
+export interface TemplateText {
   source: string;
   /** Repo-relative POSIX path the trigger ids are built from. */
   file: string;
@@ -53,7 +53,7 @@ interface TemplateText {
  * position is carried along so a trigger's id points at the line a reader will
  * actually find it on.
  */
-const templateOf = (
+export const templateOf = (
   ctx: AngularExtractContext,
   indexed: IndexedClass,
 ): TemplateText | { missing: string; line: number } | null => {

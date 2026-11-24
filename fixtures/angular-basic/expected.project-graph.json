@@ -958,6 +958,7 @@
         "responseType": "type:angular-basic#OrderDto",
         "bodyType": "type:angular-basic#CreateOrderDto",
         "bodyFrom": "type",
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env"
       }
@@ -977,6 +978,7 @@
         "baseUrlEnv": null,
         "responseType": "type:angular-basic#OrderDto[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "const"
       }
@@ -996,6 +998,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "void",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env"
       }
@@ -1015,6 +1018,7 @@
         "baseUrlEnv": null,
         "responseType": "unknown",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": null
       }

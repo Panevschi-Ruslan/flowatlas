@@ -1208,6 +1208,7 @@
         "bodyKeys": [
           "total"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "orders-api"
@@ -1232,6 +1233,7 @@
         "bodyKeys": [
           "source"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "orders-api"
@@ -1252,6 +1254,7 @@
         "baseUrlEnv": "ordersUrl",
         "responseType": "type:admin#OrderRow[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "orders-api"
@@ -1272,6 +1275,7 @@
         "baseUrlEnv": "catalogUrl",
         "responseType": "type:admin#CatalogItem",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "catalog-api"

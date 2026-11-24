@@ -682,6 +682,7 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "api"

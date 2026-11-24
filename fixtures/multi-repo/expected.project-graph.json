@@ -1873,6 +1873,7 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "pathChoices": [
@@ -1917,6 +1918,7 @@
         "baseUrlEnv": null,
         "responseType": "unknown",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": null
       }
@@ -1958,6 +1960,7 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": null
       }
@@ -1977,6 +1980,7 @@
         "baseUrlEnv": null,
         "responseType": "unknown",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": null
       }
@@ -1996,6 +2000,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:web#OrderDto",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "gateway"
@@ -2016,6 +2021,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "unknown",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env"
       }
@@ -2035,6 +2041,7 @@
         "baseUrlEnv": "ordersUrl",
         "responseType": "type:web#OrderDto",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env"
       }
@@ -2054,6 +2061,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "unknown",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env"
       }
@@ -2075,6 +2083,7 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "gateway"
@@ -2095,6 +2104,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:web#OrderDto",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
@@ -2118,6 +2128,7 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "pathChoices": [

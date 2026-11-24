@@ -331,6 +331,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "const",
@@ -353,6 +354,13 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "line": 5,
+            "why": "handed back from a function whose name is not an identifier"
+          }
+        ],
         "package": "ky",
         "client": "ky",
         "via": "const",
@@ -375,6 +383,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "unfetch",
         "client": "unfetch",
         "via": "const",

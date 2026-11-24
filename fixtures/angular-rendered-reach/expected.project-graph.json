@@ -533,6 +533,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "{id:string;title:string}",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "catalog-api"
@@ -553,6 +554,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "{id:string;title:string}",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "catalog-api"
@@ -573,6 +575,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "{id:string;title:string}",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "catalog-api"

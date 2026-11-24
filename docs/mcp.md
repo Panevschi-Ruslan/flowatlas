@@ -1434,7 +1434,7 @@ window longer than the file holds says `short: true` and every row is `weak`.
 | `who_consumes` | everything that handles messages from it; empty means nothing does; with `type`, the code that selects that type of message, or why nothing does; with `field`, only the handlers that read that field, each with where | `channel` (required), `type`, `field`, `service`, `offset` |
 | `get_type` | the structure of a type, with what it refers to expanded to a depth | `type` (required), `depth` |
 | `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it | `type` (required), `service`, `offset` |
-| `check_contract` | what one side of a crossing sends against what the other expects; on an entry, the fields of the body each piece of code on its path reads, and what traffic carried into it against its code; on a channel or one type of message, the fields read and not sent and sent and never read | `edge` (a crossing, an entry id or a route said aloud), or `from` and `to`, or `channel` and `type`; `field` |
+| `check_contract` | what one side of a crossing sends against what the other expects; on an entry, the fields of the body each piece of code on its path reads, the fields of its answer each client reads (`answer`), and what traffic carried into it against its code; on a channel or one type of message, the fields read and not sent and sent and never read | `edge` (a crossing, an entry id or a route said aloud), or `from` and `to`, or `channel` and `type`; `field` |
 | `get_spec` | a service's routes as the OpenAPI 3.1 document `flowatlas spec` writes, or its channel ends as AsyncAPI 3.0, as JSON text; with `path`, one operation and only the schemas it uses (P118) | `service` (required), `kind`, `path`, `maxChars` |
 
 A channel that carries several kinds of message told apart by a field
@@ -1598,6 +1598,49 @@ only some publishes leave it out) and `unused` (sent, read by nothing, with
 `sentBy`); without `type` a channel that carries types is compared type by
 type. On a request edge into an entry, `fields` holds the same two lists for
 the body it sends against what the route's path reads.
+
+**Fields of an answer each client reads (P391).** The front-end readers write,
+on every request the browser makes, which fields of the answer the code that
+asked for it reads: `meta.answerRead`, rows `{ field, in, line, file? }`
+(`field` dotted from the answer, a list's element's fields at the list's own
+path; `in` the method, function or component it is read in; `file` the
+template where the read is written in one), and `meta.answerUnread`, each use
+it could not follow with why. The answer is followed from the call that makes
+the request: through `await`, `then`, `json()` (the platform's `fetch`, ky),
+`data` (axios), `body` (Angular's `observe: 'response'`), `subscribe`, `pipe`
+with the operators that pass it on, look at it or map it (`map`, `switchMap`,
+`pluck`), `firstValueFrom` and `toSignal`; handed back from a client method to
+the next call of the wrappers the request was followed out through, else to
+every caller (20 at most, 4 functions out); into a component's member
+(`this.order = order`, a signal's `set`, a subject's `next`, an observable held
+as `orders$`); from the member into the component's template (`{{ order.total
+}}`, `@for` and `*ngFor`, the async pipe, `@if (…; as x)`, `*ngIf="… as x"`,
+`@let`), the member's reads in the class's code, a method the template hands it
+to (`(click)="email(order)"`) and a child component an element binds it to
+(`[order]="order"`, by the child's selector); into a React state through its
+setter, the props of a component it is bound to (`<OrderRow order={o} />`),
+and the `data` of `useQuery`, `useSuspenseQuery`, `useInfiniteQuery` and
+`useSWR`. Inside code it is P368's walk, which here also follows a list
+element by element (`map`, `filter`, `find`, `forEach`, `for…of`), reads
+`.length` and a string's methods as no field, and takes `x ?? []` and `?:`
+branches as the value. A use it cannot follow is said: an operator not known,
+the answer gathered with others (`forkJoin`, `Promise.all`), handed to a
+function outside the repository (`handed to JSON.stringify`), bound to an
+element of a component not read, a request made through a client whose answer
+is not followed (described clients, XHR, jQuery, superagent: no `answerRead`
+at all).
+
+`check_contract` given a route answers `answer` beside `reads`: `type`, what
+its handler declares it answers; `reads`, every field of it a client reads,
+`{ field, id, line, file?, call? }` (`call` the request, where the route has
+several callers), 40 at most; `missing`, a field a client reads that the
+answer never holds, at the first place it is read; `unused`, a field answered
+and read by no client, said only where every caller's answer was read and none
+hands it on. `field` keeps the reads of one field: the code that breaks if it
+changes, each read's component or method naming the screen it is on. A request
+whose answer was not read, a server-side caller among them, is said in
+`left`, as is each use not followed. On a request edge into a route, `answer`
+holds the same for that one request.
 
 `get_spec` writes the document from the database as it stands, through the
 wire rules, so a schema says what goes over the wire; a shape it could not read

@@ -465,6 +465,13 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [
+          {
+            "field": "stock",
+            "in": "site#src/components/Stock.tsx:Stock",
+            "line": 8
+          }
+        ],
         "package": null,
         "client": "fetch",
         "via": "literal",
@@ -487,6 +494,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "literal",
@@ -513,6 +521,7 @@
         "bodyKeys": [
           "name"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "literal",
@@ -535,6 +544,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal",
@@ -557,6 +567,20 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [
+          {
+            "field": "id",
+            "in": "web#js/page.js:start",
+            "line": 5
+          }
+        ],
+        "answerUnread": [
+          {
+            "in": "web#js/page.js:start",
+            "line": 7,
+            "why": "handed to cart.addAll"
+          }
+        ],
         "package": "axios",
         "client": "axios",
         "via": "literal",
@@ -579,6 +603,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "literal",
@@ -628,6 +653,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal",

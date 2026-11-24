@@ -942,6 +942,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "api"

@@ -487,6 +487,22 @@ const ROUTE_ORDER_CASES = [
 ];
 /** The same, compact: what an agent is handed. */
 const ROUTE_ORDER_COMPACT_CASES = ROUTE_ORDER_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
+ * Which fields of an answer each client reads (P391): a route's answer read
+ * by an Angular screen through the async pipe and a child it binds each row
+ * to, and by a React list through a query's data and a row's props; one
+ * field asked (which screens break if it changes); a field a client reads
+ * that the route never answers; a request whose answer is handed whole to a
+ * function of the platform; and one request's edge.
+ */
+const ANSWER_CASES = [
+  ['check_contract.answer-route', 'check_contract', { edge: 'GET /api/orders' }],
+  ['check_contract.answer-field', 'check_contract', { edge: 'GET /api/orders', field: 'status' }],
+  ['check_contract.answer-missing', 'check_contract', { edge: 'GET /api/profile' }],
+  ['check_contract.answer-unfollowed', 'check_contract', { edge: 'GET /api/orders/:id' }],
+  ['check_contract.answer-edge', 'check_contract', { from: 'ui_api_call:shop-app#src/api.ts:23:26', to: 'entry:shop-api:http:GET:/api/profile' }],
+];
+/** The same, compact: what an agent is handed. */
+const ANSWER_COMPACT_CASES = ANSWER_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
 
 /** The same impact and a flow through the rendered child, compact (P370). */
 const RENDERED_REACH_COMPACT_CASES = [
@@ -1107,6 +1123,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'route-order'),
     outDir: join(root, 'fixtures', 'route-order', 'expected.mcp.compact'),
     cases: ROUTE_ORDER_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'answer-fields-read'),
+    outDir: join(root, 'fixtures', 'answer-fields-read', 'expected.mcp'),
+    cases: ANSWER_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'answer-fields-read'),
+    outDir: join(root, 'fixtures', 'answer-fields-read', 'expected.mcp.compact'),
+    cases: ANSWER_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

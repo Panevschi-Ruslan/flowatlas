@@ -1687,6 +1687,7 @@
           "etag",
           "x-next"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -1715,6 +1716,7 @@
         "responseHeaderKeys": [
           "X-Total"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -1743,6 +1745,7 @@
         "headerKeys": [
           "x-region"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -1768,6 +1771,7 @@
         "bodyKeys": [
           "price"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -1789,6 +1793,7 @@
         "baseUrlEnv": "VITE_CATALOG_URL",
         "responseType": "type:web#Product",
         "bodyType": null,
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -1815,6 +1820,7 @@
           "category",
           "limit"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -1836,6 +1842,7 @@
         "baseUrlEnv": "VITE_CATALOG_URL",
         "responseType": "type:web#Product[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -1862,6 +1869,7 @@
           "name",
           "price"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -1883,6 +1891,7 @@
         "baseUrlEnv": "VITE_CATALOG_URL",
         "responseType": "type:web#ProductCard",
         "bodyType": null,
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -1909,6 +1918,7 @@
           "q"
         ],
         "queryInAddress": true,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "template-env",
@@ -1931,6 +1941,7 @@
         "responseType": null,
         "bodyType": null,
         "queryUnread": true,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "template-env",
@@ -1959,6 +1970,7 @@
         "headerKeys": [
           "x-tenant"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -2014,6 +2026,7 @@
           "category",
           "page"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -2041,6 +2054,7 @@
           "page"
         ],
         "headersUnread": true,
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -2098,6 +2112,7 @@
         "responseHeaderKeys": [
           "x-total"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -2122,6 +2137,7 @@
         "responseHeaderKeys": [
           "x-total"
         ],
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "template-env",

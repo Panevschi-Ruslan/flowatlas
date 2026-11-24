@@ -1,0 +1,37 @@
+{
+  "entry": "entry:shop-api:http:GET:/api/profile",
+  "reads": [],
+  "note": "no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches",
+  "answer": {
+    "type": "type:shop-api#Profile",
+    "reads": [
+      {
+        "field": "avatarUrl",
+        "id": "shop-app#src/ProfileCard.tsx:ProfileCard",
+        "line": 15
+      },
+      {
+        "field": "name",
+        "id": "shop-app#src/ProfileCard.tsx:ProfileCard",
+        "line": 16
+      },
+      {
+        "field": "nickname",
+        "id": "shop-app#src/ProfileCard.tsx:ProfileCard",
+        "line": 17
+      }
+    ],
+    "missing": [
+      {
+        "field": "nickname",
+        "id": "shop-app#src/ProfileCard.tsx:ProfileCard",
+        "line": 17
+      }
+    ]
+  },
+  "callers": 1,
+  "complete": true,
+  "next": [
+    "check_contract({from: \"ui_api_call:shop-app#src/api.ts:23:26\", to: \"entry:shop-api:http:GET:/api/profile\"})"
+  ]
+}

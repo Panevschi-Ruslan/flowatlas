@@ -8,6 +8,7 @@ import { MAX_NEXT, withNext } from '../query/next.js';
 import { loadObserved } from '../query/observed.js';
 import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
 import { reachReader } from '../query/ways-in.js';
+import { answerOf } from '../query/answer-fields.js';
 import { bodyReadsOf, channelContract, channelsCarrying, requestFields } from './fields-contract.js';
 import {
   callOf,
@@ -361,7 +362,7 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
     {
       title: 'Check a contract',
       description:
-        'Whether one side of a crossing sends what the other reads. A route (`edge`: "GET /x" or id): the body fields read on its path, guards included; a `channel` and `type`, or a type alone: fields read, not sent (`missing`), sent, never read (`unused`). `field` keeps one.',
+        'Whether one side of a crossing sends what the other expects. A route (`edge`: "GET /x" or id): body fields read on its path, guards too, and answer fields clients read; a `channel` and `type`, or a type alone: fields read, not sent (`missing`), sent, never read (`unused`). `field` keeps one.',
       inputSchema: {
         edge: z.string().optional().describe('a route, or "<from> -http_calls-> <to>"'),
         from: z.string().optional(),
@@ -414,6 +415,8 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
           const traffic = trafficFor(ctx, entry);
           // What the code on the request's path reads of the body (P368).
           const body = bodyReadsOf(db, entry, field);
+          // What each client reads of the answer, and where that and the answer disagree (P391).
+          const answer = answerOf(db, entry, field);
           return withNext(
             {
               entry,
@@ -424,8 +427,9 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
                   ? { note: 'no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches' }
                   : {}
                 : { traffic }),
+              ...(answer === undefined ? {} : { answer: answer.answer }),
               callers: into.length,
-              ...completeOf(body.left),
+              ...completeOf([...body.left, ...(answer?.left ?? [])]),
             },
             into.slice(0, MAX_NEXT).map((edge) => callOf('check_contract', { from: edge.from, to: edge.to, field })),
           );
@@ -501,6 +505,8 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
         const traffic = isEntryId(edge.to) ? trafficFor(ctx, edge.to, edge) : undefined;
         // The body's fields, sent against read on the route's path (P368).
         const fields = isEntryId(edge.to) ? requestFields(db, { id: edge.from, params: edge.params }, edge.to, field) : undefined;
+        // What this request's client reads of the answer, against what the route answers (P391).
+        const answer = isEntryId(edge.to) ? answerOf(db, edge.to, field, edge.from) : undefined;
         const shapes = [request.left, request.right, response.left, response.right].filter(
           (id): id is string => typeof id === 'string' && id.startsWith('type:'),
         );
@@ -516,10 +522,11 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
           ...(traffic === undefined ? {} : { traffic }),
           ...(fields === undefined
             ? {}
-            : {
-                ...(fields.missing.length + fields.unused.length === 0 ? {} : { fields: { missing: fields.missing, unused: fields.unused } }),
-                ...completeOf(fields.left),
-              }),
+            : fields.missing.length + fields.unused.length === 0
+              ? {}
+              : { fields: { missing: fields.missing, unused: fields.unused } }),
+          ...(answer === undefined ? {} : { answer: answer.answer }),
+          ...(fields === undefined && answer === undefined ? {} : completeOf([...(fields?.left ?? []), ...(answer?.left ?? [])])),
         }, [...new Set(shapes)].slice(0, 2).map((id) => `get_type({type: ${JSON.stringify(id)}})`));
       }),
   );

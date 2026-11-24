@@ -1364,6 +1364,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "string[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "stock-api"
@@ -1384,6 +1385,14 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "string",
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "store-web#src/app/products.client.ts:ProductsClient.update",
+            "line": 51,
+            "why": "put inside another value"
+          }
+        ],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "stock-api"
@@ -1410,6 +1419,7 @@
           "price",
           "sku"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "stock-api"
@@ -1434,6 +1444,7 @@
         "bodyKeys": [
           "name"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "stock-api"
@@ -1459,6 +1470,7 @@
           "qty",
           "sku"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "stock-api"
@@ -1479,6 +1491,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "number",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "stock-api"
@@ -1499,6 +1512,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "string[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "stock-api"

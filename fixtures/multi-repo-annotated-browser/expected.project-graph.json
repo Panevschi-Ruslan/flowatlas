@@ -467,6 +467,7 @@
         "bodyKeys": [
           "title"
         ],
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": null
@@ -508,6 +509,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "string[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env"
       }
@@ -547,6 +549,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "string[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env"
       }
@@ -586,6 +589,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "string[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env"
       }

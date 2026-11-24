@@ -601,6 +601,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -626,6 +627,7 @@
         "bodyKeys": [
           "what"
         ],
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -647,6 +649,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",
@@ -668,6 +671,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "literal",

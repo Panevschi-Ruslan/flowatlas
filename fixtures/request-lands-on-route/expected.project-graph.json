@@ -683,6 +683,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:shop-admin#CatalogGroup[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "AdminApiService.get",
@@ -706,6 +707,7 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "AdminApiService.post"
@@ -730,6 +732,7 @@
         "bodyKeys": [
           "lines"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "AdminApiService.post",

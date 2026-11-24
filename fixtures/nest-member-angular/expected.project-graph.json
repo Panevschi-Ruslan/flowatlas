@@ -236,6 +236,7 @@
         "baseUrlEnv": null,
         "responseType": "{id:string;status:string}",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "literal"
       }

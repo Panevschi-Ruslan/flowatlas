@@ -616,6 +616,7 @@
         "headerKeys": [
           "x-client"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "baseFrom": "interceptor",
@@ -638,6 +639,7 @@
         "baseUrlEnv": "VITE_BILLING_URL",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "baseFrom": "interceptor",
@@ -664,6 +666,7 @@
         "bodyKeys": [
           "name"
         ],
+        "answerRead": [],
         "package": "ky",
         "client": "ky",
         "baseFrom": "interceptor",
@@ -687,6 +690,7 @@
         "baseUrlEnv": "VITE_BILLING_URL",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "baseFrom": "interceptor",
@@ -709,6 +713,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "baseFrom": "interceptor",
@@ -733,6 +738,7 @@
         "headerKeys": [
           "x-client"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "baseFrom": "interceptor",

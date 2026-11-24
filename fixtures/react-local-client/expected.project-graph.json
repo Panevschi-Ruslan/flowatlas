@@ -109,6 +109,7 @@
         "responseType": null,
         "bodyType": "object",
         "bodyFrom": "literal",
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": null
@@ -130,6 +131,7 @@
         "responseType": null,
         "bodyType": "object",
         "bodyFrom": "literal",
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": null
@@ -151,6 +153,7 @@
         "responseType": null,
         "bodyType": "object",
         "bodyFrom": "literal",
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": null
@@ -240,6 +243,7 @@
         "responseType": null,
         "bodyType": "object",
         "bodyFrom": "literal",
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal",
