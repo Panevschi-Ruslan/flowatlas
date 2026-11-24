@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 8,
-  "generatedAt": "2026-11-23T14:49:30.225Z",
+  "generatedAt": "2026-11-24T16:12:06.149Z",
   "edges": [
     {
       "edge": {
@@ -24,7 +24,7 @@
       },
       "findings": [
         {
-          "severity": "warning",
+          "severity": "info",
           "kind": "optionality_mismatch",
           "edge": {
             "from": "producer:boards-api#src/boards/orders.service.ts:20:11",
@@ -76,7 +76,7 @@
       },
       "findings": [
         {
-          "severity": "warning",
+          "severity": "info",
           "kind": "optionality_mismatch",
           "edge": {
             "from": "producer:boards-api#src/boards/orders.service.ts:25:11",
@@ -128,7 +128,7 @@
       },
       "findings": [
         {
-          "severity": "warning",
+          "severity": "info",
           "kind": "optionality_mismatch",
           "edge": {
             "from": "producer:boards-api#src/boards/orders.service.ts:29:11",
@@ -162,7 +162,7 @@
   ],
   "findings": [
     {
-      "severity": "warning",
+      "severity": "info",
       "kind": "optionality_mismatch",
       "edge": {
         "from": "producer:boards-api#src/boards/orders.service.ts:20:11",
@@ -191,7 +191,7 @@
       "ignoredBy": null
     },
     {
-      "severity": "warning",
+      "severity": "info",
       "kind": "optionality_mismatch",
       "edge": {
         "from": "producer:boards-api#src/boards/orders.service.ts:25:11",
@@ -220,7 +220,7 @@
       "ignoredBy": null
     },
     {
-      "severity": "warning",
+      "severity": "info",
       "kind": "optionality_mismatch",
       "edge": {
         "from": "producer:boards-api#src/boards/orders.service.ts:29:11",
@@ -1903,8 +1903,8 @@
     "hash_differs": 3,
     "unchecked": 137,
     "errors": 0,
-    "warnings": 3,
-    "infos": 0,
+    "warnings": 0,
+    "infos": 3,
     "ignored": 0
   }
 }

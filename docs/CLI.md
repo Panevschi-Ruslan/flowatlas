@@ -2584,6 +2584,32 @@ that never ends. The overview's cycle count leaves it out the same way; `dead`,
 | `--include-di` | off | follow injection too, so `forwardRef` cycles appear |
 | `--min-length <n>` | `2` | smallest cycle reported. `1` includes self-recursion |
 
+### `flowatlas findings`
+
+What looks broken between the services first - calls to routes that do not
+exist, fields read and never sent, types of message handled and never
+published, contract breaks, routes unguarded among guarded siblings,
+annotations naming a missing route, values the deployment does not set - then
+the likely N+1 loops, unguarded routes and one-ended channels, each kind
+ranked, every row with its precision (`high`, `medium`, `low`), its evidence
+and the nearest fix (P384). It is the graph server's `findings` answer, from
+the same function, so the two rank alike; a candidate whose evidence did not
+hold is said under `held back`, with why.
+
+| Flag | Default | Does |
+|---|---|---|
+| `--kind <kind>` | every kind | only one kind (`call-to-missing-route`, `field-never-sent`, …, or a finding's reason) |
+| `--service <name>` | every service | narrow to one |
+| `--fail-on <precision>` | never | exit 1 when a finding at this precision or surer is listed: `high`, `medium`, `low` |
+| `--format <kind>` | `table` | `json`, `table` or `sarif` |
+
+```
+call-to-missing-route (1)
+  1. [high] CatalogClient.release sends POST /products/:param/release to catalog-api, which serves no such route (storefront src/catalog.client.ts:25)
+     the nearest route: POST /products/:param/publish (one segment off: release for publish)
+     met through POST /shop/products/:param/release (storefront)
+```
+
 ### `flowatlas dead`
 
 Entries, channels, providers and fields nothing appears to reach. Every row says
@@ -4576,6 +4602,7 @@ are new. Markdown by default, because its destination is a pull request comment.
 | `--sarif-root <dir>` | the configuration's directory | with `--format sarif`: paths relative to this checkout |
 | `--sarif-level <level>` | `note` | with `--format sarif`: leave out results below `error`, `warning` or `note` |
 | `--fail-on-contract-break` | off | exit 1 on a new contract error, or on a service neither ref could be read for |
+| `--fail-on-broken-call` | off | exit 1 on a call between the services the branch breaks: a join lost, or a new request to a route nothing serves (P384), each printed as a `broken call:` line |
 | `--max-entries <n>` | 150 | ways in listed per changed node |
 | `--max-nodes <n>` | 100 | changed nodes walked backwards from |
 | `--max-flows <n>` | 50 | ways in walked for **Changed flows**; the rest are counted in a `flows-truncated` warning |
@@ -5237,7 +5264,7 @@ documents describe a node.
 
 ### `--format sarif`: findings for code scanning
 
-`contracts`, `dead`, `cycles`, `rules`, `doctor` and `diff` write their
+`contracts`, `dead`, `cycles`, `rules`, `doctor`, `diff` and `findings` write their
 findings as one SARIF 2.1.0 log, the format GitHub code scanning (and most
 other code hosts) reads: each result is shown on the line it is about in a
 pull request, stays open while the finding is there, and closes when it is
@@ -5261,6 +5288,7 @@ report's hints:
 | a marker code (`marker-emits-without-emit`, …) | `doctor`'s annotations | the marker's own: `error` or `warning` |
 | `no-way-in` | `doctor`: a service nothing enters | `warning`, at the configuration line naming it |
 | `missing_required`, `type_mismatch`, `optionality_mismatch`, `extra_field` | `contracts`, `doctor`, `diff` | the finding's severity, `info` → `note` |
+| `finding/<kind>` (`finding/call-to-missing-route`, …) | `findings` (P384); the rule's `properties.precision` is the kind's | by precision: `high` → `error`, `medium` → `warning`, `low` → `note` |
 | `rule/<name>` | `rules`, `doctor`, `diff` | the rule's severity, `info` → `note` |
 | `dead-entry`, `dead-channel`, `dead-provider`, `dead-field` | `dead` | `note`; only actionable entries and `dead` / `likely-dead` verdicts |
 | `cycle` | `cycles` | `warning` |

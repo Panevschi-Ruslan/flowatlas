@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { wasMissed, type UnresolvedLevel } from './graph.js';
 import {
+  DEPLOYMENT_UNREAD_REASONS,
   findingsWithoutRisk,
+  GAP_FINDINGS,
+  gapFindingOf,
   kindOfRow,
+  PRECISION_NAMES,
   reasonsWithoutKind,
   RISK_NAMES,
   RISKS,
@@ -12,6 +16,7 @@ import {
   rowClassOf,
   rowKindOf,
   rowRiskOf,
+  ROUTES_UNREAD_REASONS,
   type RowKind,
 } from './row-kind.js';
 
@@ -151,5 +156,24 @@ describe('a kind stored on the row (P208)', () => {
       expect(rowRiskOf({ reason, ...rowClassOf({ reason }) }), reason).toBe(risk);
     }
     expect(rowClassOf(onPurpose)).toEqual({ kind: 'note' });
+  });
+});
+
+describe('gaps that are defects where their evidence holds (P384)', () => {
+  it('promotes only gaps, each to a kind of its own with a precision and the evidence said in words', () => {
+    for (const [reason, promoted] of GAP_FINDINGS) {
+      expect(kindOfRow({ reason }), reason).toBe('gap');
+      expect(PRECISION_NAMES).toContain(promoted.precision);
+      expect(promoted.evidence.length, reason).toBeGreaterThan(20);
+      expect(promoted.kind, reason).not.toBe(reason);
+    }
+    expect(gapFindingOf('target-route-not-found')?.kind).toBe('call-to-missing-route');
+    expect(gapFindingOf('type-unresolved')).toBeUndefined();
+  });
+
+  it('holds back on reasons about the reading, never on a finding', () => {
+    for (const reason of [...ROUTES_UNREAD_REASONS, ...DEPLOYMENT_UNREAD_REASONS]) {
+      expect(kindOfRow({ reason }), reason).not.toBe('finding');
+    }
   });
 });

@@ -320,7 +320,9 @@ export type {
   ObservedInput,
   TrafficOverlay,
 } from './analysis/never-seen.js';
-export { collectFindings, compareFindingKinds, FINDING_KINDS, findingKindOf, rankFindings } from './analysis/findings.js';
+export { collectFindings, compareFindingKinds, FINDING_KINDS, findingKindOf, precisionOf, rankFindings } from './analysis/findings.js';
+export { identifierWords, likelyRenamed, nearestRoutes, promoteGap, routesReadOf, typesNeverPublished, waysInReaching } from './analysis/boundary.js';
+export type { BoundaryFinding, HeldBack, Promoted, RoutesRead } from './analysis/boundary.js';
 export { messageTypeFacts, messageTypesOn, unreachedHandler, unselectedSaid } from './analysis/message-types.js';
 export type { ChannelReceiver, MessageTypeFacts, MessageTypeLookup, TypeSelector, Unselected } from './analysis/message-types.js';
 export { joinMessageTypes } from './message-types.js';

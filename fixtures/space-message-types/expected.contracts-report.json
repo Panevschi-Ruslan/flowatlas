@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 8,
-  "generatedAt": "2026-11-23T14:49:05.984Z",
+  "generatedAt": "2026-11-24T16:11:55.060Z",
   "edges": [
     {
       "edge": {
@@ -24,7 +24,7 @@
       },
       "findings": [
         {
-          "severity": "warning",
+          "severity": "info",
           "kind": "optionality_mismatch",
           "edge": {
             "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
@@ -365,7 +365,7 @@
           "ignoredBy": null
         },
         {
-          "severity": "warning",
+          "severity": "info",
           "kind": "optionality_mismatch",
           "edge": {
             "from": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
@@ -1221,7 +1221,7 @@
           "ignoredBy": null
         },
         {
-          "severity": "warning",
+          "severity": "info",
           "kind": "optionality_mismatch",
           "edge": {
             "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
@@ -1250,7 +1250,7 @@
           "ignoredBy": null
         },
         {
-          "severity": "warning",
+          "severity": "info",
           "kind": "optionality_mismatch",
           "edge": {
             "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
@@ -1510,7 +1510,7 @@
   ],
   "findings": [
     {
-      "severity": "warning",
+      "severity": "info",
       "kind": "optionality_mismatch",
       "edge": {
         "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
@@ -1713,7 +1713,7 @@
       "ignoredBy": null
     },
     {
-      "severity": "warning",
+      "severity": "info",
       "kind": "optionality_mismatch",
       "edge": {
         "from": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
@@ -2032,7 +2032,7 @@
       "ignoredBy": null
     },
     {
-      "severity": "warning",
+      "severity": "info",
       "kind": "optionality_mismatch",
       "edge": {
         "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
@@ -2061,7 +2061,7 @@
       "ignoredBy": null
     },
     {
-      "severity": "warning",
+      "severity": "info",
       "kind": "optionality_mismatch",
       "edge": {
         "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
@@ -2288,8 +2288,8 @@
     "hash_differs": 31,
     "unchecked": 6,
     "errors": 10,
-    "warnings": 4,
-    "infos": 10,
+    "warnings": 0,
+    "infos": 14,
     "ignored": 0
   }
 }

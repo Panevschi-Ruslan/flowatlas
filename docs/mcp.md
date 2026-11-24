@@ -871,7 +871,7 @@ pages, cursors, retries, literal lists, batch calls, migrations) are not rows;
 | Tool | Answers | Takes |
 |---|---|---|
 | `dead` | whether one node is dead, with what could make that wrong; on a class or a file, each way in it declares, judged (`waysIn`); or, without `id`, every row `flowatlas dead` lists, verdict first | `id` (or `ids`), or `service` and `kind` (`entries`, `channels`, `providers`, `methods`), `maxNodes`, `offset` |
-| `findings` | every finding counted by kind with the top three of each; with `kind`, one kind ranked by reach | `kind` (`n-plus-one`, `unguarded`, `contract-break`, `one-ended-channel`, `rule`, or a finding's reason), `service`, `maxNodes`, `offset` |
+| `findings` | what looks broken between the services first, then every other finding, counted by kind with the top three of each, each with its precision; with `kind`, one kind ranked by reach | `kind` (`call-to-missing-route`, `field-never-sent`, `type-never-published`, `contract-break`, `unguarded-among-guarded`, `annotation-to-missing-route`, `env-not-set`, `n-plus-one`, `unguarded`, `one-ended-channel`, `rule`, or a finding's reason), `service`, `maxNodes`, `offset` |
 | `check_rules` | the architecture rules of the configuration (P114), checked over the graph: each rule's status (`held`, `broken`, `unchecked`), each violation with its two ends, where it crosses (`loc`), the edge kind, the weakest confidence, `heuristic` for a guess, the rule's note and `next` (`get_flow` on the way in it starts behind, `get_source` on the crossing), the rules that could not be checked (`rule-matches-nothing`) and how many an accept excused | `rule`, `service`, `maxNodes`, `offset` |
 
 `check_rules` calls the function `flowatlas rules` calls (the linker's
@@ -941,6 +941,37 @@ ways in that reach its sender, a one-ended channel by the ends it has; `rank`
 is its place in its kind across the project, and `reach` the numbers it was
 ranked by. The per-item loops are counted under `notes`, and the findings
 accepted with `flowatlas accept` under `accepted`.
+
+**What looks broken between the services comes first (P384).** The graph
+already holds mismatches that are defects where one more fact holds; each is
+listed only where that fact (its evidence) holds, and carries `precision`
+(`high`: a defect nearly every time, `medium`, `low`), `evidence` (the fact, in
+words), `fix` (the nearest fix) and `seenBy` (the ways in that meet it):
+
+| Kind | What | Evidence | Precision |
+|---|---|---|---|
+| `call-to-missing-route` | a request to a route the service it is sent to does not serve (a `target-route-not-found` row) | every route of that service was read: no row says a route, a mount or a prefix of it went unread, and no catch-all of it could answer | high |
+| `field-never-sent` | a field the receiving code reads that no sender sends, on a channel (type by type) or a request's body, with the field sent and never read it was likely renamed from (`likely renamed: deskNumber is sent, deskId is read`) | every sender's shape and every reader on the crossing was read (`check_contract` answers `complete`) | high |
+| `type-never-published` | a consumer choosing a type of message no publish on its channel sends, with the published type it was likely respelled from | every publish on the channel says the type it sends | high |
+| `contract-break` | the contracts report's errors and warnings | the two declarations | high at error, medium at warning |
+| `unguarded-among-guarded` | a route nothing guards while the routes beside it in its controller are guarded | `guardedSiblings`, the guarded routes beside it | medium |
+| `annotation-to-missing-route` | an annotation naming a route its service does not serve | every route of that service was read | high |
+| `env-not-set` | code sending to an environment value the deployment of the function running it does not set | that deployment was read whole; a value set outside the files (a secret store) is what makes it wrong | medium |
+
+A candidate whose evidence does not hold is never listed and never silence:
+`heldBack` counts it by kind, with why the first was held back (`some routes of
+legacy-api were not read (route-path-dynamic)`). A route left unguarded is
+ranked by deviance: guarded siblings first, then the writes it reaches (a
+delete is a write), then whether a person sends it (`people`: a browser's
+request, a screen's or a bot's code) rather than only another service
+(`services`), then the reads; `unguarded` alone is `low`, since an internal
+route only other services call is often unguarded by design. An optionality
+disagreement where the receiver may go without a field the sender always sends
+breaks nothing at run time, so the contracts report says it at `info` and it is
+no finding; the sender leaving out a field the receiver requires stays a
+warning. `flowatlas findings` prints the same list, `--format sarif` writes it
+under `finding/<kind>` rules carrying each kind's precision, and
+`--fail-on high` stops a pipeline on the defects that are nearly always right.
 
 ### Finding your way in
 

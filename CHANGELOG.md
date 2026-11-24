@@ -135,6 +135,62 @@ only one of them moved.
   nodes spends about half a second on the words; a search reads them in
   under a millisecond on the fixtures and about 0.1 s for a word held by
   thousands of names.
+- **Findings say what looks broken between the services first (P384).**
+  `findings` opened with what is least likely a defect (unguarded routes,
+  one-ended channels) while the graph's best evidence of a bug sat among the
+  gaps: on `multi-repo` the gateway's call to `POST /orders/:param/cancel`, a
+  route renamed `archive`, and the browser's call to a missing `receipt` route
+  were in `start_here` and `cant_follow` only, and on `fields-read-and-sent` the
+  one finding was a field optional for the receiver and always sent, while
+  `deskId`, read and never sent, was none. Seven kinds now come first, each
+  gated on the fact that makes it a defect and carrying `precision` (`high`,
+  `medium`, `low`, as CodeQL's `@precision`), `evidence`, the nearest `fix` and
+  `seenBy`, the ways in that meet it: `call-to-missing-route` (a
+  `target-route-not-found` row, where every route of the target was read: no
+  route, mount or prefix of it unread, no catch-all; the nearest route one
+  segment off, under another verb or another prefix), `field-never-sent` (P368's
+  `missing` on every channel, type by type, and every request's body, where the
+  crossing was read whole, with the field it was likely renamed from:
+  `likely renamed: deskNumber is sent, deskId is read`), `type-never-published`
+  (a consumer choosing a type no publish on its channel sends, where every
+  publish says its type: the reverse of `message-type-unselected`, which the
+  graph's type nodes alone could not say, since no node is drawn for it),
+  `contract-break`, `unguarded-among-guarded` (a route nothing guards while the
+  routes beside it in its controller are guarded), `annotation-to-missing-route`
+  and `env-not-set` (where the function's deployment was read whole). A
+  candidate whose evidence does not hold is counted under `heldBack` with why,
+  never listed. An unguarded route is ranked by deviance: guarded siblings, then
+  writes (a delete now counts as one), then whether a person sends it (a
+  browser's request, a screen's or a bot's code) rather than only another
+  service, then reads; `unguarded` alone is `low`. An optionality disagreement
+  where the receiver may go without a field the sender always sends breaks
+  nothing at run time and is `info` (it was a `warning`, and a finding); the
+  sender leaving out what the receiver requires stays a warning. The
+  instructions list `findings()` as "what looks broken between the services".
+  `flowatlas findings` prints the same ranked list, `--format sarif` writes it
+  under `finding/<kind>` rules carrying their precision (`high` an error), and
+  `--fail-on high` exits 1 on the defects nearly always right; `flowatlas diff
+  --fail-on-broken-call` and the action's `fail-on: broken-call` fail on a call
+  between the services the branch breaks (a join lost, or a new request to a
+  route nothing serves, as `check` counts them). The overview's checks counted
+  unguarded routes and N+1 loops under reasons `findings` never names, so they
+  said 0; they count the kinds, and calls to missing routes beside them. A new
+  fixture, `findings-between-services`, plants each defect beside a decoy whose
+  evidence does not hold (a call to a service whose items controller computes
+  its prefix, a type a publish of unread type may send), with verbose and
+  compact snapshots and three answer-budget questions with hand-written
+  answers: `findings()` on `multi-repo` names both calls to missing routes,
+  the cancel one with `POST /orders/:param/archive` as its nearest route, in
+  3,172 characters (1,723 before, naming neither), on `fields-read-and-sent`
+  `deskId` with its rename in 573 (539, listing only the harmless warning), and
+  on the new fixture the six defects with both decoys held back in 5,019. The
+  budget re-records the instructions (2,384 to 2,424, the findings line) and the
+  listing (default 10,321 to 10,316, all 12,904 to 12,899: the findings
+  description says what comes first in fewer words); the tool listing's
+  whole-listing ceilings move to 37,100 and 33,450 for the findings output
+  schema's new fields. The contracts reports of six fixtures move a receiver's
+  optional field from `warning` to `info`; the `findings` snapshots gain
+  `precision` and, on `multi-repo`, the calls to missing routes.
 - **who_calls answers stay small and finish, also on several symbols
   (P379).** `depth` is how far the tree of callers is drawn, never a cut:
   every way in past it is listed under `waysIn` whatever it is, one symbol or

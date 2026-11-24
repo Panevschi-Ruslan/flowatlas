@@ -102,6 +102,10 @@ describe('the run step, with the inputs it defaults to (P231)', () => {
       assert.match(told.log, /^::warning file=docs\/architecture\.md,line=10,title=flowatlas docs::/m);
       assert.match(told.log, /^::error::this branch makes \d+ doc blocks? stale/m);
       assert.equal(runStep({ 'fail-on': '' }).status, 0);
+      // The route the gateway calls is renamed: a call between the services the branch breaks (P384).
+      const broken = runStep({ 'fail-on': 'broken-call' });
+      assert.equal(broken.status, 1, broken.log);
+      assert.match(broken.log, /^broken call: /m);
     } finally {
       writeFileSync(controller, was);
     }

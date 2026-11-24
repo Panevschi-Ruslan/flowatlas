@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 8,
-  "generatedAt": "2026-11-23T16:35:15.530Z",
+  "generatedAt": "2026-11-24T15:56:33.613Z",
   "edges": [
     {
       "edge": {
@@ -46,7 +46,7 @@
       },
       "findings": [
         {
-          "severity": "warning",
+          "severity": "info",
           "kind": "optionality_mismatch",
           "edge": {
             "from": "producer:shop-api#src/orders/orders.service.ts:16:11",
@@ -80,7 +80,7 @@
   ],
   "findings": [
     {
-      "severity": "warning",
+      "severity": "info",
       "kind": "optionality_mismatch",
       "edge": {
         "from": "producer:shop-api#src/orders/orders.service.ts:16:11",
@@ -155,8 +155,8 @@
     "hash_differs": 2,
     "unchecked": 3,
     "errors": 0,
-    "warnings": 1,
-    "infos": 0,
+    "warnings": 0,
+    "infos": 1,
     "ignored": 0
   }
 }

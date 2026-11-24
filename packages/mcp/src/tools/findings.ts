@@ -1,8 +1,10 @@
-import { readAccepted } from '@flowatlas/core';
+import { isMessageTypeNode, makeMessageTypeId, readAccepted } from '@flowatlas/core';
 import {
   acceptedSplitOf,
   collectFindings,
   compareFindingKinds,
+  likelyRenamed,
+  precisionOf,
   rankFindings,
   type AnchoredUnresolvedRow,
   type ContractBreak,
@@ -15,6 +17,8 @@ import { z } from 'zod';
 import { loadContractBreaks } from '../query/contracts.js';
 import { rulesReportOf } from './rules.js';
 import { truncate } from '../query/detail.js';
+import { reachReader } from '../query/ways-in.js';
+import { channelContract, requestFields } from './fields-contract.js';
 import { nearWords } from '../query/names.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import {
@@ -39,6 +43,14 @@ export const FINDINGS_TOP = 3;
  * exists. A kind with none shows the node's source, or searches the gap.
  */
 const SHOWN_BY: Readonly<Record<string, (row: FindingRow) => string>> = {
+  // The request, at the line that sends it: the address to correct.
+  'call-to-missing-route': (row) => callOf('get_source', { symbol: row.id }),
+  // The crossing, sent against read field by field.
+  'field-never-sent': (row) =>
+    row.from === undefined ? callOf('check_contract', { channel: row.to }) : callOf('check_contract', { from: row.from, to: row.to }),
+  // What the channel's publishes do send, where the renamed type is.
+  'type-never-published': (row) => callOf('who_emits', { channel: row.to }),
+  'unguarded-among-guarded': (row) => callOf('get_flow', { entry: row.id }),
   unguarded: (row) => callOf('get_flow', { entry: row.id }),
   // At the loop's own line: the code a reader is sent to is the loop, not the top of its method.
   'n-plus-one': (row) => callOf('get_source', { symbol: row.id, fromLine: lineOf(row.loc) }),
@@ -64,16 +76,121 @@ const shownBy = (row: FindingRow): string =>
 const wireFinding = (row: FindingRow): Record<string, unknown> => ({
   kind: row.kind,
   id: row.id,
+  ...(row.from === undefined ? {} : { from: row.from }),
   ...(row.to === undefined ? {} : { to: row.to }),
   ...(row.method === undefined ? {} : { method: row.method }),
   ...(row.service === '' ? {} : { service: row.service }),
   ...(row.loc === undefined ? {} : { loc: row.loc }),
   message: row.message,
   ...(row.severity === undefined ? {} : { severity: row.severity }),
+  precision: row.precision,
+  ...(row.evidence === undefined ? {} : { evidence: row.evidence }),
+  ...(row.fix === undefined ? {} : { fix: row.fix }),
+  ...(row.seenBy === undefined ? {} : { seenBy: row.seenBy }),
   rank: row.rank,
   ...(Object.keys(row.reach).length === 0 ? {} : { reach: row.reach }),
   next: shownBy(row),
 });
+
+/** The evidence a field read and never sent needs: every sender's shape and every reader was read. */
+const FIELD_EVIDENCE = 'every sender on the crossing and every reader of it was read';
+
+/**
+ * Fields read that no sender sends (P384, after P368's `missing`): on every
+ * channel (type by type where its handlers choose by type) and on the body of
+ * every request joined to a route. A defect only where the comparison is
+ * complete - every sender's shape read, every reader read - and said with the
+ * field sent and never read beside it that it was most likely renamed from.
+ * A comparison that is not complete holds its candidates back, with why.
+ */
+export const fieldFindingsOf = (
+  db: GraphDb,
+  ctx: ToolContext,
+): { rows: FindingRow[]; heldBack: { count: number; why: string } | undefined } => {
+  const rows: FindingRow[] = [];
+  let held: { count: number; why: string } | undefined;
+  const hold = (count: number, why: string): void => {
+    held = held === undefined ? { count, why } : { ...held, count: held.count + count };
+  };
+  const seen = new Set<string>();
+  const add = (row: FindingRow): void => {
+    const key = `${row.id}|${row.message}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    rows.push(row);
+  };
+  const reader = reachReader(db, ctx.handle, 0);
+  const channels = db
+    .nodesByType('channel')
+    .filter((node) => !isMessageTypeNode(node) && db.edgesTo(node.id, ['emits']).length > 0 && db.edgesFrom(node.id, ['consumes']).length > 0)
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  for (const channel of channels) {
+    const answer = channelContract(db, reader, { channel: channel.id, maxNodes: 1000 }) as {
+      missing?: Array<{ field: string; id: string; line: number; type?: string; notSentBy?: string[] }>;
+      unused?: Array<{ field: string; type?: string }>;
+      complete?: boolean;
+      left?: string[];
+    };
+    const missing = answer.missing ?? [];
+    if (missing.length === 0) continue;
+    if (answer.complete !== true) {
+      hold(missing.length, answer.left?.[0] ?? 'the crossing was not read whole');
+      continue;
+    }
+    for (const row of missing) {
+      const reading = db.node(row.id);
+      const sentInstead = (answer.unused ?? []).filter((each) => each.type === row.type).map((each) => each.field);
+      const renamed = likelyRenamed(row.field, sentInstead);
+      const crossing = row.type === undefined ? channel.label : `${channel.label} (${row.type})`;
+      add({
+        kind: 'field-never-sent',
+        id: row.id,
+        to: row.type === undefined ? channel.id : makeMessageTypeId(channel.id, row.type),
+        service: reading?.repo ?? '',
+        ...(reading?.file === undefined ? {} : { loc: `${reading.file}:${row.line}` }),
+        message:
+          `\`${row.field}\` is read by ${reading?.label ?? row.id} on ${crossing} and sent by ` +
+          (row.notSentBy === undefined ? 'none of its publishers' : `only some of its publishers (not ${row.notSentBy.join(', ')})`),
+        precision: precisionOf('field-never-sent'),
+        evidence: FIELD_EVIDENCE,
+        ...(renamed === undefined ? {} : { fix: `likely renamed: ${renamed} is sent, ${row.field} is read` }),
+        reach: {},
+        rank: 0,
+      });
+    }
+  }
+  const routes = db.nodesByType('entry', 'http').sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  for (const route of routes) {
+    for (const edge of db.edgesTo(route.id, ['http_calls', 'hits'])) {
+      const compared = requestFields(db, { id: edge.from, params: edge.params }, route.id, undefined);
+      if (compared === undefined || compared.missing.length === 0) continue;
+      if (compared.left.length > 0) {
+        hold(compared.missing.length, compared.left[0]!);
+        continue;
+      }
+      const sender = db.node(edge.from);
+      for (const row of compared.missing) {
+        const reading = db.node(row.id);
+        const renamed = likelyRenamed(row.field, compared.unused.map((each) => each.field));
+        add({
+          kind: 'field-never-sent',
+          id: row.id,
+          from: edge.from,
+          to: route.id,
+          service: reading?.repo ?? route.repo,
+          ...(reading?.file === undefined ? {} : { loc: `${reading.file}:${row.line}` }),
+          message: `\`${row.field}\` of the body of ${route.label} is read by ${reading?.label ?? row.id} and not sent by ${sender?.repo ?? edge.from}'s request`,
+          precision: precisionOf('field-never-sent'),
+          evidence: FIELD_EVIDENCE,
+          ...(renamed === undefined ? {} : { fix: `likely renamed: ${renamed} is sent, ${row.field} is read` }),
+          reach: {},
+          rank: 0,
+        });
+      }
+    }
+  }
+  return { rows, heldBack: held };
+};
 
 /**
  * Every finding of the project ranked by reach (P95), from the rows nobody
@@ -86,8 +203,25 @@ export const rankedFindingsOf = (
   fresh: readonly AnchoredUnresolvedRow[],
   contracts: readonly ContractBreak[],
   rules?: readonly RuleViolation[],
-): FindingRow[] =>
-  rankFindings(db, collectFindings(db, { rows: fresh, report: db.report(), contracts, ...(rules === undefined ? {} : { rules }) }).findings);
+  extra?: readonly FindingRow[],
+): FindingRow[] => rankFindings(db, collectedOf(db, fresh, contracts, rules, extra).findings);
+
+/** The findings unranked, and what was held back: the evidence read off every row of the graph (P384). */
+const collectedOf = (
+  db: GraphDb,
+  fresh: readonly AnchoredUnresolvedRow[],
+  contracts: readonly ContractBreak[],
+  rules?: readonly RuleViolation[],
+  extra?: readonly FindingRow[],
+) =>
+  collectFindings(db, {
+    rows: fresh,
+    all: db.allUnresolved(),
+    report: db.report(),
+    contracts,
+    ...(rules === undefined ? {} : { rules }),
+    ...(extra === undefined ? {} : { extra }),
+  });
 
 /**
  * Every finding of the project, ranked (P95): the rows nobody accepted, the
@@ -100,27 +234,36 @@ export const findingsOf = (
   db: GraphDb,
   ctx: ToolContext,
   service?: string,
-): { ranked: FindingRow[]; notes: Record<string, number>; accepted: number } => {
+): { ranked: FindingRow[]; notes: Record<string, number>; accepted: number; heldBack: Record<string, { count: number; why: string }> } => {
   const split = acceptedSplitOf(db, db.allUnresolved(), readAccepted(ctx.handle.path));
   const rules = rulesReportOf(db, ctx)?.violations;
   const inService = <T extends { service: string | null }>(rows: readonly T[]): T[] =>
     service === undefined ? [...rows] : rows.filter((row) => row.service === service);
+  const fields = fieldFindingsOf(db, ctx);
+  const collected = collectedOf(db, split.fresh, loadContractBreaks(ctx.handle.path), rules, fields.rows);
+  const heldBack = { ...collected.heldBack, ...(fields.heldBack === undefined ? {} : { 'field-never-sent': fields.heldBack }) };
   return {
-    ranked: inService(rankedFindingsOf(db, split.fresh, loadContractBreaks(ctx.handle.path), rules)),
+    ranked: inService(rankFindings(db, collected.findings)),
     notes: collectFindings(db, { rows: inService(split.fresh) }).notes,
-    accepted: collectFindings(db, { rows: inService(split.accepted) }).findings.length,
+    accepted: collectFindings(db, { rows: inService(split.accepted), all: db.allUnresolved() }).findings.length,
+    heldBack,
   };
 };
 
 const findingOutput = z.object({
   kind: z.string(),
   id: z.string(),
+  from: z.string().optional(),
   to: z.string().optional(),
   method: z.string().optional(),
   service: z.string().optional(),
   loc: z.string().optional(),
   message: z.string(),
   severity: z.string().optional(),
+  precision: z.string(),
+  evidence: z.string().optional(),
+  fix: z.string().optional(),
+  seenBy: z.array(z.string()).optional(),
   rank: z.number(),
   reach: z.record(z.string(), z.number()).optional(),
   next: z.string(),
@@ -135,6 +278,7 @@ export const findingsOutput = {
   counts: z.record(z.string(), z.number()).optional(),
   top: z.record(z.string(), z.array(findingOutput)).optional(),
   notes: z.record(z.string(), z.number()).optional(),
+  heldBack: z.record(z.string(), z.object({ count: z.number(), why: z.string() })).optional(),
   accepted: z.number().optional(),
   note: z.string().optional(),
   next: nextOutput,
@@ -144,10 +288,10 @@ export const registerFindings = (server: McpServer, ctx: ToolContext): void => {
   server.registerTool(
     'findings',
     {
-      title: 'What to look at',
-      description: 'Likely N+1 loops, unguarded routes, contract breaks, one-ended channels, ranked by reach.',
+      title: 'What looks broken',
+      description: 'What looks broken between the services first, each with its precision and nearest fix; then N+1 loops, unguarded routes.',
       inputSchema: {
-        kind: z.string().optional().describe('n-plus-one, unguarded, contract-break, one-ended-channel, a reason'),
+        kind: z.string().optional().describe('a kind of finding, or a reason'),
         service: serviceInput,
         maxNodes: commonInput.maxNodes,
         ...pageInput,
@@ -157,10 +301,11 @@ export const registerFindings = (server: McpServer, ctx: ToolContext): void => {
     },
     (input) =>
       withDb(ctx.handle, (db) => {
-        const { ranked: scoped, notes, accepted } = findingsOf(db, ctx, input.service);
+        const { ranked: scoped, notes, accepted, heldBack } = findingsOf(db, ctx, input.service);
         const kinds = [...new Set(scoped.map((row) => row.kind))].sort(compareFindingKinds);
         const said = {
           ...(Object.keys(notes).length === 0 ? {} : { notes }),
+          ...(Object.keys(heldBack).length === 0 ? {} : { heldBack }),
           ...(accepted === 0 ? {} : { accepted }),
         };
 

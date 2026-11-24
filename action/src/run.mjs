@@ -36,6 +36,7 @@ const diffArgs = [
   ...(input('max-chars') === '' ? [] : ['--max-chars', input('max-chars')]),
   ...(failOn.has('contract-break') ? ['--fail-on-contract-break'] : []),
   ...(failOn.has('rule-break') ? ['--fail-on-rule-break'] : []),
+  ...(failOn.has('broken-call') ? ['--fail-on-broken-call'] : []),
 ];
 // Never one an earlier run left behind, on a runner that keeps its workspace.
 rmSync(headDb, { force: true });

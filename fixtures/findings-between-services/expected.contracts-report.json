@@ -1,0 +1,305 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-24T15:56:35.005Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:storefront#src/catalog.client.ts:30:34",
+        "to": "entry:catalog-api:http:POST:/products",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#src/catalog.client.ts:30:34|http_calls|entry:catalog-api:http:POST:/products",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "storefront",
+        "typeId": "{productName:string;priceCents:number}",
+        "symbol": "storefront#src/catalog.client.ts:CatalogClient.create",
+        "writes": [
+          "priceCents",
+          "productName"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog-api",
+        "typeId": "type:catalog-api#CreateProductBody",
+        "symbol": "catalog-api#src/products/products.controller.ts:ProductsController.create"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "http_out:storefront#src/catalog.client.ts:30:34",
+            "to": "entry:catalog-api:http:POST:/products",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:storefront#src/catalog.client.ts:30:34|http_calls|entry:catalog-api:http:POST:/products",
+          "direction": "request",
+          "sender": {
+            "service": "storefront",
+            "typeId": "{productName:string;priceCents:number}",
+            "symbol": "storefront#src/catalog.client.ts:CatalogClient.create",
+            "writes": [
+              "priceCents",
+              "productName"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "catalog-api",
+            "typeId": "type:catalog-api#CreateProductBody",
+            "symbol": "catalog-api#src/products/products.controller.ts:ProductsController.create"
+          },
+          "typeId": "type:catalog-api#CreateProductBody",
+          "field": "priceCents",
+          "expected": "number",
+          "actual": "number",
+          "rule": null,
+          "message": "`priceCents` is optional for receiver catalog-api and always sent by sender storefront",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:storefront#src/catalog.client.ts:30:34",
+            "to": "entry:catalog-api:http:POST:/products",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:storefront#src/catalog.client.ts:30:34|http_calls|entry:catalog-api:http:POST:/products",
+          "direction": "request",
+          "sender": {
+            "service": "storefront",
+            "typeId": "{productName:string;priceCents:number}",
+            "symbol": "storefront#src/catalog.client.ts:CatalogClient.create",
+            "writes": [
+              "priceCents",
+              "productName"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "catalog-api",
+            "typeId": "type:catalog-api#CreateProductBody",
+            "symbol": "catalog-api#src/products/products.controller.ts:ProductsController.create"
+          },
+          "typeId": "type:catalog-api#CreateProductBody",
+          "field": "productName",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender storefront sends `productName: string`; receiver catalog-api declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#src/catalog.client.ts:34:34",
+        "to": "entry:catalog-api:http:GET:/stock/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#src/catalog.client.ts:34:34|http_calls|entry:catalog-api:http:GET:/stock/:param",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog-api",
+        "typeId": "number",
+        "symbol": "catalog-api#src/stock/stock.controller.ts:StockController.level"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "number",
+        "symbol": "storefront#src/catalog.client.ts:CatalogClient.stock"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "http_out:storefront#src/catalog.client.ts:30:34",
+        "to": "entry:catalog-api:http:POST:/products",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#src/catalog.client.ts:30:34|http_calls|entry:catalog-api:http:POST:/products",
+      "direction": "request",
+      "sender": {
+        "service": "storefront",
+        "typeId": "{productName:string;priceCents:number}",
+        "symbol": "storefront#src/catalog.client.ts:CatalogClient.create",
+        "writes": [
+          "priceCents",
+          "productName"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog-api",
+        "typeId": "type:catalog-api#CreateProductBody",
+        "symbol": "catalog-api#src/products/products.controller.ts:ProductsController.create"
+      },
+      "typeId": "type:catalog-api#CreateProductBody",
+      "field": "priceCents",
+      "expected": "number",
+      "actual": "number",
+      "rule": null,
+      "message": "`priceCents` is optional for receiver catalog-api and always sent by sender storefront",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:storefront#src/catalog.client.ts:30:34",
+        "to": "entry:catalog-api:http:POST:/products",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#src/catalog.client.ts:30:34|http_calls|entry:catalog-api:http:POST:/products",
+      "direction": "request",
+      "sender": {
+        "service": "storefront",
+        "typeId": "{productName:string;priceCents:number}",
+        "symbol": "storefront#src/catalog.client.ts:CatalogClient.create",
+        "writes": [
+          "priceCents",
+          "productName"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog-api",
+        "typeId": "type:catalog-api#CreateProductBody",
+        "symbol": "catalog-api#src/products/products.controller.ts:ProductsController.create"
+      },
+      "typeId": "type:catalog-api#CreateProductBody",
+      "field": "productName",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender storefront sends `productName: string`; receiver catalog-api declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:storefront#src/catalog.client.ts:20:34",
+        "to": "entry:catalog-api:http:GET:/products/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#src/catalog.client.ts:20:34|http_calls|entry:catalog-api:http:GET:/products/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#src/catalog.client.ts:CatalogClient.product declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#src/catalog.client.ts:20:34",
+        "to": "entry:catalog-api:http:GET:/products/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#src/catalog.client.ts:20:34|http_calls|entry:catalog-api:http:GET:/products/:param",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog-api#src/products/products.controller.ts:ProductsController.findOne declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#src/catalog.client.ts:30:34",
+        "to": "entry:catalog-api:http:POST:/products",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#src/catalog.client.ts:30:34|http_calls|entry:catalog-api:http:POST:/products",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog-api#src/products/products.controller.ts:ProductsController.create declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#src/catalog.client.ts:34:34",
+        "to": "entry:catalog-api:http:GET:/stock/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#src/catalog.client.ts:34:34|http_calls|entry:catalog-api:http:GET:/stock/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#src/catalog.client.ts:CatalogClient.stock declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:catalog-api#src/products/products.service.ts:22:11",
+        "to": "consumer:storefront#src/catalog-events.service.ts:CatalogEventsService.onCatalogEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:catalog-api#src/products/products.service.ts:22:11|emits|consumer:storefront#src/catalog-events.service.ts:CatalogEventsService.onCatalogEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:storefront#src/catalog-events.service.ts:CatalogEventsService.onCatalogEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:catalog-api#src/products/products.service.ts:34:11",
+        "to": "consumer:storefront#src/catalog-events.service.ts:CatalogEventsService.onCatalogEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:catalog-api#src/products/products.service.ts:34:11|emits|consumer:storefront#src/catalog-events.service.ts:CatalogEventsService.onCatalogEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:storefront#src/catalog-events.service.ts:CatalogEventsService.onCatalogEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:catalog-api#src/stock/stock.service.ts:21:11",
+        "to": "consumer:storefront#src/stock-events.service.ts:StockEventsService.onStockEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:catalog-api#src/stock/stock.service.ts:21:11|emits|consumer:storefront#src/stock-events.service.ts:StockEventsService.onStockEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:storefront#src/stock-events.service.ts:StockEventsService.onStockEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:catalog-api#src/stock/stock.service.ts:26:11",
+        "to": "consumer:storefront#src/stock-events.service.ts:StockEventsService.onStockEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:catalog-api#src/stock/stock.service.ts:26:11|emits|consumer:storefront#src/stock-events.service.ts:StockEventsService.onStockEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:storefront#src/stock-events.service.ts:StockEventsService.onStockEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    }
+  ],
+  "summary": {
+    "edges": 2,
+    "shared": 0,
+    "identical": 1,
+    "hash_differs": 1,
+    "unchecked": 8,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 2,
+    "ignored": 0
+  }
+}

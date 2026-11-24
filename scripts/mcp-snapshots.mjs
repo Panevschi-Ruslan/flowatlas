@@ -525,6 +525,22 @@ const FIELDS_COMPACT_CASES = [
 ];
 
 /**
+ * What looks broken between the services (P384): every defect gated on its
+ * evidence, with its precision and nearest fix, and what was held back.
+ */
+const BETWEEN_CASES = [
+  ['findings.all', 'findings', {}],
+  ['findings.call-to-missing-route', 'findings', { kind: 'call-to-missing-route' }],
+  ['findings.field-never-sent', 'findings', { kind: 'field-never-sent' }],
+  ['findings.unguarded-among-guarded', 'findings', { kind: 'unguarded-among-guarded' }],
+];
+/** The same, compact: what an agent is handed. */
+const BETWEEN_COMPACT_CASES = [
+  ['findings.all', 'findings', { verbose: false }],
+  ['findings.type-never-published', 'findings', { kind: 'type-never-published', verbose: false }],
+];
+
+/**
  * Answers that finish in one call (P364): each row of code with whether it
  * runs and the nearest way in (a screen for a handler the router shows, none
  * for one no way in reaches), each list saying whether it is complete and what
@@ -935,6 +951,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'fields-read-and-sent'),
     outDir: join(root, 'fixtures', 'fields-read-and-sent', 'expected.mcp.compact'),
     cases: FIELDS_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'findings-between-services'),
+    outDir: join(root, 'fixtures', 'findings-between-services', 'expected.mcp'),
+    cases: BETWEEN_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'findings-between-services'),
+    outDir: join(root, 'fixtures', 'findings-between-services', 'expected.mcp.compact'),
+    cases: BETWEEN_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'impact-guarded-navigation'),

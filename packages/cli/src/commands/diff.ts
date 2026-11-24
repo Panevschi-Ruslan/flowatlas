@@ -10,6 +10,9 @@
  * `--fail-on-contract-break` a pipeline blocks a merge on a boundary this branch
  * broke — and only on the ones it broke. `--fail-on-rule-break` does the same
  * for the architecture rules (P114): a violation this branch introduced.
+ * `--fail-on-broken-call` (P384) for a call between the services the branch
+ * breaks: a join the base side made that the head side loses, or a new request
+ * to a route nothing serves, as `check` counts them.
  *
  * `--env <name>` puts what an environment runs in place of the base ref
  * (P193): each service at its pin, read the way `check --env` reads it, and
@@ -41,6 +44,7 @@ import { environmentNameOf, pinSourcesOf, readEnvironment, type EnvironmentSaid,
 import { isDirty } from '../git/worktree.js';
 import { processIo, type QueryIo } from '../query/answer.js';
 import { environmentLead } from '../report/check-render.js';
+import { checkReasonsOf } from '../report/check-verdict.js';
 import { classifyContracts, contractBreaks } from '../report/contract-delta.js';
 import { DIFF_MARKDOWN_DEFAULTS, DIFF_SECTIONS, renderDiffMarkdown, summariseDiff } from '../report/diff-markdown.js';
 import { pulledSide } from '../team/pulled-side.js';
@@ -104,6 +108,8 @@ export interface DiffOptions extends PinFlags {
   failOnContractBreak?: boolean;
   /** Exit 1 when this revision introduces a violation of an architecture rule at `error` (P114). */
   failOnRuleBreak?: boolean;
+  /** Exit 1 when this revision breaks a call between the services: a join lost, or a new request to no route (P384). */
+  failOnBrokenCall?: boolean;
   maxEntries?: string;
   /** Most changed nodes to walk backwards from. The rest are counted (I9). */
   maxNodes?: string;
@@ -143,8 +149,8 @@ export interface DiffRun {
   unread?: string[];
   /** The head side's doc blocks the branch makes stale, and those stale already (P120). */
   docs: StaleDocs;
-  /** What a failing run failed on: a new contract error, a new rule violation, or both. */
-  failedOn?: Array<'contract' | 'rule'>;
+  /** What a failing run failed on: a new contract error, a new rule violation, a call it breaks. */
+  failedOn?: Array<'contract' | 'rule' | 'call'>;
   /** With `--env`: what the environment runs and what moved, as `check` says it. */
   environment?: EnvironmentSaid;
 }
@@ -660,15 +666,23 @@ export const runDiff = async (
     const ruleBroken = ruleBreaks(rules, ruleSet.failOnHeuristic);
     const refusedContracts = options.failOnContractBreak === true && (breaks.length > 0 || unread.size > 0);
     const refusedRules = options.failOnRuleBreak === true && (ruleBroken.length > 0 || unread.size > 0);
+    // The calls the branch breaks, counted as `check` counts them (P384).
+    const brokenCalls =
+      options.failOnBrokenCall === true
+        ? checkReasonsOf(report, { deployed: builtBase.graph, candidate: builtHead.graph }).reasons.filter((reason) => reason.kind === 'join')
+        : [];
+    for (const reason of brokenCalls) io.err(`broken call: ${reason.message}\n`);
+    const refusedCalls = options.failOnBrokenCall === true && (brokenCalls.length > 0 || unread.size > 0);
     const failedOn = [
       ...(refusedContracts && breaks.length > 0 ? ['contract' as const] : []),
       ...(refusedRules && ruleBroken.length > 0 ? ['rule' as const] : []),
+      ...(refusedCalls && brokenCalls.length > 0 ? ['call' as const] : []),
     ];
     return {
       report,
       text,
       file,
-      exitCode: refusedContracts || refusedRules ? EXIT.failed : EXIT.ok,
+      exitCode: refusedContracts || refusedRules || refusedCalls ? EXIT.failed : EXIT.ok,
       ...(unread.size === 0 ? {} : { unread: [...unread] }),
       docs,
       ...(failedOn.length === 0 ? {} : { failedOn }),
@@ -699,6 +713,7 @@ export const registerDiff = (program: Command): void => {
     .option('--output <file>', 'write what was printed to this file as well; with --format sarif, the log goes there instead of stdout')
     .option('--fail-on-contract-break', 'exit 1 when this revision introduces a contract error')
     .option('--fail-on-rule-break', 'exit 1 when this revision introduces a violation of an architecture rule at error')
+    .option('--fail-on-broken-call', 'exit 1 when this revision breaks a call between the services: a join lost, or a new request to a route nothing serves')
     .option('--max-entries <n>', 'most ways in to list per changed node')
     .option('--max-nodes <n>', 'most changed nodes to walk backwards from')
     .option('--max-flows <n>', `most ways in to walk for their flows (default ${DEFAULT_MAX_FLOWS})`)
@@ -723,7 +738,7 @@ export const registerDiff = (program: Command): void => {
       const [baseRef, headRef] = options.env === undefined ? [first, second] : [undefined, first];
       const { exitCode, unread, failedOn } = await runDiff(baseRef, headRef, options);
       if (exitCode !== EXIT.ok) {
-        const said = { contract: 'a contract error', rule: 'a violation of an architecture rule' } as const;
+        const said = { contract: 'a contract error', rule: 'a violation of an architecture rule', call: 'a call between the services that lands nowhere' } as const;
         throw new CliError(
           unread === undefined
             ? `this revision introduces ${(failedOn ?? ['contract']).map((what) => said[what]).join(' and ')}`

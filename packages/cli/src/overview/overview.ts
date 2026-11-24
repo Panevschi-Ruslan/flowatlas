@@ -355,8 +355,10 @@ export const overviewOf = (db: GraphDb, handle: DbHandle | undefined, options: O
     ...(rules === undefined ? [] : [{ name: 'architecture rules broken', count: rules.violations.filter((item) => relevant(item.fromService, item.toService)).length, command: 'flowatlas rules' }]),
     { name: 'cycles across services', count: cycles.length, command: 'flowatlas cycles' },
     { name: 'dead ways in', count: dead.length, command: 'flowatlas dead' },
-    { name: 'routes with no guard', count: findingCount('route-unguarded'), command: 'flowatlas doctor --reason route-unguarded' },
-    { name: 'likely N+1 queries', count: findingCount('query-in-loop'), command: 'flowatlas doctor --reason query-in-loop' },
+    // Counted by the kinds the findings list names them under (P384): `unguarded` and its deviant twin, `n-plus-one`.
+    { name: 'calls to routes that do not exist', count: findingCount('call-to-missing-route'), command: 'flowatlas findings --kind call-to-missing-route' },
+    { name: 'routes with no guard', count: findingCount('unguarded') + findingCount('unguarded-among-guarded'), command: 'flowatlas doctor --reason route-unguarded' },
+    { name: 'likely N+1 queries', count: findingCount('n-plus-one'), command: 'flowatlas doctor --reason query-in-loop' },
     { name: 'channels with one end', count: findingCount('one-ended-channel'), command: 'flowatlas channel <name>' },
     { name: 'types two services disagree about', count: drift.length, command: 'flowatlas types --drift' },
   ];

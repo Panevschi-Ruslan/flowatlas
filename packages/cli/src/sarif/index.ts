@@ -24,6 +24,7 @@ export { doctorCut, doctorFindings, doctorNotes, type AcceptedRow, type DoctorSa
 export { deadFindings, type DeadRows } from './dead.js';
 export { cycleFinding, cycleFindings } from './cycles.js';
 export { diffFindings } from './diff.js';
+export { findingResult, findingResults, findingRule, LEVEL_OF_PRECISION } from './findings.js';
 export { checkFindings, type CheckSarifInput } from './check.js';
 export { specFinding, specFindings, specRule } from './spec.js';
 export { lookupOf, namedLines, nodePlace, repoDirsOf, sarifPathsOf, type NodeLookup } from './places.js';

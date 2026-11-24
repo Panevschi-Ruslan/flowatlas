@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T15:56:34.349Z",
+  "configHash": "7910b7e92ac2",
+  "services": [
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 41,
+      "edges": 43,
+      "types": 3,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "catalog-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "rxjs",
+          "typeorm"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "legacy-api",
+      "repo": "./legacy-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "legacy-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 42,
+      "edges": 35,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "storefront",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 6,
+    "linked": 3,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 2,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 1
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": [],
+    "unselectedTypes": [
+      "channel:catalog_events#LISTING_CANCELLED"
+    ]
+  },
+  "routes": {
+    "total": 12,
+    "called": 3,
+    "uncalled": [
+      "entry:catalog-api:http:DELETE:/products/:param",
+      "entry:catalog-api:http:POST:/products/:param/publish",
+      "entry:legacy-api:http:GET:/health",
+      "entry:storefront:http:GET:/shop/items/:param",
+      "entry:storefront:http:GET:/shop/products/:param",
+      "entry:storefront:http:GET:/shop/products/:param/reviews",
+      "entry:storefront:http:GET:/shop/stock/:param",
+      "entry:storefront:http:POST:/shop/products",
+      "entry:storefront:http:POST:/shop/products/:param/release"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 5,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "catalog-api",
+      "file": "src/products/products.controller.ts",
+      "line": 39,
+      "reason": "route-unguarded",
+      "message": "DELETE /products/:param has no guard in front of it and reaches products.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "DELETE /products/:param"
+    },
+    {
+      "file": "src/products/products.service.ts",
+      "line": 34,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects LISTING_CANCELLED on catalog_events: 1 consumer chooses other types (CatalogEventsService.onCatalogEvent)",
+      "symbol": "producer:catalog-api#src/products/products.service.ts:34:11",
+      "service": "catalog-api",
+      "meta": {
+        "type": "channel:catalog_events#LISTING_CANCELLED",
+        "channel": "channel:catalog_events",
+        "messageType": "LISTING_CANCELLED",
+        "sureness": "sure"
+      }
+    },
+    {
+      "service": "catalog-api",
+      "file": "src/stock/stock.controller.ts",
+      "line": 12,
+      "reason": "route-unguarded",
+      "message": "GET /stock/:param has no guard in front of it and reaches products.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /stock/:param"
+    },
+    {
+      "service": "storefront",
+      "file": "src/catalog.client.ts",
+      "line": 25,
+      "reason": "target-route-not-found",
+      "message": "target service catalog-api has no route POST /products/:param/release",
+      "hint": "Route renamed? Check catalog-api's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:storefront#src/catalog.client.ts:25:26"
+    },
+    {
+      "service": "storefront",
+      "file": "src/catalog.client.ts",
+      "line": 40,
+      "reason": "marker-route-not-found",
+      "message": "@CallsService points at GET /products/:id/reviews, which catalog-api does not serve",
+      "hint": "Check catalog-api's controllers, or correct the annotation.",
+      "symbol": "http_out:storefront#src/catalog.client.ts:40:34"
+    },
+    {
+      "service": "storefront",
+      "file": "src/catalog.client.ts",
+      "line": 40,
+      "reason": "dynamic-http-url",
+      "message": "GET /${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "http_out:storefront#src/catalog.client.ts:40:34"
+    },
+    {
+      "service": "storefront",
+      "file": "src/legacy.client.ts",
+      "line": 19,
+      "reason": "target-route-not-found",
+      "message": "target service legacy-api has no route GET /items/:param",
+      "hint": "Route renamed? Check legacy-api's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:storefront#src/legacy.client.ts:19:34"
+    }
+  ],
+  "totals": {
+    "nodes": 92,
+    "edges": 88,
+    "types": 5,
+    "missed": 6,
+    "sites": 6,
+    "notes": 0,
+    "findings": 3,
+    "unresolved": 6
+  }
+}

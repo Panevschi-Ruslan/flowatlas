@@ -290,7 +290,7 @@ its token cannot comment.
 | `token` | `github.token` | reads those repositories and comments; the default reads this one only |
 | `comment` | `update` | `update` one comment, post a `new` one each time, or `off` |
 | `comment-when` | `changes` | or `always` |
-| `fail-on` | `contract-break,rule-break` | fail the check on new breaks of these kinds, or `stale-docs` for doc blocks this branch makes stale; empty never fails |
+| `fail-on` | `contract-break,rule-break` | fail the check on new breaks of these kinds - `broken-call` too, a call between the services the branch leaves landing nowhere (P384) - or `stale-docs` for doc blocks this branch makes stale; empty never fails |
 | `sarif` | `false` | also upload the new and fixed findings to code scanning |
 | `docs-check` | `true` | also `flowatlas docs --check`, as annotations, against the branch's graph `diff` built (`--head-db`); it fails nothing by itself, and one that cannot run is said under the comment |
 | `install` | `none` | `ci` runs `npm ci --ignore-scripts` in each repository first, for types the checker can follow |
@@ -371,6 +371,11 @@ To fail only on a break this branch introduced:
 ```sh
 flowatlas diff origin/main --fail-on-contract-break --fail-on-rule-break
 ```
+
+`--fail-on-broken-call` (P384) fails on a call between the services the
+branch breaks: a join the base side made that the head side loses (a route
+renamed under a caller), or a new request to a route nothing serves, counted as
+`check` counts them; each is printed as a `broken call:` line.
 
 The second flag does for the architecture rules what the first does for the
 contracts: the comment's **Rules** section sorts violations into new, fixed,

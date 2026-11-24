@@ -352,9 +352,9 @@ const findingOf = (
   impact?: StripImpact,
 ): ContractFinding => ({
   severity:
-    (unreached !== null || claimedEnd(exchange)) && severityOf(diff.kind, diff.rule, impact) === 'error'
+    (unreached !== null || claimedEnd(exchange)) && severityOf(diff.kind, diff.rule, impact, diff.optionalOn) === 'error'
       ? 'warning'
-      : severityOf(diff.kind, diff.rule, impact),
+      : severityOf(diff.kind, diff.rule, impact, diff.optionalOn),
   kind: diff.kind,
   edge: exchange.edge,
   edgeKey: exchange.edgeKey,

@@ -2030,6 +2030,110 @@
         }
       },
       "note": "P383: it answered isError \"nothing matches\"."
+    },
+    {
+      "id": "findings.multi-repo",
+      "ask": "what looks broken between the services",
+      "fixture": "multi-repo",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "lists": {
+          "call-to-missing-route": [
+            "http_out:gateway#src/clients/orders.client.ts:44:12",
+            "ui_api_call:web#src/app/orders-api.service.ts:26:12"
+          ]
+        },
+        "rowsSay": {
+          "call-to-missing-route": {
+            "http_out:gateway#src/clients/orders.client.ts:44:12": {
+              "precision": "high",
+              "fix": "the nearest route: POST /orders/:param/archive (one segment off: cancel for archive)"
+            }
+          }
+        },
+        "exact": [
+          "call-to-missing-route"
+        ]
+      },
+      "note": "P384: the gateway's cancel call to the route renamed archive and the browser's receipt call were gaps only (start_here, cant_follow); findings listed unguarded routes and one-ended channels."
+    },
+    {
+      "id": "findings.fields-renamed",
+      "ask": "what looks broken between the shop and the bot",
+      "fixture": "fields-read-and-sent",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "rowsSay": {
+          "field-never-sent": {
+            "ops-bot#src/notify/notify.service.ts:NotifyService.onDeskEvent": {
+              "precision": "high",
+              "fix": "likely renamed: deskNumber is sent, deskId is read"
+            }
+          }
+        },
+        "exact": [
+          "field-never-sent"
+        ],
+        "notListed": {
+          "contract-break": [
+            "producer:shop-api#src/orders/orders.service.ts:16:11"
+          ]
+        }
+      },
+      "note": "P384: deskId read and never sent was no finding; the one finding listed was a field optional for the receiver and always sent, which breaks nothing and is now information."
+    },
+    {
+      "id": "findings.between-services",
+      "ask": "what looks broken between the catalog, the storefront and the legacy service",
+      "fixture": "findings-between-services",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "lists": {
+          "call-to-missing-route": [
+            "http_out:storefront#src/catalog.client.ts:25:26"
+          ],
+          "type-never-published": [
+            "channel:catalog_events#LISTING_CANCELED"
+          ],
+          "unguarded-among-guarded": [
+            "entry:catalog-api:http:DELETE:/products/:param"
+          ],
+          "field-never-sent": [
+            "catalog-api#src/products/products.controller.ts:ProductsController.create",
+            "storefront#src/catalog-events.service.ts:CatalogEventsService.onCatalogEvent"
+          ],
+          "annotation-to-missing-route": [
+            "http_out:storefront#src/catalog.client.ts:40:34"
+          ]
+        },
+        "notListed": {
+          "call-to-missing-route": [
+            "http_out:storefront#src/legacy.client.ts:19:26"
+          ],
+          "unguarded-among-guarded": [
+            "entry:catalog-api:http:GET:/stock/:param"
+          ]
+        },
+        "exact": [
+          "call-to-missing-route",
+          "type-never-published",
+          "unguarded-among-guarded",
+          "field-never-sent"
+        ]
+      },
+      "note": "P384: each defect gated on its evidence; the call to the legacy service, whose items controller was not read, and the type a publish of unread type may send are held back."
     }
   ],
   "fixed": {
@@ -2354,6 +2458,27 @@
       "tokens": 103,
       "rows": 1,
       "complete": true,
+      "calls": 1
+    },
+    "findings.multi-repo": {
+      "chars": 3172,
+      "tokens": 793,
+      "rows": 7,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.fields-renamed": {
+      "chars": 573,
+      "tokens": 144,
+      "rows": 1,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.between-services": {
+      "chars": 5019,
+      "tokens": 1255,
+      "rows": 8,
+      "complete": null,
       "calls": 1
     },
     "find_symbol.two-words": {

@@ -679,3 +679,119 @@ export const rowClassOf = (row: KindedRow): { kind: RowKind; risk?: Risk } => {
   const risk = kind === 'finding' ? riskOf(row.reason) : undefined;
   return risk === undefined ? { kind } : { kind, risk };
 };
+
+/**
+ * How often a finding of one kind is a real defect where its evidence holds
+ * (P384), said beside every finding and on the rules of a SARIF log, as
+ * CodeQL's `@precision` says it: `high`, a defect nearly every time; `medium`,
+ * a defect more often than not; `low`, worth a look.
+ */
+export const PRECISION_NAMES = ['high', 'medium', 'low'] as const;
+
+/** How sure a finding is. */
+export type Precision = (typeof PRECISION_NAMES)[number];
+
+/** A gap the findings list names as a defect where the evidence for it holds. */
+export interface GapFinding {
+  /** The finding kind it is listed under. */
+  kind: string;
+  precision: Precision;
+  /** What must hold, in words: said on the finding, so a reader can check it. */
+  evidence: string;
+}
+
+/**
+ * Gaps that are defects where one more fact holds (P384).
+ *
+ * A request that reaches no route is a gap: the reader may have missed the
+ * route. Where every route of the service it is sent to was read - no part of
+ * an address left unread, no catch-all - nothing was missed, and the request
+ * is a call to a route that does not exist: the client was not renamed with
+ * the server. The row stays a gap (the reading's own counts do not move); the
+ * findings list names it a defect only where its evidence holds, and counts
+ * the rest as held back, each with why.
+ */
+export const GAP_FINDINGS: ReadonlyMap<string, GapFinding> = new Map([
+  [
+    'target-route-not-found',
+    {
+      kind: 'call-to-missing-route',
+      precision: 'high',
+      evidence: 'every route of the service it is sent to was read: no address left partly unread, no catch-all',
+    },
+  ],
+  [
+    'marker-route-not-found',
+    {
+      kind: 'annotation-to-missing-route',
+      precision: 'high',
+      evidence: 'every route of the service the annotation names was read: no address left partly unread, no catch-all',
+    },
+  ],
+  [
+    'environment-not-set',
+    {
+      kind: 'env-not-set',
+      precision: 'medium',
+      evidence:
+        "the deployment of the function was read whole; a value set outside the files (a secret store, a console) is what would make this wrong",
+    },
+  ],
+]);
+
+/** The finding a gap is where its evidence holds; undefined for every other reason. */
+export const gapFindingOf = (reason: string): GapFinding | undefined => GAP_FINDINGS.get(reason);
+
+/**
+ * Reasons that say some of a service's routes, or the address they are served
+ * at, were not read (P384). A request said to reach no route of a service with
+ * one of these rows may be asking for a route the reading missed, so it is not
+ * named a defect. Each is a gap or a note of this registry, which the tests
+ * check.
+ */
+export const ROUTES_UNREAD_REASONS: ReadonlySet<string> = new Set([
+  'route-path-dynamic',
+  'route-path-unread',
+  'route-verb-unread',
+  'route-mount-unread',
+  'route-mount-assumed-empty',
+  'route-registry-unread',
+  'route-module-not-found',
+  'route-base-path-unread',
+  'route-root-not-found',
+  'route-root-ambiguous',
+  'route-wildcard-only',
+  'fs-route-handler-not-read',
+  'module-controllers-unread',
+  'application-root-unread',
+  'bootstrap-not-found',
+  'entry-http-routes-unplaced',
+  'entry-http-routes-unmatched',
+  'entry-registry-unconfigured',
+  'registry-key-dynamic',
+  'procedure-router-unread',
+  'procedure-prefix-unread',
+  'procedure-path-dynamic',
+  'framework-layer-unread',
+  'framework-module-unread',
+  'framework-setting-dynamic',
+  'implicit-import-ambiguous',
+  'proxy-rule-unread',
+  'proxy-chain-unfollowed',
+  'manifest-unread',
+]);
+
+/**
+ * Reasons that say a service's deployment was not read whole (P384): a
+ * function's environment may then hold a value the files did not show.
+ */
+export const DEPLOYMENT_UNREAD_REASONS: ReadonlySet<string> = new Set([
+  'infra-file-unparsed',
+  'infra-module-missing',
+  'infra-module-undescribed',
+  'infra-module-description-invalid',
+  'parameter-file-ambiguous',
+  'environment-value-unread',
+  'construct-conditional',
+  'deployment-copy-not-read',
+]);

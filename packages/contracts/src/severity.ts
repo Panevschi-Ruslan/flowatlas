@@ -6,7 +6,7 @@
  * TypeScript, and less certainty can never make a verdict harsher than the
  * plain reading of the two declarations.
  */
-import type { FindingKind, Severity, StripImpact } from './types.js';
+import type { FindingKind, Severity, Side, StripImpact } from './types.js';
 
 const BY_KIND: Record<FindingKind, Severity> = {
   missing_required: 'error',
@@ -78,12 +78,24 @@ const BY_IMPACT: Record<StripImpact, Severity> = {
   none: 'info',
 };
 
+/**
+ * The verdict an optionality disagreement starts from, by the end that may
+ * leave the field out (P384). A field the sender may leave out and the
+ * receiver requires is a request the receiver refuses or misreads: a warning.
+ * A field the receiver may go without and the sender always sends breaks
+ * nothing at run time; it says only that one declaration is looser than the
+ * other, so it is information and never a finding listed among the defects.
+ */
+const baseOf = (kind: FindingKind, optionalOn: Side | undefined): Severity =>
+  kind === 'optionality_mismatch' && optionalOn === 'receiver' ? 'info' : BY_KIND[kind];
+
 export const severityOf = (
   kind: FindingKind,
   rule: string | null,
   impact?: StripImpact,
+  optionalOn?: Side,
 ): Severity => {
-  const base = BY_KIND[kind];
+  const base = baseOf(kind, optionalOn);
   // `BY_KIND` and `BY_IMPACT` are keyed by a union this project declares, so the
   // compiler has already checked that every key exists and no other can be
   // asked. The two rule tables are keyed by a plain string, which is the shape

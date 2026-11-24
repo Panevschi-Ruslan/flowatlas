@@ -9,6 +9,7 @@ import { registerContracts } from './commands/contracts.js';
 import { registerRules } from './commands/rules.js';
 import { registerCycles } from './commands/cycles.js';
 import { registerDead } from './commands/dead.js';
+import { registerFindings } from './commands/findings.js';
 import { registerDeployed } from './commands/deployed.js';
 import { registerDiff } from './commands/diff.js';
 import { registerDocs } from './commands/docs.js';
@@ -64,6 +65,7 @@ export const createProgram = (): Command => {
   registerStats(program);
   registerCycles(program);
   registerDead(program);
+  registerFindings(program);
   registerDoctor(program);
   registerDocs(program);
   registerShapes(program);

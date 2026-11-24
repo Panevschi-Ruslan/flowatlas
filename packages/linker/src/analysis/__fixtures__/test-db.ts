@@ -61,6 +61,8 @@ export interface TestGraph {
   types?: TypeRegistry;
   unresolved?: Unresolved[];
   report?: Partial<LinkReport>;
+  /** The configured services; `orders` alone where not given. */
+  services?: string[];
 }
 
 const directory = mkdtempSync(join(tmpdir(), 'flowatlas-linker-analysis-'));
@@ -78,7 +80,7 @@ export const writeTestDb = (graph: TestGraph): string => {
   const project: ProjectGraph = {
     schemaVersion: SCHEMA_VERSION,
     builtAt: FIXED,
-    services: [{ name: 'orders', repo: './orders', type: 'nestjs', extractor: null }],
+    services: (graph.services ?? ['orders']).map((name) => ({ name, repo: `./${name}`, type: 'nestjs', extractor: null })),
     nodes: graph.nodes,
     edges: graph.edges,
     types: graph.types ?? {},

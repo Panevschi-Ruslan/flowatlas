@@ -1172,7 +1172,15 @@ describe('dead, findings, type_usage and scoped prompts', () => {
 
   it('counts every kind of finding with its top rows, each with the call that shows it', async () => {
     const answer = await call('findings');
-    expect(answer.counts).toEqual({ unguarded: 4, 'one-ended-channel': 2 });
+    // What looks broken between the services comes first (P384): the two calls to routes that do not exist.
+    expect(answer.counts).toEqual({ 'call-to-missing-route': 2, unguarded: 4, 'one-ended-channel': 2 });
+    expect(Object.keys(answer.counts)[0]).toBe('call-to-missing-route');
+    expect(answer.top['call-to-missing-route'][0]).toMatchObject({
+      id: 'http_out:gateway#src/clients/orders.client.ts:44:12',
+      precision: 'high',
+      fix: 'the nearest route: POST /orders/:param/archive (one segment off: cancel for archive)',
+    });
+    expect(answer.heldBack).toEqual({ 'call-to-missing-route': { count: 1, why: 'the service it is sent to is not named' } });
     const [first] = answer.top.unguarded;
     expect(first).toMatchObject({ id: 'entry:orders:http:POST:/orders', rank: 1, reach: { writes: 1 } });
     expect(first.next).toBe('get_flow({entry: "entry:orders:http:POST:/orders"})');
@@ -1182,7 +1190,7 @@ describe('dead, findings, type_usage and scoped prompts', () => {
     ]);
     const none = await call('findings', { kind: 'n-plus-one' });
     expect(none).toMatchObject({ rows: [], total: 0 });
-    expect(none.note).toContain('the kinds found are unguarded, one-ended-channel');
+    expect(none.note).toContain('the kinds found are call-to-missing-route, unguarded, one-ended-channel');
   });
 
   it('lists the ways in and the crossing that carry a shared type, and the types that hold one', async () => {
