@@ -366,6 +366,17 @@ export const EXEMPT = [
       'reading it would draw a page production never shows. The fixture holds the ' +
       'layer there to keep that note honest, and the silence is the reading.',
   },
+  {
+    where: 'edit-breaks-other-repos',
+    path: 'edits/**',
+    family: 'routes',
+    why:
+      'The edits the edit hook and check_change are tested on (P387): copies of the ' +
+      "catalog's files with a route renamed and a field sent under another key, laid " +
+      'over a built copy of the fixture by scripts/edit-fixture.mjs. They are no ' +
+      "repository of the configuration and are never read as one; reading them here would " +
+      'draw the edited routes beside the real ones.',
+  },
   // A measured target's exemptions are not here. They name files of a
   // repository this project does not own, so they live with the target itself,
   // under `exempt` in the local target list (`targets.local.json`), and reach
