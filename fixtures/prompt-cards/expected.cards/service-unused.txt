@@ -1,0 +1,5 @@
+prompt: what in shop-api is unused?
+---
+flowatlas, from the graph of every repository (built just now): each answer below is what the call above it returns, complete unless it says otherwise. Call a tool only for what this does not say.
+dead({service: "shop-api"}):
+{"rows":[{"id":"entry:shop-api:http:GET:/api/reports/daily","verdict":"dead","reason":"no http_calls/hits from any repo (may be a public API)","loc":"src/reports/reports.controller.ts:6"}],"total":1,"counts":{"dead":1},"excludedEntryKinds":["cron","bot_command","bot_callback","bot_event","scene_step","invoke","task","screen"],"complete":true,"next":["dead({id: \"entry:shop-api:http:GET:/api/reports/daily\"})"]}

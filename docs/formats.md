@@ -18,6 +18,8 @@ shape does, and the schema's name carries the version.
 | `docs.json` | the doc blocks and mentions `flowatlas docs` read | `docsFormatVersion` | [`docs.v2`](../schema/docs.v2.schema.json) |
 | `freshness.json` | each service's checkout and every file a build read, for answers to say when the code moved | `freshnessFormatVersion` | [`freshness.v1`](../schema/freshness.v1.schema.json) |
 | `names.json` | the names the search hook can say something about | `namesFormatVersion` | — |
+| `card-names.json` | the names a prompt card can answer for, by kind, and when the graph was built (P386) | `cardNamesFormatVersion` | — |
+| `cards-seen.json` | which names each recent session's prompt cards answered, by id; never a prompt | — | — |
 | `questions.jsonl` | what was asked, one line per question, when the [question log](CLI.md#the-question-log) is on; never sent anywhere | — | — |
 | `observed.json` | what traffic was seen, from `flowatlas observe` | `observedFormatVersion` | — |
 | `cache.json`, `stand-ins.json` | what the next build compares against | — | — |

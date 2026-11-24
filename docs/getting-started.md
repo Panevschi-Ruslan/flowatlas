@@ -550,8 +550,9 @@ flowatlas mcp --install --dry-run
 ```
 
 After that, `claude mcp list` shows `flowatlas`. To tell each assistant which
-questions to ask the graph rather than search for, and to have a search that
-names another repository's route say what it could not see:
+questions to ask the graph rather than search for, to have a search that
+names another repository's route say what it could not see, and to have a
+prompt that names one get the graph's answer before the first turn:
 
 ```sh
 flowatlas agents install --hook

@@ -228,6 +228,39 @@ only one of them moved.
   snapshots' edge notes move from the old sentence to the new one
   (`angular-interceptor-host`, `framework-routes-in-place-writes`,
   `request-lands-on-route`).
+- **Prompt cards: the graph's answer before the first turn (P386).**
+  `flowatlas agents install --hook` adds, beside the search hook, a Claude Code
+  `UserPromptSubmit` hook. When a prompt names something the graph holds (a
+  route said aloud or as a path, whatever its parameters are called;
+  `Class.method`; a backticked identifier; a channel; an `UPPER_SNAKE` message
+  type; a service beside "dead", "unused" or "nothing calls"), it hands the
+  model the compact answer the tool for that thing gives, rendered by the graph
+  server's own tools: `who_calls` for a route or a deployed function, `impact`
+  for a method handling a route, `find_symbol` (where its requests land) for a
+  method sending one to another repository, `impact` for any other method only
+  where it reaches another repository, `who_emits` and `who_consumes` for a
+  channel or a message type, `dead({service})` for a service. Headed with the
+  graph's age and "call a tool only for what this does not say"; at most three
+  names and 2,000 characters, an answer too long asked again smaller and at
+  worst named by its call; each name once per session; silent unless a name is
+  spelled exactly as the graph holds it, a plain word only in backticks; a
+  service named in the prompt picks among names several services hold. A
+  prompt naming nothing costs one process start and one read of
+  `card-names.json`, which `build` now writes beside `names.json`; only a match
+  starts the graph server, read-only. The prompt is never written or logged,
+  and the cards' calls are kept out of the question log. `--no-prompt-cards`
+  leaves the hook out; the benchmark's graph arms get it with
+  `run.mjs --prompt-cards`. A new fixture, `prompt-cards`, four repositories
+  with a route under a global prefix, two services sharing a handler's name, a
+  client, a typed message on a channel and a plain-named channel, holds twelve
+  prompts' cards (`scripts/card-snapshots.mjs`, `expected.cards/`), and the
+  answer budget gains six questions asked as prompts, each answered with no
+  call: who calls a route said with another parameter spelling (1,050
+  characters), where a client method's request lands (803), which code handles
+  a message type (1,352), what breaks if a handler two services share changes,
+  the service named (978), what in a service is unused (640), and a prompt
+  naming nothing (no card).
+
 - **who_calls answers stay small and finish, also on several symbols
   (P379).** `depth` is how far the tree of callers is drawn, never a cut:
   every way in past it is listed under `waysIn` whatever it is, one symbol or

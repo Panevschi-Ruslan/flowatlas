@@ -1,0 +1,5 @@
+prompt: where does OrdersApiService.cancelOrder's request land?
+---
+flowatlas, from the graph of every repository (built just now): each answer below is what the call above it returns, complete unless it says otherwise. Call a tool only for what this does not say.
+find_symbol({query: "shop-web#src/app/orders-api.service.ts:OrdersApiService.cancelOrder"}):
+{"matches":[{"id":"shop-web#src/app/orders-api.service.ts:OrdersApiService.cancelOrder","line":20,"reach":"alive","from":"screen /orders","requests":[{"route":"entry:shop-api:http:POST:/api/orders/:param/cancel","by":"shop-api#src/orders/orders.controller.ts:OrdersController.cancel"}]}],"total":1,"complete":true,"next":["impact({symbol: \"shop-web#src/app/orders-api.service.ts:OrdersApiService.cancelOrder\"})","read src/app/orders-api.service.ts:20 in shop-web: the code is not served from a database alone"]}

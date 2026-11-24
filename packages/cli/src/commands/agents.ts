@@ -2,7 +2,9 @@ import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSyn
 import { dirname, join, relative, resolve } from 'node:path';
 import { checkoutTopOf, isWithinDir, loadConfig, toPosixPath, type LoadedConfig } from '@flowatlas/core';
 import { Command } from 'commander';
+import { CARD_NAMES_FILE } from '../agents/card-names.js';
 import { NAMES_FILE } from '../agents/names.js';
+import { runPromptHook } from '../agents/prompt-hook.js';
 import { runSearchHook } from '../agents/search-hook.js';
 import {
   hasGuideBlock,
@@ -29,7 +31,9 @@ import { ownBin } from '../own-path.js';
  * about the whole project from half of it. `install` writes the guide where
  * each assistant reads its instructions, and with `--hook` a Claude Code hook
  * that, after a search naming something the graph joins across repositories,
- * adds what the search could not see.
+ * adds what the search could not see, and one that, when a prompt names
+ * something the graph holds, adds the graph's answer before the first turn
+ * (P386).
  *
  * Files flowatlas owns - a skill, a Cursor rule - are written by default;
  * files a team owns - `AGENTS.md`, `CLAUDE.md`, Copilot's instructions - get a
@@ -44,8 +48,13 @@ export interface AgentsOptions {
   dryRun?: boolean;
   /** Also write the marked block into the files a team owns. */
   instructions?: boolean;
-  /** Also add the search hook. */
+  /** Also add the search hook, and the prompt hook unless `promptCards` is false. */
   hook?: boolean;
+  /**
+   * With `hook`: the prompt hook too (P386), on unless said; `--no-prompt-cards`
+   * leaves it out, and takes out one an earlier install wrote.
+   */
+  promptCards?: boolean;
   /** The hook in `.claude/settings.json`, committed, rather than `.claude/settings.local.json`. */
   shared?: boolean;
   /** Replace an owned file edited by hand, or one that is not flowatlas's. */
@@ -215,12 +224,27 @@ export const searchHookCommand = (repoDir: string, namesPath: string, shared: bo
   return `${JSON.stringify(process.execPath)} ${JSON.stringify(script)} --names ${JSON.stringify(namesPath)}`;
 };
 
+/** The prompt hook's command marker (P386). */
+const PROMPT_MARK = 'prompt-hook';
+
+/**
+ * How the prompt hook is started, as the search hook is: personal settings
+ * run this machine's built file, which reads one flat file for a prompt that
+ * names nothing; committed settings name the command, which starts the whole
+ * command line on every prompt.
+ */
+export const promptHookCommand = (repoDir: string, cardsPath: string, shared: boolean | undefined): string => {
+  if (shared === true) return `flowatlas agents ${PROMPT_MARK} --cards ${JSON.stringify(toPosixPath(relative(repoDir, cardsPath)))}`;
+  const script = join(dirname(ownBin(import.meta.url)), '..', 'dist', `${PROMPT_MARK}.js`);
+  return `${JSON.stringify(process.execPath)} ${JSON.stringify(script)} --cards ${JSON.stringify(cardsPath)}`;
+};
+
 interface HookEntry {
   matcher?: string;
   hooks?: Array<{ type?: string; command?: string; timeout?: number }>;
 }
 interface Settings {
-  hooks?: { PostToolUse?: HookEntry[] } & Record<string, unknown>;
+  hooks?: { PostToolUse?: HookEntry[]; UserPromptSubmit?: HookEntry[] } & Record<string, unknown>;
   [key: string]: unknown;
 }
 
@@ -235,7 +259,39 @@ const parseSettings = (path: string, text: string | undefined): Settings => {
   throw cannotRun(`${path} is not valid JSON; fix or remove it and run this again`);
 };
 
-const isOurs = (entry: HookEntry): boolean => (entry.hooks ?? []).some((hook) => typeof hook.command === 'string' && hook.command.includes(HOOK_MARK));
+const marked =
+  (mark: string) =>
+  (entry: HookEntry): boolean =>
+    (entry.hooks ?? []).some((hook) => typeof hook.command === 'string' && hook.command.includes(mark));
+const isOurs = marked(HOOK_MARK);
+const isOurPrompt = marked(PROMPT_MARK);
+
+/** Whether settings hold either hook `install` writes. */
+const holdsOurs = (settings: Settings): boolean => (settings.hooks?.PostToolUse ?? []).some(isOurs) || (settings.hooks?.UserPromptSubmit ?? []).some(isOurPrompt);
+
+/** The settings with `event`'s entries set to `entries`, the key dropped when none are left, and `hooks` when nothing is under it. */
+const withEntries = (settings: Settings, event: 'PostToolUse' | 'UserPromptSubmit', entries: HookEntry[]): Settings => {
+  const hooks: Record<string, unknown> = { ...(settings.hooks ?? {}) };
+  if (entries.length > 0) hooks[event] = entries;
+  else delete hooks[event];
+  const next: Settings = { ...settings };
+  if (Object.keys(hooks).length > 0) next.hooks = hooks;
+  else delete next.hooks;
+  return next;
+};
+
+/**
+ * The settings with the prompt hook in (P386), beside every other hook. No
+ * matcher: Claude Code runs every `UserPromptSubmit` hook on every prompt. A
+ * prompt waits for it, so the time it is given is short; the hook itself
+ * gives up sooner (`PROMPT_DEADLINE_MS`).
+ */
+export const withPromptHook = (settings: Settings, command: string): Settings =>
+  withEntries(settings, 'UserPromptSubmit', [...(settings.hooks?.UserPromptSubmit ?? []).filter((entry) => !isOurPrompt(entry)), { hooks: [{ type: 'command', command, timeout: 10 }] }]);
+
+/** The settings with the prompt hook taken out. */
+export const withoutPromptHook = (settings: Settings): Settings =>
+  withEntries(settings, 'UserPromptSubmit', (settings.hooks?.UserPromptSubmit ?? []).filter((entry) => !isOurPrompt(entry)));
 
 /** The settings with the hook in, merged beside every other hook (D1). */
 export const withSearchHook = (settings: Settings, command: string): Settings => {
@@ -246,16 +302,8 @@ export const withSearchHook = (settings: Settings, command: string): Settings =>
 };
 
 /** The settings with the hook taken out; the key dropped when nothing else is under it. */
-export const withoutSearchHook = (settings: Settings): Settings => {
-  const post = (settings.hooks?.PostToolUse ?? []).filter((entry) => !isOurs(entry));
-  const hooks: Record<string, unknown> = { ...(settings.hooks ?? {}) };
-  if (post.length > 0) hooks['PostToolUse'] = post;
-  else delete hooks['PostToolUse'];
-  const next: Settings = { ...settings };
-  if (Object.keys(hooks).length > 0) next.hooks = hooks;
-  else delete next.hooks;
-  return next;
-};
+export const withoutSearchHook = (settings: Settings): Settings =>
+  withEntries(settings, 'PostToolUse', (settings.hooks?.PostToolUse ?? []).filter((entry) => !isOurs(entry)));
 
 const json = (value: unknown): string => `${JSON.stringify(value, null, 2)}\n`;
 
@@ -303,11 +351,16 @@ export const installAgents = (options: AgentsOptions = {}): AgentsRun => {
       const path = settingsPath(repo.dir, options.shared);
       const existing = read(path);
       const settings = parseSettings(path, existing);
-      const next = json(withSearchHook(settings, searchHookCommand(repo.dir, join(loaded.outputDir, NAMES_FILE), options.shared)));
+      const searching = withSearchHook(settings, searchHookCommand(repo.dir, join(loaded.outputDir, NAMES_FILE), options.shared));
+      const next = json(
+        options.promptCards === false
+          ? withoutPromptHook(searching)
+          : withPromptHook(searching, promptHookCommand(repo.dir, join(loaded.outputDir, CARD_NAMES_FILE), options.shared)),
+      );
       if (next === existing) say(repo, path, 'unchanged');
       else {
         write(path, next, options.dryRun);
-        say(repo, path, existing === undefined || !(settings.hooks?.PostToolUse ?? []).some(isOurs) ? 'installed' : 'updated');
+        say(repo, path, existing === undefined || !holdsOurs(settings) ? 'installed' : 'updated');
       }
     }
   }
@@ -346,7 +399,7 @@ export const agentsStatus = (options: AgentsOptions = {}): AgentsRun => {
       const path = settingsPath(repo.dir, shared);
       const existing = read(path);
       if (existing === undefined) continue;
-      if (parseSettings(path, existing).hooks?.PostToolUse?.some(isOurs) === true) run.changes.push({ services: repo.services, file: path, state: 'installed' });
+      if (holdsOurs(parseSettings(path, existing))) run.changes.push({ services: repo.services, file: path, state: 'installed' });
     }
   }
   return run;
@@ -384,8 +437,8 @@ export const removeAgents = (options: AgentsOptions = {}): AgentsRun => {
       const existing = read(path);
       if (existing === undefined) continue;
       const settings = parseSettings(path, existing);
-      if (settings.hooks?.PostToolUse?.some(isOurs) !== true) continue;
-      const left = withoutSearchHook(settings);
+      if (!holdsOurs(settings)) continue;
+      const left = withoutPromptHook(withoutSearchHook(settings));
       if (options.dryRun !== true) {
         if (Object.keys(left).length === 0) rmSync(path, { force: true });
         else writeFileSync(path, json(left), 'utf8');
@@ -410,7 +463,8 @@ export const registerAgents = (program: Command): void => {
       .option('--dry-run', 'say what would change and write nothing');
   common(agents.command('install').description('write the guide for each assistant into every repository'))
     .option('--instructions', 'also add the guide, as a marked block, to AGENTS.md, CLAUDE.md and Copilot instructions')
-    .option('--hook', 'also add the Claude Code hook that says what a search could not see')
+    .option('--hook', 'also add the Claude Code hooks: what a search could not see, and the graph’s answer for what a prompt names')
+    .option('--no-prompt-cards', 'with --hook, leave out the prompt hook (and take out one written before)')
     .option('--shared', 'put the hook in .claude/settings.json, committed, not settings.local.json')
     .option('--force', 'replace a guide edited by hand, or a file of that name that is not flowatlas’s')
     .action((options: AgentsOptions) => say(installAgents(options), options.dryRun === true));
@@ -428,6 +482,19 @@ export const registerAgents = (program: Command): void => {
       .option('--names <path>', 'the name index')
       .action(async (options: { names?: string }) => {
         await runSearchHook(options.names === undefined ? [] : ['--names', options.names]);
+      }),
+    { hidden: true },
+  );
+  // What a prompt hook in committed settings runs (P386); personal settings run the built file directly.
+  agents.addCommand(
+    new Command(PROMPT_MARK)
+      .description('the prompt hook: reads a Claude Code prompt on stdin')
+      .allowUnknownOption()
+      .option('--cards <path>', 'the card name index')
+      .action(async (options: { cards?: string }) => {
+        await runPromptHook(options.cards === undefined ? [] : ['--cards', options.cards]);
+        // The graph server it started may hold a handle a little longer; the answer is written.
+        process.exit(0);
       }),
     { hidden: true },
   );

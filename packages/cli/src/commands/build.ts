@@ -91,6 +91,7 @@ import { spliceRepoGraph } from '../build/splice.js';
 import { EXIT } from '../exit.js';
 import { writeFreshness } from '../build/freshness.js';
 import { namesOf, writeNames } from '../agents/names.js';
+import { cardNamesOf, writeCardNames } from '../agents/card-names.js';
 import { PULLED_DIR, pulledServiceGraphPath } from '../team/bundle.js';
 import { acquireBuildLock, BuildBusyError, claimAgain, leaveQueue, queueAgain, rotateBuildLog, type LockHolder } from '../build/lock.js';
 import { waysInByService, waysInTotal } from '../doctor/ways-in.js';
@@ -1307,7 +1308,10 @@ const buildHoldingLock = async (options: BuildOptions): Promise<BuildResult> => 
 
   // The names a search hook can say something about (P227), from the graph just written.
   if (!keeping) {
-    writeNames(outputDir, namesOf(result.project, Object.fromEntries(loaded.config.services.map((service) => [service.name, loaded.repoDir(service)]))));
+    const serviceDirs = Object.fromEntries(loaded.config.services.map((service) => [service.name, loaded.repoDir(service)]));
+    writeNames(outputDir, namesOf(result.project, serviceDirs));
+    // And the names a prompt card can answer for (P386).
+    writeCardNames(outputDir, cardNamesOf(result.project, serviceDirs));
   }
   pruneServiceDirs(outputDir, loaded.config.services);
   const leftovers = leftoverRepoOutputs(

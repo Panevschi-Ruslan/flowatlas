@@ -1,0 +1,172 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-24T19:07:45.463Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:28:5",
+        "to": "consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:28:5|emits|consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#OrderCancelled",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.cancel"
+      },
+      "receiver": {
+        "service": "mailer",
+        "typeId": "type:mailer#OrderCancelled",
+        "symbol": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders-api.service.ts:17:12",
+        "to": "entry:shop-api:http:GET:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders-api.service.ts:17:12|hits|entry:shop-api:http:GET:/api/orders/:param",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#OrderView",
+        "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne"
+      },
+      "receiver": {
+        "service": "shop-web",
+        "typeId": "type:shop-web#OrderView",
+        "symbol": "shop-web#src/app/orders-api.service.ts:OrdersApiService.getOrder"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders-api.service.ts:21:12",
+        "to": "entry:shop-api:http:POST:/api/orders/:param/cancel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders-api.service.ts:21:12|hits|entry:shop-api:http:POST:/api/orders/:param/cancel",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "shop-web",
+        "typeId": "{reason:string}",
+        "symbol": "shop-web#src/app/orders-api.service.ts:OrdersApiService.cancelOrder",
+        "writes": [
+          "reason"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "shop-api",
+        "typeId": "{reason:string}",
+        "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders-api.service.ts:21:12",
+        "to": "entry:shop-api:http:POST:/api/orders/:param/cancel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders-api.service.ts:21:12|hits|entry:shop-api:http:POST:/api/orders/:param/cancel",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#OrderView",
+        "symbol": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+      },
+      "receiver": {
+        "service": "shop-web",
+        "typeId": "type:shop-web#OrderView",
+        "symbol": "shop-web#src/app/orders-api.service.ts:OrdersApiService.cancelOrder"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders-api.service.ts:25:12",
+        "to": "entry:stock-api:http:GET:/orders/:param/reserved",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders-api.service.ts:25:12|hits|entry:stock-api:http:GET:/orders/:param/reserved",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "stock-api",
+        "typeId": "number",
+        "symbol": "stock-api#src/orders/orders.controller.ts:OrdersController.findOne"
+      },
+      "receiver": {
+        "service": "shop-web",
+        "typeId": "number",
+        "symbol": "shop-web#src/app/orders-api.service.ts:OrdersApiService.reservedStock"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:29:5",
+        "to": "consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:29:5|emits|consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders-api.service.ts:17:12",
+        "to": "entry:shop-api:http:GET:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders-api.service.ts:17:12|hits|entry:shop-api:http:GET:/api/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-web#src/app/orders-api.service.ts:OrdersApiService.getOrder declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/orders-api.service.ts:25:12",
+        "to": "entry:stock-api:http:GET:/orders/:param/reserved",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/orders-api.service.ts:25:12|hits|entry:stock-api:http:GET:/orders/:param/reserved",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-web#src/app/orders-api.service.ts:OrdersApiService.reservedStock declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 5,
+    "shared": 0,
+    "identical": 5,
+    "hash_differs": 0,
+    "unchecked": 3,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

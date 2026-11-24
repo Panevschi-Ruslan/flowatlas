@@ -2276,6 +2276,95 @@
         }
       },
       "note": "P385: three routes a parameter route registered first answers; none was a finding."
+    },
+    {
+      "id": "card.route-aloud",
+      "ask": "who calls GET /api/orders/{orderId}, and what breaks if I change it",
+      "fixture": "prompt-cards",
+      "prompt": "Who calls GET /api/orders/{orderId}, and what breaks if I change it?",
+      "expect": {
+        "cards": [
+          "who_calls({symbol: \"entry:shop-api:http:GET:/api/orders/:param\"})"
+        ],
+        "mentions": [
+          "shop-web#src/app/orders-api.service.ts:OrdersApiService.getOrder",
+          "entry:shop-web:screen:/orders"
+        ]
+      },
+      "note": "P386: answered before the first turn by the prompt hook; asked as a tool it takes the call turn and the answer turn. The route is said with another parameter spelling than the code's."
+    },
+    {
+      "id": "card.client-method",
+      "ask": "where does OrdersApiService.cancelOrder's request land",
+      "fixture": "prompt-cards",
+      "prompt": "where does OrdersApiService.cancelOrder's request land?",
+      "expect": {
+        "cards": [
+          "find_symbol({query: \"shop-web#src/app/orders-api.service.ts:OrdersApiService.cancelOrder\"})"
+        ],
+        "mentions": [
+          "entry:shop-api:http:POST:/api/orders/:param/cancel",
+          "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+        ]
+      },
+      "note": "P386: answered before the first turn by the prompt hook; asked as a tool it takes the call turn and the answer turn."
+    },
+    {
+      "id": "card.message-type",
+      "ask": "which code handles ORDER_CANCELLED",
+      "fixture": "prompt-cards",
+      "prompt": "which code handles ORDER_CANCELLED?",
+      "expect": {
+        "cards": [
+          "who_emits({channel: \"channel:shop:*:orders#ORDER_CANCELLED\"})",
+          "who_consumes({channel: \"channel:shop:*:orders#ORDER_CANCELLED\"})"
+        ],
+        "mentions": [
+          "consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+          "producer:shop-api#src/orders/orders.service.ts:28:5"
+        ]
+      },
+      "note": "P386: answered before the first turn by the prompt hook; asked as a tool it takes the call turn and the answer turn."
+    },
+    {
+      "id": "card.handler-in-service",
+      "ask": "what breaks if I change OrdersController.findOne in stock-api",
+      "fixture": "prompt-cards",
+      "prompt": "what breaks if I change OrdersController.findOne in stock-api",
+      "expect": {
+        "cards": [
+          "impact({symbol: \"stock-api#src/orders/orders.controller.ts:OrdersController.findOne\"})"
+        ],
+        "mentions": [
+          "entry:shop-web:screen:/orders"
+        ]
+      },
+      "note": "P386: answered before the first turn by the prompt hook; asked as a tool it takes the call turn and the answer turn. Two services hold the name; the one the prompt names is answered."
+    },
+    {
+      "id": "card.service-unused",
+      "ask": "what in shop-api is unused",
+      "fixture": "prompt-cards",
+      "prompt": "what in shop-api is unused?",
+      "expect": {
+        "cards": [
+          "dead({service: \"shop-api\"})"
+        ],
+        "mentions": [
+          "entry:shop-api:http:GET:/api/reports/daily"
+        ]
+      },
+      "note": "P386: answered before the first turn by the prompt hook; asked as a tool it takes the call turn and the answer turn."
+    },
+    {
+      "id": "card.names-nothing",
+      "ask": "write a haiku about orders",
+      "fixture": "prompt-cards",
+      "prompt": "write a haiku about orders",
+      "expect": {
+        "silent": true
+      },
+      "note": "P386: a prompt naming nothing the graph holds gets no card and costs nothing."
     }
   ],
   "fixed": {
@@ -2601,6 +2690,48 @@
       "rows": 1,
       "complete": true,
       "calls": 1
+    },
+    "card.route-aloud": {
+      "chars": 1050,
+      "tokens": 263,
+      "rows": 1,
+      "complete": null,
+      "calls": 0
+    },
+    "card.client-method": {
+      "chars": 803,
+      "tokens": 201,
+      "rows": 1,
+      "complete": null,
+      "calls": 0
+    },
+    "card.message-type": {
+      "chars": 1352,
+      "tokens": 338,
+      "rows": 1,
+      "complete": null,
+      "calls": 0
+    },
+    "card.handler-in-service": {
+      "chars": 978,
+      "tokens": 245,
+      "rows": 1,
+      "complete": null,
+      "calls": 0
+    },
+    "card.service-unused": {
+      "chars": 640,
+      "tokens": 160,
+      "rows": 1,
+      "complete": null,
+      "calls": 0
+    },
+    "card.names-nothing": {
+      "chars": 0,
+      "tokens": 0,
+      "rows": 0,
+      "complete": null,
+      "calls": 0
     },
     "who_calls.shadowed-handler": {
       "chars": 567,

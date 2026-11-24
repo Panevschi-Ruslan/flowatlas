@@ -45,7 +45,9 @@ It drives Claude Code in print mode on the account you are signed in with,
 so it spends that account's usage. A run stopped by a usage limit goes on
 with `--resume <the run>`. `node scripts/bench-agent/run.mjs --dry` checks the
 generator, the key and the scorers with no assistant at all, and is part of
-`pnpm check`.
+`pnpm check`. The graph arms run without prompt cards unless the run is started
+with `--prompt-cards` (P386), which installs the prompt hook too and says so in
+`run.json`; a full run then needs a pilot started the same way.
 
 ## Results by kind
 

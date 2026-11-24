@@ -6,6 +6,7 @@
  *   node scripts/bench-agent/run.mjs --full --yes       # every question x 4 arms x 3 runs, after a pilot
  *   node scripts/bench-agent/run.mjs --resume <dir>     # go on where a usage limit stopped a run (with the same --work, if one was given)
  *   node scripts/bench-agent/run.mjs --dry              # no assistant: generator, key, scorers
+ *   ... --pilot --prompt-cards                          # the graph arms with prompt cards too (P386)
  *
  * This is not part of `pnpm check` (its `--dry` is). It asks an assistant
  * questions, which spends the usage of whoever is signed in, so it is started
@@ -27,7 +28,11 @@
  * everything too. C's server is handed the database alone, so it can say
  * where things are in every repository and can quote code only from the one
  * that is there, as a pulled team graph would. D's has the configuration.
- * The guide is what `flowatlas agents install --instructions --hook` writes.
+ * The guide is what `flowatlas agents install --instructions --hook` writes,
+ * with `--no-prompt-cards` unless the run is started with `--prompt-cards`
+ * (P386): the prompt hook then hands the graph arms the graph's answer for
+ * what a question names before the first turn, and `run.json` says so, so a
+ * run with cards is compared with one without.
  * Every arm gets the same prompt, the same model and the same tools for
  * reading, in a fresh copy of its workspace.
  *
@@ -77,6 +82,7 @@ const parseArgs = (argv) => {
     else if (flag === '--full') options.kind = 'full';
     else if (flag === '--dry') options.dry = true;
     else if (flag === '--yes') options.yes = true;
+    else if (flag === '--prompt-cards') options.promptCards = true;
     else if (flag === '--resume') options.resume = value();
     else if (flag === '--seed') options.seed = Number(value());
     else if (flag === '--resources') options.resources = Number(value());
@@ -157,8 +163,10 @@ const prepare = (work, options) => {
     rmSync(graph, { recursive: true, force: true });
     cpSync(plain, graph, { recursive: true });
     flowatlas(['build', '--config', join(graph, 'flowatlas.config.json')], graph);
-    flowatlas(['agents', 'install', '--config', join(graph, 'flowatlas.config.json'), '--instructions', '--hook'], graph);
   }
+  // Every time, so a graph prepared for a run with prompt cards does not keep them for one without (P386).
+  const cards = options.promptCards === true ? [] : ['--no-prompt-cards'];
+  flowatlas(['agents', 'install', '--config', join(graph, 'flowatlas.config.json'), '--instructions', '--hook', ...cards], graph);
   const key = JSON.parse(readFileSync(join(plain, 'key.json'), 'utf8'));
   return { plain, graph, key };
 };
@@ -268,7 +276,7 @@ const sayEstimate = (estimate) => {
 
 /** The full run's gate: a pilot of the same build and model, its estimate shown, and `--yes`. */
 const pilotFor = (results, run) => {
-  const pilots = readRuns(results).filter(({ run: other }) => other.kind === 'pilot' && other.flowatlas.commit === run.flowatlas.commit && other.modelRequested === run.modelRequested && other.seed === run.seed && other.done === true);
+  const pilots = readRuns(results).filter(({ run: other }) => other.kind === 'pilot' && other.flowatlas.commit === run.flowatlas.commit && other.modelRequested === run.modelRequested && other.seed === run.seed && (other.promptCards === true) === (run.promptCards === true) && other.done === true);
   return pilots[pilots.length - 1];
 };
 
@@ -378,7 +386,11 @@ export const main = async (argv = process.argv.slice(2), io = {}) => {
       arms: options.arms,
       pauseSeconds: options.pauseSeconds,
       timeoutSeconds: options.timeoutSeconds,
-      guide: 'skill + instructions + search hook (flowatlas agents install --instructions --hook)',
+      promptCards: options.promptCards === true,
+      guide:
+        options.promptCards === true
+          ? 'skill + instructions + search hook + prompt cards (flowatlas agents install --instructions --hook)'
+          : 'skill + instructions + search hook (flowatlas agents install --instructions --hook --no-prompt-cards)',
     };
     if (run.assistant.version === undefined) throw new UsageError('the `claude` command was not found; the benchmark drives Claude Code in print mode');
     if (options.kind === 'full') {

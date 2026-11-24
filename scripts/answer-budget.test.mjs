@@ -122,6 +122,12 @@ test('every question names its fixture, tool, lists and a right answer, and ids 
   const ids = budget.questions.map((question) => question.id);
   assert.equal(new Set(ids).size, ids.length);
   for (const question of budget.questions) {
+    // Asked as a prompt (P386): the card the prompt hook makes, its calls and ids its right answer.
+    if (question.prompt !== undefined) {
+      assert.ok(question.fixture && question.ask && question.tool === undefined, question.id);
+      assert.ok(question.expect?.silent === true || (Array.isArray(question.expect?.cards) && question.expect.cards.length > 0), `${question.id} has no right answer`);
+      continue;
+    }
     assert.ok(question.fixture && question.tool && question.ask, question.id);
     assert.ok(Array.isArray(question.lists) && question.lists.length > 0, question.id);
     assert.ok(question.expect && Object.keys(question.expect).length > 0, `${question.id} has no right answer`);

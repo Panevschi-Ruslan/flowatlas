@@ -201,7 +201,21 @@ export type { ReportOptions, ReportRun } from './commands/report.js';
 export { overviewOf, overviewFingerprint, OVERVIEW_SECTIONS, DEFAULT_OVERVIEW_TOP } from './overview/overview.js';
 export type { Overview, OverviewSection } from './overview/overview.js';
 export { renderOverview } from './overview/render.js';
-export { agentsStatus, installAgents, removeAgents, searchHookCommand, withSearchHook, withoutSearchHook } from './commands/agents.js';
+export {
+  agentsStatus,
+  installAgents,
+  promptHookCommand,
+  removeAgents,
+  searchHookCommand,
+  withPromptHook,
+  withoutPromptHook,
+  withSearchHook,
+  withoutSearchHook,
+} from './commands/agents.js';
+export { CARD_NAMES_FILE, cardNamesOf, readCardNamesAt } from './agents/card-names.js';
+export type { CardIndex, CardKind, CardName } from './agents/card-names.js';
+export { MAX_CARD_CHARS, MAX_NAMES, planCards, promptCard } from './agents/prompt-hook.js';
+export type { PromptCard } from './agents/prompt-hook.js';
 export type { AgentFileChange, AgentFileState, AgentsOptions, AgentsRun } from './commands/agents.js';
 // What the answer budget measures as the guide's share of every turn (P373).
 export { CORE_TOOLS, guideBody, guideDescription, sharedBlock } from './agents/template.js';

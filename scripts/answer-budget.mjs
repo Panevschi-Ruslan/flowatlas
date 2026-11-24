@@ -47,7 +47,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createFlowatlasServer, INSTRUCTIONS_MAX } from '@flowatlas/mcp';
 import { loadConfig } from '@flowatlas/core';
 import { ALWAYS_LOAD_KEY, CORE_TOOLS, UPFRONT_LISTING_MAX } from '@flowatlas/mcp';
-import { guideDescription, missingCandidatesFor, reasonCatalog, sharedBlock } from '../packages/cli/dist/index.js';
+import { guideDescription, missingCandidatesFor, promptCard, readCardNamesAt, reasonCatalog, sharedBlock } from '../packages/cli/dist/index.js';
 import { asksFurther, ceilingOf, followOn, overBudget, rowsByList, tokensOf, wrongIn } from './answer-budget-rules.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -151,6 +151,27 @@ const ask = async (client, question) => {
   return { first: answers[0], lists, measured: { chars, tokens: tokensOf(chars), rows, complete, calls: answers.length } };
 };
 
+/**
+ * A question asked as a prompt (P386): the prompt card the prompt hook hands
+ * the model before its first turn, read at the graph's build time. No tool is
+ * called, so `calls` is 0; `rows` counts the names it answers for. Right is
+ * written by hand: `cards`, exactly the calls whose answers the card holds,
+ * and `mentions`, ids it must hold; `silent` a prompt that gets no card.
+ */
+const askCard = async (question) => {
+  const cardsPath = join(root, 'fixtures', question.fixture, '.flowatlas', 'card-names.json');
+  const index = readCardNamesAt(cardsPath);
+  if (index === undefined) return { wrong: [`no card name index at ${cardsPath}: build the fixture`], measured: { chars: 0, tokens: 0, rows: 0, complete: null, calls: 0 } };
+  const card = await promptCard(question.prompt, cardsPath, { index, now: Date.parse(index.builtAt) });
+  const chars = card.text?.length ?? 0;
+  const expect = question.expect ?? {};
+  const wrong = [];
+  if (expect.silent === true && card.text !== undefined) wrong.push('a card where the prompt names nothing the graph holds');
+  if (expect.cards !== undefined && JSON.stringify(card.calls) !== JSON.stringify(expect.cards)) wrong.push(`the card answers ${JSON.stringify(card.calls)}, not ${JSON.stringify(expect.cards)}`);
+  for (const id of expect.mentions ?? []) if (!(card.text ?? '').includes(id)) wrong.push(`the card does not name ${id}`);
+  return { wrong, measured: { chars, tokens: tokensOf(chars), rows: card.keys.length, complete: null, calls: 0 } };
+};
+
 const problems = [];
 const notes = [];
 const mismatched = [];
@@ -176,18 +197,24 @@ for (const [fixtureName, questions] of byFixture) {
   const client = await connect(join(root, 'fixtures', fixtureName));
   try {
     for (const question of questions) {
-      const result = await ask(client, question);
-      after[question.id] = result.measured;
-      for (const wrong of wrongIn(question.expect ?? {}, result)) problems.push(`${question.id}: ${wrong}`);
-      const further = asksFurther(question.tool, question.args, result.first);
-      if (further !== undefined) problems.push(`${question.id}: ${further}`);
+      if (question.prompt !== undefined) {
+        const carded = await askCard(question);
+        after[question.id] = carded.measured;
+        for (const wrong of carded.wrong) problems.push(`${question.id}: ${wrong}`);
+      } else {
+        const result = await ask(client, question);
+        after[question.id] = result.measured;
+        for (const wrong of wrongIn(question.expect ?? {}, result)) problems.push(`${question.id}: ${wrong}`);
+        const further = asksFurther(question.tool, question.args, result.first);
+        if (further !== undefined) problems.push(`${question.id}: ${further}`);
+      }
       if (update) continue;
       const was = before[question.id];
       if (was === undefined) {
         problems.push(`${question.id}: no budget; run node scripts/answer-budget.mjs --update`);
         continue;
       }
-      const said = overBudget(question.id, result.measured, was, tolerance);
+      const said = overBudget(question.id, after[question.id], was, tolerance);
       problems.push(...said.problems);
       notes.push(...said.notes);
     }

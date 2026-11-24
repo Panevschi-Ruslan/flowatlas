@@ -2013,15 +2013,18 @@ server's `start_here` says the same under `moved`.
 
 Tells each assistant in the project's repositories when to ask the graph rather
 than search the files, and with `--hook` adds a Claude Code hook that says, after
-a search, what lies in the repositories it could not see (P227). The files, the
+a search, what lies in the repositories it could not see (P227), and one that
+hands the model the graph's answer for what a prompt names before its first
+turn (P386). The files, the
 hook and what each says are in the
 [graph server guide](mcp.md#tell-the-assistant-when-to-ask).
 
 | Flag | Does |
 |---|---|
 | `--instructions` | also a marked block in `AGENTS.md` (made where there is none), `CLAUDE.md` and `.github/copilot-instructions.md` (where they are) |
-| `--hook` | also the search hook, in `.claude/settings.local.json` |
-| `--shared` | the hook in `.claude/settings.json`, committed, instead |
+| `--hook` | also the search hook and the prompt hook (prompt cards, P386), in `.claude/settings.local.json` |
+| `--no-prompt-cards` | with `--hook`, leave the prompt hook out, and take out one written before |
+| `--shared` | the hooks in `.claude/settings.json`, committed, instead |
 | `--force` | replace a guide edited by hand, or a file of that name that is not flowatlas's |
 | `--repo <name>` | only this service's repository |
 | `--dry-run` | say what would change and write nothing |

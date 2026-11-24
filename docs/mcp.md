@@ -92,7 +92,8 @@ the project: the other callers are in checkouts it cannot see.
 ```sh
 flowatlas agents install                   # the guide, in the files each assistant reads
 flowatlas agents install --instructions    # and a marked block in AGENTS.md, CLAUDE.md, Copilot's file
-flowatlas agents install --hook            # and the Claude Code search hook
+flowatlas agents install --hook            # and the Claude Code search hook and prompt hook
+flowatlas agents install --hook --no-prompt-cards   # the search hook only
 flowatlas agents status
 flowatlas agents remove                    # takes out what install wrote, and nothing else
 ```
@@ -185,6 +186,44 @@ writes, and not the database, so a search pays about one process start. It goes
 into `.claude/settings.local.json`, which is yours, naming this machine's
 files; `--shared` puts it in `.claude/settings.json` for the team, as
 `flowatlas agents search-hook` with a path relative to the repository.
+
+**The prompt hook: prompt cards (P386).** With `--hook`, Claude Code also runs a
+`UserPromptSubmit` hook when a prompt is submitted. When the prompt names
+something the graph holds, it adds, before the model's first turn, the compact
+answer the tool for that thing gives, rendered by the graph server's own
+tools, so a question the graph answers needs no call to ask it:
+
+```
+flowatlas, from the graph of every repository (built 3 minutes ago): each answer below is what the call above it returns, complete unless it says otherwise. Call a tool only for what this does not say.
+who_consumes({channel: "channel:shop:*:orders#ORDER_CANCELLED"}):
+{"channel":{"id":"channel:shop:*:orders", ...},"consumers":[...],"complete":true,...}
+```
+
+| The prompt names | Spelled | The card holds |
+|---|---|---|
+| a route | `GET /api/orders/{orderId}`, or a path alone (every verb of it); any parameter spelling | `who_calls`: its callers in other repositories and the ways in, with the code handling each |
+| a method handling a route | `OrdersController.findOne` | `impact`: the ways in reaching it |
+| a method sending a request to another repository | `OrdersApi.cancel` | `find_symbol`: where its requests land |
+| any other method | `Mails.cancelled` | `impact`, only where its answer reaches another repository |
+| a channel or a message type | `shop:*:orders`, `ORDER_CANCELLED` | `who_emits` and `who_consumes` |
+| a deployed function | its deployed name | `who_calls`: what starts it |
+| a service, beside "dead", "unused", "nothing calls", "still used" | `shop-api`, or its repository's folder | `dead({service})`, when nothing in it is named |
+
+A name counts only spelled exactly as the graph holds it; a plain word
+(`audit`, `PAID`, `fetchOrders`) only in backticks. A service the prompt names
+picks among names several services hold. At most three names and 2,000
+characters: an answer that does not fit is asked again with `detail: 0`, then
+with fewer rows (the tool cutting it and saying so), and at worst named by its
+call; names past three are named by their calls. Each name is answered once per
+session (`<output>/cards-seen.json` keeps the ids, never the prompt). A prompt
+naming nothing gets no word and pays one process start and one file read,
+`<output>/card-names.json`, which `build` writes; only a prompt naming
+something starts the graph server, read-only, about half a second on a small
+project, and the hook gives up and says nothing past 5 seconds. Its calls are
+not written to the question log. The prompt is read in the hook and nowhere
+else. `--no-prompt-cards` leaves the prompt hook out (and takes out one written
+before); `--shared` writes it as `flowatlas agents prompt-hook`, which starts
+the whole command line on every prompt, so personal settings are the fast way.
 
 ---
 

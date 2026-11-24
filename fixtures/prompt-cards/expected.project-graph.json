@@ -1,0 +1,1690 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T19:07:42.589Z",
+  "services": [
+    {
+      "name": "shop-api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock-api",
+      "repo": "./stock",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "mailer",
+      "repo": "./mailer",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop-web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:audit",
+      "type": "channel",
+      "label": "audit",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 29,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "shop-bus"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:shop:*:orders",
+      "type": "channel",
+      "label": "shop:*:orders",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 28,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "shop-bus"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:shop:*:orders#ORDER_CANCELLED",
+      "type": "channel",
+      "label": "shop:*:orders#ORDER_CANCELLED",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 28,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:shop:*:orders",
+        "messageType": "ORDER_CANCELLED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+      "type": "consumer",
+      "label": "OrderMailDispatcher.dispatch",
+      "repo": "mailer",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 27,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:mailer:event:shop:*:orders",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "ORDER_CANCELLED",
+            "consumer": "consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+            "via": "switch",
+            "line": 33
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.onModuleInit",
+      "type": "consumer",
+      "label": "OrderMailDispatcher.onModuleInit",
+      "repo": "mailer",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:mailer:event:audit",
+        "subscriptions": [
+          {
+            "line": 28,
+            "column": 33,
+            "through": "this.bus.subscribe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:mailer:event:audit",
+      "type": "entry",
+      "label": "event audit",
+      "repo": "mailer",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "pattern": "audit",
+        "adapter": "shop-bus"
+      }
+    },
+    {
+      "id": "entry:mailer:event:shop:*:orders",
+      "type": "entry",
+      "label": "event shop:*:orders",
+      "repo": "mailer",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 27,
+      "kind": "event",
+      "meta": {
+        "pattern": "shop:*:orders",
+        "adapter": "shop-bus"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:GET:/api/orders/:param",
+      "type": "entry",
+      "label": "GET /api/orders/:param",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders/:param",
+        "rawPath": "/api/orders/:orderId",
+        "globalPrefix": "api",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:GET:/api/reports/daily",
+      "type": "entry",
+      "label": "GET /api/reports/daily",
+      "repo": "shop-api",
+      "file": "src/reports/reports.controller.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/reports/daily",
+        "rawPath": "/api/reports/daily",
+        "globalPrefix": "api",
+        "controller": "ReportsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:POST:/api/orders/:param/cancel",
+      "type": "entry",
+      "label": "POST /api/orders/:param/cancel",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/orders/:param/cancel",
+        "rawPath": "/api/orders/:orderId/cancel",
+        "globalPrefix": "api",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-web:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "shop-web",
+      "file": "src/app/app.routes.ts",
+      "line": 5,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "angular-routes",
+        "screens": [
+          "OrdersPageComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:stock-api:http:GET:/orders/:param/reserved",
+      "type": "entry",
+      "label": "GET /orders/:param/reserved",
+      "repo": "stock-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param/reserved",
+        "rawPath": "/orders/:orderId/reserved",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "mailer#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "mailer",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "ShopBus",
+          "Mails",
+          "OrderMailDispatcher"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "mailer#src/bus/shop-bus.service.ts:ShopBus",
+      "type": "provider",
+      "label": "ShopBus",
+      "repo": "mailer",
+      "file": "src/bus/shop-bus.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "mailer#src/bus/shop-bus.service.ts:ShopBus.publish",
+      "type": "method",
+      "label": "ShopBus.publish",
+      "repo": "mailer",
+      "file": "src/bus/shop-bus.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "mailer#src/bus/shop-bus.service.ts:ShopBus.subscribe",
+      "type": "method",
+      "label": "ShopBus.subscribe",
+      "repo": "mailer",
+      "file": "src/bus/shop-bus.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "pattern",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "mailer#src/mail/mails.service.ts:Mails",
+      "type": "provider",
+      "label": "Mails",
+      "repo": "mailer",
+      "file": "src/mail/mails.service.ts",
+      "line": 3,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "mailer#src/mail/mails.service.ts:Mails.audit",
+      "type": "method",
+      "label": "Mails.audit",
+      "repo": "mailer",
+      "file": "src/mail/mails.service.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "line",
+              "type": "{orderId:string;action:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "mailer#src/mail/mails.service.ts:Mails.cancelled",
+      "type": "method",
+      "label": "Mails.cancelled",
+      "repo": "mailer",
+      "file": "src/mail/mails.service.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "mailer#src/mail/mails.service.ts:Mails.subjectOf",
+      "type": "method",
+      "label": "Mails.subjectOf",
+      "repo": "mailer",
+      "file": "src/mail/mails.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher",
+      "type": "provider",
+      "label": "OrderMailDispatcher",
+      "repo": "mailer",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 19,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+      "type": "method",
+      "label": "OrderMailDispatcher.dispatch",
+      "repo": "mailer",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:mailer#OrderCancelled"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 32
+          },
+          {
+            "field": "orderId",
+            "line": 34,
+            "when": [
+              "ORDER_CANCELLED"
+            ]
+          },
+          {
+            "field": "reason",
+            "line": 34,
+            "when": [
+              "ORDER_CANCELLED"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.onModuleInit",
+      "type": "method",
+      "label": "OrderMailDispatcher.onModuleInit",
+      "repo": "mailer",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "producer:shop-api#src/orders/orders.service.ts:28:5",
+      "type": "producer",
+      "label": "event shop:*:orders",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_CANCELLED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:shop-api#src/orders/orders.service.ts:29:5",
+      "type": "producer",
+      "label": "event audit",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 29,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "channelVia": "literal",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "repo:mailer",
+      "type": "repo",
+      "label": "mailer",
+      "repo": "mailer",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop-api",
+      "type": "repo",
+      "label": "shop-api",
+      "repo": "shop-api",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "globalPrefix": "api",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 9
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop-web",
+      "type": "repo",
+      "label": "shop-web",
+      "repo": "shop-web",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "templates": 1,
+          "skippedExternalCalls": {
+            "@angular/common": 3,
+            "rxjs": 3
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:stock-api",
+      "type": "repo",
+      "label": "stock-api",
+      "repo": "stock-api",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "shop-api",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "ReportsController"
+        ],
+        "providers": [
+          "ShopBus",
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "shop-api#src/bus/shop-bus.service.ts:ShopBus",
+      "type": "provider",
+      "label": "ShopBus",
+      "repo": "shop-api",
+      "file": "src/bus/shop-bus.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/bus/shop-bus.service.ts:ShopBus.publish",
+      "type": "method",
+      "label": "ShopBus.publish",
+      "repo": "shop-api",
+      "file": "src/bus/shop-bus.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/bus/shop-bus.service.ts:ShopBus.subscribe",
+      "type": "method",
+      "label": "ShopBus.subscribe",
+      "repo": "shop-api",
+      "file": "src/bus/shop-bus.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "pattern",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "method",
+      "label": "OrdersController.cancel",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{reason:string}"
+            }
+          ],
+          "returns": "type:shop-api#OrderView"
+        },
+        "fieldsRead": [
+          {
+            "field": "reason",
+            "line": 17
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "method",
+      "label": "OrdersController.findOne",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-api#OrderView"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 16,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "method",
+      "label": "OrdersService.cancel",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-api#OrderView"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "method",
+      "label": "OrdersService.findOne",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-api#OrderView"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/reports/reports.controller.ts:ReportsController",
+      "type": "provider",
+      "label": "ReportsController",
+      "repo": "shop-api",
+      "file": "src/reports/reports.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/reports/reports.controller.ts:ReportsController.daily",
+      "type": "method",
+      "label": "ReportsController.daily",
+      "repo": "shop-api",
+      "file": "src/reports/reports.controller.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "shop-web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "provider",
+      "label": "OrdersApiService",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders-api.service.ts:OrdersApiService.cancelOrder",
+      "type": "method",
+      "label": "OrdersApiService.cancelOrder",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-web#OrderView"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders-api.service.ts:OrdersApiService.getOrder",
+      "type": "method",
+      "label": "OrdersApiService.getOrder",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-web#OrderView"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders-api.service.ts:OrdersApiService.reservedStock",
+      "type": "method",
+      "label": "OrdersApiService.reservedStock",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders-page.component.ts:OrdersPageComponent",
+      "type": "ui_component",
+      "label": "OrdersPageComponent",
+      "repo": "shop-web",
+      "file": "src/app/orders-page.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-orders",
+        "route": "/orders"
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders-page.component.ts:OrdersPageComponent.cancel",
+      "type": "method",
+      "label": "OrdersPageComponent.cancel",
+      "repo": "shop-web",
+      "file": "src/app/orders-page.component.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders-page.component.ts:OrdersPageComponent.ngOnInit",
+      "type": "method",
+      "label": "OrdersPageComponent.ngOnInit",
+      "repo": "shop-web",
+      "file": "src/app/orders-page.component.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "stock-api",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "stock-api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "stock-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stock-api#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "method",
+      "label": "OrdersController.findOne",
+      "repo": "stock-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "ui_action:shop-web#src/app/orders-page.component.ts:17:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "shop-web",
+      "file": "src/app/orders-page.component.ts",
+      "line": 17,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "shop-web#src/app/orders-page.component.ts:OrdersPageComponent",
+        "template": "src/app/orders-page.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:shop-web#src/app/orders-page.component.ts:9:53",
+      "type": "ui_action",
+      "label": "click=\"cancel()\"",
+      "repo": "shop-web",
+      "file": "src/app/orders-page.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "cancel()",
+        "component": "shop-web#src/app/orders-page.component.ts:OrdersPageComponent",
+        "template": "src/app/orders-page.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/orders-api.service.ts:17:12",
+      "type": "ui_api_call",
+      "label": "GET /api/orders/:param",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/orders/:param",
+        "path": "/api/orders/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:shop-web#OrderView",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/orders-api.service.ts:21:12",
+      "type": "ui_api_call",
+      "label": "POST /api/orders/:param/cancel",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/api/orders/:param/cancel",
+        "path": "/api/orders/:param/cancel",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:shop-web#OrderView",
+        "bodyType": "{reason:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "reason"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/orders-api.service.ts:25:12",
+      "type": "ui_api_call",
+      "label": "GET /orders/:param/reserved",
+      "repo": "shop-web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${stockUrl}/orders/:param/reserved",
+        "path": "/orders/:param/reserved",
+        "baseUrlEnv": "stockUrl",
+        "responseType": "number",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "stock-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:audit",
+      "to": "consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.onModuleInit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 28
+    },
+    {
+      "from": "channel:shop:*:orders",
+      "to": "consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 27
+    },
+    {
+      "from": "channel:shop:*:orders#ORDER_CANCELLED",
+      "to": "consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 33,
+      "meta": {
+        "selectedBy": "consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+      "to": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:mailer#OrderCancelled"
+      ],
+      "returns": "void",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 27
+    },
+    {
+      "from": "consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.onModuleInit",
+      "to": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.onModuleInit",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 28
+    },
+    {
+      "from": "entry:mailer:event:audit",
+      "to": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.onModuleInit",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 28
+    },
+    {
+      "from": "entry:mailer:event:shop:*:orders",
+      "to": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:mailer#OrderCancelled"
+      ],
+      "returns": "void",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 27
+    },
+    {
+      "from": "entry:shop-api:http:GET:/api/orders/:param",
+      "to": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop-api#OrderView",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "meta": {
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:shop-api:http:GET:/api/reports/daily",
+      "to": "shop-api#src/reports/reports.controller.ts:ReportsController.daily",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/reports/reports.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:shop-api:http:POST:/api/orders/:param/cancel",
+      "to": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{reason:string}"
+      ],
+      "returns": "type:shop-api#OrderView",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "meta": {
+        "params": "{orderId:string}",
+        "body": "{reason:string}"
+      }
+    },
+    {
+      "from": "entry:shop-web:screen:/orders",
+      "to": "shop-web#src/app/orders-page.component.ts:OrdersPageComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 5,
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
+      "from": "entry:stock-api:http:GET:/orders/:param/reserved",
+      "to": "stock-api#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "meta": {
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "mailer#src/mail/mails.service.ts:Mails.cancelled",
+      "to": "mailer#src/mail/mails.service.ts:Mails.subjectOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/mail/mails.service.ts",
+      "line": 7
+    },
+    {
+      "from": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher",
+      "to": "mailer#src/bus/shop-bus.service.ts:ShopBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 22
+    },
+    {
+      "from": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher",
+      "to": "mailer#src/mail/mails.service.ts:Mails",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 23
+    },
+    {
+      "from": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+      "to": "mailer#src/mail/mails.service.ts:Mails.cancelled",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 34
+    },
+    {
+      "from": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.onModuleInit",
+      "to": "mailer#src/bus/shop-bus.service.ts:ShopBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 27
+    },
+    {
+      "from": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.onModuleInit",
+      "to": "mailer#src/mail/mails.service.ts:Mails.audit",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{orderId:string;action:string}"
+      ],
+      "returns": "void",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 28
+    },
+    {
+      "from": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.onModuleInit",
+      "to": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:mailer#OrderCancelled"
+      ],
+      "returns": "void",
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 27
+    },
+    {
+      "from": "producer:shop-api#src/orders/orders.service.ts:28:5",
+      "to": "channel:shop:*:orders",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:shop-api#OrderCancelled"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 28
+    },
+    {
+      "from": "producer:shop-api#src/orders/orders.service.ts:28:5",
+      "to": "channel:shop:*:orders#ORDER_CANCELLED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 28,
+      "params": [
+        "type:shop-api#OrderCancelled"
+      ]
+    },
+    {
+      "from": "producer:shop-api#src/orders/orders.service.ts:29:5",
+      "to": "channel:audit",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{orderId:string;action:string}"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 29
+    },
+    {
+      "from": "shop-api#src/orders/orders.controller.ts:OrdersController",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "type:shop-api#OrderView",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17
+    },
+    {
+      "from": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop-api#OrderView",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "shop-api#src/orders/orders.service.ts:OrdersService",
+      "to": "shop-api#src/bus/shop-bus.service.ts:ShopBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 18
+    },
+    {
+      "from": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "to": "producer:shop-api#src/orders/orders.service.ts:28:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 28
+    },
+    {
+      "from": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "to": "producer:shop-api#src/orders/orders.service.ts:29:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 29
+    },
+    {
+      "from": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "to": "shop-api#src/bus/shop-bus.service.ts:ShopBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 28
+    },
+    {
+      "from": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop-api#OrderView",
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "from": "shop-web#src/app/orders-api.service.ts:OrdersApiService",
+      "to": "shop-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 14
+    },
+    {
+      "from": "shop-web#src/app/orders-api.service.ts:OrdersApiService.cancelOrder",
+      "to": "ui_api_call:shop-web#src/app/orders-api.service.ts:21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 21
+    },
+    {
+      "from": "shop-web#src/app/orders-api.service.ts:OrdersApiService.getOrder",
+      "to": "ui_api_call:shop-web#src/app/orders-api.service.ts:17:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 17
+    },
+    {
+      "from": "shop-web#src/app/orders-api.service.ts:OrdersApiService.reservedStock",
+      "to": "ui_api_call:shop-web#src/app/orders-api.service.ts:25:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 25
+    },
+    {
+      "from": "shop-web#src/app/orders-page.component.ts:OrdersPageComponent",
+      "to": "shop-web#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders-page.component.ts",
+      "line": 15
+    },
+    {
+      "from": "shop-web#src/app/orders-page.component.ts:OrdersPageComponent.cancel",
+      "to": "shop-web#src/app/orders-api.service.ts:OrdersApiService.cancelOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "type:shop-web#OrderView",
+      "file": "src/app/orders-page.component.ts",
+      "line": 23
+    },
+    {
+      "from": "shop-web#src/app/orders-page.component.ts:OrdersPageComponent.ngOnInit",
+      "to": "shop-web#src/app/orders-api.service.ts:OrdersApiService.getOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop-web#OrderView",
+      "file": "src/app/orders-page.component.ts",
+      "line": 18
+    },
+    {
+      "from": "shop-web#src/app/orders-page.component.ts:OrdersPageComponent.ngOnInit",
+      "to": "shop-web#src/app/orders-api.service.ts:OrdersApiService.reservedStock",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/app/orders-page.component.ts",
+      "line": 19
+    },
+    {
+      "from": "ui_action:shop-web#src/app/orders-page.component.ts:17:3",
+      "to": "shop-web#src/app/orders-page.component.ts:OrdersPageComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders-page.component.ts",
+      "line": 17
+    },
+    {
+      "from": "ui_action:shop-web#src/app/orders-page.component.ts:9:53",
+      "to": "shop-web#src/app/orders-page.component.ts:OrdersPageComponent.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders-page.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/orders-api.service.ts:17:12",
+      "to": "entry:shop-api:http:GET:/api/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 17,
+      "returns": "type:shop-web#OrderView",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/orders-api.service.ts:21:12",
+      "to": "entry:shop-api:http:POST:/api/orders/:param/cancel",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 21,
+      "params": [
+        "{reason:string}"
+      ],
+      "returns": "type:shop-web#OrderView",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/orders-api.service.ts:25:12",
+      "to": "entry:stock-api:http:GET:/orders/:param/reserved",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 25,
+      "returns": "number",
+      "meta": {
+        "via": "api-target",
+        "targetService": "stock-api"
+      }
+    }
+  ],
+  "types": {
+    "type:mailer#OrderCancelled": {
+      "name": "OrderCancelled",
+      "kind": "object",
+      "declaredIn": "mailer#src/mail/order-mail.dispatcher.ts",
+      "structuralHash": "62d5c0da92aeef10",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'ORDER_CANCELLED'",
+          "optional": false
+        },
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:shop-api#OrderCancelled": {
+      "name": "OrderCancelled",
+      "kind": "object",
+      "declaredIn": "shop-api#src/orders/orders.service.ts",
+      "structuralHash": "62d5c0da92aeef10",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'ORDER_CANCELLED'",
+          "optional": false
+        },
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-api#OrderView": {
+      "name": "OrderView",
+      "kind": "object",
+      "declaredIn": "shop-api#src/orders/orders.service.ts",
+      "structuralHash": "9b6c96ba536215ea",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-web#OrderView": {
+      "name": "OrderView",
+      "kind": "object",
+      "declaredIn": "shop-web#src/app/orders-api.service.ts",
+      "structuralHash": "9b6c96ba536215ea",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/bus/shop-bus.service.ts",
+      "line": 9,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "mailer"
+    },
+    {
+      "file": "src/mail/order-mail.dispatcher.ts",
+      "line": 28,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The listener does more than delegate, so the chain stops at the method that registered it.",
+      "symbol": "OrderMailDispatcher.onModuleInit",
+      "service": "mailer"
+    },
+    {
+      "file": "src/bus/shop-bus.service.ts",
+      "line": 9,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "shop-api"
+    }
+  ]
+}
