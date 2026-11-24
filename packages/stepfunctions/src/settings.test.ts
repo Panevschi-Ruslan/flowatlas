@@ -37,9 +37,9 @@ describe('what a task state leaves unsaid (P389)', () => {
         }),
       ),
     ).toEqual([
-      'workflow-lambda-unretried fulfil/Integration action',
-      'workflow-lambda-unretried fulfil/ByArn action',
-      'workflow-lambda-unretried fulfil/OnlyTimeout action',
+      'workflow-function-unretried fulfil/Integration action',
+      'workflow-function-unretried fulfil/ByArn action',
+      'workflow-function-unretried fulfil/OnlyTimeout action',
     ]);
   });
 
@@ -53,7 +53,7 @@ describe('what a task state leaves unsaid (P389)', () => {
           Done: { Type: 'Succeed' },
         }),
       ),
-    ).toEqual(['workflow-lambda-unretried fulfil/Caught info']);
+    ).toEqual(['workflow-function-unretried fulfil/Caught info']);
   });
 
   it('says a task waiting on an activity, a job or a token with no timeout, and a token with no heartbeat', () => {
@@ -109,6 +109,6 @@ describe('what a task state leaves unsaid (P389)', () => {
           },
         }),
       ),
-    ).toEqual(['workflow-lambda-unretried fulfil/Item action']);
+    ).toEqual(['workflow-function-unretried fulfil/Item action']);
   });
 });

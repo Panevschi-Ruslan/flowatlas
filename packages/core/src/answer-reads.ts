@@ -15,7 +15,7 @@ import { functionLikeOf, type FunctionLike } from './types/signatures.js';
  * subject's `next`, an observable held as `orders$`), and from the member into
  * the component's template (`{{ order.total }}`, `@for`, `*ngFor`, `| async`,
  * `@if (...; as x)`) and its code, into a child component it is bound to, a
- * React state's setter, the props of a component it is handed to, and what a
+ * component state's setter, the props of a component it is handed to, and what a
  * data hook hands back (`useQuery`'s and `useSWR`'s `data`). Inside code the
  * reading is P368's walk, which here also follows a list element by element.
  *
@@ -179,7 +179,7 @@ export const answerFieldsRead = (start: AnswerStart, options: AnswerReadOptions)
     walk.followValue(fn, node, state, depth);
   };
 
-  /** A function value is handed: a callback written in place or named, or a React state's setter. */
+  /** A function value is handed: a callback written in place or named, or a component state's setter. */
   const handedTo = (argument: TsNode | undefined, state: ValueState, depth: number): void => {
     if (argument === undefined) return;
     const fn = callbackOf(argument);
@@ -203,7 +203,7 @@ export const answerFieldsRead = (start: AnswerStart, options: AnswerReadOptions)
   };
 
   /**
-   * A React state's setter, `setOrders` of `const [orders, setOrders] =
+   * A component state's setter, `setOrders` of `const [orders, setOrders] =
    * useState(...)`: the value is what `orders` holds wherever the component
    * reads it. True where `callee` is one.
    */
@@ -539,7 +539,7 @@ export const answerFieldsRead = (start: AnswerStart, options: AnswerReadOptions)
     unread(at, `the ${held} used as ${short(parent)}`);
   };
 
-  /** The value stored where P368's walk leaves it: a member, a signal, a subject, a React state, a child's props. */
+  /** The value stored where P368's walk leaves it: a member, a signal, a subject, a component's state, a child's props. */
   const escape = (use: FieldEscape, handle: FieldWalk): boolean => {
     walk = handle;
     if (use.kind === 'returned') {

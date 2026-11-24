@@ -3,7 +3,7 @@ unresolved: total=13 (missing) · markers: errors=0 warnings=0 · desync=0 · co
 unresolved: 13 to act on · missed: 7 · notes: 2 · findings: 8
   2 missed places static reading cannot see, folded into 2 rows
   8 findings: 6 function tasks retrying no transient error, 2 waiting tasks with no timeout
-  workflow-lambda-unretried (finding): 6 rows
+  workflow-function-unretried (finding): 6 rows
     Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
       circulation/statemachine/loan-approval.asl.json:155  loan-approval: ScoreBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution
       circulation/statemachine/loan-approval.asl.json:206  loan-approval: LookUpBranchPolicy invokes a function and retries none of the platform's transient errors, so one fails the execution
@@ -43,20 +43,20 @@ contracts: no errors, 0 excused, 3 boundary directions nothing could be compared
 baseline: missing (0 accepted, 13 now, +13)
   no baseline at <root>/fixtures/stepfunctions-asl-files/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   reference-not-found: 0 → 4 (+4)
-  workflow-lambda-unretried: 0 → 6 (+6)
+  workflow-function-unretried: 0 → 6 (+6)
   workflow-task-untimed: 0 → 2 (+2)
   workflow-template-unbound: 0 → 1 (+1)
   new (13):
-    circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy|workflow-lambda-unretried
+    circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy|workflow-function-unretried
     circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy|workflow-template-unbound
     circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/AwaitLibrarianApproval|workflow-task-untimed
     circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/CheckBorrowerStanding|reference-not-found
-    circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/LookUpBranchPolicy|workflow-lambda-unretried
+    circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/LookUpBranchPolicy|workflow-function-unretried
     circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/NotifyBorrower|workflow-task-untimed
     circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/ScoreBorrower|reference-not-found
-    circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/ScoreBorrower|workflow-lambda-unretried
+    circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/ScoreBorrower|workflow-function-unretried
     notifications|workflows/borrower-notifications.asl.yaml|notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendEmail|reference-not-found
-    notifications|workflows/borrower-notifications.asl.yaml|notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendEmail|workflow-lambda-unretried
+    notifications|workflows/borrower-notifications.asl.yaml|notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendEmail|workflow-function-unretried
     notifications|workflows/borrower-notifications.asl.yaml|notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendText|reference-not-found
-    notifications|workflows/borrower-notifications.asl.yaml|notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendText|workflow-lambda-unretried
-    notifications|workflows/overdue-reminders.asl.json|notifications#workflows/overdue-reminders.asl.json:overdue-reminders/SendReminder|workflow-lambda-unretried
+    notifications|workflows/borrower-notifications.asl.yaml|notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendText|workflow-function-unretried
+    notifications|workflows/overdue-reminders.asl.json|notifications#workflows/overdue-reminders.asl.json:overdue-reminders/SendReminder|workflow-function-unretried

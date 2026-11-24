@@ -52,7 +52,7 @@ describe('answerFieldsRead', () => {
     expect(found.unread).toEqual([]);
   });
 
-  it("reads axios's data through then, a data hook's data, a row's props and a state's setter", () => {
+  it("reads a client's data through then, a data hook's data, a row's props and a state's setter", () => {
     const found = read(
       [
         'type Order = { id: string; status: string; note: string };',

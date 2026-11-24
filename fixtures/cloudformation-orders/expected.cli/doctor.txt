@@ -2,7 +2,7 @@ unresolved: total=3 (missing) · markers: errors=0 warnings=0 · desync=0 · con
 
 unresolved: 3 to act on · missed: 0 · notes: 0 · findings: 3
   3 findings: 2 function tasks retrying no transient error, 1 redrive after too few receives
-  workflow-lambda-unretried (finding): 2 rows
+  workflow-function-unretried (finding): 2 rows
     Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
       orders/statemachine/shipping.asl.json:5  orders-dev-shipping: ReserveStock invokes a function and retries none of the platform's transient errors, so one fails the execution
       orders/statemachine/shipping.asl.json:15  orders-dev-shipping: ChargePayment invokes a function and retries none of the platform's transient errors, so one fails the execution
@@ -20,8 +20,8 @@ contracts: no errors, 0 excused, 5 boundary directions nothing could be compared
 baseline: missing (0 accepted, 3 now, +3)
   no baseline at <root>/fixtures/cloudformation-orders/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   queue-receives-few: 0 → 1 (+1)
-  workflow-lambda-unretried: 0 → 2 (+2)
+  workflow-function-unretried: 0 → 2 (+2)
   new (3):
     orders|stacks/storage.json|channel:sqs/orders-dev-placed|queue-receives-few
-    orders|statemachine/shipping.asl.json|orders#statemachine/shipping.asl.json:orders-dev-shipping/ChargePayment|workflow-lambda-unretried
-    orders|statemachine/shipping.asl.json|orders#statemachine/shipping.asl.json:orders-dev-shipping/ReserveStock|workflow-lambda-unretried
+    orders|statemachine/shipping.asl.json|orders#statemachine/shipping.asl.json:orders-dev-shipping/ChargePayment|workflow-function-unretried
+    orders|statemachine/shipping.asl.json|orders#statemachine/shipping.asl.json:orders-dev-shipping/ReserveStock|workflow-function-unretried

@@ -1926,7 +1926,7 @@
     {
       "file": "workflows/reshelve-returns.asl.json",
       "line": 14,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "reshelve-returns: Reshelve invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
@@ -1939,7 +1939,7 @@
     {
       "file": "statemachine/checkout.asl.json",
       "line": 5,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "circulation-checkout: CheckStanding invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
@@ -1953,7 +1953,7 @@
     {
       "file": "statemachine/checkout.asl.json",
       "line": 31,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "circulation-checkout: ReserveCopy invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
@@ -1967,7 +1967,7 @@
     {
       "file": "statemachine/borrower-notices.json",
       "line": 5,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "members-borrower-notices: SendNotice invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",

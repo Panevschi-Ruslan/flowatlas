@@ -1394,7 +1394,7 @@
     {
       "file": "lib/club-stack.ts",
       "line": 81,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "ClubStack/Renewals: Charge invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
@@ -1434,7 +1434,7 @@
     {
       "file": "statemachine/lapses.asl.json",
       "line": 5,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "club-dev-lapses: ReadInbox invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",

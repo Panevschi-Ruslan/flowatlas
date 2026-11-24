@@ -2440,7 +2440,7 @@
     {
       "file": "infra/workflows.tf",
       "line": 62,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "lending-overdue-sweep: SendReminder invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
@@ -2454,7 +2454,7 @@
     {
       "file": "infra/workflows.tf",
       "line": 91,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "lending-hold-expiry: ReleaseHold invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
@@ -2481,7 +2481,7 @@
     {
       "file": "statemachine/loan-approval.asl.json",
       "line": 126,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "lending-loan-approval: ScoreBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
@@ -2495,7 +2495,7 @@
     {
       "file": "statemachine/loan-approval.asl.json",
       "line": 137,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "lending-loan-approval: NotifyBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
@@ -2509,7 +2509,7 @@
     {
       "file": "statemachine/loan-renewal.asl.json",
       "line": 5,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "lending-loan-renewal: CheckBorrowerStanding invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
@@ -2523,7 +2523,7 @@
     {
       "file": "statemachine/loan-renewal.asl.json",
       "line": 36,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "lending-loan-renewal: AssessLateFee invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
@@ -2548,7 +2548,7 @@
     {
       "file": "statemachine/loan-renewal.asl.json",
       "line": 46,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "lending-loan-renewal: AwaitFeePayment invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
@@ -2562,7 +2562,7 @@
     {
       "file": "statemachine/loan-renewal.asl.json",
       "line": 66,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "lending-loan-renewal: ApplyBranchPolicy invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
@@ -2593,7 +2593,7 @@
     {
       "file": "statemachine/loan-renewal.asl.json",
       "line": 115,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "lending-loan-renewal: NotifyRenewal invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",

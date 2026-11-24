@@ -8,7 +8,7 @@
     "queue-receives-few": 1,
     "queue-redrive-missing": 1,
     "workflow-callback-no-heartbeat": 1,
-    "workflow-lambda-unretried": 1
+    "workflow-function-unretried": 1
   },
   "top": {
     "batch-failures-unreported": [
@@ -146,9 +146,9 @@
         "next": "get_source({symbol: \"orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/AwaitApproval\"})"
       }
     ],
-    "workflow-lambda-unretried": [
+    "workflow-function-unretried": [
       {
-        "kind": "workflow-lambda-unretried",
+        "kind": "workflow-function-unretried",
         "id": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ChargeCard",
         "service": "orders",
         "loc": "statemachine/fulfil-order.asl.json:23",

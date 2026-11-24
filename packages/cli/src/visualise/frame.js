@@ -549,7 +549,7 @@ export const PAGE_WORDS = Object.freeze({
     'queue-receives-few': 'too few receives before the dead letter queue',
     'workflow-task-untimed': 'waiting task with no timeout',
     'workflow-callback-no-heartbeat': 'callback with no heartbeat',
-    'workflow-lambda-unretried': 'function task retrying no transient error',
+    'workflow-function-unretried': 'function task retrying no transient error',
     'deployment-setting-unread': 'deployment setting check not made',
     'stream-filter-not-matched': 'stream filter not evaluated',
     'stream-handler-unread': 'screen handler of a stream not found',

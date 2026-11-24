@@ -14,7 +14,7 @@ import type { Task } from './tasks.js';
  * - a task waiting on a task token with no `HeartbeatSeconds` notices a worker
  *   that died only at its timeout (`workflow-callback-no-heartbeat`);
  * - a task invoking a function that retries none of the platform's transient
- *   errors fails its execution on one of them (`workflow-lambda-unretried`);
+ *   errors fails its execution on one of them (`workflow-function-unretried`);
  *   one that catches them, never retrying, is said at `info`, since the
  *   failure is handled, only not tried again.
  *
@@ -98,7 +98,7 @@ export const taskSettingRows = (machine: StateMachine, state: State, task: Task,
     rows.push({
       file,
       line,
-      reason: 'workflow-lambda-unretried',
+      reason: 'workflow-function-unretried',
       level: caught ? 'info' : 'action',
       message: caught
         ? `${step} invokes a function and retries none of the platform's transient errors; a Catch takes them, so one ends the step on its error path rather than being tried again`

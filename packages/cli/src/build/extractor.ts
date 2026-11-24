@@ -5,12 +5,11 @@ import {
   type FlowatlasConfig,
   type PackageJson,
   type ServiceConfig,
-  requestFactsPass,
   type SourceRootOptions,
 } from '@flowatlas/core';
 import { brokersPass, helperPublishesPass, messageTypesPass, registerBrokerAdapters, streamRelaysPass } from '@flowatlas/adapters-broker';
 import { graphqlCallsPass, grpcCallsPass, leavesPass, procedureCallsPass, registerDbAdapters } from '@flowatlas/adapters-db';
-import { botButtonsPass, deployedSourceDirectories, registerEntryAdapters } from '@flowatlas/adapters-entry';
+import { botButtonsPass, deployedSourceDirectories, registerEntryAdapters, requestFactsPass } from '@flowatlas/adapters-entry';
 import {
   ANGULAR_SOURCE_ROOTS,
   registerFrontendAdapters as registerAngularFrontend,

@@ -1708,7 +1708,7 @@
     {
       "file": "statemachines/loan-review.asl.json",
       "line": 5,
-      "reason": "workflow-lambda-unretried",
+      "reason": "workflow-function-unretried",
       "level": "action",
       "message": "loan-review: ReviewLoan invokes a function and retries none of the platform's transient errors, so one fails the execution",
       "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",

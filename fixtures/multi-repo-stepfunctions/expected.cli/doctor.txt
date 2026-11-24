@@ -2,7 +2,7 @@ unresolved: total=5 (missing) · markers: errors=0 warnings=0 · desync=0 · con
 
 unresolved: 5 to act on · missed: 0 · notes: 1 · findings: 5
   5 findings: 4 function tasks retrying no transient error, 1 queue read with no redrive
-  workflow-lambda-unretried (finding): 4 rows
+  workflow-function-unretried (finding): 4 rows
     Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
       catalogue/workflows/reshelve-returns.asl.json:14  reshelve-returns: Reshelve invokes a function and retries none of the platform's transient errors, so one fails the execution
       circulation/statemachine/checkout.asl.json:5  circulation-checkout: CheckStanding invokes a function and retries none of the platform's transient errors, so one fails the execution
@@ -25,10 +25,10 @@ contracts: no errors, 0 excused, 4 boundary directions nothing could be compared
 baseline: missing (0 accepted, 5 now, +5)
   no baseline at <root>/fixtures/multi-repo-stepfunctions/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   queue-redrive-missing: 0 → 1 (+1)
-  workflow-lambda-unretried: 0 → 4 (+4)
+  workflow-function-unretried: 0 → 4 (+4)
   new (5):
     catalogue|infra/main.tf|channel:sqs/catalogue-copy-pulls|queue-redrive-missing
-    catalogue|workflows/reshelve-returns.asl.json|catalogue#workflows/reshelve-returns.asl.json:reshelve-returns/Reshelve|workflow-lambda-unretried
-    circulation|statemachine/checkout.asl.json|circulation#statemachine/checkout.asl.json:circulation-checkout/CheckStanding|workflow-lambda-unretried
-    circulation|statemachine/checkout.asl.json|circulation#statemachine/checkout.asl.json:circulation-checkout/ReserveCopy|workflow-lambda-unretried
-    members|statemachine/borrower-notices.json|members#statemachine/borrower-notices.json:members-borrower-notices/SendNotice|workflow-lambda-unretried
+    catalogue|workflows/reshelve-returns.asl.json|catalogue#workflows/reshelve-returns.asl.json:reshelve-returns/Reshelve|workflow-function-unretried
+    circulation|statemachine/checkout.asl.json|circulation#statemachine/checkout.asl.json:circulation-checkout/CheckStanding|workflow-function-unretried
+    circulation|statemachine/checkout.asl.json|circulation#statemachine/checkout.asl.json:circulation-checkout/ReserveCopy|workflow-function-unretried
+    members|statemachine/borrower-notices.json|members#statemachine/borrower-notices.json:members-borrower-notices/SendNotice|workflow-function-unretried

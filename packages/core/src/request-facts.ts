@@ -20,6 +20,11 @@ import { definePass, type ExtractorPass } from './passes.js';
  * checker gives a number), an options object written in the call or in a
  * constant it names. What is not read is simply not said, and nothing here is
  * judged: the judging is the linker's, against what the other side says.
+ *
+ * What is particular to one HTTP client - whether it sends an object body as
+ * JSON itself, which settings reach every one of its requests - is not known
+ * here: it is a `RequestClient` the package that knows the client describes,
+ * handed in through `requestFactsPassOf` (P394).
  */
 
 /** On a request: the statuses the code that sends it, or the one caller that waits for it, branches on. */
@@ -63,6 +68,51 @@ export interface RequestFactsHost {
   readonly project: Project;
   readonly builder: GraphBuilder;
 }
+
+/**
+ * Settings that reach every request of one client, as the package that knows
+ * the client describes where they are written (P394).
+ */
+export interface EveryRequestSettings {
+  /**
+   * Text one of the settings cannot be written without: a source file holding
+   * none of any client's marks is not walked.
+   */
+  readonly marks: RegExp;
+  /**
+   * A method called with options on each request on its way out, by name: an
+   * interceptor handing on a copy of the request with credentials or headers
+   * set. Its options' `setHeaders` and `headers` name the headers.
+   */
+  readonly perRequest?: string;
+  /** A factory making an instance with options: its method's name, and the text of what it is called on. */
+  readonly instance?: { readonly method: string; readonly receiver: RegExp };
+  /** Assignments to `<client>.defaults.withCredentials` and `<client>.defaults.headers[.common]…`. */
+  readonly defaults?: boolean;
+}
+
+/**
+ * One HTTP client a request can be sent with, described by the package that
+ * knows it (P394): how its reader marks the requests it draws, and what the
+ * client does on its own that the call does not spell out.
+ */
+export interface RequestClient {
+  /** The meta key and value its reader writes on every request sent with it. */
+  readonly drawnWith: { readonly key: string; readonly value: string };
+  /**
+   * It sends an object body as JSON, setting the content type itself, and a
+   * verb with a body takes the body as its second argument.
+   */
+  readonly jsonByDefault?: boolean;
+  /** Type names of the bodies it sends as they are, beside the platform's own (`FormData`, `Blob`, …). */
+  readonly bodiesAsIs?: readonly string[];
+  /** Settings that reach every one of its requests. */
+  readonly every?: EveryRequestSettings;
+}
+
+/** The client a request was sent with: the first described whose mark its reader wrote on it. */
+const clientOf = (clients: readonly RequestClient[], node: GraphNode): RequestClient | undefined =>
+  clients.find((client) => node.meta?.[client.drawnWith.key] === client.drawnWith.value);
 
 const REQUEST_TYPES: ReadonlySet<string> = new Set(['ui_api_call', 'http_out']);
 
@@ -237,7 +287,7 @@ const propertyOf = (object: ObjectLiteralExpression, name: string): TsNode | und
 const headerNamesIn = (node: TsNode | undefined): string[] => {
   if (node === undefined) return [];
   let at = bare(node);
-  // `new HttpHeaders({ … })`, `new Headers({ … })`.
+  // `new Headers({ … })`, or a client's own class of headers built the same way.
   if (Node.isNewExpression(at)) {
     const [first] = at.getArguments();
     if (first === undefined) return [];
@@ -269,19 +319,18 @@ const saysCredentials = (object: ObjectLiteralExpression): TsNode | undefined =>
 /** The verbs a body goes with. */
 const BODY_VERBS: ReadonlySet<string> = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-/** Clients that send an object body as JSON, setting the content type themselves. */
-const JSON_BY_DEFAULT = (node: GraphNode): boolean =>
-  node.meta?.['package'] === '@angular/common/http' || node.meta?.['client'] === 'axios' || node.meta?.['client'] === 'ky' || node.meta?.['client'] === 'ofetch';
+/** The platform's own bodies, which every client sends as they are rather than as JSON. */
+const PLATFORM_BODIES: readonly string[] = ['FormData', 'URLSearchParams', 'Blob', 'File', 'ArrayBuffer'];
 
 /** Whether a body value is one a client sends as is rather than as JSON: text, a form, a file. */
-const sentAsIs = (node: TsNode): boolean => {
+const sentAsIs = (node: TsNode, bodies: ReadonlySet<string>): boolean => {
   const at = bare(node);
   if (Node.isStringLiteral(at) || Node.isTemplateExpression(at) || Node.isNoSubstitutionTemplateLiteral(at)) return true;
   try {
     const type = at.getType();
     if (type.isString() || type.isStringLiteral()) return true;
     const named = (type.getSymbol() ?? type.getAliasSymbol())?.getName() ?? '';
-    return /^(FormData|URLSearchParams|Blob|File|ArrayBuffer|HttpParams)$/.test(named);
+    return bodies.has(named);
   } catch {
     return false;
   }
@@ -291,18 +340,21 @@ const sentAsIs = (node: TsNode): boolean => {
 const callOptions = (
   call: CallExpression | NewExpression,
   node: GraphNode,
+  client: RequestClient | undefined,
+  bodies: ReadonlySet<string>,
   at: (n: TsNode) => string,
 ): { credentials?: CredentialsSaid; headers: string[]; json: boolean } => {
   const args = call.getArguments();
   const method = String(node.meta?.['method'] ?? '').toUpperCase();
-  const bodyFirst = BODY_VERBS.has(method) && JSON_BY_DEFAULT(node) && args.length >= 2;
+  const jsonByDefault = client?.jsonByDefault === true;
+  const bodyFirst = BODY_VERBS.has(method) && jsonByDefault && args.length >= 2;
   let credentials: CredentialsSaid | undefined;
   const headers: string[] = [];
   let json = false;
   args.forEach((arg, index) => {
     // The body of a client that takes it before its options is not options.
     if (bodyFirst && index === 1) {
-      if (!sentAsIs(arg)) json = true;
+      if (!sentAsIs(arg, bodies)) json = true;
       return;
     }
     const object = objectOf(arg);
@@ -314,9 +366,9 @@ const callOptions = (
     const said = written === undefined ? undefined : objectOf(Node.isNewExpression(bare(written)) ? (bare(written) as NewExpression).getArguments()[0] : written);
     const type = said === undefined ? undefined : (propertyOf(said, 'Content-Type') ?? propertyOf(said, 'content-type'));
     if (type !== undefined && /json/i.test(type.getText())) json = true;
-    // A body inside the options (`fetch`'s init, axios's config): JSON only where the client makes it so.
+    // A body inside the options (the platform's init, a client's config): JSON only where the client makes it so.
     const body = propertyOf(object, 'body') ?? propertyOf(object, 'data') ?? propertyOf(object, 'json');
-    if (body !== undefined && JSON_BY_DEFAULT(node) && !sentAsIs(body)) json = true;
+    if (body !== undefined && jsonByDefault && !sentAsIs(body, bodies)) json = true;
   });
   return { ...(credentials === undefined ? {} : { credentials }), headers, json };
 };
@@ -328,21 +380,26 @@ interface EveryRequest {
 }
 
 /**
- * Settings that reach every request of a client (P388): an interceptor that
- * clones each request `withCredentials` or with headers set (Angular's
- * `HttpClient`), a client's defaults (`axios.defaults.withCredentials = true`,
- * `axios.defaults.headers.common['X-Tenant'] = …`), an instance made with
- * them (`axios.create({ withCredentials: true })`).
+ * Settings that reach every request of a client (P388), for each client
+ * described with any: an interceptor that hands on a copy of each request with
+ * credentials or headers set, a client's defaults
+ * (`<client>.defaults.withCredentials = true`), an instance made with them
+ * (`<client>.create({ withCredentials: true })`). A call that fits several
+ * descriptions is the first described client's; an assignment to `defaults`
+ * is every client's that reads its defaults.
  */
-const everyRequestOf = (host: RequestFactsHost): { angular: EveryRequest; axios: EveryRequest } => {
-  const angular: EveryRequest = { headers: new Set() };
-  const axios: EveryRequest = { headers: new Set() };
+const everyRequestOf = (host: RequestFactsHost, clients: readonly RequestClient[]): Map<RequestClient, EveryRequest> => {
+  const found = new Map<RequestClient, EveryRequest>();
+  const described = clients.flatMap((client) => (client.every === undefined ? [] : [{ client, every: client.every }]));
+  for (const { client } of described) found.set(client, { headers: new Set() });
+  if (described.length === 0) return found;
+  const byDefaults = described.filter(({ every }) => every.defaults === true).map(({ client }) => found.get(client)!);
   const root = resolvePath(host.repoDir);
   for (const source of host.project.getSourceFiles()) {
     const path = source.getFilePath();
     if (!path.startsWith(root) || path.includes('/node_modules/') || source.isDeclarationFile()) continue;
     const text = source.getFullText();
-    if (!/withCredentials|setHeaders|defaults|axios\.create/.test(text)) continue;
+    if (!described.some(({ every }) => every.marks.test(text))) continue;
     const file = relativeOf(host, source);
     const where = (node: TsNode): string => `${file}:${node.getStartLineNumber()}`;
     source.forEachDescendant((node) => {
@@ -352,24 +409,30 @@ const everyRequestOf = (host: RequestFactsHost): { angular: EveryRequest; axios:
         const name = callee.getName();
         const object = objectOf(node.getArguments()[0]);
         if (object === undefined) return;
-        const target = name === 'clone' ? angular : name === 'create' && /axios/i.test(callee.getExpression().getText()) ? axios : undefined;
-        if (target === undefined) return;
+        const receiver = callee.getExpression().getText();
+        const viaOf = (every: EveryRequestSettings): CredentialsSaid['via'] | undefined =>
+          every.perRequest === name ? 'interceptor' : every.instance !== undefined && every.instance.method === name && every.instance.receiver.test(receiver) ? 'instance' : undefined;
+        const match = described.find(({ every }) => viaOf(every) !== undefined);
+        const via = match === undefined ? undefined : viaOf(match.every);
+        if (match === undefined || via === undefined) return;
+        const target = found.get(match.client)!;
         const said = saysCredentials(object);
-        if (said !== undefined && target.credentials === undefined) target.credentials = { at: where(said), via: name === 'clone' ? 'interceptor' : 'instance' };
+        if (said !== undefined && target.credentials === undefined) target.credentials = { at: where(said), via };
         for (const header of [...headerNamesIn(propertyOf(object, 'setHeaders')), ...headerNamesIn(propertyOf(object, 'headers'))]) target.headers.add(header);
         return;
       }
+      if (byDefaults.length === 0) return;
       if (!Node.isBinaryExpression(node) || node.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) return;
       const left = node.getLeft().getText().replace(/\s+/g, '');
       if (/\.defaults\.withCredentials$/.test(left) && bare(node.getRight()).getKind() === SyntaxKind.TrueKeyword) {
-        axios.credentials ??= { at: where(node), via: 'defaults' };
+        for (const target of byDefaults) target.credentials ??= { at: where(node), via: 'defaults' };
         return;
       }
       const header = /\.defaults\.headers(?:\.common)?\[['"]([^'"]+)['"]\]$/.exec(left) ?? /\.defaults\.headers(?:\.common)?\.([A-Za-z_$][\w$]*)$/.exec(left);
-      if (header !== null) axios.headers.add(header[1]!.toLowerCase());
+      if (header !== null) for (const target of byDefaults) target.headers.add(header[1]!.toLowerCase());
     });
   }
-  return { angular, axios };
+  return found;
 };
 
 /** The request ids each node calls, and who calls each node. */
@@ -409,7 +472,7 @@ const byText = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
  * one service method that sends it): a comparison there could be about
  * another request's answer, and is then left unread rather than guessed.
  */
-export const readRequestFacts = (host: RequestFactsHost): void => {
+export const readRequestFacts = (host: RequestFactsHost, clients: readonly RequestClient[] = []): void => {
   const { builder } = host;
   const requests = builder.nodes.filter((node) => REQUEST_TYPES.has(node.type) && node.repo === host.repo);
   if (requests.length === 0) return;
@@ -421,7 +484,8 @@ export const readRequestFacts = (host: RequestFactsHost): void => {
     const sending = [...(calleesOf.get(caller) ?? [])].filter((each) => (requestsOf.get(each)?.size ?? 0) > 0);
     return sending.length === 1 && sending[0] === callee;
   };
-  let every: ReturnType<typeof everyRequestOf> | undefined;
+  const bodies: ReadonlySet<string> = new Set([...PLATFORM_BODIES, ...clients.flatMap((client) => client.bodiesAsIs ?? [])]);
+  let every: Map<RequestClient, EveryRequest> | undefined;
   for (const request of requests) {
     const site = siteOfId(request.id);
     if (site === undefined) continue;
@@ -457,9 +521,10 @@ export const readRequestFacts = (host: RequestFactsHost): void => {
         .sort((a, b) => a.status - b.status || byText(a.at, b.at));
     }
     if (request.type === 'ui_api_call') {
-      const own = callOptions(call, request, at);
-      every ??= everyRequestOf(host);
-      const shared = request.meta?.['package'] === '@angular/common/http' ? every.angular : request.meta?.['client'] === 'axios' ? every.axios : undefined;
+      const client = clientOf(clients, request);
+      const own = callOptions(call, request, client, bodies, at);
+      every ??= everyRequestOf(host, clients);
+      const shared = client === undefined ? undefined : every.get(client);
       const credentials = own.credentials ?? shared?.credentials;
       const headers = [...new Set([...own.headers, ...(shared?.headers ?? [])])].sort(byText);
       if (credentials !== undefined) meta[CREDENTIALS_META] = credentials;
@@ -470,5 +535,10 @@ export const readRequestFacts = (host: RequestFactsHost): void => {
   }
 };
 
-/** The pass every reader that draws requests runs, after it has drawn them. */
-export const requestFactsPass: ExtractorPass<RequestFactsHost> = definePass('request-facts', readRequestFacts);
+/**
+ * The pass every reader that draws requests runs, after it has drawn them,
+ * knowing the clients it is handed (P394): the package that describes the
+ * clients builds it once, and every reader runs that one.
+ */
+export const requestFactsPassOf = (clients: readonly RequestClient[]): ExtractorPass<RequestFactsHost> =>
+  definePass('request-facts', (host) => readRequestFacts(host, clients));

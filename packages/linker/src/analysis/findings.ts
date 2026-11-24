@@ -212,7 +212,7 @@ const PRECISION: Readonly<Record<string, Precision>> = {
   'workflow-task-untimed': 'medium',
   'queue-redrive-missing': 'low',
   'queue-receives-few': 'low',
-  'workflow-lambda-unretried': 'low',
+  'workflow-function-unretried': 'low',
   'workflow-callback-no-heartbeat': 'low',
   // P388: each is said with its own precision too; these are the kinds' own.
   'sse-event-unhandled': 'high',

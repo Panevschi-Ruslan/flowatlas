@@ -19,7 +19,7 @@ unresolved: 6 to act on · missed: 6 · notes: 2 · findings: 3
   queue-visibility-short (finding): 1 row
     Raise the visibility timeout of ${…}@resources.Resources.NoticesQueue to at least 36s, or lower the function's timeout.
       members/services/notices/serverless.yml:34  ${…}@resources.Resources.NoticesQueue hides a message for 30s (the default), under 6 times the 6s timeout of notices-prod-send-notice (36s): a message can come back while it is still being processed, and be processed twice
-  workflow-lambda-unretried (finding): 1 row
+  workflow-function-unretried (finding): 1 row
     Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
       members/services/notices/serverless.yml:96  stepFunctions.stateMachines.remind: Send invokes a function and retries none of the platform's transient errors, so one fails the execution
   deployed-name-generated (note): 1 row over 2 places
@@ -52,11 +52,11 @@ baseline: missing (0 accepted, 6 now, +6)
   function-name-unread: 0 → 1 (+1)
   queue-redrive-missing: 0 → 1 (+1)
   queue-visibility-short: 0 → 1 (+1)
-  workflow-lambda-unretried: 0 → 1 (+1)
+  workflow-function-unretried: 0 → 1 (+1)
   new (6):
     members|services/notices/serverless.yml|channel:sqs/${…}@resources.Resources.NoticesQueue|queue-redrive-missing
     members|services/notices/serverless.yml|constructs|deployment-plugin-unread
     members|services/notices/serverless.yml|consumer:members#services/notices/serverless.yml:functions.send-notice.events[0]|queue-visibility-short
     members|services/notices/serverless.yml|entry:members:invoke:${…}@functions.audit|function-name-unread
     members|services/notices/serverless.yml|import:export:shared-audit-queue-arn|export-not-found
-    members|services/notices/serverless.yml|members#services/notices/serverless.yml:stepFunctions.stateMachines.remind/Send|workflow-lambda-unretried
+    members|services/notices/serverless.yml|members#services/notices/serverless.yml:stepFunctions.stateMachines.remind/Send|workflow-function-unretried

@@ -21,7 +21,7 @@ Type-checked, never executed or deployed.
 | Step | What is said |
 |---|---|
 | `shop-fulfil-order`: `ReserveStock` | nothing: it retries the platform's transient errors |
-| `ChargeCard`, a function by its ARN | `workflow-lambda-unretried` |
+| `ChargeCard`, a function by its ARN | `workflow-function-unretried` |
 | `AwaitApproval`, `.waitForTaskToken` | `workflow-task-untimed` and `workflow-callback-no-heartbeat` |
 | `ShipParcel`, `.sync` with `TimeoutSeconds` | nothing |
 | `shop-accept-return`: `AwaitInspection` | nothing: the machine's own `TimeoutSeconds` bounds it, and it beats |

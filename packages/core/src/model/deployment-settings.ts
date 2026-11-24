@@ -25,7 +25,7 @@
  *   it waits for ever for an answer that never comes.
  * - `workflow-callback-no-heartbeat`: a task-token callback has no
  *   `HeartbeatSeconds`, so a worker that died is noticed only at the timeout.
- * - `workflow-lambda-unretried`: a task invoking a function retries none of
+ * - `workflow-function-unretried`: a task invoking a function retries none of
  *   the platform's transient errors.
  */
 export const DEPLOYMENT_SETTING_FINDINGS: readonly string[] = [
@@ -36,7 +36,7 @@ export const DEPLOYMENT_SETTING_FINDINGS: readonly string[] = [
   'queue-receives-few',
   'workflow-task-untimed',
   'workflow-callback-no-heartbeat',
-  'workflow-lambda-unretried',
+  'workflow-function-unretried',
 ];
 
 /** A check of a deployment's settings that was not made, and why: a value the files do not settle, code not read. */

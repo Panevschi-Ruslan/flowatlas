@@ -4,9 +4,6 @@ import {
   failsWithAny,
   failuresOf,
   matchesRoutePattern,
-  registeredFirst,
-  routeOrderOf,
-  routerOf,
   shadowsByPath,
   type Failure,
   type GraphEdge,
@@ -14,6 +11,7 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import { cmp } from './order.js';
+import { registeredFirst, routeOrderOf, routerOf } from './route-order.js';
 
 /** What decides that a route is meant to be open. */
 export interface RouteAuditOptions {

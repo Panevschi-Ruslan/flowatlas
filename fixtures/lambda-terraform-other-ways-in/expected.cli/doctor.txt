@@ -4,7 +4,7 @@ unresolved: 1 to act on · missed: 2 · notes: 0 · findings: 1
   2 missed places static reading cannot see, folded into 2 rows
   1 finding: 1 function task retrying no transient error
   ways in: 16 found, 15 with a handler that was read, 1 without
-  workflow-lambda-unretried (finding): 1 row
+  workflow-function-unretried (finding): 1 row
     Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
       members/infra/returns.tf:43  library-members-restock: Restock invokes a function and retries none of the platform's transient errors, so one fails the execution
   invoker-not-read (info): 1 row
@@ -23,6 +23,6 @@ contracts: no errors, 0 excused, 2 boundary directions nothing could be compared
 
 baseline: missing (0 accepted, 1 now, +1)
   no baseline at <root>/fixtures/lambda-terraform-other-ways-in/flowatlas.baseline.json; run flowatlas doctor --accept to write one
-  workflow-lambda-unretried: 0 → 1 (+1)
+  workflow-function-unretried: 0 → 1 (+1)
   new (1):
-    members|infra/returns.tf|members#infra/returns.tf:library-members-restock/Restock|workflow-lambda-unretried
+    members|infra/returns.tf|members#infra/returns.tf:library-members-restock/Restock|workflow-function-unretried

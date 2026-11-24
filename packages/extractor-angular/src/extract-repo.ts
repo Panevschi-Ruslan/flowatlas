@@ -36,12 +36,12 @@ import {
   type SourceRootOptions,
   type ServiceConfig,
   projectText,
-  requestFactsPass,
 } from '@flowatlas/core';
 import { createAngularContext } from './context.js';
 import { declaresAngular } from './framework.js';
 import { buildAngularClassIndex } from './index-classes.js';
 import { messageTypesPass } from '@flowatlas/adapters-broker';
+import { requestFactsPass } from '@flowatlas/adapters-entry';
 import { callsPass } from './passes/calls.js';
 import { classesPass } from './passes/classes.js';
 import { graphqlPass } from './passes/graphql.js';

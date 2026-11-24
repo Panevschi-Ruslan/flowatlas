@@ -1,5 +1,6 @@
-import { normalizePath, PARAM_PLACEHOLDER, registeredFirst, routerOf, UNREAD_SPAN, wasRead, type GraphNode } from '@flowatlas/core';
+import { normalizePath, PARAM_PLACEHOLDER, UNREAD_SPAN, wasRead, type GraphNode } from '@flowatlas/core';
 import { cmp } from './order.js';
+import { registeredFirst, routerOf } from './route-order.js';
 
 export interface RouteMatch {
   entry: GraphNode;

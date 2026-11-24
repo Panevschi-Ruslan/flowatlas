@@ -409,7 +409,7 @@ only one of them moved.
   task token with no timeout of its own or of its machine
   (`workflow-task-untimed`), a callback with no heartbeat
   (`workflow-callback-no-heartbeat`, info) and a function task retrying none
-  of the platform's transient errors (`workflow-lambda-unretried`). Only
+  of the platform's transient errors (`workflow-function-unretried`). Only
   values the files settle, or the format's default, are compared; a check not
   made is one `deployment-setting-unread` note naming why. The readers now
   record a function's timeout, each queue's visibility timeout and redrive, and
@@ -3057,6 +3057,10 @@ only one of them moved.
 
 ### Changed
 
+- **The finding of a state machine task that retries no transient error is
+  `workflow-function-unretried` (P394).** It was `workflow-lambda-unretried`;
+  a `--kind`, a `.flowatlas` filter or a SARIF rule that names the old reason
+  needs the new one. The finding is unchanged.
 - **Less said on every turn, and a guide that saves turns (P366).** The
   graph server's instructions, which a client sends again with every
   request, are about 2,100 characters instead of 6,400: the tool to begin

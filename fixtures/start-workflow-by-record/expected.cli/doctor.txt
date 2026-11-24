@@ -15,7 +15,7 @@ unresolved: 5 to act on · missed: 5 over 7 sites · notes: 0 · findings: 1
   type-unresolved: 1 row
     The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.
       lending src/handlers/create-loan.ts:24  any
-  workflow-lambda-unretried (finding): 1 row
+  workflow-function-unretried (finding): 1 row
     Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
       lending statemachine/loan-approval.asl.json:5  lending-loan-approval: CheckBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution
   call-dynamic-receiver (info): 1 row over 3 places
@@ -34,10 +34,10 @@ baseline: missing (0 accepted, 5 now, +5)
   start-name-unread: 0 → 1 (+1)
   starter-undescribed: 0 → 2 (+2)
   type-unresolved: 0 → 1 (+1)
-  workflow-lambda-unretried: 0 → 1 (+1)
+  workflow-function-unretried: 0 → 1 (+1)
   new (5):
     lending|src/handlers/create-loan.ts|@library/notify send|starter-undescribed
     lending|src/handlers/create-loan.ts|any|type-unresolved
     lending|src/handlers/resume-run.ts|producer:lending#src/handlers/resume-run.ts:7:9|start-name-unread
     lending|src/handlers/send-overdue-notices.ts|@library/jobs submit|starter-undescribed
-    lending|statemachine/loan-approval.asl.json|lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower|workflow-lambda-unretried
+    lending|statemachine/loan-approval.asl.json|lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower|workflow-function-unretried

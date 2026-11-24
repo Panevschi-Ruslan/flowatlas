@@ -2,7 +2,7 @@ unresolved: total=2 (missing) · markers: errors=0 warnings=0 · desync=0 · con
 
 unresolved: 2 to act on · missed: 0 · notes: 0 · findings: 2
   2 findings: 2 function tasks retrying no transient error
-  workflow-lambda-unretried (finding): 2 rows
+  workflow-function-unretried (finding): 2 rows
     Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
       lending statemachine/loan-approval.asl.json:5  lending-loan-approval: CheckBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution
       lending statemachine/loan-approval.asl.json:17  lending-loan-approval: ScoreBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution
@@ -18,10 +18,10 @@ contracts: 1 error, 0 excused, 0 boundary directions nothing could be compared o
 
 baseline: missing (0 accepted, 2 now, +2)
   no baseline at <root>/fixtures/start-workflow-function-helper/flowatlas.baseline.json; run flowatlas doctor --accept to write one
-  workflow-lambda-unretried: 0 → 2 (+2)
+  workflow-function-unretried: 0 → 2 (+2)
   new (2):
-    lending|statemachine/loan-approval.asl.json|lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower|workflow-lambda-unretried
-    lending|statemachine/loan-approval.asl.json|lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower|workflow-lambda-unretried
+    lending|statemachine/loan-approval.asl.json|lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower|workflow-function-unretried
+    lending|statemachine/loan-approval.asl.json|lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower|workflow-function-unretried
 
 verdict:
   1 contract error nothing excused

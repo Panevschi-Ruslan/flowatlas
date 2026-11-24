@@ -2533,7 +2533,7 @@
           "workflow-callback-no-heartbeat": [
             "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/AwaitApproval"
           ],
-          "workflow-lambda-unretried": [
+          "workflow-function-unretried": [
             "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ChargeCard"
           ]
         },
@@ -2545,7 +2545,7 @@
           "queue-receives-few",
           "workflow-task-untimed",
           "workflow-callback-no-heartbeat",
-          "workflow-lambda-unretried"
+          "workflow-function-unretried"
         ],
         "notListed": {
           "batch-failures-unreported": [
@@ -2560,7 +2560,7 @@
             "channel:sqs/shop-packing",
             "channel:sqs/shop-notices"
           ],
-          "workflow-lambda-unretried": [
+          "workflow-function-unretried": [
             "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ReserveStock"
           ],
           "workflow-task-untimed": [

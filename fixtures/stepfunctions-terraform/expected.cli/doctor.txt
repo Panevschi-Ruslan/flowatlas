@@ -2,7 +2,7 @@ unresolved: total=12 (missing) · markers: errors=0 warnings=0 · desync=0 · co
 
 unresolved: 12 to act on · missed: 1 · notes: 0 · findings: 12
   12 findings: 9 function tasks retrying no transient error, 2 waiting tasks with no timeout, 1 callback with no heartbeat
-  workflow-lambda-unretried (finding): 9 rows
+  workflow-function-unretried (finding): 9 rows
     Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
       lending infra/workflows.tf:62  lending-overdue-sweep: SendReminder invokes a function and retries none of the platform's transient errors, so one fails the execution
       lending infra/workflows.tf:91  lending-hold-expiry: ReleaseHold invokes a function and retries none of the platform's transient errors, so one fails the execution
@@ -31,19 +31,19 @@ contracts: no errors, 0 excused, 1 boundary directions nothing could be compared
 
 baseline: missing (0 accepted, 12 now, +12)
   no baseline at <root>/fixtures/stepfunctions-terraform/flowatlas.baseline.json; run flowatlas doctor --accept to write one
-  workflow-lambda-unretried: 0 → 9 (+9)
+  workflow-function-unretried: 0 → 9 (+9)
   workflow-task-untimed: 0 → 2 (+2)
   workflow-template-unbound: 0 → 1 (+1)
   new (12):
-    lending|infra/workflows.tf|lending#infra/workflows.tf:lending-hold-expiry/ReleaseHold|workflow-lambda-unretried
-    lending|infra/workflows.tf|lending#infra/workflows.tf:lending-overdue-sweep/SendReminder|workflow-lambda-unretried
+    lending|infra/workflows.tf|lending#infra/workflows.tf:lending-hold-expiry/ReleaseHold|workflow-function-unretried
+    lending|infra/workflows.tf|lending#infra/workflows.tf:lending-overdue-sweep/SendReminder|workflow-function-unretried
     lending|statemachine/loan-approval.asl.json|lending#statemachine/loan-approval.asl.json:lending-loan-approval/AwaitLibrarianApproval|workflow-task-untimed
-    lending|statemachine/loan-approval.asl.json|lending#statemachine/loan-approval.asl.json:lending-loan-approval/NotifyBorrower|workflow-lambda-unretried
-    lending|statemachine/loan-approval.asl.json|lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower|workflow-lambda-unretried
-    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ApplyBranchPolicy|workflow-lambda-unretried
+    lending|statemachine/loan-approval.asl.json|lending#statemachine/loan-approval.asl.json:lending-loan-approval/NotifyBorrower|workflow-function-unretried
+    lending|statemachine/loan-approval.asl.json|lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower|workflow-function-unretried
+    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ApplyBranchPolicy|workflow-function-unretried
     lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ApplyBranchPolicy|workflow-template-unbound
-    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AssessLateFee|workflow-lambda-unretried
-    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AwaitFeePayment|workflow-lambda-unretried
-    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/CheckBorrowerStanding|workflow-lambda-unretried
-    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/NotifyRenewal|workflow-lambda-unretried
+    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AssessLateFee|workflow-function-unretried
+    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AwaitFeePayment|workflow-function-unretried
+    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/CheckBorrowerStanding|workflow-function-unretried
+    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/NotifyRenewal|workflow-function-unretried
     lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ReapproveFlaggedLoans|workflow-task-untimed

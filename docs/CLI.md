@@ -4389,7 +4389,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info), `bucket-notification-unread`, `stream-filter-not-matched` (info), `stream-no-writer` (info), `invoker-not-read` (info), `iot-action-not-read` (info) |
 | Writes to a bucket | `s3-write-matches-nothing` (info): a write none of the bucket's notifications takes |
 | Jobs on a queue | `job-no-handler` (info, P271): a job added under a name no handler of its queue takes, where every handler names the job it takes |
-| Deployment settings against the code (P389) | `batch-failures-unreported`, `batch-failures-ignored`, `queue-visibility-short`, `queue-redrive-missing`, `queue-receives-few`, `workflow-task-untimed`, `workflow-callback-no-heartbeat` (info), `workflow-lambda-unretried` (info where a Catch takes the errors): findings; `deployment-setting-unread` (info, a note): a check not made, and why |
+| Deployment settings against the code (P389) | `batch-failures-unreported`, `batch-failures-ignored`, `queue-visibility-short`, `queue-redrive-missing`, `queue-receives-few`, `workflow-task-untimed`, `workflow-callback-no-heartbeat` (info), `workflow-function-unretried` (info where a Catch takes the errors): findings; `deployment-setting-unread` (info, a note): a check not made, and why |
 | Values a deployment gives the code | `environment-not-set`, `environment-value-unread`, `environment-from-files`, `channel-from-grant` (info; P272) |
 | Architecture rules (`flowatlas rules`, the `rules` section) | `rule-matches-nothing` (a side of a rule names nothing; never a pass), `rule-invalid` (a rule fails its schema; the configuration is refused), `rule-over-partial-read` (a note: the rule names a service read in part) |
 
@@ -8761,7 +8761,7 @@ CloudFormation and the CDK are read alike; a disabled mapping is not checked.
 | `queue-receives-few` | its redrive policy hands a message on after fewer than 5 receives |
 | `workflow-task-untimed` | a task waiting on an activity, a `.sync` job or a task token (`.waitForTaskToken`) has no `TimeoutSeconds` (or `TimeoutSecondsPath`), and the state machine has none |
 | `workflow-callback-no-heartbeat` (info) | a task waiting on a task token has no `HeartbeatSeconds` |
-| `workflow-lambda-unretried` | a task invoking a function (the integration or the function's ARN) retries none of `Lambda.ServiceException`, `Lambda.AWSLambdaException`, `Lambda.SdkClientException`, `Lambda.ClientExecutionTimeoutException`, `Lambda.TooManyRequestsException`, `States.ALL` or `States.TaskFailed`; at `info` where a `Catch` takes them |
+| `workflow-function-unretried` | a task invoking a function (the integration or the function's ARN) retries none of `Lambda.ServiceException`, `Lambda.AWSLambdaException`, `Lambda.SdkClientException`, `Lambda.ClientExecutionTimeoutException`, `Lambda.TooManyRequestsException`, `States.ALL` or `States.TaskFailed`; at `info` where a `Catch` takes them |
 
 A handler that returns what a package outside the repository returns (a batch
 helper of its own, say) is not judged: the note says so. The state machine

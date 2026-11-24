@@ -2,7 +2,7 @@ unresolved: total=4 (missing) · markers: errors=0 warnings=0 · desync=0 · con
 
 unresolved: 4 to act on · missed: 0 · notes: 0 · findings: 4
   4 findings: 2 function tasks retrying no transient error, 1 redrive after too few receives, 1 queue hiding a message too briefly
-  workflow-lambda-unretried (finding): 2 rows
+  workflow-function-unretried (finding): 2 rows
     Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
       orders/serverless.yml:137  orders-dev-shipping: ReserveStock invokes a function and retries none of the platform's transient errors, so one fails the execution
       orders/serverless.yml:145  orders-dev-shipping: ChargePayment invokes a function and retries none of the platform's transient errors, so one fails the execution
@@ -24,9 +24,9 @@ baseline: missing (0 accepted, 4 now, +4)
   no baseline at <root>/fixtures/serverless-orders/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   queue-receives-few: 0 → 1 (+1)
   queue-visibility-short: 0 → 1 (+1)
-  workflow-lambda-unretried: 0 → 2 (+2)
+  workflow-function-unretried: 0 → 2 (+2)
   new (4):
     orders|serverless.yml|channel:sqs/orders-dev-placed|queue-receives-few
     orders|serverless.yml|consumer:orders#serverless.yml:functions.ship-order.events[0]|queue-visibility-short
-    orders|serverless.yml|orders#serverless.yml:orders-dev-shipping/ChargePayment|workflow-lambda-unretried
-    orders|serverless.yml|orders#serverless.yml:orders-dev-shipping/ReserveStock|workflow-lambda-unretried
+    orders|serverless.yml|orders#serverless.yml:orders-dev-shipping/ChargePayment|workflow-function-unretried
+    orders|serverless.yml|orders#serverless.yml:orders-dev-shipping/ReserveStock|workflow-function-unretried

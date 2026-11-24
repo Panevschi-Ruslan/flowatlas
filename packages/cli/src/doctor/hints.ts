@@ -854,7 +854,7 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'A task waits on an activity, a .sync job or a task token with no TimeoutSeconds, and its state machine has none: if the answer never comes, the execution waits until the service\'s own limit. Give the task a TimeoutSeconds.',
   'workflow-callback-no-heartbeat': () =>
     'A task waits for a task token with no HeartbeatSeconds, so a worker that died is noticed only when the task times out. Give the task a HeartbeatSeconds below its timeout, and have the worker send heartbeats.',
-  'workflow-lambda-unretried': () =>
+  'workflow-function-unretried': () =>
     'A task invokes a function and retries none of the platform\'s transient errors (Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.TooManyRequestsException, or States.ALL / States.TaskFailed). Add a Retry for them.',
   'deployment-setting-unread': () =>
     'A check of a deployment\'s settings against the code it runs was not made: a value the files do not settle, a queue or a function declared somewhere this reading does not hold, or a handler not read. Nothing is said about it either way.',
@@ -1019,7 +1019,7 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'queue-receives-few': ['redrive after too few receives', 'redrives after too few receives'],
   'workflow-task-untimed': ['waiting task with no timeout', 'waiting tasks with no timeout'],
   'workflow-callback-no-heartbeat': ['callback with no heartbeat', 'callbacks with no heartbeat'],
-  'workflow-lambda-unretried': ['function task retrying no transient error', 'function tasks retrying no transient error'],
+  'workflow-function-unretried': ['function task retrying no transient error', 'function tasks retrying no transient error'],
 });
 
 /** One finding reason and its count, in words: `1 likely N+1`, `2 routes with no guard`. */

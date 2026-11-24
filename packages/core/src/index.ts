@@ -85,10 +85,7 @@ export type { DeployedEntryKind, HttpMethod, ReachedAs, SiteLeafType } from './i
 export { whenFree } from './when-free.js';
 export {
   CONTROLLER_ORDER_META,
-  registeredFirst,
   ROUTE_ORDER_META,
-  routeOrderOf,
-  routerOf,
   shadowsByPath,
 } from './route-order.js';
 export type { OrderedRoute, RouteOrder } from './route-order.js';
@@ -1287,12 +1284,14 @@ export {
   CREDENTIALS_META,
   HEADERS_META,
   readRequestFacts,
-  requestFactsPass,
+  requestFactsPassOf,
   SENDS_JSON_META,
   STATUS_CHECKS_META,
   statusChecksOf,
   statusComparisonsIn,
   type CredentialsSaid,
+  type EveryRequestSettings,
+  type RequestClient,
   type RequestFactsHost,
   type StatusCheck,
 } from './request-facts.js';

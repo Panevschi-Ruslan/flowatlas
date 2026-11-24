@@ -70,6 +70,7 @@ export * from './spec-diff/index.js';
 export { surveyChannels, surveyRoutes } from './survey.js';
 export type { ChannelSurvey, RouteSurvey } from './survey.js';
 export { matchesRoutePattern } from './route-audit.js';
+export { registeredFirst, routeOrderOf, routerOf } from './route-order.js';
 export { answeringAt, couldReach, isMatch, matchRoute, oneSegmentOff, pathAnswers } from './route-match.js';
 export type { RouteMatch, RouteMiss, RouteResult } from './route-match.js';
 export { missedOf } from './report.js';

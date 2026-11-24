@@ -16,7 +16,7 @@ unresolved: 12 to act on · missed: 11 · notes: 3 · findings: 5
         ↳ Write the integration uri as the invocation ARN of a function the template declares, through Fn::Sub.
       library/template.yaml:330  Resources.OverdueStateMachine.Events.Check
         ↳ The workflow is still drawn and joined by its name; this way of starting it is not.
-  workflow-lambda-unretried (finding): 2 rows
+  workflow-function-unretried (finding): 2 rows
     Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
       library/statemachine/renewals.asl.json:5  Resources.RenewalsStateMachine: PlaceHold invokes a function and retries none of the platform's transient errors, so one fails the execution
       library/template.yaml:309  library-prod-overdue: Remind invokes a function and retries none of the platform's transient errors, so one fails the execution
@@ -77,10 +77,10 @@ baseline: missing (0 accepted, 12 now, +12)
   nested-deployment-unread: 0 → 1 (+1)
   queue-redrive-missing: 0 → 2 (+2)
   route-target-unread: 0 → 2 (+2)
-  workflow-lambda-unretried: 0 → 2 (+2)
+  workflow-function-unretried: 0 → 2 (+2)
   new (12):
     library|api/branches.yaml|Resources.BranchesApi.paths./branches.get|route-target-unread
-    library|statemachine/renewals.asl.json|library#statemachine/renewals.asl.json:Resources.RenewalsStateMachine/PlaceHold|workflow-lambda-unretried
+    library|statemachine/renewals.asl.json|library#statemachine/renewals.asl.json:Resources.RenewalsStateMachine/PlaceHold|workflow-function-unretried
     library|template.yaml|Resources.Branches|construct-repeated-unread
     library|template.yaml|Resources.OverdueStateMachine.Events.Check|route-target-unread
     library|template.yaml|Resources.Postcodes|nested-deployment-unread
@@ -89,5 +89,5 @@ baseline: missing (0 accepted, 12 now, +12)
     library|template.yaml|entry:library:invoke:${…}@Resources.OwnerFunction|function-name-unread
     library|template.yaml|entry:library:invoke:library-prod-ping|function-handler-unread
     library|template.yaml|import:export:shared-notices-topic-arn|export-not-found
-    library|template.yaml|library#template.yaml:library-prod-overdue/Remind|workflow-lambda-unretried
+    library|template.yaml|library#template.yaml:library-prod-overdue/Remind|workflow-function-unretried
     library|tools/template.yaml|tools/template.yaml#Transform|deployment-plugin-unread
