@@ -6,7 +6,13 @@
     "loc": "src/app/items.client.ts:16",
     "service": "market-web",
     "reach": "alive",
-    "from": "screen /history"
+    "from": "screen /history",
+    "requests": [
+      {
+        "route": "entry:market-api:http:GET:/api/items",
+        "by": "market-api#src/items.controller.ts:ItemsController.list"
+      }
+    ]
   },
   "callers": [
     {

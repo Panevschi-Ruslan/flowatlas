@@ -1,0 +1,71 @@
+{
+  "target": {
+    "id": "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped",
+    "type": "method",
+    "label": "CatalogService.getGrouped",
+    "loc": "src/app/catalog.service.ts:17",
+    "service": "shop-admin",
+    "reach": "alive",
+    "from": "screen /catalog",
+    "requests": [
+      {
+        "route": "entry:shop-api:http:GET:/api/admin/:param/catalog/grouped",
+        "by": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.grouped"
+      }
+    ]
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "shop-admin#src/app/catalog.component.ts:CatalogComponent.load",
+        "type": "method",
+        "label": "CatalogComponent.load",
+        "loc": "src/app/catalog.component.ts:13",
+        "reach": "alive",
+        "from": "screen /catalog"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "returns": "type:shop-admin#CatalogGroup[]"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "ui_action:shop-admin#src/app/catalog.component.ts:8:22",
+            "type": "ui_action",
+            "label": "click=\"load()\"",
+            "loc": "src/app/catalog.component.ts:8",
+            "kind": "click"
+          },
+          "edge": {
+            "type": "handles",
+            "confidence": "static"
+          },
+          "topOfChain": true,
+          "gapsInFile": 0,
+          "children": []
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:shop-admin:screen:/catalog",
+      "type": "entry",
+      "label": "/catalog",
+      "loc": "src/app/app.routes.ts:7",
+      "service": "shop-admin",
+      "kind": "screen",
+      "reach": "outside",
+      "hops": 3,
+      "by": "shop-admin#src/app/catalog.component.ts:CatalogComponent"
+    }
+  ],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:shop-admin:screen:/catalog\"})",
+    "describe_for_prompt({id: \"entry:shop-admin:screen:/catalog\"})",
+    "impact({symbol: \"entry:shop-admin:screen:/catalog\"})"
+  ]
+}

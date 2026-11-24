@@ -1,0 +1,90 @@
+{
+  "root": {
+    "id": "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped",
+    "line": 17,
+    "children": [
+      {
+        "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.get",
+        "line": 23,
+        "edge": {
+          "type": "calls",
+          "params": [
+            "string"
+          ],
+          "returns": "T"
+        },
+        "children": [
+          {
+            "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.url",
+            "line": 18,
+            "edge": {
+              "type": "calls",
+              "params": [
+                "string"
+              ],
+              "returns": "string"
+            },
+            "children": [
+              {
+                "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.resource",
+                "line": 16,
+                "edge": {
+                  "type": "calls",
+                  "returns": "string"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ui_api_call:shop-admin#src/app/catalog.service.ts:18:12@24:12",
+        "label": "GET /admin/:param/catalog/grouped",
+        "kind": "http",
+        "edge": "calls",
+        "children": [
+          {
+            "id": "entry:shop-api:http:GET:/api/admin/:param/catalog/grouped",
+            "loc": "src/catalog/admin-catalog.controller.ts:8",
+            "edge": {
+              "type": "hits",
+              "returns": "type:shop-admin#CatalogGroup[]"
+            },
+            "children": [
+              {
+                "id": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.grouped",
+                "line": 8,
+                "edge": {
+                  "type": "handles",
+                  "params": [
+                    "string"
+                  ],
+                  "returns": "type:shop-api#CatalogGroup[]"
+                },
+                "children": [
+                  {
+                    "id": "shop-api#src/catalog/catalog.service.ts:CatalogService.grouped",
+                    "line": 11,
+                    "edge": {
+                      "type": "calls",
+                      "params": [
+                        "string"
+                      ],
+                      "returns": "type:shop-api#CatalogGroup[]"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 0,
+  "complete": true,
+  "next": [
+    "describe_for_prompt({id: \"shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped\"})",
+    "impact({symbol: \"shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped\"})"
+  ]
+}

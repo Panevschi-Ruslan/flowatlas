@@ -1,0 +1,50 @@
+{
+  "target": {
+    "id": "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped",
+    "line": 17,
+    "reach": "alive",
+    "from": "screen /catalog",
+    "requests": [
+      {
+        "route": "entry:shop-api:http:GET:/api/admin/:param/catalog/grouped",
+        "by": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.grouped"
+      }
+    ]
+  },
+  "callers": [
+    {
+      "id": "shop-admin#src/app/catalog.component.ts:CatalogComponent.load",
+      "line": 13,
+      "reach": "alive",
+      "from": "screen /catalog",
+      "edge": {
+        "type": "calls",
+        "returns": "type:shop-admin#CatalogGroup[]"
+      },
+      "children": [
+        {
+          "id": "ui_action:shop-admin#src/app/catalog.component.ts:8:22",
+          "label": "click=\"load()\"",
+          "kind": "click",
+          "edge": "handles",
+          "topOfChain": true,
+          "gapsInFile": 0
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:shop-admin:screen:/catalog",
+      "loc": "src/app/app.routes.ts:7",
+      "reach": "outside",
+      "hops": 3,
+      "by": "shop-admin#src/app/catalog.component.ts:CatalogComponent"
+    }
+  ],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:shop-admin:screen:/catalog\"})",
+    "describe_for_prompt({id: \"entry:shop-admin:screen:/catalog\"})"
+  ]
+}

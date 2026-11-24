@@ -10,7 +10,13 @@
           "loc": "src/app/items-api.service.ts:21",
           "service": "catalog-web",
           "reach": "unreached",
-          "from": "none"
+          "from": "none",
+          "requests": [
+            {
+              "route": "entry:catalog-api:http:GET:/items/:param",
+              "by": "catalog-api#src/items.controller.ts:ItemsController.findOne"
+            }
+          ]
         }
       ],
       "total": 1,
@@ -27,7 +33,13 @@
           "service": "catalog-web",
           "reach": "maybe",
           "from": "behind",
-          "gap": "gap:catalog-web|src/app/items-lookup.service.ts|navigation-unresolved"
+          "gap": "gap:catalog-web|src/app/items-lookup.service.ts|navigation-unresolved",
+          "requests": [
+            {
+              "route": "entry:catalog-api:http:GET:/items/:param",
+              "by": "catalog-api#src/items.controller.ts:ItemsController.findOne"
+            }
+          ]
         }
       ],
       "total": 1,

@@ -31,6 +31,33 @@ only one of them moved.
   it answered 2,004 (no sample) and its `impact` 1,904 from 1,901 (`channels`
   is a list). The budget matches a `throughChannels` row by its `consumer` and
   fails an exact list naming a row twice.
+- **"Where does this request land" in one call (P377).** `get_flow` takes any
+  symbol the way `who_calls` does (an id, `Class.method`, a short name that is
+  the only best match, the candidates when several share it), and with nothing
+  near names `find_symbol` (or a route search for a path), never an empty list
+  of suggestions; `flowatlas flow` takes the same. An answer about one method
+  says where the requests it sends land: `who_calls`' target, each
+  `find_symbol` match and `get_source`'s answer carry `requests`, each
+  `{route, by}` with `by` the code handling the route, and `requestsUnjoined`,
+  a request joined to no route as written (`POST ${apiUrl}/admin/:param/catalog/export`),
+  for the requests the method sends itself or through code of its own
+  service (a helper, a base class's verb helper, a client wrapper), never a
+  class it injects. `search` finds a route by the path a client writes,
+  whatever its parameters are called (`:orderId`, `{orderId}`, `${orderId}`)
+  and without the prefix the server adds (a global `/api`), a verb in front
+  keeping that verb's routes. Wherever a tool takes `service`, the folder of the
+  service's repository (as the configuration's `repo` writes it) names the
+  service too, and a name that is neither answers the services there are
+  (`what_changed` keeps its own answer for a service a diff names). A new
+  fixture, `request-lands-on-route`, with verbose and compact snapshots and
+  five answer-budget questions with hand-written answers, each now one call:
+  `get_flow` on a client method's short name 1,485 characters (three calls and
+  1,912 before), `who_calls` 999 (two and 2,314), `find_symbol` 536 (two and
+  1,889), the client's path 436, the folder as `service` 411 (three and
+  1,922). The budget re-records `find_symbol.several` (965 to 1,380) and
+  `find_symbol.unreferenced` (656 to 922), whose client methods now say where
+  their requests land, and the listing, 2 characters longer for `get_flow`'s
+  `entry`.
 - **who_calls reaches the ways in in one call (P376).** Asked without
   `depth`, `who_calls` draws the nearest callers (two hops; on a class or
   several `symbols`, each one's direct callers) and lists every way in the

@@ -1,0 +1,20 @@
+{
+  "query": "/admin/:rid/orders/${id}/modify",
+  "counts": {
+    "routes": 1
+  },
+  "results": {
+    "routes": [
+      {
+        "id": "entry:shop-api:http:POST:/api/admin/:param/orders/:param/modify",
+        "loc": "src/orders/admin-orders.controller.ts:8",
+        "reach": "alive"
+      }
+    ]
+  },
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:shop-api:http:POST:/api/admin/:param/orders/:param/modify\"})",
+    "describe_for_prompt({id: \"entry:shop-api:http:POST:/api/admin/:param/orders/:param/modify\"})"
+  ]
+}

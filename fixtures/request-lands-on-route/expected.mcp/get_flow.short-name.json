@@ -1,0 +1,137 @@
+{
+  "root": {
+    "node": {
+      "id": "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped",
+      "type": "method",
+      "label": "CatalogService.getGrouped",
+      "loc": "src/app/catalog.service.ts:17",
+      "service": "shop-admin"
+    },
+    "children": [
+      {
+        "node": {
+          "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.get",
+          "type": "method",
+          "label": "AdminApiService.get",
+          "loc": "src/app/admin-api.service.ts:23"
+        },
+        "edge": {
+          "type": "calls",
+          "confidence": "static",
+          "params": [
+            "string"
+          ],
+          "returns": "T"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.url",
+              "type": "method",
+              "label": "AdminApiService.url",
+              "loc": "src/app/admin-api.service.ts:18"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "string"
+              ],
+              "returns": "string"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.resource",
+                  "type": "method",
+                  "label": "AdminApiService.resource",
+                  "loc": "src/app/admin-api.service.ts:16"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "returns": "string"
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "node": {
+          "id": "ui_api_call:shop-admin#src/app/catalog.service.ts:18:12@24:12",
+          "type": "ui_api_call",
+          "label": "GET /admin/:param/catalog/grouped",
+          "loc": "src/app/catalog.service.ts:18",
+          "kind": "http"
+        },
+        "edge": {
+          "type": "calls",
+          "confidence": "static"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "entry:shop-api:http:GET:/api/admin/:param/catalog/grouped",
+              "type": "entry",
+              "label": "GET /api/admin/:param/catalog/grouped",
+              "loc": "src/catalog/admin-catalog.controller.ts:8",
+              "service": "shop-api",
+              "kind": "http"
+            },
+            "edge": {
+              "type": "hits",
+              "confidence": "static",
+              "returns": "type:shop-admin#CatalogGroup[]"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.grouped",
+                  "type": "method",
+                  "label": "AdminCatalogController.grouped",
+                  "loc": "src/catalog/admin-catalog.controller.ts:8"
+                },
+                "edge": {
+                  "type": "handles",
+                  "confidence": "static",
+                  "params": [
+                    "string"
+                  ],
+                  "returns": "type:shop-api#CatalogGroup[]"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "shop-api#src/catalog/catalog.service.ts:CatalogService.grouped",
+                      "type": "method",
+                      "label": "CatalogService.grouped",
+                      "loc": "src/catalog/catalog.service.ts:11"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static",
+                      "params": [
+                        "string"
+                      ],
+                      "returns": "type:shop-api#CatalogGroup[]"
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 0,
+  "complete": true,
+  "next": [
+    "describe_for_prompt({id: \"shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped\"})",
+    "impact({symbol: \"shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped\"})",
+    "get_source({symbol: \"shop-admin#src/app/admin-api.service.ts:AdminApiService.get\"})"
+  ]
+}

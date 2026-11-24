@@ -10,6 +10,7 @@ import type { DbHandle } from './query/db.js';
 import { loggedCall, questionLogSettings, type QuestionLogSettings } from './query/questions.js';
 import { nearWords } from './query/names.js';
 import { loadObservedCounts } from './query/observed.js';
+import { serviceNamed, type ServiceNamed } from './query/service-name.js';
 import { canAnswer, isToolName, NEEDS, TOOL_NAMES, TOOL_NEEDS, type Need, type ToolFacts, type ToolName } from './tool-needs.js';
 import { changeDocumentsBeside } from './tools/changes.js';
 import { respond, verboseInput } from './tools/common.js';
@@ -69,6 +70,14 @@ export const listingSettingsOf = (
 };
 
 type Handler = (request: never, extra: never) => unknown;
+
+/**
+ * The tools whose `service` is read against services of their own (P377): a
+ * diff's two sides, where a service the graph no longer holds is still a
+ * service. A folder name is read as the service there too; a name that is
+ * none is the tool's to answer.
+ */
+const SERVICES_OF_THEIR_OWN: ReadonlySet<string> = new Set(['what_changed']);
 
 /**
  * A tool's configuration with `verbose` among its inputs (P365): every tool
@@ -351,6 +360,12 @@ export class ToolListing {
     return [stamped(path), stamped(observedPathFor(path)), ...changeDocumentsBeside(path)].join('|');
   }
 
+  /** The service a `service` input names, read against the services the graph records; as said where no graph opens. */
+  #serviceNamed(said: string): ServiceNamed {
+    const opened = this.#handle.open();
+    return 'db' in opened ? serviceNamed(opened.db.services(), said) : { service: said };
+  }
+
   /** The SDK's list and call handlers, with the list decided first and a hidden tool's call answered here. */
   #guard(schema: unknown, handler: Handler): Handler {
     if (schema === ListToolsRequestSchema) {
@@ -370,8 +385,14 @@ export class ToolListing {
         // `verbose` is the boundary's, not the tool's (P365): the tool answers as it always has, and is never told.
         const { verbose, ...asked } = request.params.arguments ?? {};
         const compact = verbose !== true && !FULL_ANSWER_TOOLS.has(request.params.name);
+        // A service said by its repository's folder is the service (P377); one named nowhere answers the services there are.
+        const said = typeof asked['service'] === 'string' ? this.#serviceNamed(asked['service']) : undefined;
+        // A diff's services are its two sides', not the graph's: one gone from the graph is still asked of it.
+        const named = said !== undefined && 'error' in said && SERVICES_OF_THEIR_OWN.has(request.params.name) ? undefined : said;
+        if (named !== undefined && 'service' in named) asked['service'] = named.service;
         const toTool = request.params.arguments === undefined ? request : { ...request, params: { ...request.params, arguments: asked } };
-        const answered = () => this.#offered(handler(toTool as never, extra), compact);
+        const answered = () =>
+          named !== undefined && 'error' in named ? respond(named) : this.#offered(handler(toTool as never, extra), compact);
         if (!this.#log.enabled) return answered();
         // Logged here, once for every tool, so a tool added later is logged too (P235).
         const handle = this.#handle;

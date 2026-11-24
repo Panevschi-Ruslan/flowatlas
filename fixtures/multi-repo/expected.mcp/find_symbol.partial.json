@@ -7,7 +7,13 @@
       "loc": "src/clients/orders.client.ts:32",
       "service": "gateway",
       "reach": "alive",
-      "from": "GET /orders/:param"
+      "from": "GET /orders/:param",
+      "requests": [
+        {
+          "route": "entry:orders:http:GET:/orders/:param",
+          "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+        }
+      ]
     }
   ],
   "total": 1,

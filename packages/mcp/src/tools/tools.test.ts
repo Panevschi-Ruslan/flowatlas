@@ -279,6 +279,11 @@ describe('the tools a session is offered', () => {
    * P378 let `impact`'s `channel` name a consumer of `throughChannels` too, for
    * all of its channels, and said so on the input: 13,344 read, 36,102 in all,
    * 32,366 for the nineteen tools; the last two ceilings moved to the next 50.
+   * P377 said in the output schemas of `find_symbol` and `get_source` where a
+   * method's requests land (`requests`, `requestsUnjoined`, `requestsMore`),
+   * and in `get_flow`'s `entry` that it takes any name: 13,314 read, 36,564 in
+   * all, 32,828 for the nineteen tools. Together with P378, 32,852 for the
+   * nineteen, the ceiling moved to the next 50.
    */
   /**
    * The instructions are re-sent on every turn (P366): 6,435 characters
@@ -295,7 +300,7 @@ describe('the tools a session is offered', () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
     expect(read.length).toBeLessThan(13350);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(36150);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(36600);
   });
 
   /**
@@ -333,7 +338,7 @@ describe('the tools a session is offered', () => {
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
       expect(read.length).toBeLessThan(99999);
-      expect(JSON.stringify({ tools }).length).toBeLessThan(32400);
+      expect(JSON.stringify({ tools }).length).toBeLessThan(32900);
     } finally {
       await plain.close();
     }
@@ -521,8 +526,10 @@ describe('following an entry across services', () => {
 
   it('suggests something when nothing matches', async () => {
     const flow = await call('get_flow', { entry: 'GET /nowhere' });
-    expect(flow.error).toContain('no entry matches');
-    expect(Array.isArray(flow.suggestions)).toBe(true);
+    expect(flow.error).toBe('nothing matches "GET /nowhere"');
+    // Nothing near: the routes searched by path, never an empty list of suggestions (P377).
+    expect(flow.suggestions).toBeUndefined();
+    expect(flow.next).toEqual(['search({query: "GET /nowhere", kinds: ["routes"]})']);
   });
 
   it('stays within the node budget and says what it cut', async () => {

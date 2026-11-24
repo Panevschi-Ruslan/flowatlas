@@ -4,6 +4,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, projectEdge, truncate } from '../query/detail.js';
 import { isResolved, resolveSymbol, type EntryRef } from '../query/entry-ref.js';
+import { requestsOf } from '../query/requests.js';
 import { REVERSE_EDGES } from '../query/flow.js';
 import { truncationMessage, type FlowNode, type WalkLimit } from '../query/types.js';
 import { MAX_NEXT, nextFor, withNext, withoutShown, type RowShown } from '../query/next.js';
@@ -943,6 +944,8 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
           ...(seen === undefined ? {} : { observed: seen.hits, ...figuresOf(seen) }),
           ...(unsure === undefined ? {} : { seenAmbiguous: unsure }),
           ...targetReach,
+          // Where the requests it sends land (P377): the route and its handler, or the address joined to none.
+          ...requestsOf(db, target),
         },
         ...(found.alsoAnswers === undefined ? {} : { alsoAnswers: found.alsoAnswers }),
         ...(found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed }),

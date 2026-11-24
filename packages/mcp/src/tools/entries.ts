@@ -7,6 +7,7 @@ import { sampledIn } from '../query/observed.js';
 import { rankMatches } from '../query/names.js';
 import { nextFor, withNext, withoutShown, withTraceFor } from '../query/next.js';
 import { declaredBy, isDeclared } from '../query/declared.js';
+import { requestsOf } from '../query/requests.js';
 import { deadOptionsOf, reachOfVerdict, reachReader, REACHES, type Reach, type ReachReader } from '../query/ways-in.js';
 import {
   answerEach,
@@ -18,6 +19,7 @@ import {
   completeOf,
   completeOutput,
   inService,
+  matchedNodeOutput,
   nextOutput,
   nodeOutput,
   pagedNext,
@@ -72,7 +74,7 @@ export const listEntriesOutput = {
 
 /** What find_symbol answers: one page of matches, best first. */
 export const findSymbolOutput = {
-  matches: z.array(reachedNodeOutput).optional(),
+  matches: z.array(matchedNodeOutput).optional(),
   total: pageOutput.total.optional(),
   nextOffset: pageOutput.nextOffset,
   truncated: pageOutput.truncated,
@@ -105,7 +107,8 @@ const findOne = (db: GraphDb, input: FindAsked, query: string, reader: ReachRead
 
   const { items, total, truncated, nextOffset } = truncate(ranked, maxNodes, input.offset);
   const args = { query, types: input.types, service: input.service, detail: input.detail, maxNodes };
-  const rows = items.map((match) => reader.annotate(projectDetail(match.node, detail)));
+  // A method that sends requests says where they land (P377).
+  const rows = items.map((match) => ({ ...reader.annotate(projectDetail(match.node, detail)), ...requestsOf(db, match.node) }));
   return withNext(
     {
       matches: rows,

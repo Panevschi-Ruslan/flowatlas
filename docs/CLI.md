@@ -2170,7 +2170,11 @@ flowatlas flow "entry:orders:http:POST:/orders/:param"
 flowatlas flow "bot:order_confirm"        # a bot command or button
 flowatlas flow "invoke:library-dev-create-loan"   # a function, by its deployed name
 flowatlas flow "workflow:loan-approval"   # a state machine, by its name
+flowatlas flow "OrdersClient.fetchOne"    # any symbol, from it onwards (P377)
 ```
+
+Any symbol is taken too, as `who_calls` takes one: a full id, `Class.method`, or
+a short name that is the only best match.
 
 A name matching two services comes back as a choice rather than a guess. A name
 matching nothing comes back with the nearest few. Where a route that spells a

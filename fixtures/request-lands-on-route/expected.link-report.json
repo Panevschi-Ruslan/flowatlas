@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T08:36:04.507Z",
+  "configHash": "35cb507f7c49",
+  "services": [
+    {
+      "name": "shop-admin",
+      "repo": "./shop-frontend",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 25,
+      "edges": 20,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 758,
+      "packages": {
+        "name": "shop-admin",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop-api",
+      "repo": "./shop-backend",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 15,
+      "edges": 8,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 870,
+      "packages": {
+        "name": "shop-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 3,
+    "resolved": 2,
+    "unresolved": 1,
+    "byReason": {
+      "target-route-not-found": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 2,
+    "uncalled": [
+      "entry:shop-api:http:GET:/api/admin/:param/catalog/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "shop-admin",
+      "file": "src/app/catalog.service.ts",
+      "line": 23,
+      "reason": "target-route-not-found",
+      "message": "target service shop-api has no route POST /admin/:param/catalog/export",
+      "hint": "Route renamed? Check shop-api's controllers, or annotate the method with /** @flowatlas-calls POST /admin/:param/catalog/export */.",
+      "symbol": "ui_api_call:shop-admin#src/app/catalog.service.ts:23:12@28:12"
+    }
+  ],
+  "totals": {
+    "nodes": 40,
+    "edges": 30,
+    "types": 2,
+    "missed": 2,
+    "sites": 3,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 2
+  }
+}

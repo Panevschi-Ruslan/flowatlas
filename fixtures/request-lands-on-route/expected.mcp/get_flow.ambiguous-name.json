@@ -1,0 +1,24 @@
+{
+  "candidates": [
+    {
+      "id": "shop-admin#src/app/catalog.service.ts:CatalogService",
+      "type": "provider",
+      "label": "CatalogService",
+      "loc": "src/app/catalog.service.ts:10",
+      "service": "shop-admin",
+      "kind": "injectable"
+    },
+    {
+      "id": "shop-api#src/catalog/catalog.service.ts:CatalogService",
+      "type": "provider",
+      "label": "CatalogService",
+      "loc": "src/catalog/catalog.service.ts:9",
+      "service": "shop-api",
+      "kind": "injectable"
+    }
+  ],
+  "next": [
+    "get_flow({entry: \"shop-admin#src/app/catalog.service.ts:CatalogService\"})",
+    "get_flow({entry: \"shop-api#src/catalog/catalog.service.ts:CatalogService\"})"
+  ]
+}

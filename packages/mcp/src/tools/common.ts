@@ -332,6 +332,13 @@ export const reachOutput = {
   behind: z.string().optional(),
 };
 
+/** Where the requests a method sends land (P377), as `requestsOf` says it. */
+export const requestsOutput = {
+  requests: z.array(z.object({ route: z.string(), by: z.string().optional() })).optional(),
+  requestsUnjoined: z.array(z.string()).optional(),
+  requestsMore: z.number().optional(),
+};
+
 /** Whether a list is the whole answer, and what was left if not (P364). */
 export const completeOutput = {
   complete: z.boolean().optional(),
@@ -356,6 +363,9 @@ export const nodeOutput = z
 
 /** A row of code with whether it runs and where it is reached from (P364). */
 export const reachedNodeOutput = nodeOutput.extend(reachOutput).meta({ id: 'ReachedNode' });
+
+/** A find_symbol match: a reached node, and where the requests it sends land (P377). */
+export const matchedNodeOutput = reachedNodeOutput.extend(requestsOutput).meta({ id: 'MatchedNode' });
 
 /** What every cut list says beside its rows. */
 export const pageOutput = {

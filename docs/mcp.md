@@ -187,6 +187,11 @@ bounded and say when they were cut, rather than filling a context window.
 The meaning and defaults of `detail`, `maxNodes`, `offset` and `service` are
 said once, in the server's instructions, and each tool lists them by type alone
 (P366); a tool whose bound differs (`get_flow`'s 60 rows) lists what differs.
+`service` takes the name the configuration gives a service, or the folder of
+its repository as the configuration's `repo` writes it (`shop-backend` for
+`"repo": "./shop-backend"`), or either in another case (P377); a name that is
+none of them answers `{error, services}`, the services there are, rather than
+an empty answer.
 Every call is still checked against the full bounds. The instructions, re-sent
 by a client on every turn, are at most 2,500 characters: the tool to begin with,
 the chains, the shared inputs and which tools are listed when. What one tool's
@@ -410,6 +415,20 @@ characters; `who_calls` on the main fixture's service method took three
 calls and 13,567 characters, since its default depth stopped twice before the
 ways in. Since P376 it answers in one call of 2,004, the ways in listed once
 each.
+
+"Which handler does this front-end method's request land on" is one call since
+P377 (`request-lands-on-route`): `get_flow` on `CatalogService.getGrouped`
+answers 1,485 characters where it answered "no entry matches" and took
+`find_symbol` and `get_flow` on the full id after it (three calls, 1,912);
+`who_calls` on it says the route and handler on its target in 999 (829, and
+`get_flow` on the full id after: two calls, 2,314); `find_symbol` on
+`DeskOrderService.amendOrder` in 536 (two calls, 1,889); `search` for the
+client's path `/admin/:rid/orders/${id}/modify` in 436 where it answered
+"nothing matches"; `search` with the repository's folder as `service` in 411
+where it answered "nothing matches" and the services had to be read from
+`start_here` (three calls, 1,922). Rows that send requests now say where they
+land: `find_symbol.several` grew from 965 to 1,380 characters,
+`find_symbol.unreferenced` from 656 to 922.
 
 A complete answer whose `next` still names the same call asked further (a
 deeper `who_calls`, the next page) fails the budget too (P376): the agent
@@ -761,6 +780,15 @@ screen by its address and by the component it shows.
 `find_symbol` accepts initials: `osc` finds `OrdersService.create`. Start here
 when you know roughly what something is called.
 
+A route is found by the path a client writes, too (P377): a query holding a
+`/` matches a route whose path holds it as whole segments, whatever its
+parameters are called (`:orderId`, `{orderId}`, `${orderId}`, `<orderId>`,
+`[orderId]`, all `:param` in the graph) and without the prefix the server adds
+(`/admin/:rid/orders/:id/modify` finds `POST /api/admin/:param/orders/:param/modify`);
+a verb in front (`POST /...`) keeps the routes of that verb, and a host or a
+query string is no part of it. The whole path comes first, then a route ending
+with it, then one holding it, after the rows matched by name.
+
 `search` is the wider net. `kinds` is any of `routes`, `channels`, `messages`,
 `tables`, `types`, `gaps`, `fails` and `classes`. Under `messages`, a type of
 message on a channel is found by its value (`ORDER_SHIPPED`): each hit is the
@@ -782,7 +810,7 @@ route matched too. A helper's choices count: `423` finds the routes whose
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain; with `to`, only the shortest ways to that node | `entry` (required), `to`, `depth` (8, one more per workflow step), `maxChars` |
+| `get_flow` | one entry, or any symbol, followed through every repository it reaches, in call order, with the guard chain; with `to`, only the shortest ways to that node | `entry` (required: a route said aloud, an id, `Class.method` or a short name, as `who_calls` takes it), `to`, `depth` (8, one more per workflow step), `maxChars` |
 | `who_calls` | everything that reaches a symbol, backwards across repositories, up to every way in: the nearest callers as a tree, then each way in once under `waysIn` | `symbol` or `symbols` (required), `depth` (unset: walk to the ways in; 16 at most: the tree alone), `service` |
 | `impact` | every way in whose code calls a symbol, in any service: its own, those past each route on the calling side with `via`, and `maybe` rows where a chain stops at an unread call; the ways in only beyond a channel a consumer on the way takes messages from counted in `throughChannels`, one row per consumer | `symbol` (required), `channel` (list one of `throughChannels`: a channel, or a consumer for all of its), `service`, `offset` |
 
@@ -949,6 +977,23 @@ while `waysIn` is said once for all of them, `reaches` naming the symbols
 route is five calls down answers in one call of 2,828 characters where a depth
 of 3 took three calls and 11,993, and on its class in 2,926 where it took three
 and 20,854.
+
+**Where a method's requests land (P377).** An answer about one method says
+where the requests it sends land: `who_calls`' `target`, each `find_symbol`
+match, and `get_source`'s answer beside the code. `requests` lists each route
+a request is joined to, `{route, by}`, `by` the code handling the route (the
+controller method); `requestsUnjoined` the requests joined to no route, as
+written (`"POST ${apiUrl}/admin/:param/catalog/export"`); past eight,
+`requestsMore` counts the rest. The requests are the ones the method sends
+itself and the ones the code it calls in its own service sends for it (a
+helper of its class, a base class's verb helper, a client wrapper function,
+two calls deep at most); a call into a class its class injects is that
+class's request, so a screen's method calling a client says none. Code that
+sends nothing says neither. `get_flow` takes any symbol the way `who_calls`
+does (an id, `Class.method`, a short name that is the only best match, the
+candidates when several nodes share it, each as the call to make), and with
+nothing near says so and names `find_symbol`, never an empty list of
+suggestions.
 
 With `depth`, `who_calls` walks breadth first to that depth (16 at most) and
 draws the tree alone, as before, and counts what it left: a cut tree says

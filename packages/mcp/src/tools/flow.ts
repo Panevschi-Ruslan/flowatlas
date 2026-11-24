@@ -2,7 +2,7 @@ import type { DetailLevel, GraphNode } from '@flowatlas/core';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail } from '../query/detail.js';
-import { isResolved, resolveEntryRef, resolveSymbol } from '../query/entry-ref.js';
+import { isResolved, resolveSymbol } from '../query/entry-ref.js';
 import { findPath, type PathResult } from '../query/path.js';
 import { withDocs } from '../query/docs.js';
 import { buildFlowTree, type FlowResult } from '../query/flow.js';
@@ -130,7 +130,7 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
       description:
         'One entry followed across repositories, as a call-order tree with guards; with `to`, the shortest ways there. A node met again is `{id, ref: true, seenAt}`; `stoppedBy` says what cut it and `crossingsLeft` the crossings to ask on.',
       inputSchema: {
-        entry: z.string().describe('"POST /orders" or an entry id'),
+        entry: z.string().describe('"POST /orders", an id or a name'),
         to: z.string().optional(),
         depth: z.number().int().min(1).max(32).optional().describe('hops; default 8, +1 per workflow step'),
         detail: commonInput.detail,
@@ -155,7 +155,10 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
           });
           return { ...pathAnswer(from.id, to.id, path, input.depth), ...(note === undefined ? {} : { note }) };
         }
-        const ref = resolveEntryRef(db, input.entry);
+        // Any symbol, the way who_calls and find_symbol take one (P377): an entry said aloud first,
+        // then a class, a method or a function by its id, `Class.method` or a short name that is
+        // the only best match; a name several nodes share answers the candidates.
+        const ref = resolveSymbol(db, input.entry);
 
         if (!isResolved(ref)) {
           if (ref.candidates.length > 0) {
@@ -164,10 +167,21 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
               ref.candidates.slice(0, MAX_NEXT).map((node) => `get_flow({entry: ${JSON.stringify(node.id)}})`),
             );
           }
-          const near = nearNames(db.nodesByType('entry'), input.entry, 5);
+          // Near names of any node, entries first, so a misspelt route still finds its route.
+          const near = [...nearNames(db.nodesByType('entry'), input.entry, 5), ...nearNames(db.allNodes(), input.entry, 5)]
+            .filter((node, index, all) => all.findIndex((other) => other.id === node.id) === index)
+            .slice(0, 5);
           return withNext(
-            { error: `no entry matches ${JSON.stringify(input.entry)}`, suggestions: near.map((node) => projectDetail(node, detail)) },
-            near.slice(0, MAX_NEXT).map((node) => `get_flow({entry: ${JSON.stringify(node.id)}})`),
+            {
+              error: `nothing matches ${JSON.stringify(input.entry)}`,
+              ...(near.length === 0 ? {} : { suggestions: near.map((node) => projectDetail(node, detail)) }),
+            },
+            near.length > 0
+              ? near.slice(0, MAX_NEXT).map((node) => `get_flow({entry: ${JSON.stringify(node.id)}})`)
+              : // A path is looked for among the routes, by any parameter name (P377); a name among every node.
+                input.entry.includes('/')
+                ? [callOf('search', { query: input.entry, kinds: ['routes'] })]
+                : [callOf('find_symbol', { query: input.entry })],
           );
         }
 

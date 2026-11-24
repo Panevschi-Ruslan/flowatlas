@@ -8,8 +8,11 @@ import {
   type FailureGroup,
   gapIdOf,
   FIELDS_READ_META,
+  isHttpMethod,
   isMessageTypeNode,
   isRule,
+  normalizePath,
+  PARAM_PLACEHOLDER,
   makeMessageTypeId,
   type FieldRead,
   rowKindOf,
@@ -193,6 +196,60 @@ const nodesOf =
     );
   };
 
+/** A hole a client writes in a path: `${orderId}`, `{orderId}`, `:orderId`, `<orderId>`, `[orderId]`. */
+const CLIENT_HOLE = /^(?:\$\{[^}]*\}|\{[^}]*\}|:[^/]+|<[^>]*>|\[[^\]]*\])$/;
+
+/**
+ * A query that is a route's path, as segments with every hole `:param`, and
+ * its verb when one opens it (`POST /orders/:id`); undefined for a query that
+ * holds no `/`. A host and a query string are no part of it.
+ */
+export const pathQueryOf = (text: string): { method?: string; segments: string[] } | undefined => {
+  if (!text.includes('/')) return undefined;
+  const verb = /^([A-Za-z]+)\s+(\S.*)$/.exec(text.trim());
+  const method = verb !== null && isHttpMethod(verb[1] ?? '') ? (verb[1] ?? '').toUpperCase() : undefined;
+  const written = (method === undefined ? text.trim() : (verb?.[2] ?? '')).replace(/^[a-z]+:\/\/[^/]+/i, '').replace(/[?#].*$/, '');
+  // `${a}` may hold a `/` of its own (`${base}/x`): read as one hole whatever it holds.
+  const segments = written
+    .replace(/\$\{[^}]*\}/g, ':param')
+    .split('/')
+    .filter((segment) => segment !== '')
+    .map((segment) => (CLIENT_HOLE.test(segment) ? PARAM_PLACEHOLDER : segment.toLowerCase()));
+  return segments.length === 0 ? undefined : { ...(method === undefined ? {} : { method }), segments };
+};
+
+/** Where `part` sits in `whole` as consecutive segments, a hole matching a hole: the index, or -1. */
+const segmentsAt = (whole: readonly string[], part: readonly string[]): number => {
+  for (let at = whole.length - part.length; at >= 0; at -= 1) {
+    if (part.every((segment, index) => whole[at + index] === segment)) return at;
+  }
+  return -1;
+};
+
+/**
+ * Routes whose path holds the path asked (P377), whatever the client called
+ * its parameters and without the prefix the server adds (a global `/api`):
+ * the path whole first, then one ending with it, then one holding it.
+ */
+const routesByPath = (pool: readonly GraphNode[], text: string): GraphNode[] => {
+  const asked = pathQueryOf(text);
+  if (asked === undefined) return [];
+  const ranked: Array<{ node: GraphNode; rank: number }> = [];
+  for (const node of pool) {
+    if (node.kind !== 'http') continue;
+    const declared = String(node.meta?.['method'] ?? '').toUpperCase();
+    if (asked.method !== undefined && declared !== asked.method && declared !== 'ALL') continue;
+    const segments = normalizePath(String(node.meta?.['path'] ?? '')).split('/').filter((segment) => segment !== '').map((segment) => segment.toLowerCase());
+    const at = segmentsAt(segments, asked.segments);
+    if (at < 0) continue;
+    const rank = segments.length === asked.segments.length ? 0 : at + asked.segments.length === segments.length ? 1 : 2;
+    ranked.push({ node, rank });
+  }
+  return ranked
+    .sort((a, b) => a.rank - b.rank || a.node.label.length - b.node.label.length || (a.node.id < b.node.id ? -1 : 1))
+    .map((row) => row.node);
+};
+
 /**
  * Ways in by their label or id, and a screen also by the component it shows
  * (P363): asked for the screen of `FloorPlanComponent`, the route that
@@ -202,6 +259,9 @@ const routes: Finder = (input) => {
   const { db, text, service, limit, offset, bounded } = input;
   const pool = db.nodesByType('entry').filter(inService(service));
   const ranked = rankMatches(pool, text).map((match) => match.node);
+  // A path written as a client writes it (P377): any parameter name, and without the prefix the server adds.
+  const byPath = routesByPath(pool, text).filter((node) => !ranked.includes(node));
+  ranked.push(...byPath);
   const found = new Set(ranked.map((node) => node.id));
   const wanted = text.toLowerCase();
   const showing = pool.filter((node) => {

@@ -1158,15 +1158,161 @@
         ]
       },
       "note": "P378: impact's channel input given a row's consumer lists the ways in beyond all of its channels, each once."
+    },
+    {
+      "id": "get_flow.short-name",
+      "ask": "which back-end handler does CatalogService.getGrouped's request land on",
+      "fixture": "request-lands-on-route",
+      "tool": "get_flow",
+      "args": {
+        "entry": "CatalogService.getGrouped"
+      },
+      "lists": [
+        "root"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "root": [
+            "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped",
+            "entry:shop-api:http:GET:/api/admin/:param/catalog/grouped",
+            "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.grouped"
+          ]
+        }
+      },
+      "note": "P377: get_flow takes Class.method as who_calls does; it answered \"no entry matches\" with no suggestions."
+    },
+    {
+      "id": "who_calls.request-lands",
+      "ask": "who calls CatalogService.getGrouped, and where does its request land",
+      "fixture": "request-lands-on-route",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "CatalogService.getGrouped"
+      },
+      "lists": [
+        "target",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "waysIn": [
+            "entry:shop-admin:screen:/catalog"
+          ]
+        },
+        "rowsSay": {
+          "target": {
+            "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped": {
+              "requests": [
+                {
+                  "route": "entry:shop-api:http:GET:/api/admin/:param/catalog/grouped",
+                  "by": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.grouped"
+                }
+              ]
+            }
+          }
+        },
+        "exact": [
+          "waysIn"
+        ]
+      },
+      "note": "P377: the target says the route its request lands on and the handler there, built through the base client and the global prefix."
+    },
+    {
+      "id": "find_symbol.request-lands",
+      "ask": "find DeskOrderService.amendOrder and the route handler its request lands on",
+      "fixture": "request-lands-on-route",
+      "tool": "find_symbol",
+      "args": {
+        "query": "DeskOrderService.amendOrder"
+      },
+      "lists": [
+        "matches"
+      ],
+      "expect": {
+        "complete": true,
+        "rowsSay": {
+          "matches": {
+            "shop-admin#src/app/desk-order.service.ts:DeskOrderService.amendOrder": {
+              "requests": [
+                {
+                  "route": "entry:shop-api:http:POST:/api/admin/:param/orders/:param/modify",
+                  "by": "shop-api#src/orders/admin-orders.controller.ts:AdminOrdersController.modify"
+                }
+              ]
+            }
+          }
+        },
+        "exact": [
+          "matches"
+        ]
+      },
+      "note": "P377: the match says where its request lands; the agent read the client and its base class to rebuild the address."
+    },
+    {
+      "id": "search.client-path",
+      "ask": "which route serves the path the client writes as /admin/:rid/orders/${id}/modify",
+      "fixture": "request-lands-on-route",
+      "tool": "search",
+      "args": {
+        "query": "/admin/:rid/orders/${id}/modify",
+        "kinds": [
+          "routes"
+        ]
+      },
+      "lists": [
+        "results.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "routes": [
+            "entry:shop-api:http:POST:/api/admin/:param/orders/:param/modify"
+          ]
+        },
+        "exact": [
+          "routes"
+        ]
+      },
+      "note": "P377: any parameter name, and no global prefix; it answered \"nothing matches\"."
+    },
+    {
+      "id": "search.folder-name",
+      "ask": "which routes of the back end checked out as shop-backend say modify",
+      "fixture": "request-lands-on-route",
+      "tool": "search",
+      "args": {
+        "query": "modify",
+        "kinds": [
+          "routes"
+        ],
+        "service": "shop-backend"
+      },
+      "lists": [
+        "results.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "routes": [
+            "entry:shop-api:http:POST:/api/admin/:param/orders/:param/modify"
+          ]
+        },
+        "exact": [
+          "routes"
+        ]
+      },
+      "note": "P377: the repository folder names the service shop-api; it answered \"nothing matches\"."
     }
   ],
   "fixed": {
     "instructions": 2493,
     "guideBlock": 1205,
     "skillDescription": 268,
-    "listingCore": 5868,
-    "listingDefault": 10665,
-    "listingAll": 13344
+    "listingCore": 5870,
+    "listingDefault": 10667,
+    "listingAll": 13346
   },
   "recorded": {
     "impact.multi-repo": {
@@ -1324,15 +1470,15 @@
       "calls": 1
     },
     "find_symbol.several": {
-      "chars": 965,
-      "tokens": 242,
+      "chars": 1380,
+      "tokens": 345,
       "rows": 4,
       "complete": true,
       "calls": 1
     },
     "find_symbol.unreferenced": {
-      "chars": 656,
-      "tokens": 164,
+      "chars": 922,
+      "tokens": 231,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -1418,6 +1564,41 @@
       "chars": 1440,
       "tokens": 360,
       "rows": 5,
+      "complete": true,
+      "calls": 1
+    },
+    "get_flow.short-name": {
+      "chars": 1485,
+      "tokens": 372,
+      "rows": 8,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.request-lands": {
+      "chars": 999,
+      "tokens": 250,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "find_symbol.request-lands": {
+      "chars": 536,
+      "tokens": 134,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "search.client-path": {
+      "chars": 436,
+      "tokens": 109,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "search.folder-name": {
+      "chars": 411,
+      "tokens": 103,
+      "rows": 1,
       "complete": true,
       "calls": 1
     }

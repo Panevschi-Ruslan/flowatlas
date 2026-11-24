@@ -6,7 +6,7 @@ import { openDbFromOptions, sourceRootsFor } from '../db.js';
 import { cannotRun } from '../exit.js';
 import { FLOW_FORMATS, withQueryOptions, type QueryOptions } from '../options.js';
 import { present, processIo, settingsFor, type QueryIo } from '../query/answer.js';
-import { resolveEntry } from '../query/refs.js';
+import { resolveSymbol } from '../query/refs.js';
 import { SEQUENCE_WALK_DETAIL, sequenceDepth, sitesFrom, stopsIn } from '../query/sequence.js';
 import { askedCommand } from '../query/asked.js';
 
@@ -38,7 +38,8 @@ const answerFlow = (ref: string, options: FlowOptions, io: QueryIo = processIo):
   // Closed when the answer is out (P199): on Windows an open database can
   // be neither replaced by the next build nor removed with its directory.
   try {
-    const entry = resolveEntry(db, ref, settings.service);
+    // Any symbol, as get_flow takes one (P377): an entry said aloud, an id, `Class.method` or a short name.
+    const entry = resolveSymbol(db, ref, settings.service);
     const sequence = settings.format === 'sequence';
     const sequenceDetail = sequenceDetailOf(options.sequenceDetail);
 

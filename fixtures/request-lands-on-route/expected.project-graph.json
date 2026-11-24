@@ -1,0 +1,1142 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T08:36:04.507Z",
+  "services": [
+    {
+      "name": "shop-api",
+      "repo": "./shop-backend",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop-admin",
+      "repo": "./shop-frontend",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop-admin:screen:/catalog",
+      "type": "entry",
+      "label": "/catalog",
+      "repo": "shop-admin",
+      "file": "src/app/app.routes.ts",
+      "line": 7,
+      "kind": "screen",
+      "meta": {
+        "path": "/catalog",
+        "by": "angular-routes",
+        "screens": [
+          "CatalogComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop-admin:screen:/desk",
+      "type": "entry",
+      "label": "/desk",
+      "repo": "shop-admin",
+      "file": "src/app/app.routes.ts",
+      "line": 8,
+      "kind": "screen",
+      "meta": {
+        "path": "/desk",
+        "by": "angular-routes",
+        "screens": [
+          "DeskComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop-api:http:GET:/api/admin/:param/catalog/:param",
+      "type": "entry",
+      "label": "GET /api/admin/:param/catalog/:param",
+      "repo": "shop-api",
+      "file": "src/catalog/admin-catalog.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/admin/:param/catalog/:param",
+        "rawPath": "/api/admin/:storeId/catalog/:itemId",
+        "globalPrefix": "api",
+        "controller": "AdminCatalogController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:GET:/api/admin/:param/catalog/grouped",
+      "type": "entry",
+      "label": "GET /api/admin/:param/catalog/grouped",
+      "repo": "shop-api",
+      "file": "src/catalog/admin-catalog.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/admin/:param/catalog/grouped",
+        "rawPath": "/api/admin/:storeId/catalog/grouped",
+        "globalPrefix": "api",
+        "controller": "AdminCatalogController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:POST:/api/admin/:param/orders/:param/modify",
+      "type": "entry",
+      "label": "POST /api/admin/:param/orders/:param/modify",
+      "repo": "shop-api",
+      "file": "src/orders/admin-orders.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/admin/:param/orders/:param/modify",
+        "rawPath": "/api/admin/:storeId/orders/:orderId/modify",
+        "globalPrefix": "api",
+        "controller": "AdminOrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "repo:shop-admin",
+      "type": "repo",
+      "label": "shop-admin",
+      "repo": "shop-admin",
+      "meta": {
+        "stats": {
+          "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "templates": 2,
+          "skippedExternalCalls": {
+            "@angular/common": 2,
+            "rxjs": 3
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:shop-api",
+      "type": "repo",
+      "label": "shop-api",
+      "repo": "shop-api",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "globalPrefix": "api",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 8
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop-admin#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "shop-admin",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService",
+      "type": "provider",
+      "label": "AdminApiService",
+      "repo": "shop-admin",
+      "file": "src/app/admin-api.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.get",
+      "type": "method",
+      "label": "AdminApiService.get",
+      "repo": "shop-admin",
+      "file": "src/app/admin-api.service.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "T"
+        }
+      }
+    },
+    {
+      "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.post",
+      "type": "method",
+      "label": "AdminApiService.post",
+      "repo": "shop-admin",
+      "file": "src/app/admin-api.service.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "T"
+        }
+      }
+    },
+    {
+      "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.resource",
+      "type": "method",
+      "label": "AdminApiService.resource",
+      "repo": "shop-admin",
+      "file": "src/app/admin-api.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop-admin#src/app/admin-api.service.ts:AdminApiService.url",
+      "type": "method",
+      "label": "AdminApiService.url",
+      "repo": "shop-admin",
+      "file": "src/app/admin-api.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop-admin#src/app/catalog.component.ts:CatalogComponent",
+      "type": "ui_component",
+      "label": "CatalogComponent",
+      "repo": "shop-admin",
+      "file": "src/app/catalog.component.ts",
+      "line": 5,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-catalog",
+        "route": "/catalog"
+      }
+    },
+    {
+      "id": "shop-admin#src/app/catalog.component.ts:CatalogComponent.download",
+      "type": "method",
+      "label": "CatalogComponent.download",
+      "repo": "shop-admin",
+      "file": "src/app/catalog.component.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-admin#src/app/catalog.component.ts:CatalogComponent.load",
+      "type": "method",
+      "label": "CatalogComponent.load",
+      "repo": "shop-admin",
+      "file": "src/app/catalog.component.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-admin#src/app/catalog.service.ts:CatalogService",
+      "type": "provider",
+      "label": "CatalogService",
+      "repo": "shop-admin",
+      "file": "src/app/catalog.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "shop-admin#src/app/catalog.service.ts:CatalogService.exportSheet",
+      "type": "method",
+      "label": "CatalogService.exportSheet",
+      "repo": "shop-admin",
+      "file": "src/app/catalog.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped",
+      "type": "method",
+      "label": "CatalogService.getGrouped",
+      "repo": "shop-admin",
+      "file": "src/app/catalog.service.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop-admin#CatalogGroup[]"
+        }
+      }
+    },
+    {
+      "id": "shop-admin#src/app/desk-order.service.ts:DeskOrderService",
+      "type": "provider",
+      "label": "DeskOrderService",
+      "repo": "shop-admin",
+      "file": "src/app/desk-order.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "shop-admin#src/app/desk-order.service.ts:DeskOrderService.amendOrder",
+      "type": "method",
+      "label": "DeskOrderService.amendOrder",
+      "repo": "shop-admin",
+      "file": "src/app/desk-order.service.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "lines",
+              "type": "string[]"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "shop-admin#src/app/desk.component.ts:DeskComponent",
+      "type": "ui_component",
+      "label": "DeskComponent",
+      "repo": "shop-admin",
+      "file": "src/app/desk.component.ts",
+      "line": 5,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-desk",
+        "route": "/desk"
+      }
+    },
+    {
+      "id": "shop-admin#src/app/desk.component.ts:DeskComponent.amend",
+      "type": "method",
+      "label": "DeskComponent.amend",
+      "repo": "shop-admin",
+      "file": "src/app/desk.component.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "shop-api",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "AdminCatalogController",
+          "AdminOrdersController"
+        ],
+        "providers": [
+          "CatalogService",
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController",
+      "type": "provider",
+      "label": "AdminCatalogController",
+      "repo": "shop-api",
+      "file": "src/catalog/admin-catalog.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.grouped",
+      "type": "method",
+      "label": "AdminCatalogController.grouped",
+      "repo": "shop-api",
+      "file": "src/catalog/admin-catalog.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "storeId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-api#CatalogGroup[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.item",
+      "type": "method",
+      "label": "AdminCatalogController.item",
+      "repo": "shop-api",
+      "file": "src/catalog/admin-catalog.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "storeId",
+              "type": "string"
+            },
+            {
+              "name": "itemId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-api#src/catalog/catalog.service.ts:CatalogService",
+      "type": "provider",
+      "label": "CatalogService",
+      "repo": "shop-api",
+      "file": "src/catalog/catalog.service.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/catalog/catalog.service.ts:CatalogService.grouped",
+      "type": "method",
+      "label": "CatalogService.grouped",
+      "repo": "shop-api",
+      "file": "src/catalog/catalog.service.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "storeId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-api#CatalogGroup[]"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/catalog/catalog.service.ts:CatalogService.item",
+      "type": "method",
+      "label": "CatalogService.item",
+      "repo": "shop-api",
+      "file": "src/catalog/catalog.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "storeId",
+              "type": "string"
+            },
+            {
+              "name": "itemId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/orders/admin-orders.controller.ts:AdminOrdersController",
+      "type": "provider",
+      "label": "AdminOrdersController",
+      "repo": "shop-api",
+      "file": "src/orders/admin-orders.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/orders/admin-orders.controller.ts:AdminOrdersController.modify",
+      "type": "method",
+      "label": "AdminOrdersController.modify",
+      "repo": "shop-api",
+      "file": "src/orders/admin-orders.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "storeId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{lines:string[]}"
+            }
+          ],
+          "returns": "number"
+        },
+        "fieldsRead": [
+          {
+            "field": "lines",
+            "line": 10
+          },
+          {
+            "field": "lines.length",
+            "in": "shop-api#src/orders/orders.service.ts:OrdersService.modify",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 3,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.modify",
+      "type": "method",
+      "label": "OrdersService.modify",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "storeId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "lines",
+              "type": "string[]"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "ui_action:shop-admin#src/app/catalog.component.ts:8:22",
+      "type": "ui_action",
+      "label": "click=\"load()\"",
+      "repo": "shop-admin",
+      "file": "src/app/catalog.component.ts",
+      "line": 8,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "load()",
+        "component": "shop-admin#src/app/catalog.component.ts:CatalogComponent",
+        "template": "src/app/catalog.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:shop-admin#src/app/catalog.component.ts:8:60",
+      "type": "ui_action",
+      "label": "click=\"download()\"",
+      "repo": "shop-admin",
+      "file": "src/app/catalog.component.ts",
+      "line": 8,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "download()",
+        "component": "shop-admin#src/app/catalog.component.ts:CatalogComponent",
+        "template": "src/app/catalog.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:shop-admin#src/app/desk.component.ts:8:22",
+      "type": "ui_action",
+      "label": "click=\"amend()\"",
+      "repo": "shop-admin",
+      "file": "src/app/desk.component.ts",
+      "line": 8,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "amend()",
+        "component": "shop-admin#src/app/desk.component.ts:DeskComponent",
+        "template": "src/app/desk.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-admin#src/app/catalog.service.ts:18:12@24:12",
+      "type": "ui_api_call",
+      "label": "GET /admin/:param/catalog/grouped",
+      "repo": "shop-admin",
+      "file": "src/app/catalog.service.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/admin/:param/catalog/grouped",
+        "path": "/admin/:param/catalog/grouped",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:shop-admin#CatalogGroup[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "through": "AdminApiService.get",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-admin#src/app/catalog.service.ts:23:12@28:12",
+      "type": "ui_api_call",
+      "label": "POST /admin/:param/catalog/export",
+      "repo": "shop-admin",
+      "file": "src/app/catalog.service.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/admin/:param/catalog/export",
+        "path": "/admin/:param/catalog/export",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "through": "AdminApiService.post"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-admin#src/app/desk-order.service.ts:12:12@28:12",
+      "type": "ui_api_call",
+      "label": "POST /admin/:param/orders/:param/modify",
+      "repo": "shop-admin",
+      "file": "src/app/desk-order.service.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/admin/:param/orders/:param/modify",
+        "path": "/admin/:param/orders/:param/modify",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "number",
+        "bodyType": "{lines:string[]}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "lines"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "through": "AdminApiService.post",
+        "targetService": "shop-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop-admin:screen:/catalog",
+      "to": "shop-admin#src/app/catalog.component.ts:CatalogComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 7,
+      "meta": {
+        "route": "/catalog"
+      }
+    },
+    {
+      "from": "entry:shop-admin:screen:/desk",
+      "to": "shop-admin#src/app/desk.component.ts:DeskComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 8,
+      "meta": {
+        "route": "/desk"
+      }
+    },
+    {
+      "from": "entry:shop-api:http:GET:/api/admin/:param/catalog/:param",
+      "to": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.item",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/catalog/admin-catalog.controller.ts",
+      "line": 13,
+      "meta": {
+        "params": "{storeId:string;itemId:string}"
+      }
+    },
+    {
+      "from": "entry:shop-api:http:GET:/api/admin/:param/catalog/grouped",
+      "to": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.grouped",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop-api#CatalogGroup[]",
+      "file": "src/catalog/admin-catalog.controller.ts",
+      "line": 8,
+      "meta": {
+        "params": "{storeId:string}"
+      }
+    },
+    {
+      "from": "entry:shop-api:http:POST:/api/admin/:param/orders/:param/modify",
+      "to": "shop-api#src/orders/admin-orders.controller.ts:AdminOrdersController.modify",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "{lines:string[]}"
+      ],
+      "returns": "number",
+      "file": "src/orders/admin-orders.controller.ts",
+      "line": 8,
+      "meta": {
+        "params": "{storeId:string;orderId:string}",
+        "body": "{lines:string[]}"
+      }
+    },
+    {
+      "from": "shop-admin#src/app/admin-api.service.ts:AdminApiService",
+      "to": "shop-admin#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/admin-api.service.ts",
+      "line": 14
+    },
+    {
+      "from": "shop-admin#src/app/admin-api.service.ts:AdminApiService.get",
+      "to": "shop-admin#src/app/admin-api.service.ts:AdminApiService.url",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/app/admin-api.service.ts",
+      "line": 24
+    },
+    {
+      "from": "shop-admin#src/app/admin-api.service.ts:AdminApiService.post",
+      "to": "shop-admin#src/app/admin-api.service.ts:AdminApiService.url",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/app/admin-api.service.ts",
+      "line": 28
+    },
+    {
+      "from": "shop-admin#src/app/admin-api.service.ts:AdminApiService.url",
+      "to": "shop-admin#src/app/admin-api.service.ts:AdminApiService.resource",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/app/admin-api.service.ts",
+      "line": 20
+    },
+    {
+      "from": "shop-admin#src/app/catalog.component.ts:CatalogComponent",
+      "to": "shop-admin#src/app/catalog.service.ts:CatalogService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/catalog.component.ts",
+      "line": 11
+    },
+    {
+      "from": "shop-admin#src/app/catalog.component.ts:CatalogComponent.download",
+      "to": "shop-admin#src/app/catalog.service.ts:CatalogService.exportSheet",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/app/catalog.component.ts",
+      "line": 18
+    },
+    {
+      "from": "shop-admin#src/app/catalog.component.ts:CatalogComponent.load",
+      "to": "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:shop-admin#CatalogGroup[]",
+      "file": "src/app/catalog.component.ts",
+      "line": 14
+    },
+    {
+      "from": "shop-admin#src/app/catalog.service.ts:CatalogService.exportSheet",
+      "to": "shop-admin#src/app/admin-api.service.ts:AdminApiService.post",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "T",
+      "file": "src/app/catalog.service.ts",
+      "line": 23
+    },
+    {
+      "from": "shop-admin#src/app/catalog.service.ts:CatalogService.exportSheet",
+      "to": "ui_api_call:shop-admin#src/app/catalog.service.ts:23:12@28:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog.service.ts",
+      "line": 23
+    },
+    {
+      "from": "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped",
+      "to": "shop-admin#src/app/admin-api.service.ts:AdminApiService.get",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "T",
+      "file": "src/app/catalog.service.ts",
+      "line": 18
+    },
+    {
+      "from": "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped",
+      "to": "ui_api_call:shop-admin#src/app/catalog.service.ts:18:12@24:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog.service.ts",
+      "line": 18
+    },
+    {
+      "from": "shop-admin#src/app/desk-order.service.ts:DeskOrderService.amendOrder",
+      "to": "shop-admin#src/app/admin-api.service.ts:AdminApiService.post",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "T",
+      "file": "src/app/desk-order.service.ts",
+      "line": 12
+    },
+    {
+      "from": "shop-admin#src/app/desk-order.service.ts:DeskOrderService.amendOrder",
+      "to": "ui_api_call:shop-admin#src/app/desk-order.service.ts:12:12@28:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/desk-order.service.ts",
+      "line": 12
+    },
+    {
+      "from": "shop-admin#src/app/desk.component.ts:DeskComponent",
+      "to": "shop-admin#src/app/desk-order.service.ts:DeskOrderService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/desk.component.ts",
+      "line": 13
+    },
+    {
+      "from": "shop-admin#src/app/desk.component.ts:DeskComponent.amend",
+      "to": "shop-admin#src/app/desk-order.service.ts:DeskOrderService.amendOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string[]"
+      ],
+      "returns": "number",
+      "file": "src/app/desk.component.ts",
+      "line": 16
+    },
+    {
+      "from": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController",
+      "to": "shop-api#src/catalog/catalog.service.ts:CatalogService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/catalog/admin-catalog.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.grouped",
+      "to": "shop-api#src/catalog/catalog.service.ts:CatalogService.grouped",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop-api#CatalogGroup[]",
+      "file": "src/catalog/admin-catalog.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.item",
+      "to": "shop-api#src/catalog/catalog.service.ts:CatalogService.item",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/catalog/admin-catalog.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "shop-api#src/orders/admin-orders.controller.ts:AdminOrdersController",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/admin-orders.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "shop-api#src/orders/admin-orders.controller.ts:AdminOrdersController.modify",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService.modify",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string[]"
+      ],
+      "returns": "number",
+      "file": "src/orders/admin-orders.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "ui_action:shop-admin#src/app/catalog.component.ts:8:22",
+      "to": "shop-admin#src/app/catalog.component.ts:CatalogComponent.load",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/catalog.component.ts",
+      "line": 8
+    },
+    {
+      "from": "ui_action:shop-admin#src/app/catalog.component.ts:8:60",
+      "to": "shop-admin#src/app/catalog.component.ts:CatalogComponent.download",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/catalog.component.ts",
+      "line": 8
+    },
+    {
+      "from": "ui_action:shop-admin#src/app/desk.component.ts:8:22",
+      "to": "shop-admin#src/app/desk.component.ts:DeskComponent.amend",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/desk.component.ts",
+      "line": 8
+    },
+    {
+      "from": "ui_api_call:shop-admin#src/app/catalog.service.ts:18:12@24:12",
+      "to": "entry:shop-api:http:GET:/api/admin/:param/catalog/grouped",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/catalog.service.ts",
+      "line": 18,
+      "returns": "type:shop-admin#CatalogGroup[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api",
+        "note": "chosen over entry:shop-api:http:GET:/api/admin/:param/catalog/:param for being more specific; the framework decides by registration order"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-admin#src/app/desk-order.service.ts:12:12@28:12",
+      "to": "entry:shop-api:http:POST:/api/admin/:param/orders/:param/modify",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/desk-order.service.ts",
+      "line": 12,
+      "params": [
+        "{lines:string[]}"
+      ],
+      "returns": "number",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    }
+  ],
+  "types": {
+    "type:shop-admin#CatalogGroup": {
+      "name": "CatalogGroup",
+      "kind": "object",
+      "declaredIn": "shop-admin#src/app/catalog.service.ts",
+      "structuralHash": "2d457728bb88276c",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "items",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-api#CatalogGroup": {
+      "name": "CatalogGroup",
+      "kind": "object",
+      "declaredIn": "shop-api#src/catalog/catalog.service.ts",
+      "structuralHash": "2d457728bb88276c",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "items",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app/admin-api.service.ts",
+      "line": 23,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "sites": 2,
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "shop-admin"
+    },
+    {
+      "service": "shop-admin",
+      "file": "src/app/catalog.service.ts",
+      "line": 23,
+      "reason": "target-route-not-found",
+      "message": "target service shop-api has no route POST /admin/:param/catalog/export",
+      "hint": "Route renamed? Check shop-api's controllers, or annotate the method with /** @flowatlas-calls POST /admin/:param/catalog/export */.",
+      "symbol": "ui_api_call:shop-admin#src/app/catalog.service.ts:23:12@28:12"
+    }
+  ]
+}

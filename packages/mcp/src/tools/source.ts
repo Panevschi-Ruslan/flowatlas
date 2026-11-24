@@ -6,7 +6,8 @@ import { projectDetail } from '../query/detail.js';
 import { isResolved, resolveSymbol } from '../query/entry-ref.js';
 import { nearNames } from '../query/names.js';
 import { MAX_NEXT, nextFor, withNext } from '../query/next.js';
-import { nextOutput, nodeOutput, READ_ONLY, withDb, type ToolContext } from './common.js';
+import { requestsOf } from '../query/requests.js';
+import { nextOutput, nodeOutput, READ_ONLY, requestsOutput, withDb, type ToolContext } from './common.js';
 
 /**
  * Where a declaration ends, read by counting braces from where it starts.
@@ -110,6 +111,7 @@ export const getSourceOutput = {
   candidates: z.array(nodeOutput).optional(),
   truncated: z.string().optional(),
   note: z.string().optional(),
+  ...requestsOutput,
   next: nextOutput,
 };
 
@@ -185,6 +187,8 @@ export const registerSource = (server: McpServer, ctx: ToolContext): void => {
               ? { truncated: `declaration continues past line ${window.to + 1}; ask with fromLine ${window.to + 2}` }
               : {}),
             ...(past ? { note: `the declaration ends at line ${window.end + 1}` } : {}),
+            // Where the requests it sends land (P377), so the address need not be rebuilt from the code.
+            ...requestsOf(db, node),
           },
           [
             ...(window.continues

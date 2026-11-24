@@ -367,6 +367,26 @@ const CALLERS_CASES = [
 /** The same, compact: what an agent is handed. */
 const CALLERS_COMPACT_CASES = CALLERS_CASES.slice(0, 3).map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
 
+/**
+ * "Where does this request land" in one call (P377): get_flow on a front-end
+ * method's short name, who_calls, find_symbol and get_source saying where a
+ * method's requests land (one joined to no route among them), search with
+ * the client's parameter names and no global prefix, and a service named by
+ * its repository's folder, or by nothing the configuration says.
+ */
+const REQUEST_CASES = [
+  ['get_flow.short-name', 'get_flow', { entry: 'CatalogService.getGrouped' }],
+  ['get_flow.ambiguous-name', 'get_flow', { entry: 'CatalogService' }],
+  ['who_calls.request-lands', 'who_calls', { symbol: 'CatalogService.getGrouped' }],
+  ['find_symbol.request-lands', 'find_symbol', { query: 'DeskOrderService.amendOrder' }],
+  ['get_source.request-unjoined', 'get_source', { symbol: 'CatalogService.exportSheet' }],
+  ['search.client-path', 'search', { query: '/admin/:rid/orders/${id}/modify', kinds: ['routes'] }],
+  ['search.folder-name', 'search', { query: 'modify', kinds: ['routes'], service: 'shop-backend' }],
+  ['search.unknown-service', 'search', { query: 'modify', service: 'backend' }],
+];
+/** The same, compact: what an agent is handed. */
+const REQUEST_COMPACT_CASES = REQUEST_CASES.filter(([name]) => !name.startsWith('get_source')).map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
+
 /** The same impact and a flow through the rendered child, compact (P370). */
 const RENDERED_REACH_COMPACT_CASES = [
   ['impact.rendered-child', 'impact', { symbol: RENDERED_REACH_TARGET, verbose: false }],
@@ -857,6 +877,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'callers-walked-to-ways-in'),
     outDir: join(root, 'fixtures', 'callers-walked-to-ways-in', 'expected.mcp.compact'),
     cases: CALLERS_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'request-lands-on-route'),
+    outDir: join(root, 'fixtures', 'request-lands-on-route', 'expected.mcp'),
+    cases: REQUEST_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'request-lands-on-route'),
+    outDir: join(root, 'fixtures', 'request-lands-on-route', 'expected.mcp.compact'),
+    cases: REQUEST_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

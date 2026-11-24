@@ -1,0 +1,7 @@
+{
+  "error": "no service named \"backend\"",
+  "services": [
+    "shop-admin",
+    "shop-api"
+  ]
+}
